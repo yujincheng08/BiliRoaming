@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <SwitchPreference
+        android:key="test_key"
+        android:summary="Test Summary"
+        android:title="Test Title" />
+
+</PreferenceScreen>
