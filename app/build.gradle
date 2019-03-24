@@ -2,6 +2,8 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 28
+    buildToolsVersion '28.0.3'
+
     defaultConfig {
         applicationId "me.iacn.biliroaming"
         minSdkVersion 21
@@ -9,6 +11,7 @@ android {
         versionCode 1
         versionName "1.0"
     }
+
     buildTypes {
         release {
             minifyEnabled false
@@ -18,6 +21,20 @@ android {
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
     compileOnly 'de.robv.android.xposed:api:82'
+    compileOnly 'de.robv.android.xposed:api:82:sources'
+    implementation 'com.github.githubwing:HotXposed:v1.0.0'
+}
+
+afterEvaluate {
+    installDebug.doLast {
+        restartBiliBili.execute()
+    }
+}
+
+task restartBiliBili(type: Exec) {
+    def pkg = "tv.danmaku.bili"
+    commandLine android.adbExecutable, 'shell', 'am', 'force-stop', pkg
+    commandLine android.adbExecutable, 'shell', 'monkey', '-p', pkg, '1'
 }
