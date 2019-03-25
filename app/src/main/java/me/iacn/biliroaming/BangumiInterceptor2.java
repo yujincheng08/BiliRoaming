@@ -31,7 +31,7 @@ public class BangumiInterceptor2 implements InvocationHandler {
             Object httpUrlObject = XposedHelpers.callMethod(request, "a");
             String url = (String) XposedHelpers.callMethod(httpUrlObject, "toString");
             if (url.contains("/pgc/view/app/season")) {
-                System.out.println("url = " + url);
+                System.out.println("url2 = " + url);
             }
 
 
