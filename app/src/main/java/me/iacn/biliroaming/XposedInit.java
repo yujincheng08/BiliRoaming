@@ -50,7 +50,7 @@ public class XposedInit implements IHookerDispatcher {
                                         boolean hasAdded = false;
                                         for (Object interceptor : interceptors) {
                                             String simpleName = interceptor.getClass().getSimpleName();
-                                            if ("BangumiInterceptor".equals(simpleName)) {
+                                            if (simpleName.contains("$Proxy")) {
                                                 hasAdded = true;
                                                 break;
                                             }
