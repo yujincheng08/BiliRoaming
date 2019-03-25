@@ -18,6 +18,11 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
 }
 
 dependencies {
@@ -25,16 +30,20 @@ dependencies {
     compileOnly 'de.robv.android.xposed:api:82'
     compileOnly 'de.robv.android.xposed:api:82:sources'
     implementation 'com.github.githubwing:HotXposed:v1.0.0'
+    implementation 'com.squareup.okhttp3:okhttp:3.14.0'
 }
 
 afterEvaluate {
     installDebug.doLast {
-        restartBiliBili.execute()
+        forceStopBiliBili.execute()
+        startBiliBili.execute()
     }
 }
 
-task restartBiliBili(type: Exec) {
-    def pkg = "tv.danmaku.bili"
-    commandLine android.adbExecutable, 'shell', 'am', 'force-stop', pkg
-    commandLine android.adbExecutable, 'shell', 'monkey', '-p', pkg, '1'
+task forceStopBiliBili(type: Exec) {
+    commandLine android.adbExecutable, 'shell', 'am', 'force-stop', 'tv.danmaku.bili'
+}
+
+task startBiliBili(type: Exec) {
+    commandLine android.adbExecutable, 'shell', 'monkey', '-p', 'tv.danmaku.bili', '1'
 }
