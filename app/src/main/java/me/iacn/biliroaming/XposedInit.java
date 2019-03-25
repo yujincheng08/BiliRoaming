@@ -6,12 +6,11 @@ import android.app.Application;
 import android.app.Instrumentation;
 import android.content.Context;
 
-import net.androidwing.hotxposed.IHookerDispatcher;
-
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.List;
 
+import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam;
@@ -23,9 +22,9 @@ import static de.robv.android.xposed.XposedHelpers.findAndHookMethod;
  * Created by iAcn on 2019/3/24
  * Email i@iacn.me
  */
-public class XposedInit implements IHookerDispatcher {
+public class XposedInit implements IXposedHookLoadPackage {
     @Override
-    public void dispatch(LoadPackageParam lpparam) {
+    public void handleLoadPackage(LoadPackageParam lpparam) throws Throwable {
         if (!"tv.danmaku.bili".equals(lpparam.packageName)) return;
 
         findAndHookMethod(Instrumentation.class, "callApplicationOnCreate", Application.class, new XC_MethodHook() {
