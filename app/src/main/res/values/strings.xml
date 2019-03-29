@@ -1,4 +1,15 @@
 <resources>
-    <string name="app_name">BiliRoaming</string>
-    <string name="xposed_description">Unlock bilibili bangumi area limit</string>
+    <string name="app_name">哔哩漫游</string>
+    <string name="xposed_description">解锁B站港澳台番剧限制</string>
+    <string name="about">关于</string>
+    <string name="version">版本</string>
+    <string name="running_status_enable">已启用</string>
+    <string name="running_status_disable">未启用</string>
+    <string name="click_jump_to_enable">点击跳转以启用</string>
+    <string name="runtime_xposed">运行环境：Xposed/EdXposed</string>
+    <string name="runtime_taichi">运行环境：太极</string>
+    <string name="main_func_title">解锁番剧限制</string>
+    <string name="main_func_summary">使大陆的用户可以正常观看港澳台番剧</string>
+    <string name="hide_icon_summary">不显示本应用在启动器中的图标</string>
+    <string name="hide_icon_title">隐藏桌面图标</string>
 </resources>

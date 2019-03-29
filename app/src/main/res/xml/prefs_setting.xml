@@ -2,8 +2,23 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
     <SwitchPreference
-        android:key="test_key"
-        android:summary="Test Summary"
-        android:title="Test Title" />
+        android:key="main_func"
+        android:summary="@string/main_func_summary"
+        android:title="@string/main_func_title" />
+
+    <SwitchPreference
+        android:key="hide_icon"
+        android:summary="@string/hide_icon_summary"
+        android:title="@string/hide_icon_title" />
+
+    <PreferenceCategory android:title="@string/about">
+
+        <Preference
+            android:key="version"
+            android:title="@string/version" />
+
+        <Preference android:key="running_status" />
+
+    </PreferenceCategory>
 
 </PreferenceScreen>
