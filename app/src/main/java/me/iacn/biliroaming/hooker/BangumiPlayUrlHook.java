@@ -37,7 +37,6 @@ public class BangumiPlayUrlHook extends BaseHook {
                             String queryString = urlString.substring(urlString.indexOf("?") + 1);
                             if (queryString.contains("module=bangumi")) {
                                 InputStream inputStream = (InputStream) param.getResult();
-                                System.out.println(inputStream.getClass());
                                 String encoding = connection.getContentEncoding();
                                 String content = StreamUtils.getContent(inputStream, encoding);
 

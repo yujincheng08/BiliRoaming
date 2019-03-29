@@ -51,11 +51,12 @@ public class BangumiSeasonHook extends BaseHook {
 
                                 JSONObject resultJson = contentJson.optJSONObject("result");
                                 Object obj = callStaticMethod(fastJsonClass, "a", resultJson.toString(), beanClass);
-
-                                Object newEpisodes = getObjectField(obj, "episodes");
                                 Object newRights = getObjectField(obj, "rights");
-                                setObjectField(bangumiSeason, "episodes", newEpisodes);
+                                Object newEpisodes = getObjectField(obj, "episodes");
+
                                 setObjectField(bangumiSeason, "rights", newRights);
+                                setObjectField(bangumiSeason, "episodes", newEpisodes);
+                                setObjectField(bangumiSeason, "seasonLimit", null);
                             }
                         }
                     }
