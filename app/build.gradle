@@ -8,7 +8,7 @@ android {
         minSdkVersion 21
         targetSdkVersion 27
         versionCode 1
-        versionName "1.0"
+        versionName "1.0.0"
     }
 
     buildTypes {
@@ -22,6 +22,12 @@ android {
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    android.applicationVariants.all { variant ->
+        variant.outputs.all { output ->
+            outputFileName = "BiliRoaming_${defaultConfig.versionName}.apk"
+        }
     }
 }
 
