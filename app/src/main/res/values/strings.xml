@@ -5,7 +5,7 @@
     <string name="version">版本</string>
     <string name="running_status_enable">已启用</string>
     <string name="running_status_disable">未启用</string>
-    <string name="click_jump_to_enable">点击跳转以启用</string>
+    <string name="not_running_summary">插件当前没有被激活</string>
     <string name="runtime_xposed">运行环境：Xposed/EdXposed</string>
     <string name="runtime_taichi">运行环境：太极</string>
     <string name="main_func_title">解锁番剧限制</string>
