@@ -64,5 +64,20 @@ public class MainActivity extends Activity {
                 }
             }
         }
+
+        @Override
+        public boolean onPreferenceChange(Preference preference, Object newValue) {
+            if ("hide_icon".equals(preference.getKey())) {
+                boolean isShow = (boolean) newValue;
+                ComponentName aliasName = new ComponentName(getActivity(), MainActivity.class.getName() + "Alias");
+                PackageManager packageManager = getActivity().getPackageManager();
+                int status = isShow ?
+                        PackageManager.COMPONENT_ENABLED_STATE_DISABLED : PackageManager.COMPONENT_ENABLED_STATE_ENABLED;
+                if (packageManager.getComponentEnabledSetting(aliasName) != status) {
+                    packageManager.setComponentEnabledSetting(aliasName, status, PackageManager.DONT_KILL_APP);
+                }
+            }
+            return true;
+        }
     }
 }
