@@ -9,6 +9,7 @@ import android.content.Context;
 import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XC_MethodReplacement;
+import de.robv.android.xposed.XSharedPreferences;
 import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam;
 import me.iacn.biliroaming.hooker.BangumiPlayUrlHook;
 import me.iacn.biliroaming.hooker.BangumiSeasonHook;
@@ -22,6 +23,8 @@ import static de.robv.android.xposed.XposedHelpers.findAndHookMethod;
  */
 public class XposedInit implements IXposedHookLoadPackage {
 
+    private XSharedPreferences mPrefs;
+
     @Override
     public void handleLoadPackage(LoadPackageParam lpparam) throws Throwable {
         if (BuildConfig.APPLICATION_ID.equals(lpparam.packageName)) {
@@ -31,9 +34,14 @@ public class XposedInit implements IXposedHookLoadPackage {
 
         if (!"tv.danmaku.bili".equals(lpparam.packageName)) return;
 
+        mPrefs = new XSharedPreferences(BuildConfig.APPLICATION_ID);
+
         findAndHookMethod(Instrumentation.class, "callApplicationOnCreate", Application.class, new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                System.out.println(mPrefs.getBoolean("main_func", false));
+                if (!mPrefs.getBoolean("main_func", false)) return;
+
                 Context context = (Context) param.args[0];
                 String currentProcessName = getCurrentProcessName(context);
 

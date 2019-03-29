@@ -1,5 +1,6 @@
 package me.iacn.biliroaming;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.ContentResolver;
@@ -10,6 +11,8 @@ import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.util.Log;
+
+import java.io.File;
 
 /**
  * Created by iAcn on 2019/3/23
@@ -78,6 +81,21 @@ public class MainActivity extends Activity {
                 }
             }
             return true;
+        }
+
+        @Override
+        public void onPause() {
+            super.onPause();
+            setWorldReadable();
+        }
+
+        @SuppressLint("SetWorldReadable")
+        private void setWorldReadable() {
+            File prefsDir = new File(getActivity().getApplicationInfo().dataDir, "shared_prefs");
+            File prefsFile = new File(prefsDir, getPreferenceManager().getSharedPreferencesName() + ".xml");
+            if (prefsFile.exists()) {
+                prefsFile.setReadable(true, false);
+            }
         }
     }
 }

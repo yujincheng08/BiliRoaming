@@ -3,7 +3,7 @@
     <style name="AppTheme" parent="@android:style/Theme.DeviceDefault.Light">
         <item name="android:colorPrimary">@android:color/white</item>
         <item name="android:colorPrimaryDark">#b2b2b2</item>
-        <item name="android:colorAccent">@color/colorAccent</item>
+        <item name="android:colorAccent">#1a73e9</item>
         <item name="android:windowBackground">@android:color/white</item>
     </style>
 
