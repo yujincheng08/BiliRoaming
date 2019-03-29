@@ -5,7 +5,7 @@ import org.json.JSONObject;
 import java.util.List;
 
 import de.robv.android.xposed.XC_MethodHook;
-import me.iacn.biliroaming.BiliRoamingApi;
+import me.iacn.biliroaming.network.BiliRoamingApi;
 
 import static de.robv.android.xposed.XposedHelpers.callStaticMethod;
 import static de.robv.android.xposed.XposedHelpers.findAndHookMethod;

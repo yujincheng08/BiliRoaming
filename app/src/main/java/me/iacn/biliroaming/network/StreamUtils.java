@@ -1,4 +1,4 @@
-package me.iacn.biliroaming;
+package me.iacn.biliroaming.network;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

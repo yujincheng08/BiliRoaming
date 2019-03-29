@@ -4,7 +4,7 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 
 import de.robv.android.xposed.XC_MethodHook;
-import me.iacn.biliroaming.StreamUtils;
+import me.iacn.biliroaming.network.StreamUtils;
 
 import static de.robv.android.xposed.XposedHelpers.findAndHookMethod;
 
