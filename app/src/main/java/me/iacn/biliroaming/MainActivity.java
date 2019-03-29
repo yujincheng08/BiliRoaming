@@ -2,6 +2,7 @@ package me.iacn.biliroaming;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.preference.Preference;
 import android.preference.PreferenceFragment;
 
 /**
@@ -20,6 +21,9 @@ public class MainActivity extends Activity {
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.prefs_setting);
+
+            findPreference("version").setSummary(BuildConfig.VERSION_NAME);
+            Preference runningStatusPref = findPreference("running_status");
         }
     }
 }
