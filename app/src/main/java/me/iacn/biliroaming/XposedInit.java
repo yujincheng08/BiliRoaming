@@ -39,7 +39,6 @@ public class XposedInit implements IXposedHookLoadPackage {
         findAndHookMethod(Instrumentation.class, "callApplicationOnCreate", Application.class, new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-                System.out.println(mPrefs.getBoolean("main_func", false));
                 if (!mPrefs.getBoolean("main_func", false)) return;
 
                 Context context = (Context) param.args[0];
