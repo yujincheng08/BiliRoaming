@@ -14,7 +14,7 @@ import me.iacn.biliroaming.network.StreamUtils;
 import static de.robv.android.xposed.XposedHelpers.findAndHookMethod;
 
 /**
- * Created by iAcn on 2019/3/27
+ * Created by iAcn on 2019/3/29
  * Email i@iacn.me
  */
 public class BangumiPlayUrlHook extends BaseHook {
@@ -42,9 +42,10 @@ public class BangumiPlayUrlHook extends BaseHook {
                                 String content = StreamUtils.getContent(inputStream, encoding);
 
                                 if (isLimitWatchingArea(content)) {
-                                    String newContent = BiliRoamingApi.getPlayUrl(queryString);
-                                    param.setResult(new ByteArrayInputStream(newContent.getBytes()));
+                                    content = BiliRoamingApi.getPlayUrl(queryString);
                                 }
+
+                                param.setResult(new ByteArrayInputStream(content.getBytes()));
                             }
                         }
                     }
