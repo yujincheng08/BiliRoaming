@@ -30,7 +30,8 @@ public class HotXposedInit implements IXposedHookLoadPackage {
     public void handleLoadPackage(LoadPackageParam lpparam) throws Throwable {
         disableModulesUpdatedNotification(lpparam);
 
-        if (!HOST_PACKAGE.equals(lpparam.packageName)) return;
+        if (!HOST_PACKAGE.equals(lpparam.packageName)
+                && !BuildConfig.APPLICATION_ID.equals(lpparam.packageName)) return;
 
         File moduleApkFile = getModuleApkFile();
         if (!moduleApkFile.exists()) return;

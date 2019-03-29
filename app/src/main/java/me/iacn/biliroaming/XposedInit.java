@@ -8,6 +8,7 @@ import android.content.Context;
 
 import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.XC_MethodHook;
+import de.robv.android.xposed.XC_MethodReplacement;
 import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam;
 import me.iacn.biliroaming.hooker.BangumiPlayUrlHook;
 import me.iacn.biliroaming.hooker.BangumiSeasonHook;
@@ -23,6 +24,11 @@ public class XposedInit implements IXposedHookLoadPackage {
 
     @Override
     public void handleLoadPackage(LoadPackageParam lpparam) throws Throwable {
+        if (BuildConfig.APPLICATION_ID.equals(lpparam.packageName)) {
+            findAndHookMethod(MainActivity.class.getName(), lpparam.classLoader,
+                    "isModuleActive", XC_MethodReplacement.returnConstant(true));
+        }
+
         if (!"tv.danmaku.bili".equals(lpparam.packageName)) return;
 
         findAndHookMethod(Instrumentation.class, "callApplicationOnCreate", Application.class, new XC_MethodHook() {
