@@ -15,8 +15,17 @@ public class BiliRoamingApi {
     private static final String BILIROAMING_PLAYURL_URL = "https://api.iacn.me/biliroaming/playurl?";
 
     public static String getSeason(String seasonId) throws IOException {
-        String apiUrl = BILIROAMING_SEASON_URL + "season_id=" + seasonId;
-        URL url = new URL(apiUrl);
+        String urlString = BILIROAMING_SEASON_URL + "season_id=" + seasonId;
+        return getContent(urlString);
+    }
+
+    public static String getPlayUrl(String queryString) throws IOException {
+        String urlString = BILIROAMING_PLAYURL_URL + queryString;
+        return getContent(urlString);
+    }
+
+    private static String getContent(String urlString) throws IOException {
+        URL url = new URL(urlString);
 
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestMethod("GET");
@@ -25,9 +34,5 @@ public class BiliRoamingApi {
         String encoding = connection.getContentEncoding();
 
         return StreamUtils.getContent(inputStream, encoding);
-    }
-
-    public String getPlayUrl() {
-        return null;
     }
 }
