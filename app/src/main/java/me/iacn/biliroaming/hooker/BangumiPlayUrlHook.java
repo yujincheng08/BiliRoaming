@@ -1,5 +1,7 @@
 package me.iacn.biliroaming.hooker;
 
+import android.util.Log;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -19,12 +21,15 @@ import static de.robv.android.xposed.XposedHelpers.findAndHookMethod;
  */
 public class BangumiPlayUrlHook extends BaseHook {
 
+    private static final String TAG = "BiliRoaming";
+
     public BangumiPlayUrlHook(ClassLoader classLoader) {
         super(classLoader);
     }
 
     @Override
     public void startHook() {
+        Log.d(TAG, "startHook: BangumiPlayUrl");
         findAndHookMethod("com.bilibili.lib.okhttp.huc.OkHttpURLConnection", mClassLoader,
                 "getInputStream", new XC_MethodHook() {
                     @Override
@@ -41,7 +46,9 @@ public class BangumiPlayUrlHook extends BaseHook {
                                 String content = StreamUtils.getContent(inputStream, encoding);
 
                                 if (isLimitWatchingArea(content)) {
+                                    Log.d(TAG, "Limited Play Url: queryString = " + queryString);
                                     content = BiliRoamingApi.getPlayUrl(queryString);
+                                    Log.d(TAG, "Has replaced play url with proxy server");
                                 }
 
                                 param.setResult(new ByteArrayInputStream(content.getBytes()));
@@ -55,6 +62,8 @@ public class BangumiPlayUrlHook extends BaseHook {
         try {
             JSONObject json = new JSONObject(jsonText);
             int code = json.optInt("code");
+            Log.d(TAG, "PlayUrlInformation: code = " + code);
+
             return code == -10403;
         } catch (JSONException e) {
             e.printStackTrace();

@@ -5,6 +5,7 @@ import android.app.ActivityManager.RunningAppProcessInfo;
 import android.app.Application;
 import android.app.Instrumentation;
 import android.content.Context;
+import android.util.Log;
 
 import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.XC_MethodHook;
@@ -23,6 +24,7 @@ import static de.robv.android.xposed.XposedHelpers.findAndHookMethod;
  */
 public class XposedInit implements IXposedHookLoadPackage {
 
+    private static final String TAG = "BiliRoaming";
     private XSharedPreferences mPrefs;
 
     @Override
