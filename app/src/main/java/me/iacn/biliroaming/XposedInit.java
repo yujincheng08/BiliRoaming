@@ -41,7 +41,10 @@ public class XposedInit implements IXposedHookLoadPackage {
         findAndHookMethod(Instrumentation.class, "callApplicationOnCreate", Application.class, new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-                if (!mPrefs.getBoolean("main_func", false)) return;
+                boolean enableMainFunc = mPrefs.getBoolean("main_func", false);
+                Log.d(TAG, "BiliBili process launched: enableMainFunc = " + enableMainFunc);
+
+                if (!enableMainFunc) return;
 
                 Context context = (Context) param.args[0];
                 String currentProcessName = getCurrentProcessName(context);
