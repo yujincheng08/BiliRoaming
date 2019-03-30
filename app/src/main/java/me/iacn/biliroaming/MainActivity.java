@@ -91,10 +91,14 @@ public class MainActivity extends Activity {
 
         @SuppressLint("SetWorldReadable")
         private void setWorldReadable() {
-            File prefsDir = new File(getActivity().getApplicationInfo().dataDir, "shared_prefs");
+            File dataDir = new File(getActivity().getApplicationInfo().dataDir);
+            File prefsDir = new File(dataDir, "shared_prefs");
             File prefsFile = new File(prefsDir, getPreferenceManager().getSharedPreferencesName() + ".xml");
             if (prefsFile.exists()) {
-                prefsFile.setReadable(true, false);
+                for (File file : new File[]{dataDir, prefsDir, prefsFile}) {
+                    file.setReadable(true, false);
+                    file.setExecutable(true, false);
+                }
             }
         }
     }
