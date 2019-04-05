@@ -1,5 +1,7 @@
 package me.iacn.biliroaming.network;
 
+import android.text.TextUtils;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -14,8 +16,10 @@ public class BiliRoamingApi {
     private static final String BILIROAMING_SEASON_URL = "https://api.iacn.me/biliroaming/season?";
     private static final String BILIROAMING_PLAYURL_URL = "https://api.iacn.me/biliroaming/playurl?";
 
-    public static String getSeason(String seasonId) throws IOException {
+    public static String getSeason(String seasonId, String accessKey) throws IOException {
         String urlString = BILIROAMING_SEASON_URL + "season_id=" + seasonId;
+        if (!TextUtils.isEmpty(accessKey))
+            urlString += "&access_key=" + accessKey;
         return getContent(urlString);
     }
 

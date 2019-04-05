@@ -68,6 +68,7 @@ public class BangumiSeasonHook extends BaseHook {
                         if (isNormalSeason(param.thisObject)) return;
 
                         String seasonId = lastSeasonInfo.get("season_id");
+                        String accessKey = lastSeasonInfo.get("access_key");
 
                         // Filter other request
                         // If it isn't bangumi, seasonId will be null
@@ -75,7 +76,7 @@ public class BangumiSeasonHook extends BaseHook {
 
                         Log.d(TAG, "Limited Bangumi: seasonId = " + seasonId);
 
-                        String content = BiliRoamingApi.getSeason(seasonId);
+                        String content = BiliRoamingApi.getSeason(seasonId, accessKey);
                         JSONObject contentJson = new JSONObject(content);
                         int code = contentJson.optInt("code");
 
