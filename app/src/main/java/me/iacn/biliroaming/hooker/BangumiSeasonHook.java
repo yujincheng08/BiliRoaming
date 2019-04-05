@@ -38,55 +38,6 @@ public class BangumiSeasonHook extends BaseHook {
     @Override
     public void startHook() {
         Log.d(TAG, "startHook: BangumiSeason");
-        findAndHookMethod("com.bilibili.bangumi.viewmodel.detail.BangumiDetailViewModel$b", mClassLoader,
-                "call", Object.class, new XC_MethodHook() {
-                    @Override
-                    protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-                        Object bangumiSeason = param.args[0];
-
-                        Log.d(TAG, "SeasonInformation: stock = " + bangumiSeason);
-
-                        if (bangumiSeason == null) return;
-
-                        List episodes = (List) getObjectField(bangumiSeason, "episodes");
-                        Object rights = getObjectField(bangumiSeason, "rights");
-                        boolean areaLimit = getBooleanField(rights, "areaLimit");
-
-                        if (areaLimit && episodes.size() == 0) {
-                            // It's a bangumi that limit watching area
-                            String seasonId = (String) getObjectField(bangumiSeason, "seasonId");
-
-                            Log.d(TAG, "Limited Bangumi: seasonTitle = " +
-                                    getObjectField(bangumiSeason, "seasonTitle") +
-                                    ", seasonId = " + seasonId);
-
-                            String content = BiliRoamingApi.getSeason(seasonId);
-                            JSONObject contentJson = new JSONObject(content);
-                            int code = contentJson.optInt("code");
-
-                            Log.d(TAG, "Get a season from proxy server, code = " + code);
-
-                            if (contentJson.optInt("code") == 0) {
-                                Class<?> fastJsonClass = findClass("com.alibaba.fastjson.a", mClassLoader);
-                                Class<?> beanClass = findClass(
-                                        "com.bilibili.bangumi.api.uniform.BangumiUniformSeason", mClassLoader);
-
-                                JSONObject resultJson = contentJson.optJSONObject("result");
-                                Object obj = callStaticMethod(fastJsonClass, "a", resultJson.toString(), beanClass);
-                                Object newRights = getObjectField(obj, "rights");
-                                Object newEpisodes = getObjectField(obj, "episodes");
-
-                                setObjectField(bangumiSeason, "rights", newRights);
-                                setObjectField(bangumiSeason, "episodes", newEpisodes);
-                                setObjectField(bangumiSeason, "seasonLimit", null);
-
-                                Log.d(TAG, "SeasonInformation: new = " + bangumiSeason
-                                        + ", areaLimit = " + getBooleanField(newRights, "areaLimit")
-                                        + ", episodes.size() = " + ((List) newEpisodes).size());
-                            }
-                        }
-                    }
-                });
 
         Class<?> paramsMapClass = findClass(
                 "com.bilibili.bangumi.api.uniform.BangumiDetailApiService$UniformSeasonParamsMap", mClassLoader);
@@ -97,7 +48,7 @@ public class BangumiSeasonHook extends BaseHook {
                 String seasonId = paramMap.get("season_id");
                 String accessKey = paramMap.get("access_key");
 
-                Log.d(TAG, "SeasonInfo: seasonId = " + seasonId + ", accessKey = " + accessKey);
+                Log.d(TAG, "SeasonInformation: seasonId = " + seasonId);
 
                 lastSeasonInfo.put("season_id", seasonId);
                 lastSeasonInfo.put("access_key", accessKey);
@@ -114,11 +65,7 @@ public class BangumiSeasonHook extends BaseHook {
                         // Filter non-bangumi responses
                         if (!bangumiApiResponse.isInstance(param.thisObject)) return;
 
-                        boolean is404 = getIntField(param.thisObject, "code") == -404;
-                        boolean isNullResult = getObjectField(param.thisObject, "result") == null;
-
-                        // Filter normal bangumis
-                        if (!is404 || !isNullResult) return;
+                        if (isNormalSeason(param.thisObject)) return;
 
                         String seasonId = lastSeasonInfo.get("season_id");
 
@@ -126,21 +73,51 @@ public class BangumiSeasonHook extends BaseHook {
                         // If it isn't bangumi, seasonId will be null
                         if (seasonId == null) return;
 
+                        Log.d(TAG, "Limited Bangumi: seasonId = " + seasonId);
+
                         String content = BiliRoamingApi.getSeason(seasonId);
                         JSONObject contentJson = new JSONObject(content);
+                        int code = contentJson.optInt("code");
 
-                        if (contentJson.optInt("code") == 0) {
+                        Log.d(TAG, "Get a season from proxy server, code = " + code);
+
+                        if (code == 0) {
                             Class<?> fastJsonClass = findClass("com.alibaba.fastjson.a", mClassLoader);
                             Class<?> beanClass = findClass(
                                     "com.bilibili.bangumi.api.uniform.BangumiUniformSeason", mClassLoader);
 
                             JSONObject resultJson = contentJson.optJSONObject("result");
-                            Object obj = callStaticMethod(fastJsonClass, "a", resultJson.toString(), beanClass);
+                            Object newResutl = callStaticMethod(fastJsonClass, "a", resultJson.toString(), beanClass);
 
                             setIntField(param.thisObject, "code", 0);
-                            setObjectField(param.thisObject, "result", obj);
+                            setObjectField(param.thisObject, "result", newResutl);
                         }
                     }
                 });
+
+        findAndHookMethod("com.bilibili.bangumi.viewmodel.detail.BangumiDetailViewModel$b", mClassLoader,
+                "call", Object.class, new XC_MethodHook() {
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                        lastSeasonInfo.clear();
+                    }
+                });
+    }
+
+    private boolean isNormalSeason(Object bangumiApiResponse) {
+        int code = getIntField(bangumiApiResponse, "code");
+        Object result = getObjectField(bangumiApiResponse, "result");
+
+        Log.d(TAG, "SeasonResponse: code = " + code + ", result = " + result);
+
+        if (code == -404 && result == null) {
+            return false;
+        }
+
+        List episodes = (List) getObjectField(result, "episodes");
+        Object rights = getObjectField(result, "rights");
+        boolean areaLimit = getBooleanField(rights, "areaLimit");
+
+        return !areaLimit && episodes.size() != 0;
     }
 }
