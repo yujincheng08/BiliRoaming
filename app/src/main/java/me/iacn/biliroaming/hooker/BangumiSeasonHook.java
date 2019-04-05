@@ -10,6 +10,7 @@ import java.util.Map;
 
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedBridge;
+import me.iacn.biliroaming.BiliBiliPackage;
 import me.iacn.biliroaming.network.BiliRoamingApi;
 
 import static de.robv.android.xposed.XposedHelpers.callStaticMethod;
@@ -59,8 +60,7 @@ public class BangumiSeasonHook extends BaseHook {
                 "isSuccess", new XC_MethodHook() {
                     @Override
                     protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-                        Class<?> bangumiApiResponse = findClass(
-                                "com.bilibili.bangumi.api.BangumiApiResponse", mClassLoader);
+                        Class<?> bangumiApiResponse = BiliBiliPackage.getInstance().bangumiApiResponse();
 
                         // Filter non-bangumi responses
                         if (!bangumiApiResponse.isInstance(param.thisObject)) return;
@@ -83,9 +83,8 @@ public class BangumiSeasonHook extends BaseHook {
                         Log.d(TAG, "Get a season from proxy server, code = " + code);
 
                         if (code == 0) {
-                            Class<?> fastJsonClass = findClass("com.alibaba.fastjson.a", mClassLoader);
-                            Class<?> beanClass = findClass(
-                                    "com.bilibili.bangumi.api.uniform.BangumiUniformSeason", mClassLoader);
+                            Class<?> fastJsonClass = BiliBiliPackage.getInstance().fastJson();
+                            Class<?> beanClass = BiliBiliPackage.getInstance().bangumiUniformSeason();
 
                             JSONObject resultJson = contentJson.optJSONObject("result");
                             Object newResutl = callStaticMethod(fastJsonClass, "a", resultJson.toString(), beanClass);
