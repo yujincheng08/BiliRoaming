@@ -54,13 +54,13 @@ public class MainActivity extends Activity {
 
             Preference runningStatusPref = findPreference("running_status");
 
-            if (isModuleActive()) {
+            if (isTaiChiModuleActive(getActivity())) {
                 runningStatusPref.setTitle(R.string.running_status_enable);
-                runningStatusPref.setSummary(R.string.runtime_xposed);
+                runningStatusPref.setSummary(R.string.runtime_taichi);
             } else {
-                if (isTaiChiModuleActive(getActivity())) {
+                if (isModuleActive()) {
                     runningStatusPref.setTitle(R.string.running_status_enable);
-                    runningStatusPref.setSummary(R.string.runtime_taichi);
+                    runningStatusPref.setSummary(R.string.runtime_xposed);
                 } else {
                     runningStatusPref.setTitle(R.string.running_status_disable);
                     runningStatusPref.setSummary(R.string.not_running_summary);
