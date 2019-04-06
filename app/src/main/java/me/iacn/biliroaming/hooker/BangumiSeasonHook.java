@@ -108,16 +108,22 @@ public class BangumiSeasonHook extends BaseHook {
         int code = getIntField(bangumiApiResponse, "code");
         Object result = getObjectField(bangumiApiResponse, "result");
 
-        Log.d(TAG, "SeasonResponse: code = " + code + ", result = " + result);
-
         if (code == -404 && result == null) {
+            Log.d(TAG, "SeasonResponse: code = " + code + ", result = null");
             return false;
         }
 
-        List episodes = (List) getObjectField(result, "episodes");
-        Object rights = getObjectField(result, "rights");
-        boolean areaLimit = getBooleanField(rights, "areaLimit");
+        Class<?> bangumiSeasonClass = BiliBiliPackage.getInstance().bangumiUniformSeason();
+        if (bangumiSeasonClass.isInstance(result)) {
+            Log.d(TAG, "SeasonResponse: code = " + code + ", result = " + result);
 
-        return !areaLimit && episodes.size() != 0;
+            List episodes = (List) getObjectField(result, "episodes");
+            Object rights = getObjectField(result, "rights");
+            boolean areaLimit = getBooleanField(rights, "areaLimit");
+
+            return !areaLimit && episodes.size() != 0;
+        }
+
+        return true;
     }
 }
