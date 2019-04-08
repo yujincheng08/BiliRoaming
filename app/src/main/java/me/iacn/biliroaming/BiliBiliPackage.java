@@ -2,6 +2,8 @@ package me.iacn.biliroaming;
 
 import java.lang.ref.WeakReference;
 
+import de.robv.android.xposed.XposedHelpers.ClassNotFoundError;
+
 import static de.robv.android.xposed.XposedHelpers.findClass;
 
 /**
@@ -41,7 +43,16 @@ public class BiliBiliPackage {
     }
 
     public Class<?> fastJson() {
-        fastJsonClass = checkNullOrReturn(fastJsonClass, "com.alibaba.fastjson.a");
+        if (fastJsonClass == null || fastJsonClass.get() == null) {
+            Class<?> clazz;
+            try {
+                clazz = findClass("com.alibaba.fastjson.JSON", mClassLoader);
+            } catch (ClassNotFoundError e) {
+                clazz = findClass("com.alibaba.fastjson.a", mClassLoader);
+            }
+            fastJsonClass = new WeakReference<>(clazz);
+        }
+
         return fastJsonClass.get();
     }
 
