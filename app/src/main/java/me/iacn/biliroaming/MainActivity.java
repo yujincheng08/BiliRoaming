@@ -44,6 +44,8 @@ public class MainActivity extends Activity {
 
     public static class PrefsFragment extends PreferenceFragment implements Preference.OnPreferenceChangeListener {
 
+        private Preference runningStatusPref;
+
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
@@ -51,8 +53,12 @@ public class MainActivity extends Activity {
 
             findPreference("hide_icon").setOnPreferenceChangeListener(this);
             findPreference("version").setSummary(BuildConfig.VERSION_NAME);
+            runningStatusPref = findPreference("running_status");
+        }
 
-            Preference runningStatusPref = findPreference("running_status");
+        @Override
+        public void onResume() {
+            super.onResume();
 
             if (isTaiChiModuleActive(getActivity())) {
                 runningStatusPref.setTitle(R.string.running_status_enable);
