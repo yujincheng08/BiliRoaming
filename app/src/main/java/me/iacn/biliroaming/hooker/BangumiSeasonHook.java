@@ -56,45 +56,45 @@ public class BangumiSeasonHook extends BaseHook {
             }
         });
 
-        findAndHookMethod("com.bilibili.okretro.BaseResponse", mClassLoader,
-                "isSuccess", new XC_MethodHook() {
-                    @Override
-                    protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-                        Class<?> bangumiApiResponse = BiliBiliPackage.getInstance().bangumiApiResponse();
+        findAndHookMethod("retrofit2.l", mClassLoader, "f", new XC_MethodHook() {
+            @Override
+            protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                Object result = param.getResult();
+                Class<?> bangumiApiResponse = BiliBiliPackage.getInstance().bangumiApiResponse();
 
-                        // Filter non-bangumi responses
-                        if (!bangumiApiResponse.isInstance(param.thisObject)) return;
+                // Filter non-bangumi responses
+                if (!bangumiApiResponse.isInstance(result)) return;
 
-                        if (isNormalSeason(param.thisObject)) return;
+                if (isNormalSeason(result)) return;
 
-                        String seasonId = lastSeasonInfo.get("season_id");
-                        String accessKey = lastSeasonInfo.get("access_key");
+                String seasonId = lastSeasonInfo.get("season_id");
+                String accessKey = lastSeasonInfo.get("access_key");
 
-                        // Filter other request
-                        // If it isn't bangumi, seasonId will be null
-                        if (seasonId == null) return;
+                // Filter other request
+                // If it isn't bangumi, seasonId will be null
+                if (seasonId == null) return;
 
-                        Log.d(TAG, "Limited Bangumi: seasonId = " + seasonId);
+                Log.d(TAG, "Limited Bangumi: seasonId = " + seasonId);
 
-                        String content = BiliRoamingApi.getSeason(seasonId, accessKey);
-                        JSONObject contentJson = new JSONObject(content);
-                        int code = contentJson.optInt("code");
+                String content = BiliRoamingApi.getSeason(seasonId, accessKey);
+                JSONObject contentJson = new JSONObject(content);
+                int code = contentJson.optInt("code");
 
-                        Log.d(TAG, "Get a season from proxy server, code = " + code);
+                Log.d(TAG, "Get a season from proxy server, code = " + code);
 
-                        if (code == 0) {
-                            Class<?> fastJsonClass = BiliBiliPackage.getInstance().fastJson();
-                            Class<?> beanClass = BiliBiliPackage.getInstance().bangumiUniformSeason();
+                if (code == 0) {
+                    Class<?> fastJsonClass = BiliBiliPackage.getInstance().fastJson();
+                    Class<?> beanClass = BiliBiliPackage.getInstance().bangumiUniformSeason();
 
-                            JSONObject resultJson = contentJson.optJSONObject("result");
-                            Object newResutl = callStaticMethod(fastJsonClass,
-                                    getParseMethod(fastJsonClass), resultJson.toString(), beanClass);
+                    JSONObject resultJson = contentJson.optJSONObject("result");
+                    Object newResutl = callStaticMethod(fastJsonClass,
+                            getParseMethod(fastJsonClass), resultJson.toString(), beanClass);
 
-                            setIntField(param.thisObject, "code", 0);
-                            setObjectField(param.thisObject, "result", newResutl);
-                        }
-                    }
-                });
+                    setIntField(result, "code", 0);
+                    setObjectField(result, "result", newResutl);
+                }
+            }
+        });
 
         findAndHookMethod("com.bilibili.bangumi.viewmodel.detail.BangumiDetailViewModel$b", mClassLoader,
                 "call", Object.class, new XC_MethodHook() {
