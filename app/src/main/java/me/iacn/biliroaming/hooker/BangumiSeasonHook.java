@@ -56,17 +56,17 @@ public class BangumiSeasonHook extends BaseHook {
             }
         });
 
-        BiliBiliPackage instance = BiliBiliPackage.getInstance();
-        findAndHookMethod(instance.retrofitResponse(), mClassLoader, instance.retrofitBody(), new XC_MethodHook() {
+        Class<?> responseClass = findClass(BiliBiliPackage.getInstance().retrofitResponse(), mClassLoader);
+        XposedBridge.hookAllConstructors(responseClass, new XC_MethodHook() {
             @Override
-            protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                Object result = param.getResult();
+            protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                Object body = param.args[1];
                 Class<?> bangumiApiResponse = BiliBiliPackage.getInstance().bangumiApiResponse();
 
                 // Filter non-bangumi responses
-                if (!bangumiApiResponse.isInstance(result)) return;
+                if (!bangumiApiResponse.isInstance(body)) return;
 
-                if (isNormalSeason(result)) return;
+                if (isNormalSeason(body)) return;
 
                 String seasonId = lastSeasonInfo.get("season_id");
                 String accessKey = lastSeasonInfo.get("access_key");
@@ -91,8 +91,8 @@ public class BangumiSeasonHook extends BaseHook {
                     Object newResult = callStaticMethod(fastJsonClass,
                             BiliBiliPackage.getInstance().fastJsonParse(), resultJson.toString(), beanClass);
 
-                    setIntField(result, "code", 0);
-                    setObjectField(result, "result", newResult);
+                    setIntField(body, "code", 0);
+                    setObjectField(body, "result", newResult);
                 }
             }
         });

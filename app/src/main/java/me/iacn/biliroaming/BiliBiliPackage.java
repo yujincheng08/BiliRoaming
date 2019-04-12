@@ -60,10 +60,6 @@ public class BiliBiliPackage {
         return mHookInfo.get("class_retrofit_response");
     }
 
-    public String retrofitBody() {
-        return mHookInfo.get("method_retrofit_body");
-    }
-
     public String fastJsonParse() {
         return mHookInfo.get("method_fastjson_parse");
     }
@@ -125,11 +121,6 @@ public class BiliBiliPackage {
             mHookInfo.put("class_retrofit_response", findRetrofitResponseClass());
             needUpdate = true;
         }
-        if (!mHookInfo.containsKey("method_retrofit_body")) {
-            Class<?> responseClass = findClass(mHookInfo.get("class_retrofit_response"), mClassLoader);
-            mHookInfo.put("method_retrofit_body", findBodyMethod(responseClass));
-            needUpdate = true;
-        }
         if (!mHookInfo.containsKey("class_fastjson")) {
             Class<?> fastJsonClass = findFastJsonClass();
             boolean notObfuscated = "JSON".equals(fastJsonClass.getSimpleName());
@@ -166,16 +157,6 @@ public class BiliBiliPackage {
             if ("extractResult".equals(method.getName())) {
                 Class<?> responseClass = method.getParameterTypes()[0];
                 return responseClass.getName();
-            }
-        }
-        return null;
-    }
-
-    private String findBodyMethod(Class<?> responseClass) {
-        for (Method method : responseClass.getMethods()) {
-            String genericType = method.getGenericReturnType().toString();
-            if ("T".equals(genericType)) {
-                return method.getName();
             }
         }
         return null;
