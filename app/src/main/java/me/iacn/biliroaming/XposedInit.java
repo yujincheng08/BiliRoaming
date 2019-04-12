@@ -51,7 +51,7 @@ public class XposedInit implements IXposedHookLoadPackage {
 
                 // Hook main process and download process
                 if ("tv.danmaku.bili".equals(currentProcessName)) {
-                    BiliBiliPackage.getInstance().init(lpparam.classLoader);
+                    BiliBiliPackage.getInstance().init(lpparam.classLoader, context);
                     new BangumiSeasonHook(lpparam.classLoader).startHook();
                 } else if ("tv.danmaku.bili:download".equals(currentProcessName)) {
                     new BangumiPlayUrlHook(lpparam.classLoader).startHook();

@@ -1,10 +1,22 @@
 package me.iacn.biliroaming;
 
+import android.content.Context;
+import android.util.Log;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.lang.ref.WeakReference;
+import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
 
 import de.robv.android.xposed.XposedHelpers.ClassNotFoundError;
 
 import static de.robv.android.xposed.XposedHelpers.findClass;
+import static me.iacn.biliroaming.Constant.TAG;
 
 /**
  * Created by iAcn on 2019/4/5
@@ -13,7 +25,9 @@ import static de.robv.android.xposed.XposedHelpers.findClass;
 public class BiliBiliPackage {
 
     private static volatile BiliBiliPackage sInstance;
+
     private ClassLoader mClassLoader;
+    private Map<String, String> mHookInfo;
 
     private WeakReference<Class<?>> bangumiApiResponseClass;
     private WeakReference<Class<?>> fastJsonClass;
@@ -33,8 +47,13 @@ public class BiliBiliPackage {
         return sInstance;
     }
 
-    public void init(ClassLoader classLoader) {
+    void init(ClassLoader classLoader, Context context) {
         this.mClassLoader = classLoader;
+
+        readHookInfo(context);
+        if (checkHookInfo()) {
+            writeHookInfo(context);
+        }
     }
 
     public Class<?> bangumiApiResponse() {
@@ -66,5 +85,91 @@ public class BiliBiliPackage {
             clazz = new WeakReference<>(findClass(className, mClassLoader));
         }
         return clazz;
+    }
+
+    private void readHookInfo(Context context) {
+        try {
+            File hookInfoFile = new File(context.getCacheDir(), Constant.HOOK_INFO_FILE_NAME);
+            Log.d(TAG, "Reading hook info: " + hookInfoFile);
+            long startTime = System.currentTimeMillis();
+
+            if (hookInfoFile.isFile() && hookInfoFile.canRead()) {
+                long lastUpdateTime = context.getPackageManager()
+                        .getPackageInfo(Constant.BILIBILI_PACKAGENAME, 0).lastUpdateTime;
+                ObjectInputStream stream = new ObjectInputStream(new FileInputStream(hookInfoFile));
+
+                if (stream.readLong() == lastUpdateTime)
+                    mHookInfo = (Map<String, String>) stream.readObject();
+            }
+
+            long endTime = System.currentTimeMillis();
+            Log.d(TAG, "Read hook info completed, cost " + (endTime - startTime) + " ms");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * @return Whether to update the serialization file.
+     */
+    private boolean checkHookInfo() {
+        boolean needUpdate = false;
+
+        if (mHookInfo == null) {
+            mHookInfo = new HashMap<>();
+            needUpdate = true;
+        }
+        if (!mHookInfo.containsKey("class_retrofit_response")) {
+            mHookInfo.put("class_retrofit_response", findRetrofitResponseClass());
+            needUpdate = true;
+        }
+        if (!mHookInfo.containsKey("method_retrofit_body")) {
+            Class<?> responseClass = findClass(mHookInfo.get("class_retrofit_response"), mClassLoader);
+            mHookInfo.put("method_retrofit_body", findBodyMethod(responseClass));
+            needUpdate = true;
+        }
+
+        Log.d(TAG, "Check hook info completed: " + needUpdate);
+        return needUpdate;
+    }
+
+    private void writeHookInfo(Context context) {
+        try {
+            File hookInfoFile = new File(context.getCacheDir(), Constant.HOOK_INFO_FILE_NAME);
+            long lastUpdateTime = context.getPackageManager()
+                    .getPackageInfo(Constant.BILIBILI_PACKAGENAME, 0).lastUpdateTime;
+
+            if (hookInfoFile.exists()) hookInfoFile.delete();
+
+            ObjectOutputStream stream = new ObjectOutputStream(new FileOutputStream(hookInfoFile));
+            stream.writeLong(lastUpdateTime);
+            stream.writeObject(mHookInfo);
+            stream.flush();
+            stream.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        Log.d(TAG, "Write hook info completed");
+    }
+
+    private String findRetrofitResponseClass() {
+        Method[] methods = BiliBiliPackage.getInstance().bangumiApiResponse().getMethods();
+        for (Method method : methods) {
+            if ("extractResult".equals(method.getName())) {
+                Class<?> responseClass = method.getParameterTypes()[0];
+                return responseClass.getName();
+            }
+        }
+        return null;
+    }
+
+    private String findBodyMethod(Class<?> responseClass) {
+        for (Method method : responseClass.getMethods()) {
+            String genericType = method.getGenericReturnType().toString();
+            if ("T".equals(genericType)) {
+                return method.getName();
+            }
+        }
+        return null;
     }
 }
