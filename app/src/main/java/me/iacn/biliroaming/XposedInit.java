@@ -16,6 +16,8 @@ import me.iacn.biliroaming.hooker.BangumiPlayUrlHook;
 import me.iacn.biliroaming.hooker.BangumiSeasonHook;
 
 import static de.robv.android.xposed.XposedHelpers.findAndHookMethod;
+import static me.iacn.biliroaming.Constant.BILIBILI_PACKAGENAME;
+import static me.iacn.biliroaming.Constant.TAG;
 
 
 /**
@@ -24,7 +26,6 @@ import static de.robv.android.xposed.XposedHelpers.findAndHookMethod;
  */
 public class XposedInit implements IXposedHookLoadPackage {
 
-    private static final String TAG = "BiliRoaming";
     private XSharedPreferences mPrefs;
 
     @Override
@@ -34,7 +35,7 @@ public class XposedInit implements IXposedHookLoadPackage {
                     "isModuleActive", XC_MethodReplacement.returnConstant(true));
         }
 
-        if (!"tv.danmaku.bili".equals(lpparam.packageName)) return;
+        if (!BILIBILI_PACKAGENAME.equals(lpparam.packageName)) return;
 
         mPrefs = new XSharedPreferences(BuildConfig.APPLICATION_ID);
 

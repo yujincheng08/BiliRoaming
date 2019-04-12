@@ -14,14 +14,13 @@ import me.iacn.biliroaming.network.BiliRoamingApi;
 import me.iacn.biliroaming.network.StreamUtils;
 
 import static de.robv.android.xposed.XposedHelpers.findAndHookMethod;
+import static me.iacn.biliroaming.Constant.TAG;
 
 /**
  * Created by iAcn on 2019/3/29
  * Email i@iacn.me
  */
 public class BangumiPlayUrlHook extends BaseHook {
-
-    private static final String TAG = "BiliRoaming";
 
     public BangumiPlayUrlHook(ClassLoader classLoader) {
         super(classLoader);
@@ -46,7 +45,6 @@ public class BangumiPlayUrlHook extends BaseHook {
                                 String content = StreamUtils.getContent(inputStream, encoding);
 
                                 if (isLimitWatchingArea(content)) {
-                                    Log.d(TAG, "Limited Play Url: queryString = " + queryString);
                                     content = BiliRoamingApi.getPlayUrl(queryString);
                                     Log.d(TAG, "Has replaced play url with proxy server");
                                 }

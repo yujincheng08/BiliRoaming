@@ -21,6 +21,7 @@ import static de.robv.android.xposed.XposedHelpers.getIntField;
 import static de.robv.android.xposed.XposedHelpers.getObjectField;
 import static de.robv.android.xposed.XposedHelpers.setIntField;
 import static de.robv.android.xposed.XposedHelpers.setObjectField;
+import static me.iacn.biliroaming.Constant.TAG;
 
 /**
  * Created by iAcn on 2019/3/27
@@ -28,7 +29,6 @@ import static de.robv.android.xposed.XposedHelpers.setObjectField;
  */
 public class BangumiSeasonHook extends BaseHook {
 
-    private static final String TAG = "BiliRoaming";
     private Map<String, String> lastSeasonInfo;
 
     public BangumiSeasonHook(ClassLoader classLoader) {
