@@ -56,9 +56,22 @@ public class BiliBiliPackage {
         }
     }
 
+    public String retrofitResponse() {
+        return mHookInfo.get("class_retrofit_response");
+    }
+
+    public String retrofitBody() {
+        return mHookInfo.get("method_retrofit_body");
+    }
+
     public Class<?> bangumiApiResponse() {
         bangumiApiResponseClass = checkNullOrReturn(bangumiApiResponseClass, "com.bilibili.bangumi.api.BangumiApiResponse");
         return bangumiApiResponseClass.get();
+    }
+
+    public Class<?> bangumiUniformSeason() {
+        bangumiUniformSeasonClass = checkNullOrReturn(bangumiUniformSeasonClass, "com.bilibili.bangumi.api.uniform.BangumiUniformSeason");
+        return bangumiUniformSeasonClass.get();
     }
 
     public Class<?> fastJson() {
@@ -75,11 +88,6 @@ public class BiliBiliPackage {
         return fastJsonClass.get();
     }
 
-    public Class<?> bangumiUniformSeason() {
-        bangumiUniformSeasonClass = checkNullOrReturn(bangumiUniformSeasonClass, "com.bilibili.bangumi.api.uniform.BangumiUniformSeason");
-        return bangumiUniformSeasonClass.get();
-    }
-
     private WeakReference<Class<?>> checkNullOrReturn(WeakReference<Class<?>> clazz, String className) {
         if (clazz == null || clazz.get() == null) {
             clazz = new WeakReference<>(findClass(className, mClassLoader));
@@ -94,8 +102,7 @@ public class BiliBiliPackage {
             long startTime = System.currentTimeMillis();
 
             if (hookInfoFile.isFile() && hookInfoFile.canRead()) {
-                long lastUpdateTime = context.getPackageManager()
-                        .getPackageInfo(Constant.BILIBILI_PACKAGENAME, 0).lastUpdateTime;
+                long lastUpdateTime = context.getPackageManager().getPackageInfo(Constant.BILIBILI_PACKAGENAME, 0).lastUpdateTime;
                 ObjectInputStream stream = new ObjectInputStream(new FileInputStream(hookInfoFile));
 
                 if (stream.readLong() == lastUpdateTime)
@@ -136,8 +143,7 @@ public class BiliBiliPackage {
     private void writeHookInfo(Context context) {
         try {
             File hookInfoFile = new File(context.getCacheDir(), Constant.HOOK_INFO_FILE_NAME);
-            long lastUpdateTime = context.getPackageManager()
-                    .getPackageInfo(Constant.BILIBILI_PACKAGENAME, 0).lastUpdateTime;
+            long lastUpdateTime = context.getPackageManager().getPackageInfo(Constant.BILIBILI_PACKAGENAME, 0).lastUpdateTime;
 
             if (hookInfoFile.exists()) hookInfoFile.delete();
 

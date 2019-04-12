@@ -56,7 +56,8 @@ public class BangumiSeasonHook extends BaseHook {
             }
         });
 
-        findAndHookMethod("retrofit2.l", mClassLoader, "f", new XC_MethodHook() {
+        BiliBiliPackage instance = BiliBiliPackage.getInstance();
+        findAndHookMethod(instance.retrofitResponse(), mClassLoader, instance.retrofitBody(), new XC_MethodHook() {
             @Override
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                 Object result = param.getResult();
