@@ -64,6 +64,10 @@ public class BiliBiliPackage {
         return mHookInfo.get("method_retrofit_body");
     }
 
+    public String fastJsonParse() {
+        return mHookInfo.get("method_fastjson_parse");
+    }
+
     public Class<?> bangumiApiResponse() {
         bangumiApiResponseClass = checkNullOrReturn(bangumiApiResponseClass, "com.bilibili.bangumi.api.BangumiApiResponse");
         return bangumiApiResponseClass.get();
@@ -75,16 +79,7 @@ public class BiliBiliPackage {
     }
 
     public Class<?> fastJson() {
-        if (fastJsonClass == null || fastJsonClass.get() == null) {
-            Class<?> clazz;
-            try {
-                clazz = findClass("com.alibaba.fastjson.JSON", mClassLoader);
-            } catch (ClassNotFoundError e) {
-                clazz = findClass("com.alibaba.fastjson.a", mClassLoader);
-            }
-            fastJsonClass = new WeakReference<>(clazz);
-        }
-
+        fastJsonClass = checkNullOrReturn(fastJsonClass, mHookInfo.get("class_fastjson"));
         return fastJsonClass.get();
     }
 
@@ -135,6 +130,13 @@ public class BiliBiliPackage {
             mHookInfo.put("method_retrofit_body", findBodyMethod(responseClass));
             needUpdate = true;
         }
+        if (!mHookInfo.containsKey("class_fastjson")) {
+            Class<?> fastJsonClass = findFastJsonClass();
+            boolean notObfuscated = "JSON".equals(fastJsonClass.getSimpleName());
+            mHookInfo.put("class_fastjson", fastJsonClass.getName());
+            mHookInfo.put("method_fastjson_parse", notObfuscated ? "parseObject" : "a");
+            needUpdate = true;
+        }
 
         Log.d(TAG, "Check hook info completed: " + needUpdate);
         return needUpdate;
@@ -177,5 +179,15 @@ public class BiliBiliPackage {
             }
         }
         return null;
+    }
+
+    private Class<?> findFastJsonClass() {
+        Class<?> clazz;
+        try {
+            clazz = findClass("com.alibaba.fastjson.JSON", mClassLoader);
+        } catch (ClassNotFoundError e) {
+            clazz = findClass("com.alibaba.fastjson.a", mClassLoader);
+        }
+        return clazz;
     }
 }

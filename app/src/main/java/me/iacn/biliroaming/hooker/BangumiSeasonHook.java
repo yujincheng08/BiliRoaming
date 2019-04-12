@@ -88,11 +88,11 @@ public class BangumiSeasonHook extends BaseHook {
                     Class<?> beanClass = BiliBiliPackage.getInstance().bangumiUniformSeason();
 
                     JSONObject resultJson = contentJson.optJSONObject("result");
-                    Object newResutl = callStaticMethod(fastJsonClass,
-                            getParseMethod(fastJsonClass), resultJson.toString(), beanClass);
+                    Object newResult = callStaticMethod(fastJsonClass,
+                            BiliBiliPackage.getInstance().fastJsonParse(), resultJson.toString(), beanClass);
 
                     setIntField(result, "code", 0);
-                    setObjectField(result, "result", newResutl);
+                    setObjectField(result, "result", newResult);
                 }
             }
         });
@@ -127,10 +127,5 @@ public class BangumiSeasonHook extends BaseHook {
         }
 
         return true;
-    }
-
-    private String getParseMethod(Class<?> fastJsonClass) {
-        boolean notObfuscated = "JSON".equals(fastJsonClass.getSimpleName());
-        return notObfuscated ? "parseObject" : "a";
     }
 }
