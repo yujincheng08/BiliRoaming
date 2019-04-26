@@ -101,7 +101,7 @@ public class BiliBiliPackage {
             }
 
             long endTime = System.currentTimeMillis();
-            Log.d(TAG, "Read hook info completed, cost " + (endTime - startTime) + " ms");
+            Log.d(TAG, "Read hook info completed: cost " + (endTime - startTime) + " ms");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -129,7 +129,7 @@ public class BiliBiliPackage {
             needUpdate = true;
         }
 
-        Log.d(TAG, "Check hook info completed: " + needUpdate);
+        Log.d(TAG, "Check hook info completed: needUpdate = " + needUpdate);
         return needUpdate;
     }
 

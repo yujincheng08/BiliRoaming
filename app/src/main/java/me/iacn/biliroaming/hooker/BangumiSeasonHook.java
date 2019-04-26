@@ -81,7 +81,7 @@ public class BangumiSeasonHook extends BaseHook {
                 JSONObject contentJson = new JSONObject(content);
                 int code = contentJson.optInt("code");
 
-                Log.d(TAG, "Get a season from proxy server, code = " + code);
+                Log.d(TAG, "Got new season information from proxy server: code = " + code);
 
                 if (code == 0) {
                     Class<?> fastJsonClass = BiliBiliPackage.getInstance().fastJson();

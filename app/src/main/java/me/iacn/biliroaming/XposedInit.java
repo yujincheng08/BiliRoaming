@@ -1,7 +1,5 @@
 package me.iacn.biliroaming;
 
-import android.app.ActivityManager;
-import android.app.ActivityManager.RunningAppProcessInfo;
 import android.app.Application;
 import android.app.Instrumentation;
 import android.content.Context;
@@ -43,32 +41,24 @@ public class XposedInit implements IXposedHookLoadPackage {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
                 boolean enableMainFunc = mPrefs.getBoolean("main_func", false);
-                Log.d(TAG, "BiliBili process launched: enableMainFunc = " + enableMainFunc);
 
                 if (!enableMainFunc) return;
 
-                Context context = (Context) param.args[0];
-                String currentProcessName = getCurrentProcessName(context);
-
                 // Hook main process and download process
-                if ("tv.danmaku.bili".equals(currentProcessName)) {
-                    BiliBiliPackage.getInstance().init(lpparam.classLoader, context);
-                    new BangumiSeasonHook(lpparam.classLoader).startHook();
-                } else if ("tv.danmaku.bili:download".equals(currentProcessName)) {
-                    new BangumiPlayUrlHook(lpparam.classLoader).startHook();
+                switch (lpparam.processName) {
+                    case "tv.danmaku.bili": {
+                        Log.d(TAG, "BiliBili process launched: enableMainFunc = " + enableMainFunc);
+                        BiliBiliPackage.getInstance().init(lpparam.classLoader, (Context) param.args[0]);
+
+                        new BangumiSeasonHook(lpparam.classLoader).startHook();
+                        break;
+                    }
+                    case "tv.danmaku.bili:download": {
+                        new BangumiPlayUrlHook(lpparam.classLoader).startHook();
+                        break;
+                    }
                 }
             }
         });
-    }
-
-    private String getCurrentProcessName(Context context) {
-        int myPid = android.os.Process.myPid();
-        ActivityManager manager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
-        for (RunningAppProcessInfo processInfo : manager.getRunningAppProcesses()) {
-            if (processInfo.pid == myPid) {
-                return processInfo.processName;
-            }
-        }
-        return null;
     }
 }
