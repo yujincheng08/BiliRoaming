@@ -7,6 +7,8 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import me.iacn.biliroaming.BuildConfig;
+
 /**
  * Created by iAcn on 2019/3/27
  * Email i@iacn.me
@@ -33,10 +35,15 @@ public class BiliRoamingApi {
 
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestMethod("GET");
+        connection.setRequestProperty("Build", String.valueOf(BuildConfig.VERSION_CODE));
         connection.setConnectTimeout(4000);
-        InputStream inputStream = connection.getInputStream();
-        String encoding = connection.getContentEncoding();
+        connection.connect();
 
-        return StreamUtils.getContent(inputStream, encoding);
+        if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
+            InputStream inputStream = connection.getInputStream();
+            String encoding = connection.getContentEncoding();
+            return StreamUtils.getContent(inputStream, encoding);
+        }
+        return null;
     }
 }
