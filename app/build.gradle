@@ -7,8 +7,8 @@ android {
         applicationId "me.iacn.biliroaming"
         minSdkVersion 21
         targetSdkVersion 27
-        versionCode 5
-        versionName "1.0.7"
+        versionCode 6
+        versionName "1.0.8"
     }
 
     buildTypes {
