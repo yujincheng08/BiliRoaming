@@ -25,6 +25,13 @@ public class BiliRoamingApi {
         return getContent(urlString);
     }
 
+    public static String getEpisode(String episodeId, String accessKey) throws IOException {
+        String urlString = BILIROAMING_SEASON_URL + "ep_id=" + episodeId;
+        if (!TextUtils.isEmpty(accessKey))
+            urlString += "&access_key=" + accessKey;
+        return getContent(urlString);
+    }
+
     public static String getPlayUrl(String queryString) throws IOException {
         String urlString = BILIROAMING_PLAYURL_URL + queryString;
         return getContent(urlString);

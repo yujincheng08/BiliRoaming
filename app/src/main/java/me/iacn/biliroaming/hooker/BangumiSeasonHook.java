@@ -1,10 +1,10 @@
 package me.iacn.biliroaming.hooker;
 
+import android.util.ArrayMap;
 import android.util.Log;
 
 import org.json.JSONObject;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -22,6 +22,8 @@ import static de.robv.android.xposed.XposedHelpers.getObjectField;
 import static de.robv.android.xposed.XposedHelpers.setIntField;
 import static de.robv.android.xposed.XposedHelpers.setObjectField;
 import static me.iacn.biliroaming.Constant.TAG;
+import static me.iacn.biliroaming.Constant.TYPE_EPISODE_ID;
+import static me.iacn.biliroaming.Constant.TYPE_SEASON_ID;
 
 /**
  * Created by iAcn on 2019/3/27
@@ -29,11 +31,11 @@ import static me.iacn.biliroaming.Constant.TAG;
  */
 public class BangumiSeasonHook extends BaseHook {
 
-    private Map<String, String> lastSeasonInfo;
+    private Map<String, Object> lastSeasonInfo;
 
     public BangumiSeasonHook(ClassLoader classLoader) {
         super(classLoader);
-        lastSeasonInfo = new HashMap<>();
+        lastSeasonInfo = new ArrayMap<>();
     }
 
     @Override
@@ -45,13 +47,26 @@ public class BangumiSeasonHook extends BaseHook {
         XposedBridge.hookAllConstructors(paramsMapClass, new XC_MethodHook() {
             @Override
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                HashMap<String, String> paramMap = (HashMap) param.thisObject;
-                String seasonId = paramMap.get("season_id");
+                Map<String, String> paramMap = (Map) param.thisObject;
+                int type = (int) param.args[1];
+
+                switch (type) {
+                    case TYPE_SEASON_ID:
+                        String seasonId = paramMap.get("season_id");
+                        lastSeasonInfo.put("season_id", seasonId);
+                        Log.d(TAG, "SeasonInformation: seasonId = " + seasonId);
+                        break;
+                    case TYPE_EPISODE_ID:
+                        String episodeId = paramMap.get("ep_id");
+                        lastSeasonInfo.put("episode_id", episodeId);
+                        Log.d(TAG, "SeasonInformation: episodeId = " + episodeId);
+                        break;
+                    default:
+                        return;
+                }
+                lastSeasonInfo.put("type", type);
+
                 String accessKey = paramMap.get("access_key");
-
-                Log.d(TAG, "SeasonInformation: seasonId = " + seasonId);
-
-                lastSeasonInfo.put("season_id", seasonId);
                 lastSeasonInfo.put("access_key", accessKey);
             }
         });
@@ -63,21 +78,28 @@ public class BangumiSeasonHook extends BaseHook {
                 Object body = param.args[1];
                 Class<?> bangumiApiResponse = BiliBiliPackage.getInstance().bangumiApiResponse();
 
-                // Filter non-bangumi responses
-                if (!bangumiApiResponse.isInstance(body)) return;
+                // Filter non-bangumi and normal bangumi responses
+                if (!bangumiApiResponse.isInstance(body) || isNormalSeason(body)) return;
 
-                if (isNormalSeason(body)) return;
+                // Filter other responses
+                // If it isn't bangumi, the type variable will not exist in this map
+                if (!lastSeasonInfo.containsKey("type")) return;
 
-                String seasonId = lastSeasonInfo.get("season_id");
-                String accessKey = lastSeasonInfo.get("access_key");
+                Log.d(TAG, "Limited Bangumi: seasonInfo = " + lastSeasonInfo);
 
-                // Filter other request
-                // If it isn't bangumi, seasonId will be null
-                if (seasonId == null) return;
+                String accessKey = (String) lastSeasonInfo.get("access_key");
+                String content = null;
+                switch ((int) lastSeasonInfo.get("type")) {
+                    case TYPE_SEASON_ID:
+                        String seasonId = (String) lastSeasonInfo.get("season_id");
+                        content = BiliRoamingApi.getSeason(seasonId, accessKey);
+                        break;
+                    case TYPE_EPISODE_ID:
+                        String episodeId = (String) lastSeasonInfo.get("episode_id");
+                        content = BiliRoamingApi.getEpisode(episodeId, accessKey);
+                        break;
+                }
 
-                Log.d(TAG, "Limited Bangumi: seasonId = " + seasonId);
-
-                String content = BiliRoamingApi.getSeason(seasonId, accessKey);
                 JSONObject contentJson = new JSONObject(content);
                 int code = contentJson.optInt("code");
 
