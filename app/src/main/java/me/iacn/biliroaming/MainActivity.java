@@ -57,6 +57,34 @@ public class MainActivity extends Activity {
         }
 
         @Override
+        public boolean onPreferenceChange(Preference preference, Object newValue) {
+            if ("hide_icon".equals(preference.getKey())) {
+                boolean isShow = (boolean) newValue;
+                ComponentName aliasName = new ComponentName(getActivity(), MainActivity.class.getName() + "Alias");
+                PackageManager packageManager = getActivity().getPackageManager();
+                int status = isShow ?
+                        PackageManager.COMPONENT_ENABLED_STATE_DISABLED : PackageManager.COMPONENT_ENABLED_STATE_ENABLED;
+                if (packageManager.getComponentEnabledSetting(aliasName) != status) {
+                    packageManager.setComponentEnabledSetting(aliasName, status, PackageManager.DONT_KILL_APP);
+                }
+            }
+            return true;
+        }
+
+        @SuppressLint("SetWorldReadable")
+        private void setWorldReadable() {
+            File dataDir = new File(getActivity().getApplicationInfo().dataDir);
+            File prefsDir = new File(dataDir, "shared_prefs");
+            File prefsFile = new File(prefsDir, getPreferenceManager().getSharedPreferencesName() + ".xml");
+            if (prefsFile.exists()) {
+                for (File file : new File[]{dataDir, prefsDir, prefsFile}) {
+                    file.setReadable(true, false);
+                    file.setExecutable(true, false);
+                }
+            }
+        }
+
+        @Override
         public void onResume() {
             super.onResume();
 
@@ -75,37 +103,9 @@ public class MainActivity extends Activity {
         }
 
         @Override
-        public boolean onPreferenceChange(Preference preference, Object newValue) {
-            if ("hide_icon".equals(preference.getKey())) {
-                boolean isShow = (boolean) newValue;
-                ComponentName aliasName = new ComponentName(getActivity(), MainActivity.class.getName() + "Alias");
-                PackageManager packageManager = getActivity().getPackageManager();
-                int status = isShow ?
-                        PackageManager.COMPONENT_ENABLED_STATE_DISABLED : PackageManager.COMPONENT_ENABLED_STATE_ENABLED;
-                if (packageManager.getComponentEnabledSetting(aliasName) != status) {
-                    packageManager.setComponentEnabledSetting(aliasName, status, PackageManager.DONT_KILL_APP);
-                }
-            }
-            return true;
-        }
-
-        @Override
         public void onPause() {
             super.onPause();
             setWorldReadable();
-        }
-
-        @SuppressLint("SetWorldReadable")
-        private void setWorldReadable() {
-            File dataDir = new File(getActivity().getApplicationInfo().dataDir);
-            File prefsDir = new File(dataDir, "shared_prefs");
-            File prefsFile = new File(prefsDir, getPreferenceManager().getSharedPreferencesName() + ".xml");
-            if (prefsFile.exists()) {
-                for (File file : new File[]{dataDir, prefsDir, prefsFile}) {
-                    file.setReadable(true, false);
-                    file.setExecutable(true, false);
-                }
-            }
         }
     }
 }
