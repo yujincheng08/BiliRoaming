@@ -41,15 +41,15 @@ dependencies {
 
 afterEvaluate {
     installDebug.doLast {
-        forceStopBiliBili.execute()
-        startBiliBili.execute()
+        restartBiliBili()
     }
 }
 
-task forceStopBiliBili(type: Exec) {
-    commandLine android.adbExecutable, 'shell', 'am', 'force-stop', 'tv.danmaku.bili'
-}
-
-task startBiliBili(type: Exec) {
-    commandLine android.adbExecutable, 'shell', 'monkey', '-p', 'tv.danmaku.bili', '1'
+def restartBiliBili() {
+    exec {
+        commandLine android.adbExecutable, 'shell', 'am', 'force-stop', 'tv.danmaku.bili'
+    }
+    exec {
+        commandLine android.adbExecutable, 'shell', 'monkey', '-p', 'tv.danmaku.bili', '1'
+    }
 }
