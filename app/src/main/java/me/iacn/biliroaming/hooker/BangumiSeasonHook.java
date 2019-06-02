@@ -5,6 +5,7 @@ import android.util.Log;
 
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -78,32 +79,22 @@ public class BangumiSeasonHook extends BaseHook {
                 Object body = param.args[1];
                 Class<?> bangumiApiResponse = BiliBiliPackage.getInstance().bangumiApiResponse();
 
-                // Filter non-bangumi and normal bangumi responses
-                if (!bangumiApiResponse.isInstance(body) || isNormalSeason(body)) return;
-
-                // Filter other responses
+                // Filter non-bangumi responses
                 // If it isn't bangumi, the type variable will not exist in this map
-                if (!lastSeasonInfo.containsKey("type")) return;
+                if (!bangumiApiResponse.isInstance(body) || !lastSeasonInfo.containsKey("type"))
+                    return;
 
-                Log.d(TAG, "Limited Bangumi: seasonInfo = " + lastSeasonInfo);
+                Object result = getObjectField(body, "result");
+                // Filter normal bangumi and other responses
+                if (isBangumiWithWatchPermission(getIntField(body, "code"), result)) return;
 
-                String accessKey = (String) lastSeasonInfo.get("access_key");
-                String content = null;
-                switch ((int) lastSeasonInfo.get("type")) {
-                    case TYPE_SEASON_ID:
-                        String seasonId = (String) lastSeasonInfo.get("season_id");
-                        content = BiliRoamingApi.getSeason(seasonId, accessKey);
-                        break;
-                    case TYPE_EPISODE_ID:
-                        String episodeId = (String) lastSeasonInfo.get("episode_id");
-                        content = BiliRoamingApi.getEpisode(episodeId, accessKey);
-                        break;
-                }
-
+                boolean useCache = result != null;
+                String content = getSeasonInfoFromProxyServer(useCache);
                 JSONObject contentJson = new JSONObject(content);
                 int code = contentJson.optInt("code");
 
-                Log.d(TAG, "Got new season information from proxy server: code = " + code);
+                Log.d(TAG, "Got new season information from proxy server: code = " + code
+                        + ", useCache = " + useCache);
 
                 if (code == 0) {
                     Class<?> fastJsonClass = BiliBiliPackage.getInstance().fastJson();
@@ -113,8 +104,19 @@ public class BangumiSeasonHook extends BaseHook {
                     Object newResult = callStaticMethod(fastJsonClass,
                             BiliBiliPackage.getInstance().fastJsonParse(), resultJson.toString(), beanClass);
 
-                    setIntField(body, "code", 0);
-                    setObjectField(body, "result", newResult);
+                    if (useCache) {
+                        // Replace only episodes and rights
+                        // Remain user information, such as follow status, watch progress, etc.
+                        Object newRights = getObjectField(newResult, "rights");
+                        Object newEpisodes = getObjectField(newResult, "episodes");
+
+                        setObjectField(result, "rights", newRights);
+                        setObjectField(result, "episodes", newEpisodes);
+                        setObjectField(result, "seasonLimit", null);
+                    } else {
+                        setIntField(body, "code", 0);
+                        setObjectField(body, "result", newResult);
+                    }
                 }
             }
         });
@@ -128,26 +130,39 @@ public class BangumiSeasonHook extends BaseHook {
                 });
     }
 
-    private boolean isNormalSeason(Object bangumiApiResponse) {
-        int code = getIntField(bangumiApiResponse, "code");
-        Object result = getObjectField(bangumiApiResponse, "result");
+    private boolean isBangumiWithWatchPermission(int code, Object result) {
+        Log.d(TAG, "BangumiApiResponse: code = " + code + ", result = " + result);
 
-        if (code == -404 && result == null) {
-            Log.d(TAG, "SeasonResponse: code = " + code + ", result = null");
-            return false;
+        if (result != null) {
+            Class<?> bangumiSeasonClass = BiliBiliPackage.getInstance().bangumiUniformSeason();
+            if (bangumiSeasonClass.isInstance(result)) {
+                List episodes = (List) getObjectField(result, "episodes");
+                Object rights = getObjectField(result, "rights");
+                boolean areaLimit = getBooleanField(rights, "areaLimit");
+
+                return !areaLimit && episodes.size() != 0;
+            }
+        }
+        return code != -404;
+    }
+
+    private String getSeasonInfoFromProxyServer(boolean useCache) throws IOException {
+        Log.d(TAG, "Limited Bangumi: seasonInfo = " + lastSeasonInfo);
+
+        String content = null;
+        String accessKey = (String) lastSeasonInfo.get("access_key");
+
+        switch ((int) lastSeasonInfo.get("type")) {
+            case TYPE_SEASON_ID:
+                String seasonId = (String) lastSeasonInfo.get("season_id");
+                content = BiliRoamingApi.getSeason(seasonId, accessKey, useCache);
+                break;
+            case TYPE_EPISODE_ID:
+                String episodeId = (String) lastSeasonInfo.get("episode_id");
+                content = BiliRoamingApi.getEpisode(episodeId, accessKey, useCache);
+                break;
         }
 
-        Class<?> bangumiSeasonClass = BiliBiliPackage.getInstance().bangumiUniformSeason();
-        if (bangumiSeasonClass.isInstance(result)) {
-            Log.d(TAG, "SeasonResponse: code = " + code + ", result = " + result);
-
-            List episodes = (List) getObjectField(result, "episodes");
-            Object rights = getObjectField(result, "rights");
-            boolean areaLimit = getBooleanField(rights, "areaLimit");
-
-            return !areaLimit && episodes.size() != 0;
-        }
-
-        return true;
+        return content;
     }
 }
