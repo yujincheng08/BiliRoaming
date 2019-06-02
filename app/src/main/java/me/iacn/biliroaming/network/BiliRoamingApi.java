@@ -1,5 +1,6 @@
 package me.iacn.biliroaming.network;
 
+import android.net.Uri;
 import android.text.TextUtils;
 
 import java.io.IOException;
@@ -15,28 +16,35 @@ import me.iacn.biliroaming.BuildConfig;
  */
 public class BiliRoamingApi {
 
-    private static final String BILIROAMING_SEASON_URL = "https://api.iacn.me/biliroaming/season?";
-    private static final String BILIROAMING_PLAYURL_URL = "https://api.iacn.me/biliroaming/playurl?";
+    private static final String BILIROAMING_SEASON_URL = "api.iacn.me/biliroaming/season";
+    private static final String BILIROAMING_PLAYURL_URL = "api.iacn.me/biliroaming/playurl";
 
-    public static String getSeason(String seasonId, String accessKey) throws IOException {
-        String urlString = BILIROAMING_SEASON_URL + "season_id=" + seasonId;
+    public static String getSeason(String seasonId, String accessKey, boolean useCache) throws IOException {
+        Uri.Builder builder = new Uri.Builder();
+        builder.scheme("https").encodedAuthority(BILIROAMING_SEASON_URL).appendPath(seasonId);
+
         if (!TextUtils.isEmpty(accessKey)) {
-            urlString += "&access_key=" + accessKey;
+            builder.appendQueryParameter("access_key", accessKey);
         }
-        return getContent(urlString);
+        builder.appendQueryParameter("use_cache", useCache ? "1" : "0");
+
+        return getContent(builder.toString());
     }
 
-    public static String getEpisode(String episodeId, String accessKey) throws IOException {
-        String urlString = BILIROAMING_SEASON_URL + "ep_id=" + episodeId;
+    public static String getEpisode(String episodeId, String accessKey, boolean useCache) throws IOException {
+        Uri.Builder builder = new Uri.Builder();
+        builder.scheme("https").encodedAuthority(BILIROAMING_SEASON_URL).appendQueryParameter("ep_id", episodeId);
+
         if (!TextUtils.isEmpty(accessKey)) {
-            urlString += "&access_key=" + accessKey;
+            builder.appendQueryParameter("access_key", accessKey);
         }
-        return getContent(urlString);
+        builder.appendQueryParameter("use_cache", useCache ? "1" : "0");
+
+        return getContent(builder.toString());
     }
 
     public static String getPlayUrl(String queryString) throws IOException {
-        String urlString = BILIROAMING_PLAYURL_URL + queryString;
-        return getContent(urlString);
+        return getContent("https://" + BILIROAMING_PLAYURL_URL + "?" + queryString);
     }
 
     private static String getContent(String urlString) throws IOException {
