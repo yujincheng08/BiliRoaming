@@ -108,11 +108,13 @@ public class BangumiSeasonHook extends BaseHook {
                         // Replace only episodes and rights
                         // Remain user information, such as follow status, watch progress, etc.
                         Object newRights = getObjectField(newResult, "rights");
-                        Object newEpisodes = getObjectField(newResult, "episodes");
+                        if (!getBooleanField(newRights, "areaLimit")) {
+                            Object newEpisodes = getObjectField(newResult, "episodes");
 
-                        setObjectField(result, "rights", newRights);
-                        setObjectField(result, "episodes", newEpisodes);
-                        setObjectField(result, "seasonLimit", null);
+                            setObjectField(result, "rights", newRights);
+                            setObjectField(result, "episodes", newEpisodes);
+                            setObjectField(result, "seasonLimit", null);
+                        }
                     } else {
                         setIntField(body, "code", 0);
                         setObjectField(body, "result", newResult);
