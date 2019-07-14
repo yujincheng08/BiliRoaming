@@ -1,5 +1,6 @@
 package me.iacn.biliroaming.hooker;
 
+import android.app.Activity;
 import android.graphics.Color;
 import android.util.Log;
 import android.util.SparseArray;
@@ -7,6 +8,7 @@ import android.util.SparseArray;
 import java.util.List;
 
 import de.robv.android.xposed.XC_MethodHook;
+import de.robv.android.xposed.XC_MethodReplacement;
 import me.iacn.biliroaming.XposedInit;
 
 import static de.robv.android.xposed.XposedHelpers.findAndHookMethod;
@@ -60,5 +62,7 @@ public class CustomThemeHook extends BaseHook {
                         }
                     }
                 });
+
+        findAndHookMethod(helperClass, "a", Activity.class, XC_MethodReplacement.DO_NOTHING);
     }
 }
