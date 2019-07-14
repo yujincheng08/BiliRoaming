@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.text.Editable;
-import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.View;
 import android.widget.EditText;
@@ -29,7 +28,7 @@ public class ColorChooseDialog extends AlertDialog.Builder {
     private TextView tvColorG;
     private TextView tvColorB;
 
-    public ColorChooseDialog(Context context, String hexColor) {
+    public ColorChooseDialog(Context context, int defColor) {
         super(context);
         View view = getView(context);
 
@@ -40,11 +39,6 @@ public class ColorChooseDialog extends AlertDialog.Builder {
         setEditTextListener();
         setSeekBarListener();
 
-        if (TextUtils.isEmpty(hexColor)) {
-            hexColor = "#009788";
-        }
-
-        int defColor = Color.parseColor(hexColor);
         updateValue(defColor);
         etColor.setText(String.format("%06X", 0xFFFFFF & defColor));
 
