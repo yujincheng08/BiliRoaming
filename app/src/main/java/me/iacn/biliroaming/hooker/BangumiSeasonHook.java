@@ -12,6 +12,7 @@ import java.util.Map;
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedBridge;
 import me.iacn.biliroaming.BiliBiliPackage;
+import me.iacn.biliroaming.XposedInit;
 import me.iacn.biliroaming.network.BiliRoamingApi;
 
 import static de.robv.android.xposed.XposedHelpers.callStaticMethod;
@@ -41,6 +42,7 @@ public class BangumiSeasonHook extends BaseHook {
 
     @Override
     public void startHook() {
+        if (!XposedInit.sPrefs.getBoolean("main_func", false)) return;
         Log.d(TAG, "startHook: BangumiSeason");
 
         Class<?> paramsMapClass = findClass(

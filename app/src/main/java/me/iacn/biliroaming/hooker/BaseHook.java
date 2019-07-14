@@ -8,7 +8,7 @@ public abstract class BaseHook {
 
     ClassLoader mClassLoader;
 
-    BaseHook(ClassLoader classLoader) {
+    public BaseHook(ClassLoader classLoader) {
         this.mClassLoader = classLoader;
     }
 

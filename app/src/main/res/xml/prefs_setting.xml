@@ -7,6 +7,11 @@
         android:title="@string/main_func_title" />
 
     <SwitchPreference
+        android:key="custom_theme"
+        android:summary="@string/custom_theme_summary"
+        android:title="@string/custom_theme_title" />
+
+    <SwitchPreference
         android:key="hide_icon"
         android:summary="@string/hide_icon_summary"
         android:title="@string/hide_icon_title" />

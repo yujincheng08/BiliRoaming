@@ -10,6 +10,7 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 
 import de.robv.android.xposed.XC_MethodHook;
+import me.iacn.biliroaming.XposedInit;
 import me.iacn.biliroaming.network.BiliRoamingApi;
 import me.iacn.biliroaming.network.StreamUtils;
 
@@ -28,7 +29,9 @@ public class BangumiPlayUrlHook extends BaseHook {
 
     @Override
     public void startHook() {
+        if (!XposedInit.sPrefs.getBoolean("main_func", false)) return;
         Log.d(TAG, "startHook: BangumiPlayUrl");
+
         findAndHookMethod("com.bilibili.lib.okhttp.huc.OkHttpURLConnection", mClassLoader,
                 "getInputStream", new XC_MethodHook() {
                     @Override

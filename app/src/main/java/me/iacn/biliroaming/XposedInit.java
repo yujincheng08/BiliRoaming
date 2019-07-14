@@ -12,6 +12,7 @@ import de.robv.android.xposed.XSharedPreferences;
 import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam;
 import me.iacn.biliroaming.hooker.BangumiPlayUrlHook;
 import me.iacn.biliroaming.hooker.BangumiSeasonHook;
+import me.iacn.biliroaming.hooker.CustomThemeHook;
 
 import static de.robv.android.xposed.XposedHelpers.findAndHookMethod;
 import static me.iacn.biliroaming.Constant.BILIBILI_PACKAGENAME;
@@ -24,7 +25,7 @@ import static me.iacn.biliroaming.Constant.TAG;
  */
 public class XposedInit implements IXposedHookLoadPackage {
 
-    private XSharedPreferences mPrefs;
+    public static XSharedPreferences sPrefs;
 
     @Override
     public void handleLoadPackage(LoadPackageParam lpparam) throws Throwable {
@@ -35,21 +36,18 @@ public class XposedInit implements IXposedHookLoadPackage {
 
         if (!BILIBILI_PACKAGENAME.equals(lpparam.packageName)) return;
 
-        mPrefs = new XSharedPreferences(BuildConfig.APPLICATION_ID);
+        sPrefs = new XSharedPreferences(BuildConfig.APPLICATION_ID);
 
         findAndHookMethod(Instrumentation.class, "callApplicationOnCreate", Application.class, new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-                boolean enableMainFunc = mPrefs.getBoolean("main_func", false);
-
-                if (!enableMainFunc) return;
-
                 // Hook main process and download process
                 switch (lpparam.processName) {
                     case "tv.danmaku.bili":
-                        Log.d(TAG, "BiliBili process launched: enableMainFunc = " + enableMainFunc);
+                        Log.d(TAG, "BiliBili process launched ...");
                         BiliBiliPackage.getInstance().init(lpparam.classLoader, (Context) param.args[0]);
                         new BangumiSeasonHook(lpparam.classLoader).startHook();
+                        new CustomThemeHook(lpparam.classLoader).startHook();
                         break;
                     case "tv.danmaku.bili:download":
                         new BangumiPlayUrlHook(lpparam.classLoader).startHook();
