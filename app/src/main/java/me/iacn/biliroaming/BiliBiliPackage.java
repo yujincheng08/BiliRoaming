@@ -32,6 +32,7 @@ public class BiliBiliPackage {
     private WeakReference<Class<?>> bangumiApiResponseClass;
     private WeakReference<Class<?>> fastJsonClass;
     private WeakReference<Class<?>> bangumiUniformSeasonClass;
+    private WeakReference<Class<?>> themeHelperClass;
 
     private BiliBiliPackage() {
     }
@@ -77,6 +78,11 @@ public class BiliBiliPackage {
     public Class<?> fastJson() {
         fastJsonClass = checkNullOrReturn(fastJsonClass, mHookInfo.get("class_fastjson"));
         return fastJsonClass.get();
+    }
+
+    public Class<?> themeHelper() {
+        themeHelperClass = checkNullOrReturn(themeHelperClass, "tv.danmaku.bili.ui.theme.a");
+        return themeHelperClass.get();
     }
 
     private WeakReference<Class<?>> checkNullOrReturn(WeakReference<Class<?>> clazz, String className) {
