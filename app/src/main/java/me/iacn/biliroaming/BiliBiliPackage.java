@@ -3,6 +3,7 @@ package me.iacn.biliroaming;
 import android.content.Context;
 import android.util.Log;
 import android.util.SparseArray;
+import android.view.View;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -71,6 +72,10 @@ public class BiliBiliPackage {
 
     public String colorArray() {
         return mHookInfo.get("field_color_array");
+    }
+
+    public String themeListClickListener() {
+        return mHookInfo.get("class_theme_list_click");
     }
 
     public Class<?> bangumiApiResponse() {
@@ -146,6 +151,10 @@ public class BiliBiliPackage {
             mHookInfo.put("field_color_array", findColorArrayField());
             needUpdate = true;
         }
+        if (!mHookInfo.containsKey("class_theme_list_click")) {
+            mHookInfo.put("class_theme_list_click", findThemeListClickClass());
+            needUpdate = true;
+        }
 
         Log.d(TAG, "Check hook info completed: needUpdate = " + needUpdate);
         return needUpdate;
@@ -198,6 +207,18 @@ public class BiliBiliPackage {
                 Type[] types = genericType.getActualTypeArguments();
                 if ("int[]".equals(types[0].toString())) {
                     return field.getName();
+                }
+            }
+        }
+        return null;
+    }
+
+    private String findThemeListClickClass() {
+        Class<?> themeStoreActivityClass = findClass("tv.danmaku.bili.ui.theme.ThemeStoreActivity", mClassLoader);
+        for (Class<?> innerClass : themeStoreActivityClass.getDeclaredClasses()) {
+            for (Class<?> interfaceClass : innerClass.getInterfaces()) {
+                if (interfaceClass == View.OnClickListener.class) {
+                    return innerClass.getName();
                 }
             }
         }
