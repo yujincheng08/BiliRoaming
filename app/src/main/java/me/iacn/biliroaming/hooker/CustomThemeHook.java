@@ -92,12 +92,10 @@ public class CustomThemeHook extends BaseHook {
                 // Make colors updated immediately
                 if (mId == CUSTOM_THEME_ID || mId == -1) {
                     Log.d(TAG, "Custom theme item has been clicked");
-                    Log.d(TAG, "New theme: mId = " + mId);
 
                     ColorChooseDialog colorDialog = new ColorChooseDialog(view.getContext(), getCustomColor());
                     colorDialog.setPositiveButton("确定", (dialog, which) -> {
                         int color = colorDialog.getColor();
-                        Log.d(TAG, "Chose color: " + color);
 
                         BiliBiliPackage instance = BiliBiliPackage.getInstance();
                         Class<?> helperClass = instance.themeHelper();
@@ -109,9 +107,13 @@ public class CustomThemeHook extends BaseHook {
 
                         // If it is currently use the custom theme, it will use temporary id
                         // To make the theme color take effect immediately
-                        setIntField(biliSkin, "mId", mId == CUSTOM_THEME_ID ? -1 : CUSTOM_THEME_ID);
+                        int newId = mId == CUSTOM_THEME_ID ? -1 : CUSTOM_THEME_ID;
+                        setIntField(biliSkin, "mId", newId);
 
                         putCustomColor(color);
+                        Log.d(TAG, "Update new color: mId = " + newId
+                                + ", color = 0x" + Integer.toHexString(color).toUpperCase());
+
                         try {
                             XposedBridge.invokeOriginalMethod(param.method, param.thisObject, param.args);
                         } catch (Exception e1) {
