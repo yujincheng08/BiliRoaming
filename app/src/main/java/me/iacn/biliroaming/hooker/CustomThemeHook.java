@@ -51,8 +51,8 @@ public class CustomThemeHook extends BaseHook {
         Class<?> helperClass = instance.themeHelper();
         SparseArray<int[]> colorArray = (SparseArray) getStaticObjectField(helperClass, instance.colorArray());
 
-        int mainColor = getCustomColor();
-        colorArray.put(CUSTOM_THEME_ID, generateColorArray(mainColor));
+        int primaryColor = getCustomColor();
+        colorArray.put(CUSTOM_THEME_ID, generateColorArray(primaryColor));
 
         findAndHookMethod("tv.danmaku.bili.ui.theme.ThemeStoreActivity", mClassLoader, "a",
                 "tv.danmaku.bili.ui.theme.api.BiliSkinList", boolean.class, new XC_MethodHook() {
@@ -140,8 +140,36 @@ public class CustomThemeHook extends BaseHook {
         findAndHookMethod(helperClass, "a", Activity.class, XC_MethodReplacement.DO_NOTHING);
     }
 
-    private int[] generateColorArray(int mainColor) {
-        return new int[]{mainColor, Color.GREEN, Color.BLUE, Color.BLACK};
+    /**
+     * Color Array
+     * <p>
+     * index0: color primary        e.g. global main color.
+     * index1: color primary dark   e.g. tint when button be pressed.
+     * index2: color primary light  e.g. temporarily not used.
+     * index3: color primary trans  e.g. mini-tv cover on drawer.
+     */
+    private int[] generateColorArray(int primaryColor) {
+        int[] colors = new int[4];
+        float[] hsv = new float[3];
+        float[] result = new float[3];
+        Color.colorToHSV(primaryColor, hsv);
+
+        colors[0] = primaryColor;
+
+        // Decrease brightness
+        System.arraycopy(hsv, 0, result, 0, hsv.length);
+        result[2] -= result[2] * 0.2f;
+        colors[1] = Color.HSVToColor(result);
+
+        // Increase brightness
+        System.arraycopy(hsv, 0, result, 0, hsv.length);
+        result[2] += result[2] * 0.1f;
+        colors[2] = Color.HSVToColor(result);
+
+        // Increase transparency
+        colors[3] = 0xB4000000 | 0xFFFFFF & colors[1];
+
+        return colors;
     }
 
     private int getCustomColor() {
