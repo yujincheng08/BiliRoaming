@@ -7,8 +7,8 @@ android {
         applicationId "me.iacn.biliroaming"
         minSdkVersion 21
         targetSdkVersion 27
-        versionCode 7
-        versionName "1.0.9"
+        versionCode 8
+        versionName "1.1.2"
     }
 
     buildTypes {
@@ -27,7 +27,7 @@ android {
     applicationVariants.all { variant ->
         variant.outputs.all { output ->
             if (variant.buildType.name == 'release') {
-                outputFileName = "BiliRoaming_${defaultConfig.versionName}.apk"
+                outputFileName = "BiliRoaming-${defaultConfig.versionName}.apk"
             }
         }
     }
