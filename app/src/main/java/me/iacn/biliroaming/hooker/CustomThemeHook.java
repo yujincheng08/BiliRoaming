@@ -14,6 +14,7 @@ import java.util.List;
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XC_MethodReplacement;
 import de.robv.android.xposed.XposedBridge;
+import me.iacn.biliroaming.BiliBiliPackage;
 import me.iacn.biliroaming.ColorChooseDialog;
 import me.iacn.biliroaming.XposedInit;
 
@@ -46,11 +47,12 @@ public class CustomThemeHook extends BaseHook {
         if (!XposedInit.sPrefs.getBoolean("custom_theme", false)) return;
         Log.d(TAG, "startHook: CustomTheme");
 
-        Class<?> helperClass = findClass("tv.danmaku.bili.ui.theme.a", mClassLoader);///////////////////////////////////////
-        SparseArray<int[]> colorArray = (SparseArray<int[]>) getStaticObjectField(helperClass, "l");///////////////////////////
+        BiliBiliPackage instance = BiliBiliPackage.getInstance();
+        Class<?> helperClass = instance.themeHelper();
+        SparseArray<int[]> colorArray = (SparseArray) getStaticObjectField(helperClass, instance.colorArray());
 
-        int[] array = {getCustomColor(), Color.GREEN, Color.BLUE, Color.BLACK};
-        colorArray.put(CUSTOM_THEME_ID, array);
+        int mainColor = getCustomColor();
+        colorArray.put(CUSTOM_THEME_ID, generateColorArray(mainColor));
 
         findAndHookMethod("tv.danmaku.bili.ui.theme.ThemeStoreActivity", mClassLoader, "a",
                 "tv.danmaku.bili.ui.theme.api.BiliSkinList", boolean.class, new XC_MethodHook() {
@@ -59,79 +61,71 @@ public class CustomThemeHook extends BaseHook {
                         Object biliSkinList = param.args[0];
                         List mList = (List) getObjectField(biliSkinList, "mList");
 
-                        if (mList != null) {
-                            Class<?> biliSkinClass = findClass("tv.danmaku.bili.ui.theme.api.BiliSkin", mClassLoader);
-                            Object biliSkin = biliSkinClass.newInstance();
+                        if (mList == null) return;
 
-                            setIntField(biliSkin, "mId", CUSTOM_THEME_ID);
-                            setObjectField(biliSkin, "mName", "自选颜色");
-                            setBooleanField(biliSkin, "mIsFree", true);
-                            // Under the night mode item
-                            mList.add(3, biliSkin);
+                        Class<?> biliSkinClass = findClass("tv.danmaku.bili.ui.theme.api.BiliSkin", mClassLoader);
+                        Object biliSkin = biliSkinClass.newInstance();
 
-                            Log.d(TAG, "Add a theme item: size = " + mList.size());
-                        }
+                        setIntField(biliSkin, "mId", CUSTOM_THEME_ID);
+                        setObjectField(biliSkin, "mName", "自选颜色");
+                        setBooleanField(biliSkin, "mIsFree", true);
+                        // Under the night mode item
+                        mList.add(3, biliSkin);
+
+                        Log.d(TAG, "Add a theme item: size = " + mList.size());
                     }
                 });
 
-        findAndHookMethod("tv.danmaku.bili.ui.theme.ThemeStoreActivity$b", mClassLoader,///////////////////////////////
-                "onClick", View.class, new XC_MethodHook() {
-                    @Override
-                    protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-                        View view = (View) param.args[0];
-                        String idName = view.getResources().getResourceEntryName(view.getId());
+        findAndHookMethod(instance.themeListClickListener(), mClassLoader, "onClick", View.class, new XC_MethodHook() {
+            @Override
+            protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                View view = (View) param.args[0];
+                String idName = view.getResources().getResourceEntryName(view.getId());
 
-                        if ("list_item".equals(idName)) {
-                            Object biliSkin = view.getTag();
+                if (!"list_item".equals(idName)) return;
 
-                            if (biliSkin == null) return;
+                Object biliSkin = view.getTag();
 
-                            int mId = getIntField(biliSkin, "mId");
-                            // Make colors updated immediately
-                            if (mId == CUSTOM_THEME_ID || mId == -1) {
-                                Log.d(TAG, "Custom theme item has been clicked");
-                                Log.d(TAG, "New theme: mId = " + mId);
+                if (biliSkin == null) return;
 
-                                ColorChooseDialog colorDialog = new ColorChooseDialog(view.getContext(), getCustomColor());
-                                colorDialog.setPositiveButton("确定", (dialog, which) -> {
-                                    int color = colorDialog.getColor();
-                                    Log.d(TAG, "Chose color: " + color);
+                int mId = getIntField(biliSkin, "mId");
+                // Make colors updated immediately
+                if (mId == CUSTOM_THEME_ID || mId == -1) {
+                    Log.d(TAG, "Custom theme item has been clicked");
+                    Log.d(TAG, "New theme: mId = " + mId);
 
+                    ColorChooseDialog colorDialog = new ColorChooseDialog(view.getContext(), getCustomColor());
+                    colorDialog.setPositiveButton("确定", (dialog, which) -> {
+                        int color = colorDialog.getColor();
+                        Log.d(TAG, "Chose color: " + color);
 
-                                    // ==================================================================================
-                                    // ==================================================================================
-                                    // ==================================================================================
+                        BiliBiliPackage instance = BiliBiliPackage.getInstance();
+                        Class<?> helperClass = instance.themeHelper();
+                        SparseArray<int[]> colorArray = (SparseArray) getStaticObjectField(helperClass, instance.colorArray());
 
+                        int[] colors = generateColorArray(color);
+                        colorArray.put(CUSTOM_THEME_ID, colors);
+                        colorArray.put(-1, colors);  // Add a new color id but it won't be saved
 
-                                    Class<?> helperClass = findClass("tv.danmaku.bili.ui.theme.a", mClassLoader);
-                                    SparseArray<int[]> colorArray = (SparseArray<int[]>) getStaticObjectField(helperClass, "l");
+                        // If it is currently use the custom theme, it will use temporary id
+                        // To make the theme color take effect immediately
+                        setIntField(biliSkin, "mId", mId == CUSTOM_THEME_ID ? -1 : CUSTOM_THEME_ID);
 
-                                    int[] colors = {color, Color.GREEN, Color.BLUE, Color.BLACK};
-                                    colorArray.put(CUSTOM_THEME_ID, colors);
-                                    colorArray.put(-1, colors);
-
-                                    setIntField(biliSkin, "mId", mId == CUSTOM_THEME_ID ? -1 : CUSTOM_THEME_ID);
-
-                                    putCustomColor(color);
-
-                                    try {
-                                        XposedBridge.invokeOriginalMethod(param.method, param.thisObject, param.args);
-                                    } catch (Exception e1) {
-                                        e1.printStackTrace();
-                                    }
-
-                                });
-                                colorDialog.show();
-
-                                param.setResult(null);
-                            }
+                        putCustomColor(color);
+                        try {
+                            XposedBridge.invokeOriginalMethod(param.method, param.thisObject, param.args);
+                        } catch (Exception e1) {
+                            e1.printStackTrace();
                         }
-                    }
-                });
 
-//        ====================================================================
-//        ====================================================================
-//        ====================================================================
+                    });
+                    colorDialog.show();
+
+                    // Stop executing the original method
+                    param.setResult(null);
+                }
+            }
+        });
 
         findAndHookMethod(helperClass, "a", Context.class, int.class, new XC_MethodHook() {
             @Override
@@ -142,12 +136,12 @@ public class CustomThemeHook extends BaseHook {
             }
         });
 
+        // Make sure that not invalidate when user not logging in
         findAndHookMethod(helperClass, "a", Activity.class, XC_MethodReplacement.DO_NOTHING);
     }
 
-    private void addToColorArray(int id, int color) {
-        Class<?> clazz = findClass("tv.danmaku.bili.ui.theme.a", mClassLoader);
-        SparseArray<int[]> l = (SparseArray<int[]>) getStaticObjectField(clazz, "l");
+    private int[] generateColorArray(int mainColor) {
+        return new int[]{mainColor, Color.GREEN, Color.BLUE, Color.BLACK};
     }
 
     private int getCustomColor() {

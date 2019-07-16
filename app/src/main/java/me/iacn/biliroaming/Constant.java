@@ -13,5 +13,5 @@ public final class Constant {
     public static final int TYPE_SEASON_ID = 0;
     public static final int TYPE_EPISODE_ID = 2;
     public static final String CUSTOM_COLOR_KEY = "biliroaming_custom_color";
-    public static final int DEFAULT_CUSTOM_COLOR = Color.parseColor("#009788");
+    public static final int DEFAULT_CUSTOM_COLOR = Color.parseColor("#54B4AB");
 }
