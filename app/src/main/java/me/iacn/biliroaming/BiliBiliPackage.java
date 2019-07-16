@@ -2,6 +2,7 @@ package me.iacn.biliroaming;
 
 import android.content.Context;
 import android.util.Log;
+import android.util.SparseArray;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -9,7 +10,10 @@ import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.lang.ref.WeakReference;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -65,6 +69,10 @@ public class BiliBiliPackage {
         return mHookInfo.get("method_fastjson_parse");
     }
 
+    public String colorArray() {
+        return mHookInfo.get("field_color_array");
+    }
+
     public Class<?> bangumiApiResponse() {
         bangumiApiResponseClass = checkNullOrReturn(bangumiApiResponseClass, "com.bilibili.bangumi.api.BangumiApiResponse");
         return bangumiApiResponseClass.get();
@@ -107,7 +115,7 @@ public class BiliBiliPackage {
             }
 
             long endTime = System.currentTimeMillis();
-            Log.d(TAG, "Read hook info completed: cost " + (endTime - startTime) + " ms");
+            Log.d(TAG, "Read hook info completed: take " + (endTime - startTime) + " ms");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -134,6 +142,10 @@ public class BiliBiliPackage {
             mHookInfo.put("method_fastjson_parse", notObfuscated ? "parseObject" : "a");
             needUpdate = true;
         }
+        if (!mHookInfo.containsKey("field_color_array")) {
+            mHookInfo.put("field_color_array", findColorArrayField());
+            needUpdate = true;
+        }
 
         Log.d(TAG, "Check hook info completed: needUpdate = " + needUpdate);
         return needUpdate;
@@ -158,7 +170,7 @@ public class BiliBiliPackage {
     }
 
     private String findRetrofitResponseClass() {
-        Method[] methods = BiliBiliPackage.getInstance().bangumiApiResponse().getMethods();
+        Method[] methods = bangumiApiResponse().getMethods();
         for (Method method : methods) {
             if ("extractResult".equals(method.getName())) {
                 Class<?> responseClass = method.getParameterTypes()[0];
@@ -176,5 +188,19 @@ public class BiliBiliPackage {
             clazz = findClass("com.alibaba.fastjson.a", mClassLoader);
         }
         return clazz;
+    }
+
+    private String findColorArrayField() {
+        Field[] fields = themeHelper().getDeclaredFields();
+        for (Field field : fields) {
+            if (field.getType() == SparseArray.class) {
+                ParameterizedType genericType = (ParameterizedType) field.getGenericType();
+                Type[] types = genericType.getActualTypeArguments();
+                if ("int[]".equals(types[0].toString())) {
+                    return field.getName();
+                }
+            }
+        }
+        return null;
     }
 }
