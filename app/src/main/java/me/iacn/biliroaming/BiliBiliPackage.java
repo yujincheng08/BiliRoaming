@@ -79,12 +79,14 @@ public class BiliBiliPackage {
     }
 
     public Class<?> bangumiApiResponse() {
-        bangumiApiResponseClass = checkNullOrReturn(bangumiApiResponseClass, "com.bilibili.bangumi.api.BangumiApiResponse");
+        bangumiApiResponseClass = checkNullOrReturn(bangumiApiResponseClass,
+                "com.bilibili.bangumi.data.common.api.BangumiApiResponse");
         return bangumiApiResponseClass.get();
     }
 
     public Class<?> bangumiUniformSeason() {
-        bangumiUniformSeasonClass = checkNullOrReturn(bangumiUniformSeasonClass, "com.bilibili.bangumi.api.uniform.BangumiUniformSeason");
+        bangumiUniformSeasonClass = checkNullOrReturn(bangumiUniformSeasonClass,
+                "com.bilibili.bangumi.data.page.detail.entity.BangumiUniformSeason");
         return bangumiUniformSeasonClass.get();
     }
 

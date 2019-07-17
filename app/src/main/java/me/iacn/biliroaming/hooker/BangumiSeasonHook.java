@@ -45,8 +45,8 @@ public class BangumiSeasonHook extends BaseHook {
         if (!XposedInit.sPrefs.getBoolean("main_func", false)) return;
         Log.d(TAG, "startHook: BangumiSeason");
 
-        Class<?> paramsMapClass = findClass(
-                "com.bilibili.bangumi.api.uniform.BangumiDetailApiService$UniformSeasonParamsMap", mClassLoader);
+        Class<?> paramsMapClass = findClass("com.bilibili.bangumi.data.page.detail." +
+                "BangumiDetailApiService$UniformSeasonParamsMap", mClassLoader);
         XposedBridge.hookAllConstructors(paramsMapClass, new XC_MethodHook() {
             @Override
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
@@ -125,7 +125,7 @@ public class BangumiSeasonHook extends BaseHook {
             }
         });
 
-        findAndHookMethod("com.bilibili.bangumi.viewmodel.detail.BangumiDetailViewModel$b", mClassLoader,
+        findAndHookMethod("com.bilibili.bangumi.logic.page.detail.BangumiDetailViewModel$d", mClassLoader,
                 "call", Object.class, new XC_MethodHook() {
                     @Override
                     protected void afterHookedMethod(MethodHookParam param) throws Throwable {

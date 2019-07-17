@@ -52,6 +52,9 @@ public class XposedInit implements IXposedHookLoadPackage {
                     case "tv.danmaku.bili:download":
                         new BangumiPlayUrlHook(lpparam.classLoader).startHook();
                         break;
+                    case "tv.danmaku.bili:web":
+                        CustomThemeHook.insertColorForWebProcess(lpparam.classLoader);
+                        break;
                 }
             }
         });
