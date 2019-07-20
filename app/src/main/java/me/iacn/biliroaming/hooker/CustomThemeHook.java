@@ -150,7 +150,7 @@ public class CustomThemeHook extends BaseHook {
      * index2: color primary light  e.g. temporarily not used.
      * index3: color primary trans  e.g. mini-tv cover on drawer.
      */
-    private static int[] generateColorArray(int primaryColor) {
+    private int[] generateColorArray(int primaryColor) {
         int[] colors = new int[4];
         float[] hsv = new float[3];
         float[] result = new float[3];
@@ -174,7 +174,7 @@ public class CustomThemeHook extends BaseHook {
         return colors;
     }
 
-    private static int getCustomColor() {
+    private int getCustomColor() {
         return getBiliPrefs().getInt(CUSTOM_COLOR_KEY, DEFAULT_CUSTOM_COLOR);
     }
 
@@ -182,14 +182,14 @@ public class CustomThemeHook extends BaseHook {
         getBiliPrefs().edit().putInt(CUSTOM_COLOR_KEY, color).apply();
     }
 
-    private static SharedPreferences getBiliPrefs() {
+    private SharedPreferences getBiliPrefs() {
         return AndroidAppHelper.currentApplication().getSharedPreferences("bili_preference", Context.MODE_PRIVATE);
     }
 
-    public static void insertColorForWebProcess(ClassLoader classLoader) {
+    public void insertColorForWebProcess() {
         if (!XposedInit.sPrefs.getBoolean("custom_theme", false)) return;
 
-        Class<?> helperClass = findClass("com.bilibili.column.helper.k", classLoader);
+        Class<?> helperClass = findClass("com.bilibili.column.helper.k", mClassLoader);
         SparseArray<int[]> colorArray = (SparseArray) getStaticObjectField(helperClass, "l");
 
         int primaryColor = getCustomColor();
