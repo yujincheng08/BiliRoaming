@@ -24,10 +24,11 @@ import static me.iacn.biliroaming.Constant.TAG;
 public class BiliRoamingApi {
 
     private static final String BILIROAMING_SEASON_URL = "api.iacn.me/biliroaming/season";
-    private static final String BILIPLUS_SEASON_URL = "www.biliplus.com/api/bangumi";
     private static final String BILIROAMING_PLAYURL_URL = "api.iacn.me/biliroaming/playurl";
+    private static final String BILIPLUS_SEASON_URL = "www.biliplus.com/api/bangumi";
+    private static final String BILIPLUS_PLAYURL_URL = "www.biliplus.com/BPplayurl.php";
 
-    private static final String BILIEPISODE_TEMPLATE = "{\"aid\":0,\"badge\":\"\",\"badge_type\":0,\"cid\":0,\"cover\":\"\",\"dimension\":{\"height\":1080,\"rotate\":0,\"width\":1920},\"from\":\"bangumi\",\"id\":0,\"long_title\":\"\",\"release_date\":\"\",\"rights\":{\"allow_dm\":1},\"share_copy\":\"\",\"share_url\":\"\",\"short_link\":\"\",\"stat\":{\"coin\":0,\"danmakus\":0,\"play\":0,\"reply\":0},\"status\":2,\"subtitle\":\"\",\"title\":\"\",\"vid\":\"\"}";
+    private static final String BILIEPISODE_TEMPLATE = "{\"aid\":0,\"badge\":\"\",\"badge_type\":0,\"cid\":0,\"cover\":\"\",\"dimension\":{\"height\":1080,\"rotate\":0,\"width\":1920},\"from\":\"bangumi\",\"id\":0,\"long_title\":\"\",\"release_date\":\"\",\"rights\":{\"allow_dm\":1},\"share_copy\":\"\",\"share_url\":\"\",\"short_link\":\"\",\"stat\":{\"coin\":0,\"danmakus\":0,\"play\":0,\"reply\":0},\"status\":0,\"subtitle\":\"\",\"title\":\"\",\"vid\":\"\"}";
     public static String getSeason(String seasonId, String accessKey, boolean useCache) throws IOException {
         Uri.Builder builder = new Uri.Builder();
         builder.scheme("https").encodedAuthority(BILIROAMING_SEASON_URL).appendPath(seasonId);
@@ -70,6 +71,10 @@ public class BiliRoamingApi {
                 nep.put("cover", ep.getString("cover"));
                 nep.put("id", ep.getString("episode_id"));
                 nep.put("long_title", ep.getString("index_title"));
+                nep.put("status", ep.getString("episode_status"));
+                if(ep.getString("episode_status") == "13"){
+                    nep.put("badge","会员");
+                }
                 nep.put("title", ep.getString("index"));
                 Log.e(TAG, "resolved: " + nep.toString());
                 season_ret.put(nep);
@@ -103,6 +108,68 @@ public class BiliRoamingApi {
         return getContent("https://" + BILIROAMING_PLAYURL_URL + "?" + queryString);
     }
 
+    public static String getPlayUrl_BP(String queryString) throws IOException {
+        Uri.Builder builder = new Uri.Builder();
+        builder.scheme("https").encodedAuthority(BILIPLUS_PLAYURL_URL);
+        builder.encodedQuery(queryString);
+        Log.e(TAG,"getPlayUrl_BP" + builder.toString());
+        String ret = getContent(builder.toString());
+        Log.e(TAG,"BP get OK! ret = "+ret);
+
+        try{
+            JSONObject play_ret = new JSONObject(ret);
+            play_ret.put("is_preview",0);
+            play_ret.put("no_rexcode",0);
+            play_ret.put("message","");
+            play_ret.put("type","DASH");
+            JSONObject play_ret_dash = play_ret.getJSONObject("dash");
+            play_ret_dash.put("duration",0);
+            play_ret_dash.put("min_buffer_time",0);
+            JSONArray play_ret_dash_video = play_ret_dash.getJSONArray("video");
+            JSONArray play_ret_dash_audio = play_ret_dash.getJSONArray("audio");
+            JSONArray play_ret_dash_video_new = new JSONArray();
+            JSONArray play_ret_dash_audio_new = new JSONArray();
+            for (int i=play_ret_dash_video.length()-1; i>=0; i--){
+                JSONObject t = play_ret_dash_video.getJSONObject(i);
+                t.put("start_with_sap",0);
+                t.put("sar","");
+                t.put("codecs","");
+                t.put("backup_url",new JSONArray());
+                t.put("framerate","");
+                t.put("size",0);
+                t.put("mime_type","");
+                t.put("width",0);
+                t.put("height",0);
+                t.put("md5","");
+                t.remove("baseUrl");
+                play_ret_dash_video_new.put(t);
+            }
+            for (int i=0; i<play_ret_dash_audio.length(); i++){
+                JSONObject t = play_ret_dash_audio.getJSONObject(i);
+                t.put("start_with_sap",0);
+                t.put("sar","");
+                t.put("codecs","");
+                t.put("backup_url",new JSONArray());
+                t.put("framerate","");
+                t.put("size",0);
+                t.put("mime_type","");
+                t.put("width",0);
+                t.put("height",0);
+                t.put("md5","");
+                t.remove("baseUrl");
+                play_ret_dash_audio_new.put(t);
+            }
+            play_ret_dash.put("audio",play_ret_dash_audio_new);
+            play_ret_dash.put("video",play_ret_dash_video_new);
+            play_ret.put("dash",play_ret_dash);
+
+            Log.e(TAG,play_ret.toString());
+            return play_ret.toString();
+        }catch(JSONException e){
+            e.printStackTrace();
+            return "{code:1}";
+        }
+    }
     private static String getContent(String urlString) throws IOException {
         URL url = new URL(urlString);
 

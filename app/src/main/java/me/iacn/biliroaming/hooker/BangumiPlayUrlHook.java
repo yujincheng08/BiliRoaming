@@ -36,6 +36,7 @@ public class BangumiPlayUrlHook extends BaseHook {
                 "getInputStream", new XC_MethodHook() {
                     @Override
                     protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                        Log.e(TAG,"getInputStream");
                         // Found from "b.ecy" in version 5.39.1
                         HttpURLConnection connection = (HttpURLConnection) param.thisObject;
                         String urlString = connection.getURL().toString();
@@ -48,7 +49,7 @@ public class BangumiPlayUrlHook extends BaseHook {
                                 String content = StreamUtils.getContent(inputStream, encoding);
 
                                 if (isLimitWatchingArea(content)) {
-                                    content = BiliRoamingApi.getPlayUrl(queryString);
+                                    content = BiliRoamingApi.getPlayUrl_BP(queryString);
                                     Log.d(TAG, "Has replaced play url with proxy server");
                                 }
 
