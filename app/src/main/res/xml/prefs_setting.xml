@@ -16,6 +16,11 @@
         android:summary="@string/hide_icon_summary"
         android:title="@string/hide_icon_title" />
 
+    <SwitchPreference
+        android:key="use_biliplus"
+        android:summary="@string/use_biliplus_summary"
+        android:title="@string/use_biliplus_title" />
+
     <PreferenceCategory android:title="@string/about">
 
         <Preference

@@ -49,7 +49,10 @@ public class BangumiPlayUrlHook extends BaseHook {
                                 String content = StreamUtils.getContent(inputStream, encoding);
 
                                 if (isLimitWatchingArea(content)) {
-                                    content = BiliRoamingApi.getPlayUrl_BP(queryString);
+                                    if (XposedInit.sPrefs.getBoolean("use_biliplus", false))
+                                        content = BiliRoamingApi.getPlayUrl_BP(queryString);
+                                    else
+                                        content = BiliRoamingApi.getPlayUrl(queryString);
                                     Log.d(TAG, "Has replaced play url with proxy server");
                                 }
 

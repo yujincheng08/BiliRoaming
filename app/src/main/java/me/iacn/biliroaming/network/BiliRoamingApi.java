@@ -29,6 +29,7 @@ public class BiliRoamingApi {
     private static final String BILIPLUS_PLAYURL_URL = "www.biliplus.com/BPplayurl.php";
 
     private static final String BILIEPISODE_TEMPLATE = "{\"aid\":0,\"badge\":\"\",\"badge_type\":0,\"cid\":0,\"cover\":\"\",\"dimension\":{\"height\":1080,\"rotate\":0,\"width\":1920},\"from\":\"bangumi\",\"id\":0,\"long_title\":\"\",\"release_date\":\"\",\"rights\":{\"allow_dm\":1},\"share_copy\":\"\",\"share_url\":\"\",\"short_link\":\"\",\"stat\":{\"coin\":0,\"danmakus\":0,\"play\":0,\"reply\":0},\"status\":0,\"subtitle\":\"\",\"title\":\"\",\"vid\":\"\"}";
+    private static final String BILIEPRIGHT_TEMPLATE = "{\"allow_bp\":0,\"allow_bp_rank\":0,\"allow_download\":0,\"allow_review\":1,\"area_limit\":0,\"ban_area_show\":1,\"can_watch\":1,\"copyright\":\"bilibili\",\"is_cover_show\":0,\"is_preview\":0,\"watch_platform\":0}";
     public static String getSeason(String seasonId, String accessKey, boolean useCache) throws IOException {
         Uri.Builder builder = new Uri.Builder();
         builder.scheme("https").encodedAuthority(BILIROAMING_SEASON_URL).appendPath(seasonId);
@@ -42,8 +43,6 @@ public class BiliRoamingApi {
     }
 
     public static String getSeason_BP(String seasonId, String accessKey, boolean useCache) throws IOException {
-        Log.e(TAG,"getSeason_BP start");
-
         /*
         This won't work in android 7.0
         The ciper suite that BiliPlus used is not supported in android 7.0.
@@ -55,9 +54,7 @@ public class BiliRoamingApi {
         Uri.Builder builder = new Uri.Builder();
         builder.scheme("https").encodedAuthority(BILIPLUS_SEASON_URL);
         builder.appendQueryParameter("season", seasonId);
-        Log.e(TAG,"getSeason_BP" + builder.toString());
         String ret = getContent(builder.toString());
-        Log.e(TAG,"BP get OK! ret = "+ret);
 
         try {
             JSONObject season_bpt = new JSONObject(ret);
@@ -76,7 +73,6 @@ public class BiliRoamingApi {
                     nep.put("badge","会员");
                 }
                 nep.put("title", ep.getString("index"));
-                Log.e(TAG, "resolved: " + nep.toString());
                 season_ret.put(nep);
             }
             JSONObject ep_ret = new JSONObject();
@@ -84,6 +80,8 @@ public class BiliRoamingApi {
             ep_ret.put("code", 0);
             ep_ret.put("message", "success");
             ep_ret_result.put("episodes", season_ret);
+            JSONObject rp_ret_result_rights = new JSONObject(BILIEPRIGHT_TEMPLATE);
+            ep_ret_result.put("rights",rp_ret_result_rights);
             ep_ret.put("result", ep_ret_result);
 
             return ep_ret.toString();
@@ -112,9 +110,7 @@ public class BiliRoamingApi {
         Uri.Builder builder = new Uri.Builder();
         builder.scheme("https").encodedAuthority(BILIPLUS_PLAYURL_URL);
         builder.encodedQuery(queryString);
-        Log.e(TAG,"getPlayUrl_BP" + builder.toString());
         String ret = getContent(builder.toString());
-        Log.e(TAG,"BP get OK! ret = "+ret);
 
         try{
             JSONObject play_ret = new JSONObject(ret);
@@ -163,7 +159,6 @@ public class BiliRoamingApi {
             play_ret_dash.put("video",play_ret_dash_video_new);
             play_ret.put("dash",play_ret_dash);
 
-            Log.e(TAG,play_ret.toString());
             return play_ret.toString();
         }catch(JSONException e){
             e.printStackTrace();

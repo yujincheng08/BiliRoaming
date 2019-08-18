@@ -104,17 +104,19 @@ public class BangumiSeasonHook extends BaseHook {
 
                     JSONObject resultJson = contentJson.optJSONObject("result");
                     Object newResult = callStaticMethod(fastJsonClass,
-                            BiliBiliPackage.getInstance().fastJsonParse(), "{\"episodes\":"+resultJson.optJSONArray("episodes").toString()+"}", beanClass);
+                            BiliBiliPackage.getInstance().fastJsonParse(), resultJson.toString(), beanClass);
 
                     if (useCache) {
                         // Replace only episodes and rights
                         // Remain user information, such as follow status, watch progress, etc.
-                        Object oldRights = getObjectField(result,"rights");
-                        setObjectField(oldRights, "areaLimit", false);
-                        setObjectField(result,"rights", oldRights);
-                        Object newEpisodes = getObjectField(newResult, "episodes");
-                        setObjectField(result, "episodes", newEpisodes);
-                        setObjectField(result, "seasonLimit", null);
+                        Object newRights = getObjectField(newResult, "rights");
+                        if (!getBooleanField(newRights, "areaLimit")) {
+                            Object newEpisodes = getObjectField(newResult, "episodes");
+
+                            setObjectField(result, "rights", newRights);
+                            setObjectField(result, "episodes", newEpisodes);
+                            setObjectField(result, "seasonLimit", null);
+                        }
                     } else {
                         setIntField(body, "code", 0);
                         setObjectField(body, "result", newResult);
@@ -157,7 +159,10 @@ public class BangumiSeasonHook extends BaseHook {
         switch ((int) lastSeasonInfo.get("type")) {
             case TYPE_SEASON_ID:
                 String seasonId = (String) lastSeasonInfo.get("season_id");
-                content = BiliRoamingApi.getSeason_BP(seasonId, accessKey, useCache);
+                if (XposedInit.sPrefs.getBoolean("use_biliplus", false))
+                    content = BiliRoamingApi.getSeason_BP(seasonId, accessKey, useCache);
+                else
+                    content = BiliRoamingApi.getSeason(seasonId, accessKey, useCache);
                 break;
             case TYPE_EPISODE_ID:
                 String episodeId = (String) lastSeasonInfo.get("episode_id");

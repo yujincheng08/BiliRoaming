@@ -12,6 +12,8 @@
     <string name="main_func_summary">使大陆的用户可以正常观看港澳台番剧</string>
     <string name="hide_icon_summary">不显示本应用在启动器中的图标</string>
     <string name="hide_icon_title">隐藏桌面图标</string>
+    <string name="use_biliplus_summary">使用BiliPlus API获取番剧数据（测试）</string>
+    <string name="use_biliplus_title">使用BP接口</string>
     <string name="custom_theme_title">自定义主题色</string>
     <string name="custom_theme_summary">添加自定义主题颜色的功能</string>
 </resources>
