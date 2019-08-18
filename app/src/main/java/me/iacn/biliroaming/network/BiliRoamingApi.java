@@ -2,7 +2,6 @@ package me.iacn.biliroaming.network;
 
 import android.net.Uri;
 import android.text.TextUtils;
-import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -14,8 +13,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 import me.iacn.biliroaming.BuildConfig;
-
-import static me.iacn.biliroaming.Constant.TAG;
 
 /**
  * Created by iAcn on 2019/3/27
@@ -110,6 +107,9 @@ public class BiliRoamingApi {
         Uri.Builder builder = new Uri.Builder();
         builder.scheme("https").encodedAuthority(BILIPLUS_PLAYURL_URL);
         builder.encodedQuery(queryString);
+        builder.appendQueryParameter("module","bangumi");
+        builder.appendQueryParameter("otype","json");
+        builder.appendQueryParameter("platform","android");
         String ret = getContent(builder.toString());
 
         try{

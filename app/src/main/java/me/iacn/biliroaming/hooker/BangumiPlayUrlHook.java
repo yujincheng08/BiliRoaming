@@ -36,14 +36,13 @@ public class BangumiPlayUrlHook extends BaseHook {
                 "getInputStream", new XC_MethodHook() {
                     @Override
                     protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                        Log.e(TAG,"getInputStream");
                         // Found from "b.ecy" in version 5.39.1
                         HttpURLConnection connection = (HttpURLConnection) param.thisObject;
                         String urlString = connection.getURL().toString();
 
                         if (urlString.startsWith("https://api.bilibili.com/pgc/player/api/playurl")) {
                             String queryString = urlString.substring(urlString.indexOf("?") + 1);
-                            if (queryString.contains("module=bangumi")) {
+                            if (queryString.contains("cid")) {
                                 InputStream inputStream = (InputStream) param.getResult();
                                 String encoding = connection.getContentEncoding();
                                 String content = StreamUtils.getContent(inputStream, encoding);
