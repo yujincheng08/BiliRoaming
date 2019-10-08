@@ -90,7 +90,7 @@ public class MainActivity extends Activity {
             super.onResume();
 
             if (isTaiChiModuleActive(getActivity())) {
-                runningStatusPref.setTitle(R.string.running_status_enable);
+                runningStatusPref.setTitle(R.string.running_status_disable);
                 runningStatusPref.setSummary(R.string.runtime_taichi);
             } else {
                 if (isModuleActive()) {

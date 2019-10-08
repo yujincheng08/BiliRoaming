@@ -2,6 +2,7 @@ package me.iacn.biliroaming.network;
 
 import android.net.Uri;
 import android.text.TextUtils;
+import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -13,6 +14,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 import me.iacn.biliroaming.BuildConfig;
+import static me.iacn.biliroaming.Constant.TAG;
 
 /**
  * Created by iAcn on 2019/3/27
@@ -117,52 +119,71 @@ public class BiliRoamingApi {
             play_ret.put("is_preview",0);
             play_ret.put("no_rexcode",0);
             play_ret.put("message","");
-            play_ret.put("type","DASH");
-            JSONObject play_ret_dash = play_ret.getJSONObject("dash");
-            play_ret_dash.put("duration",0);
-            play_ret_dash.put("min_buffer_time",0);
-            JSONArray play_ret_dash_video = play_ret_dash.getJSONArray("video");
-            JSONArray play_ret_dash_audio = play_ret_dash.getJSONArray("audio");
-            JSONArray play_ret_dash_video_new = new JSONArray();
-            JSONArray play_ret_dash_audio_new = new JSONArray();
-            for (int i=play_ret_dash_video.length()-1; i>=0; i--){
-                JSONObject t = play_ret_dash_video.getJSONObject(i);
-                t.put("start_with_sap",0);
-                t.put("sar","");
-                t.put("codecs","");
-                t.put("backup_url",new JSONArray());
-                t.put("framerate","");
-                t.put("size",0);
-                t.put("mime_type","");
-                t.put("width",0);
-                t.put("height",0);
-                t.put("md5","");
-                t.remove("baseUrl");
-                play_ret_dash_video_new.put(t);
+            if (play_ret.has("durl")){
+                play_ret.put("type","FLV");
+                JSONObject play_ret_durl = play_ret.getJSONArray("durl").getJSONObject(0);
+                play_ret_durl.put("ahead","");
+                play_ret_durl.put("vhead","");
+                JSONArray play_ret_durl_backup = new JSONArray();
+                play_ret_durl_backup.put(play_ret_durl.getString("url"));
+                play_ret_durl.put("backup_url",play_ret_durl_backup);
+                play_ret_durl.put("md5","");
+                JSONArray play_ret_durl_s = new JSONArray();
+                play_ret_durl_s.put(play_ret_durl);
+                play_ret.put("durl",play_ret_durl_s);
+                return play_ret.toString();
             }
-            for (int i=0; i<play_ret_dash_audio.length(); i++){
-                JSONObject t = play_ret_dash_audio.getJSONObject(i);
-                t.put("start_with_sap",0);
-                t.put("sar","");
-                t.put("codecs","");
-                t.put("backup_url",new JSONArray());
-                t.put("framerate","");
-                t.put("size",0);
-                t.put("mime_type","");
-                t.put("width",0);
-                t.put("height",0);
-                t.put("md5","");
-                t.remove("baseUrl");
-                play_ret_dash_audio_new.put(t);
-            }
-            play_ret_dash.put("audio",play_ret_dash_audio_new);
-            play_ret_dash.put("video",play_ret_dash_video_new);
-            play_ret.put("dash",play_ret_dash);
+            else if(play_ret.has("dash")) {
+                play_ret.put("type", "DASH");
+                JSONObject play_ret_dash = play_ret.getJSONObject("dash");
+                play_ret_dash.put("duration", 0);
+                play_ret_dash.put("min_buffer_time", 0);
+                JSONArray play_ret_dash_video = play_ret_dash.getJSONArray("video");
+                JSONArray play_ret_dash_audio = play_ret_dash.getJSONArray("audio");
+                JSONArray play_ret_dash_video_new = new JSONArray();
+                JSONArray play_ret_dash_audio_new = new JSONArray();
+                for (int i = play_ret_dash_video.length() - 1; i >= 0; i--) {
+                    JSONObject t = play_ret_dash_video.getJSONObject(i);
+                    t.put("start_with_sap", 0);
+                    t.put("sar", "");
+                    t.put("codecs", "");
+                    t.put("backup_url", new JSONArray());
+                    t.put("framerate", "");
+                    t.put("size", 0);
+                    t.put("mime_type", "");
+                    t.put("width", 0);
+                    t.put("height", 0);
+                    t.put("md5", "");
+                    t.remove("baseUrl");
+                    play_ret_dash_video_new.put(t);
+                }
+                for (int i = 0; i < play_ret_dash_audio.length(); i++) {
+                    JSONObject t = play_ret_dash_audio.getJSONObject(i);
+                    t.put("start_with_sap", 0);
+                    t.put("sar", "");
+                    t.put("codecs", "");
+                    t.put("backup_url", new JSONArray());
+                    t.put("framerate", "");
+                    t.put("size", 0);
+                    t.put("mime_type", "");
+                    t.put("width", 0);
+                    t.put("height", 0);
+                    t.put("md5", "");
+                    t.remove("baseUrl");
+                    play_ret_dash_audio_new.put(t);
+                }
+                play_ret_dash.put("audio", play_ret_dash_audio_new);
+                play_ret_dash.put("video", play_ret_dash_video_new);
+                play_ret.put("dash", play_ret_dash);
 
-            return play_ret.toString();
+                return play_ret.toString();
+            }else{
+                Log.e(TAG,"Unsupported video type, please report it at https://github.com/djytw/BiliRoaming/issues");
+                return "{\"code\":1}";
+            }
         }catch(JSONException e){
             e.printStackTrace();
-            return "{code:1}";
+            return "{\"code\":1}";
         }
     }
     private static String getContent(String urlString) throws IOException {
