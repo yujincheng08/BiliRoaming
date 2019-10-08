@@ -66,7 +66,7 @@ public class BiliRoamingApi {
                 nep.put("id", ep.getString("episode_id"));
                 nep.put("long_title", ep.getString("index_title"));
                 nep.put("status", ep.getString("episode_status"));
-                if(ep.getString("episode_status") == "13"){
+                if(ep.getString("episode_status").equals("13")){
                     nep.put("badge","会员");
                 }
                 nep.put("title", ep.getString("index"));
