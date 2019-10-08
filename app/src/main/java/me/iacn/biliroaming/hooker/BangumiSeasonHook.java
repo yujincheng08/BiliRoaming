@@ -6,6 +6,7 @@ import android.util.Log;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
 
@@ -18,6 +19,7 @@ import me.iacn.biliroaming.network.BiliRoamingApi;
 import static de.robv.android.xposed.XposedHelpers.callStaticMethod;
 import static de.robv.android.xposed.XposedHelpers.findAndHookMethod;
 import static de.robv.android.xposed.XposedHelpers.findClass;
+import static de.robv.android.xposed.XposedHelpers.findField;
 import static de.robv.android.xposed.XposedHelpers.getBooleanField;
 import static de.robv.android.xposed.XposedHelpers.getIntField;
 import static de.robv.android.xposed.XposedHelpers.getObjectField;
@@ -91,7 +93,11 @@ public class BangumiSeasonHook extends BaseHook {
                 if (isBangumiWithWatchPermission(getIntField(body, "code"), result)) return;
 
                 boolean useCache = result != null;
-                String content = getSeasonInfoFromProxyServer(useCache);
+                String content;
+                if (XposedInit.sPrefs.getBoolean("use_biliplus", false) && result!=null)
+                    content = BiliRoamingApi.getSeason_BP((String)getObjectField(result,"seasonId"), null, false);
+                else
+                    content = getSeasonInfoFromProxyServer(useCache);
                 JSONObject contentJson = new JSONObject(content);
                 int code = contentJson.optInt("code");
 
