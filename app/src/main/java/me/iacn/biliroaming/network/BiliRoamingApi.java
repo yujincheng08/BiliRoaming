@@ -19,21 +19,9 @@ public class BiliRoamingApi {
     private static final String BILIROAMING_SEASON_URL = "api.iacn.me/biliroaming/season";
     private static final String BILIROAMING_PLAYURL_URL = "api.iacn.me/biliroaming/playurl";
 
-    public static String getSeason(String seasonId, String accessKey, boolean useCache) throws IOException {
+    public static String getSeason(String id, String accessKey, boolean useCache) throws IOException {
         Uri.Builder builder = new Uri.Builder();
-        builder.scheme("https").encodedAuthority(BILIROAMING_SEASON_URL).appendPath(seasonId);
-
-        if (!TextUtils.isEmpty(accessKey)) {
-            builder.appendQueryParameter("access_key", accessKey);
-        }
-        builder.appendQueryParameter("use_cache", useCache ? "1" : "0");
-
-        return getContent(builder.toString());
-    }
-
-    public static String getEpisode(String episodeId, String accessKey, boolean useCache) throws IOException {
-        Uri.Builder builder = new Uri.Builder();
-        builder.scheme("https").encodedAuthority(BILIROAMING_SEASON_URL).appendQueryParameter("ep_id", episodeId);
+        builder.scheme("https").encodedAuthority(BILIROAMING_SEASON_URL).appendPath(id);
 
         if (!TextUtils.isEmpty(accessKey)) {
             builder.appendQueryParameter("access_key", accessKey);

@@ -153,20 +153,18 @@ public class BangumiSeasonHook extends BaseHook {
     private String getSeasonInfoFromProxyServer(boolean useCache) throws IOException {
         Log.d(TAG, "Limited Bangumi: seasonInfo = " + lastSeasonInfo);
 
-        String content = null;
+        String id = null;
         String accessKey = (String) lastSeasonInfo.get("access_key");
 
         switch ((int) lastSeasonInfo.get("type")) {
             case TYPE_SEASON_ID:
-                String seasonId = (String) lastSeasonInfo.get("season_id");
-                content = BiliRoamingApi.getSeason(seasonId, accessKey, useCache);
+                id = (String) lastSeasonInfo.get("season_id");
                 break;
             case TYPE_EPISODE_ID:
-                String episodeId = (String) lastSeasonInfo.get("episode_id");
-                content = BiliRoamingApi.getEpisode(episodeId, accessKey, useCache);
+                id = "ep" + lastSeasonInfo.get("episode_id");
                 break;
         }
 
-        return content;
+        return BiliRoamingApi.getSeason(id, accessKey, useCache);
     }
 }
