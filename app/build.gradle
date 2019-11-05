@@ -7,13 +7,13 @@ android {
         applicationId "me.iacn.biliroaming"
         minSdkVersion 21
         targetSdkVersion 27
-        versionCode 9
-        versionName "1.1.3"
+        versionCode 10
+        versionName "1.1.5"
     }
 
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
             zipAlignEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }

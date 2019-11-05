@@ -116,8 +116,8 @@ public class CustomThemeHook extends BaseHook {
 
                         try {
                             XposedBridge.invokeOriginalMethod(param.method, param.thisObject, param.args);
-                        } catch (Exception e1) {
-                            e1.printStackTrace();
+                        } catch (Exception e) {
+                            e.printStackTrace();
                         }
 
                     });

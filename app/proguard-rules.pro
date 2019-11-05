@@ -6,6 +6,6 @@
   public void *(de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam);
 }
 
--keepclassmembernames class me.iacn.biliroaming.MainActivity {
+-keepclassmembers class me.iacn.biliroaming.MainActivity {
     boolean isModuleActive();
 }
