@@ -125,7 +125,7 @@ public class BangumiSeasonHook extends BaseHook {
             }
         });
 
-        findAndHookMethod("com.bilibili.bangumi.logic.page.detail.BangumiDetailViewModel$d", mClassLoader,
+        findAndHookMethod("com.bilibili.bangumi.logic.page.detail.BangumiDetailViewModelV2$d", mClassLoader,
                 "call", Object.class, new XC_MethodHook() {
                     @Override
                     protected void afterHookedMethod(MethodHookParam param) throws Throwable {
