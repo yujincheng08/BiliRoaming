@@ -13,6 +13,7 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam;
 import me.iacn.biliroaming.hooker.BangumiPlayUrlHook;
 import me.iacn.biliroaming.hooker.BangumiSeasonHook;
 import me.iacn.biliroaming.hooker.CustomThemeHook;
+import me.iacn.biliroaming.hooker.TeenagersModeHook;
 
 import static de.robv.android.xposed.XposedHelpers.findAndHookMethod;
 import static me.iacn.biliroaming.Constant.BILIBILI_PACKAGENAME;
@@ -49,6 +50,7 @@ public class XposedInit implements IXposedHookLoadPackage {
                         new BangumiSeasonHook(lpparam.classLoader).startHook();
                         new BangumiPlayUrlHook(lpparam.classLoader).startHook();
                         new CustomThemeHook(lpparam.classLoader).startHook();
+                        new TeenagersModeHook(lpparam.classLoader).startHook();
                         break;
                     case "tv.danmaku.bili:web":
                         new CustomThemeHook(lpparam.classLoader).insertColorForWebProcess();
