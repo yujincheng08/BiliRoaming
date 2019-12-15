@@ -10,6 +10,7 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 
 import de.robv.android.xposed.XC_MethodHook;
+import de.robv.android.xposed.XposedHelpers;
 import me.iacn.biliroaming.XposedInit;
 import me.iacn.biliroaming.network.BiliRoamingApi;
 import me.iacn.biliroaming.network.StreamUtils;
@@ -31,32 +32,35 @@ public class BangumiPlayUrlHook extends BaseHook {
     public void startHook() {
         if (!XposedInit.sPrefs.getBoolean("main_func", false)) return;
         Log.d(TAG, "startHook: BangumiPlayUrl");
+        try {
+            findAndHookMethod("com.bilibili.lib.okhttp.huc.OkHttpURLConnection", mClassLoader,
+                    "getInputStream", new XC_MethodHook() {
+                        @Override
+                        protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                            // Found from "b.ecy" in version 5.39.1
+                            HttpURLConnection connection = (HttpURLConnection) param.thisObject;
+                            String urlString = connection.getURL().toString();
 
-        findAndHookMethod("com.bilibili.lib.okhttp.huc.OkHttpURLConnection", mClassLoader,
-                "getInputStream", new XC_MethodHook() {
-                    @Override
-                    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                        // Found from "b.ecy" in version 5.39.1
-                        HttpURLConnection connection = (HttpURLConnection) param.thisObject;
-                        String urlString = connection.getURL().toString();
+                            if (urlString.startsWith("https://api.bilibili.com/pgc/player/api/playurl")) {
+                                String queryString = urlString.substring(urlString.indexOf("?") + 1);
+                                if (queryString.contains("ep_id=")) {
+                                    InputStream inputStream = (InputStream) param.getResult();
+                                    String encoding = connection.getContentEncoding();
+                                    String content = StreamUtils.getContent(inputStream, encoding);
 
-                        if (urlString.startsWith("https://api.bilibili.com/pgc/player/api/playurl")) {
-                            String queryString = urlString.substring(urlString.indexOf("?") + 1);
-                            if (queryString.contains("ep_id=")) {
-                                InputStream inputStream = (InputStream) param.getResult();
-                                String encoding = connection.getContentEncoding();
-                                String content = StreamUtils.getContent(inputStream, encoding);
+                                    if (isLimitWatchingArea(content)) {
+                                        content = BiliRoamingApi.getPlayUrl(queryString);
+                                        Log.d(TAG, "Has replaced play url with proxy server");
+                                    }
 
-                                if (isLimitWatchingArea(content)) {
-                                    content = BiliRoamingApi.getPlayUrl(queryString);
-                                    Log.d(TAG, "Has replaced play url with proxy server");
+                                    param.setResult(new ByteArrayInputStream(content.getBytes()));
                                 }
-
-                                param.setResult(new ByteArrayInputStream(content.getBytes()));
                             }
                         }
-                    }
-                });
+                    });
+        } catch (XposedHelpers.ClassNotFoundError e) {
+            e.printStackTrace();
+        }
     }
 
     private boolean isLimitWatchingArea(String jsonText) {

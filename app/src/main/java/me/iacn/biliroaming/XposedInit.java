@@ -48,6 +48,7 @@ public class XposedInit implements IXposedHookLoadPackage {
                         BiliBiliPackage.getInstance().init(lpparam.classLoader, (Context) param.args[0]);
                         new BangumiSeasonHook(lpparam.classLoader).startHook();
                         new CustomThemeHook(lpparam.classLoader).startHook();
+                        new BangumiPlayUrlHook(lpparam.classLoader).startHook(); // After 5.50
                         break;
                     case "tv.danmaku.bili:download":
                         new BangumiPlayUrlHook(lpparam.classLoader).startHook();
