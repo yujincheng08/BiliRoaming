@@ -91,7 +91,11 @@ public class BangumiSeasonHook extends BaseHook {
                 if (isBangumiWithWatchPermission(getIntField(body, "code"), result)) return;
 
                 boolean useCache = result != null;
-                String content = getSeasonInfoFromProxyServer(useCache);
+                String content;
+                if (XposedInit.sPrefs.getBoolean("use_biliplus", false) && result!=null)
+                    content = BiliRoamingApi.getSeason_BP((String)getObjectField(result,"seasonId"));
+                else
+                    content = getSeasonInfoFromProxyServer(useCache);
                 JSONObject contentJson = new JSONObject(content);
                 int code = contentJson.optInt("code");
 
