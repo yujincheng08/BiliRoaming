@@ -21,6 +21,7 @@ import static de.robv.android.xposed.XposedHelpers.findClass;
 import static de.robv.android.xposed.XposedHelpers.getBooleanField;
 import static de.robv.android.xposed.XposedHelpers.getIntField;
 import static de.robv.android.xposed.XposedHelpers.getObjectField;
+import static de.robv.android.xposed.XposedHelpers.setBooleanField;
 import static de.robv.android.xposed.XposedHelpers.setIntField;
 import static de.robv.android.xposed.XposedHelpers.setObjectField;
 import static me.iacn.biliroaming.Constant.TAG;
@@ -88,7 +89,17 @@ public class BangumiSeasonHook extends BaseHook {
 
                 Object result = getObjectField(body, "result");
                 // Filter normal bangumi and other responses
-                if (isBangumiWithWatchPermission(getIntField(body, "code"), result)) return;
+                if (isBangumiWithWatchPermission(getIntField(body, "code"), result)){
+                    if (result != null) {
+                        Class<?> bangumiSeasonClass = BiliBiliPackage.getInstance().bangumiUniformSeason();
+                        if (bangumiSeasonClass.isInstance(result) && XposedInit.sPrefs.getBoolean("allow_download", false)) {
+                            Object rights = getObjectField(result, "rights");
+                            setBooleanField(rights, "allowDownload", true);
+                            Log.d(TAG, "Download allowed");
+                        }
+                    }
+                    return;
+                }
 
                 boolean useCache = result != null;
                 String content;
@@ -114,6 +125,8 @@ public class BangumiSeasonHook extends BaseHook {
                         // Replace only episodes and rights
                         // Remain user information, such as follow status, watch progress, etc.
                         Object newRights = getObjectField(newResult, "rights");
+                        if(XposedInit.sPrefs.getBoolean("allow_download", false))
+                            setBooleanField(newRights, "allowDownload", true);
                         if (!getBooleanField(newRights, "areaLimit")) {
                             Object newEpisodes = getObjectField(newResult, "episodes");
 

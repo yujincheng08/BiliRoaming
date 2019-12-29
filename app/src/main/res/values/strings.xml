@@ -18,4 +18,6 @@
     <string name="custom_theme_summary">添加自定义主题颜色的功能</string>
     <string name="teenagers_mode_dialog_title">关闭青少年模式弹窗</string>
     <string name="teenagers_mode_dialog_summary">仍可从侧滑菜单进入青少年模式</string>
+    <string name="allow_download_title">允许下载版权番剧</string>
+    <string name="allow_download_summary">使版权番剧可以缓存</string>
 </resources>
