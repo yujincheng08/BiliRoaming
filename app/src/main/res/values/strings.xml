@@ -16,4 +16,6 @@
     <string name="custom_theme_summary">添加自定义主题颜色的功能</string>
     <string name="teenagers_mode_dialog_title">关闭青少年模式弹窗</string>
     <string name="teenagers_mode_dialog_summary">仍可从侧滑菜单进入青少年模式</string>
+    <string name="comment_floor_title">评论区楼层显示</string>
+    <string name="comment_floor_summary">恢复以前版本的评论楼层显示</string>
 </resources>
