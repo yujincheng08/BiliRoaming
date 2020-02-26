@@ -6,7 +6,6 @@ import android.util.Log;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 
 import de.robv.android.xposed.XC_MethodHook;
@@ -136,11 +135,9 @@ public class BangumiSeasonHook extends BaseHook {
         if (result != null) {
             Class<?> bangumiSeasonClass = BiliBiliPackage.getInstance().bangumiUniformSeason();
             if (bangumiSeasonClass.isInstance(result)) {
-                List episodes = (List) getObjectField(result, "episodes");
                 Object rights = getObjectField(result, "rights");
                 boolean areaLimit = getBooleanField(rights, "areaLimit");
-
-                return !areaLimit && episodes.size() != 0;
+                return !areaLimit;
             }
         }
         return code != -404;
