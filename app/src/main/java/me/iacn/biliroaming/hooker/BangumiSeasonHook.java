@@ -16,7 +16,6 @@ import me.iacn.biliroaming.XposedInit;
 import me.iacn.biliroaming.network.BiliRoamingApi;
 
 import static de.robv.android.xposed.XposedHelpers.callStaticMethod;
-import static de.robv.android.xposed.XposedHelpers.findAndHookMethod;
 import static de.robv.android.xposed.XposedHelpers.findClass;
 import static de.robv.android.xposed.XposedHelpers.getBooleanField;
 import static de.robv.android.xposed.XposedHelpers.getIntField;
@@ -88,7 +87,10 @@ public class BangumiSeasonHook extends BaseHook {
 
                 Object result = getObjectField(body, "result");
                 // Filter normal bangumi and other responses
-                if (isBangumiWithWatchPermission(getIntField(body, "code"), result)) return;
+                if (isBangumiWithWatchPermission(getIntField(body, "code"), result)) {
+                    lastSeasonInfo.clear();
+                    return;
+                }
 
                 boolean useCache = result != null;
                 String content = getSeasonInfoFromProxyServer(useCache);
@@ -122,16 +124,10 @@ public class BangumiSeasonHook extends BaseHook {
                         setObjectField(body, "result", newResult);
                     }
                 }
+
+                lastSeasonInfo.clear();
             }
         });
-
-        findAndHookMethod("com.bilibili.bangumi.logic.page.detail.BangumiDetailViewModelV2$d", mClassLoader,
-                "call", Object.class, new XC_MethodHook() {
-                    @Override
-                    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                        lastSeasonInfo.clear();
-                    }
-                });
     }
 
     private boolean isBangumiWithWatchPermission(int code, Object result) {
