@@ -1,12 +1,12 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 28
+    compileSdkVersion 29
 
     defaultConfig {
         applicationId "me.iacn.biliroaming"
         minSdkVersion 21
-        targetSdkVersion 27
+        targetSdkVersion 27  // Target Android O
         versionCode 10
         versionName "1.1.5"
     }

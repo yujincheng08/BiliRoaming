@@ -1,4 +1,4 @@
-package me.iacn.biliroaming.hooker;
+package me.iacn.biliroaming.hook;
 
 import android.app.Activity;
 import android.app.AndroidAppHelper;
