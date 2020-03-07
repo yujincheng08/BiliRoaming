@@ -6,6 +6,7 @@ package me.iacn.biliroaming;
  */
 public final class Constant {
     public static final String BILIBILI_PACKAGENAME = "tv.danmaku.bili";
+    public static final String BILIBILI_PACKAGENAME2 = "com.bilibili.app.blue";
     public static final String TAG = "BiliRoaming";
     public static final String HOOK_INFO_FILE_NAME = "hookinfo.dat";
     public static final int TYPE_SEASON_ID = 0;
