@@ -8,6 +8,7 @@ import org.json.JSONObject;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.util.Map;
 
 import de.robv.android.xposed.XC_MethodHook;
 import me.iacn.biliroaming.XposedInit;
@@ -31,6 +32,19 @@ public class BangumiPlayUrlHook extends BaseHook {
     public void startHook() {
         if (!XposedInit.sPrefs.getBoolean("main_func", false)) return;
         Log.d(TAG, "startHook: BangumiPlayUrl");
+
+        findAndHookMethod("com.bilibili.nativelibrary.LibBili", mClassLoader, "a",
+                Map.class, new XC_MethodHook() {
+            @Override
+            protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                Map params = (Map)param.args[0];
+                if(XposedInit.sPrefs.getBoolean("use_biliplus", false) &&
+                        params.containsKey("ep_id")) {
+                    params.remove("dl");
+                }
+
+            }
+        });
 
         findAndHookMethod("com.bilibili.lib.okhttp.huc.OkHttpURLConnection", mClassLoader,
                 "getInputStream", new XC_MethodHook() {
