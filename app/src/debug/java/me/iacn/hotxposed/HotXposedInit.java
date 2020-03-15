@@ -25,6 +25,7 @@ public class HotXposedInit implements IXposedHookLoadPackage {
 
     private static final String HOST_PACKAGE = "tv.danmaku.bili";
     private static final String HOST_PACKAGE2 = "com.bilibili.app.blue";
+    private static final String HOST_PACKAGE3 = "com.bilibili.app.in";
     private static final String REAL_XPOSED_INIT = "me.iacn.biliroaming.XposedInit";
 
     @Override
@@ -32,6 +33,7 @@ public class HotXposedInit implements IXposedHookLoadPackage {
         disableModulesUpdatedNotification(lpparam);
 
         if (!HOST_PACKAGE.equals(lpparam.packageName) && !HOST_PACKAGE2.equals(lpparam.packageName)
+                && !HOST_PACKAGE3.equals(lpparam.packageName)
                 && !BuildConfig.APPLICATION_ID.equals(lpparam.packageName)) return;
 
         File moduleApkFile = getModuleApkFile();

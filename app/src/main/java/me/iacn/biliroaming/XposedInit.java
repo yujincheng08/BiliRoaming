@@ -19,6 +19,7 @@ import me.iacn.biliroaming.hook.TeenagersModeHook;
 import static de.robv.android.xposed.XposedHelpers.findAndHookMethod;
 import static me.iacn.biliroaming.Constant.BILIBILI_PACKAGENAME;
 import static me.iacn.biliroaming.Constant.BILIBILI_PACKAGENAME2;
+import static me.iacn.biliroaming.Constant.BILIBILI_PACKAGENAME3;
 import static me.iacn.biliroaming.Constant.TAG;
 
 
@@ -37,7 +38,9 @@ public class XposedInit implements IXposedHookLoadPackage {
                     "isModuleActive", XC_MethodReplacement.returnConstant(true));
         }
 
-        if (!BILIBILI_PACKAGENAME.equals(lpparam.packageName) && !BILIBILI_PACKAGENAME2.equals(lpparam.packageName)) return;
+        if (!BILIBILI_PACKAGENAME.equals(lpparam.packageName)
+                && !BILIBILI_PACKAGENAME2.equals(lpparam.packageName)
+                && !BILIBILI_PACKAGENAME3.equals(lpparam.packageName)) return;
 
         sPrefs = new XSharedPreferences(BuildConfig.APPLICATION_ID);
 
@@ -48,6 +51,7 @@ public class XposedInit implements IXposedHookLoadPackage {
                 switch (lpparam.processName) {
                     case "tv.danmaku.bili":
                     case "com.bilibili.app.blue":
+                    case "com.bilibili.app.in":
                         Log.d(TAG, "BiliBili process launched ...");
                         BiliBiliPackage.getInstance().init(lpparam.classLoader, (Context) param.args[0]);
                         new BangumiSeasonHook(lpparam.classLoader).startHook();
@@ -57,7 +61,13 @@ public class XposedInit implements IXposedHookLoadPackage {
                         new CommentHook(lpparam.classLoader).startHook();
                         break;
                     case "tv.danmaku.bili:web":
+                    case "com.bilibili.app.in:web":
+                    case "com.bilibili.app.blue:web":
                         new CustomThemeHook(lpparam.classLoader).insertColorForWebProcess();
+                        break;
+                    case "com.bilibili.app.in:download":
+                    case "tv.danmaku.bili:download":
+                        new BangumiPlayUrlHook(lpparam.classLoader).startHook();
                         break;
                 }
             }

@@ -56,7 +56,7 @@ public class BangumiPlayUrlHook extends BaseHook {
 
                         if (urlString.startsWith("https://api.bilibili.com/pgc/player/api/playurl")) {
                             String queryString = urlString.substring(urlString.indexOf("?") + 1);
-                            if (queryString.contains("ep_id=")) {
+                            if (queryString.contains("ep_id=") || queryString.contains("module=bangumi")) {
                                 InputStream inputStream = (InputStream) param.getResult();
                                 String encoding = connection.getContentEncoding();
                                 String content = StreamUtils.getContent(inputStream, encoding);
