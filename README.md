@@ -15,4 +15,4 @@ An Xposed module to unlock BiliBili bangumi watching area limit.
   * 太极框架不能用
  
 # download/下载
-https://github.com/djytw/BiliRoaming/releases/latest
+https://github.com/yujincheng08/BiliRoaming/releases/latest
