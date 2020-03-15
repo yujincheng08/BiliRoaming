@@ -38,7 +38,7 @@ public class BangumiPlayUrlHook extends BaseHook {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
                 Map params = (Map)param.args[0];
-                if(XposedInit.sPrefs.getBoolean("use_biliplus", false) &&
+                if(XposedInit.sPrefs.getBoolean("allow_download", false) &&
                         params.containsKey("ep_id")) {
                     params.remove("dl");
                 }

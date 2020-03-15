@@ -41,6 +41,11 @@
             android:key="version"
             android:title="@string/version" />
 
+        <Preference
+            android:key="author"
+            android:title="@string/author"
+            android:summary="@string/author_list"/>
+
         <Preference android:key="running_status" />
 
     </PreferenceCategory>
