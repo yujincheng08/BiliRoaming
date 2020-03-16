@@ -24,4 +24,6 @@
     <string name="allow_download_summary">使版权番剧可以缓存</string>
     <string name="comment_floor_title">评论区楼层显示</string>
     <string name="comment_floor_summary">恢复以前版本的评论楼层显示</string>
+    <string name="simulate_summary">可以开启概念版的直播功能（国际版无效）</string>
+    <string name="simulate_title">模拟原版客户端</string>
 </resources>

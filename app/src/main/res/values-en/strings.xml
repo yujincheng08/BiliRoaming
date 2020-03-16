@@ -25,4 +25,6 @@
     <string name="comment_floor_summary">Show comment floor as previous version</string>
     <string name="author">Author</string>
     <string name="author_list">iAcn/djytw/yujincheng08</string>
+    <string name="simulate_summary">Enable live for blue version</string>
+    <string name="simulate_title">Simulate Origin</string>
 </resources>

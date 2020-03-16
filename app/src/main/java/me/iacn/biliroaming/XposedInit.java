@@ -66,6 +66,7 @@ public class XposedInit implements IXposedHookLoadPackage {
                         new CustomThemeHook(lpparam.classLoader).insertColorForWebProcess();
                         break;
                     case "com.bilibili.app.in:download":
+                    case "com.bilibili.app.blue:download":
                     case "tv.danmaku.bili:download":
                         new BangumiPlayUrlHook(lpparam.classLoader).startHook();
                         break;

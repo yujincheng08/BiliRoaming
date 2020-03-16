@@ -42,7 +42,11 @@ public class BangumiPlayUrlHook extends BaseHook {
                         params.containsKey("ep_id")) {
                     params.remove("dl");
                 }
-
+                if(XposedInit.sPrefs.getBoolean("simulate", false)) {
+                    params.put("appkey", "1d8b6e7d45233436");
+                    params.put("platform", "android");
+                    params.put("mobi_app", "android");
+                }
             }
         });
 

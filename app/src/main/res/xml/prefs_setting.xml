@@ -35,6 +35,11 @@
         android:summary="@string/use_biliplus_summary"
         android:title="@string/use_biliplus_title" />
 
+    <SwitchPreference
+        android:key="simulate"
+        android:summary="@string/simulate_summary"
+        android:title="@string/simulate_title" />
+
     <PreferenceCategory android:title="@string/about">
 
         <Preference
