@@ -39,6 +39,29 @@
         android:key="simulate"
         android:summary="@string/simulate_summary"
         android:title="@string/simulate_title" />
+    <PreferenceCategory android:title="@string/cdn_category">
+
+        <SwitchPreference
+            android:key="use_cdn"
+            android:summary="@string/use_cdn_summary"
+            android:title="@string/use_cdn_title" />
+
+        <ListPreference
+            android:dependency="use_cdn"
+            android:entries="@array/cdn_entries"
+            android:entryValues="@array/cdn_values"
+            android:key="cdn"
+            android:summary="@string/cdn_summary"
+            android:title="@string/cdn_title"
+            android:defaultValue="@integer/cdn_default"/>
+
+        <EditTextPreference
+            android:key="custom_cdn"
+            android:dependency="use_cdn"
+            android:title="@string/custom_cdn_title"
+            android:summary="@string/custom_cdn_summary"/>
+    </PreferenceCategory>
+
 
     <PreferenceCategory android:title="@string/about">
 

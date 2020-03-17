@@ -119,13 +119,13 @@ public class BangumiSeasonHook extends BaseHook {
                     JSONObject resultJson = contentJson.optJSONObject("result");
                     Object newResult = callStaticMethod(fastJsonClass,
                             BiliBiliPackage.getInstance().fastJsonParse(), resultJson.toString(), beanClass);
+                    Object newRights = getObjectField(newResult, "rights");
 
+                    if(XposedInit.sPrefs.getBoolean("allow_download", false))
+                        setBooleanField(newRights, "allowDownload", true);
                     if (useCache) {
                         // Replace only episodes and rights
                         // Remain user information, such as follow status, watch progress, etc.
-                        Object newRights = getObjectField(newResult, "rights");
-                        if(XposedInit.sPrefs.getBoolean("allow_download", false))
-                            setBooleanField(newRights, "allowDownload", true);
                         if (!getBooleanField(newRights, "areaLimit")) {
                             Object newEpisodes = getObjectField(newResult, "episodes");
 

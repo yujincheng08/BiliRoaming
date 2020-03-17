@@ -5,10 +5,10 @@ android {
 
     defaultConfig {
         applicationId "me.iacn.biliroaming"
-        minSdkVersion 21
+        minSdkVersion 18
         targetSdkVersion 27  // Target Android O
-        versionCode 14
-        versionName "1.1.10"
+        versionCode 16
+        versionName "1.1.12"
     }
 
     buildTypes {
