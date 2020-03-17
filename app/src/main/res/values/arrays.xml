@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="cdn_entries" >
+        <item>自定义</item>
+        <item>东京</item>
+        <item>香港</item>
+        <item>台湾</item>
+        <item>韩国</item>
+        <item>俄罗斯</item>
+        <item>马来西亚</item>
+        <item>德国</item>
+        <item>瑞典</item>
+        <item>美国</item>
+    </string-array>
+    <string-array name="cdn_values" >
+        <item/>
+        <item>23.62.226.208</item>
+        <item>219.76.10.185</item>
+        <item>203.69.81.59</item>
+        <item>175.207.14.88</item>
+        <item>2.20.254.184</item>
+        <item>23.45.232.26</item>
+        <item>2.21.78.123</item>
+        <item>23.211.136.74</item>
+        <item>23.44.51.8</item>
+    </string-array>
+</resources>

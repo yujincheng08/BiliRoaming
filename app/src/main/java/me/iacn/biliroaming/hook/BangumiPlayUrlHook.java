@@ -8,6 +8,7 @@ import org.json.JSONObject;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.InetAddress;
 import java.util.Map;
 
 import de.robv.android.xposed.XC_MethodHook;
@@ -50,6 +51,35 @@ public class BangumiPlayUrlHook extends BaseHook {
             }
         });
 
+
+        findAndHookMethod("java.net.InetAddress",mClassLoader,
+                "getAllByName", String.class, new XC_MethodHook() {
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                        String host = (String)param.args[0];
+                        Log.d(TAG, "Host: " + host);
+                        String cdn = getCDN();
+                        if (!cdn.isEmpty() && host.equals("upos-hz-mirrorakam.akamaized.net")) {
+                            InetAddress[] result = {InetAddress.getByName(cdn)};
+                            param.setResult(result);
+                            Log.d(TAG, "Replace by CDN: " + cdn);
+                        }
+                    }
+                });
+        findAndHookMethod("java.net.InetAddress",mClassLoader,
+                "getByName", String.class, new XC_MethodHook() {
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                        String host = (String)param.args[0];
+                        String cdn = getCDN();
+                        if (!cdn.isEmpty() && host.equals("upos-hz-mirrorakam.akamaized.net")) {
+                            InetAddress result = InetAddress.getByName(cdn);
+                            param.setResult(result);
+                            Log.d(TAG, "Replace by CDN: " + cdn);
+                        }
+                    }
+                });
+
         findAndHookMethod("com.bilibili.lib.okhttp.huc.OkHttpURLConnection", mClassLoader,
                 "getInputStream", new XC_MethodHook() {
                     @Override
@@ -91,5 +121,13 @@ public class BangumiPlayUrlHook extends BaseHook {
             e.printStackTrace();
             return false;
         }
+    }
+
+    private String getCDN() {
+        boolean use_cdn = XposedInit.sPrefs.getBoolean("use_cdn", false);
+        if(!use_cdn) return "";
+        String cdn = XposedInit.sPrefs.getString("cdn", "");
+        if(cdn.isEmpty()) cdn = XposedInit.sPrefs.getString("custom_cdn", "");
+        return cdn;
     }
 }
