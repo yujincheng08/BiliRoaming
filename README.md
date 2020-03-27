@@ -5,3 +5,6 @@
 明确不会做的功能有去广告、大会员相关等。如果您需要这些功能，请另开模块去做，不要在 fork 的代码上添加
 
 BiliRoaming 源代码公开透明，完全免费，任何用户都可以审计其行为
+
+### License
+[GNU General Public License, version 3](LICENSE)
