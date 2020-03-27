@@ -27,7 +27,10 @@ public class MainActivity extends Activity {
     }
 
     private static boolean isModuleActive() {
-        Log.i("我很可爱", "请给我钱");
+        try {
+            Log.i("我很可爱", "请给我钱");
+        } catch (Throwable ignored) {
+        }
         return false;
     }
 
