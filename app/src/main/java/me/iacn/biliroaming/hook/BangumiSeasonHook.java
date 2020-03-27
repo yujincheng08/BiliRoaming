@@ -55,12 +55,12 @@ public class BangumiSeasonHook extends BaseHook {
                     case TYPE_SEASON_ID:
                         String seasonId = paramMap.get("season_id");
                         lastSeasonInfo.put("season_id", seasonId);
-                        Log.d(TAG, "SeasonInformation: seasonId = " + seasonId);
+                        Log.d(TAG, "Bangumi watching: seasonId = " + seasonId);
                         break;
                     case TYPE_EPISODE_ID:
                         String episodeId = paramMap.get("ep_id");
                         lastSeasonInfo.put("episode_id", episodeId);
-                        Log.d(TAG, "SeasonInformation: episodeId = " + episodeId);
+                        Log.d(TAG, "Bangumi watching: episodeId = " + episodeId);
                         break;
                     default:
                         return;
@@ -96,7 +96,7 @@ public class BangumiSeasonHook extends BaseHook {
                 JSONObject contentJson = new JSONObject(content);
                 int code = contentJson.optInt("code");
 
-                Log.d(TAG, "Got new season information from proxy server: code = " + code
+                Log.d(TAG, "Get new season information from proxy server: code = " + code
                         + ", useCache = " + useCache);
 
                 if (code == 0) {
@@ -113,12 +113,14 @@ public class BangumiSeasonHook extends BaseHook {
                         Object newRights = getObjectField(newResult, "rights");
                         if (!getBooleanField(newRights, "areaLimit")) {
                             Object newEpisodes = getObjectField(newResult, "episodes");
-                            Object newModules = getObjectField(newResult, "modules");
-
                             setObjectField(result, "rights", newRights);
                             setObjectField(result, "episodes", newEpisodes);
-                            setObjectField(result, "modules", newModules);
                             setObjectField(result, "seasonLimit", null);
+
+                            if (BiliBiliPackage.getInstance().hasModulesInResult()) {
+                                Object newModules = getObjectField(newResult, "modules");
+                                setObjectField(result, "modules", newModules);
+                            }
                         }
                     } else {
                         setIntField(body, "code", 0);
@@ -146,7 +148,7 @@ public class BangumiSeasonHook extends BaseHook {
     }
 
     private String getSeasonInfoFromProxyServer(boolean useCache) throws IOException {
-        Log.d(TAG, "Limited Bangumi: seasonInfo = " + lastSeasonInfo);
+        Log.d(TAG, "Found a restricted bangumi: " + lastSeasonInfo);
 
         String id = null;
         String accessKey = (String) lastSeasonInfo.get("access_key");

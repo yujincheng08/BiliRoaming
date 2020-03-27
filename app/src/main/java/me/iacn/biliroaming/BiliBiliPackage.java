@@ -39,6 +39,8 @@ public class BiliBiliPackage {
     private WeakReference<Class<?>> bangumiUniformSeasonClass;
     private WeakReference<Class<?>> themeHelperClass;
 
+    private boolean mHasModulesInResult;
+
     private BiliBiliPackage() {
     }
 
@@ -85,8 +87,17 @@ public class BiliBiliPackage {
     }
 
     public Class<?> bangumiUniformSeason() {
-        bangumiUniformSeasonClass = checkNullOrReturn(bangumiUniformSeasonClass,
-                "com.bilibili.bangumi.data.page.detail.entity.BangumiUniformSeason");
+        if (bangumiUniformSeasonClass == null || bangumiUniformSeasonClass.get() == null) {
+            Class<?> clazz = findClass(
+                    "com.bilibili.bangumi.data.page.detail.entity.BangumiUniformSeason", mClassLoader);
+            bangumiUniformSeasonClass = new WeakReference<>(clazz);
+
+            try {
+                clazz.getField("modules");
+                mHasModulesInResult = true;
+            } catch (NoSuchFieldException ignored) {
+            }
+        }
         return bangumiUniformSeasonClass.get();
     }
 
@@ -98,6 +109,11 @@ public class BiliBiliPackage {
     public Class<?> themeHelper() {
         themeHelperClass = checkNullOrReturn(themeHelperClass, "tv.danmaku.bili.ui.theme.a");
         return themeHelperClass.get();
+    }
+
+    public boolean hasModulesInResult() {
+        Log.d(TAG, "hasModulesInResult: " + mHasModulesInResult);
+        return mHasModulesInResult;
     }
 
     private WeakReference<Class<?>> checkNullOrReturn(WeakReference<Class<?>> clazz, String className) {

@@ -63,7 +63,7 @@ public class BangumiPlayUrlHook extends BaseHook {
         try {
             JSONObject json = new JSONObject(jsonText);
             int code = json.optInt("code");
-            Log.d(TAG, "PlayUrlInformation: code = " + code);
+            Log.d(TAG, "Loading play url: code = " + code);
 
             return code == -10403;
         } catch (JSONException e) {
