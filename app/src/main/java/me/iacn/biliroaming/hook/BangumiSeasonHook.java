@@ -113,9 +113,11 @@ public class BangumiSeasonHook extends BaseHook {
                         Object newRights = getObjectField(newResult, "rights");
                         if (!getBooleanField(newRights, "areaLimit")) {
                             Object newEpisodes = getObjectField(newResult, "episodes");
+                            Object newModules = getObjectField(newResult, "modules");
 
                             setObjectField(result, "rights", newRights);
                             setObjectField(result, "episodes", newEpisodes);
+                            setObjectField(result, "modules", newModules);
                             setObjectField(result, "seasonLimit", null);
                         }
                     } else {
