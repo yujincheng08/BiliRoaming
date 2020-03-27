@@ -20,3 +20,6 @@ An Xposed module to unlock BiliBili bangumi watching area limit.
 
 # download/下载
 https://github.com/yujincheng08/BiliRoaming/releases/latest
+
+### License
+[GNU General Public License, version 3](LICENSE)
