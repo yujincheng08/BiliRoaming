@@ -36,11 +36,13 @@ class XposedInit : IXposedHookLoadPackage {
                         CustomThemeHook(lpparam.classLoader).startHook()
                         TeenagersModeHook(lpparam.classLoader).startHook()
                         CommentHook(lpparam.classLoader).startHook()
-                        CDNHook(lpparam.classLoader).startHook()
                         JsonHook(lpparam.classLoader).startHook()
                     }
                     "tv.danmaku.bili:web", "com.bilibili.app.in:web", "com.bilibili.app.blue:web" -> CustomThemeHook(lpparam.classLoader).insertColorForWebProcess()
-                    "com.bilibili.app.in:download", "com.bilibili.app.blue:download", "tv.danmaku.bili:download" -> BangumiPlayUrlHook(lpparam.classLoader).startHook()
+                    "com.bilibili.app.in:download", "com.bilibili.app.blue:download", "tv.danmaku.bili:download" -> {
+                        BangumiPlayUrlHook(lpparam.classLoader).startHook()
+                        CDNHook(lpparam.classLoader).startHook()
+                    }
                 }
             }
         })

@@ -3,7 +3,7 @@ package me.iacn.biliroaming.hook
 import android.util.Log
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedHelpers
-import me.iacn.biliroaming.Constant
+import me.iacn.biliroaming.Constant.TAG
 import me.iacn.biliroaming.XposedInit
 import java.net.InetAddress
 
@@ -11,7 +11,7 @@ class CDNHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
         if (!XposedInit.sPrefs.getBoolean("use_cdn", false)) return;
 
-        Log.d(Constant.TAG, "startHook: CDN")
+        Log.d(TAG, "startHook: CDN")
 
         XposedHelpers.findAndHookMethod("java.net.InetAddress", mClassLoader,
                 "getAllByName", String::class.java, object : XC_MethodHook() {
@@ -21,7 +21,7 @@ class CDNHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 val cdn: String = getCDN()
                 if (cdn.isNotEmpty() && host == "upos-hz-mirrorakam.akamaized.net") {
                     param.result = arrayOf(InetAddress.getByName(cdn))
-                    Log.d(Constant.TAG, "Replace by CDN: $cdn")
+                    Log.d(TAG, "Replace by CDN: $cdn")
                 }
             }
         })
@@ -33,7 +33,7 @@ class CDNHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 val cdn: String = getCDN()
                 if (cdn.isNotEmpty() && host == "upos-hz-mirrorakam.akamaized.net") {
                     param.result = InetAddress.getByName(cdn)
-                    Log.d(Constant.TAG, "Replace by CDN: $cdn")
+                    Log.d(TAG, "Replace by CDN: $cdn")
                 }
             }
         })
