@@ -96,7 +96,7 @@ class BangumiSeasonHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
                             val newEpisodes = XposedHelpers.getObjectField(newResult, "episodes")
                             var newModules:Any? = null
                             XposedHelpers.findFieldIfExists(newResult.javaClass, "modules")?.let {
-                                newModules = XposedHelpers.getObjectField(it.name, "modules")
+                                newModules = XposedHelpers.getObjectField(newResult, "modules")
                             }
                             XposedHelpers.setObjectField(result, "rights", newRights)
                             XposedHelpers.setObjectField(result, "episodes", newEpisodes)
