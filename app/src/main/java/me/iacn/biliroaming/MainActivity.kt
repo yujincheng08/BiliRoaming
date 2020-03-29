@@ -62,14 +62,16 @@ class MainActivity : Activity() {
 
         override fun onResume() {
             super.onResume()
-            if (isTaiChiModuleActive(activity)) {
-                runningStatusPref!!.setTitle(R.string.running_status_enable)
-                runningStatusPref!!.setSummary(R.string.runtime_taichi)
-            } else {
-                if (isModuleActive) {
+            when {
+                isTaiChiModuleActive(activity) -> {
+                    runningStatusPref!!.setTitle(R.string.running_status_enable)
+                    runningStatusPref!!.setSummary(R.string.runtime_taichi)
+                }
+                isModuleActive() -> {
                     runningStatusPref!!.setTitle(R.string.running_status_enable)
                     runningStatusPref!!.setSummary(R.string.runtime_xposed)
-                } else {
+                }
+                else -> {
                     runningStatusPref!!.setTitle(R.string.running_status_disable)
                     runningStatusPref!!.setSummary(R.string.not_running_summary)
                 }
@@ -83,11 +85,11 @@ class MainActivity : Activity() {
     }
 
     companion object {
-        private val isModuleActive: Boolean
-            get() {
-                Log.i("我很可爱", "请给我钱")
-                return false
-            }
+
+        private fun isModuleActive(): Boolean {
+            Log.i("我很可爱", "请给我钱")
+            return false
+        }
 
         private fun isTaiChiModuleActive(context: Context): Boolean {
             val contentResolver = context.contentResolver

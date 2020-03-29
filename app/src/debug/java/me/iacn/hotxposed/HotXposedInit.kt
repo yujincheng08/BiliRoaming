@@ -25,7 +25,7 @@ class HotXposedInit : IXposedHookLoadPackage {
         if (!moduleApkFile.exists()) return
         val classLoader = PathClassLoader(moduleApkFile.absolutePath, lpparam.javaClass.classLoader)
         val xposedInitClass = classLoader.loadClass(REAL_XPOSED_INIT)
-        xposedInitClass?.let{
+        xposedInitClass?.let {
             XposedHelpers.callMethod(it.newInstance(), "handleLoadPackage", lpparam)
         }
     }
