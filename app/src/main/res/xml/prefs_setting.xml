@@ -62,27 +62,27 @@
             android:summary="@string/custom_cdn_summary"/>
     </PreferenceCategory>
 
-    <PreferenceCategory android:title="@string/purify_group">
-        <SwitchPreference
-            android:key="purify"
-            android:summary="@string/purify_summary"
-            android:title="@string/purify_title"/>
-        <SwitchPreference
-            android:key="purify_mall"
-            android:dependency="purify"
-            android:summary="@string/purify_mall_summary"
-            android:title="@string/purify_mall_title"/>
-        <SwitchPreference
-            android:key="purify_game"
-            android:dependency="purify"
-            android:summary="@string/purify_game_summary"
-            android:title="@string/purify_game_title"/>
-        <SwitchPreference
-            android:key="purify_drawer"
-            android:dependency="purify"
-            android:summary="@string/purify_drawer_summary"
-            android:title="@string/purify_drawer_title"/>
-    </PreferenceCategory>
+<!--    <PreferenceCategory android:title="@string/purify_group">-->
+<!--        <SwitchPreference-->
+<!--            android:key="purify"-->
+<!--            android:summary="@string/purify_summary"-->
+<!--            android:title="@string/purify_title"/>-->
+<!--        <SwitchPreference-->
+<!--            android:key="purify_mall"-->
+<!--            android:dependency="purify"-->
+<!--            android:summary="@string/purify_mall_summary"-->
+<!--            android:title="@string/purify_mall_title"/>-->
+<!--        <SwitchPreference-->
+<!--            android:key="purify_game"-->
+<!--            android:dependency="purify"-->
+<!--            android:summary="@string/purify_game_summary"-->
+<!--            android:title="@string/purify_game_title"/>-->
+<!--        <SwitchPreference-->
+<!--            android:key="purify_drawer"-->
+<!--            android:dependency="purify"-->
+<!--            android:summary="@string/purify_drawer_summary"-->
+<!--            android:title="@string/purify_drawer_title"/>-->
+<!--    </PreferenceCategory>-->
 
     <PreferenceCategory android:title="@string/about">
 
