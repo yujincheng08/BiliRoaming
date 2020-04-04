@@ -2,7 +2,7 @@ package me.iacn.biliroaming.hook
 
 import android.util.Log
 import de.robv.android.xposed.XC_MethodHook
-import de.robv.android.xposed.XposedHelpers
+import de.robv.android.xposed.XposedHelpers.*
 import me.iacn.biliroaming.Constant.TAG
 import me.iacn.biliroaming.XposedInit
 import me.iacn.biliroaming.network.BiliRoamingApi.getPlayUrl
@@ -22,7 +22,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
     override fun startHook() {
         if (!XposedInit.sPrefs.getBoolean("main_func", false)) return
         Log.d(TAG, "startHook: BangumiPlayUrl")
-        XposedHelpers.findAndHookMethod("com.bilibili.nativelibrary.LibBili", mClassLoader, "a",
+        findAndHookMethod("com.bilibili.nativelibrary.LibBili", mClassLoader, "a",
                 MutableMap::class.java, object : XC_MethodHook() {
             @Throws(Throwable::class)
             override fun beforeHookedMethod(param: MethodHookParam) {
@@ -39,7 +39,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
                 }
             }
         })
-        XposedHelpers.findAndHookMethod("com.bilibili.lib.okhttp.huc.OkHttpURLConnection", mClassLoader,
+        findAndHookMethod("com.bilibili.lib.okhttp.huc.OkHttpURLConnection", mClassLoader,
                 "getInputStream", object : XC_MethodHook() {
             @Throws(Throwable::class)
             override fun afterHookedMethod(param: MethodHookParam) {

@@ -4,7 +4,7 @@ import android.util.ArrayMap
 import android.util.Log
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedBridge
-import de.robv.android.xposed.XposedHelpers
+import de.robv.android.xposed.XposedHelpers.*
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.Constant.TAG
 import me.iacn.biliroaming.Constant.TYPE_EPISODE_ID
@@ -24,7 +24,7 @@ class BangumiSeasonHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
     override fun startHook() {
         if (!XposedInit.sPrefs.getBoolean("main_func", false)) return
         Log.d(TAG, "startHook: BangumiSeason")
-        val paramsMapClass = XposedHelpers.findClass("com.bilibili.bangumi.data.page.detail." +
+        val paramsMapClass = findClass("com.bilibili.bangumi.data.page.detail." +
                 "BangumiDetailApiService\$UniformSeasonParamsMap", mClassLoader)
         XposedBridge.hookAllConstructors(paramsMapClass, object : XC_MethodHook() {
             @Throws(Throwable::class)
@@ -49,7 +49,7 @@ class BangumiSeasonHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
                 lastSeasonInfo["access_key"] = accessKey
             }
         })
-        val responseClass = XposedHelpers.findClass(instance!!.retrofitResponse(), mClassLoader)
+        val responseClass = findClass(instance!!.retrofitResponse(), mClassLoader)
         XposedBridge.hookAllConstructors(responseClass, object : XC_MethodHook() {
             @Throws(Throwable::class)
             override fun beforeHookedMethod(param: MethodHookParam) {
@@ -59,14 +59,14 @@ class BangumiSeasonHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
                 // Filter non-bangumi responses
                 // If it isn't bangumi, the type variable will not exist in this map
                 if (!bangumiApiResponse!!.isInstance(body) || !lastSeasonInfo.containsKey("type")) return
-                val result = XposedHelpers.getObjectField(body, "result")
+                val result = getObjectField(body, "result")
                 // Filter normal bangumi and other responses
-                if (isBangumiWithWatchPermission(XposedHelpers.getIntField(body, "code"), result)) {
+                if (isBangumiWithWatchPermission(getIntField(body, "code"), result)) {
                     if (result != null) {
                         val bangumiSeasonClass = instance!!.bangumiUniformSeason()
                         if (bangumiSeasonClass!!.isInstance(result) && XposedInit.sPrefs.getBoolean("allow_download", false)) {
-                            val rights = XposedHelpers.getObjectField(result, "rights")
-                            XposedHelpers.setBooleanField(rights, "allowDownload", true)
+                            val rights = getObjectField(result, "rights")
+                            setBooleanField(rights, "allowDownload", true)
                             Log.d(TAG, "Download allowed")
                         }
                     }
@@ -75,7 +75,7 @@ class BangumiSeasonHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
                 }
                 val useCache = result != null
                 val content: String?
-                content = if (XposedInit.sPrefs.getBoolean("use_biliplus", false) && result != null) seasonBp(XposedHelpers.getObjectField(result, "seasonId") as String) else getSeasonInfoFromProxyServer(useCache)
+                content = if (XposedInit.sPrefs.getBoolean("use_biliplus", false) && result != null) seasonBp(getObjectField(result, "seasonId") as String) else getSeasonInfoFromProxyServer(useCache)
                 val contentJson = JSONObject(content!!)
                 val code = contentJson.optInt("code")
                 Log.d(TAG, "Got new season information from proxy server: code = " + code
@@ -84,32 +84,32 @@ class BangumiSeasonHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
                     val fastJsonClass = instance!!.fastJson()
                     val beanClass = instance!!.bangumiUniformSeason()
                     val resultJson = contentJson.optJSONObject("result")
-                    val newResult = XposedHelpers.callStaticMethod(fastJsonClass,
+                    val newResult = callStaticMethod(fastJsonClass,
                             instance!!.fastJsonParse(), resultJson!!.toString(), beanClass)
-                    val newRights = XposedHelpers.getObjectField(newResult, "rights")
+                    val newRights = getObjectField(newResult, "rights")
                     if (XposedInit.sPrefs.getBoolean("allow_download", false))
-                        XposedHelpers.setBooleanField(newRights, "allowDownload", true)
+                        setBooleanField(newRights, "allowDownload", true)
                     if (useCache) {
                         // Replace only episodes and rights
                         // Remain user information, such as follow status, watch progress, etc.
-                        if (!XposedHelpers.getBooleanField(newRights, "areaLimit")) {
-                            val newEpisodes = XposedHelpers.getObjectField(newResult, "episodes")
-                            var newModules:Any? = null
-                            XposedHelpers.findFieldIfExists(newResult.javaClass, "modules")?.let {
-                                newModules = XposedHelpers.getObjectField(newResult, "modules")
+                        if (!getBooleanField(newRights, "areaLimit")) {
+                            val newEpisodes = getObjectField(newResult, "episodes")
+                            var newModules: Any? = null
+                            findFieldIfExists(newResult.javaClass, "modules")?.let {
+                                newModules = getObjectField(newResult, "modules")
                             }
-                            XposedHelpers.setObjectField(result, "rights", newRights)
-                            XposedHelpers.setObjectField(result, "episodes", newEpisodes)
-                            XposedHelpers.setObjectField(result, "seasonLimit", null)
-                            XposedHelpers.findFieldIfExists(result.javaClass, "modules")?.let {
-                                newModules?.let {it2 ->
-                                    XposedHelpers.setObjectField(result, it.name, it2)
+                            setObjectField(result, "rights", newRights)
+                            setObjectField(result, "episodes", newEpisodes)
+                            setObjectField(result, "seasonLimit", null)
+                            findFieldIfExists(result.javaClass, "modules")?.let {
+                                newModules?.let { it2 ->
+                                    setObjectField(result, it.name, it2)
                                 }
                             }
                         }
                     } else {
-                        XposedHelpers.setIntField(body, "code", 0)
-                        XposedHelpers.setObjectField(body, "result", newResult)
+                        setIntField(body, "code", 0)
+                        setObjectField(body, "result", newResult)
                     }
                 }
                 lastSeasonInfo.clear()
@@ -122,8 +122,8 @@ class BangumiSeasonHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
         if (result != null) {
             val bangumiSeasonClass = instance!!.bangumiUniformSeason()
             if (bangumiSeasonClass!!.isInstance(result)) {
-                val rights = XposedHelpers.getObjectField(result, "rights")
-                val areaLimit = XposedHelpers.getBooleanField(rights, "areaLimit")
+                val rights = getObjectField(result, "rights")
+                val areaLimit = getBooleanField(rights, "areaLimit")
                 return !areaLimit
             }
         }

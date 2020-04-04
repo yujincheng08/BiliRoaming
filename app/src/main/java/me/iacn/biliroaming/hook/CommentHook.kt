@@ -2,7 +2,7 @@ package me.iacn.biliroaming.hook
 
 import android.util.Log
 import de.robv.android.xposed.XC_MethodHook
-import de.robv.android.xposed.XposedHelpers
+import de.robv.android.xposed.XposedHelpers.*
 import me.iacn.biliroaming.Constant.TAG
 import me.iacn.biliroaming.XposedInit
 
@@ -17,19 +17,19 @@ class CommentHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
         val floorHook: XC_MethodHook = object : XC_MethodHook() {
             @Throws(Throwable::class)
             override fun beforeHookedMethod(param: MethodHookParam) {
-                val config = XposedHelpers.getObjectField(param.thisObject, "config")
+                val config = getObjectField(param.thisObject, "config")
                 config?.let {
-                    XposedHelpers.setIntField(it, "mShowFloor", 1)
+                    setIntField(it, "mShowFloor", 1)
                 }
             }
         }
-        XposedHelpers.findAndHookMethod("com.bilibili.app.comm.comment2.model.BiliCommentList",
+        findAndHookMethod("com.bilibili.app.comm.comment2.model.BiliCommentList",
                 mClassLoader, "isShowFloor", floorHook)
-        XposedHelpers.findAndHookMethod("com.bilibili.app.comm.comment2.model.BiliCommentCursorList",
+        findAndHookMethod("com.bilibili.app.comm.comment2.model.BiliCommentCursorList",
                 mClassLoader, "isShowFloor", floorHook)
-        XposedHelpers.findAndHookMethod("com.bilibili.app.comm.comment2.model.BiliCommentDialogue",
+        findAndHookMethod("com.bilibili.app.comm.comment2.model.BiliCommentDialogue",
                 mClassLoader, "isShowFloor", floorHook)
-        XposedHelpers.findAndHookMethod("com.bilibili.app.comm.comment2.model.BiliCommentDetail",
+        findAndHookMethod("com.bilibili.app.comm.comment2.model.BiliCommentDetail",
                 mClassLoader, "isShowFloor", floorHook)
     }
 }
