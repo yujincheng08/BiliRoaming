@@ -85,13 +85,13 @@ class MainActivity : Activity() {
         override fun onResume() {
             super.onResume()
             when {
-                isTaiChiModuleActive(activity) -> {
-                    runningStatusPref!!.setTitle(R.string.running_status_enable)
-                    runningStatusPref!!.setSummary(R.string.runtime_taichi)
-                }
                 isModuleActive() -> {
                     runningStatusPref!!.setTitle(R.string.running_status_enable)
                     runningStatusPref!!.setSummary(R.string.runtime_xposed)
+                }
+                isTaiChiModuleActive(activity) -> {
+                    runningStatusPref!!.setTitle(R.string.running_status_enable)
+                    runningStatusPref!!.setSummary(R.string.runtime_taichi)
                 }
                 else -> {
                     runningStatusPref!!.setTitle(R.string.running_status_disable)

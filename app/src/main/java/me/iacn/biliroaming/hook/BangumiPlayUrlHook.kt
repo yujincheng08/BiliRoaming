@@ -2,9 +2,10 @@ package me.iacn.biliroaming.hook
 
 import android.util.Log
 import de.robv.android.xposed.XC_MethodHook
-import de.robv.android.xposed.XposedHelpers.*
+import de.robv.android.xposed.XposedHelpers.findAndHookMethod
 import me.iacn.biliroaming.Constant.TAG
 import me.iacn.biliroaming.XposedInit
+import me.iacn.biliroaming.XposedInit.Companion.toastMessage
 import me.iacn.biliroaming.network.BiliRoamingApi.getPlayUrl
 import me.iacn.biliroaming.network.BiliRoamingApi.playurlBp
 import me.iacn.biliroaming.network.StreamUtils.getContent
@@ -57,6 +58,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
                                 content = if (XposedInit.sPrefs.getBoolean("use_biliplus", false))
                                     playurlBp(queryString) else getPlayUrl(queryString)
                                 Log.d(TAG, "Has replaced play url with proxy server")
+                                toastMessage("已从代理服务器获取播放地址")
                             }
                         }
                         param.result = ByteArrayInputStream(content!!.toByteArray())

@@ -10,6 +10,7 @@ import me.iacn.biliroaming.Constant.TAG
 import me.iacn.biliroaming.Constant.TYPE_EPISODE_ID
 import me.iacn.biliroaming.Constant.TYPE_SEASON_ID
 import me.iacn.biliroaming.XposedInit
+import me.iacn.biliroaming.XposedInit.Companion.toastMessage
 import me.iacn.biliroaming.network.BiliRoamingApi.getSeason
 import me.iacn.biliroaming.network.BiliRoamingApi.seasonBp
 import org.json.JSONObject
@@ -68,6 +69,7 @@ class BangumiSeasonHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
                             val rights = getObjectField(result, "rights")
                             setBooleanField(rights, "allowDownload", true)
                             Log.d(TAG, "Download allowed")
+                            toastMessage("已允许下载")
                         }
                     }
                     lastSeasonInfo.clear()
@@ -80,6 +82,7 @@ class BangumiSeasonHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
                 val code = contentJson.optInt("code")
                 Log.d(TAG, "Got new season information from proxy server: code = " + code
                         + ", useCache = " + useCache)
+                toastMessage("已从代理服务器获取番剧信息")
                 if (code == 0) {
                     val fastJsonClass = instance!!.fastJson()
                     val beanClass = instance!!.bangumiUniformSeason()
@@ -119,6 +122,7 @@ class BangumiSeasonHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
 
     private fun isBangumiWithWatchPermission(code: Int, result: Any?): Boolean {
         Log.d(TAG, "BangumiApiResponse: code = $code, result = $result")
+        toastMessage("发现版权番剧，尝试解锁……")
         if (result != null) {
             val bangumiSeasonClass = instance!!.bangumiUniformSeason()
             if (bangumiSeasonClass!!.isInstance(result)) {

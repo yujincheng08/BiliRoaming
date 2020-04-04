@@ -5,6 +5,7 @@ import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedHelpers.*
 import me.iacn.biliroaming.Constant.TAG
 import me.iacn.biliroaming.XposedInit
+import me.iacn.biliroaming.XposedInit.Companion.toastMessage
 import java.net.InetAddress
 
 class CDNHook(classLoader: ClassLoader) : BaseHook(classLoader) {
@@ -22,6 +23,7 @@ class CDNHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 if (cdn.isNotEmpty() && host == "upos-hz-mirrorakam.akamaized.net") {
                     param.result = arrayOf(InetAddress.getByName(cdn))
                     Log.d(TAG, "Replace by CDN: $cdn")
+                    toastMessage("CDN加速已生效", true)
                 }
             }
         })
@@ -35,6 +37,7 @@ class CDNHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 if (cdn.isNotEmpty() && host == "upos-hz-mirrorakam.akamaized.net") {
                     param.result = InetAddress.getByName(cdn)
                     Log.d(TAG, "Replace by CDN: $cdn")
+                    toastMessage("CDN加速已生效", true)
                 }
             }
         })
@@ -50,6 +53,7 @@ class CDNHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     setObjectField(params, "mHttpProxy", "http://$cdn:80")
                     val proxy = getObjectField(params, "mHttpProxy") as String
                     Log.d(TAG, "Using cdn as proxy: $proxy")
+                    toastMessage("CDN加速已生效", true)
                 }
             }
         })

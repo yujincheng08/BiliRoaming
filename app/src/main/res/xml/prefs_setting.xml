@@ -7,6 +7,13 @@
         android:title="@string/main_func_title" />
 
     <SwitchPreference
+        android:key="show_info"
+        android:dependency="main_func"
+        android:defaultValue="true"
+        android:summary="@string/show_info_summary"
+        android:title="@string/show_info_title" />
+
+    <SwitchPreference
         android:key="custom_theme"
         android:summary="@string/custom_theme_summary"
         android:title="@string/custom_theme_title" />

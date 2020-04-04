@@ -1,12 +1,15 @@
 package me.iacn.biliroaming
 
+import android.app.Activity
 import android.app.Application
 import android.app.Instrumentation
 import android.content.Context
 import android.util.Log
+import android.widget.Toast
 import de.robv.android.xposed.*
 import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam
 import me.iacn.biliroaming.hook.*
+
 
 /**
  * Created by iAcn on 2019/3/24
@@ -38,6 +41,17 @@ class XposedInit : IXposedHookLoadPackage {
                         CommentHook(lpparam.classLoader).startHook()
                         JsonHook(lpparam.classLoader).startHook()
                         CDNHook(lpparam.classLoader).startHook()
+                        (object : BaseHook(lpparam.classLoader) {
+                            override fun startHook() {
+                                XposedBridge.hookAllMethods(XposedHelpers.findClass(
+                                        "android.app.Instrumentation", lpparam.classLoader),
+                                        "newActivity", object : XC_MethodHook() {
+                                    override fun afterHookedMethod(param: MethodHookParam) {
+                                        currentActivity = param.result as Activity
+                                    }
+                                })
+                            }
+                        }).startHook()
                     }
                     "tv.danmaku.bili:web", "com.bilibili.app.in:web", "com.bilibili.app.blue:web" -> {
                         CustomThemeHook(lpparam.classLoader).insertColorForWebProcess()
@@ -53,5 +67,19 @@ class XposedInit : IXposedHookLoadPackage {
 
     companion object {
         var sPrefs: XSharedPreferences = XSharedPreferences(BuildConfig.APPLICATION_ID)
+        var currentActivity: Activity? = null
+        var toast: Toast? = null
+        fun toastMessage(msg: String, new: Boolean = false) {
+            if (sPrefs.getBoolean("show_info", false)) {
+                currentActivity?.runOnUiThread {
+                    if (new || toast == null) {
+                        toast = Toast.makeText(currentActivity, msg, Toast.LENGTH_SHORT)
+                    }
+                    toast?.setText("哔哩漫游：$msg")
+                    toast?.duration = Toast.LENGTH_SHORT
+                    toast?.show()
+                }
+            }
+        }
     }
 }
