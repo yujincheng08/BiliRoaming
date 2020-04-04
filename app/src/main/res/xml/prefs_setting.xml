@@ -39,6 +39,8 @@
         android:key="simulate"
         android:summary="@string/simulate_summary"
         android:title="@string/simulate_title" />
+
+
     <PreferenceCategory android:title="@string/cdn_category">
 
         <SwitchPreference
@@ -53,36 +55,39 @@
             android:key="cdn"
             android:summary="@string/cdn_summary"
             android:title="@string/cdn_title"
-            android:defaultValue="@integer/cdn_default"/>
+            android:defaultValue="@integer/cdn_default" />
 
         <EditTextPreference
             android:key="custom_cdn"
             android:dependency="use_cdn"
             android:title="@string/custom_cdn_title"
-            android:summary="@string/custom_cdn_summary"/>
+            android:summary="@string/custom_cdn_summary" />
     </PreferenceCategory>
 
-<!--    <PreferenceCategory android:title="@string/purify_group">-->
-<!--        <SwitchPreference-->
-<!--            android:key="purify"-->
-<!--            android:summary="@string/purify_summary"-->
-<!--            android:title="@string/purify_title"/>-->
-<!--        <SwitchPreference-->
-<!--            android:key="purify_mall"-->
-<!--            android:dependency="purify"-->
-<!--            android:summary="@string/purify_mall_summary"-->
-<!--            android:title="@string/purify_mall_title"/>-->
-<!--        <SwitchPreference-->
-<!--            android:key="purify_game"-->
-<!--            android:dependency="purify"-->
-<!--            android:summary="@string/purify_game_summary"-->
-<!--            android:title="@string/purify_game_title"/>-->
-<!--        <SwitchPreference-->
-<!--            android:key="purify_drawer"-->
-<!--            android:dependency="purify"-->
-<!--            android:summary="@string/purify_drawer_summary"-->
-<!--            android:title="@string/purify_drawer_title"/>-->
-<!--    </PreferenceCategory>-->
+    <PreferenceCategory
+        android:title="@string/hidden_group"
+        android:key="hidden_group">
+
+        <SwitchPreference
+            android:key="hidden"
+            android:summary="@string/hidden_summary"
+            android:title="@string/hidden_title" />
+        <SwitchPreference
+            android:key="purify_mall"
+            android:dependency="hidden"
+            android:summary="@string/purify_mall_summary"
+            android:title="@string/purify_mall_title" />
+        <SwitchPreference
+            android:key="purify_game"
+            android:dependency="hidden"
+            android:summary="@string/purify_game_summary"
+            android:title="@string/purify_game_title" />
+        <SwitchPreference
+            android:key="purify_drawer"
+            android:dependency="hidden"
+            android:summary="@string/purify_drawer_summary"
+            android:title="@string/purify_drawer_title" />
+    </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/about">
 
@@ -93,7 +98,7 @@
         <Preference
             android:key="author"
             android:title="@string/author"
-            android:summary="@string/author_list"/>
+            android:summary="@string/author_list" />
 
         <Preference android:key="running_status" />
 

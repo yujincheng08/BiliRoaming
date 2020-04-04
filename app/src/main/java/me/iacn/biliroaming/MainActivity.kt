@@ -4,14 +4,20 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.ComponentName
 import android.content.Context
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.preference.Preference
 import android.preference.Preference.OnPreferenceChangeListener
+import android.preference.Preference.OnPreferenceClickListener
+import android.preference.PreferenceCategory
 import android.preference.PreferenceFragment
 import android.util.Log
+import android.widget.Toast
+import android.widget.Toast.LENGTH_SHORT
 import java.io.File
+
 
 /**
  * Created by iAcn on 2019/3/23
@@ -24,14 +30,28 @@ class MainActivity : Activity() {
         fragmentManager.beginTransaction().replace(android.R.id.content, PrefsFragment()).commit()
     }
 
-    class PrefsFragment : PreferenceFragment(), OnPreferenceChangeListener {
+    class PrefsFragment : PreferenceFragment(), OnPreferenceChangeListener, OnPreferenceClickListener {
         private var runningStatusPref: Preference? = null
+        private var counter: Int = 0;
+        private var prefs: SharedPreferences? = null
+        private var toast: Toast? = null
+
         override fun onCreate(savedInstanceState: Bundle?) {
             super.onCreate(savedInstanceState)
+            onCreate()
+        }
+
+        private fun onCreate() {
             addPreferencesFromResource(R.xml.prefs_setting)
+            prefs = preferenceManager.sharedPreferences
+            runningStatusPref = findPreference("running_status")
+            if (!prefs?.getBoolean("hidden", false)!!) {
+                val hiddenGroup = findPreference("hidden_group") as PreferenceCategory
+                preferenceScreen.removePreference(hiddenGroup)
+            }
             findPreference("hide_icon").onPreferenceChangeListener = this
             findPreference("version").summary = BuildConfig.VERSION_NAME
-            runningStatusPref = findPreference("running_status")
+            findPreference("version").onPreferenceClickListener = this
         }
 
         override fun onPreferenceChange(preference: Preference, newValue: Any): Boolean {
@@ -81,6 +101,34 @@ class MainActivity : Activity() {
         override fun onPause() {
             super.onPause()
             setWorldReadable()
+        }
+
+        override fun onPreferenceClick(preference: Preference?): Boolean {
+            if (prefs?.getBoolean("hidden", false)!! || counter == 7) {
+                return true
+            }
+            counter++
+            val text = "再按${7 - counter}次开启净化功能"
+            if (counter == 7) {
+                preferenceScreen.removeAll()
+                addPreferencesFromResource(R.xml.prefs_setting)
+                prefs?.edit()?.putBoolean("hidden", true)?.commit()
+                toast?.setText("已开启净化功能")
+                toast?.duration = LENGTH_SHORT;
+                toast?.show();
+                preferenceScreen.removeAll()
+                onCreate()
+                onResume()
+            } else if (counter >= 4) {
+                toast?.let {
+                    it.setText(text);
+                    it.duration = LENGTH_SHORT;
+                    it.show();
+                } ?: run {
+                    toast = Toast.makeText(activity, text, LENGTH_SHORT)
+                }
+            }
+            return true
         }
     }
 

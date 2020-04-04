@@ -34,13 +34,13 @@
     <string name="custom_cdn_title">自定义CDN</string>
     <string name="custom_cdn_summary">设置自定义CDN的IP地址</string>
     <string name="cdn_category">加速CDN设置</string>
-    <string name="purify_title">净化</string>
-    <string name="purify_summary">启动净化功能</string>
+    <string name="hidden_title">启用隐藏功能</string>
+    <string name="hidden_summary">打开后可以使用隐藏功能</string>
     <string name="purify_mall_summary">去除底部会员购</string>
     <string name="purify_mall_title">会员购</string>
     <string name="purify_game_summary">去除首页右上角游戏中心</string>
     <string name="purify_game_title">游戏中心</string>
     <string name="purify_drawer_summary">去除侧边栏免流服务等（一刀切）</string>
     <string name="purify_drawer_title">侧边栏</string>
-    <string name="purify_group">净化</string>
+    <string name="hidden_group">隐藏功能</string>
 </resources>
