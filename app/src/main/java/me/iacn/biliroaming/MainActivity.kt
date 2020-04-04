@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.ComponentName
 import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -52,6 +53,7 @@ class MainActivity : Activity() {
             findPreference("hide_icon").onPreferenceChangeListener = this
             findPreference("version").summary = BuildConfig.VERSION_NAME
             findPreference("version").onPreferenceClickListener = this
+            findPreference("author").onPreferenceClickListener = this
         }
 
         override fun onPreferenceChange(preference: Preference, newValue: Any): Boolean {
@@ -103,7 +105,7 @@ class MainActivity : Activity() {
             setWorldReadable()
         }
 
-        override fun onPreferenceClick(preference: Preference?): Boolean {
+        private fun onVersionClick(): Boolean {
             if (prefs?.getBoolean("hidden", false)!! || counter == 7) {
                 return true
             }
@@ -126,9 +128,25 @@ class MainActivity : Activity() {
                     it.show();
                 } ?: run {
                     toast = Toast.makeText(activity, text, LENGTH_SHORT)
+                    toast?.show()
                 }
             }
             return true
+        }
+
+        private fun onAuthorClick(): Boolean {
+            val uri = Uri.parse("https://github.com/yujincheng08/BiliRoaming")
+            val intent = Intent(Intent.ACTION_VIEW, uri)
+            startActivity(intent)
+            return true
+        }
+
+        override fun onPreferenceClick(preference: Preference?): Boolean {
+            return when (preference?.key) {
+                "version" -> onVersionClick()
+                "author" -> onAuthorClick()
+                else -> false
+            }
         }
     }
 
