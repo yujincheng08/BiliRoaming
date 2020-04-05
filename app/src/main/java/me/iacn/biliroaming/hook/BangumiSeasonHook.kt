@@ -20,6 +20,9 @@ import java.io.IOException
  * Created by iAcn on 2019/3/27
  * Email i@iacn.me
  */
+
+data class Result(val code: Int?, val result: Any?)
+
 class BangumiSeasonHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
     private val lastSeasonInfo: MutableMap<String, Any?>
     override fun startHook() {
@@ -76,51 +79,48 @@ class BangumiSeasonHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
                     return
                 }
                 val useCache = result != null
-                val content: String?
-                content = if (XposedInit.sPrefs.getBoolean("use_biliplus", false) && result != null) seasonBp(getObjectField(result, "seasonId") as String) else getSeasonInfoFromProxyServer(useCache)
-                val contentJson = JSONObject(content!!)
-                val code = contentJson.optInt("code")
+                var content = getSeasonInfoFromProxyServer(useCache)
+                var (code, newResult) = getNewResult(content)
+                if (code == null || newResult == null || !isBangumiWithWatchPermission(code, newResult)) {
+                    Log.d(TAG, "Use biliplus instead")
+                    content = seasonBp(getObjectField(result, "seasonId") as String)
+                    val (_, r) = getNewResult(content)
+                    newResult = r
+                }
 
-                val fastJsonClass = instance!!.fastJson()
-                val beanClass = instance!!.bangumiUniformSeason()
-                val resultJson = contentJson.optJSONObject("result")
-                val newResult = callStaticMethod(fastJsonClass,
-                        instance!!.fastJsonParse(), resultJson!!.toString(), beanClass)
-
-                Log.d(TAG, "Got new season information from proxy server: code = " + code
-                        + ", useCache = " + useCache)
-                if (!isBangumiWithWatchPermission(code, newResult)) {
-                    toastMessage("解锁失败，请重试或启用Biliplus")
+                if(newResult != null) {
+                    Log.d(TAG, "Got new season information from proxy server: $content")
+                    toastMessage("已从代理服务器获取番剧信息")
+                } else {
+                    Log.d(TAG, "Failed to get new season information from proxy server")
+                    toastMessage("解锁失败，请重试")
                     lastSeasonInfo.clear()
                     return
                 }
-                toastMessage("已从代理服务器获取番剧信息")
-                if (code == 0) {
-                    val newRights = getObjectField(newResult, "rights")
-                    if (XposedInit.sPrefs.getBoolean("allow_download", false))
-                        setBooleanField(newRights, "allowDownload", true)
-                    if (useCache) {
-                        // Replace only episodes and rights
-                        // Remain user information, such as follow status, watch progress, etc.
-                        if (!getBooleanField(newRights, "areaLimit")) {
-                            val newEpisodes = getObjectField(newResult, "episodes")
-                            var newModules: Any? = null
-                            findFieldIfExists(newResult.javaClass, "modules")?.let {
-                                newModules = getObjectField(newResult, "modules")
-                            }
-                            setObjectField(result, "rights", newRights)
-                            setObjectField(result, "episodes", newEpisodes)
-                            setObjectField(result, "seasonLimit", null)
-                            findFieldIfExists(result.javaClass, "modules")?.let {
-                                newModules?.let { it2 ->
-                                    setObjectField(result, it.name, it2)
-                                }
+                val newRights = getObjectField(newResult, "rights")
+                if (XposedInit.sPrefs.getBoolean("allow_download", false))
+                    setBooleanField(newRights, "allowDownload", true)
+                if (useCache) {
+                    // Replace only episodes and rights
+                    // Remain user information, such as follow status, watch progress, etc.
+                    if (!getBooleanField(newRights, "areaLimit")) {
+                        val newEpisodes = getObjectField(newResult, "episodes")
+                        var newModules: Any? = null
+                        findFieldIfExists(newResult?.javaClass, "modules")?.let {
+                            newModules = getObjectField(newResult, "modules")
+                        }
+                        setObjectField(result, "rights", newRights)
+                        setObjectField(result, "episodes", newEpisodes)
+                        setObjectField(result, "seasonLimit", null)
+                        findFieldIfExists(result.javaClass, "modules")?.let {
+                            newModules?.let { it2 ->
+                                setObjectField(result, it.name, it2)
                             }
                         }
-                    } else {
-                        setIntField(body, "code", 0)
-                        setObjectField(body, "result", newResult)
                     }
+                } else {
+                    setIntField(body, "code", 0)
+                    setObjectField(body, "result", newResult)
                 }
                 lastSeasonInfo.clear()
             }
@@ -139,6 +139,20 @@ class BangumiSeasonHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
             }
         }
         return code != -404
+    }
+
+    private fun getNewResult(content: String?): Result {
+        val fastJsonClass = instance!!.fastJson()
+        val beanClass = instance!!.bangumiUniformSeason()
+        if(content==null) {
+            return Result(null, null)
+        }
+        val contentJson = JSONObject(content)
+        val resultJson = contentJson.optJSONObject("result")
+        val code = contentJson.optInt("code")
+        val newResult = callStaticMethod(fastJsonClass,
+                instance!!.fastJsonParse(), resultJson!!.toString(), beanClass)
+        return Result(code, newResult)
     }
 
     @Throws(IOException::class)

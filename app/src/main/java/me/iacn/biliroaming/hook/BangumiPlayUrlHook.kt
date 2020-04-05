@@ -55,10 +55,17 @@ class BangumiPlayUrlHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
                         var content = getContent(inputStream, encoding)
                         content?.let {
                             if (isLimitWatchingArea(it)) {
-                                content = if (XposedInit.sPrefs.getBoolean("use_biliplus", false))
-                                    playurlBp(queryString) else getPlayUrl(queryString)
-                                Log.d(TAG, "Has replaced play url with proxy server")
-                                toastMessage("已从代理服务器获取播放地址")
+                                content = getPlayUrl(queryString)
+                                if (content == null)
+                                    content = playurlBp(queryString)
+                                if (content != null) {
+                                    Log.d(TAG, "Has replaced play url with proxy server $content")
+                                    toastMessage("已从代理服务器获取播放地址")
+                                } else {
+                                    Log.d(TAG, "Failed to get play url")
+                                    toastMessage("获取播放地址失败")
+                                    return
+                                }
                             }
                         }
                         param.result = ByteArrayInputStream(content!!.toByteArray())

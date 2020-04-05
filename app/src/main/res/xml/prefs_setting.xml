@@ -14,12 +14,6 @@
         android:title="@string/show_info_title" />
 
     <SwitchPreference
-        android:key="use_biliplus"
-        android:dependency="main_func"
-        android:summary="@string/use_biliplus_summary"
-        android:title="@string/use_biliplus_title" />
-
-    <SwitchPreference
         android:key="allow_download"
         android:dependency="main_func"
         android:summary="@string/allow_download_summary"

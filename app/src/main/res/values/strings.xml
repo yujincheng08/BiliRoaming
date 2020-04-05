@@ -14,8 +14,6 @@
     <string name="main_func_summary">使用户可以观看区域外版权番剧</string>
     <string name="hide_icon_summary">不显示本应用在启动器中的图标</string>
     <string name="hide_icon_title">隐藏桌面图标</string>
-    <string name="use_biliplus_summary">使用BiliPlus（海外用户回国用，大陆用户不建议打开）</string>
-    <string name="use_biliplus_title">使用BP接口</string>
     <string name="custom_theme_title">自定义主题色</string>
     <string name="custom_theme_summary">添加自定义主题颜色的功能</string>
     <string name="teenagers_mode_dialog_title">关闭青少年模式弹窗</string>
