@@ -14,6 +14,18 @@
         android:title="@string/show_info_title" />
 
     <SwitchPreference
+        android:key="use_biliplus"
+        android:dependency="main_func"
+        android:summary="@string/use_biliplus_summary"
+        android:title="@string/use_biliplus_title" />
+
+    <SwitchPreference
+        android:key="allow_download"
+        android:dependency="main_func"
+        android:summary="@string/allow_download_summary"
+        android:title="@string/allow_download_title" />
+
+    <SwitchPreference
         android:key="custom_theme"
         android:summary="@string/custom_theme_summary"
         android:title="@string/custom_theme_title" />
@@ -23,10 +35,6 @@
         android:summary="@string/teenagers_mode_dialog_summary"
         android:title="@string/teenagers_mode_dialog_title" />
 
-    <SwitchPreference
-        android:key="allow_download"
-        android:summary="@string/allow_download_summary"
-        android:title="@string/allow_download_title" />
     <SwitchPreference
         android:key="comment_floor"
         android:summary="@string/comment_floor_summary"
@@ -38,11 +46,6 @@
         android:title="@string/hide_icon_title" />
 
     <SwitchPreference
-        android:key="use_biliplus"
-        android:summary="@string/use_biliplus_summary"
-        android:title="@string/use_biliplus_title" />
-
-    <SwitchPreference
         android:key="simulate"
         android:summary="@string/simulate_summary"
         android:title="@string/simulate_title" />
@@ -52,6 +55,7 @@
 
         <SwitchPreference
             android:key="use_cdn"
+            android:dependency="main_func"
             android:summary="@string/use_cdn_summary"
             android:title="@string/use_cdn_title" />
 

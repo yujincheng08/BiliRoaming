@@ -48,6 +48,10 @@ class XposedInit : IXposedHookLoadPackage {
                                         "newActivity", object : XC_MethodHook() {
                                     override fun afterHookedMethod(param: MethodHookParam) {
                                         currentActivity = param.result as Activity
+                                        if (!started) {
+                                            toastMessage("哔哩漫游已生效")
+                                            started=true
+                                        }
                                     }
                                 })
                             }
@@ -69,6 +73,7 @@ class XposedInit : IXposedHookLoadPackage {
         var sPrefs: XSharedPreferences = XSharedPreferences(BuildConfig.APPLICATION_ID)
         var currentActivity: Activity? = null
         var toast: Toast? = null
+        var started = false
         fun toastMessage(msg: String, new: Boolean = false) {
             if (sPrefs.getBoolean("show_info", false)) {
                 currentActivity?.runOnUiThread {

@@ -80,15 +80,22 @@ class BangumiSeasonHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
                 content = if (XposedInit.sPrefs.getBoolean("use_biliplus", false) && result != null) seasonBp(getObjectField(result, "seasonId") as String) else getSeasonInfoFromProxyServer(useCache)
                 val contentJson = JSONObject(content!!)
                 val code = contentJson.optInt("code")
+
+                val fastJsonClass = instance!!.fastJson()
+                val beanClass = instance!!.bangumiUniformSeason()
+                val resultJson = contentJson.optJSONObject("result")
+                val newResult = callStaticMethod(fastJsonClass,
+                        instance!!.fastJsonParse(), resultJson!!.toString(), beanClass)
+
                 Log.d(TAG, "Got new season information from proxy server: code = " + code
                         + ", useCache = " + useCache)
+                if (!isBangumiWithWatchPermission(code, newResult)) {
+                    toastMessage("解锁失败，请重试或启用Biliplus")
+                    lastSeasonInfo.clear()
+                    return
+                }
                 toastMessage("已从代理服务器获取番剧信息")
                 if (code == 0) {
-                    val fastJsonClass = instance!!.fastJson()
-                    val beanClass = instance!!.bangumiUniformSeason()
-                    val resultJson = contentJson.optJSONObject("result")
-                    val newResult = callStaticMethod(fastJsonClass,
-                            instance!!.fastJsonParse(), resultJson!!.toString(), beanClass)
                     val newRights = getObjectField(newResult, "rights")
                     if (XposedInit.sPrefs.getBoolean("allow_download", false))
                         setBooleanField(newRights, "allowDownload", true)
