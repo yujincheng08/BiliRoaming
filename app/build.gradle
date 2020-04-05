@@ -10,8 +10,8 @@ android {
         applicationId "me.iacn.biliroaming"
         minSdkVersion 21
         targetSdkVersion 27  // Target Android O
-        versionCode 18
-        versionName "1.1.14"
+        versionCode 19
+        versionName "1.1.15"
     }
 
     buildTypes {
