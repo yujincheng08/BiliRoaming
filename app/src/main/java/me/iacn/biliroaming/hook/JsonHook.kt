@@ -9,7 +9,6 @@ import java.lang.reflect.Type
 
 class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
-        if (!XposedInit.sPrefs.getBoolean("hidden", false)) return
         Log.d(Constant.TAG, "startHook: Json")
 
         val jsonClass = findClass("com.alibaba.fastjson.JSON", mClassLoader)

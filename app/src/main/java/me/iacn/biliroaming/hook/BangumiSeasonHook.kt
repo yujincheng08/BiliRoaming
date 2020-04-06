@@ -83,12 +83,12 @@ class BangumiSeasonHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
                 var (code, newResult) = getNewResult(content)
                 if (code == null || newResult == null || !isBangumiWithWatchPermission(code, newResult)) {
                     Log.d(TAG, "Use biliplus instead")
-                    content = seasonBp(getObjectField(result, "seasonId") as String)
+                    content = seasonBp(lastSeasonInfo["season_id"] as String?, lastSeasonInfo["access_key"] as String?)
                     val (_, r) = getNewResult(content)
                     newResult = r
                 }
 
-                if(newResult != null) {
+                if (newResult != null) {
                     Log.d(TAG, "Got new season information from proxy server: $content")
                     toastMessage("已从代理服务器获取番剧信息")
                 } else {
@@ -106,7 +106,7 @@ class BangumiSeasonHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
                     if (!getBooleanField(newRights, "areaLimit")) {
                         val newEpisodes = getObjectField(newResult, "episodes")
                         var newModules: Any? = null
-                        findFieldIfExists(newResult?.javaClass, "modules")?.let {
+                        findFieldIfExists(newResult.javaClass, "modules")?.let {
                             newModules = getObjectField(newResult, "modules")
                         }
                         setObjectField(result, "rights", newRights)
@@ -144,7 +144,7 @@ class BangumiSeasonHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
     private fun getNewResult(content: String?): Result {
         val fastJsonClass = instance!!.fastJson()
         val beanClass = instance!!.bangumiUniformSeason()
-        if(content==null) {
+        if (content == null) {
             return Result(null, null)
         }
         val contentJson = JSONObject(content)

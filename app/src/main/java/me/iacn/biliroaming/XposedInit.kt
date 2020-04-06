@@ -8,6 +8,7 @@ import android.util.Log
 import android.widget.Toast
 import de.robv.android.xposed.*
 import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam
+import me.iacn.biliroaming.Constant.TAG
 import me.iacn.biliroaming.hook.*
 
 
@@ -25,7 +26,8 @@ class XposedInit : IXposedHookLoadPackage {
         if (Constant.BILIBILI_PACKAGENAME != lpparam.packageName
                 && Constant.BILIBILI_PACKAGENAME2 != lpparam.packageName
                 && Constant.BILIBILI_PACKAGENAME3 != lpparam.packageName) return
-        //sPrefs = XSharedPreferences(BuildConfig.APPLICATION_ID)
+        sPrefs = XSharedPreferences(BuildConfig.APPLICATION_ID)
+        sPrefs.makeWorldReadable()
         XposedHelpers.findAndHookMethod(Instrumentation::class.java, "callApplicationOnCreate", Application::class.java, object : XC_MethodHook() {
             @Throws(Throwable::class)
             override fun beforeHookedMethod(param: MethodHookParam) {
@@ -33,6 +35,7 @@ class XposedInit : IXposedHookLoadPackage {
                 when (lpparam.processName) {
                     "tv.danmaku.bili", "com.bilibili.app.blue", "com.bilibili.app.in" -> {
                         Log.d(Constant.TAG, "BiliBili process launched ...")
+                        Log.d(TAG, "Config: ${sPrefs.all}")
                         BiliBiliPackage.instance?.init(lpparam.classLoader, param.args[0] as Context)
                         BangumiSeasonHook(lpparam.classLoader).startHook()
                         BangumiPlayUrlHook(lpparam.classLoader).startHook()
@@ -50,7 +53,7 @@ class XposedInit : IXposedHookLoadPackage {
                                         currentActivity = param.result as Activity
                                         if (!started) {
                                             toastMessage("哔哩漫游已生效")
-                                            started=true
+                                            started = true
                                         }
                                     }
                                 })

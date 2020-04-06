@@ -72,7 +72,7 @@ object BiliRoamingApi {
 
     @JvmStatic
     @Throws(IOException::class)
-    fun seasonBp(id: String?): String {
+    fun seasonBp(id: String?, access_key: String?): String {
         /*
         This won't work in android 7.0
         The ciper suite that BiliPlus used is not supported in android 7.0.
@@ -84,6 +84,7 @@ object BiliRoamingApi {
         val builder = Uri.Builder()
         builder.scheme("https").encodedAuthority(BILIPLUS_SEASON_URL)
         builder.appendQueryParameter("season", id)
+        builder.appendQueryParameter("access_key", access_key)
         val ret = getContent(builder.toString())
         return try {
             val seasonBpt = JSONObject(ret)
