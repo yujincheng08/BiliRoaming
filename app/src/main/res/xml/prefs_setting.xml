@@ -60,7 +60,7 @@
             android:key="cdn"
             android:summary="@string/cdn_summary"
             android:title="@string/cdn_title"
-            android:defaultValue="@integer/cdn_default" />
+            android:defaultValue="@string/cdn_default" />
 
         <EditTextPreference
             android:key="custom_cdn"
