@@ -72,7 +72,7 @@ object BiliRoamingApi {
 
     @JvmStatic
     @Throws(IOException::class)
-    fun seasonBp(id: String?, access_key: String?): String {
+    fun seasonBp(id: String?, accessKey: String?, seasonType: Int?): String {
         /*
         This won't work in android 7.0
         The ciper suite that BiliPlus used is not supported in android 7.0.
@@ -84,23 +84,24 @@ object BiliRoamingApi {
         val builder = Uri.Builder()
         builder.scheme("https").encodedAuthority(BILIPLUS_SEASON_URL)
         builder.appendQueryParameter("season", id)
-        builder.appendQueryParameter("access_key", access_key)
+        builder.appendQueryParameter("access_key", accessKey)
+        builder.appendQueryParameter("season_type", "$seasonType")
         val ret = getContent(builder.toString())
         return try {
             val seasonBpt = JSONObject(ret)
             val seasonBp = seasonBpt.getJSONObject("result").getJSONArray("episodes")
             val seasonRet = JSONArray()
-            for (i in seasonBp.length() - 1 downTo 0) {
+            for (i in 0 until seasonBp.length ()) {
                 val ep = seasonBp.getJSONObject(i)
                 val nep = JSONObject(BILIEPISODE_TEMPLATE)
-                nep.put("aid", ep.getString("av_id"))
-                nep.put("cid", ep.getString("danmaku"))
+                nep.put("aid", ep.getString("aid"))
+                nep.put("cid", ep.getString("cid"))
                 nep.put("cover", ep.getString("cover"))
-                nep.put("id", ep.getString("episode_id"))
+                nep.put("id", ep.getString("ep_id"))
                 nep.put("long_title", ep.getString("index_title"))
                 nep.put("status", ep.getString("episode_status"))
-                if (ep.getString("episode_status") == "13") {
-                    nep.put("badge", "会员")
+                if (ep.has("badge")) {
+                    nep.put("badge", ep.getString("badge"))
                 }
                 nep.put("title", ep.getString("index"))
                 seasonRet.put(nep)

@@ -83,7 +83,9 @@ class BangumiSeasonHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
                 var (code, newResult) = getNewResult(content)
                 if (code == null || newResult == null || !isBangumiWithWatchPermission(code, newResult)) {
                     Log.d(TAG, "Use biliplus instead")
-                    content = seasonBp(getObjectField(result, "seasonId") as String?, lastSeasonInfo["access_key"] as String?)
+                    content = seasonBp(getObjectField(result, "seasonId") as String?,
+                            lastSeasonInfo["access_key"] as String?,
+                            getIntField(result, "seasonType"))
                     val (_, r) = getNewResult(content)
                     newResult = r
                 }
