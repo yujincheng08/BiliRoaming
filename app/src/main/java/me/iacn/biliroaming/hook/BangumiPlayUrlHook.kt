@@ -1,14 +1,12 @@
 package me.iacn.biliroaming.hook
 
-import android.util.Log
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedHelpers.findAndHookMethod
-import me.iacn.biliroaming.Constant.TAG
 import me.iacn.biliroaming.XposedInit
 import me.iacn.biliroaming.XposedInit.Companion.toastMessage
 import me.iacn.biliroaming.network.BiliRoamingApi.getPlayUrl
-import me.iacn.biliroaming.network.BiliRoamingApi.playurlBp
 import me.iacn.biliroaming.network.StreamUtils.getContent
+import me.iacn.biliroaming.utils.Log
 import org.json.JSONException
 import org.json.JSONObject
 import java.io.ByteArrayInputStream
@@ -21,7 +19,7 @@ import java.net.HttpURLConnection
  */
 class BangumiPlayUrlHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
     override fun startHook() {
-        Log.d(TAG, "startHook: BangumiPlayUrl")
+        Log.d("startHook: BangumiPlayUrl")
         findAndHookMethod("com.bilibili.nativelibrary.LibBili", mClassLoader, "a",
                 MutableMap::class.java, object : XC_MethodHook() {
             @Throws(Throwable::class)
@@ -47,29 +45,24 @@ class BangumiPlayUrlHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
                 // Found from "b.ecy" in version 5.39.1
                 val connection = param.thisObject as HttpURLConnection
                 val urlString = connection.url.toString()
-                if (urlString.startsWith("https://api.bilibili.com/pgc/player/api/playurl")) {
-                    val queryString = urlString.substring(urlString.indexOf("?") + 1)
-                    if (queryString.contains("ep_id=") || queryString.contains("module=bangumi")) {
-                        val inputStream = param.result as InputStream
-                        val encoding = connection.contentEncoding
-                        var content = getContent(inputStream, encoding)
-                        content?.let {
-                            if (isLimitWatchingArea(it)) {
-                                content = getPlayUrl(queryString)
-                                if (content == null)
-                                    content = playurlBp(queryString)
-                                if (content != null) {
-                                    Log.d(TAG, "Has replaced play url with proxy server $content")
-                                    toastMessage("已从代理服务器获取播放地址")
-                                } else {
-                                    Log.d(TAG, "Failed to get play url")
-                                    toastMessage("获取播放地址失败")
-                                    return
-                                }
-                            }
-                        }
-                        param.result = ByteArrayInputStream(content!!.toByteArray())
-                    }
+                if (!urlString.startsWith("https://api.bilibili.com/pgc/player/api/playurl")) return
+                val queryString = urlString.substring(urlString.indexOf("?") + 1)
+                if (!queryString.contains("ep_id=") && !queryString.contains("module=bangumi")) return
+                val inputStream = param.result as InputStream
+                val encoding = connection.contentEncoding
+                var content = getContent(inputStream, encoding)
+                if (content == null || !isLimitWatchingArea(content)) {
+                    param.result = ByteArrayInputStream(content?.toByteArray())
+                    return
+                }
+                content = getPlayUrl(queryString)
+                content?.let {
+                    Log.d("Has replaced play url with proxy server $it")
+                    toastMessage("已从代理服务器获取播放地址")
+                    param.result = ByteArrayInputStream(it.toByteArray())
+                } ?: run {
+                    Log.d("Failed to get play url")
+                    toastMessage("获取播放地址失败")
                 }
             }
         })
@@ -79,7 +72,6 @@ class BangumiPlayUrlHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
         return try {
             val json = JSONObject(jsonText)
             val code = json.optInt("code")
-            Log.d(TAG, "PlayUrlInformation: code = $code")
             code == -10403
         } catch (e: JSONException) {
             e.printStackTrace()

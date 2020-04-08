@@ -1,9 +1,10 @@
 package me.iacn.biliroaming.network
 
 import android.net.Uri
-import android.text.TextUtils
 import me.iacn.biliroaming.BuildConfig
+import me.iacn.biliroaming.XposedInit
 import me.iacn.biliroaming.network.StreamUtils.getContent
+import me.iacn.biliroaming.utils.Log
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
@@ -16,35 +17,128 @@ import java.net.URL
  * Email i@iacn.me
  */
 object BiliRoamingApi {
-    private const val BILIROAMING_SEASON_URL = "api.iacn.me/biliroaming/season"
-    private const val BILIROAMING_PLAYURL_URL = "api.iacn.me/biliroaming/playurl"
-    private const val BILIPLUS_SEASON_URL = "www.biliplus.com/api/bangumi"
+    private const val BILI_SEASON_URL = "api.bilibili.com/pgc/view/web/season"
     private const val BILIPLUS_PLAYURL_URL = "www.biliplus.com/BPplayurl.php"
-    private const val BILIEPISODE_TEMPLATE = "{\"aid\":0,\"badge\":\"\",\"badge_type\":0,\"cid\":0,\"cover\":\"\",\"dimension\":{\"height\":1080,\"rotate\":0,\"width\":1920},\"from\":\"bangumi\",\"id\":0,\"long_title\":\"\",\"release_date\":\"\",\"rights\":{\"allow_dm\":1},\"share_copy\":\"\",\"share_url\":\"\",\"short_link\":\"\",\"stat\":{\"coin\":0,\"danmakus\":0,\"play\":0,\"reply\":0},\"status\":0,\"subtitle\":\"\",\"title\":\"\",\"vid\":\"\"}"
-    private const val BILIEPRIGHT_TEMPLATE = "{\"allow_bp\":0,\"allow_bp_rank\":0,\"allow_download\":1,\"allow_review\":1,\"area_limit\":0,\"ban_area_show\":1,\"can_watch\":1,\"copyright\":\"bilibili\",\"is_cover_show\":0,\"is_preview\":0,\"watch_platform\":0}"
+    private const val BILI_REVIEW_URL = "api.bilibili.com/pgc/review/user"
+    private const val BILI_USER_STATUS_URL = "api.bilibili.com/pgc/view/web/season/user/status"
+    private const val BILI_MEDIA_URL = "bangumi.bilibili.com/view/web_api/media"
     private const val BILIMODULE_TEMPLATE = "{\"data\": {},\"id\": 0,\"module_style\": {\"hidden\": 0,\"line\": 1},\"more\": \"查看更多\",\"style\": \"positive\",\"title\": \"选集\"}"
 
     @JvmStatic
     @Throws(IOException::class)
-    fun getSeason(id: String?, accessKey: String?, useCache: Boolean): String? {
+    fun getSeason(info: Map<String, String?>, hidden: Boolean): String? {
         val builder = Uri.Builder()
-        builder.scheme("https").encodedAuthority(BILIROAMING_SEASON_URL).appendPath(id)
-        if (!TextUtils.isEmpty(accessKey)) {
-            builder.appendQueryParameter("access_key", accessKey)
+        builder.scheme("https").encodedAuthority(BILI_SEASON_URL)
+        info.filter { !it.value.isNullOrEmpty() }.forEach { builder.appendQueryParameter(it.key, it.value) }
+        val seasonContent = getContent(builder.toString()) ?: return null
+        val seasonJson = JSONObject(seasonContent)
+        val result = seasonJson.getJSONObject("result")
+        reconstructModules(result)
+        fixRight(result)
+        if (hidden) getExtraInfo(result, info["access_key"])
+        return seasonJson.toString()
+    }
+
+    @JvmStatic
+    private fun reconstructModules(result: JSONObject) {
+        val module = JSONObject(BILIMODULE_TEMPLATE)
+        val episodes = result.getJSONArray("episodes")
+        module.getJSONObject("data").put("episodes", episodes);
+        // work around
+        result.put("modules", JSONArray(arrayOf(module)));
+    }
+
+    @JvmStatic
+    private fun fixRight(result: JSONObject) {
+        val rights = result.getJSONObject("rights")
+        rights.put("area_limit", 0)
+
+        if (XposedInit.sPrefs.getBoolean("allow_download", false)) {
+            rights.put("allow_download", 1)
         }
-        builder.appendQueryParameter("use_cache", if (useCache) "1" else "0")
-        return getContent(builder.toString())
+    }
+
+    @JvmStatic
+    @Throws(JSONException::class, IOException::class)
+    private fun getExtraInfo(result: JSONObject, accessKey: String?) {
+        val mediaId = result.getString("media_id")
+        getMediaInfo(result, mediaId, accessKey)
+        val seasonId = result.getString("season_id")
+        getUserStatus(result, seasonId, mediaId, accessKey)
+    }
+
+    @JvmStatic
+    private fun getMediaInfo(result: JSONObject, mediaId: String, accessKey: String?) {
+        try {
+            val uri = Uri.Builder()
+                    .scheme("https")
+                    .encodedAuthority(BILI_MEDIA_URL)
+                    .appendQueryParameter("media_id", mediaId)
+                    .appendQueryParameter("access_key", accessKey)
+                    .toString()
+            val mediaContent = getContent(uri)
+            val mediaJson = JSONObject(mediaContent!!)
+            val mediaResult = mediaJson.getJSONObject("result")
+            val actors = mediaResult.getString("actors")
+            result.put("actor", JSONObject("{\"info\": \"$actors\", \"title\": \"角色声优\"}"))
+            val staff = mediaResult.getString("staff")
+            result.put("staff", JSONObject("{\"info\": \"$staff\", \"title\": \"制作信息\"}"))
+
+            for (field in listOf("alias", "area", "origin_name", "style", "type_name")) {
+                if (mediaResult.has(field))
+                    result.put(field, mediaResult.get(field))
+            }
+        } catch (e: Throwable) {
+        }
+    }
+
+    @JvmStatic
+    private fun getReviewInfo(userStatus: JSONObject, seasonId: String, mediaId: String, accessKey: String?) {
+        try {
+            val uri = Uri.Builder()
+                    .scheme("https")
+                    .encodedAuthority(BILI_REVIEW_URL)
+                    .appendQueryParameter("media_id", mediaId)
+                    .appendQueryParameter("access_key", accessKey)
+                    .toString()
+            val reviewContent = getContent(uri)
+            val reviewJson = JSONObject(reviewContent!!)
+            val reviewResult = reviewJson.getJSONObject("result")
+            val review = reviewResult.getJSONObject("review")
+            review.put("article_url", "https://member.bilibili.com/article-text/mobile?media_id=$mediaId")
+            userStatus.put("review", review)
+        } catch (e: Throwable) {
+
+        }
+    }
+
+    @JvmStatic
+    private fun getUserStatus(result: JSONObject, seasonId: String, mediaId: String, accessKey: String?) {
+        try {
+            val uri = Uri.Builder()
+                    .scheme("https")
+                    .encodedAuthority(BILI_USER_STATUS_URL)
+                    .appendQueryParameter("season_id", seasonId)
+                    .appendQueryParameter("access_key", accessKey)
+                    .toString()
+            val statusContent = getContent(uri)
+            val reviewJson = JSONObject(statusContent!!)
+            val statusResult = reviewJson.getJSONObject("result")
+            val userStatus = JSONObject()
+            for (field in listOf("follow", "follow_status", "pay", "progress", "sponsor", "paster")) {
+                if (statusResult.has(field))
+                    userStatus.put(field, statusResult.get(field))
+            }
+            getReviewInfo(userStatus, seasonId, mediaId, accessKey)
+            result.put("user_status", userStatus)
+        } catch (e: Throwable) {
+
+        }
     }
 
     @JvmStatic
     @Throws(IOException::class)
-    fun getPlayUrl(queryString: String): String? {
-        return getContent("https://$BILIROAMING_PLAYURL_URL?$queryString")
-    }
-
-    @JvmStatic
-    @Throws(IOException::class)
-    fun playurlBp(queryString: String?): String? {
+    fun getPlayUrl(queryString: String?): String? {
         val builder = Uri.Builder()
         builder.scheme("https").encodedAuthority(BILIPLUS_PLAYURL_URL)
         builder.encodedQuery(queryString)
@@ -69,59 +163,5 @@ object BiliRoamingApi {
         }
         return null
     }
-
-    @JvmStatic
-    @Throws(IOException::class)
-    fun seasonBp(id: String?, accessKey: String?, seasonType: Int?): String {
-        /*
-        This won't work in android 7.0
-        The ciper suite that BiliPlus used is not supported in android 7.0.
-
-        A known bug:
-        https://stackoverflow.com/questions/39133437/sslhandshakeexception-handshake-failed-on-android-n-7-0
-        https://code.google.com/p/android/issues/detail?id=224438
-        */
-        val builder = Uri.Builder()
-        builder.scheme("https").encodedAuthority(BILIPLUS_SEASON_URL)
-        builder.appendQueryParameter("season", id)
-        builder.appendQueryParameter("access_key", accessKey)
-        builder.appendQueryParameter("season_type", "$seasonType")
-        val ret = getContent(builder.toString())
-        return try {
-            val seasonBpt = JSONObject(ret)
-            val seasonBp = seasonBpt.getJSONObject("result").getJSONArray("episodes")
-            val seasonRet = JSONArray()
-            for (i in 0 until seasonBp.length ()) {
-                val ep = seasonBp.getJSONObject(i)
-                val nep = JSONObject(BILIEPISODE_TEMPLATE)
-                nep.put("aid", ep.getString("aid"))
-                nep.put("cid", ep.getString("cid"))
-                nep.put("cover", ep.getString("cover"))
-                nep.put("id", ep.getString("ep_id"))
-                nep.put("long_title", ep.getString("index_title"))
-                nep.put("status", ep.getString("episode_status"))
-                if (ep.has("badge")) {
-                    nep.put("badge", ep.getString("badge"))
-                }
-                nep.put("title", ep.getString("index"))
-                seasonRet.put(nep)
-            }
-            val module = JSONObject(BILIMODULE_TEMPLATE);
-            module.getJSONObject("data").put("episodes", seasonRet);
-            val epRet = JSONObject()
-            val epRetResult = JSONObject()
-            epRet.put("code", 0)
-            epRet.put("message", "success")
-            epRetResult.put("episodes", seasonRet)
-            // work around
-            epRetResult.put("modules", JSONArray(arrayOf(module)));
-            val rpRetResultRights = JSONObject(BILIEPRIGHT_TEMPLATE)
-            epRetResult.put("rights", rpRetResultRights)
-            epRet.put("result", epRetResult)
-            epRet.toString()
-        } catch (e: JSONException) {
-            e.printStackTrace()
-            "{code:1}"
-        }
-    }
 }
+

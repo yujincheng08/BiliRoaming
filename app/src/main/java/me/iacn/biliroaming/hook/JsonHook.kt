@@ -1,15 +1,14 @@
 package me.iacn.biliroaming.hook
 
-import android.util.Log
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedHelpers.*
-import me.iacn.biliroaming.Constant
 import me.iacn.biliroaming.XposedInit
+import me.iacn.biliroaming.utils.Log
 import java.lang.reflect.Type
 
 class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
-        Log.d(Constant.TAG, "startHook: Json")
+        Log.d("startHook: Json")
 
         val jsonClass = findClass("com.alibaba.fastjson.JSON", mClassLoader)
         val tabResponseClass = findClass("tv.danmaku.bili.ui.main2.resource.MainResourceManager\$TabResponse", mClassLoader)
@@ -21,12 +20,12 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             @Throws(Throwable::class)
             override fun afterHookedMethod(param: MethodHookParam) {
                 var result = param.result
-                result?.let {} ?: run{
+                result?.let {} ?: run {
                     return;
                 }
                 if (result.javaClass == generalResponseClass) {
                     result = getObjectField(result, "data")
-                    result?.let{} ?: return
+                    result?.let {} ?: return
                 }
 
                 if (param.result.javaClass == tabResponseClass) {
@@ -71,7 +70,7 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         getObjectField(it, "emotes") == null
                     }
                 } else if (result.javaClass == accountMineClass) {
-                    if(XposedInit.sPrefs.getBoolean("purify_drawer", false)) {
+                    if (XposedInit.sPrefs.getBoolean("purify_drawer", false)) {
                         val sections = getObjectField(result, "sectionList") as MutableList<*>?
                         sections?.removeAt(sections.size - 1)
                     }

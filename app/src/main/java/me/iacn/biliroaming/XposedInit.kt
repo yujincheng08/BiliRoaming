@@ -4,12 +4,11 @@ import android.app.Activity
 import android.app.Application
 import android.app.Instrumentation
 import android.content.Context
-import android.util.Log
 import android.widget.Toast
 import de.robv.android.xposed.*
 import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam
-import me.iacn.biliroaming.Constant.TAG
 import me.iacn.biliroaming.hook.*
+import me.iacn.biliroaming.utils.Log
 
 
 /**
@@ -34,8 +33,8 @@ class XposedInit : IXposedHookLoadPackage {
                 // Hook main process and download process
                 when (lpparam.processName) {
                     "tv.danmaku.bili", "com.bilibili.app.blue", "com.bilibili.app.in" -> {
-                        Log.d(Constant.TAG, "BiliBili process launched ...")
-                        Log.d(TAG, "Config: ${sPrefs.all}")
+                        Log.d("BiliBili process launched ...")
+                        Log.d("Config: ${sPrefs.all}")
                         BiliBiliPackage.instance?.init(lpparam.classLoader, param.args[0] as Context)
                         BangumiSeasonHook(lpparam.classLoader).startHook()
                         BangumiPlayUrlHook(lpparam.classLoader).startHook()
@@ -52,7 +51,7 @@ class XposedInit : IXposedHookLoadPackage {
                                     override fun afterHookedMethod(param: MethodHookParam) {
                                         currentActivity = param.result as Activity
                                         if (!started) {
-                                            toastMessage("哔哩漫游已生效")
+                                            toastMessage("哔哩漫游已激活")
                                             started = true
                                         }
                                     }

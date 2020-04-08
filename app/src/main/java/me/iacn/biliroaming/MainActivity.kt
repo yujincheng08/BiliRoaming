@@ -17,7 +17,6 @@ import android.preference.PreferenceFragment
 import android.util.Log
 import android.widget.Toast
 import android.widget.Toast.LENGTH_SHORT
-import me.iacn.biliroaming.Constant.TAG
 import java.io.File
 
 
@@ -154,7 +153,7 @@ class MainActivity : Activity() {
     companion object {
 
         @android.support.annotation.Keep fun isModuleActive(): Boolean {
-            Log.i(TAG, "请给我钱")
+            Log.i("大不自多", "海纳江河")
             return false
         }
 

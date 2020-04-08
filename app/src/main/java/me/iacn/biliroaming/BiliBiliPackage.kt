@@ -1,12 +1,11 @@
 package me.iacn.biliroaming
 
 import android.content.Context
-import android.util.Log
 import android.util.SparseArray
 import android.view.View
 import de.robv.android.xposed.XposedHelpers
 import de.robv.android.xposed.XposedHelpers.ClassNotFoundError
-import me.iacn.biliroaming.Constant.TAG
+import me.iacn.biliroaming.utils.Log
 import java.io.*
 import java.lang.ref.WeakReference
 import java.lang.reflect.ParameterizedType
@@ -80,7 +79,7 @@ class BiliBiliPackage private constructor() {
     private fun readHookInfo(context: Context) {
         try {
             val hookInfoFile = File(context.cacheDir, Constant.HOOK_INFO_FILE_NAME)
-            Log.d(TAG, "Reading hook info: $hookInfoFile")
+            Log.d("Reading hook info: $hookInfoFile")
             val startTime = System.currentTimeMillis()
             if (hookInfoFile.isFile && hookInfoFile.canRead()) {
                 val lastUpdateTime = context.packageManager.getPackageInfo(Constant.BILIBILI_PACKAGENAME, 0).lastUpdateTime
@@ -88,7 +87,7 @@ class BiliBiliPackage private constructor() {
                 if (stream.readLong() == lastUpdateTime) mHookInfo = stream.readObject() as MutableMap<String, String?>
             }
             val endTime = System.currentTimeMillis()
-            Log.d(TAG, "Read hook info completed: take " + (endTime - startTime) + " ms")
+            Log.d("Read hook info completed: take ${endTime - startTime} ms")
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -122,7 +121,7 @@ class BiliBiliPackage private constructor() {
             mHookInfo!!["class_theme_list_click"] = findThemeListClickClass()
             needUpdate = true
         }
-        Log.d(TAG, "Check hook info completed: needUpdate = $needUpdate")
+        Log.d("Check hook info completed: needUpdate = $needUpdate")
         return needUpdate
     }
 
@@ -139,7 +138,7 @@ class BiliBiliPackage private constructor() {
         } catch (e: Exception) {
             e.printStackTrace()
         }
-        Log.d(TAG, "Write hook info completed")
+        Log.d("Write hook info completed")
     }
 
     private fun findRetrofitResponseClass(): String? {
@@ -154,13 +153,11 @@ class BiliBiliPackage private constructor() {
     }
 
     private fun findFastJsonClass(): Class<*> {
-        val clazz: Class<*>
-        clazz = try {
+        return try {
             XposedHelpers.findClass("com.alibaba.fastjson.JSON", mClassLoader)
         } catch (e: ClassNotFoundError) {
             XposedHelpers.findClass("com.alibaba.fastjson.a", mClassLoader)
         }
-        return clazz
     }
 
     private fun findColorArrayField(): String? {

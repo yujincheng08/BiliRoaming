@@ -6,7 +6,6 @@ import android.content.Context
 import android.content.DialogInterface
 import android.content.SharedPreferences
 import android.graphics.Color
-import android.util.Log
 import android.util.SparseArray
 import android.view.View
 import de.robv.android.xposed.XC_MethodHook
@@ -18,8 +17,8 @@ import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.ColorChooseDialog
 import me.iacn.biliroaming.Constant.CUSTOM_COLOR_KEY
 import me.iacn.biliroaming.Constant.DEFAULT_CUSTOM_COLOR
-import me.iacn.biliroaming.Constant.TAG
 import me.iacn.biliroaming.XposedInit
+import me.iacn.biliroaming.utils.Log
 import java.util.*
 
 /**
@@ -29,7 +28,7 @@ import java.util.*
 class CustomThemeHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
     override fun startHook() {
         if (!XposedInit.sPrefs.getBoolean("custom_theme", false)) return
-        Log.d(TAG, "startHook: CustomTheme")
+        Log.d("startHook: CustomTheme")
         val instance = instance
         val helperClass = instance!!.themeHelper()
         val colorArray: SparseArray<IntArray> = XposedHelpers.getStaticObjectField(helperClass, instance.colorArray()) as SparseArray<IntArray>
@@ -49,7 +48,7 @@ class CustomThemeHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
                 XposedHelpers.setBooleanField(biliSkin, "mIsFree", true)
                 // Under the night mode item
                 mList.add(3, biliSkin)
-                Log.d(TAG, "Add a theme item: size = " + mList.size)
+                Log.d("Add a theme item: size = " + mList.size)
             }
         })
         XposedHelpers.findAndHookMethod(instance.themeListClickListener(), mClassLoader, "onClick", View::class.java, object : XC_MethodHook() {
@@ -62,7 +61,7 @@ class CustomThemeHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
                 val mId = XposedHelpers.getIntField(biliSkin, "mId")
                 // Make colors updated immediately
                 if (mId == CUSTOM_THEME_ID || mId == -1) {
-                    Log.d(TAG, "Custom theme item has been clicked")
+                    Log.d("Custom theme item has been clicked")
                     val colorDialog = ColorChooseDialog(view.context, customColor)
                     colorDialog.setPositiveButton("确定") { _: DialogInterface?, _: Int ->
                         val color = colorDialog.color
@@ -78,8 +77,8 @@ class CustomThemeHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
                         val newId = if (mId == CUSTOM_THEME_ID) -1 else CUSTOM_THEME_ID
                         XposedHelpers.setIntField(biliSkin, "mId", newId)
                         putCustomColor(color)
-                        Log.d(TAG, "Update new color: mId = " + newId
-                                + ", color = 0x" + Integer.toHexString(color).toUpperCase(Locale.getDefault()))
+                        Log.d("Update new color: mId = $newId, " +
+                                "color = 0x ${Integer.toHexString(color).toUpperCase(Locale.getDefault())}")
                         try {
                             XposedBridge.invokeOriginalMethod(param.method, param.thisObject, param.args)
                         } catch (e: Exception) {
