@@ -43,4 +43,6 @@
     <string name="hidden_group">隐藏功能</string>
     <string name="show_info_summary">显示解锁版权、允许下载等状态信息</string>
     <string name="show_info_title">提示模块运行信息</string>
+    <string name="test_cdn_title">cdn测速</string>
+    <string name="test_cdn_summary">点击打开CDN测速网页</string>
 </resources>

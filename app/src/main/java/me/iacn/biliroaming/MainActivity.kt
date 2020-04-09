@@ -141,10 +141,18 @@ class MainActivity : Activity() {
             return true
         }
 
+        private fun onTestCDNClick(): Boolean {
+            val uri = Uri.parse("https://yujincheng08.github.io/BiliRoaming/cdn_test.html")
+            val intent = Intent(Intent.ACTION_VIEW, uri)
+            startActivity(intent)
+            return true
+        }
+
         override fun onPreferenceClick(preference: Preference?): Boolean {
             return when (preference?.key) {
                 "version" -> onVersionClick()
                 "author" -> onAuthorClick()
+                "test_cdn" -> onTestCDNClick()
                 else -> false
             }
         }
@@ -152,7 +160,8 @@ class MainActivity : Activity() {
 
     companion object {
 
-        @android.support.annotation.Keep fun isModuleActive(): Boolean {
+        @android.support.annotation.Keep
+        fun isModuleActive(): Boolean {
             Log.i("大不自多", "海纳江河")
             return false
         }

@@ -67,6 +67,12 @@
             android:dependency="use_cdn"
             android:title="@string/custom_cdn_title"
             android:summary="@string/custom_cdn_summary" />
+
+        <Preference
+            android:key="test_cdn"
+            android:dependency="use_cdn"
+            android:title="@string/test_cdn_title"
+            android:summary="@string/test_cdn_summary" />
     </PreferenceCategory>
 
     <PreferenceCategory
