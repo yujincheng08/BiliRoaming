@@ -4,7 +4,6 @@ import android.net.Uri
 import me.iacn.biliroaming.BuildConfig
 import me.iacn.biliroaming.XposedInit
 import me.iacn.biliroaming.network.StreamUtils.getContent
-import me.iacn.biliroaming.utils.Log
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
@@ -128,6 +127,10 @@ object BiliRoamingApi {
             for (field in listOf("follow", "follow_status", "pay", "progress", "sponsor", "paster")) {
                 if (statusResult.has(field))
                     userStatus.put(field, statusResult.get(field))
+            }
+            if (statusResult.has("vip_info") &&
+                    statusResult.getJSONObject("vip_info").getInt("status") == 1) {
+                userStatus.put("vip", 1)
             }
             getReviewInfo(userStatus, seasonId, mediaId, accessKey)
             result.put("user_status", userStatus)
