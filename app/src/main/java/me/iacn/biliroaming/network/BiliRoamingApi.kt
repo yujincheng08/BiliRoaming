@@ -18,6 +18,7 @@ import java.net.URL
 object BiliRoamingApi {
     private const val BILI_SEASON_URL = "api.bilibili.com/pgc/view/web/season"
     private const val BILIPLUS_PLAYURL_URL = "www.biliplus.com/BPplayurl.php"
+    private const val BILIPLUS_VIEW_URL = "www.biliplus.com/api/view"
     private const val BILI_REVIEW_URL = "api.bilibili.com/pgc/review/user"
     private const val BILI_USER_STATUS_URL = "api.bilibili.com/pgc/view/web/season/user/status"
     private const val BILI_MEDIA_URL = "bangumi.bilibili.com/view/web_api/media"
@@ -144,6 +145,18 @@ object BiliRoamingApi {
     fun getPlayUrl(queryString: String?): String? {
         val builder = Uri.Builder()
         builder.scheme("https").encodedAuthority(BILIPLUS_PLAYURL_URL)
+        builder.encodedQuery(queryString)
+        builder.appendQueryParameter("module", "bangumi")
+        builder.appendQueryParameter("otype", "json")
+        builder.appendQueryParameter("platform", "android")
+        return getContent(builder.toString())
+    }
+
+    @JvmStatic
+    @Throws(IOException::class)
+    fun getView(queryString: String?): String? {
+        val builder = Uri.Builder()
+        builder.scheme("https").encodedAuthority(BILIPLUS_VIEW_URL)
         builder.encodedQuery(queryString)
         builder.appendQueryParameter("module", "bangumi")
         builder.appendQueryParameter("otype", "json")

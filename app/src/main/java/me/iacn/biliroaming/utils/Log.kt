@@ -39,9 +39,9 @@ object Log {
     @JvmStatic
     fun xLog(obj: Any?) {
         if (obj is Throwable){
-            XposedBridge.log("$obj")
+            XposedBridge.log("$TAG: $obj")
         } else {
-            XposedBridge.log("$obj")
+            XposedBridge.log("$TAG: $obj")
         }
     }
 

@@ -8,8 +8,12 @@ import de.robv.android.xposed.XposedHelpers.ClassNotFoundError
 import me.iacn.biliroaming.utils.Log
 import java.io.*
 import java.lang.ref.WeakReference
+import java.lang.reflect.Field
+import java.lang.reflect.Method
 import java.lang.reflect.ParameterizedType
 import java.util.*
+
+data class OkHttpResult(val fieldName: String?, val methodName: String?)
 
 /**
  * Created by iAcn on 2019/4/5
@@ -68,6 +72,13 @@ class BiliBiliPackage private constructor() {
         return themeHelperClass!!.get()
     }
 
+    fun requestField(): String? {
+        return mHookInfo!!["field_request"]
+    }
+
+    fun urlMethod(): String? {
+        return mHookInfo!!["method_url"]
+    }
     private fun checkNullOrReturn(clazz: WeakReference<Class<*>?>?, className: String?): WeakReference<Class<*>?> {
         var clazz = clazz
         if (clazz?.get() == null) {
@@ -104,6 +115,12 @@ class BiliBiliPackage private constructor() {
         }
         if (!mHookInfo!!.containsKey("class_retrofit_response")) {
             mHookInfo!!["class_retrofit_response"] = findRetrofitResponseClass()
+            needUpdate = true
+        }
+        if(!mHookInfo!!.containsKey("field_request") || !mHookInfo!!.containsKey("method_url")) {
+            val(fieldName, methodName) = findUrlField(mHookInfo!!["class_retrofit_response"]!!)
+            mHookInfo!!["field_request"] = fieldName
+            mHookInfo!!["method_url"] = methodName
             needUpdate = true
         }
         if (!mHookInfo!!.containsKey("class_fastjson")) {
@@ -152,6 +169,20 @@ class BiliBiliPackage private constructor() {
         return null
     }
 
+    private fun findUrlField(responseClassName: String) : OkHttpResult {
+        val responseClass = XposedHelpers.findClass(responseClassName, mClassLoader)
+        for (constructor in responseClass.declaredConstructors) {
+            for (field in constructor.parameterTypes[0].declaredFields) {
+                for (method in field.type.declaredMethods) {
+                    if (method.returnType.name == "okhttp3.HttpUrl") {
+                        return OkHttpResult(field.name, method.name)
+                    }
+                }
+            }
+        }
+        return OkHttpResult(null, null)
+    }
+
     private fun findFastJsonClass(): Class<*> {
         return try {
             XposedHelpers.findClass("com.alibaba.fastjson.JSON", mClassLoader)
@@ -193,14 +224,14 @@ class BiliBiliPackage private constructor() {
         @JvmStatic
         val instance: BiliBiliPackage?
             get() {
-                sInstance?.let{} ?: run{
-                synchronized(BiliBiliPackage::class.java) {
-                    if (sInstance == null) {
-                        sInstance = BiliBiliPackage()
+                sInstance?.let {} ?: run {
+                    synchronized(BiliBiliPackage::class.java) {
+                        if (sInstance == null) {
+                            sInstance = BiliBiliPackage()
+                        }
                     }
                 }
+                return sInstance
             }
-        return sInstance
     }
-}
 }

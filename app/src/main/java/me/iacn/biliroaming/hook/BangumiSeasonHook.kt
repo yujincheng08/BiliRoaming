@@ -9,9 +9,11 @@ import me.iacn.biliroaming.Constant.TYPE_EPISODE_ID
 import me.iacn.biliroaming.Constant.TYPE_SEASON_ID
 import me.iacn.biliroaming.XposedInit
 import me.iacn.biliroaming.XposedInit.Companion.toastMessage
+import me.iacn.biliroaming.network.BiliRoamingApi
 import me.iacn.biliroaming.network.BiliRoamingApi.getSeason
 import me.iacn.biliroaming.utils.Log
 import org.json.JSONObject
+import java.net.URL
 
 /**
  * Created by iAcn on 2019/3/27
@@ -45,63 +47,96 @@ class BangumiSeasonHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
         XposedBridge.hookAllConstructors(responseClass, object : XC_MethodHook() {
             @Throws(Throwable::class)
             override fun beforeHookedMethod(param: MethodHookParam) {
+                val url = getUrl(param.args[0])
                 val body = param.args[1]
                 val bangumiApiResponse = instance!!.bangumiApiResponse()
                 // Filter non-bangumi responses
                 // If it isn't bangumi, the type variable will not exist in this map
-                if (!bangumiApiResponse!!.isInstance(body)) return
-                val result = getObjectField(body, "result")
-                // Filter normal bangumi and other responses
-                if (isBangumiWithWatchPermission(getIntField(body, "code"), result)) {
-                    result?.let {
-                        allowDownload(it)
-                    }
+                if (bangumiApiResponse!!.isInstance(body)) {
+                    fixBangumi(body)
                     lastSeasonInfo.clear()
-                    return
+                } else if (url != null && url.startsWith("https://app.bilibili.com/x/v2/view") &&
+                        getIntField(body, "code") == -404) {
+                    fixView(body, url)
                 }
-                toastMessage("发现版权番剧，尝试解锁……")
-                Log.d(lastSeasonInfo)
-                val hidden = result == null
-                val content = getSeason(lastSeasonInfo, hidden)
-                val (code, newResult) = getNewResult(content)
-
-                if (newResult != null && code != null && isBangumiWithWatchPermission(code, newResult)) {
-                    Log.d("Got new season information from proxy server: $content")
-                    toastMessage("已从代理服务器获取番剧信息")
-                } else {
-                    Log.d("Failed to get new season information from proxy server")
-                    toastMessage("解锁失败，请重试")
-                    lastSeasonInfo.clear()
-                    return
-                }
-                val newRights = getObjectField(newResult, "rights")
-                if (XposedInit.sPrefs.getBoolean("allow_download", false))
-                    setBooleanField(newRights, "allowDownload", true)
-                if (!hidden) {
-                    // Replace only episodes and rights
-                    // Remain user information, such as follow status, watch progress, etc.
-                    if (!getBooleanField(newRights, "areaLimit")) {
-                        val newEpisodes = getObjectField(newResult, "episodes")
-                        var newModules: Any? = null
-                        findFieldIfExists(newResult.javaClass, "modules")?.let {
-                            newModules = getObjectField(newResult, "modules")
-                        }
-                        setObjectField(result, "rights", newRights)
-                        setObjectField(result, "episodes", newEpisodes)
-                        setObjectField(result, "seasonLimit", null)
-                        findFieldIfExists(result.javaClass, "modules")?.let {
-                            newModules?.let { it2 ->
-                                setObjectField(result, it.name, it2)
-                            }
-                        }
-                    }
-                } else {
-                    setIntField(body, "code", 0)
-                    setObjectField(body, "result", newResult)
-                }
-                lastSeasonInfo.clear()
             }
         })
+    }
+
+    private fun fixBangumi(body: Any) {
+        val result = getObjectField(body, "result")
+        // Filter normal bangumi and other responses
+        if (isBangumiWithWatchPermission(getIntField(body, "code"), result)) {
+            result?.let {
+                allowDownload(it)
+            }
+            lastSeasonInfo.clear()
+            return
+        }
+        toastMessage("发现版权番剧，尝试解锁……")
+        Log.d("Info: $lastSeasonInfo")
+        val hidden = result == null
+        val content = getSeason(lastSeasonInfo, hidden)
+        val (code, newResult) = getNewResult(content, "result", instance!!.bangumiUniformSeason()!!)
+
+        if (newResult != null && code != null && isBangumiWithWatchPermission(code, newResult)) {
+            Log.d("Got new season information from proxy server: $content")
+            toastMessage("已从代理服务器获取番剧信息")
+        } else {
+            Log.d("Failed to get new season information from proxy server")
+            toastMessage("解锁失败，请重试")
+            lastSeasonInfo.clear()
+            return
+        }
+        val newRights = getObjectField(newResult, "rights")
+        if (XposedInit.sPrefs.getBoolean("allow_download", false))
+            setBooleanField(newRights, "allowDownload", true)
+        if (!hidden) {
+            // Replace only episodes and rights
+            // Remain user information, such as follow status, watch progress, etc.
+            if (!getBooleanField(newRights, "areaLimit")) {
+                val newEpisodes = getObjectField(newResult, "episodes")
+                var newModules: Any? = null
+                findFieldIfExists(newResult.javaClass, "modules")?.let {
+                    newModules = getObjectField(newResult, "modules")
+                }
+                setObjectField(result, "rights", newRights)
+                setObjectField(result, "episodes", newEpisodes)
+                setObjectField(result, "seasonLimit", null)
+                findFieldIfExists(result.javaClass, "modules")?.let {
+                    newModules?.let { it2 ->
+                        setObjectField(result, it.name, it2)
+                    }
+                }
+            }
+        } else {
+            setIntField(body, "code", 0)
+            setObjectField(body, "result", newResult)
+        }
+    }
+
+    private fun fixView(body: Any, urlString: String) {
+        var queryString = urlString.substring(urlString.indexOf("?") + 1)
+        queryString = queryString.replace("aid=", "id=")
+        val content = BiliRoamingApi.getView(queryString)
+        Log.d("Got view information from proxy server: $content")
+        val detailClass = findClass("tv.danmaku.bili.ui.video.api.BiliVideoDetail", mClassLoader)
+        val (_, newResult) = getNewResult(content, "v2_app_api", detailClass)
+        setIntField(body, "code", 0)
+        setObjectField(body, "data", newResult)
+        val bangumiInfo = getObjectField(newResult, "mBangumiInfo")
+        bangumiInfo?.let {
+            val episodeId = getObjectField(bangumiInfo, "mEpId") as String?
+            episodeId?.let {
+                lastSeasonInfo["ep_id"] = it
+                val url = URL(urlString)
+                url.query.split("&").filter { it2 ->
+                    it2.startsWith("access_key=")
+                }.forEach { it2 ->
+                    lastSeasonInfo["access_key"] = it2.substring(it2.indexOf("=") + 1)
+                }
+            }
+        }
     }
 
     private fun isBangumiWithWatchPermission(code: Int, result: Any?): Boolean {
@@ -116,14 +151,13 @@ class BangumiSeasonHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
         return code != -404
     }
 
-    private fun getNewResult(content: String?): Result {
+    private fun getNewResult(content: String?, fieldName: String, beanClass: Class<*>): Result {
         val fastJsonClass = instance!!.fastJson()
-        val beanClass = instance!!.bangumiUniformSeason()
         if (content == null) {
             return Result(null, null)
         }
         val contentJson = JSONObject(content)
-        val resultJson = contentJson.optJSONObject("result")
+        val resultJson = contentJson.optJSONObject(fieldName)
         val code = contentJson.optInt("code")
         val newResult = callStaticMethod(fastJsonClass,
                 instance!!.fastJsonParse(), resultJson!!.toString(), beanClass)
@@ -138,6 +172,20 @@ class BangumiSeasonHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
             setBooleanField(rights, "allowDownload", true)
             Log.d("Download allowed")
             toastMessage("已允许下载")
+        }
+    }
+
+    private fun getUrl(response: Any): String? {
+        val requestField = instance!!.requestField()
+        val urlMethod = instance!!.urlMethod()
+        if (requestField == null || urlMethod == null) {
+            return null
+        }
+        val request = getObjectField(response, requestField)
+        return try {
+            callMethod(request, urlMethod).toString()
+        } catch (e: Throwable) {
+            null
         }
     }
 
