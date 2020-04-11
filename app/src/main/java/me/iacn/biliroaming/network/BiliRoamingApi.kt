@@ -149,7 +149,14 @@ object BiliRoamingApi {
         builder.appendQueryParameter("module", "bangumi")
         builder.appendQueryParameter("otype", "json")
         builder.appendQueryParameter("platform", "android")
-        return getContent(builder.toString())
+        var content = getContent(builder.toString())
+        if (content != null && !content.contains("\"code\":0")) {
+            // Workaround for moive
+            builder.appendQueryParameter("module", "movie")
+            builder.appendQueryParameter("update", "1")
+            content = getContent(builder.toString())
+        }
+        return content
     }
 
     @JvmStatic
