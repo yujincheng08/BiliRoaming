@@ -43,9 +43,9 @@ object BiliRoamingApi {
     private fun reconstructModules(result: JSONObject) {
         val module = JSONObject(BILIMODULE_TEMPLATE)
         val episodes = result.getJSONArray("episodes")
-        module.getJSONObject("data").put("episodes", episodes);
+        module.getJSONObject("data").put("episodes", episodes)
         // work around
-        result.put("modules", JSONArray(arrayOf(module)));
+        result.put("modules", JSONArray(arrayOf(module)))
     }
 
     @JvmStatic
@@ -93,7 +93,7 @@ object BiliRoamingApi {
     }
 
     @JvmStatic
-    private fun getReviewInfo(userStatus: JSONObject, seasonId: String, mediaId: String, accessKey: String?) {
+    private fun getReviewInfo(userStatus: JSONObject, mediaId: String, accessKey: String?) {
         try {
             val uri = Uri.Builder()
                     .scheme("https")
@@ -133,7 +133,7 @@ object BiliRoamingApi {
                     statusResult.getJSONObject("vip_info").getInt("status") == 1) {
                 userStatus.put("vip", 1)
             }
-            getReviewInfo(userStatus, seasonId, mediaId, accessKey)
+            getReviewInfo(userStatus, mediaId, accessKey)
             result.put("user_status", userStatus)
         } catch (e: Throwable) {
 

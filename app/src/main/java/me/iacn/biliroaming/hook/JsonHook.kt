@@ -21,7 +21,7 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             override fun afterHookedMethod(param: MethodHookParam) {
                 var result = param.result
                 result?.let {} ?: run {
-                    return;
+                    return
                 }
                 if (result.javaClass == generalResponseClass) {
                     result = getObjectField(result, "data")

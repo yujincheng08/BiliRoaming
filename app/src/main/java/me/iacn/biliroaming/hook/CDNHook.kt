@@ -9,7 +9,7 @@ import java.net.InetAddress
 
 class CDNHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
-        if (!XposedInit.sPrefs.getBoolean("use_cdn", false)) return;
+        if (!XposedInit.sPrefs.getBoolean("use_cdn", false)) return
 
         Log.d("startHook: CDN")
 

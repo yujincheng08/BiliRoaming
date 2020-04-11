@@ -65,9 +65,6 @@ class CustomThemeHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
                     val colorDialog = ColorChooseDialog(view.context, customColor)
                     colorDialog.setPositiveButton("确定") { _: DialogInterface?, _: Int ->
                         val color = colorDialog.color
-                        val instance = BiliBiliPackage.instance
-                        val helperClass = instance!!.themeHelper()
-                        val colorArray: SparseArray<IntArray> = XposedHelpers.getStaticObjectField(helperClass, instance.colorArray()) as SparseArray<IntArray>
                         val colors = generateColorArray(color)
                         colorArray.put(CUSTOM_THEME_ID, colors)
                         colorArray.put(-1, colors) // Add a new color id but it won't be saved
