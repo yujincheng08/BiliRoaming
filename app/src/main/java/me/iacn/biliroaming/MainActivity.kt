@@ -54,6 +54,7 @@ class MainActivity : Activity() {
             findPreference("version").summary = BuildConfig.VERSION_NAME
             findPreference("version").onPreferenceClickListener = this
             findPreference("author").onPreferenceClickListener = this
+            findPreference("test_cdn").onPreferenceClickListener = this
         }
 
         override fun onPreferenceChange(preference: Preference, newValue: Any): Boolean {

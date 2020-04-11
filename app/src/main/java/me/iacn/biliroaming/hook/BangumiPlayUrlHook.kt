@@ -47,7 +47,8 @@ class BangumiPlayUrlHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
                 val urlString = connection.url.toString()
                 if (!urlString.startsWith("https://api.bilibili.com/pgc/player/api/playurl")) return
                 val queryString = urlString.substring(urlString.indexOf("?") + 1)
-                if (!queryString.contains("ep_id=") && !queryString.contains("module=bangumi")) return
+                if ((!queryString.contains("ep_id=") && !queryString.contains("module=bangumi"))
+                        || queryString.contains("ep_id=0") /*workaround*/) return
                 val inputStream = param.result as InputStream
                 val encoding = connection.contentEncoding
                 var content = getContent(inputStream, encoding)
