@@ -35,15 +35,7 @@ class XposedInit : IXposedHookLoadPackage {
                     "tv.danmaku.bili", "com.bilibili.app.blue", "com.bilibili.app.in" -> {
                         Log.d("BiliBili process launched ...")
                         Log.d("Config: ${sPrefs.all}")
-                        BiliBiliPackage.instance?.init(lpparam.classLoader, param.args[0] as Context)
-                        BangumiSeasonHook(lpparam.classLoader).startHook()
-                        BangumiPlayUrlHook(lpparam.classLoader).startHook()
-                        CustomThemeHook(lpparam.classLoader).startHook()
-                        TeenagersModeHook(lpparam.classLoader).startHook()
-                        CommentHook(lpparam.classLoader).startHook()
-                        JsonHook(lpparam.classLoader).startHook()
-                        CDNHook(lpparam.classLoader).startHook()
-                        (object : BaseHook(lpparam.classLoader) {
+                        startHook(object : BaseHook(lpparam.classLoader) {
                             override fun startHook() {
                                 XposedBridge.hookAllMethods(XposedHelpers.findClass(
                                         "android.app.Instrumentation", lpparam.classLoader),
@@ -57,18 +49,35 @@ class XposedInit : IXposedHookLoadPackage {
                                     }
                                 })
                             }
-                        }).startHook()
+                        })
+                        BiliBiliPackage.instance?.init(lpparam.classLoader, param.args[0] as Context)
+                        startHook(BangumiSeasonHook(lpparam.classLoader))
+                        startHook(BangumiPlayUrlHook(lpparam.classLoader))
+                        startHook(CustomThemeHook(lpparam.classLoader))
+                        startHook(TeenagersModeHook(lpparam.classLoader))
+                        startHook(CommentHook(lpparam.classLoader))
+                        startHook(JsonHook(lpparam.classLoader))
+                        startHook(CDNHook(lpparam.classLoader))
                     }
                     "tv.danmaku.bili:web", "com.bilibili.app.in:web", "com.bilibili.app.blue:web" -> {
                         CustomThemeHook(lpparam.classLoader).insertColorForWebProcess()
                     }
                     "com.bilibili.app.in:download", "com.bilibili.app.blue:download", "tv.danmaku.bili:download" -> {
-                        BangumiPlayUrlHook(lpparam.classLoader).startHook()
-                        CDNHook(lpparam.classLoader).startHook()
+                        startHook(BangumiPlayUrlHook(lpparam.classLoader))
+                        startHook(CDNHook(lpparam.classLoader))
                     }
                 }
             }
         })
+    }
+
+    private fun startHook(hooker: BaseHook) {
+        try{
+            hooker.startHook()
+        }catch (e: Throwable) {
+            Log.e(e.message)
+            toastMessage("出现错误，部分功能可能失效。")
+        }
     }
 
     companion object {
