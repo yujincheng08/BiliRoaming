@@ -2,7 +2,7 @@ package me.iacn.biliroaming.hook
 
 import android.util.ArrayMap
 import de.robv.android.xposed.XC_MethodHook
-import de.robv.android.xposed.XposedBridge
+import de.robv.android.xposed.XposedBridge.hookAllConstructors
 import de.robv.android.xposed.XposedHelpers.*
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.Constant.TYPE_EPISODE_ID
@@ -29,7 +29,7 @@ class BangumiSeasonHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
         Log.d("startHook: BangumiSeason")
         val paramsMapClass = findClass("com.bilibili.bangumi.data.page.detail." +
                 "BangumiDetailApiService\$UniformSeasonParamsMap", mClassLoader)
-        XposedBridge.hookAllConstructors(paramsMapClass, object : XC_MethodHook() {
+        hookAllConstructors(paramsMapClass, object : XC_MethodHook() {
             @Throws(Throwable::class)
             override fun afterHookedMethod(param: MethodHookParam) {
                 val paramMap: Map<String, String> = param.thisObject as Map<String, String>
@@ -44,7 +44,7 @@ class BangumiSeasonHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
 
         val responseClass = findClass(instance!!.retrofitResponse(), mClassLoader)
 
-        XposedBridge.hookAllConstructors(responseClass, object : XC_MethodHook() {
+        hookAllConstructors(responseClass, object : XC_MethodHook() {
             @Throws(Throwable::class)
             override fun beforeHookedMethod(param: MethodHookParam) {
                 val url = getUrl(param.args[0])
@@ -61,6 +61,22 @@ class BangumiSeasonHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
                 }
             }
         })
+
+        try {
+            val urlHook = object : XC_MethodHook() {
+                @Throws(Throwable::class)
+                override fun afterHookedMethod(param: MethodHookParam) {
+                    val redirectUrl = getObjectField(param.thisObject, "redirectUrl") as String
+                    if (redirectUrl.isEmpty()) return
+                    param.result = callMethod(param.thisObject, "getUrl", redirectUrl)
+                }
+            }
+            findAndHookMethod("com.bilibili.bplus.followingcard.api.entity.cardBean.VideoCard",
+                    mClassLoader, "getJumpUrl", urlHook)
+            findAndHookMethod("com.bilibili.bplus.followingcard.api.entity.cardBean.VideoCard",
+                    mClassLoader, "getCommentJumpUrl", urlHook)
+        } catch (e: Throwable) {
+        }
     }
 
     private fun fixBangumi(body: Any) {
