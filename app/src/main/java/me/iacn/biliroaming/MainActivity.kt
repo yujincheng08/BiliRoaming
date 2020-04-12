@@ -111,12 +111,12 @@ class MainActivity : Activity() {
                 return true
             }
             counter++
-            val text = "再按${7 - counter}次开启净化功能"
+            val text = "再按${7 - counter}次开启隐藏功能"
             if (counter == 7) {
                 preferenceScreen.removeAll()
                 addPreferencesFromResource(R.xml.prefs_setting)
                 prefs?.edit()?.putBoolean("hidden", true)?.commit()
-                toast?.setText("已开启净化功能")
+                toast?.setText("已开启隐藏功能")
                 toast?.duration = LENGTH_SHORT;
                 toast?.show();
                 preferenceScreen.removeAll()
