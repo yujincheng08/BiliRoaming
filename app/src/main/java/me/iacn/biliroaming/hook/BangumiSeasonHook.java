@@ -14,7 +14,9 @@ import me.iacn.biliroaming.BiliBiliPackage;
 import me.iacn.biliroaming.XposedInit;
 import me.iacn.biliroaming.network.BiliRoamingApi;
 
+import static de.robv.android.xposed.XposedHelpers.callMethod;
 import static de.robv.android.xposed.XposedHelpers.callStaticMethod;
+import static de.robv.android.xposed.XposedHelpers.findAndHookMethod;
 import static de.robv.android.xposed.XposedHelpers.findClass;
 import static de.robv.android.xposed.XposedHelpers.getBooleanField;
 import static de.robv.android.xposed.XposedHelpers.getIntField;
@@ -131,6 +133,23 @@ public class BangumiSeasonHook extends BaseHook {
                 lastSeasonInfo.clear();
             }
         });
+        try {
+            Object urlHook = new XC_MethodHook() {
+                @Override
+                protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                    String redirectUrl = (String) getObjectField(param.thisObject, "redirectUrl");
+                    if (redirectUrl.isEmpty()) return;
+                    param.setResult(callMethod(param.thisObject, "getUrl", redirectUrl));
+                }
+            };
+            findAndHookMethod("com.bilibili.bplus.followingcard.api.entity.cardBean.VideoCard",
+                    mClassLoader, "getJumpUrl", urlHook);
+            findAndHookMethod("com.bilibili.bplus.followingcard.api.entity.cardBean.VideoCard",
+                    mClassLoader, "getCommentJumpUrl", urlHook);
+        } catch (Throwable ignored) {
+        }
+
+
     }
 
     private boolean isBangumiWithWatchPermission(int code, Object result) {
