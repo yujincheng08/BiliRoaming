@@ -146,17 +146,18 @@ object BiliRoamingApi {
         val builder = Uri.Builder()
         builder.scheme("https").encodedAuthority(BILIPLUS_PLAYURL_URL)
         builder.encodedQuery(queryString)
-        builder.appendQueryParameter("module", "bangumi")
+        builder.appendQueryParameter("module", "pgc")
         builder.appendQueryParameter("otype", "json")
         builder.appendQueryParameter("platform", "android")
-        var content = getContent(builder.toString())
-        if (content != null && !content.contains("\"code\":0")) {
-            // Workaround for moive
-            builder.appendQueryParameter("module", "movie")
-            builder.appendQueryParameter("update", "1")
-            content = getContent(builder.toString())
-        }
-        return content
+//        var content = getContent(builder.toString())
+//        if (content != null && !content.contains("\"code\":0")) {
+//            // Workaround for moive
+//            builder.appendQueryParameter("module", "movie")
+//            builder.appendQueryParameter("update", "1")
+//            content = getContent(builder.toString())
+//        }
+//        return content
+        return getContent(builder.toString())
     }
 
     @JvmStatic
