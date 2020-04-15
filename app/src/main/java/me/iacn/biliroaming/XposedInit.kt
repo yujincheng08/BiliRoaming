@@ -43,7 +43,11 @@ class XposedInit : IXposedHookLoadPackage {
                                     override fun afterHookedMethod(param: MethodHookParam) {
                                         currentActivity = param.result as Activity
                                         if (!started) {
-                                            toastMessage("哔哩漫游已激活")
+                                            if(!sPrefs.getBoolean("main_func", false)) {
+                                                toastMessage("哔哩漫游已激活，但未启用番剧解锁功能")
+                                            } else {
+                                                toastMessage("哔哩漫游已激活")
+                                            }
                                             started = true
                                         }
                                     }

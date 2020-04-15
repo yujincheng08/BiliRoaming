@@ -30,7 +30,8 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
                 if (param.result.javaClass == tabResponseClass) {
                     val data = getObjectField(result, "tabData")
-                    if (XposedInit.sPrefs.getBoolean("purify_mall", false)) {
+                    if (XposedInit.sPrefs.getBoolean("purify_mall", false) &&
+                            XposedInit.sPrefs.getBoolean("hidden", false)) {
                         val bottom = getObjectField(data, "bottom") as MutableList<*>
                         bottom.removeAll {
                             val uri = getObjectField(it, "uri") as String
@@ -56,7 +57,8 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 //                        }
 //                        tab.add(0, live);
 //                    }
-                    if (XposedInit.sPrefs.getBoolean("purify_game", false)) {
+                    if (XposedInit.sPrefs.getBoolean("purify_game", false) &&
+                            XposedInit.sPrefs.getBoolean("hidden", false)) {
                         val top = getObjectField(data, "top") as MutableList<*>
                         top.removeAll {
                             val uri = getObjectField(it, "uri") as String
@@ -70,7 +72,8 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         getObjectField(it, "emotes") == null
                     }
                 } else if (result.javaClass == accountMineClass) {
-                    if (XposedInit.sPrefs.getBoolean("purify_drawer", false)) {
+                    if (XposedInit.sPrefs.getBoolean("purify_drawer", false) &&
+                            XposedInit.sPrefs.getBoolean("hidden", false)) {
                         val sections = getObjectField(result, "sectionList") as MutableList<*>?
                         sections?.removeAt(sections.size - 1)
                     }

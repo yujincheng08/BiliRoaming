@@ -81,6 +81,7 @@
 
         <SwitchPreference
             android:key="hidden"
+            android:defaultValue="false"
             android:summary="@string/hidden_summary"
             android:title="@string/hidden_title" />
         <SwitchPreference
