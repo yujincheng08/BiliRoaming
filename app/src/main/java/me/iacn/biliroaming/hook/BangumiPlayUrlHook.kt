@@ -19,6 +19,7 @@ import java.net.HttpURLConnection
  */
 class BangumiPlayUrlHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
     override fun startHook() {
+        if (!XposedInit.sPrefs.getBoolean("main_func", false)) return
         Log.d("startHook: BangumiPlayUrl")
         findAndHookMethod("com.bilibili.nativelibrary.LibBili", mClassLoader, "a",
                 MutableMap::class.java, object : XC_MethodHook() {
@@ -30,14 +31,8 @@ class BangumiPlayUrlHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
                         params.containsKey("ep_id")) {
                     params.remove("dl")
                 }
-                if (XposedInit.sPrefs.getBoolean("simulate", false)) {
-                    params["appkey"] = "1d8b6e7d45233436"
-                    params["platform"] = "android"
-                    params["mobi_app"] = "android"
-                }
             }
         })
-        if (!XposedInit.sPrefs.getBoolean("main_func", false)) return
         findAndHookMethod("com.bilibili.lib.okhttp.huc.OkHttpURLConnection", mClassLoader,
                 "getInputStream", object : XC_MethodHook() {
             @Throws(Throwable::class)

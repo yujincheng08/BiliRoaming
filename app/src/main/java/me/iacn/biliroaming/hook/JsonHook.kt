@@ -39,24 +39,26 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         }
                     }
 
-//                    val tab = getObjectField(data, "tab") as MutableList<Any>
-//                    val hasLive = tab.fold(false) { acc, it ->
-//                        val uri = getObjectField(it, "uri") as String;
-//                        acc && uri.startsWith("bilibili://live/home")
-//                    };
-//                    val tabClass = findClass("tv.danmaku.bili.ui.main2.resource.MainResourceManager\$TabData", mClassLoader)
-//                    if (!hasLive) {
-//                        val live = newInstance(tabClass);
-//                        setObjectField(live, "tabId", "20");
-//                        setObjectField(live, "name", "直播");
-//                        setObjectField(live, "uri", "bilibili://live/home");
-//                        setObjectField(live, "reportId", "直播tab");
-//                        setIntField(live, "pos", 1);
-//                        tab.forEach{
-//                            setIntField(it, "pos", getIntField(it, "pos") + 1);
-//                        }
-//                        tab.add(0, live);
-//                    }
+                    if (XposedInit.sPrefs.getBoolean("simulate", false)) {
+                        val tab = getObjectField(data, "tab") as MutableList<Any>
+                        val hasLive = tab.fold(false) { acc, it ->
+                            val uri = getObjectField(it, "uri") as String;
+                            acc || uri.startsWith("bilibili://live/home")
+                        }
+                        val tabClass = findClass("tv.danmaku.bili.ui.main2.resource.MainResourceManager\$Tab", mClassLoader)
+                        if (!hasLive) {
+                            val live = newInstance(tabClass);
+                            setObjectField(live, "tabId", "20");
+                            setObjectField(live, "name", "直播");
+                            setObjectField(live, "uri", "bilibili://live/home");
+                            setObjectField(live, "reportId", "直播tab");
+                            setIntField(live, "pos", 1);
+                            tab.forEach {
+                                setIntField(it, "pos", getIntField(it, "pos") + 1);
+                            }
+                            tab.add(0, live);
+                        }
+                    }
                     if (XposedInit.sPrefs.getBoolean("purify_game", false) &&
                             XposedInit.sPrefs.getBoolean("hidden", false)) {
                         val top = getObjectField(data, "top") as MutableList<*>
@@ -65,13 +67,7 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             uri.startsWith("bilibili://game_center/home")
                         }
                     }
-                } else if (result.javaClass == emotionClass) {
-                    // Work around of bili blue
-                    val packages = getObjectField(result, "packages") as MutableList<*>
-                    packages.removeAll {
-                        getObjectField(it, "emotes") == null
-                    }
-                } else if (result.javaClass == accountMineClass) {
+                }  else if (result.javaClass == accountMineClass) {
                     if (XposedInit.sPrefs.getBoolean("purify_drawer", false) &&
                             XposedInit.sPrefs.getBoolean("hidden", false)) {
                         val sections = getObjectField(result, "sectionList") as MutableList<*>?

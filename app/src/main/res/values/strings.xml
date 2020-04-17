@@ -22,8 +22,8 @@
     <string name="allow_download_summary">使版权番剧可以缓存</string>
     <string name="comment_floor_title">评论区楼层显示</string>
     <string name="comment_floor_summary">恢复以前版本的评论楼层显示</string>
-    <string name="simulate_summary">可以开启概念版的直播功能（国际版无效）</string>
-    <string name="simulate_title">模拟原版客户端</string>
+    <string name="simulate_summary">开启概念版的直播功能</string>
+    <string name="simulate_title">概念版添加直播</string>
     <string name="use_cdn_summary">设置CDN加速港澳台番剧加载</string>
     <string name="use_cdn_title">加速港澳台番剧</string>
     <string name="cdn_summary">选择速度最快的CDN服务器</string>
@@ -35,11 +35,11 @@
     <string name="hidden_title">启用隐藏功能</string>
     <string name="hidden_summary">打开后可以使用隐藏功能</string>
     <string name="purify_mall_summary">去除底部会员购</string>
-    <string name="purify_mall_title">会员购</string>
+    <string name="purify_mall_title">净化会员购</string>
     <string name="purify_game_summary">去除首页右上角游戏中心</string>
-    <string name="purify_game_title">游戏中心</string>
+    <string name="purify_game_title">净化游戏中心</string>
     <string name="purify_drawer_summary">去除侧边栏免流服务等（一刀切）</string>
-    <string name="purify_drawer_title">侧边栏</string>
+    <string name="purify_drawer_title">净化侧边栏</string>
     <string name="hidden_group">隐藏功能</string>
     <string name="show_info_summary">显示解锁版权、允许下载等状态信息</string>
     <string name="show_info_title">提示模块运行信息</string>
