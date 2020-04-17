@@ -8,10 +8,9 @@ import de.robv.android.xposed.XposedHelpers.ClassNotFoundError
 import me.iacn.biliroaming.utils.Log
 import java.io.*
 import java.lang.ref.WeakReference
-import java.lang.reflect.Field
-import java.lang.reflect.Method
 import java.lang.reflect.ParameterizedType
 import java.util.*
+import kotlin.collections.HashMap
 
 data class OkHttpResult(val fieldName: String?, val methodName: String?)
 
@@ -19,35 +18,38 @@ data class OkHttpResult(val fieldName: String?, val methodName: String?)
  * Created by iAcn on 2019/4/5
  * Email i@iacn.me
  */
-class BiliBiliPackage private constructor() {
-    private var mClassLoader: ClassLoader? = null
-    private var mHookInfo: MutableMap<String, String?>? = null
+class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, private val mContext: Context) {
+    private val mHookInfo: MutableMap<String, String?> = readHookInfo(mContext)
     private var bangumiApiResponseClass: WeakReference<Class<*>?>? = null
     private var fastJsonClass: WeakReference<Class<*>?>? = null
     private var bangumiUniformSeasonClass: WeakReference<Class<*>?>? = null
     private var themeHelperClass: WeakReference<Class<*>?>? = null
-    fun init(classLoader: ClassLoader?, context: Context) {
-        mClassLoader = classLoader
-        readHookInfo(context)
+
+    init {
         if (checkHookInfo()) {
-            writeHookInfo(context)
+            writeHookInfo(mContext)
         }
+        instance = this
     }
 
     fun retrofitResponse(): String? {
-        return mHookInfo!!["class_retrofit_response"]
+        return mHookInfo["class_retrofit_response"]
     }
 
     fun fastJsonParse(): String? {
-        return mHookInfo!!["method_fastjson_parse"]
+        return mHookInfo["method_fastjson_parse"]
     }
 
     fun colorArray(): String? {
-        return mHookInfo!!["field_color_array"]
+        return mHookInfo["field_color_array"]
     }
 
     fun themeListClickListener(): String? {
-        return mHookInfo!!["class_theme_list_click"]
+        return mHookInfo["class_theme_list_click"]
+    }
+
+    fun routeParams(): String? {
+        return mHookInfo["class_route_params"]
     }
 
     fun bangumiApiResponse(): Class<*>? {
@@ -63,7 +65,7 @@ class BiliBiliPackage private constructor() {
     }
 
     fun fastJson(): Class<*>? {
-        fastJsonClass = checkNullOrReturn(fastJsonClass, mHookInfo!!["class_fastjson"])
+        fastJsonClass = checkNullOrReturn(fastJsonClass, mHookInfo["class_fastjson"])
         return fastJsonClass!!.get()
     }
 
@@ -73,12 +75,13 @@ class BiliBiliPackage private constructor() {
     }
 
     fun requestField(): String? {
-        return mHookInfo!!["field_request"]
+        return mHookInfo["field_request"]
     }
 
     fun urlMethod(): String? {
-        return mHookInfo!!["method_url"]
+        return mHookInfo["method_url"]
     }
+
     private fun checkNullOrReturn(clazz: WeakReference<Class<*>?>?, className: String?): WeakReference<Class<*>?> {
         var clazz = clazz
         if (clazz?.get() == null) {
@@ -87,7 +90,7 @@ class BiliBiliPackage private constructor() {
         return clazz
     }
 
-    private fun readHookInfo(context: Context) {
+    private fun readHookInfo(context: Context): MutableMap<String, String?> {
         try {
             val hookInfoFile = File(context.cacheDir, Constant.HOOK_INFO_FILE_NAME)
             Log.d("Reading hook info: $hookInfoFile")
@@ -95,13 +98,15 @@ class BiliBiliPackage private constructor() {
             if (hookInfoFile.isFile && hookInfoFile.canRead()) {
                 val lastUpdateTime = context.packageManager.getPackageInfo(Constant.BILIBILI_PACKAGENAME, 0).lastUpdateTime
                 val stream = ObjectInputStream(FileInputStream(hookInfoFile))
-                if (stream.readLong() == lastUpdateTime) mHookInfo = stream.readObject() as MutableMap<String, String?>
+                @Suppress("UNCHECKED_CAST")
+                if (stream.readLong() == lastUpdateTime) return stream.readObject() as MutableMap<String, String?>
             }
             val endTime = System.currentTimeMillis()
             Log.d("Read hook info completed: take ${endTime - startTime} ms")
         } catch (e: Exception) {
             e.printStackTrace()
         }
+        return HashMap()
     }
 
     /**
@@ -109,33 +114,33 @@ class BiliBiliPackage private constructor() {
      */
     private fun checkHookInfo(): Boolean {
         var needUpdate = false
-        if (mHookInfo == null) {
-            mHookInfo = HashMap()
+        if (!mHookInfo.containsKey("class_retrofit_response")) {
+            mHookInfo["class_retrofit_response"] = findRetrofitResponseClass()
             needUpdate = true
         }
-        if (!mHookInfo!!.containsKey("class_retrofit_response")) {
-            mHookInfo!!["class_retrofit_response"] = findRetrofitResponseClass()
+        if (!mHookInfo.containsKey("field_request") || !mHookInfo.containsKey("method_url")) {
+            val (fieldName, methodName) = findUrlField(mHookInfo["class_retrofit_response"]!!)
+            mHookInfo["field_request"] = fieldName
+            mHookInfo["method_url"] = methodName
             needUpdate = true
         }
-        if(!mHookInfo!!.containsKey("field_request") || !mHookInfo!!.containsKey("method_url")) {
-            val(fieldName, methodName) = findUrlField(mHookInfo!!["class_retrofit_response"]!!)
-            mHookInfo!!["field_request"] = fieldName
-            mHookInfo!!["method_url"] = methodName
-            needUpdate = true
-        }
-        if (!mHookInfo!!.containsKey("class_fastjson")) {
+        if (!mHookInfo.containsKey("class_fastjson")) {
             val fastJsonClass = findFastJsonClass()
             val notObfuscated = "JSON" == fastJsonClass.simpleName
-            mHookInfo!!["class_fastjson"] = fastJsonClass.name
-            mHookInfo!!["method_fastjson_parse"] = if (notObfuscated) "parseObject" else "a"
+            mHookInfo["class_fastjson"] = fastJsonClass.name
+            mHookInfo["method_fastjson_parse"] = if (notObfuscated) "parseObject" else "a"
             needUpdate = true
         }
-        if (!mHookInfo!!.containsKey("field_color_array")) {
-            mHookInfo!!["field_color_array"] = findColorArrayField()
+        if (!mHookInfo.containsKey("field_color_array")) {
+            mHookInfo["field_color_array"] = findColorArrayField()
             needUpdate = true
         }
-        if (!mHookInfo!!.containsKey("class_theme_list_click")) {
-            mHookInfo!!["class_theme_list_click"] = findThemeListClickClass()
+        if (!mHookInfo.containsKey("class_theme_list_click")) {
+            mHookInfo["class_theme_list_click"] = findThemeListClickClass()
+            needUpdate = true
+        }
+        if (!mHookInfo.containsKey("class_route_params")) {
+            mHookInfo["class_route_params"] = findRouteParamsClass()
             needUpdate = true
         }
         Log.d("Check hook info completed: needUpdate = $needUpdate")
@@ -169,7 +174,7 @@ class BiliBiliPackage private constructor() {
         return null
     }
 
-    private fun findUrlField(responseClassName: String) : OkHttpResult {
+    private fun findUrlField(responseClassName: String): OkHttpResult {
         val responseClass = XposedHelpers.findClass(responseClassName, mClassLoader)
         for (constructor in responseClass.declaredConstructors) {
             for (field in constructor.parameterTypes[0].declaredFields) {
@@ -217,21 +222,18 @@ class BiliBiliPackage private constructor() {
         return null
     }
 
+    private fun findRouteParamsClass(): String? {
+        val actionClass = XposedHelpers.findClass("com.bilibili.userfeedback.laserreport.UploadFeedbackUploadAction", mClassLoader)
+        for (m in actionClass.methods) {
+            if (m.name == "act") {
+                return m.parameterTypes[0].name
+            }
+        }
+        return null
+    }
+
     companion object {
         @Volatile
-        private var sInstance: BiliBiliPackage? = null
-
-        @JvmStatic
-        val instance: BiliBiliPackage?
-            get() {
-                sInstance?.let {} ?: run {
-                    synchronized(BiliBiliPackage::class.java) {
-                        if (sInstance == null) {
-                            sInstance = BiliBiliPackage()
-                        }
-                    }
-                }
-                return sInstance
-            }
+        var instance: BiliBiliPackage? = null
     }
 }

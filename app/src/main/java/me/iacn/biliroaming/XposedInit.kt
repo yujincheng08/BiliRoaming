@@ -43,7 +43,7 @@ class XposedInit : IXposedHookLoadPackage {
                                     override fun afterHookedMethod(param: MethodHookParam) {
                                         currentActivity = param.result as Activity
                                         if (!started) {
-                                            if(!sPrefs.getBoolean("main_func", false)) {
+                                            if (!sPrefs.getBoolean("main_func", false)) {
                                                 toastMessage("哔哩漫游已激活，但未启用番剧解锁功能")
                                             } else {
                                                 toastMessage("哔哩漫游已激活")
@@ -54,7 +54,7 @@ class XposedInit : IXposedHookLoadPackage {
                                 })
                             }
                         })
-                        BiliBiliPackage.instance?.init(lpparam.classLoader, param.args[0] as Context)
+                        BiliBiliPackage(lpparam.classLoader, param.args[0] as Context)
                         startHook(BangumiSeasonHook(lpparam.classLoader))
                         startHook(BangumiPlayUrlHook(lpparam.classLoader))
                         startHook(CustomThemeHook(lpparam.classLoader))
@@ -62,6 +62,7 @@ class XposedInit : IXposedHookLoadPackage {
                         startHook(CommentHook(lpparam.classLoader))
                         startHook(JsonHook(lpparam.classLoader))
                         startHook(CDNHook(lpparam.classLoader))
+                        startHook(MiniProgramHook(lpparam.classLoader))
                     }
                     "tv.danmaku.bili:web", "com.bilibili.app.in:web", "com.bilibili.app.blue:web" -> {
                         CustomThemeHook(lpparam.classLoader).insertColorForWebProcess()
@@ -76,9 +77,9 @@ class XposedInit : IXposedHookLoadPackage {
     }
 
     private fun startHook(hooker: BaseHook) {
-        try{
+        try {
             hooker.startHook()
-        }catch (e: Throwable) {
+        } catch (e: Throwable) {
             Log.e(e.message)
             toastMessage("出现错误，部分功能可能失效。")
         }

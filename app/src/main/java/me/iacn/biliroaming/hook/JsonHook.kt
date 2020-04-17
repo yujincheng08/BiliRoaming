@@ -80,6 +80,5 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
             }
         })
-
     }
 }
