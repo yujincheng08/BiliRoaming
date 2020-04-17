@@ -6,6 +6,7 @@ import de.robv.android.xposed.XposedHelpers.findClass
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.XposedInit
 import me.iacn.biliroaming.utils.Log
+import me.iacn.biliroaming.utils.bv2av
 
 class MiniProgramHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
@@ -17,6 +18,16 @@ class MiniProgramHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 if (arg.toString() != "action://share/shareto") return
                 val bundle = param.args[2] as android.os.Bundle
                 val extra = bundle.getBundle("default_extra_bundle")
+                if (extra?.getString("platform") == "COPY"){
+                    extra.getString("params_content")?.let {url ->
+                        val idx = url.lastIndexOf("BV")
+                        if (idx<0) return
+                        val bv = url.substring(idx)
+                        if (bv.length != 12) return
+                        extra.putString("params_content", "${url.substring(0, idx)}av${bv2av(bv)}")
+                    }
+                    return
+                }
                 if (extra?.getString("params_type") != "type_min_program") return
                 extra.putString("params_type", "type_web")
                 if (extra.getString("platform") == "QQ") {
