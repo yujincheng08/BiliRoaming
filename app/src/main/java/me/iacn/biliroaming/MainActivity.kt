@@ -156,12 +156,12 @@ class MainActivity : Activity() {
                         try {
                             val body = result.getString("body")
                             log = body.substring(body.lastIndexOf("更新日志"))
-                        }catch(e : Throwable){}
-                        updatePreference.summary = if(log.isNotEmpty()) log else resources.getString(R.string.update_summary)
-                        updatePreference.onPreferenceClickListener=this
-                        updatePreference.order=1
+                        } catch (e: Throwable) {
+                        }
+                        updatePreference.summary = if (log.isNotEmpty()) log else resources.getString(R.string.update_summary)
+                        updatePreference.onPreferenceClickListener = this
+                        updatePreference.order = 1
                         aboutGroup.addPreference(updatePreference)
-
                     }
                 }
             } catch (e: Throwable) {
