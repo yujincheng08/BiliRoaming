@@ -1,25 +1,37 @@
+# 哔哩漫游
+解除B站客户端番剧区域限制的Xposed模块，并且提供其他小功能
+
 # BiliRoaming
-An Xposed module to unlock BiliBili bangumi watching area limit.
+An Xposed module that unblocks bangumi area limit of BILIBILI, and miscellaneous features
 
-# BiliPlus API Version
-* support BiliPlus API
-* unlock China Mainland restricted bangumi (as well as eariler supported TW/HK bangumi)
-* support CDN speedup
-* support bangumi download
-* support international ver and blue ver
+# 支持以下功能
 
-# 中文
-* 用途: 
-  * 解除B站区域限制 
-* 与原项目区别:
-  * 使用BiliPlus API
-  * 支持国外看国内版权番
-  * 支持CDN加速
-  * 支持缓存番剧
-  * 支持国际版和概念版
+- 解除B站番剧区域限制
+- 港澳台CDN加速
+- 缓存番剧
+- 支持国际版和概念版
+- 自定义主题色
+- 关闭青少年模式弹窗
+- 显示评论区楼层
+- 概念版添加直播入口
+- 不以小程序形式分享
+
+# Features
+
+- Unlock bangumi area limit
+- CDN speedup
+- Download bangumi
+- Support International ver and blue ver
+- Customize theme
+- Close teenager dialog
+- Show comment floor
+- Add live entry to blue ver
+- Share without mini programs
+
 
 # download/下载
 https://github.com/yujincheng08/BiliRoaming/releases/latest
+https://repo.xposed.info/module/me.iacn.biliroaming
 
 ### License
 [GNU General Public License, version 3](LICENSE)
