@@ -50,4 +50,10 @@
     <string name="setting_category">设置</string>
     <string name="mini_program_title">去你大爷的小程序</string>
     <string name="mini_program_summary">不再以小程序的方式分享到QQ或者微信（同时复制分享链接变为av号）</string>
+    <string name="version_url">https://api.github.com/repos/yujincheng08/BiliRoaming/releases/latest</string>
+    <string name="update_title">更新</string>
+    <string name="update_summary">点击打开最新版下载地址</string>
+    <string name="update_url">https://github.com/yujincheng08/BiliRoaming/releases/latest</string>
+    <string name="github_url">https://github.com/yujincheng08/BiliRoaming</string>
+    <string name="cdn_url">https://yujincheng08.github.io/BiliRoaming/cdn_test.html</string>
 </resources>

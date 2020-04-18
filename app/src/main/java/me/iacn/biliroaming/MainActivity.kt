@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package me.iacn.biliroaming
 
 import android.annotation.SuppressLint
@@ -14,11 +16,15 @@ import android.preference.Preference.OnPreferenceChangeListener
 import android.preference.Preference.OnPreferenceClickListener
 import android.preference.PreferenceCategory
 import android.preference.PreferenceFragment
+import android.util.AttributeSet
 import android.util.Log
 import android.widget.Toast
 import android.widget.Toast.LENGTH_SHORT
+import me.iacn.biliroaming.utils.CheckVersionTask
+import me.iacn.biliroaming.utils.OnTaskReturn
+import org.json.JSONObject
 import java.io.File
-
+import java.net.URL
 
 /**
  * Created by iAcn on 2019/3/23
@@ -31,9 +37,9 @@ class MainActivity : Activity() {
         fragmentManager.beginTransaction().replace(android.R.id.content, PrefsFragment()).commit()
     }
 
-    class PrefsFragment : PreferenceFragment(), OnPreferenceChangeListener, OnPreferenceClickListener {
+    class PrefsFragment : PreferenceFragment(), OnPreferenceChangeListener, OnPreferenceClickListener, OnTaskReturn<JSONObject> {
         private var runningStatusPref: Preference? = null
-        private var counter: Int = 0;
+        private var counter: Int = 0
         private var prefs: SharedPreferences? = null
         private var toast: Toast? = null
 
@@ -55,6 +61,7 @@ class MainActivity : Activity() {
             findPreference("version").onPreferenceClickListener = this
             findPreference("author").onPreferenceClickListener = this
             findPreference("test_cdn").onPreferenceClickListener = this
+            CheckVersionTask(this).execute(URL(resources.getString(R.string.version_url)))
         }
 
         override fun onPreferenceChange(preference: Preference, newValue: Any): Boolean {
@@ -115,35 +122,68 @@ class MainActivity : Activity() {
             if (counter == 7) {
                 preferenceScreen.removeAll()
                 addPreferencesFromResource(R.xml.prefs_setting)
-                prefs?.edit()?.putBoolean("hidden", true)?.commit()
+                prefs?.edit()?.putBoolean("hidden", true)?.apply()
                 toast?.setText("已开启隐藏功能")
-                toast?.duration = LENGTH_SHORT;
-                toast?.show();
+                toast?.duration = LENGTH_SHORT
+                toast?.show()
                 preferenceScreen.removeAll()
                 onCreate()
                 onResume()
             } else if (counter >= 4) {
                 toast?.let {
-                    it.setText(text);
-                    it.duration = LENGTH_SHORT;
-                    it.show();
+                    it.setText(text)
+                    it.duration = LENGTH_SHORT
+                    it.show()
                 } ?: run {
                     toast = Toast.makeText(activity, text, LENGTH_SHORT)
+                    toast?.setText(text)
                     toast?.show()
                 }
             }
             return true
         }
 
+        override fun onReturn(result: JSONObject?) {
+            try {
+                result?.getString("name")?.let {
+                    if (BuildConfig.VERSION_NAME != it) {
+                        findPreference("version").summary = "${BuildConfig.VERSION_NAME}（最新版${it}）"
+                        val aboutGroup = findPreference("about") as PreferenceCategory
+                        val updatePreference = Preference(activity)
+                        updatePreference.key = "update"
+                        updatePreference.title = resources.getString(R.string.update_title)
+                        var log = ""
+                        try {
+                            val body = result.getString("body")
+                            log = body.substring(body.lastIndexOf("更新日志"))
+                        }catch(e : Throwable){}
+                        updatePreference.summary = if(log.isNotEmpty()) log else resources.getString(R.string.update_summary)
+                        updatePreference.onPreferenceClickListener=this
+                        updatePreference.order=1
+                        aboutGroup.addPreference(updatePreference)
+
+                    }
+                }
+            } catch (e: Throwable) {
+            }
+        }
+
         private fun onAuthorClick(): Boolean {
-            val uri = Uri.parse("https://github.com/yujincheng08/BiliRoaming")
+            val uri = Uri.parse(resources.getString(R.string.github_url))
             val intent = Intent(Intent.ACTION_VIEW, uri)
             startActivity(intent)
             return true
         }
 
         private fun onTestCDNClick(): Boolean {
-            val uri = Uri.parse("https://yujincheng08.github.io/BiliRoaming/cdn_test.html")
+            val uri = Uri.parse(resources.getString(R.string.cdn_url))
+            val intent = Intent(Intent.ACTION_VIEW, uri)
+            startActivity(intent)
+            return true
+        }
+
+        private fun onUpdateCheck(): Boolean {
+            val uri = Uri.parse(resources.getString(R.string.update_url))
             val intent = Intent(Intent.ACTION_VIEW, uri)
             startActivity(intent)
             return true
@@ -154,13 +194,13 @@ class MainActivity : Activity() {
                 "version" -> onVersionClick()
                 "author" -> onAuthorClick()
                 "test_cdn" -> onTestCDNClick()
+                "update" -> onUpdateCheck()
                 else -> false
             }
         }
     }
 
     companion object {
-
         @android.support.annotation.Keep
         fun isModuleActive(): Boolean {
             Log.i("大不自多", "海纳江河")
@@ -178,4 +218,5 @@ class MainActivity : Activity() {
             }
         }
     }
+
 }

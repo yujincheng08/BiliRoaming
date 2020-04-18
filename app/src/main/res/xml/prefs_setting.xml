@@ -112,7 +112,7 @@
             android:title="@string/purify_drawer_title" />
     </PreferenceCategory>
 
-    <PreferenceCategory android:title="@string/about">
+    <PreferenceCategory android:key="about" android:title="@string/about">
 
         <Preference
             android:key="version"
