@@ -83,6 +83,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, private
     }
 
     private fun checkNullOrReturn(clazz: WeakReference<Class<*>?>?, className: String?): WeakReference<Class<*>?> {
+        @Suppress("NAME_SHADOWING")
         var clazz = clazz
         if (clazz?.get() == null) {
             clazz = WeakReference(XposedHelpers.findClass(className, mClassLoader))

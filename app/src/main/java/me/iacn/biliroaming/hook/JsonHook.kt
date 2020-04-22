@@ -12,7 +12,6 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
         val jsonClass = findClass("com.alibaba.fastjson.JSON", mClassLoader)
         val tabResponseClass = findClass("tv.danmaku.bili.ui.main2.resource.MainResourceManager\$TabResponse", mClassLoader)
-        val emotionClass = findClass("com.bilibili.app.comm.emoticon.model.EmoticonPackagesDetailData", mClassLoader)
         val generalResponseClass = findClass("com.bilibili.okretro.GeneralResponse", mClassLoader)
         val accountMineClass = findClass("tv.danmaku.bili.ui.main2.api.AccountMine", mClassLoader)
 
@@ -40,6 +39,7 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     }
 
                     if (XposedInit.sPrefs.getBoolean("simulate", false)) {
+                        @Suppress("UNCHECKED_CAST")
                         val tab = getObjectField(data, "tab") as MutableList<Any>
                         val hasLive = tab.fold(false) { acc, it ->
                             val uri = getObjectField(it, "uri") as String;

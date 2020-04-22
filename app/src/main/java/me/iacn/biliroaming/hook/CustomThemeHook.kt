@@ -31,6 +31,7 @@ class CustomThemeHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
         Log.d("startHook: CustomTheme")
         val instance = instance
         val helperClass = instance!!.themeHelper()
+        @Suppress("UNCHECKED_CAST")
         val colorArray: SparseArray<IntArray> = XposedHelpers.getStaticObjectField(helperClass, instance.colorArray()) as SparseArray<IntArray>
         val primaryColor = customColor
         colorArray.put(CUSTOM_THEME_ID, generateColorArray(primaryColor))
@@ -39,8 +40,8 @@ class CustomThemeHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
             @Throws(Throwable::class)
             override fun beforeHookedMethod(param: MethodHookParam) {
                 val biliSkinList = param.args[0]
+                @Suppress("UNCHECKED_CAST")
                 val mList = XposedHelpers.getObjectField(biliSkinList, "mList") as MutableList<Any>
-                        ?: return
                 val biliSkinClass = XposedHelpers.findClass("tv.danmaku.bili.ui.theme.api.BiliSkin", mClassLoader)
                 val biliSkin = biliSkinClass.newInstance()
                 XposedHelpers.setIntField(biliSkin, "mId", CUSTOM_THEME_ID)
@@ -145,6 +146,7 @@ class CustomThemeHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
     fun insertColorForWebProcess() {
         if (!XposedInit.sPrefs.getBoolean("custom_theme", false)) return
         val helperClass = XposedHelpers.findClass("com.bilibili.column.helper.k", mClassLoader)
+        @Suppress("UNCHECKED_CAST")
         val colorArray: SparseArray<IntArray> = XposedHelpers.getStaticObjectField(helperClass, "l") as SparseArray<IntArray>
         val primaryColor = customColor
         colorArray.put(CUSTOM_THEME_ID, generateColorArray(primaryColor))

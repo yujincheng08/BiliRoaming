@@ -35,6 +35,7 @@ class BangumiSeasonHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
         hookAllConstructors(paramsMapClass, object : XC_MethodHook() {
             @Throws(Throwable::class)
             override fun afterHookedMethod(param: MethodHookParam) {
+                @Suppress("UNCHECKED_CAST")
                 val paramMap: Map<String, String> = param.thisObject as Map<String, String>
                 lastSeasonInfo.clear()
                 when (param.args[1] as Int) {
