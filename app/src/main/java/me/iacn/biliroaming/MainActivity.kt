@@ -9,6 +9,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
+import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
 import android.preference.Preference
@@ -16,7 +17,6 @@ import android.preference.Preference.OnPreferenceChangeListener
 import android.preference.Preference.OnPreferenceClickListener
 import android.preference.PreferenceCategory
 import android.preference.PreferenceFragment
-import android.util.AttributeSet
 import android.util.Log
 import android.widget.Toast
 import android.widget.Toast.LENGTH_SHORT
@@ -33,7 +33,14 @@ import java.net.URL
 class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        actionBar!!.elevation = 0f
+        when (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) {
+            Configuration.UI_MODE_NIGHT_NO -> {
+                setTheme(R.style.LightTheme)
+            }
+            Configuration.UI_MODE_NIGHT_YES -> {
+                setTheme(R.style.DarkTheme)
+            }
+        }
         fragmentManager.beginTransaction().replace(android.R.id.content, PrefsFragment()).commit()
     }
 

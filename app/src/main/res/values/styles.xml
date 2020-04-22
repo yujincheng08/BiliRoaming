@@ -1,10 +1,13 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
-    <style name="AppTheme" parent="@android:style/Theme.DeviceDefault.Light">
-        <item name="android:colorPrimary">@android:color/white</item>
-        <item name="android:colorPrimaryDark">#b2b2b2</item>
+    <style name="LightTheme" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowLightStatusBar" tools:targetApi="m">true</item>
         <item name="android:colorAccent">#1a73e9</item>
-        <item name="android:windowBackground">@android:color/white</item>
+    </style>
+
+    <style name="DarkTheme" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
+        <item name="android:colorAccent">#64b5f6</item>
     </style>
 
 </resources>
