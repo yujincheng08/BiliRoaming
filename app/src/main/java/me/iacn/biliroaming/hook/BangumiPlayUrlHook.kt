@@ -71,7 +71,9 @@ class BangumiPlayUrlHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
                 "com.bapis.bilibili.pgc.gateway.player.v1.PlayViewReq", object : XC_MethodHook() {
             override fun beforeHookedMethod(param: MethodHookParam?) {
                 val request = param?.args?.get(0) ?: return
-                callMethod(request, "setDownload", 0)
+                if (XposedInit.sPrefs.getBoolean("allow_download", false)) {
+                    callMethod(request, "setDownload", 0)
+                }
             }
 
             override fun afterHookedMethod(param: MethodHookParam?) {
