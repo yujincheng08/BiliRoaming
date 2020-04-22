@@ -1,7 +1,10 @@
 package me.iacn.biliroaming.hook
 
+import android.net.Uri
 import de.robv.android.xposed.XC_MethodHook
-import de.robv.android.xposed.XposedHelpers.findAndHookMethod
+import de.robv.android.xposed.XposedHelpers.*
+import me.iacn.biliroaming.Protos.PlayViewReply
+import me.iacn.biliroaming.Protos.PlayViewReq
 import me.iacn.biliroaming.XposedInit
 import me.iacn.biliroaming.XposedInit.Companion.toastMessage
 import me.iacn.biliroaming.network.BiliRoamingApi.getPlayUrl
@@ -62,7 +65,32 @@ class BangumiPlayUrlHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
                 }
             }
         })
+        val playUrlMossClass = findClass("com.bapis.bilibili.pgc.gateway.player.v1.PlayURLMoss", mClassLoader) ?: return
+        findAndHookMethod(playUrlMossClass, "playView",
+                "com.bapis.bilibili.pgc.gateway.player.v1.PlayViewReq", object : XC_MethodHook() {
+            override fun beforeHookedMethod(param: MethodHookParam?) {
+                val request = param?.args?.get(0) ?: return
+                callMethod(request, "setDownload", 0)
+            }
+
+            override fun afterHookedMethod(param: MethodHookParam?) {
+                val request = param?.args?.get(0) ?: return
+                val response = param.result ?: return
+                if (!(callMethod(response, "hasVideoInfo") as Boolean)) {
+                    val content = getPlayUrl(reconstructQuery(request))
+                    content?.let {
+                        Log.d("Has replaced play url with proxy server $it")
+                        toastMessage("已从代理服务器获取播放地址")
+                        param.result = reconstructResponse(response, it)
+                    } ?: run {
+                        Log.d("Failed to get play url")
+                        toastMessage("获取播放地址失败")
+                    }
+                }
+            }
+        })
     }
+
 
     private fun isLimitWatchingArea(jsonText: String): Boolean {
         return try {
@@ -75,4 +103,110 @@ class BangumiPlayUrlHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
         }
     }
 
+    private fun reconstructQuery(request: Any): String? {
+        Log.d(request)
+        val serializedRequest = callMethod(request, "toByteArray") as ByteArray
+        val req = PlayViewReq.parseFrom(serializedRequest)
+        val builder = Uri.Builder()
+        for (field in req.allFields) {
+            builder.appendQueryParameter(field.key.name, field.value.toString())
+        }
+        BangumiSeasonHook.lastSeasonInfo["access_key"]?.let {
+            builder.appendQueryParameter("access_key", it)
+        }
+        return builder.build().query
+    }
+
+
+    private fun reconstructResponse(response: Any, content: String): Any {
+        try {
+            val jsonContent = JSONObject(content)
+            val builder = PlayViewReply.newBuilder()
+            builder.playConfBuilder.let {
+                it.dislikeDisable = true
+                it.likeDisable = true
+                it.elecDisable = true
+                it.build()
+            }
+            builder.videoInfoBuilder.let {
+                it.timelength = jsonContent.getLong("timelength")
+                it.videoCodecid = jsonContent.getInt("video_codecid")
+                it.quality = jsonContent.getInt("quality")
+                it.format = jsonContent.getString("format")
+            }
+            val audioIds = jsonContent.getJSONObject("dash").getJSONArray("audio").let {
+                val ids = IntArray(it.length())
+                for (i in 0 until it.length()) {
+                    val audio = it.getJSONObject(i)
+                    builder.videoInfoBuilder.addDashAudioBuilder().let { dash ->
+                        dash.baseUrl = audio.getString("base_url")
+                        dash.id = audio.getInt("id")
+                        ids[i] = dash.id
+                        dash.md5 = audio.getString("md5")
+                        dash.size = audio.getLong("size")
+                        dash.codecid = audio.getInt("codecid")
+                        dash.bandwidth = audio.getInt("bandwidth")
+                        audio.getJSONArray("backup_url").let { bk ->
+                            for (j in 0 until bk.length()) {
+                                dash.addBackupUrl(bk.getString(j))
+                            }
+                        }
+                        dash.build()
+                    }
+                }
+                ids
+            }
+            val qualityMap = jsonContent.getJSONArray("accept_quality").let {
+                (0 until it.length()).map { idx -> it.getInt(idx) }
+            }.zip(jsonContent.getJSONArray("accept_description").let {
+                (0 until it.length()).map { idx -> it.getString(idx) }
+            }).toMap()
+            jsonContent.getJSONObject("dash").getJSONArray("video").let {
+                for (i in 0 until it.length()) {
+                    val video = it.getJSONObject(i)
+                    builder.videoInfoBuilder.addStreamListBuilder().let { stream ->
+                        stream.dashVideoBuilder.let { dash ->
+                            dash.baseUrl = video.getString("base_url")
+                            video.getJSONArray("backup_url").let { bk ->
+                                for (j in 0 until bk.length()) {
+                                    dash.addBackupUrl(bk.getString(j))
+                                }
+                            }
+                            dash.bandwidth = video.getInt("bandwidth")
+                            dash.codecid = video.getInt("codecid")
+                            dash.md5 = video.getString("md5")
+                            dash.size = video.getLong("size")
+                            dash.audioId = audioIds[0]
+                            dash.noRexcode = jsonContent.getInt("no_rexcode") != 0
+                            dash.build()
+                        }
+                        stream.streamInfoBuilder.let { info ->
+                            info.quality = video.getInt("id")
+                            info.format = if(formatMap.containsKey(info.quality))
+                                formatMap[info.quality] else jsonContent.getString("format")
+                            info.description = qualityMap[info.quality]
+                            info.intact = true
+                            info.needLogin = needLoginMap[info.quality] ?: false
+                            info.needVip = needVipMap[info.quality] ?: false
+                            info.build()
+                        }
+                        stream.build()
+                    }
+                }
+            }
+            builder.businessBuilder.build()
+            builder.videoInfoBuilder.build()
+            val serializedResponse = builder.build().toByteArray()
+            return callStaticMethod(response.javaClass, "parseFrom", serializedResponse)
+        } catch (e: Throwable) {
+            Log.d("ERR: " + e.message)
+        }
+        return response
+    }
+
+    companion object {
+        private val formatMap = hashMapOf(Pair(16, "mp4"), Pair(32, "flv480"), Pair(64, "flv720"), Pair(80, "flv"), Pair(112, "hdflv2"))
+        private val needVipMap = hashMapOf(Pair(16, false), Pair(32, false), Pair(64, false), Pair(80, true), Pair(112, true))
+        private val needLoginMap = hashMapOf(Pair(16, false), Pair(32, false), Pair(64, false), Pair(80, false), Pair(112, true))
+    }
 }

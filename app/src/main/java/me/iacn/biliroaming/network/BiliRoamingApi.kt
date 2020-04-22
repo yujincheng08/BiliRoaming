@@ -157,7 +157,8 @@ object BiliRoamingApi {
 //            content = getContent(builder.toString())
 //        }
 //        return content
-        return getContent(builder.toString())
+        val content = getContent(builder.toString())
+        return if(content != null && content.contains("\"code\":0")) content else null
     }
 
     @JvmStatic

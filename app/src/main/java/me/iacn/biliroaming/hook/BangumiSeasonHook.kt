@@ -23,7 +23,10 @@ import java.net.URL
 data class Result(val code: Int?, val result: Any?)
 
 class BangumiSeasonHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
-    private val lastSeasonInfo: MutableMap<String, String?>
+    companion object {
+        val lastSeasonInfo: MutableMap<String, String?> = ArrayMap()
+    }
+
     override fun startHook() {
         if (!XposedInit.sPrefs.getBoolean("main_func", false)) return
         Log.d("startHook: BangumiSeason")
@@ -33,6 +36,7 @@ class BangumiSeasonHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
             @Throws(Throwable::class)
             override fun afterHookedMethod(param: MethodHookParam) {
                 val paramMap: Map<String, String> = param.thisObject as Map<String, String>
+                lastSeasonInfo.clear()
                 when (param.args[1] as Int) {
                     TYPE_SEASON_ID -> lastSeasonInfo["season_id"] = paramMap["season_id"]
                     TYPE_EPISODE_ID -> lastSeasonInfo["ep_id"] = paramMap["ep_id"]
@@ -54,7 +58,6 @@ class BangumiSeasonHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
                 // If it isn't bangumi, the type variable will not exist in this map
                 if (bangumiApiResponse!!.isInstance(body)) {
                     fixBangumi(body)
-                    lastSeasonInfo.clear()
                 } else if (url != null && url.startsWith("https://app.bilibili.com/x/v2/view") &&
                         getIntField(body, "code") == -404) {
                     fixView(body, url)
@@ -66,8 +69,8 @@ class BangumiSeasonHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
             val urlHook = object : XC_MethodHook() {
                 @Throws(Throwable::class)
                 override fun afterHookedMethod(param: MethodHookParam) {
-                    val redirectUrl = getObjectField(param.thisObject, "redirectUrl") as String
-                    if (redirectUrl.isEmpty()) return
+                    val redirectUrl = getObjectField(param.thisObject, "redirectUrl") as String?
+                    if (redirectUrl.isNullOrEmpty()) return
                     param.result = callMethod(param.thisObject, "getUrl", redirectUrl)
                 }
             }
@@ -84,9 +87,12 @@ class BangumiSeasonHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
         // Filter normal bangumi and other responses
         if (isBangumiWithWatchPermission(getIntField(body, "code"), result)) {
             result?.let {
-                allowDownload(it)
+                val bangumiSeasonClass = instance!!.bangumiUniformSeason()
+                if (bangumiSeasonClass!!.isInstance(it)) {
+                    allowDownload(it)
+                    lastSeasonInfo.clear()
+                }
             }
-            lastSeasonInfo.clear()
             return
         }
         toastMessage("发现版权番剧，尝试解锁……")
@@ -181,9 +187,7 @@ class BangumiSeasonHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
     }
 
     private fun allowDownload(result: Any?) {
-        val bangumiSeasonClass = instance!!.bangumiUniformSeason()
-        if (bangumiSeasonClass!!.isInstance(result) &&
-                XposedInit.sPrefs.getBoolean("allow_download", false)) {
+        if (XposedInit.sPrefs.getBoolean("allow_download", false)) {
             val rights = getObjectField(result, "rights")
             setBooleanField(rights, "allowDownload", true)
             Log.d("Download allowed")
@@ -205,8 +209,4 @@ class BangumiSeasonHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
         }
     }
 
-
-    init {
-        lastSeasonInfo = ArrayMap()
-    }
 }

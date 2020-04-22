@@ -40,12 +40,26 @@ object Log {
     @JvmStatic
     fun xLog(obj: Any?) {
         if (obj is Throwable) {
-            XposedBridge.log("$TAG: $obj")
+            XposedBridge.log(obj)
         } else {
-            XposedBridge.log("$TAG: $obj")
+            val str = obj.toString()
+            if (str.length > maxLength) {
+                val chunkCount: Int = str.length / maxLength
+                for (i in 0..chunkCount) {
+                    val max: Int = 4000 * (i + 1)
+                    if (max >= str.length) {
+                        xLog(str.substring(maxLength * i))
+                    } else {
+                        xLog(str.substring(maxLength * i, max))
+                    }
+                }
+            } else {
+                XposedBridge.log("$TAG : $str")
+            }
         }
     }
 
+    private const val maxLength = 4000
 }
 
 fun bv2av(bv: String): Long {

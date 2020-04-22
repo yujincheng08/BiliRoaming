@@ -1,0 +1,136 @@
+syntax = "proto3";
+
+package me.iacn.biliroaming;
+
+option java_package = "me.iacn.biliroaming";
+option java_outer_classname = "Protos";
+option optimize_for = LITE_RUNTIME;
+
+enum CodeType {
+    NOCODE = 0;
+    CODE264 = 1;
+    CODE265 = 2;
+}
+
+message PlayViewReq {
+    int64 ep_id = 0x1;
+    int64 cid = 0x2;
+    int64 qn = 0x3;
+    int32 fnver = 0x4;
+    int32 fnval = 0x5;
+    int32 download = 0x6;
+    int32 force_host = 0x7;
+    int32 fourk = 0x8;
+    string spmid = 0x9;
+    string from_spmid = 0xa;
+    int32 teenagers_mode = 0xb;
+    CodeType prefer_codec_type = 0xc;
+    bool is_preview = 0xd;
+}
+
+message BusinessInfo {
+    bool is_preview = 1;
+    bool bp = 2;
+    string marlin_token = 3;
+}
+
+message PlayAbilityConf {
+    bool background_play_disable = 0x1;
+    bool flip_disable = 0x2;
+    bool cast_disable = 0x3;
+    bool feedback_disable = 0x4;
+    bool subtitle_disable = 0x5;
+    bool playback_rate_disable = 0x6;
+    bool time_up_disable = 0x7;
+    bool playback_mode_disable = 0x8;
+    bool scale_mode_disable = 0x9;
+    bool like_disable = 0xa;
+    bool dislike_disable = 0xb;
+    bool coin_disable = 0xc;
+    bool elec_disable = 0xd;
+    bool share_disable = 0xe;
+    bool screen_shot_disable = 0xf;
+    bool lock_screen_disable = 0x10;
+    bool recommend_disable = 0x11;
+    bool playback_speed_disable = 0x12;
+    bool definition_disable = 0x13;
+    bool selections_disable = 0x14;
+    bool next_disable = 0x15;
+    bool edit_dm_disable = 0x16;
+}
+
+message StreamLimit {
+    string title = 0x1;
+    string uri = 0x2;
+    string msg = 0x3;
+}
+
+message StreamInfo {
+    int32 quality = 0x1;
+    string format = 0x2;
+    string description = 0x3;
+    int32 err_code = 0x4;
+    StreamLimit limit = 0x5;
+    bool need_vip = 0x6;
+    bool need_login = 0x7;
+    bool intact = 0x8;
+    bool no_rexcode = 0x9;
+}
+
+message DashVideo {
+    string base_url = 0x1;
+    repeated string backup_url = 0x2;
+    int32 bandwidth = 0x3;
+    int32 codecid = 0x4;
+    string md5 = 0x5;
+    int64 size = 0x6;
+    int32 audio_id = 0x7;
+    bool no_rexcode = 0x8;
+}
+
+message ResponseUrl {
+    repeated string backup_url = 0x5;
+    int64 length = 0x2;
+    string md5 = 0x6;
+    int32 order = 0x1;
+    int64 size = 0x3;
+    string url = 0x4;
+}
+
+message SegmentVideo {
+    repeated ResponseUrl segment = 0x1;
+}
+
+message Stream {
+    StreamInfo stream_info = 0x1;
+    oneof content {
+        DashVideo dash_video = 0x2;
+        SegmentVideo segment_video = 0x3;
+    }
+}
+
+message DashItem {
+    int32 id = 0x1;
+    string base_url = 0x2;
+    repeated string backup_url = 0x3;
+    int32 bandwidth = 0x4;
+    int32 codecid = 0x5;
+    string md5 = 0x6;
+    int64 size = 0x7;
+}
+
+message VideoInfo {
+    int32 quality = 0x1;
+    string format = 0x2;
+    int64 timelength = 0x3;
+    int32 video_codecid = 0x4;
+    repeated Stream stream_list = 0x5;
+    repeated DashItem dash_audio = 0x6;
+}
+
+message PlayViewReply {
+    VideoInfo video_info = 1;
+    PlayAbilityConf play_conf = 2;
+    BusinessInfo business = 3;
+}
+
