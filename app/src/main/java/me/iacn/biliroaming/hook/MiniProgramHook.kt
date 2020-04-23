@@ -30,10 +30,13 @@ class MiniProgramHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
                 if (extra?.getString("params_type") != "type_min_program") return
                 extra.putString("params_type", "type_web")
-                if (extra.getString("platform") == "QQ") {
+                if (extra.getString("params_title") == "哔哩哔哩") {
                     extra.putString("params_title", extra.getString("params_content"))
+                    extra.putString("params_content", "由哔哩漫游分享")
                 }
-                extra.putString("params_content", "由哔哩漫游分享")
+                if (extra.getString("params_content")!!.startsWith("已观看")) {
+                    extra.putString("params_content", "${extra.getString("params_content")}\n由哔哩漫游分享")
+                }
             }
         })
     }
