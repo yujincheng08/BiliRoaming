@@ -65,8 +65,11 @@ class BangumiPlayUrlHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
                 }
             }
         })
-        val playUrlMossClass = findClass("com.bapis.bilibili.pgc.gateway.player.v1.PlayURLMoss", mClassLoader)
-                ?: return
+        val playUrlMossClass = try {
+            findClass("com.bapis.bilibili.pgc.gateway.player.v1.PlayURLMoss", mClassLoader)
+        } catch (e: ClassNotFoundError) {
+            null
+        } ?: return
         findAndHookMethod(playUrlMossClass, "playView",
                 "com.bapis.bilibili.pgc.gateway.player.v1.PlayViewReq", object : XC_MethodHook() {
             override fun beforeHookedMethod(param: MethodHookParam?) {
@@ -270,7 +273,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
                 Pair(74, false),
                 Pair(80, false),
                 Pair(112, true),
-                Pair(116,true),
+                Pair(116, true),
                 Pair(120, true)
         )
     }
