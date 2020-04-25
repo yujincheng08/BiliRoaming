@@ -12,8 +12,8 @@ android {
         minSdkVersion 21
         //noinspection OldTargetApi
         targetSdkVersion 27  // Target Android O
-        versionCode 22
-        versionName "1.2.2"
+        versionCode 24
+        versionName "1.2.4"
     }
 
     buildTypes {
@@ -76,7 +76,7 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'com.android.support:support-annotations:28.0.0'
     implementation 'com.google.protobuf:protobuf-java:3.11.4'
-    implementation 'com.google.protobuf:protoc:3.11.4'
+    compileOnly 'com.google.protobuf:protoc:3.11.4'
 }
 
 afterEvaluate {
