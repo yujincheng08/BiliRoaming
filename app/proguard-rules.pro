@@ -6,6 +6,10 @@
   public void *(de.robv.android.xposed.callbacks.XC_InitPackageResources.InitPackageResourcesParam);
 }
 
+-keepclasseswithmembers public class me.iacn.biliroaming.* extends com.google.protobuf.* { *; }
+
+
+
 -keepclassmembers class me.iacn.biliroaming.MainActivity.Companion{
     boolean isModuleActive();
 }
