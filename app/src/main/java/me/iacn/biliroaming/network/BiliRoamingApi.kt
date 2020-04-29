@@ -4,6 +4,7 @@ import android.net.Uri
 import me.iacn.biliroaming.BuildConfig
 import me.iacn.biliroaming.XposedInit
 import me.iacn.biliroaming.network.StreamUtils.getContent
+import me.iacn.biliroaming.utils.Log
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
@@ -22,10 +23,15 @@ object BiliRoamingApi {
     private const val BILI_REVIEW_URL = "api.bilibili.com/pgc/review/user"
     private const val BILI_USER_STATUS_URL = "api.bilibili.com/pgc/view/web/season/user/status"
     private const val BILI_MEDIA_URL = "bangumi.bilibili.com/view/web_api/media"
-    private const val BILIMODULE_TEMPLATE = "{\"data\": {},\"id\": 0,\"module_style\": {\"hidden\": 0,\"line\": 1},\"more\": \"查看更多\",\"style\": \"positive\",\"title\": \"选集\"}"
+    private const val BILI_MODULE_TEMPLATE = "{\"data\": {},\"id\": 0,\"module_style\": {\"hidden\": 0,\"line\": 1},\"more\": \"查看更多\",\"style\": \"positive\",\"title\": \"选集\"}"
+
+    private const val KGHOST_TW_API_URL = "bilibili-tw-api.kghost.info/"
+    private const val KGHOST_HK_API_URL = "bilibili-hk-api.kghost.info/"
+    private const val KGHOST_SG_API_URL = "bilibili-sg-api.kghost.info/"
+    private const val KGHOST_CN_API_URL = "bilibili-cn-api.kghost.info/"
+    private const val KGHOST_PLAYURL = "pgc/player/web/playurl"
 
     @JvmStatic
-    @Throws(IOException::class)
     fun getSeason(info: Map<String, String?>, hidden: Boolean): String? {
         val builder = Uri.Builder()
         builder.scheme("https").encodedAuthority(BILI_SEASON_URL)
@@ -41,7 +47,7 @@ object BiliRoamingApi {
 
     @JvmStatic
     private fun reconstructModules(result: JSONObject) {
-        val module = JSONObject(BILIMODULE_TEMPLATE)
+        val module = JSONObject(BILI_MODULE_TEMPLATE)
         val episodes = result.getJSONArray("episodes")
         module.getJSONObject("data").put("episodes", episodes)
         // work around
@@ -59,7 +65,7 @@ object BiliRoamingApi {
     }
 
     @JvmStatic
-    @Throws(JSONException::class, IOException::class)
+    @Throws(JSONException::class)
     private fun getExtraInfo(result: JSONObject, accessKey: String?) {
         val mediaId = result.getString("media_id")
         getMediaInfo(result, mediaId, accessKey)
@@ -83,7 +89,6 @@ object BiliRoamingApi {
             result.put("actor", JSONObject("{\"info\": \"$actors\", \"title\": \"角色声优\"}"))
             val staff = mediaResult.getString("staff")
             result.put("staff", JSONObject("{\"info\": \"$staff\", \"title\": \"制作信息\"}"))
-
             for (field in listOf("alias", "area", "origin_name", "style", "type_name")) {
                 if (mediaResult.has(field))
                     result.put(field, mediaResult.get(field))
@@ -141,28 +146,56 @@ object BiliRoamingApi {
     }
 
     @JvmStatic
-    @Throws(IOException::class)
-    fun getPlayUrl(queryString: String?): String? {
+    fun getPlayUrl(queryString: String?, info: Map<String, String?>): String? {
         val builder = Uri.Builder()
         builder.scheme("https").encodedAuthority(BILIPLUS_PLAYURL_URL)
         builder.encodedQuery(queryString)
         builder.appendQueryParameter("module", "pgc")
         builder.appendQueryParameter("otype", "json")
         builder.appendQueryParameter("platform", "android")
-//        var content = getContent(builder.toString())
-//        if (content != null && !content.contains("\"code\":0")) {
-//            // Workaround for moive
-//            builder.appendQueryParameter("module", "movie")
-//            builder.appendQueryParameter("update", "1")
-//            content = getContent(builder.toString())
-//        }
-//        return content
         val content = getContent(builder.toString())
-        return if(content != null && content.contains("\"code\":0")) content else null
+        return if (content != null && content.contains("\"code\":0"))
+            content else getBackupUrl(queryString, info)
     }
 
     @JvmStatic
-    @Throws(IOException::class)
+    fun getBackupUrl(queryString: String?, info: Map<String, String?>): String? {
+        Log.d("Title: ${info["title"]}")
+        val hostList: Array<String> = info["title"]?.run {
+            when {
+                contains(Regex("僅.*台")) -> {
+                    arrayOf(KGHOST_TW_API_URL)
+                }
+                contains(Regex("僅.*港")) -> {
+                    arrayOf(KGHOST_HK_API_URL)
+                }
+                contains(Regex("仅.*东南亚")) -> {
+                    arrayOf(KGHOST_SG_API_URL)
+                }
+                else -> {
+                    arrayOf(KGHOST_CN_API_URL)
+                }
+            }
+        } ?: run {
+            arrayOf(KGHOST_CN_API_URL, KGHOST_TW_API_URL, KGHOST_HK_API_URL, KGHOST_SG_API_URL)
+        }
+        for (host in hostList) {
+            val uri = Uri.Builder()
+                    .scheme("https")
+                    .encodedAuthority(host + KGHOST_PLAYURL)
+                    .appendQueryParameter("season_id", info["season_id"])
+                    .appendQueryParameter("access_key", info["access_key"])
+                    .encodedQuery(queryString)
+                    .toString()
+            getContent(uri)?.let {
+                Log.d("use backup for playurl from kghost instead")
+                if (it.contains("\"code\":0")) return it
+            }
+        }
+        return null
+    }
+
+    @JvmStatic
     fun getView(queryString: String?): String? {
         val builder = Uri.Builder()
         builder.scheme("https").encodedAuthority(BILIPLUS_VIEW_URL)
@@ -173,20 +206,22 @@ object BiliRoamingApi {
         return getContent(builder.toString())
     }
 
-    @Throws(IOException::class)
     private fun getContent(urlString: String): String? {
-        val url = URL(urlString)
-        val connection = url.openConnection() as HttpURLConnection
-        connection.requestMethod = "GET"
-        connection.setRequestProperty("Build", BuildConfig.VERSION_CODE.toString())
-        connection.connectTimeout = 4000
-        connection.connect()
-        if (connection.responseCode == HttpURLConnection.HTTP_OK) {
-            val inputStream = connection.inputStream
-            val encoding = connection.contentEncoding
-            return getContent(inputStream, encoding)
+        return try {
+            val url = URL(urlString)
+            val connection = url.openConnection() as HttpURLConnection
+            connection.requestMethod = "GET"
+            connection.setRequestProperty("Build", BuildConfig.VERSION_CODE.toString())
+            connection.connectTimeout = 4000
+            connection.connect()
+            if (connection.responseCode == HttpURLConnection.HTTP_OK) {
+                val inputStream = connection.inputStream
+                val encoding = connection.contentEncoding
+                getContent(inputStream, encoding)
+            } else null
+        } catch (e: IOException) {
+            null
         }
-        return null
     }
 }
 

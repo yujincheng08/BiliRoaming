@@ -54,7 +54,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
                     param.result = ByteArrayInputStream(content?.toByteArray())
                     return
                 }
-                content = getPlayUrl(queryString)
+                content = getPlayUrl(queryString, BangumiSeasonHook.lastSeasonInfo)
                 content?.let {
                     Log.d("Has replaced play url with proxy server $it")
                     toastMessage("已从代理服务器获取播放地址")
@@ -83,7 +83,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
                 val request = param?.args?.get(0) ?: return
                 val response = param.result ?: return
                 if (!(callMethod(response, "hasVideoInfo") as Boolean)) {
-                    val content = getPlayUrl(reconstructQuery(request))
+                    val content = getPlayUrl(reconstructQuery(request), BangumiSeasonHook.lastSeasonInfo)
                     content?.let {
                         Log.d("Has replaced play url with proxy server $it")
                         toastMessage("已从代理服务器获取播放地址")
@@ -125,7 +125,8 @@ class BangumiPlayUrlHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
 
     private fun reconstructResponse(response: Any, content: String): Any {
         try {
-            val jsonContent = JSONObject(content)
+            var jsonContent = JSONObject(content)
+            if (jsonContent.has("result")) jsonContent = jsonContent.getJSONObject("result")
             val builder = PlayViewReply.newBuilder()
             builder.playConfBuilder.let {
                 it.dislikeDisable = true

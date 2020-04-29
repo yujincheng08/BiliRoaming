@@ -104,6 +104,7 @@ class BangumiSeasonHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
 
         if (newResult != null && code != null && isBangumiWithWatchPermission(code, newResult)) {
             Log.d("Got new season information from proxy server: $content")
+            lastSeasonInfo["title"] = getObjectField(newResult, "title").toString()
             toastMessage("已从代理服务器获取番剧信息")
         } else {
             Log.d("Failed to get new season information from proxy server")
