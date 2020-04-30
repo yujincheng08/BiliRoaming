@@ -123,6 +123,11 @@
             android:summary="@string/author_list"
             android:title="@string/author" />
 
+        <Preference
+            android:key="group"
+            android:summary="@string/group_summary"
+            android:title="@string/group_title"/>
+
         <Preference android:key="running_status" />
 
     </PreferenceCategory>

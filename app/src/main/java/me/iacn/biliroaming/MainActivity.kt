@@ -26,6 +26,7 @@ import org.json.JSONObject
 import java.io.File
 import java.net.URL
 
+
 /**
  * Created by iAcn on 2019/3/23
  * Email i@iacn.me
@@ -68,6 +69,7 @@ class MainActivity : Activity() {
             findPreference("version").onPreferenceClickListener = this
             findPreference("author").onPreferenceClickListener = this
             findPreference("test_cdn").onPreferenceClickListener = this
+            findPreference("group").onPreferenceClickListener = this
             CheckVersionTask(this).execute(URL(resources.getString(R.string.version_url)))
         }
 
@@ -196,12 +198,27 @@ class MainActivity : Activity() {
             return true
         }
 
+        private fun onGroupChick(): Boolean {
+            val intent = Intent()
+            val key = "Qk8NsOfgC-afK4Vqhnqg9FBF2l1oL0sp"
+            intent.data = Uri.parse("mqqopensdkapi://bizAgent/qm/qr?url=http%3A%2F%2Fqm.qq.com%2Fcgi-bin%2Fqm%2Fqr%3Ffrom%3Dapp%26p%3Dandroid%26k%3D$key")
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            return try {
+                startActivity(intent)
+                true
+            } catch (e: Exception) {
+                false
+            }
+        }
+
+
         override fun onPreferenceClick(preference: Preference?): Boolean {
             return when (preference?.key) {
                 "version" -> onVersionClick()
                 "author" -> onAuthorClick()
                 "test_cdn" -> onTestCDNClick()
                 "update" -> onUpdateCheck()
+                "group" -> onGroupChick()
                 else -> false
             }
         }

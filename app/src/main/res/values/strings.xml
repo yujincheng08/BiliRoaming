@@ -56,4 +56,6 @@
     <string name="update_url">https://github.com/yujincheng08/BiliRoaming/releases/latest</string>
     <string name="github_url">https://github.com/yujincheng08/BiliRoaming</string>
     <string name="cdn_url">https://yujincheng08.github.io/BiliRoaming/cdn_test.html</string>
+    <string name="group_title">QQ群</string>
+    <string name="group_summary">点击加入QQ群</string>
 </resources>

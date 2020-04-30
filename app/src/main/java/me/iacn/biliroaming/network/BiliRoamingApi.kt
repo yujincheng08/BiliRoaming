@@ -183,8 +183,6 @@ object BiliRoamingApi {
             val uri = Uri.Builder()
                     .scheme("https")
                     .encodedAuthority(host + KGHOST_PLAYURL)
-                    .appendQueryParameter("season_id", info["season_id"])
-                    .appendQueryParameter("access_key", info["access_key"])
                     .encodedQuery(queryString)
                     .toString()
             getContent(uri)?.let {
