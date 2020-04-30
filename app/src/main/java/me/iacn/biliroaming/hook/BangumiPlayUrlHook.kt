@@ -126,7 +126,13 @@ class BangumiPlayUrlHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
     private fun reconstructResponse(response: Any, content: String): Any {
         try {
             var jsonContent = JSONObject(content)
-            if (jsonContent.has("result")) jsonContent = jsonContent.getJSONObject("result")
+            if (jsonContent.has("result")) {
+                // For kghost server
+                val result = jsonContent.get("result")
+                if(result !is String) {
+                    jsonContent = jsonContent.getJSONObject("result")
+                }
+            }
             val builder = PlayViewReply.newBuilder()
             builder.playConfBuilder.let {
                 it.dislikeDisable = true
