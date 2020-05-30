@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string-array name="cdn_entries" >
+    <string-array name="cdn_entries">
         <item>香港</item>
         <item>东京</item>
         <item>台湾</item>
@@ -12,7 +12,7 @@
         <item>美国</item>
         <item>自定义</item>
     </string-array>
-    <string-array name="cdn_values" >
+    <string-array name="cdn_values">
         <item>219.76.10.185</item>
         <item>23.62.226.208</item>
         <item>203.69.81.59</item>
@@ -22,6 +22,26 @@
         <item>2.21.78.123</item>
         <item>23.211.136.74</item>
         <item>23.44.51.8</item>
-        <item/>
+        <item />
+    </string-array>
+    <string-array name="upos_entries">
+        <item>不替换</item>
+        <item>ks3（金山）</item>
+        <item>kodo（七牛）</item>
+        <item>cos（腾讯）</item>
+        <item>bos（百度）</item>
+        <item>wcs（网宿）</item>
+        <item>xycdn（迅雷）</item>
+        <item>hw（251）</item>
+    </string-array>
+    <string-array name="upos_values">
+        <item />
+        <item>ks3u</item>
+        <item>kodou</item>
+        <item>cosu</item>
+        <item>bosu</item>
+        <item>wcsu</item>
+        <item>xycdn</item>
+        <item>hw</item>
     </string-array>
 </resources>

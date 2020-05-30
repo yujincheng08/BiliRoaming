@@ -3,14 +3,11 @@ package me.iacn.biliroaming
 import android.content.Context
 import android.util.SparseArray
 import android.view.View
-import de.robv.android.xposed.XposedHelpers
-import de.robv.android.xposed.XposedHelpers.ClassNotFoundError
+import de.robv.android.xposed.XposedHelpers.*
 import me.iacn.biliroaming.utils.Log
 import java.io.*
 import java.lang.ref.WeakReference
 import java.lang.reflect.ParameterizedType
-import java.util.*
-import kotlin.collections.HashMap
 
 data class OkHttpResult(val fieldName: String?, val methodName: String?)
 
@@ -31,6 +28,12 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, private
         }
         instance = this
     }
+
+//    private fun getAccessKey(): String {
+//        val helperClass = findClass("com.bilibili.bangumi.ui.page.detail.pay.BangumiPayHelperV2\$accessKey\$2", mClassLoader)
+//        val instance = getStaticObjectField(helperClass, "INSTANCE")
+//        return callMethod(instance, "invoke") as String
+//    }
 
     fun retrofitResponse(): String? {
         return mHookInfo["class_retrofit_response"]
@@ -86,7 +89,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, private
         @Suppress("NAME_SHADOWING")
         var clazz = clazz
         if (clazz?.get() == null) {
-            clazz = WeakReference(XposedHelpers.findClass(className, mClassLoader))
+            clazz = WeakReference(findClass(className, mClassLoader))
         }
         return clazz
     }
@@ -176,7 +179,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, private
     }
 
     private fun findUrlField(responseClassName: String): OkHttpResult {
-        val responseClass = XposedHelpers.findClass(responseClassName, mClassLoader)
+        val responseClass = findClass(responseClassName, mClassLoader)
         for (constructor in responseClass.declaredConstructors) {
             for (field in constructor.parameterTypes[0].declaredFields) {
                 for (method in field.type.declaredMethods) {
@@ -191,9 +194,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, private
 
     private fun findFastJsonClass(): Class<*> {
         return try {
-            XposedHelpers.findClass("com.alibaba.fastjson.JSON", mClassLoader)
+            findClass("com.alibaba.fastjson.JSON", mClassLoader)
         } catch (e: ClassNotFoundError) {
-            XposedHelpers.findClass("com.alibaba.fastjson.a", mClassLoader)
+            findClass("com.alibaba.fastjson.a", mClassLoader)
         }
     }
 
@@ -212,7 +215,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, private
     }
 
     private fun findThemeListClickClass(): String? {
-        val themeStoreActivityClass = XposedHelpers.findClass("tv.danmaku.bili.ui.theme.ThemeStoreActivity", mClassLoader)
+        val themeStoreActivityClass = findClass("tv.danmaku.bili.ui.theme.ThemeStoreActivity", mClassLoader)
         for (innerClass in themeStoreActivityClass.declaredClasses) {
             for (interfaceClass in innerClass.interfaces) {
                 if (interfaceClass == View.OnClickListener::class.java) {
@@ -224,7 +227,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, private
     }
 
     private fun findRouteParamsClass(): String? {
-        val actionClass = XposedHelpers.findClass("com.bilibili.userfeedback.laserreport.UploadFeedbackUploadAction", mClassLoader)
+        val actionClass = findClass("com.bilibili.userfeedback.laserreport.UploadFeedbackUploadAction", mClassLoader)
         for (m in actionClass.methods) {
             if (m.name == "act") {
                 return m.parameterTypes[0].name

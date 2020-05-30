@@ -1,6 +1,7 @@
 package me.iacn.biliroaming.network
 
 import android.net.Uri
+import de.robv.android.xposed.XSharedPreferences
 import me.iacn.biliroaming.BuildConfig
 import me.iacn.biliroaming.XposedInit
 import me.iacn.biliroaming.network.StreamUtils.getContent
@@ -153,7 +154,9 @@ object BiliRoamingApi {
         builder.appendQueryParameter("module", "pgc")
         builder.appendQueryParameter("otype", "json")
         builder.appendQueryParameter("platform", "android")
-        val content = getContent(builder.toString())
+        val content = getContent(builder.toString(),
+                if(XposedInit.sPrefs.getString("upos", "").isNullOrEmpty()) null else
+                mapOf("upos_server" to XposedInit.sPrefs.getString("upos", "cosu")!!))
         return if (content != null && content.contains("\"code\":0"))
             content else getBackupUrl(queryString, info)
     }
@@ -204,13 +207,17 @@ object BiliRoamingApi {
         return getContent(builder.toString())
     }
 
-    private fun getContent(urlString: String): String? {
+    private fun getContent(urlString: String, cookie: Map<String, String>? = null): String? {
         return try {
             val url = URL(urlString)
             val connection = url.openConnection() as HttpURLConnection
             connection.requestMethod = "GET"
             connection.setRequestProperty("Build", BuildConfig.VERSION_CODE.toString())
             connection.connectTimeout = 4000
+            val cookies = cookie?.map { item ->
+                "${item.key}=${item.value}"
+            }?.joinToString(separator = "; ")
+            connection.setRequestProperty("Cookie", cookies)
             connection.connect()
             if (connection.responseCode == HttpURLConnection.HTTP_OK) {
                 val inputStream = connection.inputStream
@@ -218,8 +225,10 @@ object BiliRoamingApi {
                 getContent(inputStream, encoding)
             } else null
         } catch (e: IOException) {
+            Log.d("getContent error: $e with url $urlString")
             null
         }
     }
+
 }
 

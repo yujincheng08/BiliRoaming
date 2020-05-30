@@ -44,6 +44,16 @@
             android:key="test_cdn"
             android:summary="@string/test_cdn_summary"
             android:title="@string/test_cdn_title" />
+
+        <!--suppress AndroidDomInspection -->
+        <ListPreference
+            android:defaultValue=""
+            android:entries="@array/upos_entries"
+            android:entryValues="@array/upos_values"
+            android:key="upos"
+            android:summary="@string/upos_summary"
+            android:title="@string/upos_title" />
+
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/miscellaneous_category">
