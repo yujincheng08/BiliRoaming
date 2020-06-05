@@ -1,12 +1,16 @@
 package me.iacn.biliroaming
 
+import android.app.AndroidAppHelper
 import android.content.Context
 import android.util.SparseArray
 import android.view.View
-import de.robv.android.xposed.XposedHelpers.*
+import dalvik.system.DexFile
+import de.robv.android.xposed.XposedHelpers.ClassNotFoundError
+import de.robv.android.xposed.XposedHelpers.findClass
 import me.iacn.biliroaming.utils.Log
 import java.io.*
 import java.lang.ref.WeakReference
+import java.lang.reflect.Modifier
 import java.lang.reflect.ParameterizedType
 
 data class OkHttpResult(val fieldName: String?, val methodName: String?)
@@ -15,7 +19,7 @@ data class OkHttpResult(val fieldName: String?, val methodName: String?)
  * Created by iAcn on 2019/4/5
  * Email i@iacn.me
  */
-class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, private val mContext: Context) {
+class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContext: Context) {
     private val mHookInfo: MutableMap<String, String?> = readHookInfo(mContext)
     private var bangumiApiResponseClass: WeakReference<Class<*>?>? = null
     private var fastJsonClass: WeakReference<Class<*>?>? = null
@@ -55,6 +59,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, private
         return mHookInfo["class_route_params"]
     }
 
+    fun themeName(): String? {
+        return mHookInfo["class_theme_name"]
+    }
+
     fun bangumiApiResponse(): Class<*>? {
         bangumiApiResponseClass = checkNullOrReturn(bangumiApiResponseClass,
                 "com.bilibili.bangumi.data.common.api.BangumiApiResponse")
@@ -76,6 +84,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, private
         themeHelperClass = checkNullOrReturn(themeHelperClass, "tv.danmaku.bili.ui.theme.a")
         return themeHelperClass!!.get()
     }
+
 
     fun requestField(): String? {
         return mHookInfo["field_request"]
@@ -147,6 +156,11 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, private
             mHookInfo["class_route_params"] = findRouteParamsClass()
             needUpdate = true
         }
+        if (!mHookInfo.containsKey("class_theme_name")) {
+            mHookInfo["class_theme_name"] = findThemeNameClass()
+            needUpdate = true
+        }
+        Log.d(mHookInfo)
         Log.d("Check hook info completed: needUpdate = $needUpdate")
         return needUpdate
     }
@@ -224,6 +238,21 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, private
             }
         }
         return null
+    }
+
+    private fun findThemeNameClass(): String? {
+        return try {
+            val classes = DexFile(AndroidAppHelper.currentApplication().packageCodePath).entries().toList().filter {
+                it.startsWith("tv.danmaku.bili.ui.garb")
+            }.filter { c ->
+                findClass(c, mClassLoader).declaredFields.filter {
+                    Modifier.isStatic(it.modifiers)
+                }.filter {
+                    it.type == Map::class.java
+                }.count() == 1
+            }
+            if (classes.size == 1) classes[0] else null
+        }catch(e:Throwable){null}
     }
 
     private fun findRouteParamsClass(): String? {

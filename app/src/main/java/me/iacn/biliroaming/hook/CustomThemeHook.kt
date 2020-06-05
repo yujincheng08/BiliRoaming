@@ -12,7 +12,6 @@ import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XC_MethodReplacement
 import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.XposedHelpers
-import me.iacn.biliroaming.BiliBiliPackage
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.ColorChooseDialog
 import me.iacn.biliroaming.Constant.CUSTOM_COLOR_KEY
@@ -29,8 +28,18 @@ class CustomThemeHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
     override fun startHook() {
         if (!XposedInit.sPrefs.getBoolean("custom_theme", false)) return
         Log.d("startHook: CustomTheme")
+
         val instance = instance
         val helperClass = instance!!.themeHelper()
+
+        instance.themeName()?.let {
+            val themeNameClass = XposedHelpers.findClass(it, mClassLoader)
+
+            @Suppress("UNCHECKED_CAST")
+            val m = XposedHelpers.getStaticObjectField(themeNameClass, "a") as MutableMap<String, Int>
+            m["custom"] = CUSTOM_THEME_ID
+        }
+
         @Suppress("UNCHECKED_CAST")
         val colorArray: SparseArray<IntArray> = XposedHelpers.getStaticObjectField(helperClass, instance.colorArray()) as SparseArray<IntArray>
         val primaryColor = customColor
@@ -40,6 +49,7 @@ class CustomThemeHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
             @Throws(Throwable::class)
             override fun beforeHookedMethod(param: MethodHookParam) {
                 val biliSkinList = param.args[0]
+
                 @Suppress("UNCHECKED_CAST")
                 val mList = XposedHelpers.getObjectField(biliSkinList, "mList") as MutableList<Any>
                 val biliSkinClass = XposedHelpers.findClass("tv.danmaku.bili.ui.theme.api.BiliSkin", mClassLoader)
@@ -98,8 +108,10 @@ class CustomThemeHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
             }
         })
 
-        // Make sure that not invalidate when user not logging in
+        // No invalidation when not logged in
         XposedHelpers.findAndHookMethod(helperClass, "a", Activity::class.java, XC_MethodReplacement.DO_NOTHING)
+        // No reset when not logged in
+        XposedHelpers.findAndHookMethod("tv.danmaku.bili.ui.theme.e", mClassLoader, "e",  XC_MethodReplacement.DO_NOTHING)
     }
 
     /**
@@ -146,6 +158,7 @@ class CustomThemeHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
     fun insertColorForWebProcess() {
         if (!XposedInit.sPrefs.getBoolean("custom_theme", false)) return
         val helperClass = XposedHelpers.findClass("com.bilibili.column.helper.k", mClassLoader)
+
         @Suppress("UNCHECKED_CAST")
         val colorArray: SparseArray<IntArray> = XposedHelpers.getStaticObjectField(helperClass, "l") as SparseArray<IntArray>
         val primaryColor = customColor

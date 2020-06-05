@@ -15,7 +15,7 @@
     <string name="hide_icon_summary">不显示本应用在启动器中的图标</string>
     <string name="hide_icon_title">隐藏桌面图标</string>
     <string name="custom_theme_title">自定义主题色</string>
-    <string name="custom_theme_summary">添加自定义主题颜色的功能</string>
+    <string name="custom_theme_summary">添加自定义主题颜色的功能(需从我的右上角调色盘图标进入)</string>
     <string name="teenagers_mode_dialog_title">关闭青少年模式弹窗</string>
     <string name="teenagers_mode_dialog_summary">仍可从侧滑菜单进入青少年模式</string>
     <string name="allow_download_title">允许下载版权番剧</string>
