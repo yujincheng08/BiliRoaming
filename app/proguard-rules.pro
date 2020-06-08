@@ -8,7 +8,9 @@
 
 -keepclasseswithmembers public class me.iacn.biliroaming.* extends com.google.protobuf.* { *; }
 
-
+-keepclassmembers class * {
+    @android.webkit.JavascriptInterface <methods>;
+}
 
 -keepclassmembers class me.iacn.biliroaming.MainActivity.Companion{
     boolean isModuleActive();
