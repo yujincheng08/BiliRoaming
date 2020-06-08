@@ -29,8 +29,8 @@ class CustomThemeHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
         if (!XposedInit.sPrefs.getBoolean("custom_theme", false)) return
         Log.d("startHook: CustomTheme")
 
-        val instance = instance
-        val helperClass = instance!!.themeHelper()
+        val instance = instance!!
+        val helperClass = instance.themeHelper()
 
         instance.themeName()?.let {
             val themeNameClass = XposedHelpers.findClass(it, mClassLoader)

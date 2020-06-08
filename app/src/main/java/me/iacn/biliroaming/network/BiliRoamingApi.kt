@@ -1,7 +1,14 @@
 package me.iacn.biliroaming.network
 
+import android.annotation.SuppressLint
+import android.app.AndroidAppHelper
 import android.net.Uri
-import de.robv.android.xposed.XSharedPreferences
+import android.os.Build
+import android.os.Handler
+import android.webkit.CookieManager
+import android.webkit.JavascriptInterface
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import me.iacn.biliroaming.BuildConfig
 import me.iacn.biliroaming.XposedInit
 import me.iacn.biliroaming.network.StreamUtils.getContent
@@ -12,6 +19,9 @@ import org.json.JSONObject
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+
 
 /**
  * Created by iAcn on 2019/3/27
@@ -155,8 +165,8 @@ object BiliRoamingApi {
         builder.appendQueryParameter("otype", "json")
         builder.appendQueryParameter("platform", "android")
         val content = getContent(builder.toString(),
-                if(XposedInit.sPrefs.getString("upos", "").isNullOrEmpty()) null else
-                mapOf("upos_server" to XposedInit.sPrefs.getString("upos", "cosu")!!))
+                if (XposedInit.sPrefs.getString("upos", "").isNullOrEmpty()) null else
+                    mapOf("upos_server" to XposedInit.sPrefs.getString("upos", "cosu")!!))
         return if (content != null && content.contains("\"code\":0"))
             content else getBackupUrl(queryString, info)
     }
@@ -207,24 +217,68 @@ object BiliRoamingApi {
         return getContent(builder.toString())
     }
 
+    @SuppressLint("SetJavaScriptEnabled")
     private fun getContent(urlString: String, cookie: Map<String, String>? = null): String? {
+        val timeout = 3000
         return try {
-            val url = URL(urlString)
-            val connection = url.openConnection() as HttpURLConnection
-            connection.requestMethod = "GET"
-            connection.setRequestProperty("Build", BuildConfig.VERSION_CODE.toString())
-            connection.connectTimeout = 4000
-            val cookies = cookie?.map { item ->
-                "${item.key}=${item.value}"
-            }?.joinToString(separator = "; ")
-            connection.setRequestProperty("Cookie", cookies)
-            connection.connect()
-            if (connection.responseCode == HttpURLConnection.HTTP_OK) {
-                val inputStream = connection.inputStream
-                val encoding = connection.contentEncoding
-                getContent(inputStream, encoding)
-            } else null
-        } catch (e: IOException) {
+            // Work around for android 7
+            if (Build.VERSION.SDK_INT == Build.VERSION_CODES.N &&
+                    urlString.startsWith("https") &&
+                    !urlString.contains("bilibili.com")) {
+                Log.d("Found Android 7, try to bypass ssl issue")
+                val cookieManger = CookieManager.getInstance()
+                URL(urlString).host.let {
+                    cookie?.forEach { k, v -> cookieManger.setCookie(it, "${k}=${v}") }
+                }
+                val handler = Handler(AndroidAppHelper.currentApplication().mainLooper)
+                val listener = object : Any() {
+                    val latch = CountDownLatch(1)
+                    var result = ""
+
+                    @JavascriptInterface
+                    fun callback(r: String) {
+                        result = r
+                        latch.countDown()
+                    }
+                }
+                handler.post {
+                    val webView = WebView(XposedInit.currentActivity, null)
+                    webView.addJavascriptInterface(listener, "listener")
+                    webView.webViewClient = object : WebViewClient() {
+                        override fun onPageFinished(view: WebView?, url: String?) {
+                            view?.settings?.javaScriptEnabled = true
+                            view?.loadUrl("javascript:listener.callback(document.documentElement.innerText)")
+                        }
+                    }
+                    webView.loadUrl(urlString)
+                }
+                try {
+                    if (!listener.latch.await(timeout.toLong(), TimeUnit.MILLISECONDS)) {
+                        throw IOException("Timeout connection to server")
+                    }
+                } catch (e: InterruptedException) {
+                    throw IOException("Connection to server was interrupted")
+                }
+                return listener.result
+            } else {
+                val url = URL(urlString)
+                val connection = url.openConnection() as HttpURLConnection
+                connection.requestMethod = "GET"
+                connection.setRequestProperty("Build", BuildConfig.VERSION_CODE.toString())
+                connection.connectTimeout = timeout
+                val cookies = cookie?.map { item ->
+                    "${item.key}=${item.value}"
+                }?.joinToString(separator = "; ")
+                connection.setRequestProperty("Cookie", cookies)
+                connection.connect()
+                if (connection.responseCode == HttpURLConnection.HTTP_OK) {
+                    val inputStream = connection.inputStream
+                    val encoding = connection.contentEncoding
+                    getContent(inputStream, encoding)
+                } else null
+            }
+
+        } catch (e: Throwable) {
             Log.d("getContent error: $e with url $urlString")
             null
         }
