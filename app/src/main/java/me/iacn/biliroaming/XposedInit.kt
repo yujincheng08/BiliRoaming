@@ -1,5 +1,6 @@
 package me.iacn.biliroaming
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Application
 import android.app.Instrumentation
@@ -34,7 +35,7 @@ class XposedInit : IXposedHookLoadPackage {
                 when (lpparam.processName) {
                     "tv.danmaku.bili", "com.bilibili.app.blue", "com.bilibili.app.in" -> {
                         Log.d("BiliBili process launched ...")
-                        Log.d("Config: ${sPrefs.all}")
+                        Log.d("Config: ${sPrefs.all.filter { it.key != "splash_image" }}")
                         startHook(object : BaseHook(lpparam.classLoader) {
                             override fun startHook() {
                                 XposedBridge.hookAllMethods(XposedHelpers.findClass(
@@ -90,6 +91,7 @@ class XposedInit : IXposedHookLoadPackage {
         var currentActivity: Activity? = null
         var toast: Toast? = null
         var started = false
+        @SuppressLint("ShowToast")
         fun toastMessage(msg: String, new: Boolean = false) {
             if (sPrefs.getBoolean("show_info", false)) {
                 currentActivity?.runOnUiThread {

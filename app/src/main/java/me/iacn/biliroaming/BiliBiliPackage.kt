@@ -1,5 +1,8 @@
+@file:Suppress("DEPRECATION")
+
 package me.iacn.biliroaming
 
+import android.annotation.SuppressLint
 import android.app.AndroidAppHelper
 import android.content.Context
 import android.util.SparseArray
@@ -27,8 +30,12 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     private var themeHelperClass: WeakReference<Class<*>?>? = null
 
     init {
-        if (checkHookInfo()) {
-            writeHookInfo(mContext)
+        try {
+            if (checkHookInfo()) {
+                writeHookInfo(mContext)
+            }
+        } catch (e: Throwable) {
+            Log.d(e)
         }
         instance = this
     }
@@ -252,7 +259,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 }.count() == 1
             }
             if (classes.size == 1) classes[0] else null
-        }catch(e:Throwable){null}
+        } catch (e: Throwable) {
+            null
+        }
     }
 
     private fun findRouteParamsClass(): String? {

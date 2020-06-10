@@ -38,7 +38,7 @@
     <string name="purify_mall_title">净化会员购</string>
     <string name="purify_game_summary">去除首页右上角游戏中心</string>
     <string name="purify_game_title">净化游戏中心</string>
-    <string name="purify_drawer_summary">去除侧边栏免流服务等（一刀切）</string>
+    <string name="purify_drawer_summary">净化【我的】页面（一刀切）</string>
     <string name="purify_drawer_title">净化侧边栏</string>
     <string name="hidden_group">隐藏功能</string>
     <string name="show_info_summary">显示解锁版权、允许下载等状态信息</string>
@@ -60,4 +60,11 @@
     <string name="group_summary">点击加入QQ群</string>
     <string name="upos_summary">设置大陆番剧的服务器，仅对海外用户生效</string>
     <string name="upos_title">UPOS服务器设置</string>
+    <string name="purify_splash_summary">去除启动客户端时的推广</string>
+    <string name="purify_splash_title">净化开屏页面</string>
+    <string name="beautify_splash_title">替换开屏图片</string>
+    <string name="beautify_splash_summary">替换开屏图片为自定义图片（拉伸填满）</string>
+    <string name="beautify_title">美化客户端</string>
+    <string name="beautify_summary">简单地美化客户端</string>
+    <string name="beautify_category">美化</string>
 </resources>
