@@ -7,6 +7,8 @@ import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.XposedInit
 import me.iacn.biliroaming.utils.Log
 import me.iacn.biliroaming.utils.bv2av
+import java.net.HttpURLConnection
+import java.net.URL
 
 class MiniProgramHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
@@ -18,13 +20,29 @@ class MiniProgramHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 if (arg.toString() != "action://share/shareto") return
                 val bundle = param.args[2] as android.os.Bundle
                 val extra = bundle.getBundle("default_extra_bundle")
-                if (extra?.getString("platform") == "COPY"){
-                    extra.getString("params_content")?.let {url ->
-                        val idx = url.lastIndexOf("BV")
-                        if (idx<0) return
-                        val bv = url.substring(idx)
-                        if (bv.length != 12) return
-                        extra.putString("params_content", "${url.substring(0, idx)}av${bv2av(bv)}")
+                if (extra?.getString("platform") == "COPY") {
+                    extra.getString("params_content")?.let { url ->
+                        val conn = URL(url).openConnection() as HttpURLConnection
+                        conn.requestMethod = "GET"
+                        conn.instanceFollowRedirects = false
+                        conn.connect()
+                        if (conn.responseCode == HttpURLConnection.HTTP_MOVED_TEMP) {
+                            val target = URL(conn.getHeaderField("Location"))
+                            val bv = target.path.split("/").first { it.startsWith("BV") && it.length == 12 }
+                            if (bv.isEmpty()) return
+                            val av = bv2av(bv)
+                            val query = target.query.split("&").map {
+                                it.split("=")
+                            }.filter {
+                                it.size == 2
+                            }.filter {
+                                it[0] == "p"
+                            }.joinToString("") {
+                                it.joinToString("")
+                            }
+                            extra.putString("params_content", "https://b23.tv/av${av}/${query}")
+                        }
+
                     }
                     return
                 }
