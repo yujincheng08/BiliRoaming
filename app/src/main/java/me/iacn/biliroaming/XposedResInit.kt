@@ -1,12 +1,5 @@
 package me.iacn.biliroaming
 
-import android.app.AndroidAppHelper
-import android.content.pm.PackageManager
-import android.content.res.XResources
-import android.graphics.BitmapFactory
-import android.graphics.drawable.BitmapDrawable
-import android.graphics.drawable.Drawable
-import android.util.Base64
 import de.robv.android.xposed.IXposedHookInitPackageResources
 import de.robv.android.xposed.XSharedPreferences
 import de.robv.android.xposed.callbacks.XC_InitPackageResources

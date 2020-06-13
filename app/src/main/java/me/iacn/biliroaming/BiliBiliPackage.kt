@@ -2,7 +2,6 @@
 
 package me.iacn.biliroaming
 
-import android.annotation.SuppressLint
 import android.app.AndroidAppHelper
 import android.content.Context
 import android.util.SparseArray
