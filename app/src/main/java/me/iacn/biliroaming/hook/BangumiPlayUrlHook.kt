@@ -268,17 +268,17 @@ class BangumiPlayUrlHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
                 Pair(32, false),
                 Pair(64, false),
                 Pair(74, false),
-                Pair(80, true),
-                Pair(112, true),
+                Pair(80, false),
+                Pair(112, true), // 1080P+ needs VIP
                 Pair(116, true),
                 Pair(120, true)
         )
         private val needLoginMap = hashMapOf(
                 Pair(16, false),
-                Pair(32, false),
-                Pair(64, false),
-                Pair(74, false),
-                Pair(80, false),
+                Pair(32, true), // 480P needs login
+                Pair(64, true),
+                Pair(74, true),
+                Pair(80, true),
                 Pair(112, true),
                 Pair(116, true),
                 Pair(120, true)
