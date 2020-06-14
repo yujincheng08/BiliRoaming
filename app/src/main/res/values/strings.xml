@@ -22,8 +22,8 @@
     <string name="allow_download_summary">使版权番剧可以缓存</string>
     <string name="comment_floor_title">评论区楼层显示</string>
     <string name="comment_floor_summary">恢复以前版本的评论楼层显示</string>
-    <string name="simulate_summary">开启概念版的直播功能</string>
-    <string name="simulate_title">概念版添加直播</string>
+    <string name="simulate_summary">开启Play版的直播功能（需要2.5.0或以上版本）</string>
+    <string name="simulate_title">Play版添加直播</string>
     <string name="use_cdn_summary">设置CDN加速港澳台番剧加载（海外用户没必要开）</string>
     <string name="use_cdn_title">加速港澳台番剧</string>
     <string name="cdn_summary">选择速度最快的CDN服务器</string>
