@@ -136,10 +136,12 @@
             android:dependency="hidden"
             android:key="purify_splash"
             android:summary="@string/purify_splash_summary"
-            android:title="@string/purify_splash_title"/>
+            android:title="@string/purify_splash_title" />
     </PreferenceCategory>
 
-    <PreferenceCategory android:key="about" android:title="@string/about">
+    <PreferenceCategory
+        android:key="about"
+        android:title="@string/about">
 
         <Preference
             android:key="version"
@@ -153,7 +155,7 @@
         <Preference
             android:key="group"
             android:summary="@string/group_summary"
-            android:title="@string/group_title"/>
+            android:title="@string/group_title" />
 
         <Preference android:key="running_status" />
 

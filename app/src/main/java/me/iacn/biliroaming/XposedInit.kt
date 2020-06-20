@@ -91,6 +91,7 @@ class XposedInit : IXposedHookLoadPackage {
         var currentActivity: Activity? = null
         var toast: Toast? = null
         var started = false
+
         @SuppressLint("ShowToast")
         fun toastMessage(msg: String, new: Boolean = false) {
             if (sPrefs.getBoolean("show_info", false)) {
