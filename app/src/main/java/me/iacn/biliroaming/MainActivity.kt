@@ -243,10 +243,10 @@ class MainActivity : Activity() {
             return true
         }
 
-        override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
+        override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
             when (requestCode) {
                 fileSectionCode -> if (resultCode == RESULT_OK) {
-                    val uri = data.data ?: return
+                    val uri = data?.data ?: return
                     val stream = ByteArrayOutputStream()
                     stream.flush()
                     MediaStore.Images.Media.getBitmap(activity.contentResolver, uri).compress(CompressFormat.PNG, 100, stream)
