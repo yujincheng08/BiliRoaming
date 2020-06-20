@@ -129,7 +129,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
             if (jsonContent.has("result")) {
                 // For kghost server
                 val result = jsonContent.get("result")
-                if(result !is String) {
+                if (result !is String) {
                     jsonContent = jsonContent.getJSONObject("result")
                 }
             }

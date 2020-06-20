@@ -4,11 +4,7 @@ package me.iacn.biliroaming
 
 import android.annotation.SuppressLint
 import android.app.Activity
-import android.content.ActivityNotFoundException
-import android.content.ComponentName
-import android.content.Context
-import android.content.Intent
-import android.content.SharedPreferences
+import android.content.*
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.graphics.Bitmap.CompressFormat
@@ -243,10 +239,10 @@ class MainActivity : Activity() {
             return true
         }
 
-        override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
+        override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
             when (requestCode) {
                 fileSectionCode -> if (resultCode == RESULT_OK) {
-                    val uri = data.data ?: return
+                    val uri = data?.data ?: return
                     val stream = ByteArrayOutputStream()
                     stream.flush()
                     MediaStore.Images.Media.getBitmap(activity.contentResolver, uri).compress(CompressFormat.PNG, 100, stream)

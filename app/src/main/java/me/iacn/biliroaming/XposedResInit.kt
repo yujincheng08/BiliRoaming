@@ -15,11 +15,12 @@ class XposedResInit : IXposedHookInitPackageResources {
                 && Constant.BILIBILI_PACKAGENAME3 != resparam.packageName) return
         sPrefs = XSharedPreferences(BuildConfig.APPLICATION_ID)
         sPrefs.makeWorldReadable()
-        if(!sPrefs.getBoolean("beautify", false)) return
+        if (!sPrefs.getBoolean("beautify", false)) return
 
         startHook(SplashHook(resparam))
 
     }
+
     private fun startHook(hooker: BaseHook) {
         try {
             hooker.startHook()
@@ -27,6 +28,7 @@ class XposedResInit : IXposedHookInitPackageResources {
             Log.e(e)
         }
     }
+
     companion object {
         var sPrefs: XSharedPreferences = XSharedPreferences(BuildConfig.APPLICATION_ID)
     }
