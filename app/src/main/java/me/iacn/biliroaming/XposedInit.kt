@@ -64,6 +64,7 @@ class XposedInit : IXposedHookLoadPackage {
                         startHook(JsonHook(lpparam.classLoader))
                         startHook(CDNHook(lpparam.classLoader))
                         startHook(MiniProgramHook(lpparam.classLoader))
+                        startHook(AutoLikeHook(lpparam.classLoader))
                     }
                     "tv.danmaku.bili:web", "com.bilibili.app.in:web", "com.bilibili.app.blue:web" -> {
                         CustomThemeHook(lpparam.classLoader).insertColorForWebProcess()

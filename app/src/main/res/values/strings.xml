@@ -67,4 +67,6 @@
     <string name="beautify_title">美化客户端</string>
     <string name="beautify_summary">简单地美化客户端</string>
     <string name="beautify_category">美化</string>
+    <string name="auto_like_summary">进入视频详情页时自动点赞</string>
+    <string name="auto_like_title">自动点赞视频</string>
 </resources>

@@ -27,6 +27,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     private var fastJsonClass: WeakReference<Class<*>?>? = null
     private var bangumiUniformSeasonClass: WeakReference<Class<*>?>? = null
     private var themeHelperClass: WeakReference<Class<*>?>? = null
+    private var sectionClass: WeakReference<Class<*>?>? = null
 
     init {
         try {
@@ -69,6 +70,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         return mHookInfo["class_theme_name"]
     }
 
+    fun videoDetailName(): String? {
+        return mHookInfo["field_video_detail"]
+    }
+
     fun bangumiApiResponse(): Class<*>? {
         bangumiApiResponseClass = checkNullOrReturn(bangumiApiResponseClass,
                 "com.bilibili.bangumi.data.common.api.BangumiApiResponse")
@@ -91,6 +96,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         return themeHelperClass!!.get()
     }
 
+    fun section(): Class<*>? {
+        sectionClass = checkNullOrReturn(sectionClass, "tv.danmaku.bili.ui.video.section.b")
+        return sectionClass!!.get()
+    }
 
     fun requestField(): String? {
         return mHookInfo["field_request"]
@@ -164,6 +173,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         }
         if (!mHookInfo.containsKey("class_theme_name")) {
             mHookInfo["class_theme_name"] = findThemeNameClass()
+            needUpdate = true
+        }
+        if (!mHookInfo.containsKey("field_video_detail")){
+            mHookInfo["field_video_detail"] = findVideoDetailField()
             needUpdate = true
         }
         Log.d(mHookInfo)
@@ -271,6 +284,14 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             }
         }
         return null
+    }
+
+    private fun findVideoDetailField(): String? {
+        val detailClass = findClass("tv.danmaku.bili.ui.video.api.BiliVideoDetail", mClassLoader)
+        return section()?.declaredFields?.first {
+            Log.d(it.type)
+            it.type == detailClass
+        }?.name
     }
 
     companion object {

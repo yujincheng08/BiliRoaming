@@ -81,7 +81,10 @@
             android:key="mini_program"
             android:summary="@string/mini_program_summary"
             android:title="@string/mini_program_title" />
-
+        <SwitchPreference
+            android:key="auto_like"
+            android:summary="@string/auto_like_summary"
+            android:title="@string/auto_like_title"/>
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/beautify_category">
         <SwitchPreference
