@@ -7,7 +7,6 @@ import android.app.Activity
 import android.content.*
 import android.content.pm.PackageManager
 import android.content.res.Configuration
-import android.graphics.Bitmap.CompressFormat
 import android.net.Uri
 import android.os.Bundle
 import android.preference.Preference
@@ -15,15 +14,12 @@ import android.preference.Preference.OnPreferenceChangeListener
 import android.preference.Preference.OnPreferenceClickListener
 import android.preference.PreferenceCategory
 import android.preference.PreferenceFragment
-import android.provider.MediaStore
-import android.util.Base64
 import android.util.Log
 import android.widget.Toast
 import android.widget.Toast.LENGTH_SHORT
 import me.iacn.biliroaming.utils.CheckVersionTask
 import me.iacn.biliroaming.utils.OnTaskReturn
 import org.json.JSONObject
-import java.io.ByteArrayOutputStream
 import java.io.File
 import java.net.URL
 
@@ -53,9 +49,6 @@ class MainActivity : Activity() {
         private var prefs: SharedPreferences? = null
         private var toast: Toast? = null
 
-        private val fileSectionCode = 0
-
-
         override fun onCreate(savedInstanceState: Bundle?) {
             super.onCreate(savedInstanceState)
             onCreate()
@@ -75,7 +68,6 @@ class MainActivity : Activity() {
             findPreference("author").onPreferenceClickListener = this
             findPreference("test_cdn").onPreferenceClickListener = this
             findPreference("group").onPreferenceClickListener = this
-            findPreference("beautify_splash").onPreferenceChangeListener = this
             CheckVersionTask(this).execute(URL(resources.getString(R.string.version_url)))
         }
 
@@ -89,12 +81,6 @@ class MainActivity : Activity() {
                     if (packageManager.getComponentEnabledSetting(aliasName) != status) {
                         packageManager.setComponentEnabledSetting(aliasName, status, PackageManager.DONT_KILL_APP)
                     }
-                }
-                "beautify_splash" -> {
-                    if (newValue as Boolean)
-                        selectSplashImage()
-                    else
-                        preferenceManager.sharedPreferences.edit().remove("splash_image").apply()
                 }
             }
             return true
@@ -224,35 +210,6 @@ class MainActivity : Activity() {
                 false
             }
         }
-
-        private fun selectSplashImage(): Boolean {
-            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
-            intent.type = "*/*"
-            intent.addCategory(Intent.CATEGORY_OPENABLE)
-
-            try {
-                startActivityForResult(Intent.createChooser(intent, "选择一张图片"), fileSectionCode)
-            } catch (ex: ActivityNotFoundException) {
-                Toast.makeText(activity, "请安装文件管理器",
-                        LENGTH_SHORT).show()
-            }
-            return true
-        }
-
-        override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-            when (requestCode) {
-                fileSectionCode -> if (resultCode == RESULT_OK) {
-                    val uri = data?.data ?: return
-                    val stream = ByteArrayOutputStream()
-                    stream.flush()
-                    MediaStore.Images.Media.getBitmap(activity.contentResolver, uri).compress(CompressFormat.PNG, 100, stream)
-                    val encodedImage = Base64.encodeToString(stream.toByteArray(), Base64.DEFAULT)
-                    preferenceManager.sharedPreferences.edit().putString("splash_image", encodedImage).apply()
-                }
-            }
-            super.onActivityResult(requestCode, resultCode, data)
-        }
-
 
         override fun onPreferenceClick(preference: Preference?): Boolean {
             return when (preference?.key) {

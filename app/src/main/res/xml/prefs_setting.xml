@@ -86,18 +86,6 @@
             android:summary="@string/auto_like_summary"
             android:title="@string/auto_like_title"/>
     </PreferenceCategory>
-    <PreferenceCategory android:title="@string/beautify_category">
-        <SwitchPreference
-            android:key="beautify"
-            android:summary="@string/beautify_summary"
-            android:title="@string/beautify_title" />
-        <SwitchPreference
-            android:dependency="beautify"
-            android:key="beautify_splash"
-            android:summary="@string/beautify_splash_summary"
-            android:title="@string/beautify_splash_title" />
-
-    </PreferenceCategory>
     <PreferenceCategory android:title="@string/setting_category">
         <SwitchPreference
             android:defaultValue="true"
