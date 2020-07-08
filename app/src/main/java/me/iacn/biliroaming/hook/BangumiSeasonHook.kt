@@ -190,8 +190,23 @@ class BangumiSeasonHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
 
     private fun allowDownload(result: Any?) {
         if (XposedInit.sPrefs.getBoolean("allow_download", false)) {
-            val rights = getObjectField(result, "rights")
-            setBooleanField(rights, "allowDownload", true)
+            try {
+                val rights = getObjectField(result, "rights")
+                setBooleanField(rights, "allowDownload", true)
+                val modules = getObjectField(result, "modules") as MutableList<*>
+                for (it in modules) {
+                    val data = getObjectField(it, "data")
+                    val moduleEpisodes = callMethod(data, "getJSONArray", "episodes") ?: continue
+                    val size = callMethod(moduleEpisodes, "size") as Int
+                    for (i in 0 until size) {
+                        val episode = callMethod(moduleEpisodes, "getJSONObject", i)
+                        val episodeRights = callMethod(episode, "getJSONObject", "rights")
+                        callMethod(episodeRights, "put", "allow_download", 1)
+                    }
+                }
+            } catch (e: Throwable) {
+                Log.e(e)
+            }
             Log.d("Download allowed")
             toastMessage("已允许下载")
         }

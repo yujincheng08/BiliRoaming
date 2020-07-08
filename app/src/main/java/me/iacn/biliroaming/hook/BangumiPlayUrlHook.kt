@@ -15,6 +15,7 @@ import org.json.JSONObject
 import java.io.ByteArrayInputStream
 import java.io.InputStream
 import java.net.HttpURLConnection
+import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 
 /**
  * Created by iAcn on 2019/3/29
@@ -24,18 +25,20 @@ class BangumiPlayUrlHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
     override fun startHook() {
         if (!XposedInit.sPrefs.getBoolean("main_func", false)) return
         Log.d("startHook: BangumiPlayUrl")
-        findAndHookMethod("com.bilibili.nativelibrary.LibBili", mClassLoader, "a",
-                MutableMap::class.java, object : XC_MethodHook() {
-            @Throws(Throwable::class)
-            override fun beforeHookedMethod(param: MethodHookParam) {
-                @Suppress("UNCHECKED_CAST")
-                val params = param.args[0] as MutableMap<String, String>
-                if (XposedInit.sPrefs.getBoolean("allow_download", false) &&
-                        params.containsKey("ep_id")) {
-                    params.remove("dl")
+        instance?.signQueryName()?.let {
+            findAndHookMethod("com.bilibili.nativelibrary.LibBili", mClassLoader, it,
+                    MutableMap::class.java, object : XC_MethodHook() {
+                @Throws(Throwable::class)
+                override fun beforeHookedMethod(param: MethodHookParam) {
+                    @Suppress("UNCHECKED_CAST")
+                    val params = param.args[0] as MutableMap<String, String>
+                    if (XposedInit.sPrefs.getBoolean("allow_download", false) &&
+                            params.containsKey("ep_id")) {
+                        params.remove("dl")
+                    }
                 }
-            }
-        })
+            })
+        }
         findAndHookMethod("com.bilibili.lib.okhttp.huc.OkHttpURLConnection", mClassLoader,
                 "getInputStream", object : XC_MethodHook() {
             @Throws(Throwable::class)
@@ -65,36 +68,37 @@ class BangumiPlayUrlHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
                 }
             }
         })
-        val playUrlMossClass = try {
+        try {
             findClass("com.bapis.bilibili.pgc.gateway.player.v1.PlayURLMoss", mClassLoader)
         } catch (e: ClassNotFoundError) {
             null
-        } ?: return
-        findAndHookMethod(playUrlMossClass, "playView",
-                "com.bapis.bilibili.pgc.gateway.player.v1.PlayViewReq", object : XC_MethodHook() {
-            override fun beforeHookedMethod(param: MethodHookParam?) {
-                val request = param?.args?.get(0) ?: return
-                if (XposedInit.sPrefs.getBoolean("allow_download", false)) {
-                    callMethod(request, "setDownload", 0)
-                }
-            }
-
-            override fun afterHookedMethod(param: MethodHookParam?) {
-                val request = param?.args?.get(0) ?: return
-                val response = param.result ?: return
-                if (!(callMethod(response, "hasVideoInfo") as Boolean)) {
-                    val content = getPlayUrl(reconstructQuery(request), BangumiSeasonHook.lastSeasonInfo)
-                    content?.let {
-                        Log.d("Has replaced play url with proxy server $it")
-                        toastMessage("已从代理服务器获取播放地址")
-                        param.result = reconstructResponse(response, it)
-                    } ?: run {
-                        Log.d("Failed to get play url")
-                        toastMessage("获取播放地址失败")
+        }?.let {
+            findAndHookMethod(it, "playView",
+                    "com.bapis.bilibili.pgc.gateway.player.v1.PlayViewReq", object : XC_MethodHook() {
+                override fun beforeHookedMethod(param: MethodHookParam?) {
+                    val request = param?.args?.get(0) ?: return
+                    if (XposedInit.sPrefs.getBoolean("allow_download", false)) {
+                        callMethod(request, "setDownload", 0)
                     }
                 }
-            }
-        })
+
+                override fun afterHookedMethod(param: MethodHookParam?) {
+                    val request = param?.args?.get(0) ?: return
+                    val response = param.result ?: return
+                    if (!(callMethod(response, "hasVideoInfo") as Boolean)) {
+                        val content = getPlayUrl(reconstructQuery(request), BangumiSeasonHook.lastSeasonInfo)
+                        content?.let {
+                            Log.d("Has replaced play url with proxy server $it")
+                            toastMessage("已从代理服务器获取播放地址")
+                            param.result = reconstructResponse(response, it)
+                        } ?: run {
+                            Log.d("Failed to get play url")
+                            toastMessage("获取播放地址失败")
+                        }
+                    }
+                }
+            })
+        }
     }
 
 
@@ -218,6 +222,11 @@ class BangumiPlayUrlHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
                             val segment = durl.getJSONObject(i)
                             stream.segmentVideoBuilder.addSegmentBuilder().let { url ->
                                 url.length = segment.getLong("length")
+                                segment.getJSONArray("backup_url").let { bk ->
+                                    for (j in 0 until bk.length()) {
+                                        url.addBackupUrl(bk.getString(i))
+                                    }
+                                }
                                 // TODO: backup
                                 url.md5 = segment.getString("md5")
                                 url.order = segment.getInt("order")

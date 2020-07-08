@@ -30,7 +30,8 @@ class CustomThemeHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
         Log.d("startHook: CustomTheme")
 
         val instance = instance!!
-        val helperClass = instance.themeHelper()
+        val helperClassName = instance.themeHelper() ?: return
+        val helperClass = findClass(helperClassName, mClassLoader)
 
         instance.themeName()?.let {
             val themeNameClass = findClass(it, mClassLoader)
@@ -44,24 +45,26 @@ class CustomThemeHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
         val colorArray: SparseArray<IntArray> = getStaticObjectField(helperClass, instance.colorArray()) as SparseArray<IntArray>
         val primaryColor = customColor
         colorArray.put(CUSTOM_THEME_ID, generateColorArray(primaryColor))
-        findAndHookMethod("tv.danmaku.bili.ui.theme.ThemeStoreActivity", mClassLoader, "a",
-                "tv.danmaku.bili.ui.theme.api.BiliSkinList", Boolean::class.javaPrimitiveType, object : XC_MethodHook() {
-            @Throws(Throwable::class)
-            override fun beforeHookedMethod(param: MethodHookParam) {
-                val biliSkinList = param.args[0]
+        instance.skinList()?.let {
+            findAndHookMethod("tv.danmaku.bili.ui.theme.ThemeStoreActivity", mClassLoader, it,
+                    "tv.danmaku.bili.ui.theme.api.BiliSkinList", Boolean::class.javaPrimitiveType, object : XC_MethodHook() {
+                @Throws(Throwable::class)
+                override fun beforeHookedMethod(param: MethodHookParam) {
+                    val biliSkinList = param.args[0]
 
-                @Suppress("UNCHECKED_CAST")
-                val mList = getObjectField(biliSkinList, "mList") as MutableList<Any>
-                val biliSkinClass = findClass("tv.danmaku.bili.ui.theme.api.BiliSkin", mClassLoader)
-                val biliSkin = biliSkinClass.newInstance()
-                setIntField(biliSkin, "mId", CUSTOM_THEME_ID)
-                setObjectField(biliSkin, "mName", "自选颜色")
-                setBooleanField(biliSkin, "mIsFree", true)
-                // Under the night mode item
-                mList.add(3, biliSkin)
-                Log.d("Add a theme item: size = " + mList.size)
-            }
-        })
+                    @Suppress("UNCHECKED_CAST")
+                    val mList = getObjectField(biliSkinList, "mList") as MutableList<Any>
+                    val biliSkinClass = findClass("tv.danmaku.bili.ui.theme.api.BiliSkin", mClassLoader)
+                    val biliSkin = biliSkinClass.newInstance()
+                    setIntField(biliSkin, "mId", CUSTOM_THEME_ID)
+                    setObjectField(biliSkin, "mName", "自选颜色")
+                    setBooleanField(biliSkin, "mIsFree", true)
+                    // Under the night mode item
+                    mList.add(3, biliSkin)
+                    Log.d("Add a theme item: size = " + mList.size)
+                }
+            })
+        }
         findAndHookMethod(instance.themeListClickListener(), mClassLoader, "onClick", View::class.java, object : XC_MethodHook() {
             @Throws(Throwable::class)
             override fun beforeHookedMethod(param: MethodHookParam) {
@@ -100,18 +103,49 @@ class CustomThemeHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
                 }
             }
         })
-        findAndHookMethod(helperClass, "a", Context::class.java, Int::class.javaPrimitiveType, object : XC_MethodHook() {
-            @Throws(Throwable::class)
-            override fun beforeHookedMethod(param: MethodHookParam) {
-                val currentThemeKey = param.args[1] as Int
-                if (currentThemeKey == -1) param.args[1] = CUSTOM_THEME_ID
-            }
-        })
+        instance.saveSkinList()?.let {
+            findAndHookMethod(helperClass, it, Context::class.java, Int::class.javaPrimitiveType, object : XC_MethodHook() {
+                @Throws(Throwable::class)
+                override fun beforeHookedMethod(param: MethodHookParam) {
+                    val currentThemeKey = param.args[1] as Int
+                    if (currentThemeKey == -1) param.args[1] = CUSTOM_THEME_ID
+                }
+            })
+        }
 
         // No invalidation when not logged in
-        findAndHookMethod(helperClass, "a", Activity::class.java, XC_MethodReplacement.DO_NOTHING)
+        instance.invalidateSkin()?.let { its ->
+            val hooker = object : XC_MethodReplacement() {
+                var called = 0
+                override fun replaceHookedMethod(param: MethodHookParam): Any? {
+                    return if (called++ == 1) {
+                        called = 0
+                        XposedBridge.invokeOriginalMethod(param.method, param.thisObject, param.args)
+                    } else {
+                        null
+                    }
+                }
+            }
+            its.split(";").map {
+                findAndHookMethod(helperClass, it, Activity::class.java, hooker)
+            }
+        }
         // No reset when not logged in
-        findAndHookMethod("tv.danmaku.bili.ui.theme.e", mClassLoader, "e", XC_MethodReplacement.DO_NOTHING)
+        instance.themeReset()?.let { its ->
+            val hooker = object : XC_MethodReplacement() {
+                override fun replaceHookedMethod(param: MethodHookParam): Any? {
+                    for (s in Thread.currentThread().stackTrace) {
+                        if(s.className=="tv.danmaku.bili.MainActivityV2" && s.methodName == "onPostCreate")
+                            return null
+                    }
+                    return XposedBridge.invokeOriginalMethod(param.method, param.thisObject, param.args)
+                }
+
+            }
+            its.split(";").map {
+                findAndHookMethod(instance.themeProcessor()!!, mClassLoader, it, hooker)
+            }
+        }
     }
 
     /**
