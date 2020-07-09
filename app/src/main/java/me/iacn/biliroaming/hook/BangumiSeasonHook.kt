@@ -28,7 +28,7 @@ class BangumiSeasonHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
     }
 
     override fun startHook() {
-        if (!XposedInit.sPrefs.getBoolean("main_func", false)) return
+        if (!XposedInit.sPrefs!!.getBoolean("main_func", false)) return
         Log.d("startHook: BangumiSeason")
         val paramsMapClass = findClass("com.bilibili.bangumi.data.page.detail." +
                 "BangumiDetailApiService\$UniformSeasonParamsMap", mClassLoader)
@@ -113,7 +113,7 @@ class BangumiSeasonHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
             return
         }
         val newRights = getObjectField(newResult, "rights")
-        if (XposedInit.sPrefs.getBoolean("allow_download", false))
+        if (XposedInit.sPrefs!!.getBoolean("allow_download", false))
             setBooleanField(newRights, "allowDownload", true)
         if (!hidden) {
             // Replace only episodes and rights
@@ -189,7 +189,7 @@ class BangumiSeasonHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
     }
 
     private fun allowDownload(result: Any?) {
-        if (XposedInit.sPrefs.getBoolean("allow_download", false)) {
+        if (XposedInit.sPrefs!!.getBoolean("allow_download", false)) {
             try {
                 val rights = getObjectField(result, "rights")
                 setBooleanField(rights, "allowDownload", true)

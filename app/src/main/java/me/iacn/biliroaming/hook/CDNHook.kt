@@ -9,7 +9,7 @@ import java.net.InetAddress
 
 class CDNHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
-        if (!XposedInit.sPrefs.getBoolean("use_cdn", false)) return
+        if (!XposedInit.sPrefs!!.getBoolean("use_cdn", false)) return
 
         Log.d("startHook: CDN")
 
@@ -59,8 +59,8 @@ class CDNHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     fun getCDN(): String {
-        var cdn = XposedInit.sPrefs.getString("cdn", "")!!
-        if (cdn.isEmpty()) cdn = XposedInit.sPrefs.getString("custom_cdn", "")!!
+        var cdn = XposedInit.sPrefs!!.getString("cdn", "")!!
+        if (cdn.isEmpty()) cdn = XposedInit.sPrefs!!.getString("custom_cdn", "")!!
         return cdn
     }
 

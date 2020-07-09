@@ -12,11 +12,11 @@ import java.net.URL
 
 class MiniProgramHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
-        if (!XposedInit.sPrefs.getBoolean("mini_program", false)) return
+        if (!XposedInit.sPrefs!!.getBoolean("mini_program", false)) return
         Log.d("startHook: mini program")
         hookAllConstructors(findClass(instance?.routeParams(), mClassLoader), object : XC_MethodHook() {
-            override fun beforeHookedMethod(param: MethodHookParam?) {
-                val arg = param!!.args[1] as android.net.Uri
+            override fun beforeHookedMethod(param: MethodHookParam) {
+                val arg = param.args[1] as android.net.Uri
                 if (arg.toString() != "action://share/shareto") return
                 val bundle = param.args[2] as android.os.Bundle
                 val extra = bundle.getBundle("default_extra_bundle")

@@ -11,7 +11,7 @@ import me.iacn.biliroaming.utils.Log
  */
 class CommentHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
     override fun startHook() {
-        if (!XposedInit.sPrefs.getBoolean("comment_floor", false)) return
+        if (!XposedInit.sPrefs!!.getBoolean("comment_floor", false)) return
         Log.d("startHook: Comment")
         val floorHook: XC_MethodHook = object : XC_MethodHook() {
             @Throws(Throwable::class)

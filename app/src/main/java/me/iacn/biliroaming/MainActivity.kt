@@ -2,9 +2,12 @@
 
 package me.iacn.biliroaming
 
-import android.annotation.SuppressLint
 import android.app.Activity
-import android.content.*
+import android.app.AlertDialog
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.net.Uri
@@ -15,12 +18,10 @@ import android.preference.Preference.OnPreferenceClickListener
 import android.preference.PreferenceCategory
 import android.preference.PreferenceFragment
 import android.util.Log
-import android.widget.Toast
-import android.widget.Toast.LENGTH_SHORT
+import android.view.View
 import me.iacn.biliroaming.utils.CheckVersionTask
 import me.iacn.biliroaming.utils.OnTaskReturn
 import org.json.JSONObject
-import java.io.File
 import java.net.URL
 
 
@@ -45,31 +46,21 @@ class MainActivity : Activity() {
 
     class PrefsFragment : PreferenceFragment(), OnPreferenceChangeListener, OnPreferenceClickListener, OnTaskReturn<JSONObject> {
         private var runningStatusPref: Preference? = null
-        private var counter: Int = 0
         private var prefs: SharedPreferences? = null
-        private var toast: Toast? = null
 
         override fun onCreate(savedInstanceState: Bundle?) {
             super.onCreate(savedInstanceState)
-            onCreate()
-        }
-
-        private fun onCreate() {
-            addPreferencesFromResource(R.xml.prefs_setting)
+            addPreferencesFromResource(R.xml.main_activity)
             prefs = preferenceManager.sharedPreferences
             runningStatusPref = findPreference("running_status")
-            if (!prefs?.getBoolean("hidden", false)!!) {
-                val hiddenGroup = findPreference("hidden_group") as PreferenceCategory
-                preferenceScreen.removePreference(hiddenGroup)
-            }
             findPreference("hide_icon").onPreferenceChangeListener = this
             findPreference("version").summary = BuildConfig.VERSION_NAME
-            findPreference("version").onPreferenceClickListener = this
             findPreference("author").onPreferenceClickListener = this
-            findPreference("test_cdn").onPreferenceClickListener = this
             findPreference("group").onPreferenceClickListener = this
+            findPreference("feature").onPreferenceClickListener = this
             CheckVersionTask(this).execute(URL(resources.getString(R.string.version_url)))
         }
+
 
         override fun onPreferenceChange(preference: Preference, newValue: Any): Boolean {
             when (preference.key) {
@@ -84,19 +75,6 @@ class MainActivity : Activity() {
                 }
             }
             return true
-        }
-
-        @SuppressLint("SetWorldReadable")
-        private fun setWorldReadable() {
-            val dataDir = File(activity.applicationInfo.dataDir)
-            val prefsDir = File(dataDir, "shared_prefs")
-            val prefsFile = File(prefsDir, preferenceManager.sharedPreferencesName + ".xml")
-            if (prefsFile.exists()) {
-                for (file in arrayOf(dataDir, prefsDir, prefsFile)) {
-                    file.setReadable(true, false)
-                    file.setExecutable(true, false)
-                }
-            }
         }
 
         override fun onResume() {
@@ -115,41 +93,6 @@ class MainActivity : Activity() {
                     runningStatusPref!!.setSummary(R.string.not_running_summary)
                 }
             }
-        }
-
-        override fun onPause() {
-            super.onPause()
-            setWorldReadable()
-        }
-
-        private fun onVersionClick(): Boolean {
-            if (prefs?.getBoolean("hidden", false)!! || counter == 7) {
-                return true
-            }
-            counter++
-            val text = "再按${7 - counter}次开启隐藏功能"
-            if (counter == 7) {
-                preferenceScreen.removeAll()
-                addPreferencesFromResource(R.xml.prefs_setting)
-                prefs?.edit()?.putBoolean("hidden", true)?.apply()
-                toast?.setText("已开启隐藏功能")
-                toast?.duration = LENGTH_SHORT
-                toast?.show()
-                preferenceScreen.removeAll()
-                onCreate()
-                onResume()
-            } else if (counter >= 4) {
-                toast?.let {
-                    it.setText(text)
-                    it.duration = LENGTH_SHORT
-                    it.show()
-                } ?: run {
-                    toast = Toast.makeText(activity, text, LENGTH_SHORT)
-                    toast?.setText(text)
-                    toast?.show()
-                }
-            }
-            return true
         }
 
         override fun onReturn(result: JSONObject?) {
@@ -184,13 +127,6 @@ class MainActivity : Activity() {
             return true
         }
 
-        private fun onTestCDNClick(): Boolean {
-            val uri = Uri.parse(resources.getString(R.string.cdn_url))
-            val intent = Intent(Intent.ACTION_VIEW, uri)
-            startActivity(intent)
-            return true
-        }
-
         private fun onUpdateCheck(): Boolean {
             val uri = Uri.parse(resources.getString(R.string.update_url))
             val intent = Intent(Intent.ACTION_VIEW, uri)
@@ -211,13 +147,23 @@ class MainActivity : Activity() {
             }
         }
 
+        private fun onFeatureClick(): Boolean {
+            object : AlertDialog.Builder(activity) {
+                init {
+                    setView(View.inflate(activity, R.layout.feature, null))
+                    setNegativeButton("关闭", null)
+
+                }
+            }.show()
+            return true
+        }
+
         override fun onPreferenceClick(preference: Preference?): Boolean {
             return when (preference?.key) {
-                "version" -> onVersionClick()
                 "author" -> onAuthorClick()
-                "test_cdn" -> onTestCDNClick()
                 "update" -> onUpdateCheck()
                 "group" -> onGroupChick()
+                "feature" -> onFeatureClick()
                 else -> false
             }
         }

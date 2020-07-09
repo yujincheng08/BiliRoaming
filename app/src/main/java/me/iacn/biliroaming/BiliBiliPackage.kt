@@ -35,7 +35,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 writeHookInfo(mContext)
             }
         } catch (e: Throwable) {
-            Log.d(e)
+            Log.e(e)
         }
         instance = this
     }
@@ -100,6 +100,18 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     fun themeReset(): String? {
         return mHookInfo["methods_theme_reset"]
+    }
+
+    fun addSetting(): String? {
+        return mHookInfo["method_add_setting"]
+    }
+
+    fun settingRoute(): String? {
+        return mHookInfo["class_setting_route"]
+    }
+
+    fun getSettingRoute(): String? {
+        return mHookInfo["method_get_setting_route"]
     }
 
     fun bangumiApiResponse(): Class<*>? {
@@ -228,6 +240,18 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         }
         if (!mHookInfo.containsKey("method_sign_query")) {
             mHookInfo["method_sign_query"] = findSignQueryMethod()
+            needUpdate = true
+        }
+        if (!mHookInfo.containsKey("method_add_setting")) {
+            mHookInfo["method_add_setting"] = findAddSettingMethod()
+            needUpdate = true
+        }
+        if (!mHookInfo.containsKey("class_setting_route")) {
+            mHookInfo["class_setting_route"] = findSettingRouteClass()
+            needUpdate = true
+        }
+        if (!mHookInfo.containsKey("method_get_setting_route")) {
+            mHookInfo["method_get_setting_route"] = findGetSettingRouteMethod()
             needUpdate = true
         }
         Log.d(mHookInfo)
@@ -413,6 +437,42 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         return findClass(themeProcessorName, mClassLoader).declaredMethods.filter {
             it.parameterTypes.isEmpty() && it.modifiers == 0
         }.joinToString(";") { it.name }
+    }
+
+    private fun findAddSettingMethod(): String? {
+        val homeFragmentClass = findClass("tv.danmaku.bili.ui.main2.mine.HomeUserCenterFragment", mClassLoader)
+        return homeFragmentClass.declaredMethods.first {
+            it.parameterTypes.size == 2 && it.parameterTypes[0] == Context::class.java && it.parameterTypes[1] == List::class.java
+        }?.name
+    }
+
+    private fun findSettingRouteClass(): String? {
+        return try {
+            val menuGroupItemClass = findClass("com.bilibili.lib.homepage.mine.MenuGroup\$Item", mClassLoader)
+            val accountMineClass = findClass("tv.danmaku.bili.ui.main2.api.AccountMine", mClassLoader)
+            val classes = DexFile(AndroidAppHelper.currentApplication().packageCodePath).entries().toList().filter {
+                it.startsWith("tv.danmaku.bili.ui.main2")
+            }.filter { c ->
+                findClass(c, mClassLoader).run {
+                    declaredFields.filter {
+                        it.type == accountMineClass
+                    }.count() > 0 && declaredMethods.filter {
+                        it.parameterTypes.size == 1 && it.parameterTypes[0] == menuGroupItemClass
+                    }.count() > 0
+                }
+            }
+            if (classes.size == 1) classes[0] else null
+        } catch (e: Throwable) {
+            null
+        }
+    }
+
+    private fun findGetSettingRouteMethod(): String? {
+        val settingRouteClass = settingRoute() ?: return null
+        val menuGroupItemClass = findClass("com.bilibili.lib.homepage.mine.MenuGroup\$Item", mClassLoader)
+        return findClass(settingRouteClass, mClassLoader).declaredMethods.first {
+            it.parameterTypes.size == 1 && it.parameterTypes[0] == menuGroupItemClass
+        }?.name
     }
 
     companion object {

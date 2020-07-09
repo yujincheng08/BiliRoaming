@@ -7,7 +7,7 @@
     <string name="author_list">iAcn/djytw/yujincheng08</string>
     <string name="running_status_enable">已启用</string>
     <string name="running_status_disable">未启用</string>
-    <string name="not_running_summary">插件当前没有被激活</string>
+    <string name="not_running_summary">哔哩漫游未激活</string>
     <string name="runtime_xposed">运行环境：Xposed/EdXposed</string>
     <string name="runtime_taichi">运行环境：太极</string>
     <string name="main_func_title">解锁番剧限制</string>
@@ -69,4 +69,7 @@
     <string name="beautify_category">美化</string>
     <string name="auto_like_summary">进入视频详情页时自动点赞</string>
     <string name="auto_like_title">自动点赞视频</string>
+    <string name="feature_title">功能设置</string>
+    <string name="feature_summary">打开哔哩哔哩客户端，进入【我的】页面，点击【哔哩漫游设置】</string>
+    <string name="feature_dialog">当哔哩漫游被正确激活后，打开哔哩哔哩客户端，进入【我的】页面，就能看到【哔哩漫游设置】。如果不知道如何激活插件，请直接使用Xpatch版。</string>
 </resources>

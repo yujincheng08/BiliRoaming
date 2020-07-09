@@ -3,7 +3,6 @@ package me.iacn.biliroaming.hook
 import android.app.Activity
 import android.app.AndroidAppHelper
 import android.content.Context
-import android.content.DialogInterface
 import android.content.SharedPreferences
 import android.graphics.Color
 import android.util.SparseArray
@@ -26,7 +25,7 @@ import java.util.*
  */
 class CustomThemeHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
     override fun startHook() {
-        if (!XposedInit.sPrefs.getBoolean("custom_theme", false)) return
+        if (!XposedInit.sPrefs!!.getBoolean("custom_theme", false)) return
         Log.d("startHook: CustomTheme")
 
         val instance = instance!!
@@ -77,7 +76,7 @@ class CustomThemeHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
                 if (mId == CUSTOM_THEME_ID || mId == -1) {
                     Log.d("Custom theme item has been clicked")
                     val colorDialog = ColorChooseDialog(view.context, customColor)
-                    colorDialog.setPositiveButton("确定") { _: DialogInterface?, _: Int ->
+                    colorDialog.setPositiveButton("确定") { _, _ ->
                         val color = colorDialog.color
                         val colors = generateColorArray(color)
                         colorArray.put(CUSTOM_THEME_ID, colors)
@@ -190,7 +189,7 @@ class CustomThemeHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
         get() = AndroidAppHelper.currentApplication().getSharedPreferences("bili_preference", Context.MODE_PRIVATE)
 
     fun insertColorForWebProcess() {
-        if (!XposedInit.sPrefs.getBoolean("custom_theme", false)) return
+        if (!XposedInit.sPrefs!!.getBoolean("custom_theme", false)) return
         val helperClass = findClass("com.bilibili.column.helper.k", mClassLoader)
 
         @Suppress("UNCHECKED_CAST")

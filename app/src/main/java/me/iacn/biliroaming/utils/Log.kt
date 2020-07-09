@@ -8,6 +8,15 @@ import android.util.Log as ALog
 
 object Log {
     @JvmStatic
+    fun throwableStr(e: Throwable) :String{
+        val sb = StringBuilder()
+        sb.appendln(e)
+        for (s in e.stackTrace)
+            sb.appendln(s)
+        return sb.toString()
+    }
+
+    @JvmStatic
     fun d(obj: Any?) {
         ALog.d(TAG, "$obj")
         xLog(obj)
@@ -39,23 +48,23 @@ object Log {
 
     @JvmStatic
     fun xLog(obj: Any?) {
-        if (obj is Throwable) {
-            XposedBridge.log(obj)
+        val str = if (obj is Throwable) {
+            throwableStr(obj)
         } else {
-            val str = obj.toString()
-            if (str.length > maxLength) {
-                val chunkCount: Int = str.length / maxLength
-                for (i in 0..chunkCount) {
-                    val max: Int = 4000 * (i + 1)
-                    if (max >= str.length) {
-                        xLog(str.substring(maxLength * i))
-                    } else {
-                        xLog(str.substring(maxLength * i, max))
-                    }
+            obj.toString()
+        }
+        if (str.length > maxLength) {
+            val chunkCount: Int = str.length / maxLength
+            for (i in 0..chunkCount) {
+                val max: Int = 4000 * (i + 1)
+                if (max >= str.length) {
+                    xLog(str.substring(maxLength * i))
+                } else {
+                    xLog(str.substring(maxLength * i, max))
                 }
-            } else {
-                XposedBridge.log("$TAG : $str")
             }
+        } else {
+            XposedBridge.log("$TAG : $str")
         }
     }
 

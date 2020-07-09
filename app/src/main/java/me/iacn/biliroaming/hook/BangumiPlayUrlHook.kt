@@ -23,7 +23,7 @@ import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
  */
 class BangumiPlayUrlHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
     override fun startHook() {
-        if (!XposedInit.sPrefs.getBoolean("main_func", false)) return
+        if (!XposedInit.sPrefs!!.getBoolean("main_func", false)) return
         Log.d("startHook: BangumiPlayUrl")
         instance?.signQueryName()?.let {
             findAndHookMethod("com.bilibili.nativelibrary.LibBili", mClassLoader, it,
@@ -32,7 +32,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
                 override fun beforeHookedMethod(param: MethodHookParam) {
                     @Suppress("UNCHECKED_CAST")
                     val params = param.args[0] as MutableMap<String, String>
-                    if (XposedInit.sPrefs.getBoolean("allow_download", false) &&
+                    if (XposedInit.sPrefs!!.getBoolean("allow_download", false) &&
                             params.containsKey("ep_id")) {
                         params.remove("dl")
                     }
@@ -72,19 +72,19 @@ class BangumiPlayUrlHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
             findClass("com.bapis.bilibili.pgc.gateway.player.v1.PlayURLMoss", mClassLoader)
         } catch (e: ClassNotFoundError) {
             null
-        }?.let {
-            findAndHookMethod(it, "playView",
+        }?.let {c ->
+            findAndHookMethod(c, "playView",
                     "com.bapis.bilibili.pgc.gateway.player.v1.PlayViewReq", object : XC_MethodHook() {
-                override fun beforeHookedMethod(param: MethodHookParam?) {
-                    val request = param?.args?.get(0) ?: return
-                    if (XposedInit.sPrefs.getBoolean("allow_download", false)) {
+                override fun beforeHookedMethod(param: MethodHookParam) {
+                    val request = param.args[0]
+                    if (XposedInit.sPrefs!!.getBoolean("allow_download", false)) {
                         callMethod(request, "setDownload", 0)
                     }
                 }
 
-                override fun afterHookedMethod(param: MethodHookParam?) {
-                    val request = param?.args?.get(0) ?: return
-                    val response = param.result ?: return
+                override fun afterHookedMethod(param: MethodHookParam) {
+                    val request = param.args[0]
+                    val response = param.result
                     if (!(callMethod(response, "hasVideoInfo") as Boolean)) {
                         val content = getPlayUrl(reconstructQuery(request), BangumiSeasonHook.lastSeasonInfo)
                         content?.let {

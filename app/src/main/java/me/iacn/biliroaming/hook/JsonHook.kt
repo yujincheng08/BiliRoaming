@@ -26,8 +26,8 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
                 if (param.result.javaClass == tabResponseClass) {
                     val data = getObjectField(result, "tabData")
-                    if (XposedInit.sPrefs.getBoolean("purify_mall", false) &&
-                            XposedInit.sPrefs.getBoolean("hidden", false)) {
+                    if (XposedInit.sPrefs!!.getBoolean("purify_mall", false) &&
+                            XposedInit.sPrefs!!.getBoolean("hidden", false)) {
                         val bottom = getObjectField(data, "bottom") as MutableList<*>
                         bottom.removeAll {
                             val uri = getObjectField(it, "uri") as String
@@ -35,7 +35,7 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         }
                     }
 
-                    if (XposedInit.sPrefs.getBoolean("simulate", false)) {
+                    if (XposedInit.sPrefs!!.getBoolean("simulate", false)) {
                         @Suppress("UNCHECKED_CAST")
                         val tab = getObjectField(data, "tab") as MutableList<Any>
                         val hasLive = tab.fold(false) { acc, it ->
@@ -56,8 +56,8 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             tab.add(0, live)
                         }
                     }
-                    if (XposedInit.sPrefs.getBoolean("purify_game", false) &&
-                            XposedInit.sPrefs.getBoolean("hidden", false)) {
+                    if (XposedInit.sPrefs!!.getBoolean("purify_game", false) &&
+                            XposedInit.sPrefs!!.getBoolean("hidden", false)) {
                         val top = getObjectField(data, "top") as MutableList<*>
                         top.removeAll {
                             val uri = getObjectField(it, "uri") as String
@@ -65,16 +65,16 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         }
                     }
                 } else if (result.javaClass == accountMineClass) {
-                    if (XposedInit.sPrefs.getBoolean("purify_drawer", false) &&
-                            XposedInit.sPrefs.getBoolean("hidden", false)) {
+                    if (XposedInit.sPrefs!!.getBoolean("purify_drawer", false) &&
+                            XposedInit.sPrefs!!.getBoolean("hidden", false)) {
                         val sections = getObjectField(result, "sectionList") as MutableList<*>?
                         sections?.removeAt(sections.size - 1)
                         val sections2 = getObjectField(result, "sectionListV2") as MutableList<*>?
                         sections2?.removeAt(sections2.size - 2)
                     }
                 } else if (result.javaClass == splashClass) {
-                    if (XposedInit.sPrefs.getBoolean("purify_splash", false) &&
-                            XposedInit.sPrefs.getBoolean("hidden", false)) {
+                    if (XposedInit.sPrefs!!.getBoolean("purify_splash", false) &&
+                            XposedInit.sPrefs!!.getBoolean("hidden", false)) {
                         (getObjectField(result, "splashList") as MutableList<*>?)?.clear()
                         (getObjectField(result, "strategyList") as MutableList<*>?)?.clear()
                     }

@@ -12,7 +12,7 @@ class AutoLikeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     val likedVideos = HashSet<Long>()
 
     override fun startHook() {
-        if(!XposedInit.sPrefs.getBoolean("auto_like", false)) return
+        if(!XposedInit.sPrefs!!.getBoolean("auto_like", false)) return
 
         Log.d("startHook: auto like")
 
@@ -21,8 +21,8 @@ class AutoLikeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val instance = instance!!
 
         findAndHookMethod(instance.section(), "a", Object::class.java, object : XC_MethodHook() {
-            override fun afterHookedMethod(param: MethodHookParam?) {
-                val sec = param?.thisObject ?: return
+            override fun afterHookedMethod(param: MethodHookParam) {
+                val sec = param.thisObject ?: return
                 val detail = getObjectField(sec, instance.videoDetailName())
                 val avid = getLongField(detail, "mAvid")
                 if (likedVideos.contains(avid)) return
