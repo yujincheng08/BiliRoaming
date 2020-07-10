@@ -72,4 +72,9 @@
     <string name="feature_title">功能设置</string>
     <string name="feature_summary">打开哔哩哔哩客户端，进入【我的】页面，点击【哔哩漫游设置】</string>
     <string name="feature_dialog">当哔哩漫游被正确激活后，打开哔哩哔哩客户端，进入【我的】页面，就能看到【哔哩漫游设置】。如果不知道如何激活插件，请直接使用Xpatch版。</string>
+    <string name="thanks_summary">BiliPlus/Kghost</string>
+    <string name="thanks_title">服务器提供</string>
+    <string name="help_title">帮助</string>
+    <string name="help_summary">点击查看激活方法、常见问题等</string>
+    <string name="help_url">https://github.com/yujincheng08/BiliRoaming/wiki</string>
 </resources>

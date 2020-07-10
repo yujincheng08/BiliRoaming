@@ -11,6 +11,12 @@
         android:summary="@string/hide_icon_summary"
         android:title="@string/hide_icon_title" />
 
+    <Preference
+        android:key="help"
+        android:title="@string/help_title"
+        android:summary="@string/help_summary"
+        />
+
     <PreferenceCategory
         android:key="about"
         android:title="@string/about">
@@ -28,6 +34,11 @@
             android:key="group"
             android:summary="@string/group_summary"
             android:title="@string/group_title" />
+
+        <Preference
+            android:key="thanks"
+            android:summary="@string/thanks_summary"
+            android:title="@string/thanks_title" />
 
         <Preference android:key="running_status" />
 

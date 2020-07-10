@@ -15,6 +15,7 @@ An Xposed module that unblocks bangumi area limit of BILIBILI, and miscellaneous
 - 显示评论区楼层
 - 概念版添加直播入口
 - 不以小程序形式分享
+- 自动点赞视频
 
 # Features
 
@@ -27,11 +28,19 @@ An Xposed module that unblocks bangumi area limit of BILIBILI, and miscellaneous
 - Show comment floor
 - Add live entry to blue ver
 - Share without mini programs
-
+- Like videos automatically
 
 # download/下载
 https://github.com/yujincheng08/BiliRoaming/releases/latest
+
 https://repo.xposed.info/module/me.iacn.biliroaming
 
+# 使用方法
+https://github.com/yujincheng08/BiliRoaming/wiki#%E4%BD%BF%E7%94%A8%E6%96%B9%E6%B3%95
+
+# 特别鸣谢
+- [原作者](https://github.com/iAcn/BiliRoaming)
+- [BiliPlus](https://www.biliplus.com/)
+- [Kghost](https://github.com/kghost/bilibili-area-limit)
 ### License
 [GNU General Public License, version 3](LICENSE)

@@ -58,6 +58,7 @@ class MainActivity : Activity() {
             findPreference("author").onPreferenceClickListener = this
             findPreference("group").onPreferenceClickListener = this
             findPreference("feature").onPreferenceClickListener = this
+            findPreference("help").onPreferenceClickListener = this
             CheckVersionTask(this).execute(URL(resources.getString(R.string.version_url)))
         }
 
@@ -134,7 +135,14 @@ class MainActivity : Activity() {
             return true
         }
 
-        private fun onGroupChick(): Boolean {
+        private fun onHelpClick(): Boolean{
+            val uri = Uri.parse(resources.getString(R.string.help_url))
+            val intent = Intent(Intent.ACTION_VIEW, uri)
+            startActivity(intent)
+            return true
+        }
+
+        private fun onGroupClick(): Boolean {
             val intent = Intent()
             val key = "Qk8NsOfgC-afK4Vqhnqg9FBF2l1oL0sp"
             intent.data = Uri.parse("mqqopensdkapi://bizAgent/qm/qr?url=http%3A%2F%2Fqm.qq.com%2Fcgi-bin%2Fqm%2Fqr%3Ffrom%3Dapp%26p%3Dandroid%26k%3D$key")
@@ -162,8 +170,9 @@ class MainActivity : Activity() {
             return when (preference?.key) {
                 "author" -> onAuthorClick()
                 "update" -> onUpdateCheck()
-                "group" -> onGroupChick()
+                "group" -> onGroupClick()
                 "feature" -> onFeatureClick()
+                "help" -> onHelpClick()
                 else -> false
             }
         }
