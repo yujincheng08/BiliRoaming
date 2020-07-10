@@ -70,7 +70,7 @@ object BiliRoamingApi {
         val rights = result.getJSONObject("rights")
         rights.put("area_limit", 0)
 
-        if (XposedInit.sPrefs!!.getBoolean("allow_download", false)) {
+        if (XposedInit.sPrefs.getBoolean("allow_download", false)) {
             rights.put("allow_download", 1)
         }
     }
@@ -165,8 +165,8 @@ object BiliRoamingApi {
         builder.appendQueryParameter("otype", "json")
         builder.appendQueryParameter("platform", "android")
         val content = getContent(builder.toString(),
-                if (XposedInit.sPrefs!!.getString("upos", "").isNullOrEmpty()) null else
-                    mapOf("upos_server" to XposedInit.sPrefs!!.getString("upos", "cosu")!!))
+                if (XposedInit.sPrefs.getString("upos", "").isNullOrEmpty()) null else
+                    mapOf("upos_server" to XposedInit.sPrefs.getString("upos", "cosu")!!))
         return if (content != null && content.contains("\"code\":0"))
             content else getBackupUrl(queryString, info)
     }
@@ -280,6 +280,7 @@ object BiliRoamingApi {
 
         } catch (e: Throwable) {
             Log.d("getContent error: $e with url $urlString")
+            Log.e(e)
             null
         }
     }

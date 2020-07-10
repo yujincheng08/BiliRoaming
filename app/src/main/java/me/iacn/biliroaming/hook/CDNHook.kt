@@ -9,7 +9,7 @@ import java.net.InetAddress
 
 class CDNHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
-        if (!XposedInit.sPrefs!!.getBoolean("use_cdn", false)) return
+        if (!XposedInit.sPrefs.getBoolean("use_cdn", false)) return
 
         Log.d("startHook: CDN")
 
@@ -22,7 +22,7 @@ class CDNHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 if (cdn.isNotEmpty() && host == "upos-hz-mirrorakam.akamaized.net") {
                     param.result = arrayOf(InetAddress.getByName(cdn))
                     Log.d("Replace by CDN: $cdn")
-                    toastMessage("CDN加速已生效", true)
+                    toastMessage("CDN加速已生效")
                 }
             }
         })
@@ -36,7 +36,7 @@ class CDNHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 if (cdn.isNotEmpty() && host == "upos-hz-mirrorakam.akamaized.net") {
                     param.result = InetAddress.getByName(cdn)
                     Log.d("Replace by CDN: $cdn")
-                    toastMessage("CDN加速已生效", true)
+                    toastMessage("CDN加速已生效")
                 }
             }
         })
@@ -52,15 +52,15 @@ class CDNHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     setObjectField(params, "mHttpProxy", "http://$cdn:80")
                     val proxy = getObjectField(params, "mHttpProxy") as String
                     Log.d("Using cdn as proxy: $proxy")
-                    toastMessage("CDN加速已生效", true)
+                    toastMessage("CDN加速已生效")
                 }
             }
         })
     }
 
     fun getCDN(): String {
-        var cdn = XposedInit.sPrefs!!.getString("cdn", "")!!
-        if (cdn.isEmpty()) cdn = XposedInit.sPrefs!!.getString("custom_cdn", "")!!
+        var cdn = XposedInit.sPrefs.getString("cdn", "")!!
+        if (cdn.isEmpty()) cdn = XposedInit.sPrefs.getString("custom_cdn", "")!!
         return cdn
     }
 

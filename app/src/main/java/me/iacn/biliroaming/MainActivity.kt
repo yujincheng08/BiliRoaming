@@ -45,8 +45,8 @@ class MainActivity : Activity() {
     }
 
     class PrefsFragment : PreferenceFragment(), OnPreferenceChangeListener, OnPreferenceClickListener, OnTaskReturn<JSONObject> {
-        private var runningStatusPref: Preference? = null
-        private var prefs: SharedPreferences? = null
+        private lateinit var runningStatusPref: Preference
+        private lateinit var prefs: SharedPreferences
 
         override fun onCreate(savedInstanceState: Bundle?) {
             super.onCreate(savedInstanceState)
@@ -82,16 +82,16 @@ class MainActivity : Activity() {
             super.onResume()
             when {
                 isModuleActive() -> {
-                    runningStatusPref!!.setTitle(R.string.running_status_enable)
-                    runningStatusPref!!.setSummary(R.string.runtime_xposed)
+                    runningStatusPref.setTitle(R.string.running_status_enable)
+                    runningStatusPref.setSummary(R.string.runtime_xposed)
                 }
                 isTaiChiModuleActive(activity) -> {
-                    runningStatusPref!!.setTitle(R.string.running_status_enable)
-                    runningStatusPref!!.setSummary(R.string.runtime_taichi)
+                    runningStatusPref.setTitle(R.string.running_status_enable)
+                    runningStatusPref.setSummary(R.string.runtime_taichi)
                 }
                 else -> {
-                    runningStatusPref!!.setTitle(R.string.running_status_disable)
-                    runningStatusPref!!.setSummary(R.string.not_running_summary)
+                    runningStatusPref.setTitle(R.string.running_status_disable)
+                    runningStatusPref.setSummary(R.string.not_running_summary)
                 }
             }
         }

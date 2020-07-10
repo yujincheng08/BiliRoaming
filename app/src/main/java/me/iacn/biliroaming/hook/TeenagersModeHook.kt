@@ -14,7 +14,7 @@ import me.iacn.biliroaming.utils.Log
  */
 class TeenagersModeHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
     override fun startHook() {
-        if (!XposedInit.sPrefs!!.getBoolean("teenagers_mode_dialog", false)) return
+        if (!XposedInit.sPrefs.getBoolean("teenagers_mode_dialog", false)) return
         Log.d("startHook: TeenagersMode")
         XposedHelpers.findAndHookMethod("com.bilibili.teenagersmode.ui.TeenagersModeDialogActivity",
                 mClassLoader, "onCreate", Bundle::class.java, object : XC_MethodHook() {

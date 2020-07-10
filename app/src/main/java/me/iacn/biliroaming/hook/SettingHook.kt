@@ -16,7 +16,6 @@ class SettingHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     override fun startHook() {
         Log.d("startHook: setting")
-        val instance = instance!!
         findAndHookMethod("tv.danmaku.bili.ui.main2.mine.HomeUserCenterFragment",
                 mClassLoader, instance.addSetting(), Context::class.java, List::class.java, object : XC_MethodHook() {
             override fun beforeHookedMethod(param: MethodHookParam) {
@@ -36,7 +35,7 @@ class SettingHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
         })
 
-        findAndHookMethod(instance.settingRoute(), mClassLoader, instance.getSettingRoute(), "com.bilibili.lib.homepage.mine.MenuGroup\$Item", object : XC_MethodHook() {
+        findAndHookMethod(instance.settingRouteClass, instance.getSettingRoute(), "com.bilibili.lib.homepage.mine.MenuGroup\$Item", object : XC_MethodHook() {
             override fun afterHookedMethod(param: MethodHookParam) {
                 val item = param.args[0]
                 val uri = getObjectField(item, "uri") as String

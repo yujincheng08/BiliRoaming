@@ -3,6 +3,7 @@ package me.iacn.biliroaming.hook
 import android.net.Uri
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedHelpers.*
+import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.Protos.PlayViewReply
 import me.iacn.biliroaming.Protos.PlayViewReq
 import me.iacn.biliroaming.XposedInit
@@ -15,7 +16,6 @@ import org.json.JSONObject
 import java.io.ByteArrayInputStream
 import java.io.InputStream
 import java.net.HttpURLConnection
-import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 
 /**
  * Created by iAcn on 2019/3/29
@@ -23,16 +23,16 @@ import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
  */
 class BangumiPlayUrlHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
     override fun startHook() {
-        if (!XposedInit.sPrefs!!.getBoolean("main_func", false)) return
+        if (!XposedInit.sPrefs.getBoolean("main_func", false)) return
         Log.d("startHook: BangumiPlayUrl")
-        instance?.signQueryName()?.let {
+        instance.signQueryName()?.let {
             findAndHookMethod("com.bilibili.nativelibrary.LibBili", mClassLoader, it,
                     MutableMap::class.java, object : XC_MethodHook() {
                 @Throws(Throwable::class)
                 override fun beforeHookedMethod(param: MethodHookParam) {
                     @Suppress("UNCHECKED_CAST")
                     val params = param.args[0] as MutableMap<String, String>
-                    if (XposedInit.sPrefs!!.getBoolean("allow_download", false) &&
+                    if (XposedInit.sPrefs.getBoolean("allow_download", false) &&
                             params.containsKey("ep_id")) {
                         params.remove("dl")
                     }
@@ -72,12 +72,12 @@ class BangumiPlayUrlHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
             findClass("com.bapis.bilibili.pgc.gateway.player.v1.PlayURLMoss", mClassLoader)
         } catch (e: ClassNotFoundError) {
             null
-        }?.let {c ->
+        }?.let { c ->
             findAndHookMethod(c, "playView",
                     "com.bapis.bilibili.pgc.gateway.player.v1.PlayViewReq", object : XC_MethodHook() {
                 override fun beforeHookedMethod(param: MethodHookParam) {
                     val request = param.args[0]
-                    if (XposedInit.sPrefs!!.getBoolean("allow_download", false)) {
+                    if (XposedInit.sPrefs.getBoolean("allow_download", false)) {
                         callMethod(request, "setDownload", 0)
                     }
                 }

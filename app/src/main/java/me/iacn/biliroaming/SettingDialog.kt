@@ -28,7 +28,7 @@ import kotlin.system.exitProcess
 class SettingDialog(context: Context) : AlertDialog.Builder(context) {
 
     class PrefsFragment : PreferenceFragment(), Preference.OnPreferenceChangeListener, Preference.OnPreferenceClickListener, OnTaskReturn<JSONObject> {
-        private var prefs: SharedPreferences? = null
+        private lateinit var prefs: SharedPreferences
         private var counter: Int = 0
 
         override fun onCreate(savedInstanceState: Bundle?) {
@@ -36,7 +36,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             preferenceManager.sharedPreferencesName = "biliroaming"
             addPreferencesFromResource(R.xml.prefs_setting)
             prefs = preferenceManager.sharedPreferences
-            if (!prefs?.getBoolean("hidden", false)!!) {
+            if (!prefs.getBoolean("hidden", false)) {
                 val hiddenGroup = findPreference("hidden_group") as PreferenceCategory
                 preferenceScreen.removePreference(hiddenGroup)
             }
@@ -46,7 +46,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("test_cdn").onPreferenceClickListener = this
             findPreference("group").onPreferenceClickListener = this
             findPreference("help").onPreferenceClickListener = this
-            CheckVersionTask(this).execute(URL(XposedInit.moduleRes!!.getString(R.string.version_url)))
+            CheckVersionTask(this).execute(URL(XposedInit.moduleRes.getString(R.string.version_url)))
         }
 
         override fun onPreferenceChange(preference: Preference, newValue: Any): Boolean {
@@ -54,12 +54,12 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         }
 
         private fun onVersionClick(): Boolean {
-            if (prefs?.getBoolean("hidden", false)!! || counter == 7) {
+            if (prefs.getBoolean("hidden", false) || counter == 7) {
                 return true
             }
             counter++
             if (counter == 7) {
-                prefs?.edit()?.putBoolean("hidden", true)?.apply()
+                prefs.edit()?.putBoolean("hidden", true)?.apply()
                 toastMessage("已开启隐藏功能，重启应用生效")
             } else if (counter >= 4) {
                 toastMessage("再按${7 - counter}次开启隐藏功能")
@@ -76,14 +76,14 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                         val aboutGroup = findPreference("about") as PreferenceCategory
                         val updatePreference = Preference(activity)
                         updatePreference.key = "update"
-                        updatePreference.title = XposedInit.moduleRes!!.getString(R.string.update_title)
+                        updatePreference.title = XposedInit.moduleRes.getString(R.string.update_title)
                         var log = ""
                         try {
                             val body = result.getString("body")
                             log = body.substring(body.lastIndexOf("更新日志"))
                         } catch (e: Throwable) {
                         }
-                        updatePreference.summary = if (log.isNotEmpty()) log else XposedInit.moduleRes!!.getString(R.string.update_summary)
+                        updatePreference.summary = if (log.isNotEmpty()) log else XposedInit.moduleRes.getString(R.string.update_summary)
                         updatePreference.onPreferenceClickListener = this
                         updatePreference.order = 1
                         aboutGroup.addPreference(updatePreference)
@@ -94,28 +94,28 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         }
 
         private fun onAuthorClick(): Boolean {
-            val uri = Uri.parse(XposedInit.moduleRes!!.getString(R.string.github_url))
+            val uri = Uri.parse(XposedInit.moduleRes.getString(R.string.github_url))
             val intent = Intent(Intent.ACTION_VIEW, uri)
             startActivity(intent)
             return true
         }
 
         private fun onTestCDNClick(): Boolean {
-            val uri = Uri.parse(XposedInit.moduleRes!!.getString(R.string.cdn_url))
+            val uri = Uri.parse(XposedInit.moduleRes.getString(R.string.cdn_url))
             val intent = Intent(Intent.ACTION_VIEW, uri)
             startActivity(intent)
             return true
         }
 
         private fun onUpdateCheck(): Boolean {
-            val uri = Uri.parse(XposedInit.moduleRes!!.getString(R.string.update_url))
+            val uri = Uri.parse(XposedInit.moduleRes.getString(R.string.update_url))
             val intent = Intent(Intent.ACTION_VIEW, uri)
             startActivity(intent)
             return true
         }
 
-        private fun onHelpClick(): Boolean{
-            val uri = Uri.parse(XposedInit.moduleRes!!.getString(R.string.help_url))
+        private fun onHelpClick(): Boolean {
+            val uri = Uri.parse(XposedInit.moduleRes.getString(R.string.help_url))
             val intent = Intent(Intent.ACTION_VIEW, uri)
             startActivity(intent)
             return true
@@ -141,7 +141,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 "test_cdn" -> onTestCDNClick()
                 "update" -> onUpdateCheck()
                 "group" -> onGroupClick()
-                "help"->onHelpClick()
+                "help" -> onHelpClick()
                 else -> false
             }
         }
@@ -173,7 +173,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
 
     class BackupRes(val res: Resources, val theme: Resources.Theme)
 
-    companion object{
+    companion object {
         @JvmStatic
         fun replaceResource(context: Activity?, res: Resources?): BackupRes? {
             context ?: return null

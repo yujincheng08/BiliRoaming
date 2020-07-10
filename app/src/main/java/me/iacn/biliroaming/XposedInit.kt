@@ -35,9 +35,7 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
             XposedHelpers.findAndHookMethod(MainActivity.Companion::class.java.name, lpparam.classLoader,
                     "isModuleActive", XC_MethodReplacement.returnConstant(true))
         }
-        if (Constant.BILIBILI_PACKAGENAME != lpparam.packageName
-                && Constant.BILIBILI_PACKAGENAME2 != lpparam.packageName
-                && Constant.BILIBILI_PACKAGENAME3 != lpparam.packageName) return
+        if(!Constant.BILIBILI_PACKAGENAME.contains(lpparam.packageName)) return
         XposedHelpers.findAndHookMethod(Instrumentation::class.java, "callApplicationOnCreate", Application::class.java, object : XC_MethodHook() {
             @Throws(Throwable::class)
             override fun beforeHookedMethod(param: MethodHookParam) {
@@ -47,7 +45,7 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                 when (lpparam.processName) {
                     "tv.danmaku.bili", "com.bilibili.app.blue", "com.bilibili.app.in" -> {
                         Log.d("BiliBili process launched ...")
-                        Log.d("Config: ${sPrefs?.all?.filter { it.key != "splash_image" }}")
+                        Log.d("Config: ${sPrefs.all}")
                         startHook(object : BaseHook(lpparam.classLoader) {
                             override fun startHook() {
                                 XposedBridge.hookAllMethods(XposedHelpers.findClass(
@@ -56,7 +54,7 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                                     override fun afterHookedMethod(param: MethodHookParam) {
                                         currentActivity = param.result as Activity
                                         if (!started) {
-                                            if (sPrefs == null || !sPrefs!!.getBoolean("main_func", false)) {
+                                            if (!sPrefs.getBoolean("main_func", false)) {
                                                 toastMessage("哔哩漫游已激活，但未启用番剧解锁功能")
                                             } else {
                                                 toastMessage("哔哩漫游已激活")
@@ -82,10 +80,6 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                     "tv.danmaku.bili:web", "com.bilibili.app.in:web", "com.bilibili.app.blue:web" -> {
                         CustomThemeHook(lpparam.classLoader).insertColorForWebProcess()
                     }
-                    "com.bilibili.app.in:download", "com.bilibili.app.blue:download", "tv.danmaku.bili:download" -> {
-                        startHook(BangumiPlayUrlHook(lpparam.classLoader))
-                        startHook(CDNHook(lpparam.classLoader))
-                    }
                 }
             }
         })
@@ -101,30 +95,27 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
     }
 
     companion object {
-        var sPrefs: SharedPreferences? = null
-        var currentActivity: Activity? = null
-        private var toast: Toast? = null
+        lateinit var sPrefs: SharedPreferences
+        lateinit var currentActivity: Activity
+        private val toast by lazy { Toast.makeText(currentActivity, "", Toast.LENGTH_SHORT)}
         var started = false
-        var modulePath: String? = null
-        var moduleRes: Resources? = null
+        lateinit var modulePath: String
+        lateinit var moduleRes: Resources
 
-        @SuppressLint("ShowToast")
-        fun toastMessage(msg: String, new: Boolean = false) {
-            if (sPrefs!!.getBoolean("show_info", true)) {
-                currentActivity?.runOnUiThread {
-                    if (new || toast == null) {
-                        toast = Toast.makeText(currentActivity, msg, Toast.LENGTH_SHORT)
-                    }
-                    toast?.setText("哔哩漫游：$msg")
-                    toast?.duration = Toast.LENGTH_SHORT
-                    toast?.show()
+        fun toastMessage(msg: String) {
+            if (sPrefs.getBoolean("show_info", true)) {
+                currentActivity.runOnUiThread {
+                    toast.setText("哔哩漫游：$msg")
+                    toast.duration = Toast.LENGTH_SHORT
+                    toast.show()
                 }
             }
         }
 
-        @SuppressLint("DiscouragedPrivateApi", "PrivateApi")
+        @Suppress("DEPRECATION")
+        @SuppressLint("DiscouragedPrivateApi")
         @JvmStatic
-        fun getModuleRes(path: String?): Resources? {
+        fun getModuleRes(path: String): Resources {
             val assetManager = AssetManager::class.java.newInstance()
             val addAssetPath = AssetManager::class.java.getDeclaredMethod("addAssetPath", String::class.java)
             addAssetPath.invoke(assetManager, path)

@@ -30,7 +30,7 @@ class ColorChooseDialog(context: Context, defColor: Int) : AlertDialog.Builder(c
         get() = Color.rgb(sbColorR.progress, sbColorG.progress, sbColorB.progress)
 
     private fun getView(context: Context): View {
-        val layout = XposedInit.moduleRes!!.getLayout(R.layout.dialog_color_choose)
+        val layout = XposedInit.moduleRes.getLayout(R.layout.dialog_color_choose)
         val inflater = LayoutInflater.from(context)
         return inflater.inflate(layout, null)
     }

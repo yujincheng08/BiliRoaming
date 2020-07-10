@@ -3,69 +3,62 @@ package me.iacn.biliroaming.utils
 import de.robv.android.xposed.XposedBridge
 import me.iacn.biliroaming.Constant.TAG
 import java.math.BigInteger
+import kotlin.reflect.KFunction2
 import android.util.Log as ALog
 
+fun Throwable.dump(): String {
+    val sb = StringBuilder()
+    sb.appendln(toString())
+    for (s in stackTrace)
+        sb.appendln(s)
+    return sb.toString()
+}
 
 object Log {
-    @JvmStatic
-    fun throwableStr(e: Throwable) :String{
-        val sb = StringBuilder()
-        sb.appendln(e)
-        for (s in e.stackTrace)
-            sb.appendln(s)
-        return sb.toString()
-    }
 
     @JvmStatic
-    fun d(obj: Any?) {
-        ALog.d(TAG, "$obj")
-        xLog(obj)
-    }
+    private fun doLog(f: KFunction2<String, String, Int>, obj: Any?) {
+        val str = if (obj is Throwable) obj.dump() else obj.toString()
 
-    @JvmStatic
-    fun i(obj: Any?) {
-        ALog.i(TAG, "$obj")
-        xLog(obj)
-    }
-
-    @JvmStatic
-    fun e(obj: Any?) {
-        ALog.e(TAG, "$obj")
-        xLog(obj)
-    }
-
-    @JvmStatic
-    fun v(obj: Any?) {
-        ALog.v(TAG, "$obj")
-        xLog(obj)
-    }
-
-    @JvmStatic
-    fun w(obj: Any?) {
-        ALog.w(TAG, "$obj")
-        xLog(obj)
-    }
-
-    @JvmStatic
-    fun xLog(obj: Any?) {
-        val str = if (obj is Throwable) {
-            throwableStr(obj)
-        } else {
-            obj.toString()
-        }
         if (str.length > maxLength) {
             val chunkCount: Int = str.length / maxLength
             for (i in 0..chunkCount) {
                 val max: Int = 4000 * (i + 1)
                 if (max >= str.length) {
-                    xLog(str.substring(maxLength * i))
+                    doLog(f, str.substring(maxLength * i))
                 } else {
-                    xLog(str.substring(maxLength * i, max))
+                    doLog(f, str.substring(maxLength * i, max))
                 }
             }
         } else {
+            f(TAG, str)
             XposedBridge.log("$TAG : $str")
         }
+    }
+
+    @JvmStatic
+    fun d(obj: Any?) {
+        doLog(ALog::d, obj)
+    }
+
+    @JvmStatic
+    fun i(obj: Any?) {
+        doLog(ALog::i, obj)
+    }
+
+    @JvmStatic
+    fun e(obj: Any?) {
+        doLog(ALog::e, obj)
+    }
+
+    @JvmStatic
+    fun v(obj: Any?) {
+        doLog(ALog::v, obj)
+    }
+
+    @JvmStatic
+    fun w(obj: Any?) {
+        doLog(ALog::w, obj)
     }
 
     private const val maxLength = 4000

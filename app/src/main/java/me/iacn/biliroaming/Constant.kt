@@ -5,9 +5,7 @@ package me.iacn.biliroaming
  * Email i@iacn.me
  */
 object Constant {
-    const val BILIBILI_PACKAGENAME = "tv.danmaku.bili"
-    const val BILIBILI_PACKAGENAME2 = "com.bilibili.app.blue"
-    const val BILIBILI_PACKAGENAME3 = "com.bilibili.app.in"
+    val BILIBILI_PACKAGENAME = setOf("tv.danmaku.bili", "com.bilibili.app.blue", "com.bilibili.app.in")
     const val TAG = "BiliRoaming"
     const val HOOK_INFO_FILE_NAME = "hookinfo.dat"
     const val TYPE_SEASON_ID = 0

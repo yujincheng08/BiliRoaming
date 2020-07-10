@@ -1,6 +1,5 @@
 package me.iacn.biliroaming.hook
 
-import android.app.Activity
 import android.app.AndroidAppHelper
 import android.content.Context
 import android.content.SharedPreferences
@@ -25,23 +24,15 @@ import java.util.*
  */
 class CustomThemeHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
     override fun startHook() {
-        if (!XposedInit.sPrefs!!.getBoolean("custom_theme", false)) return
+        if (!XposedInit.sPrefs.getBoolean("custom_theme", false)) return
         Log.d("startHook: CustomTheme")
 
-        val instance = instance!!
-        val helperClassName = instance.themeHelper() ?: return
-        val helperClass = findClass(helperClassName, mClassLoader)
-
-        instance.themeName()?.let {
-            val themeNameClass = findClass(it, mClassLoader)
-
-            @Suppress("UNCHECKED_CAST")
-            val m = getStaticObjectField(themeNameClass, "a") as MutableMap<String, Int>
-            m["custom"] = CUSTOM_THEME_ID
-        }
+        @Suppress("UNCHECKED_CAST")
+        val m = getStaticObjectField(instance.themeNameClass, "a") as MutableMap<String, Int>
+        m["custom"] = CUSTOM_THEME_ID
 
         @Suppress("UNCHECKED_CAST")
-        val colorArray: SparseArray<IntArray> = getStaticObjectField(helperClass, instance.colorArray()) as SparseArray<IntArray>
+        val colorArray: SparseArray<IntArray> = getStaticObjectField(instance.themeHelperClass, instance.colorArray()) as SparseArray<IntArray>
         val primaryColor = customColor
         colorArray.put(CUSTOM_THEME_ID, generateColorArray(primaryColor))
         instance.skinList()?.let {
@@ -64,7 +55,7 @@ class CustomThemeHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
                 }
             })
         }
-        findAndHookMethod(instance.themeListClickListener(), mClassLoader, "onClick", View::class.java, object : XC_MethodHook() {
+        findAndHookMethod(instance.themeListClickClass, "onClick", View::class.java, object : XC_MethodHook() {
             @Throws(Throwable::class)
             override fun beforeHookedMethod(param: MethodHookParam) {
                 val view = param.args[0] as View
@@ -103,7 +94,7 @@ class CustomThemeHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
             }
         })
         instance.saveSkinList()?.let {
-            findAndHookMethod(helperClass, it, Context::class.java, Int::class.javaPrimitiveType, object : XC_MethodHook() {
+            findAndHookMethod(instance.themeHelperClass, it, Context::class.java, Int::class.javaPrimitiveType, object : XC_MethodHook() {
                 @Throws(Throwable::class)
                 override fun beforeHookedMethod(param: MethodHookParam) {
                     val currentThemeKey = param.args[1] as Int
@@ -112,29 +103,12 @@ class CustomThemeHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
             })
         }
 
-        // No invalidation when not logged in
-        instance.invalidateSkin()?.let { its ->
-            val hooker = object : XC_MethodReplacement() {
-                var called = 0
-                override fun replaceHookedMethod(param: MethodHookParam): Any? {
-                    return if (called++ == 1) {
-                        called = 0
-                        XposedBridge.invokeOriginalMethod(param.method, param.thisObject, param.args)
-                    } else {
-                        null
-                    }
-                }
-            }
-            its.split(";").map {
-                findAndHookMethod(helperClass, it, Activity::class.java, hooker)
-            }
-        }
         // No reset when not logged in
         instance.themeReset()?.let { its ->
             val hooker = object : XC_MethodReplacement() {
                 override fun replaceHookedMethod(param: MethodHookParam): Any? {
                     for (s in Thread.currentThread().stackTrace) {
-                        if(s.className=="tv.danmaku.bili.MainActivityV2" && s.methodName == "onPostCreate")
+                        if (s.className == "tv.danmaku.bili.MainActivityV2" && s.methodName == "onPostCreate")
                             return null
                     }
                     return XposedBridge.invokeOriginalMethod(param.method, param.thisObject, param.args)
@@ -142,7 +116,7 @@ class CustomThemeHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
 
             }
             its.split(";").map {
-                findAndHookMethod(instance.themeProcessor()!!, mClassLoader, it, hooker)
+                findAndHookMethod(instance.themeProcessorClass, it, hooker)
             }
         }
     }
@@ -189,7 +163,7 @@ class CustomThemeHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
         get() = AndroidAppHelper.currentApplication().getSharedPreferences("bili_preference", Context.MODE_PRIVATE)
 
     fun insertColorForWebProcess() {
-        if (!XposedInit.sPrefs!!.getBoolean("custom_theme", false)) return
+        if (!XposedInit.sPrefs.getBoolean("custom_theme", false)) return
         val helperClass = findClass("com.bilibili.column.helper.k", mClassLoader)
 
         @Suppress("UNCHECKED_CAST")

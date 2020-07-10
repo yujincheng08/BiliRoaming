@@ -28,7 +28,7 @@ class BangumiSeasonHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
     }
 
     override fun startHook() {
-        if (!XposedInit.sPrefs!!.getBoolean("main_func", false)) return
+        if (!XposedInit.sPrefs.getBoolean("main_func", false)) return
         Log.d("startHook: BangumiSeason")
         val paramsMapClass = findClass("com.bilibili.bangumi.data.page.detail." +
                 "BangumiDetailApiService\$UniformSeasonParamsMap", mClassLoader)
@@ -47,17 +47,14 @@ class BangumiSeasonHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
             }
         })
 
-        val responseClass = findClass(instance!!.retrofitResponse(), mClassLoader)
-
-        hookAllConstructors(responseClass, object : XC_MethodHook() {
+        hookAllConstructors(instance.retrofitResponseClass, object : XC_MethodHook() {
             @Throws(Throwable::class)
             override fun beforeHookedMethod(param: MethodHookParam) {
                 val url = getUrl(param.args[0])
                 val body = param.args[1]
-                val bangumiApiResponse = instance!!.bangumiApiResponse()
                 // Filter non-bangumi responses
                 // If it isn't bangumi, the type variable will not exist in this map
-                if (bangumiApiResponse!!.isInstance(body)) {
+                if (instance.bangumiApiResponseClass.isInstance(body)) {
                     fixBangumi(body)
                 } else if (url != null && url.startsWith("https://app.bilibili.com/x/v2/view") &&
                         getIntField(body, "code") == -404) {
@@ -88,8 +85,7 @@ class BangumiSeasonHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
         // Filter normal bangumi and other responses
         if (isBangumiWithWatchPermission(getIntField(body, "code"), result)) {
             result?.let {
-                val bangumiSeasonClass = instance!!.bangumiUniformSeason()
-                if (bangumiSeasonClass!!.isInstance(it)) {
+                if (instance.bangumiUniformSeasonClass.isInstance(it)) {
                     allowDownload(it)
                     lastSeasonInfo.clear()
                 }
@@ -100,7 +96,7 @@ class BangumiSeasonHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
         Log.d("Info: $lastSeasonInfo")
         val hidden = result == null
         val content = getSeason(lastSeasonInfo, hidden)
-        val (code, newResult) = getNewResult(content, "result", instance!!.bangumiUniformSeason()!!)
+        val (code, newResult) = getNewResult(content, "result", instance.bangumiUniformSeasonClass)
 
         if (newResult != null && code != null && isBangumiWithWatchPermission(code, newResult)) {
             Log.d("Got new season information from proxy server: $content")
@@ -113,7 +109,7 @@ class BangumiSeasonHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
             return
         }
         val newRights = getObjectField(newResult, "rights")
-        if (XposedInit.sPrefs!!.getBoolean("allow_download", false))
+        if (XposedInit.sPrefs.getBoolean("allow_download", false))
             setBooleanField(newRights, "allowDownload", true)
         if (!hidden) {
             // Replace only episodes and rights
@@ -165,8 +161,7 @@ class BangumiSeasonHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
 
     private fun isBangumiWithWatchPermission(code: Int, result: Any?): Boolean {
         if (result != null) {
-            val bangumiSeasonClass = instance!!.bangumiUniformSeason()
-            if (bangumiSeasonClass!!.isInstance(result)) {
+            if (instance.bangumiUniformSeasonClass.isInstance(result)) {
                 val rights = getObjectField(result, "rights")
                 val areaLimit = getBooleanField(rights, "areaLimit")
                 return !areaLimit
@@ -176,20 +171,19 @@ class BangumiSeasonHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
     }
 
     private fun getNewResult(content: String?, fieldName: String, beanClass: Class<*>): Result {
-        val fastJsonClass = instance!!.fastJson()
         if (content == null) {
             return Result(null, null)
         }
         val contentJson = JSONObject(content)
         val resultJson = contentJson.optJSONObject(fieldName)
         val code = contentJson.optInt("code")
-        val newResult = callStaticMethod(fastJsonClass,
-                instance!!.fastJsonParse(), resultJson!!.toString(), beanClass)
+        val newResult = callStaticMethod(instance.fastJsonClass,
+                instance.fastJsonParse(), resultJson!!.toString(), beanClass)
         return Result(code, newResult)
     }
 
     private fun allowDownload(result: Any?) {
-        if (XposedInit.sPrefs!!.getBoolean("allow_download", false)) {
+        if (XposedInit.sPrefs.getBoolean("allow_download", false)) {
             try {
                 val rights = getObjectField(result, "rights")
                 setBooleanField(rights, "allowDownload", true)
@@ -213,8 +207,8 @@ class BangumiSeasonHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
     }
 
     private fun getUrl(response: Any): String? {
-        val requestField = instance!!.requestField()
-        val urlMethod = instance!!.urlMethod()
+        val requestField = instance.requestField()
+        val urlMethod = instance.urlMethod()
         if (requestField == null || urlMethod == null) {
             return null
         }

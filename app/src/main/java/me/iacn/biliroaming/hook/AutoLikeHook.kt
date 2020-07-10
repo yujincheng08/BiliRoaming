@@ -12,15 +12,14 @@ class AutoLikeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     val likedVideos = HashSet<Long>()
 
     override fun startHook() {
-        if(!XposedInit.sPrefs!!.getBoolean("auto_like", false)) return
+        if (!XposedInit.sPrefs.getBoolean("auto_like", false)) return
 
         Log.d("startHook: auto like")
 
         val context = AndroidAppHelper.currentApplication()
         val likeId = context.resources.getIdentifier("frame1", "id", context.packageName)
-        val instance = instance!!
 
-        findAndHookMethod(instance.section(), "a", Object::class.java, object : XC_MethodHook() {
+        findAndHookMethod(instance.sectionClass, instance.likeMethod(), Object::class.java, object : XC_MethodHook() {
             override fun afterHookedMethod(param: MethodHookParam) {
                 val sec = param.thisObject ?: return
                 val detail = getObjectField(sec, instance.videoDetailName())

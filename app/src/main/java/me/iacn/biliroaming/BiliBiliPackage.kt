@@ -2,7 +2,6 @@
 
 package me.iacn.biliroaming
 
-import android.app.Activity
 import android.app.AndroidAppHelper
 import android.content.Context
 import android.util.SparseArray
@@ -15,6 +14,7 @@ import java.io.*
 import java.lang.ref.WeakReference
 import java.lang.reflect.Modifier
 import java.lang.reflect.ParameterizedType
+import kotlin.reflect.KProperty
 
 data class OkHttpResult(val fieldName: String?, val methodName: String?)
 
@@ -24,10 +24,17 @@ data class OkHttpResult(val fieldName: String?, val methodName: String?)
  */
 class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContext: Context) {
     private val mHookInfo: MutableMap<String, String?> = readHookInfo(mContext)
-    private var bangumiApiResponseClass: WeakReference<Class<*>?>? = null
-    private var fastJsonClass: WeakReference<Class<*>?>? = null
-    private var bangumiUniformSeasonClass: WeakReference<Class<*>?>? = null
-    private var sectionClass: WeakReference<Class<*>?>? = null
+    val bangumiApiResponseClass by Weak { findClass("com.bilibili.bangumi.data.common.api.BangumiApiResponse", mClassLoader) }
+    val fastJsonClass by Weak { findClass(mHookInfo["class_fastjson"], mClassLoader) }
+    val bangumiUniformSeasonClass by Weak { findClass("com.bilibili.bangumi.data.page.detail.entity.BangumiUniformSeason", mClassLoader) }
+    val sectionClass by Weak { findClass(mHookInfo["class_section"], mClassLoader) }
+    val retrofitResponseClass by Weak { findClass(mHookInfo["class_retrofit_response"], mClassLoader) }
+    val themeHelperClass by Weak { findClass(mHookInfo["class_theme_helper"], mClassLoader) }
+    val settingRouteClass by Weak { findClass(mHookInfo["class_setting_route"], mClassLoader) }
+    val themeListClickClass by Weak { findClass(mHookInfo["class_theme_list_click"], mClassLoader) }
+    val routeParamsClass by Weak { findClass(mHookInfo["class_route_params"], mClassLoader) }
+    val themeNameClass by Weak { findClass(mHookInfo["class_theme_name"], mClassLoader) }
+    val themeProcessorClass by Weak { findClass(mHookInfo["class_theme_processor"], mClassLoader) }
 
     init {
         try {
@@ -46,28 +53,12 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 //        return callMethod(instance, "invoke") as String
 //    }
 
-    fun retrofitResponse(): String? {
-        return mHookInfo["class_retrofit_response"]
-    }
-
     fun fastJsonParse(): String? {
         return mHookInfo["method_fastjson_parse"]
     }
 
     fun colorArray(): String? {
         return mHookInfo["field_color_array"]
-    }
-
-    fun themeListClickListener(): String? {
-        return mHookInfo["class_theme_list_click"]
-    }
-
-    fun routeParams(): String? {
-        return mHookInfo["class_route_params"]
-    }
-
-    fun themeName(): String? {
-        return mHookInfo["class_theme_name"]
     }
 
     fun videoDetailName(): String? {
@@ -78,24 +69,12 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         return mHookInfo["method_sign_query"]
     }
 
-    fun themeHelper(): String? {
-        return mHookInfo["class_theme_helper"]
-    }
-
     fun skinList(): String? {
         return mHookInfo["method_skin_list"]
     }
 
     fun saveSkinList(): String? {
         return mHookInfo["method_save_skin"]
-    }
-
-    fun invalidateSkin(): String? {
-        return mHookInfo["methods_invalidate_skin"]
-    }
-
-    fun themeProcessor(): String? {
-        return mHookInfo["class_theme_processor"]
     }
 
     fun themeReset(): String? {
@@ -106,34 +85,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         return mHookInfo["method_add_setting"]
     }
 
-    fun settingRoute(): String? {
-        return mHookInfo["class_setting_route"]
-    }
-
     fun getSettingRoute(): String? {
         return mHookInfo["method_get_setting_route"]
-    }
-
-    fun bangumiApiResponse(): Class<*>? {
-        bangumiApiResponseClass = checkNullOrReturn(bangumiApiResponseClass,
-                "com.bilibili.bangumi.data.common.api.BangumiApiResponse")
-        return bangumiApiResponseClass!!.get()
-    }
-
-    fun bangumiUniformSeason(): Class<*>? {
-        bangumiUniformSeasonClass = checkNullOrReturn(bangumiUniformSeasonClass,
-                "com.bilibili.bangumi.data.page.detail.entity.BangumiUniformSeason")
-        return bangumiUniformSeasonClass!!.get()
-    }
-
-    fun fastJson(): Class<*>? {
-        fastJsonClass = checkNullOrReturn(fastJsonClass, mHookInfo["class_fastjson"])
-        return fastJsonClass!!.get()
-    }
-
-    fun section(): Class<*>? {
-        sectionClass = checkNullOrReturn(sectionClass, "tv.danmaku.bili.ui.video.section.b")
-        return sectionClass!!.get()
     }
 
     fun requestField(): String? {
@@ -144,13 +97,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         return mHookInfo["method_url"]
     }
 
-    private fun checkNullOrReturn(clazz: WeakReference<Class<*>?>?, className: String?): WeakReference<Class<*>?> {
-        @Suppress("NAME_SHADOWING")
-        var clazz = clazz
-        if (clazz?.get() == null) {
-            clazz = WeakReference(findClass(className, mClassLoader))
-        }
-        return clazz
+    fun likeMethod(): String? {
+        return mHookInfo["method_like"]
     }
 
     private fun readHookInfo(context: Context): MutableMap<String, String?> {
@@ -159,7 +107,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             Log.d("Reading hook info: $hookInfoFile")
             val startTime = System.currentTimeMillis()
             if (hookInfoFile.isFile && hookInfoFile.canRead()) {
-                val lastUpdateTime = context.packageManager.getPackageInfo(Constant.BILIBILI_PACKAGENAME, 0).lastUpdateTime
+                val lastUpdateTime = context.packageManager.getPackageInfo(AndroidAppHelper.currentPackageName(), 0).lastUpdateTime
                 val stream = ObjectInputStream(FileInputStream(hookInfoFile))
                 @Suppress("UNCHECKED_CAST")
                 if (stream.readLong() == lastUpdateTime) return stream.readObject() as MutableMap<String, String?>
@@ -210,10 +158,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             mHookInfo["method_save_skin"] = findSaveSkinMethod()
             needUpdate = true
         }
-        if (!mHookInfo.containsKey("methods_invalidate_skin")) {
-            mHookInfo["methods_invalidate_skin"] = findInvalidateSkinMethods()
-            needUpdate = true
-        }
         if (!mHookInfo.containsKey("class_theme_processor")) {
             mHookInfo["class_theme_processor"] = findThemeProcessor()
             needUpdate = true
@@ -232,6 +176,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         }
         if (!mHookInfo.containsKey("class_theme_name")) {
             mHookInfo["class_theme_name"] = findThemeNameClass()
+            needUpdate = true
+        }
+        if (!mHookInfo.containsKey("class_section")) {
+            mHookInfo["class_section"] = findSectionClass()
             needUpdate = true
         }
         if (!mHookInfo.containsKey("field_video_detail")) {
@@ -254,6 +202,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             mHookInfo["method_get_setting_route"] = findGetSettingRouteMethod()
             needUpdate = true
         }
+        if (!mHookInfo.containsKey("method_like")) {
+            mHookInfo["method_like"] = findLikeMethod()
+            needUpdate = true
+        }
         Log.d(mHookInfo)
         Log.d("Check hook info completed: needUpdate = $needUpdate")
         return needUpdate
@@ -262,7 +214,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     private fun writeHookInfo(context: Context) {
         try {
             val hookInfoFile = File(context.cacheDir, Constant.HOOK_INFO_FILE_NAME)
-            val lastUpdateTime = context.packageManager.getPackageInfo(Constant.BILIBILI_PACKAGENAME, 0).lastUpdateTime
+            val lastUpdateTime = context.packageManager.getPackageInfo(AndroidAppHelper.currentPackageName(), 0).lastUpdateTime
             if (hookInfoFile.exists()) hookInfoFile.delete()
             val stream = ObjectOutputStream(FileOutputStream(hookInfoFile))
             stream.writeLong(lastUpdateTime)
@@ -276,14 +228,11 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     }
 
     private fun findRetrofitResponseClass(): String? {
-        val methods = bangumiApiResponse()!!.methods
-        for (method in methods) {
-            if ("extractResult" == method.name) {
-                val responseClass = method.parameterTypes[0]
-                return responseClass.name
-            }
-        }
-        return null
+        return bangumiApiResponseClass.methods.filter {
+            "extractResult" == it.name
+        }.map {
+            it.parameterTypes[0]
+        }.first().name
     }
 
     private fun findUrlField(responseClassName: String): OkHttpResult {
@@ -309,18 +258,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     }
 
     private fun findColorArrayField(): String? {
-        val themeHelperName = themeHelper() ?: return null
-        val fields = findClass(themeHelperName, mClassLoader).declaredFields
-        for (field in fields) {
-            if (field.type == SparseArray::class.java) {
-                val genericType = field.genericType as ParameterizedType
-                val types = genericType.actualTypeArguments
-                if ("int[]" == types[0].toString()) {
-                    return field.name
-                }
-            }
-        }
-        return null
+        return themeHelperClass.declaredFields.first {
+            it.type == SparseArray::class.java &&
+                    (it.genericType as ParameterizedType).actualTypeArguments[0].toString() == "int[]"
+        }.name
     }
 
     private fun findSkinListMethod(): String? {
@@ -333,18 +274,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     }
 
     private fun findSaveSkinMethod(): String? {
-        val themeHelperName = themeHelper() ?: return null
-        return findClass(themeHelperName, mClassLoader).declaredMethods.first {
+        return themeHelperClass.declaredMethods.first {
             it.parameterTypes.size == 2 && it.parameterTypes[0] == Context::class.java &&
                     it.parameterTypes[1] == Int::class.javaPrimitiveType
         }?.name
-    }
-
-    private fun findInvalidateSkinMethods(): String {
-        val themeHelperName = themeHelper() ?: return ""
-        return findClass(themeHelperName, mClassLoader).declaredMethods.filter {
-            it.parameterTypes.size == 1 && it.parameterTypes[0] == Activity::class.java
-        }.joinToString(";") { it.name }
     }
 
     private fun findThemeListClickClass(): String? {
@@ -385,9 +318,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     private fun findVideoDetailField(): String? {
         val detailClass = findClass("tv.danmaku.bili.ui.video.api.BiliVideoDetail", mClassLoader)
-        return section()?.declaredFields?.first {
+        return sectionClass.declaredFields.first {
             it.type == detailClass
-        }?.name
+        }.name
     }
 
     private fun findSignQueryMethod(): String? {
@@ -433,8 +366,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     }
 
     private fun findThemeResetMethods(): String {
-        val themeProcessorName = themeProcessor() ?: return ""
-        return findClass(themeProcessorName, mClassLoader).declaredMethods.filter {
+        return themeProcessorClass.declaredMethods.filter {
             it.parameterTypes.isEmpty() && it.modifiers == 0
         }.joinToString(";") { it.name }
     }
@@ -467,16 +399,52 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         }
     }
 
+    private fun findSectionClass(): String? {
+        return try {
+            val progressBarClass = findClass("tv.danmaku.biliplayer.view.RingProgressBar", mClassLoader)
+            val classes = DexFile(AndroidAppHelper.currentApplication().packageCodePath).entries().toList().filter {
+                it.startsWith("tv.danmaku.bili.ui.video.section")
+            }.filter { c ->
+                findClass(c, mClassLoader).declaredFields.filter {
+                    it.type == progressBarClass
+                }.count() > 0
+            }
+            if (classes.size == 1) classes[0] else null
+        } catch (e: Throwable) {
+            null
+        }
+    }
+
     private fun findGetSettingRouteMethod(): String? {
-        val settingRouteClass = settingRoute() ?: return null
         val menuGroupItemClass = findClass("com.bilibili.lib.homepage.mine.MenuGroup\$Item", mClassLoader)
-        return findClass(settingRouteClass, mClassLoader).declaredMethods.first {
+        return settingRouteClass.declaredMethods.first {
             it.parameterTypes.size == 1 && it.parameterTypes[0] == menuGroupItemClass
         }?.name
     }
 
+    private fun findLikeMethod(): String? {
+        return sectionClass.declaredMethods.first {
+            it.parameterTypes.size == 1 && it.parameterTypes[0] == Object::class.java
+        }.name
+    }
+
     companion object {
         @Volatile
-        var instance: BiliBiliPackage? = null
+        lateinit var instance: BiliBiliPackage
+    }
+
+    class Weak(val initializer: () -> Class<*>?) {
+        private var weakReference: WeakReference<Class<*>?>? = null
+
+        operator fun getValue(thisRef: Any?, property: KProperty<*>): Class<*> {
+            weakReference?.get() ?: let {
+                weakReference = WeakReference(initializer())
+            }
+            return weakReference!!.get()!!
+        }
+
+        operator fun setValue(thisRef: Any?, property: KProperty<*>, value: Class<*>) {
+            weakReference = WeakReference(value)
+        }
     }
 }
