@@ -30,6 +30,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val sectionClass by Weak { findClass(mHookInfo["class_section"], mClassLoader) }
     val retrofitResponseClass by Weak { findClass(mHookInfo["class_retrofit_response"], mClassLoader) }
     val themeHelperClass by Weak { findClass(mHookInfo["class_theme_helper"], mClassLoader) }
+    val columnHelperClass by Weak { findClass(mHookInfo["class_column_helper"], mClassLoader) }
     val settingRouteClass by Weak { findClass(mHookInfo["class_setting_route"], mClassLoader) }
     val themeListClickClass by Weak { findClass(mHookInfo["class_theme_list_click"], mClassLoader) }
     val routeParamsClass by Weak { findClass(mHookInfo["class_route_params"], mClassLoader) }
@@ -59,6 +60,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     fun colorArray(): String? {
         return mHookInfo["field_color_array"]
+    }
+
+    fun columnColorArray(): String? {
+        return mHookInfo["field_column_color_array"]
     }
 
     fun videoDetailName(): String? {
@@ -99,6 +104,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     fun likeMethod(): String? {
         return mHookInfo["method_like"]
+    }
+
+    fun themeName(): String? {
+        return mHookInfo["field_theme_name"]
     }
 
     private fun readHookInfo(context: Context): MutableMap<String, String?> {
@@ -150,6 +159,14 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             mHookInfo["field_color_array"] = findColorArrayField()
             needUpdate = true
         }
+        if(!mHookInfo.containsKey("class_column_helper")) {
+            mHookInfo["class_column_helper"] = findColumnHelper()
+            needUpdate = true
+        }
+        if (!mHookInfo.containsKey("field_column_color_array")) {
+            mHookInfo["field_column_color_array"] = findColumnColorArrayField()
+            needUpdate = true
+        }
         if (!mHookInfo.containsKey("method_skin_list")) {
             mHookInfo["method_skin_list"] = findSkinListMethod()
             needUpdate = true
@@ -176,6 +193,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         }
         if (!mHookInfo.containsKey("class_theme_name")) {
             mHookInfo["class_theme_name"] = findThemeNameClass()
+            needUpdate = true
+        }
+        if (!mHookInfo.containsKey("field_theme_name")) {
+            mHookInfo["field_theme_name"] = findThemeNameField()
             needUpdate = true
         }
         if (!mHookInfo.containsKey("class_section")) {
@@ -264,6 +285,13 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         }.name
     }
 
+    private fun findColumnColorArrayField(): String? {
+        return columnHelperClass.declaredFields.first {
+            it.type == SparseArray::class.java &&
+                    (it.genericType as ParameterizedType).actualTypeArguments[0].toString() == "int[]"
+        }.name
+    }
+
     private fun findSkinListMethod(): String? {
         val themeStoreClass = findClass("tv.danmaku.bili.ui.theme.ThemeStoreActivity", mClassLoader)
         val biliSkinListClass = findClass("tv.danmaku.bili.ui.theme.api.BiliSkinList", mClassLoader)
@@ -298,15 +326,20 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 it.startsWith("tv.danmaku.bili.ui.garb")
             }.filter { c ->
                 findClass(c, mClassLoader).declaredFields.filter {
-                    Modifier.isStatic(it.modifiers)
-                }.filter {
-                    it.type == Map::class.java
+                    Modifier.isStatic(it.modifiers) && it.type == Map::class.java
                 }.count() == 1
             }
             if (classes.size == 1) classes[0] else null
         } catch (e: Throwable) {
             null
         }
+    }
+
+    private fun findThemeNameField(): String? {
+        return themeNameClass.declaredFields.first {
+            it.type == Map::class.java
+                    && Modifier.isStatic(it.modifiers)
+        }.name
     }
 
     private fun findRouteParamsClass(): String? {
@@ -336,6 +369,23 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         return try {
             val classes = DexFile(AndroidAppHelper.currentApplication().packageCodePath).entries().toList().filter {
                 it.startsWith("tv.danmaku.bili.ui.theme")
+            }.filter { c ->
+                findClass(c, mClassLoader).declaredFields.filter {
+                    Modifier.isStatic(it.modifiers)
+                }.filter {
+                    it.type == SparseArray::class.java
+                }.count() > 1
+            }
+            if (classes.size == 1) classes[0] else null
+        } catch (e: Throwable) {
+            null
+        }
+    }
+
+    private fun findColumnHelper(): String? {
+        return try {
+            val classes = DexFile(AndroidAppHelper.currentApplication().packageCodePath).entries().toList().filter {
+                it.startsWith("com.bilibili.column.helper")
             }.filter { c ->
                 findClass(c, mClassLoader).declaredFields.filter {
                     Modifier.isStatic(it.modifiers)

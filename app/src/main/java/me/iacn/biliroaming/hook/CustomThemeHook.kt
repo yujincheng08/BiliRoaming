@@ -28,13 +28,14 @@ class CustomThemeHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
         Log.d("startHook: CustomTheme")
 
         @Suppress("UNCHECKED_CAST")
-        val m = getStaticObjectField(instance.themeNameClass, "a") as MutableMap<String, Int>
+        val m = getStaticObjectField(instance.themeNameClass, instance.themeName()) as MutableMap<String, Int>
         m["custom"] = CUSTOM_THEME_ID
 
         @Suppress("UNCHECKED_CAST")
-        val colorArray: SparseArray<IntArray> = getStaticObjectField(instance.themeHelperClass, instance.colorArray()) as SparseArray<IntArray>
+        val colorArray = getStaticObjectField(instance.themeHelperClass, instance.colorArray()) as SparseArray<IntArray>
         val primaryColor = customColor
         colorArray.put(CUSTOM_THEME_ID, generateColorArray(primaryColor))
+
         instance.skinList()?.let {
             findAndHookMethod("tv.danmaku.bili.ui.theme.ThemeStoreActivity", mClassLoader, it,
                     "tv.danmaku.bili.ui.theme.api.BiliSkinList", Boolean::class.javaPrimitiveType, object : XC_MethodHook() {
@@ -164,12 +165,15 @@ class CustomThemeHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
 
     fun insertColorForWebProcess() {
         if (!XposedInit.sPrefs.getBoolean("custom_theme", false)) return
-        val helperClass = findClass("com.bilibili.column.helper.k", mClassLoader)
 
-        @Suppress("UNCHECKED_CAST")
-        val colorArray: SparseArray<IntArray> = getStaticObjectField(helperClass, "l") as SparseArray<IntArray>
-        val primaryColor = customColor
-        colorArray.put(CUSTOM_THEME_ID, generateColorArray(primaryColor))
+        try {
+            @Suppress("UNCHECKED_CAST")
+            val colorArray: SparseArray<IntArray> = getStaticObjectField(instance.columnHelperClass, instance.columnColorArray()) as SparseArray<IntArray>
+            val primaryColor = customColor
+            colorArray.put(CUSTOM_THEME_ID, generateColorArray(primaryColor))
+        } catch (e: Throwable) {
+            Log.e(e)
+        }
     }
 
     companion object {
