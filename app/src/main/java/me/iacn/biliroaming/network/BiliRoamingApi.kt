@@ -58,11 +58,27 @@ object BiliRoamingApi {
 
     @JvmStatic
     private fun reconstructModules(result: JSONObject) {
+        var id = 0
         val module = JSONObject(BILI_MODULE_TEMPLATE)
         val episodes = result.getJSONArray("episodes")
         module.getJSONObject("data").put("episodes", episodes)
+        module.put("id", ++id)
+        val modules = arrayListOf(module)
+
+        if(result.has("section")) {
+            val sections = result.getJSONArray("section")
+            for (i in 0 until sections.length()) {
+                val section = sections.getJSONObject(i)
+                val sectionModule = JSONObject(BILI_MODULE_TEMPLATE)
+                sectionModule.put("data", section)
+                sectionModule.put("style", "section")
+                sectionModule.put("title", section.getString("title"))
+                sectionModule.put("id", ++id)
+                modules.add(sectionModule)
+            }
+        }
         // work around
-        result.put("modules", JSONArray(arrayOf(module)))
+        result.put("modules", JSONArray(modules))
     }
 
     @JvmStatic
