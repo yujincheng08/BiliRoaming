@@ -77,6 +77,18 @@ object BiliRoamingApi {
                 modules.add(sectionModule)
             }
         }
+        if (result.has("seasons")) {
+            val seasons = result.getJSONArray("seasons")
+            val seasonModule = JSONObject(BILI_MODULE_TEMPLATE)
+            val data = JSONObject().put("seasons", seasons)
+            seasonModule.put("data", data)
+                    .put("style", "season")
+                    .put("title", "")
+                    .put("id", ++id)
+                    .put("module_style", JSONObject("{\"line\": 1}"))
+            modules.add(seasonModule)
+
+        }
         // work around
         result.put("modules", JSONArray(modules))
     }
