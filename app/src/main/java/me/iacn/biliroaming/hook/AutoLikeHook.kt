@@ -2,14 +2,12 @@ package me.iacn.biliroaming.hook
 
 import android.app.AndroidAppHelper
 import android.view.View
-import de.robv.android.xposed.XC_MethodHook
-import de.robv.android.xposed.XposedHelpers.*
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.XposedInit
-import me.iacn.biliroaming.utils.Log
+import me.iacn.biliroaming.utils.*
 
 class AutoLikeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
-    val likedVideos = HashSet<Long>()
+    private val likedVideos = HashSet<Long>()
 
     override fun startHook() {
         if (!XposedInit.sPrefs.getBoolean("auto_like", false)) return
@@ -19,28 +17,26 @@ class AutoLikeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val context = AndroidAppHelper.currentApplication()
         val likeId = context.resources.getIdentifier("frame1", "id", context.packageName)
 
-        findAndHookMethod(instance.sectionClass, instance.likeMethod(), Object::class.java, object : XC_MethodHook() {
-            override fun afterHookedMethod(param: MethodHookParam) {
-                val sec = param.thisObject ?: return
-                val detail = getObjectField(sec, instance.videoDetailName())
-                val avid = getLongField(detail, "mAvid")
-                if (likedVideos.contains(avid)) return
-                likedVideos.add(avid)
-                val requestUser = getObjectField(detail, "mRequestUser")
-                val like = getIntField(requestUser, "mLike")
-                val likeView = sec.javaClass.declaredFields.map {
-                    getObjectField(sec, it.name)
-                }.filter {
-                    View::class.java.isInstance(it)
-                }.map {
-                    it as View
-                }.first {
-                    it.id == likeId
-                }
-                if (like == 0) {
-                    callMethod(sec, "onClick", likeView)
-                }
+        instance.sectionClass?.hookAfterMethod(instance.likeMethod(), Object::class.java) { param ->
+            val sec = param.thisObject ?: return@hookAfterMethod
+            val detail = sec.getObjectField(instance.videoDetailName())
+            val avid = detail?.getLongField("mAvid") ?: return@hookAfterMethod
+            if (likedVideos.contains(avid)) return@hookAfterMethod
+            likedVideos.add(avid)
+            val requestUser = detail.getObjectField("mRequestUser")
+            val like = requestUser?.getIntField("mLike")
+            val likeView = sec.javaClass.declaredFields.map {
+                sec.getObjectField(it.name)
+            }.filter {
+                View::class.java.isInstance(it)
+            }.map {
+                it as View
+            }.first {
+                it.id == likeId
             }
-        })
+            if (like == 0) {
+                sec.callMethod("onClick", likeView)
+            }
+        }
     }
 }

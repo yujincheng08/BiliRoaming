@@ -1,89 +1,83 @@
 package me.iacn.biliroaming.hook
 
-import de.robv.android.xposed.XC_MethodHook
-import de.robv.android.xposed.XposedHelpers.*
-import me.iacn.biliroaming.XposedInit
-import me.iacn.biliroaming.utils.Log
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
+import me.iacn.biliroaming.XposedInit
+import me.iacn.biliroaming.utils.*
 import java.lang.reflect.Type
 
 class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
         Log.d("startHook: Json")
 
-        val tabResponseClass = findClass("tv.danmaku.bili.ui.main2.resource.MainResourceManager\$TabResponse", mClassLoader)
-        val generalResponseClass = findClass("com.bilibili.okretro.GeneralResponse", mClassLoader)
-        val accountMineClass = findClass("tv.danmaku.bili.ui.main2.api.AccountMine", mClassLoader)
-        val splashClass = findClass("tv.danmaku.bili.ui.splash.SplashData", mClassLoader)
+        val tabResponseClass = "tv.danmaku.bili.ui.main2.resource.MainResourceManager\$TabResponse".findClass(mClassLoader)
+        val generalResponseClass = "com.bilibili.okretro.GeneralResponse".findClass(mClassLoader)
+        val accountMineClass = "tv.danmaku.bili.ui.main2.api.AccountMine".findClass(mClassLoader)
+        val splashClass = "tv.danmaku.bili.ui.splash.SplashData".findClass(mClassLoader)
+        val tabClass = "tv.danmaku.bili.ui.main2.resource.MainResourceManager\$Tab".findClass(mClassLoader)
 
-        findAndHookMethod(instance.fastJsonClass, "parseObject", String::class.java, Type::class.java, Int::class.javaPrimitiveType, "com.alibaba.fastjson.parser.Feature[]", object : XC_MethodHook() {
-            @Throws(Throwable::class)
-            override fun afterHookedMethod(param: MethodHookParam) {
-                var result = param.result ?: return
-                if (result.javaClass == generalResponseClass) {
-                    result = getObjectField(result, "data") ?: return
-                }
+        instance.fastJsonClass?.hookAfterMethod("parseObject", String::class.java, Type::class.java, Int::class.javaPrimitiveType, "com.alibaba.fastjson.parser.Feature[]") { param ->
+            var result = param.result ?: return@hookAfterMethod
+            if (result.javaClass == generalResponseClass) {
+                result = result.getObjectField("data") ?: return@hookAfterMethod
+            }
 
-                when(result.javaClass) {
-                    tabResponseClass -> {
-                        val data = getObjectField(result, "tabData")
-                        if (XposedInit.sPrefs.getBoolean("purify_mall", false) &&
-                                XposedInit.sPrefs.getBoolean("hidden", false)) {
-                            val bottom = getObjectField(data, "bottom") as MutableList<*>
-                            bottom.removeAll {
-                                val uri = getObjectField(it, "uri") as String
-                                uri.startsWith("bilibili://mall/home")
-                            }
+            when (result.javaClass) {
+                tabResponseClass -> {
+                    val data = result.getObjectField("tabData")
+                    if (XposedInit.sPrefs.getBoolean("purify_mall", false) &&
+                            XposedInit.sPrefs.getBoolean("hidden", false)) {
+                        data?.getObjectFieldAs<MutableList<*>?>("bottom")?.removeAll {
+                            it?.getObjectFieldAs<String?>("uri")?.startsWith("bilibili://mall/home")
+                                    ?: false
                         }
+                    }
 
-                        if (XposedInit.sPrefs.getBoolean("simulate", false)) {
-                            @Suppress("UNCHECKED_CAST")
-                            val tab = getObjectField(data, "tab") as MutableList<Any>
-                            val hasLive = tab.fold(false) { acc, it ->
-                                val uri = getObjectField(it, "uri") as String
-                                acc || uri.startsWith("bilibili://live/home")
-                            }
-                            val tabClass = findClass("tv.danmaku.bili.ui.main2.resource.MainResourceManager\$Tab", mClassLoader)
-                            if (!hasLive) {
-                                val live = newInstance(tabClass)
-                                setObjectField(live, "tabId", "20")
-                                setObjectField(live, "name", "直播")
-                                setObjectField(live, "uri", "bilibili://live/home")
-                                setObjectField(live, "reportId", "直播tab")
-                                setIntField(live, "pos", 1)
+                    if (XposedInit.sPrefs.getBoolean("simulate", false)) {
+                        val tab = data?.getObjectFieldAs<MutableList<Any>>("tab")
+                        val hasLive = tab?.fold(false) { acc, it ->
+                            val uri = it.getObjectFieldAs<String>("uri")
+                            acc || uri.startsWith("bilibili://live/home")
+                        }
+                        if (hasLive != null && !hasLive) {
+                            val live = tabClass?.newInstance()?.setObjectField("tabId", "20")?.setObjectField("name", "直播")?.setObjectField("uri", "bilibili://live/home")?.setObjectField("reportId", "直播tab")?.setIntField("pos", 1)
+                            live?.let { l ->
                                 tab.forEach {
-                                    setIntField(it, "pos", getIntField(it, "pos") + 1)
+                                    it.setIntField("pos", it.getIntField("pos") + 1)
                                 }
-                                tab.add(0, live)
-                            }
-                        }
-                        if (XposedInit.sPrefs.getBoolean("purify_game", false) &&
-                                XposedInit.sPrefs.getBoolean("hidden", false)) {
-                            val top = getObjectField(data, "top") as MutableList<*>
-                            top.removeAll {
-                                val uri = getObjectField(it, "uri") as String
-                                uri.startsWith("bilibili://game_center/home")
+                                tab.add(0, l)
                             }
                         }
                     }
-                    accountMineClass -> {
-                        if (XposedInit.sPrefs.getBoolean("purify_drawer", false) &&
-                                XposedInit.sPrefs.getBoolean("hidden", false)) {
-                            val sections = getObjectField(result, "sectionList") as MutableList<*>?
+                    if (XposedInit.sPrefs.getBoolean("purify_game", false) &&
+                            XposedInit.sPrefs.getBoolean("hidden", false)) {
+                        val top = data?.getObjectFieldAs<MutableList<*>?>("top")
+                        top?.removeAll {
+                            val uri = it?.getObjectFieldAs<String?>("uri")
+                            uri?.startsWith("bilibili://game_center/home") ?: false
+                        }
+                    }
+                }
+                accountMineClass -> {
+                    if (XposedInit.sPrefs.getBoolean("purify_drawer", false) &&
+                            XposedInit.sPrefs.getBoolean("hidden", false)) {
+                        result.javaClass.findFieldOrNull("sectionList")?.run {
+                            val sections = get(result) as MutableList<*>?
                             sections?.removeAt(sections.size - 1)
-                            val sections2 = getObjectField(result, "sectionListV2") as MutableList<*>?
-                            sections2?.removeAt(sections2.size - 2)
+                        }
+                        result.javaClass.findFieldOrNull("sectionListV2")?.run {
+                            val sections = get(result) as MutableList<*>?
+                            sections?.removeAt(sections.size - 2)
                         }
                     }
-                    splashClass -> {
-                        if (XposedInit.sPrefs.getBoolean("purify_splash", false) &&
-                                XposedInit.sPrefs.getBoolean("hidden", false)) {
-                            (getObjectField(result, "splashList") as MutableList<*>?)?.clear()
-                            (getObjectField(result, "strategyList") as MutableList<*>?)?.clear()
-                        }
+                }
+                splashClass -> {
+                    if (XposedInit.sPrefs.getBoolean("purify_splash", false) &&
+                            XposedInit.sPrefs.getBoolean("hidden", false)) {
+                        result.getObjectFieldAs<MutableList<*>?>("splashList")?.clear()
+                        result.getObjectFieldAs<MutableList<*>?>("strategyList")?.clear()
                     }
                 }
             }
-        })
+        }
     }
 }

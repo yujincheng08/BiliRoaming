@@ -65,15 +65,15 @@ object BiliRoamingApi {
         module.put("id", ++id)
         val modules = arrayListOf(module)
 
-        if(result.has("section")) {
+        if (result.has("section")) {
             val sections = result.getJSONArray("section")
             for (i in 0 until sections.length()) {
                 val section = sections.getJSONObject(i)
                 val sectionModule = JSONObject(BILI_MODULE_TEMPLATE)
-                sectionModule.put("data", section)
-                sectionModule.put("style", "section")
-                sectionModule.put("title", section.getString("title"))
-                sectionModule.put("id", ++id)
+                        .put("data", section)
+                        .put("style", "section")
+                        .put("title", section.getString("title"))
+                        .put("id", ++id)
                 modules.add(sectionModule)
             }
         }

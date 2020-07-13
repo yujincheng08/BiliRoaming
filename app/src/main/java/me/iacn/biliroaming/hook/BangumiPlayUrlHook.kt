@@ -1,8 +1,6 @@
 package me.iacn.biliroaming.hook
 
 import android.net.Uri
-import de.robv.android.xposed.XC_MethodHook
-import de.robv.android.xposed.XposedHelpers.*
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.Protos.PlayViewReply
 import me.iacn.biliroaming.Protos.PlayViewReq
@@ -10,7 +8,7 @@ import me.iacn.biliroaming.XposedInit
 import me.iacn.biliroaming.XposedInit.Companion.toastMessage
 import me.iacn.biliroaming.network.BiliRoamingApi.getPlayUrl
 import me.iacn.biliroaming.network.StreamUtils.getContent
-import me.iacn.biliroaming.utils.Log
+import me.iacn.biliroaming.utils.*
 import org.json.JSONException
 import org.json.JSONObject
 import java.io.ByteArrayInputStream
@@ -26,78 +24,66 @@ class BangumiPlayUrlHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
         if (!XposedInit.sPrefs.getBoolean("main_func", false)) return
         Log.d("startHook: BangumiPlayUrl")
         instance.signQueryName()?.let {
-            findAndHookMethod("com.bilibili.nativelibrary.LibBili", mClassLoader, it,
-                    MutableMap::class.java, object : XC_MethodHook() {
-                @Throws(Throwable::class)
-                override fun beforeHookedMethod(param: MethodHookParam) {
-                    @Suppress("UNCHECKED_CAST")
-                    val params = param.args[0] as MutableMap<String, String>
-                    if (XposedInit.sPrefs.getBoolean("allow_download", false) &&
-                            params.containsKey("ep_id")) {
-                        params.remove("dl")
-                    }
-                }
-            })
-        }
-        findAndHookMethod("com.bilibili.lib.okhttp.huc.OkHttpURLConnection", mClassLoader,
-                "getInputStream", object : XC_MethodHook() {
-            @Throws(Throwable::class)
-            override fun afterHookedMethod(param: MethodHookParam) {
-                // Found from "b.ecy" in version 5.39.1
-                val connection = param.thisObject as HttpURLConnection
-                val urlString = connection.url.toString()
-                if (!urlString.startsWith("https://api.bilibili.com/pgc/player/api/playurl")) return
-                val queryString = urlString.substring(urlString.indexOf("?") + 1)
-                if ((!queryString.contains("ep_id=") && !queryString.contains("module=bangumi"))
-                        || queryString.contains("ep_id=0") /*workaround*/) return
-                val inputStream = param.result as InputStream
-                val encoding = connection.contentEncoding
-                var content = getContent(inputStream, encoding)
-                if (content == null || !isLimitWatchingArea(content)) {
-                    param.result = ByteArrayInputStream(content?.toByteArray())
-                    return
-                }
-                content = getPlayUrl(queryString, BangumiSeasonHook.lastSeasonInfo)
-                content?.let {
-                    Log.d("Has replaced play url with proxy server $it")
-                    toastMessage("已从代理服务器获取播放地址")
-                    param.result = ByteArrayInputStream(it.toByteArray())
-                } ?: run {
-                    Log.d("Failed to get play url")
-                    toastMessage("获取播放地址失败")
+            "com.bilibili.nativelibrary.LibBili".hookBeforeMethod(mClassLoader, it, MutableMap::class.java) { param ->
+                @Suppress("UNCHECKED_CAST")
+                val params = param.args[0] as MutableMap<String, String>
+                if (XposedInit.sPrefs.getBoolean("allow_download", false) &&
+                        params.containsKey("ep_id")) {
+                    params.remove("dl")
                 }
             }
-        })
-        try {
-            findClass("com.bapis.bilibili.pgc.gateway.player.v1.PlayURLMoss", mClassLoader)
-        } catch (e: ClassNotFoundError) {
-            null
-        }?.let { c ->
-            findAndHookMethod(c, "playView",
-                    "com.bapis.bilibili.pgc.gateway.player.v1.PlayViewReq", object : XC_MethodHook() {
-                override fun beforeHookedMethod(param: MethodHookParam) {
-                    val request = param.args[0]
-                    if (XposedInit.sPrefs.getBoolean("allow_download", false)) {
-                        callMethod(request, "setDownload", 0)
-                    }
-                }
+        }
+        "com.bilibili.lib.okhttp.huc.OkHttpURLConnection".hookAfterMethod(mClassLoader,
+                "getInputStream") { param ->
+            // Found from "b.ecy" in version 5.39.1
+            val connection = param.thisObject as HttpURLConnection
+            val urlString = connection.url.toString()
+            if (!urlString.startsWith("https://api.bilibili.com/pgc/player/api/playurl")) return@hookAfterMethod
+            val queryString = urlString.substring(urlString.indexOf("?") + 1)
+            if ((!queryString.contains("ep_id=") && !queryString.contains("module=bangumi"))
+                    || queryString.contains("ep_id=0") /*workaround*/) return@hookAfterMethod
+            val inputStream = param.result as InputStream
+            val encoding = connection.contentEncoding
+            var content = getContent(inputStream, encoding)
+            if (content == null || !isLimitWatchingArea(content)) {
+                param.result = ByteArrayInputStream(content?.toByteArray())
+                return@hookAfterMethod
+            }
+            content = getPlayUrl(queryString, BangumiSeasonHook.lastSeasonInfo)
+            content?.let {
+                Log.d("Has replaced play url with proxy server $it")
+                toastMessage("已从代理服务器获取播放地址")
+                param.result = ByteArrayInputStream(it.toByteArray())
+            } ?: run {
+                Log.d("Failed to get play url")
+                toastMessage("获播放地址失败")
+            }
+        }
 
-                override fun afterHookedMethod(param: MethodHookParam) {
-                    val request = param.args[0]
-                    val response = param.result
-                    if (!(callMethod(response, "hasVideoInfo") as Boolean)) {
-                        val content = getPlayUrl(reconstructQuery(request), BangumiSeasonHook.lastSeasonInfo)
-                        content?.let {
-                            Log.d("Has replaced play url with proxy server $it")
-                            toastMessage("已从代理服务器获取播放地址")
-                            param.result = reconstructResponse(response, it)
-                        } ?: run {
-                            Log.d("Failed to get play url")
-                            toastMessage("获取播放地址失败")
-                        }
+        "com.bapis.bilibili.pgc.gateway.player.v1.PlayURLMoss".findClass(mClassLoader)?.run {
+            hookBeforeMethod("playView",
+                    "com.bapis.bilibili.pgc.gateway.player.v1.PlayViewReq") { param ->
+                val request = param.args[0]
+                if (XposedInit.sPrefs.getBoolean("allow_download", false)) {
+                    request.callMethod( "setDownload", 0)
+                }
+            }
+            hookAfterMethod("playView",
+                    "com.bapis.bilibili.pgc.gateway.player.v1.PlayViewReq") { param ->
+                val request = param.args[0]
+                val response = param.result
+                if (!response.callMethodAs<Boolean>("hasVideoInfo")) {
+                    val content = getPlayUrl(reconstructQuery(request), BangumiSeasonHook.lastSeasonInfo)
+                    content?.let {
+                        Log.d("Has replaced play url with proxy server $it")
+                        toastMessage("已从代理服务器获取播放地址")
+                        param.result = reconstructResponse(response, it)
+                    } ?: run {
+                        Log.d("Failed to get play url")
+                        toastMessage("获取播放地址失败")
                     }
                 }
-            })
+            }
         }
     }
 
@@ -114,7 +100,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
     }
 
     private fun reconstructQuery(request: Any): String? {
-        val serializedRequest = callMethod(request, "toByteArray") as ByteArray
+        val serializedRequest = request.callMethodAs<ByteArray>("toByteArray")
         val req = PlayViewReq.parseFrom(serializedRequest)
         val builder = Uri.Builder()
         for (field in req.allFields) {
@@ -264,7 +250,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
             builder.businessBuilder.build()
             builder.videoInfoBuilder.build()
             val serializedResponse = builder.build().toByteArray()
-            return callStaticMethod(response.javaClass, "parseFrom", serializedResponse)
+            return response.javaClass.callStaticMethod("parseFrom", serializedResponse)!!
         } catch (e: Throwable) {
             Log.d("ERR: " + e.message)
         }

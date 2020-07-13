@@ -7,9 +7,10 @@ import android.content.Context
 import android.util.SparseArray
 import android.view.View
 import dalvik.system.DexFile
-import de.robv.android.xposed.XposedHelpers.ClassNotFoundError
-import de.robv.android.xposed.XposedHelpers.findClass
+import de.robv.android.xposed.XposedHelpers.findClassIfExists
 import me.iacn.biliroaming.utils.Log
+import me.iacn.biliroaming.utils.findClass
+import me.iacn.biliroaming.utils.findClassOrNull
 import java.io.*
 import java.lang.ref.WeakReference
 import java.lang.reflect.Modifier
@@ -24,18 +25,19 @@ data class OkHttpResult(val fieldName: String?, val methodName: String?)
  */
 class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContext: Context) {
     private val mHookInfo: MutableMap<String, String?> = readHookInfo(mContext)
-    val bangumiApiResponseClass by Weak { findClass("com.bilibili.bangumi.data.common.api.BangumiApiResponse", mClassLoader) }
-    val fastJsonClass by Weak { findClass(mHookInfo["class_fastjson"], mClassLoader) }
-    val bangumiUniformSeasonClass by Weak { findClass("com.bilibili.bangumi.data.page.detail.entity.BangumiUniformSeason", mClassLoader) }
-    val sectionClass by Weak { findClass(mHookInfo["class_section"], mClassLoader) }
-    val retrofitResponseClass by Weak { findClass(mHookInfo["class_retrofit_response"], mClassLoader) }
-    val themeHelperClass by Weak { findClass(mHookInfo["class_theme_helper"], mClassLoader) }
-    val columnHelperClass by Weak { findClass(mHookInfo["class_column_helper"], mClassLoader) }
-    val settingRouteClass by Weak { findClass(mHookInfo["class_setting_route"], mClassLoader) }
-    val themeListClickClass by Weak { findClass(mHookInfo["class_theme_list_click"], mClassLoader) }
-    val routeParamsClass by Weak { findClass(mHookInfo["class_route_params"], mClassLoader) }
-    val themeNameClass by Weak { findClass(mHookInfo["class_theme_name"], mClassLoader) }
-    val themeProcessorClass by Weak { findClass(mHookInfo["class_theme_processor"], mClassLoader) }
+    val bangumiApiResponseClass by Weak { "com.bilibili.bangumi.data.common.api.BangumiApiResponse".findClassOrNull(mClassLoader) }
+    val fastJsonClass by Weak { mHookInfo["class_fastjson"]?.findClassOrNull(mClassLoader) }
+    val bangumiUniformSeasonClass by Weak { "com.bilibili.bangumi.data.page.detail.entity.BangumiUniformSeason".findClassOrNull(mClassLoader) }
+    val sectionClass by Weak { mHookInfo["class_section"]?.findClassOrNull(mClassLoader) }
+    val retrofitResponseClass by Weak { mHookInfo["class_retrofit_response"]?.findClassOrNull(mClassLoader) }
+    val themeHelperClass by Weak { mHookInfo["class_theme_helper"]?.findClassOrNull(mClassLoader) }
+    val columnHelperClass by Weak { mHookInfo["class_column_helper"]?.findClassOrNull(mClassLoader) }
+    val settingRouteClass by Weak { mHookInfo["class_setting_route"]?.findClassOrNull(mClassLoader) }
+    val themeListClickClass by Weak { mHookInfo["class_theme_list_click"]?.findClassOrNull(mClassLoader) }
+    val routeParamsClass by Weak { mHookInfo["class_route_params"]?.findClassOrNull(mClassLoader) }
+    val themeNameClass by Weak { mHookInfo["class_theme_name"]?.findClassOrNull(mClassLoader) }
+    val themeProcessorClass by Weak { mHookInfo["class_theme_processor"]?.findClassOrNull(mClassLoader) }
+    val drawerClass by Weak { mHookInfo["class_drawer"]?.findClassOrNull(mClassLoader) }
 
     init {
         try {
@@ -134,99 +136,86 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
      */
     private fun checkHookInfo(): Boolean {
         var needUpdate = false
-        if (!mHookInfo.containsKey("class_retrofit_response")) {
-            mHookInfo["class_retrofit_response"] = findRetrofitResponseClass()
-            needUpdate = true
+
+        fun <K, V> MutableMap<K, V>.checkOrPut(key: K, defaultValue: () -> V): MutableMap<K, V> {
+            if (!containsKey(key)) {
+                put(key, defaultValue())
+                needUpdate = true
+            }
+            return this
         }
-        if (!mHookInfo.containsKey("field_request") || !mHookInfo.containsKey("method_url")) {
+
+        fun <K, V> MutableMap<K, V>.checkOrPut(vararg keys: K, checker: (map: MutableMap<K, V>, keys: Array<out K>) -> Boolean, defaultValue: () -> Array<V>): MutableMap<K, V> {
+            if (!checker(this, keys)) {
+                putAll(keys.zip(defaultValue()))
+                needUpdate = true
+            }
+            return this
+        }
+
+        fun <K, V> MutableMap<K, V>.checkConjunctiveOrPut(vararg keys: K, defaultValue: () -> Array<V>): MutableMap<K, V> {
+            return checkOrPut(keys = *keys, checker = { m, ks -> ks.fold(true) { acc, k -> acc && m.containsKey(k) } }, defaultValue = defaultValue)
+        }
+
+        fun <K, V> MutableMap<K, V>.checkDisjunctiveOrPut(vararg keys: K, defaultValue: () -> Array<V>): MutableMap<K, V> {
+            return checkOrPut(keys = *keys, checker = { m, ks -> ks.fold(false) { acc, k -> acc || m.containsKey(k) } }, defaultValue = defaultValue)
+        }
+
+        mHookInfo.checkOrPut("class_retrofit_response") {
+            findRetrofitResponseClass()
+        }.checkConjunctiveOrPut("field_request", "method_url") {
             val (fieldName, methodName) = findUrlField(mHookInfo["class_retrofit_response"]!!)
-            mHookInfo["field_request"] = fieldName
-            mHookInfo["method_url"] = methodName
-            needUpdate = true
-        }
-        if (!mHookInfo.containsKey("class_fastjson")) {
+            arrayOf(fieldName, methodName)
+        }.checkConjunctiveOrPut("class_fastjson", "method_fastjson_parse") {
             val fastJsonClass = findFastJsonClass()
-            val notObfuscated = "JSON" == fastJsonClass.simpleName
-            mHookInfo["class_fastjson"] = fastJsonClass.name
-            mHookInfo["method_fastjson_parse"] = if (notObfuscated) "parseObject" else "a"
-            needUpdate = true
+            val notObfuscated = "JSON" == fastJsonClass?.simpleName
+            arrayOf(fastJsonClass?.name, if (notObfuscated) "parseObject" else "a")
+        }.checkOrPut("class_theme_helper") {
+            findThemeHelper()
+        }.checkOrPut("field_color_array") {
+            findColorArrayField()
+        }.checkOrPut("class_column_helper") {
+            findColumnHelper()
+        }.checkOrPut("field_column_color_array") {
+            findColumnColorArrayField()
+        }.checkOrPut("method_skin_list") {
+            findSkinListMethod()
+        }.checkOrPut("method_save_skin") {
+            findSaveSkinMethod()
+        }.checkOrPut("class_theme_processor") {
+            findThemeProcessor()
+        }.checkOrPut("methods_theme_reset") {
+            findThemeResetMethods()
+        }.checkOrPut("class_theme_list_click") {
+            findThemeListClickClass()
+        }.checkOrPut("class_route_params") {
+            findRouteParamsClass()
+        }.checkOrPut("class_theme_name") {
+            findThemeNameClass()
+        }.checkOrPut("field_theme_name") {
+            findThemeNameField()
+        }.checkOrPut("class_section") {
+            findSectionClass()
+        }.checkOrPut("field_video_detail") {
+            findVideoDetailField()
+        }.checkOrPut("method_sign_query") {
+            findSignQueryMethod()
+        }.checkOrPut("class_setting_route", "method_add_setting", checker = { m, keys ->
+            keys.fold(true) { acc, s -> acc && m.containsKey(s) } ||
+                    findClassIfExists("tv.danmaku.bili.ui.main2.mine.HomeUserCenterFragment", mClassLoader) == null
+        }) {
+            arrayOf(findSettingRouteClass(), findAddSettingMethod())
+        }.checkOrPut("class_drawer", checker = { m, keys ->
+            keys.fold(true) { acc, s -> acc && m.containsKey(s) } ||
+                    findClassIfExists("tv.danmaku.bili.ui.main2.mine.HomeUserCenterFragment", mClassLoader) != null
+        }) {
+            arrayOf(findDrawerClass())
+        }.checkOrPut("method_get_setting_route") {
+            findGetSettingRouteMethod()
+        }.checkOrPut("method_like") {
+            findLikeMethod()
         }
-        if (!mHookInfo.containsKey("class_theme_helper")) {
-            mHookInfo["class_theme_helper"] = findThemeHelper()
-            needUpdate = true
-        }
-        if (!mHookInfo.containsKey("field_color_array")) {
-            mHookInfo["field_color_array"] = findColorArrayField()
-            needUpdate = true
-        }
-        if(!mHookInfo.containsKey("class_column_helper")) {
-            mHookInfo["class_column_helper"] = findColumnHelper()
-            needUpdate = true
-        }
-        if (!mHookInfo.containsKey("field_column_color_array")) {
-            mHookInfo["field_column_color_array"] = findColumnColorArrayField()
-            needUpdate = true
-        }
-        if (!mHookInfo.containsKey("method_skin_list")) {
-            mHookInfo["method_skin_list"] = findSkinListMethod()
-            needUpdate = true
-        }
-        if (!mHookInfo.containsKey("method_save_skin")) {
-            mHookInfo["method_save_skin"] = findSaveSkinMethod()
-            needUpdate = true
-        }
-        if (!mHookInfo.containsKey("class_theme_processor")) {
-            mHookInfo["class_theme_processor"] = findThemeProcessor()
-            needUpdate = true
-        }
-        if (!mHookInfo.containsKey("methods_theme_reset")) {
-            mHookInfo["methods_theme_reset"] = findThemeResetMethods()
-            needUpdate = true
-        }
-        if (!mHookInfo.containsKey("class_theme_list_click")) {
-            mHookInfo["class_theme_list_click"] = findThemeListClickClass()
-            needUpdate = true
-        }
-        if (!mHookInfo.containsKey("class_route_params")) {
-            mHookInfo["class_route_params"] = findRouteParamsClass()
-            needUpdate = true
-        }
-        if (!mHookInfo.containsKey("class_theme_name")) {
-            mHookInfo["class_theme_name"] = findThemeNameClass()
-            needUpdate = true
-        }
-        if (!mHookInfo.containsKey("field_theme_name")) {
-            mHookInfo["field_theme_name"] = findThemeNameField()
-            needUpdate = true
-        }
-        if (!mHookInfo.containsKey("class_section")) {
-            mHookInfo["class_section"] = findSectionClass()
-            needUpdate = true
-        }
-        if (!mHookInfo.containsKey("field_video_detail")) {
-            mHookInfo["field_video_detail"] = findVideoDetailField()
-            needUpdate = true
-        }
-        if (!mHookInfo.containsKey("method_sign_query")) {
-            mHookInfo["method_sign_query"] = findSignQueryMethod()
-            needUpdate = true
-        }
-        if (!mHookInfo.containsKey("method_add_setting")) {
-            mHookInfo["method_add_setting"] = findAddSettingMethod()
-            needUpdate = true
-        }
-        if (!mHookInfo.containsKey("class_setting_route")) {
-            mHookInfo["class_setting_route"] = findSettingRouteClass()
-            needUpdate = true
-        }
-        if (!mHookInfo.containsKey("method_get_setting_route")) {
-            mHookInfo["method_get_setting_route"] = findGetSettingRouteMethod()
-            needUpdate = true
-        }
-        if (!mHookInfo.containsKey("method_like")) {
-            mHookInfo["method_like"] = findLikeMethod()
-            needUpdate = true
-        }
+
         Log.d(mHookInfo)
         Log.d("Check hook info completed: needUpdate = $needUpdate")
         return needUpdate
@@ -249,15 +238,16 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     }
 
     private fun findRetrofitResponseClass(): String? {
-        return bangumiApiResponseClass.methods.filter {
+        return bangumiApiResponseClass?.methods?.filter {
             "extractResult" == it.name
-        }.map {
+        }?.map {
             it.parameterTypes[0]
-        }.first().name
+        }?.firstOrNull()?.name
     }
 
     private fun findUrlField(responseClassName: String): OkHttpResult {
-        val responseClass = findClass(responseClassName, mClassLoader)
+        val responseClass = responseClassName.findClass(mClassLoader)
+                ?: return OkHttpResult(null, null)
         for (constructor in responseClass.declaredConstructors) {
             for (field in constructor.parameterTypes[0].declaredFields) {
                 for (method in field.type.declaredMethods) {
@@ -270,46 +260,43 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         return OkHttpResult(null, null)
     }
 
-    private fun findFastJsonClass(): Class<*> {
-        return try {
-            findClass("com.alibaba.fastjson.JSON", mClassLoader)
-        } catch (e: ClassNotFoundError) {
-            findClass("com.alibaba.fastjson.a", mClassLoader)
-        }
+    private fun findFastJsonClass(): Class<*>? {
+        return "com.alibaba.fastjson.JSON".findClassOrNull(mClassLoader)
+                ?: "com.alibaba.fastjson.a".findClass(mClassLoader)
     }
 
     private fun findColorArrayField(): String? {
-        return themeHelperClass.declaredFields.first {
+        return themeHelperClass?.declaredFields?.firstOrNull {
             it.type == SparseArray::class.java &&
                     (it.genericType as ParameterizedType).actualTypeArguments[0].toString() == "int[]"
-        }.name
+        }?.name
     }
 
     private fun findColumnColorArrayField(): String? {
-        return columnHelperClass.declaredFields.first {
+        return columnHelperClass?.declaredFields?.firstOrNull {
             it.type == SparseArray::class.java &&
                     (it.genericType as ParameterizedType).actualTypeArguments[0].toString() == "int[]"
-        }.name
+        }?.name
     }
 
     private fun findSkinListMethod(): String? {
-        val themeStoreClass = findClass("tv.danmaku.bili.ui.theme.ThemeStoreActivity", mClassLoader)
-        val biliSkinListClass = findClass("tv.danmaku.bili.ui.theme.api.BiliSkinList", mClassLoader)
-        return themeStoreClass.declaredMethods.first {
+        val biliSkinListClass = "tv.danmaku.bili.ui.theme.api.BiliSkinList".findClass(mClassLoader) ?: return null
+        return "tv.danmaku.bili.ui.theme.ThemeStoreActivity".findClass(mClassLoader)?.declaredMethods?.firstOrNull {
             it.parameterTypes.size == 2 && it.parameterTypes[0] == biliSkinListClass &&
                     it.parameterTypes[1] == Boolean::class.javaPrimitiveType
         }?.name
     }
 
     private fun findSaveSkinMethod(): String? {
-        return themeHelperClass.declaredMethods.first {
+        return themeHelperClass?.declaredMethods?.firstOrNull {
             it.parameterTypes.size == 2 && it.parameterTypes[0] == Context::class.java &&
                     it.parameterTypes[1] == Int::class.javaPrimitiveType
         }?.name
     }
 
     private fun findThemeListClickClass(): String? {
-        val themeStoreActivityClass = findClass("tv.danmaku.bili.ui.theme.ThemeStoreActivity", mClassLoader)
+        val themeStoreActivityClass = "tv.danmaku.bili.ui.theme.ThemeStoreActivity".findClass(mClassLoader)
+                ?: return null
         for (innerClass in themeStoreActivityClass.declaredClasses) {
             for (interfaceClass in innerClass.interfaces) {
                 if (interfaceClass == View.OnClickListener::class.java) {
@@ -325,9 +312,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             val classes = DexFile(AndroidAppHelper.currentApplication().packageCodePath).entries().toList().filter {
                 it.startsWith("tv.danmaku.bili.ui.garb")
             }.filter { c ->
-                findClass(c, mClassLoader).declaredFields.filter {
+                c.findClassOrNull(mClassLoader)?.declaredFields?.filter {
                     Modifier.isStatic(it.modifiers) && it.type == Map::class.java
-                }.count() == 1
+                }?.count() == 1
             }
             if (classes.size == 1) classes[0] else null
         } catch (e: Throwable) {
@@ -336,30 +323,28 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     }
 
     private fun findThemeNameField(): String? {
-        return themeNameClass.declaredFields.first {
+        return themeNameClass?.declaredFields?.firstOrNull {
             it.type == Map::class.java
                     && Modifier.isStatic(it.modifiers)
-        }.name
+        }?.name
     }
 
     private fun findRouteParamsClass(): String? {
-        val actionClass = findClass("com.bilibili.userfeedback.laserreport.UploadFeedbackUploadAction", mClassLoader)
-        return actionClass.methods.first {
+        return "com.bilibili.userfeedback.laserreport.UploadFeedbackUploadAction".findClass(mClassLoader)?.methods?.firstOrNull {
             it.name == "act"
         }?.parameterTypes?.get(0)?.name
     }
 
     private fun findVideoDetailField(): String? {
-        val detailClass = findClass("tv.danmaku.bili.ui.video.api.BiliVideoDetail", mClassLoader)
-        return sectionClass.declaredFields.first {
+        val detailClass = "tv.danmaku.bili.ui.video.api.BiliVideoDetail".findClass(mClassLoader) ?: return null
+        return sectionClass?.declaredFields?.firstOrNull {
             it.type == detailClass
-        }.name
+        }?.name
     }
 
     private fun findSignQueryMethod(): String? {
-        val libBiliClass = findClass("com.bilibili.nativelibrary.LibBili", mClassLoader)
-        val signedQueryClass = findClass("com.bilibili.nativelibrary.SignedQuery", mClassLoader)
-        return libBiliClass.declaredMethods.first {
+        val signedQueryClass = "com.bilibili.nativelibrary.SignedQuery".findClass(mClassLoader) ?: return null
+        return "com.bilibili.nativelibrary.LibBili".findClass(mClassLoader)?.declaredMethods?.firstOrNull {
             it.parameterTypes.size == 1 && it.parameterTypes[0] == MutableMap::class.java &&
                     it.returnType == signedQueryClass
         }?.name
@@ -370,11 +355,11 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             val classes = DexFile(AndroidAppHelper.currentApplication().packageCodePath).entries().toList().filter {
                 it.startsWith("tv.danmaku.bili.ui.theme")
             }.filter { c ->
-                findClass(c, mClassLoader).declaredFields.filter {
+                c.findClassOrNull(mClassLoader)?.declaredFields?.filter {
                     Modifier.isStatic(it.modifiers)
-                }.filter {
+                }?.filter {
                     it.type == SparseArray::class.java
-                }.count() > 1
+                }?.count()?.let { it > 1 } ?: false
             }
             if (classes.size == 1) classes[0] else null
         } catch (e: Throwable) {
@@ -387,11 +372,11 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             val classes = DexFile(AndroidAppHelper.currentApplication().packageCodePath).entries().toList().filter {
                 it.startsWith("com.bilibili.column.helper")
             }.filter { c ->
-                findClass(c, mClassLoader).declaredFields.filter {
+                c.findClassOrNull(mClassLoader)?.declaredFields?.filter {
                     Modifier.isStatic(it.modifiers)
-                }.filter {
+                }?.filter {
                     it.type == SparseArray::class.java
-                }.count() > 1
+                }?.count()?.let { it > 1 } ?: false
             }
             if (classes.size == 1) classes[0] else null
         } catch (e: Throwable) {
@@ -401,13 +386,13 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     private fun findThemeProcessor(): String? {
         return try {
-            val biliSkinListClass = findClass("tv.danmaku.bili.ui.theme.api.BiliSkinList", mClassLoader)
+            val biliSkinListClass = "tv.danmaku.bili.ui.theme.api.BiliSkinList".findClass(mClassLoader) ?: return null
             val classes = DexFile(AndroidAppHelper.currentApplication().packageCodePath).entries().toList().filter {
                 it.startsWith("tv.danmaku.bili.ui.theme")
             }.filter { c ->
-                findClass(c, mClassLoader).declaredFields.filter {
+                c.findClassOrNull(mClassLoader)?.declaredFields?.filter {
                     it.type == biliSkinListClass
-                }.count() > 1
+                }?.count()?.let { it > 1 } ?: false
             }
             if (classes.size == 1) classes[0] else null
         } catch (e: Throwable) {
@@ -415,33 +400,34 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         }
     }
 
-    private fun findThemeResetMethods(): String {
-        return themeProcessorClass.declaredMethods.filter {
+    private fun findThemeResetMethods(): String? {
+        return themeProcessorClass?.declaredMethods?.filter {
             it.parameterTypes.isEmpty() && it.modifiers == 0
-        }.joinToString(";") { it.name }
+        }?.joinToString(";") { it.name }
     }
 
     private fun findAddSettingMethod(): String? {
-        val homeFragmentClass = findClass("tv.danmaku.bili.ui.main2.mine.HomeUserCenterFragment", mClassLoader)
-        return homeFragmentClass.declaredMethods.first {
+        return "tv.danmaku.bili.ui.main2.mine.HomeUserCenterFragment".findClass(mClassLoader)?.declaredMethods?.firstOrNull {
             it.parameterTypes.size == 2 && it.parameterTypes[0] == Context::class.java && it.parameterTypes[1] == List::class.java
         }?.name
     }
 
     private fun findSettingRouteClass(): String? {
         return try {
-            val menuGroupItemClass = findClass("com.bilibili.lib.homepage.mine.MenuGroup\$Item", mClassLoader)
-            val accountMineClass = findClass("tv.danmaku.bili.ui.main2.api.AccountMine", mClassLoader)
+            val menuGroupItemClass = "com.bilibili.lib.homepage.mine.MenuGroup\$Item".findClass(mClassLoader)
+                    ?: return null
+            val accountMineClass = "tv.danmaku.bili.ui.main2.api.AccountMine".findClass(mClassLoader)
+                    ?: return null
             val classes = DexFile(AndroidAppHelper.currentApplication().packageCodePath).entries().toList().filter {
                 it.startsWith("tv.danmaku.bili.ui.main2")
             }.filter { c ->
-                findClass(c, mClassLoader).run {
+                c.findClass(mClassLoader)?.run {
                     declaredFields.filter {
                         it.type == accountMineClass
                     }.count() > 0 && declaredMethods.filter {
                         it.parameterTypes.size == 1 && it.parameterTypes[0] == menuGroupItemClass
                     }.count() > 0
-                }
+                } ?: false
             }
             if (classes.size == 1) classes[0] else null
         } catch (e: Throwable) {
@@ -451,13 +437,13 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     private fun findSectionClass(): String? {
         return try {
-            val progressBarClass = findClass("tv.danmaku.biliplayer.view.RingProgressBar", mClassLoader)
+            val progressBarClass = "tv.danmaku.biliplayer.view.RingProgressBar".findClass(mClassLoader) ?: return null
             val classes = DexFile(AndroidAppHelper.currentApplication().packageCodePath).entries().toList().filter {
                 it.startsWith("tv.danmaku.bili.ui.video.section")
             }.filter { c ->
-                findClass(c, mClassLoader).declaredFields.filter {
+                c.findClassOrNull(mClassLoader)?.declaredFields?.filter {
                     it.type == progressBarClass
-                }.count() > 0
+                }?.count()?.let { it > 0 } ?: false
             }
             if (classes.size == 1) classes[0] else null
         } catch (e: Throwable) {
@@ -466,16 +452,37 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     }
 
     private fun findGetSettingRouteMethod(): String? {
-        val menuGroupItemClass = findClass("com.bilibili.lib.homepage.mine.MenuGroup\$Item", mClassLoader)
-        return settingRouteClass.declaredMethods.first {
+        val menuGroupItemClass = "com.bilibili.lib.homepage.mine.MenuGroup\$Item".findClass(mClassLoader) ?: return null
+        return settingRouteClass?.declaredMethods?.firstOrNull {
             it.parameterTypes.size == 1 && it.parameterTypes[0] == menuGroupItemClass
         }?.name
     }
 
     private fun findLikeMethod(): String? {
-        return sectionClass.declaredMethods.first {
+        return sectionClass?.declaredMethods?.firstOrNull {
             it.parameterTypes.size == 1 && it.parameterTypes[0] == Object::class.java
-        }.name
+        }?.name
+    }
+
+    private fun findDrawerClass(): String? {
+        return try {
+            val navigationViewClass = "android.support.design.widget.NavigationView".findClass(mClassLoader)
+                    ?: return null
+            val regex = Regex("^tv\\.danmaku\\.bili\\.ui\\.main2\\.[^.]*$")
+            val classes = DexFile(AndroidAppHelper.currentApplication().packageCodePath).entries().toList().filter {
+                it.matches(regex)
+            }.filter { c ->
+                Log.d(c)
+                c.findClassOrNull(mClassLoader)?.run {
+                    declaredFields.filter {
+                        it.type == navigationViewClass
+                    }.count() > 0
+                } ?: false
+            }
+            if (classes.size == 1) classes[0] else null
+        } catch (e: Throwable) {
+            null
+        }
     }
 
     companion object {
@@ -486,11 +493,11 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     class Weak(val initializer: () -> Class<*>?) {
         private var weakReference: WeakReference<Class<*>?>? = null
 
-        operator fun getValue(thisRef: Any?, property: KProperty<*>): Class<*> {
+        operator fun getValue(thisRef: Any?, property: KProperty<*>): Class<*>? {
             weakReference?.get() ?: let {
                 weakReference = WeakReference(initializer())
             }
-            return weakReference!!.get()!!
+            return weakReference!!.get()
         }
 
         operator fun setValue(thisRef: Any?, property: KProperty<*>, value: Class<*>) {

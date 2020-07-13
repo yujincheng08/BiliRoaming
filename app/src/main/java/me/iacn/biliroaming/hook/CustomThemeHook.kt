@@ -6,16 +6,14 @@ import android.content.SharedPreferences
 import android.graphics.Color
 import android.util.SparseArray
 import android.view.View
-import de.robv.android.xposed.XC_MethodHook
-import de.robv.android.xposed.XC_MethodReplacement
-import de.robv.android.xposed.XposedBridge
-import de.robv.android.xposed.XposedHelpers.*
+import de.robv.android.xposed.XC_MethodHook.MethodHookParam
+import de.robv.android.xposed.XposedBridge.invokeOriginalMethod
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.ColorChooseDialog
 import me.iacn.biliroaming.Constant.CUSTOM_COLOR_KEY
 import me.iacn.biliroaming.Constant.DEFAULT_CUSTOM_COLOR
 import me.iacn.biliroaming.XposedInit
-import me.iacn.biliroaming.utils.Log
+import me.iacn.biliroaming.utils.*
 import java.util.*
 
 /**
@@ -27,97 +25,83 @@ class CustomThemeHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
         if (!XposedInit.sPrefs.getBoolean("custom_theme", false)) return
         Log.d("startHook: CustomTheme")
 
-        @Suppress("UNCHECKED_CAST")
-        val m = getStaticObjectField(instance.themeNameClass, instance.themeName()) as MutableMap<String, Int>
-        m["custom"] = CUSTOM_THEME_ID
+        instance.themeNameClass?.getStaticObjectFieldAs<MutableMap<String, Int>>(instance.themeName())?.put("custom", CUSTOM_THEME_ID)
 
         @Suppress("UNCHECKED_CAST")
-        val colorArray = getStaticObjectField(instance.themeHelperClass, instance.colorArray()) as SparseArray<IntArray>
+        val colorArray = instance.themeHelperClass?.getStaticObjectFieldAs<SparseArray<IntArray>>(instance.colorArray())
         val primaryColor = customColor
-        colorArray.put(CUSTOM_THEME_ID, generateColorArray(primaryColor))
+        colorArray?.put(CUSTOM_THEME_ID, generateColorArray(primaryColor))
 
         instance.skinList()?.let {
-            findAndHookMethod("tv.danmaku.bili.ui.theme.ThemeStoreActivity", mClassLoader, it,
-                    "tv.danmaku.bili.ui.theme.api.BiliSkinList", Boolean::class.javaPrimitiveType, object : XC_MethodHook() {
-                @Throws(Throwable::class)
-                override fun beforeHookedMethod(param: MethodHookParam) {
-                    val biliSkinList = param.args[0]
+            "tv.danmaku.bili.ui.theme.ThemeStoreActivity".hookBeforeMethod(mClassLoader, it,
+                    "tv.danmaku.bili.ui.theme.api.BiliSkinList", Boolean::class.javaPrimitiveType) { param ->
+                val biliSkinList = param.args[0]
 
-                    @Suppress("UNCHECKED_CAST")
-                    val mList = getObjectField(biliSkinList, "mList") as MutableList<Any>
-                    val biliSkinClass = findClass("tv.danmaku.bili.ui.theme.api.BiliSkin", mClassLoader)
-                    val biliSkin = biliSkinClass.newInstance()
-                    setIntField(biliSkin, "mId", CUSTOM_THEME_ID)
-                    setObjectField(biliSkin, "mName", "自选颜色")
-                    setBooleanField(biliSkin, "mIsFree", true)
-                    // Under the night mode item
-                    mList.add(3, biliSkin)
-                    Log.d("Add a theme item: size = " + mList.size)
-                }
-            })
-        }
-        findAndHookMethod(instance.themeListClickClass, "onClick", View::class.java, object : XC_MethodHook() {
-            @Throws(Throwable::class)
-            override fun beforeHookedMethod(param: MethodHookParam) {
-                val view = param.args[0] as View
-                val idName = view.resources.getResourceEntryName(view.id)
-                if ("list_item" != idName) return
-                val biliSkin = view.tag ?: return
-                val mId = getIntField(biliSkin, "mId")
-                // Make colors updated immediately
-                if (mId == CUSTOM_THEME_ID || mId == -1) {
-                    Log.d("Custom theme item has been clicked")
-                    val colorDialog = ColorChooseDialog(view.context, customColor)
-                    colorDialog.setPositiveButton("确定") { _, _ ->
-                        val color = colorDialog.color
-                        val colors = generateColorArray(color)
-                        colorArray.put(CUSTOM_THEME_ID, colors)
-                        colorArray.put(-1, colors) // Add a new color id but it won't be saved
-
-                        // If it is currently use the custom theme, it will use temporary id
-                        // To make the theme color take effect immediately
-                        val newId = if (mId == CUSTOM_THEME_ID) -1 else CUSTOM_THEME_ID
-                        setIntField(biliSkin, "mId", newId)
-                        putCustomColor(color)
-                        Log.d("Update new color: mId = $newId, " +
-                                "color = 0x ${Integer.toHexString(color).toUpperCase(Locale.getDefault())}")
-                        try {
-                            XposedBridge.invokeOriginalMethod(param.method, param.thisObject, param.args)
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                        }
-                    }
-                    colorDialog.show()
-
-                    // Stop executing the original method
-                    param.result = null
-                }
+                @Suppress("UNCHECKED_CAST")
+                val mList = biliSkinList.getObjectFieldAs<MutableList<Any>>("mList")
+                val biliSkin = "tv.danmaku.bili.ui.theme.api.BiliSkin".findClass(mClassLoader)?.newInstance()
+                        ?: return@hookBeforeMethod
+                biliSkin.setIntField("mId", CUSTOM_THEME_ID)
+                        .setObjectField("mName", "自选颜色")
+                        .setBooleanField("mIsFree", true)
+                // Under the night mode item
+                mList.add(3, biliSkin)
+                Log.d("Add a theme item: size = " + mList.size)
             }
-        })
-        instance.saveSkinList()?.let {
-            findAndHookMethod(instance.themeHelperClass, it, Context::class.java, Int::class.javaPrimitiveType, object : XC_MethodHook() {
-                @Throws(Throwable::class)
-                override fun beforeHookedMethod(param: MethodHookParam) {
-                    val currentThemeKey = param.args[1] as Int
-                    if (currentThemeKey == -1) param.args[1] = CUSTOM_THEME_ID
+        }
+        instance.themeListClickClass?.hookBeforeMethod("onClick", View::class.java) { param ->
+            val view = param.args[0] as View
+            val idName = view.resources.getResourceEntryName(view.id)
+            if ("list_item" != idName) return@hookBeforeMethod
+            val biliSkin = view.tag ?: return@hookBeforeMethod
+            val mId = biliSkin.getIntField("mId")
+            // Make colors updated immediately
+            if (mId == CUSTOM_THEME_ID || mId == -1) {
+                Log.d("Custom theme item has been clicked")
+                val colorDialog = ColorChooseDialog(view.context, customColor)
+                colorDialog.setPositiveButton("确定") { _, _ ->
+                    val color = colorDialog.color
+                    val colors = generateColorArray(color)
+                    colorArray?.put(CUSTOM_THEME_ID, colors)
+                    colorArray?.put(-1, colors) // Add a new color id but it won't be saved
+
+                    // If it is currently use the custom theme, it will use temporary id
+                    // To make the theme color take effect immediately
+                    val newId = if (mId == CUSTOM_THEME_ID) -1 else CUSTOM_THEME_ID
+                    biliSkin.setIntField("mId", newId)
+                    putCustomColor(color)
+                    Log.d("Update new color: mId = $newId, " +
+                            "color = 0x ${Integer.toHexString(color).toUpperCase(Locale.getDefault())}")
+                    try {
+                        invokeOriginalMethod(param.method, param.thisObject, param.args)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
                 }
-            })
+                colorDialog.show()
+
+                // Stop executing the original method
+                param.result = null
+            }
+        }
+        instance.saveSkinList()?.let {
+            instance.themeHelperClass?.hookBeforeMethod(it, Context::class.java, Int::class.javaPrimitiveType) { param ->
+                val currentThemeKey = param.args[1] as Int
+                if (currentThemeKey == -1) param.args[1] = CUSTOM_THEME_ID
+            }
         }
 
         // No reset when not logged in
         instance.themeReset()?.let { its ->
-            val hooker = object : XC_MethodReplacement() {
-                override fun replaceHookedMethod(param: MethodHookParam): Any? {
-                    for (s in Thread.currentThread().stackTrace) {
-                        if (s.className == "tv.danmaku.bili.MainActivityV2" && s.methodName == "onPostCreate")
-                            return null
-                    }
-                    return XposedBridge.invokeOriginalMethod(param.method, param.thisObject, param.args)
-                }
-
+            val hooker: (MethodHookParam) -> Any? = { param ->
+                if (Thread.currentThread().stackTrace.count { s ->
+                            s.className == "tv.danmaku.bili.MainActivityV2" && s.methodName == "onPostCreate"
+                        } > 0
+                ) null else
+                    invokeOriginalMethod(param.method, param.thisObject, param.args)
             }
             its.split(";").map {
-                findAndHookMethod(instance.themeProcessorClass, it, hooker)
+                instance.themeProcessorClass?.replaceMethod(it, hooker = hooker)
             }
         }
     }
@@ -168,9 +152,9 @@ class CustomThemeHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
 
         try {
             @Suppress("UNCHECKED_CAST")
-            val colorArray: SparseArray<IntArray> = getStaticObjectField(instance.columnHelperClass, instance.columnColorArray()) as SparseArray<IntArray>
+            val colorArray = instance.columnHelperClass?.getStaticObjectFieldAs<SparseArray<IntArray>>(instance.columnColorArray())
             val primaryColor = customColor
-            colorArray.put(CUSTOM_THEME_ID, generateColorArray(primaryColor))
+            colorArray?.put(CUSTOM_THEME_ID, generateColorArray(primaryColor))
         } catch (e: Throwable) {
             Log.e(e)
         }
