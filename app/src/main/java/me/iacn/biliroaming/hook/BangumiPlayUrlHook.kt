@@ -2,8 +2,7 @@ package me.iacn.biliroaming.hook
 
 import android.net.Uri
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
-import me.iacn.biliroaming.Protos.PlayViewReply
-import me.iacn.biliroaming.Protos.PlayViewReq
+import me.iacn.biliroaming.Protos.*
 import me.iacn.biliroaming.XposedInit
 import me.iacn.biliroaming.XposedInit.Companion.toastMessage
 import me.iacn.biliroaming.network.BiliRoamingApi.getPlayUrl
@@ -65,7 +64,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
                     "com.bapis.bilibili.pgc.gateway.player.v1.PlayViewReq") { param ->
                 val request = param.args[0]
                 if (XposedInit.sPrefs.getBoolean("allow_download", false)) {
-                    request.callMethod( "setDownload", 0)
+                    request.callMethod("setDownload", 0)
                 }
             }
             hookAfterMethod("playView",
@@ -94,7 +93,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
             val code = json.optInt("code")
             code == -10403
         } catch (e: JSONException) {
-            e.printStackTrace()
+            Log.e(e)
             false
         }
     }
@@ -124,17 +123,18 @@ class BangumiPlayUrlHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
                 }
             }
             val builder = PlayViewReply.newBuilder()
-            builder.playConfBuilder.let {
-                it.dislikeDisable = true
-                it.likeDisable = true
-                it.elecDisable = true
-                it.build()
+            builder.playConf = PlayAbilityConf.newBuilder().run {
+                dislikeDisable = true
+                likeDisable = true
+                elecDisable = true
+                build()
             }
-            builder.videoInfoBuilder.let {
-                it.timelength = jsonContent.getLong("timelength")
-                it.videoCodecid = jsonContent.getInt("video_codecid")
-                it.quality = jsonContent.getInt("quality")
-                it.format = jsonContent.getString("format")
+            val videoInfoBuilder = VideoInfo.newBuilder().run {
+                timelength = jsonContent.getLong("timelength")
+                videoCodecid = jsonContent.getInt("video_codecid")
+                quality = jsonContent.getInt("quality")
+                format = jsonContent.getString("format")
+                this
             }
             val qualityMap = jsonContent.getJSONArray("accept_quality").let {
                 (0 until it.length()).map { idx -> it.getInt(idx) }
@@ -149,110 +149,115 @@ class BangumiPlayUrlHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
                     val ids = IntArray(it.length())
                     for (i in 0 until it.length()) {
                         val audio = it.getJSONObject(i)
-                        builder.videoInfoBuilder.addDashAudioBuilder().let { dash ->
-                            dash.baseUrl = audio.getString("base_url")
-                            dash.id = audio.getInt("id")
-                            ids[i] = dash.id
-                            dash.md5 = audio.getString("md5")
-                            dash.size = audio.getLong("size")
-                            dash.codecid = audio.getInt("codecid")
-                            dash.bandwidth = audio.getInt("bandwidth")
+                        videoInfoBuilder.addDashAudio(DashItem.newBuilder().run {
+                            baseUrl = audio.getString("base_url")
+                            id = audio.getInt("id")
+                            ids[i] = id
+                            md5 = audio.getString("md5")
+                            size = audio.getLong("size")
+                            codecid = audio.getInt("codecid")
+                            bandwidth = audio.getInt("bandwidth")
                             audio.getJSONArray("backup_url").let { bk ->
                                 for (j in 0 until bk.length()) {
-                                    dash.addBackupUrl(bk.getString(j))
+                                    addBackupUrl(bk.getString(j))
                                 }
                             }
-                            dash.build()
-                        }
+                            build()
+                        })
                     }
                     ids
                 }
                 jsonContent.getJSONObject("dash").getJSONArray("video").let {
                     for (i in 0 until it.length()) {
                         val video = it.getJSONObject(i)
-                        builder.videoInfoBuilder.addStreamListBuilder().let { stream ->
-                            stream.dashVideoBuilder.let { dash ->
-                                dash.baseUrl = video.getString("base_url")
+                        videoInfoBuilder.addStreamList(Stream.newBuilder().run {
+                            dashVideo = DashVideo.newBuilder().run {
+                                baseUrl = video.getString("base_url")
                                 video.getJSONArray("backup_url").let { bk ->
                                     for (j in 0 until bk.length()) {
-                                        dash.addBackupUrl(bk.getString(j))
+                                        addBackupUrl(bk.getString(j))
                                     }
                                 }
-                                dash.bandwidth = video.getInt("bandwidth")
-                                dash.codecid = video.getInt("codecid")
-                                dash.md5 = video.getString("md5")
-                                dash.size = video.getLong("size")
-                                dash.audioId = audioIds[0]
-                                dash.noRexcode = jsonContent.getInt("no_rexcode") != 0
-                                dash.build()
+                                bandwidth = video.getInt("bandwidth")
+                                codecid = video.getInt("codecid")
+                                md5 = video.getString("md5")
+                                size = video.getLong("size")
+                                audioId = audioIds[0]
+                                noRexcode = jsonContent.getInt("no_rexcode") != 0
+                                build()
                             }
-                            stream.streamInfoBuilder.let { info ->
-                                info.quality = video.getInt("id")
-                                info.format = if (formatMap.containsKey(info.quality))
-                                    formatMap[info.quality] else jsonContent.getString("format")
-                                info.description = descMap[info.quality]
-                                info.intact = true
-                                info.needLogin = needLoginMap[info.quality] ?: false
-                                info.needVip = needVipMap[info.quality] ?: false
-                                info.build()
+                            streamInfo = StreamInfo.newBuilder().run {
+                                quality = video.getInt("id")
+                                format = if (formatMap.containsKey(quality))
+                                    formatMap[quality] else jsonContent.getString("format")
+                                description = descMap[quality]
+                                intact = true
+                                needLogin = needLoginMap[quality] ?: false
+                                needVip = needVipMap[quality] ?: false
+                                build()
                             }
-                            stream.build()
-                        }
+                            build()
+                        })
                     }
 
                 }
             } else if (type == "FLV") {
-                builder.videoInfoBuilder.addStreamListBuilder().let { stream ->
-                    jsonContent.getJSONArray("durl").let { durl ->
-                        for (i in 0 until durl.length()) {
-                            val segment = durl.getJSONObject(i)
-                            stream.segmentVideoBuilder.addSegmentBuilder().let { url ->
-                                url.length = segment.getLong("length")
-                                segment.getJSONArray("backup_url").let { bk ->
-                                    for (j in 0 until bk.length()) {
-                                        url.addBackupUrl(bk.getString(i))
+                videoInfoBuilder.addStreamList(Stream.newBuilder().run {
+                    segmentVideo = SegmentVideo.newBuilder().run {
+                        jsonContent.getJSONArray("durl").let { durl ->
+                            for (i in 0 until durl.length()) {
+                                val segment = durl.getJSONObject(i)
+                                addSegment(ResponseUrl.newBuilder().run {
+                                    length = segment.getLong("length")
+                                    segment.getJSONArray("backup_url").let { bk ->
+                                        for (j in 0 until bk.length()) {
+                                            addBackupUrl(bk.getString(i))
+                                        }
                                     }
-                                }
-                                // TODO: backup
-                                url.md5 = segment.getString("md5")
-                                url.order = segment.getInt("order")
-                                url.size = segment.getLong("size")
-                                url.url = segment.getString("url")
-                                url.build()
+                                    md5 = segment.getString("md5")
+                                    order = segment.getInt("order")
+                                    size = segment.getLong("size")
+                                    url = segment.getString("url")
+                                    build()
+                                })
                             }
                         }
-                        stream.streamInfoBuilder.let { stream ->
-                            stream.quality = jsonContent.getInt("quality")
-                            stream.description = descMap[stream.quality]
-                            stream.format = formatMap[stream.quality]
-                            stream.intact = true
-                            stream.needVip = needVipMap[stream.quality] ?: false
-                            stream.needLogin = needLoginMap[stream.quality] ?: false
-                        }
-                        stream.build()
+                        build()
                     }
-                }
+                    streamInfo = StreamInfo.newBuilder().run {
+                        quality = jsonContent.getInt("quality")
+                        description = descMap[quality]
+                        format = formatMap[quality]
+                        intact = true
+                        needVip = needVipMap[quality] ?: false
+                        needLogin = needLoginMap[quality] ?: false
+                        build()
+                    }
+                    build()
+                })
                 qualityMap.forEach { quality ->
                     if (quality != jsonContent.getInt("quality")) {
-                        builder.videoInfoBuilder.addStreamListBuilder().let { stream ->
-                            stream.streamInfoBuilder
-                                    .setDescription(descMap[quality])
-                                    .setFormat(formatMap[quality])
-                                    .setNeedLogin(needLoginMap[quality] ?: false)
-                                    .setNeedVip(needVipMap[quality] ?: false)
-                                    .setQuality(quality).build()
-                            stream.build()
-                        }
+                        videoInfoBuilder.addStreamList(Stream.newBuilder().run {
+                            streamInfo = StreamInfo.newBuilder().run {
+                                description = descMap[quality]
+                                format = formatMap[quality]
+                                needLogin = needLoginMap[quality] ?: false
+                                needVip = needVipMap[quality] ?: false
+                                this.quality = quality
+                                build()
+                            }
+                            build()
+                        })
                     }
                 }
             }
 
-            builder.businessBuilder.build()
-            builder.videoInfoBuilder.build()
+            builder.videoInfo = videoInfoBuilder.build()
+            builder.business = BusinessInfo.newBuilder().build()
             val serializedResponse = builder.build().toByteArray()
             return response.javaClass.callStaticMethod("parseFrom", serializedResponse)!!
         } catch (e: Throwable) {
-            Log.d("ERR: " + e.message)
+            Log.d(e)
         }
         return response
     }
