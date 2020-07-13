@@ -9,17 +9,20 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
-import android.content.res.Configuration
 import android.content.res.Resources
+import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.preference.Preference
 import android.preference.PreferenceCategory
 import android.preference.PreferenceFragment
 import android.view.ContextThemeWrapper
+import android.view.ViewGroup
+import android.widget.TextView
 import me.iacn.biliroaming.XposedInit.Companion.toastMessage
 import me.iacn.biliroaming.utils.CheckVersionTask
 import me.iacn.biliroaming.utils.OnTaskReturn
+import me.iacn.biliroaming.utils.hookAfterMethod
 import org.json.JSONObject
 import java.net.URL
 import kotlin.system.exitProcess
@@ -147,7 +150,6 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         }
     }
 
-
     init {
         val activity = context as Activity
         val backupRes = replaceResource(activity, XposedInit.moduleRes)
@@ -157,11 +159,23 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
 
         prefsFragment.onActivityCreated(null)
 
+        val unhook = Preference::class.java.hookAfterMethod("onCreateView", ViewGroup::class.java) { param ->
+            if (PreferenceCategory::class.java.isInstance(param.thisObject)) {
+                val textView = param.result as TextView
+                if (textView.textColors.defaultColor == -13816531)
+                    textView.setTextColor(Color.GRAY)
+            }
+        }
+
         setView(prefsFragment.view)
         setTitle("哔哩漫游设置")
         restoreResource(activity, backupRes)
-        setNegativeButton("返回", null)
+//        unhook?.unhook()
+        setNegativeButton("返回") { _, _ ->
+            unhook?.unhook()
+        }
         setPositiveButton("确定并重启客户端") { _, _ ->
+            unhook?.unhook()
             val intent = activity.baseContext.packageManager
                     .getLaunchIntentForPackage(activity.baseContext.packageName)
             val restartIntent = PendingIntent.getActivity(activity.applicationContext, 0, intent, PendingIntent.FLAG_ONE_SHOT)
@@ -185,14 +199,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             themeField.isAccessible = true
             val oldTheme = themeField.get(context) as Resources.Theme
             val newTheme = res.newTheme()
-            when (oldRes.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) {
-                Configuration.UI_MODE_NIGHT_NO -> {
-                    newTheme.applyStyle(R.style.LightTheme, true)
-                }
-                Configuration.UI_MODE_NIGHT_YES -> {
-                    newTheme.applyStyle(R.style.DarkTheme, true)
-                }
-            }
+            newTheme.applyStyle(R.style.LightTheme, true)
             resField.set(context, res)
             themeField.set(context, newTheme)
             return BackupRes(oldRes, oldTheme)
