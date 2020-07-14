@@ -80,11 +80,11 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                         val updatePreference = Preference(activity)
                         updatePreference.key = "update"
                         updatePreference.title = XposedInit.moduleRes.getString(R.string.update_title)
-                        var log = ""
-                        try {
+                        val log = try {
                             val body = result.getString("body")
-                            log = body.substring(body.lastIndexOf("更新日志"))
+                            body.substring(body.lastIndexOf("更新日志"))
                         } catch (e: Throwable) {
+                            ""
                         }
                         updatePreference.summary = if (log.isNotEmpty()) log else XposedInit.moduleRes.getString(R.string.update_summary)
                         updatePreference.onPreferenceClickListener = this

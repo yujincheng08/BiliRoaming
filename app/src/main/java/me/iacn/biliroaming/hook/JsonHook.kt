@@ -14,6 +14,8 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val accountMineClass = "tv.danmaku.bili.ui.main2.api.AccountMine".findClass(mClassLoader)
         val splashClass = "tv.danmaku.bili.ui.splash.SplashData".findClass(mClassLoader)
         val tabClass = "tv.danmaku.bili.ui.main2.resource.MainResourceManager\$Tab".findClass(mClassLoader)
+        val defaultWordClass = "tv.danmaku.bili.ui.main2.api.SearchDefaultWord".findClass(mClassLoader)
+        val defaultKeywordClass = "com.bilibili.search.api.DefaultKeyword".findClass(mClassLoader)
 
         instance.fastJsonClass?.hookAfterMethod("parseObject", String::class.java, Type::class.java, Int::class.javaPrimitiveType, "com.alibaba.fastjson.parser.Feature[]") { param ->
             var result = param.result ?: return@hookAfterMethod
@@ -75,6 +77,28 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             XposedInit.sPrefs.getBoolean("hidden", false)) {
                         result.getObjectFieldAs<MutableList<*>?>("splashList")?.clear()
                         result.getObjectFieldAs<MutableList<*>?>("strategyList")?.clear()
+                    }
+                }
+                defaultWordClass, defaultKeywordClass -> {
+                    if (XposedInit.sPrefs.getBoolean("purify_search", false) && XposedInit.sPrefs.getBoolean("hidden", false)) {
+                        result.javaClass.fields.forEach {
+                            if (it.type != Int::class.javaPrimitiveType)
+                                result.setObjectField(it.name, null)
+                        }
+                    }
+                }
+            }
+        }
+
+        val searchRankClass = "com.bilibili.search.api.SearchRank".findClass(mClassLoader)
+        val searchGuessClass = "com.bilibili.search.api.SearchReferral\$Guess".findClass(mClassLoader)
+
+        instance.fastJsonClass?.hookAfterMethod("parseArray", String::class.java, Class::class.java) { param ->
+            val result = param.result as MutableList<*>?
+            when (param.args[1] as Class<*>) {
+                searchRankClass, searchGuessClass -> {
+                    if (XposedInit.sPrefs.getBoolean("purify_search", false) && XposedInit.sPrefs.getBoolean("hidden", false)) {
+                        result?.clear()
                     }
                 }
             }

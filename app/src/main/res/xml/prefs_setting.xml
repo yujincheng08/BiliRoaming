@@ -124,6 +124,11 @@
             android:key="purify_splash"
             android:summary="@string/purify_splash_summary"
             android:title="@string/purify_splash_title" />
+        <SwitchPreference
+            android:dependency="hidden"
+            android:key="purify_search"
+            android:summary="@string/purify_search_summary"
+            android:title="@string/purify_search_title" />
     </PreferenceCategory>
 
     <PreferenceCategory

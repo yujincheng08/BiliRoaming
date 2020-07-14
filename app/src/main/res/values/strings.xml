@@ -77,4 +77,6 @@
     <string name="help_title">帮助</string>
     <string name="help_summary">点击查看激活方法、常见问题等</string>
     <string name="help_url">https://github.com/yujincheng08/BiliRoaming/wiki</string>
+    <string name="purify_search_title">净化搜索页面</string>
+    <string name="purify_search_summary">去除搜索页面的热搜和推荐</string>
 </resources>
