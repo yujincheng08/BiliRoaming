@@ -3,9 +3,7 @@
 package me.iacn.biliroaming
 
 import android.app.Activity
-import android.app.AlarmManager
 import android.app.AlertDialog
-import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
@@ -170,24 +168,29 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         setView(prefsFragment.view)
         setTitle("哔哩漫游设置")
         restoreResource(activity, backupRes)
-//        unhook?.unhook()
         setNegativeButton("返回") { _, _ ->
             unhook?.unhook()
         }
         setPositiveButton("确定并重启客户端") { _, _ ->
             unhook?.unhook()
-            val intent = activity.baseContext.packageManager
-                    .getLaunchIntentForPackage(activity.baseContext.packageName)
-            val restartIntent = PendingIntent.getActivity(activity.applicationContext, 0, intent, PendingIntent.FLAG_ONE_SHOT)
-            val mgr = activity.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-            mgr.set(AlarmManager.RTC, System.currentTimeMillis() + 1000, restartIntent)
-            exitProcess(0)
+            restartApplication(activity)
         }
     }
 
     class BackupRes(val res: Resources, val theme: Resources.Theme)
 
     companion object {
+        @JvmStatic
+        fun restartApplication(activity: Activity) {
+            // https://stackoverflow.com/a/58530756
+            val pm = activity.packageManager
+            val intent = pm.getLaunchIntentForPackage(activity.packageName)
+            activity.finishAffinity()
+            activity.startActivity(intent)
+            exitProcess(0)
+        }
+
+
         @JvmStatic
         fun replaceResource(context: Activity?, res: Resources?): BackupRes? {
             context ?: return null
