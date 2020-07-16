@@ -42,10 +42,12 @@ class BangumiSeasonHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
 
         instance.retrofitResponseClass?.hookBeforeAllConstructors { param ->
             val url = getUrl(param.args[0])
-            val body = param.args[1]
+            val body = param.args[1] ?: return@hookBeforeAllConstructors
             // Filter non-bangumi responses
             // If it isn't bangumi, the type variable will not exist in this map
-            if (instance.bangumiApiResponseClass?.isInstance(body) == true) {
+            if (instance.bangumiApiResponseClass?.isInstance(body) == true ||
+                    // for new blue 6.3.7
+                    instance.rxGeneralResponseClass?.isInstance(body) == true) {
                 fixBangumi(body)
             } else if (url != null && url.startsWith("https://app.bilibili.com/x/v2/view") &&
                     body.getIntField("code") == -404) {

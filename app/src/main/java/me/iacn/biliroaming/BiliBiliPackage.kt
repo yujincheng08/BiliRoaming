@@ -26,9 +26,10 @@ data class OkHttpResult(val fieldName: String?, val methodName: String?)
  */
 class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContext: Context) {
     private val mHookInfo: MutableMap<String, String?> = readHookInfo(mContext)
-    val bangumiApiResponseClass by Weak { "com.bilibili.bangumi.data.common.api.BangumiApiResponse".findClassOrNull(mClassLoader) }
+    val bangumiApiResponseClass by Weak { "com.bilibili.bangumi.data.common.api.BangumiApiResponse".findClass(mClassLoader) }
+    val rxGeneralResponseClass by Weak { "com.bilibili.okretro.call.rxjava.RxGeneralResponse".findClassOrNull(mClassLoader) }
     val fastJsonClass by Weak { mHookInfo["class_fastjson"]?.findClassOrNull(mClassLoader) }
-    val bangumiUniformSeasonClass by Weak { "com.bilibili.bangumi.data.page.detail.entity.BangumiUniformSeason".findClassOrNull(mClassLoader) }
+    val bangumiUniformSeasonClass by Weak { "com.bilibili.bangumi.data.page.detail.entity.BangumiUniformSeason".findClass(mClassLoader) }
     val sectionClass by Weak { mHookInfo["class_section"]?.findClassOrNull(mClassLoader) }
     val retrofitResponseClass by Weak { mHookInfo["class_retrofit_response"]?.findClassOrNull(mClassLoader) }
     val themeHelperClass by Weak { mHookInfo["class_theme_helper"]?.findClassOrNull(mClassLoader) }
