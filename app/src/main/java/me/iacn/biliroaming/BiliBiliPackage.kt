@@ -4,6 +4,7 @@ package me.iacn.biliroaming
 
 import android.app.AndroidAppHelper
 import android.content.Context
+import android.os.Bundle
 import android.util.SparseArray
 import android.view.View
 import dalvik.system.DexFile
@@ -34,10 +35,12 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val columnHelperClass by Weak { mHookInfo["class_column_helper"]?.findClassOrNull(mClassLoader) }
     val settingRouteClass by Weak { mHookInfo["class_setting_route"]?.findClassOrNull(mClassLoader) }
     val themeListClickClass by Weak { mHookInfo["class_theme_list_click"]?.findClassOrNull(mClassLoader) }
-    val routeParamsClass by Weak { mHookInfo["class_route_params"]?.findClassOrNull(mClassLoader) }
+    val shareWrapperClass by Weak { mHookInfo["class_share_wrapper"]?.findClassOrNull(mClassLoader) }
     val themeNameClass by Weak { mHookInfo["class_theme_name"]?.findClassOrNull(mClassLoader) }
     val themeProcessorClass by Weak { mHookInfo["class_theme_processor"]?.findClassOrNull(mClassLoader) }
     val drawerClass by Weak { mHookInfo["class_drawer"]?.findClassOrNull(mClassLoader) }
+
+    private val classesList by lazy { DexFile(AndroidAppHelper.currentApplication().packageCodePath).entries().toList() }
 
     init {
         try {
@@ -110,6 +113,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     fun themeName(): String? {
         return mHookInfo["field_theme_name"]
+    }
+
+    fun shareWrapper() : String? {
+        return mHookInfo["method_share_wrapper"]
     }
 
     private fun readHookInfo(context: Context): MutableMap<String, String?> {
@@ -188,8 +195,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             findThemeResetMethods()
         }.checkOrPut("class_theme_list_click") {
             findThemeListClickClass()
-        }.checkOrPut("class_route_params") {
-            findRouteParamsClass()
+        }.checkOrPut("class_share_wrapper") {
+            findShareWrapperClass()
+        }.checkOrPut("method_share_wrapper") {
+            findShareWrapperMethod()
         }.checkOrPut("class_theme_name") {
             findThemeNameClass()
         }.checkOrPut("field_theme_name") {
@@ -219,6 +228,23 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         Log.d(mHookInfo)
         Log.d("Check hook info completed: needUpdate = $needUpdate")
         return needUpdate
+    }
+
+    private fun findShareWrapperMethod(): String? {
+        return shareWrapperClass?.declaredMethods?.firstOrNull {
+            it.parameterTypes.size == 2 && it.parameterTypes[0] == String::class.java && it.parameterTypes[1] == Bundle::class.java
+        }?.name
+    }
+
+    private fun findShareWrapperClass(): String? {
+        val reg = Regex("^com\\.bilibili\\.lib\\.sharewrapper\\.[^.]*$")
+        return classesList.filter {
+            it.matches(reg)
+        }.firstOrNull { c ->
+            c.findClass(mClassLoader)?.declaredMethods?.filter {
+                it.parameterTypes.size == 2 && it.parameterTypes[0] == String::class.java && it.parameterTypes[1] == Bundle::class.java
+            }?.count()?.let { it > 0 } ?: false
+        }
     }
 
     private fun writeHookInfo(context: Context) {
@@ -280,7 +306,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     }
 
     private fun findSkinListMethod(): String? {
-        val biliSkinListClass = "tv.danmaku.bili.ui.theme.api.BiliSkinList".findClass(mClassLoader) ?: return null
+        val biliSkinListClass = "tv.danmaku.bili.ui.theme.api.BiliSkinList".findClass(mClassLoader)
+                ?: return null
         return "tv.danmaku.bili.ui.theme.ThemeStoreActivity".findClass(mClassLoader)?.declaredMethods?.firstOrNull {
             it.parameterTypes.size == 2 && it.parameterTypes[0] == biliSkinListClass &&
                     it.parameterTypes[1] == Boolean::class.javaPrimitiveType
@@ -309,7 +336,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     private fun findThemeNameClass(): String? {
         return try {
-            val classes = DexFile(AndroidAppHelper.currentApplication().packageCodePath).entries().toList().filter {
+            val classes = classesList.filter {
                 it.startsWith("tv.danmaku.bili.ui.garb")
             }.filter { c ->
                 c.findClassOrNull(mClassLoader)?.declaredFields?.filter {
@@ -329,21 +356,18 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         }?.name
     }
 
-    private fun findRouteParamsClass(): String? {
-        return "com.bilibili.userfeedback.laserreport.UploadFeedbackUploadAction".findClass(mClassLoader)?.methods?.firstOrNull {
-            it.name == "act"
-        }?.parameterTypes?.get(0)?.name
-    }
 
     private fun findVideoDetailField(): String? {
-        val detailClass = "tv.danmaku.bili.ui.video.api.BiliVideoDetail".findClass(mClassLoader) ?: return null
+        val detailClass = "tv.danmaku.bili.ui.video.api.BiliVideoDetail".findClass(mClassLoader)
+                ?: return null
         return sectionClass?.declaredFields?.firstOrNull {
             it.type == detailClass
         }?.name
     }
 
     private fun findSignQueryMethod(): String? {
-        val signedQueryClass = "com.bilibili.nativelibrary.SignedQuery".findClass(mClassLoader) ?: return null
+        val signedQueryClass = "com.bilibili.nativelibrary.SignedQuery".findClass(mClassLoader)
+                ?: return null
         return "com.bilibili.nativelibrary.LibBili".findClass(mClassLoader)?.declaredMethods?.firstOrNull {
             it.parameterTypes.size == 1 && it.parameterTypes[0] == MutableMap::class.java &&
                     it.returnType == signedQueryClass
@@ -352,7 +376,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     private fun findThemeHelper(): String? {
         return try {
-            val classes = DexFile(AndroidAppHelper.currentApplication().packageCodePath).entries().toList().filter {
+            val classes = classesList.filter {
                 it.startsWith("tv.danmaku.bili.ui.theme")
             }.filter { c ->
                 c.findClassOrNull(mClassLoader)?.declaredFields?.filter {
@@ -369,7 +393,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     private fun findColumnHelper(): String? {
         return try {
-            val classes = DexFile(AndroidAppHelper.currentApplication().packageCodePath).entries().toList().filter {
+            val classes = classesList.filter {
                 it.startsWith("com.bilibili.column.helper")
             }.filter { c ->
                 c.findClassOrNull(mClassLoader)?.declaredFields?.filter {
@@ -386,8 +410,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     private fun findThemeProcessor(): String? {
         return try {
-            val biliSkinListClass = "tv.danmaku.bili.ui.theme.api.BiliSkinList".findClass(mClassLoader) ?: return null
-            val classes = DexFile(AndroidAppHelper.currentApplication().packageCodePath).entries().toList().filter {
+            val biliSkinListClass = "tv.danmaku.bili.ui.theme.api.BiliSkinList".findClass(mClassLoader)
+                    ?: return null
+            val classes = classesList.filter {
                 it.startsWith("tv.danmaku.bili.ui.theme")
             }.filter { c ->
                 c.findClassOrNull(mClassLoader)?.declaredFields?.filter {
@@ -418,7 +443,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     ?: return null
             val accountMineClass = "tv.danmaku.bili.ui.main2.api.AccountMine".findClass(mClassLoader)
                     ?: return null
-            val classes = DexFile(AndroidAppHelper.currentApplication().packageCodePath).entries().toList().filter {
+            val classes = classesList.filter {
                 it.startsWith("tv.danmaku.bili.ui.main2")
             }.filter { c ->
                 c.findClass(mClassLoader)?.run {
@@ -437,8 +462,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     private fun findSectionClass(): String? {
         return try {
-            val progressBarClass = "tv.danmaku.biliplayer.view.RingProgressBar".findClass(mClassLoader) ?: return null
-            val classes = DexFile(AndroidAppHelper.currentApplication().packageCodePath).entries().toList().filter {
+            val progressBarClass = "tv.danmaku.biliplayer.view.RingProgressBar".findClass(mClassLoader)
+                    ?: return null
+            val classes = classesList.filter {
                 it.startsWith("tv.danmaku.bili.ui.video.section")
             }.filter { c ->
                 c.findClassOrNull(mClassLoader)?.declaredFields?.filter {
@@ -452,7 +478,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     }
 
     private fun findGetSettingRouteMethod(): String? {
-        val menuGroupItemClass = "com.bilibili.lib.homepage.mine.MenuGroup\$Item".findClass(mClassLoader) ?: return null
+        val menuGroupItemClass = "com.bilibili.lib.homepage.mine.MenuGroup\$Item".findClass(mClassLoader)
+                ?: return null
         return settingRouteClass?.declaredMethods?.firstOrNull {
             it.parameterTypes.size == 1 && it.parameterTypes[0] == menuGroupItemClass
         }?.name
@@ -469,7 +496,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             val navigationViewClass = "android.support.design.widget.NavigationView".findClass(mClassLoader)
                     ?: return null
             val regex = Regex("^tv\\.danmaku\\.bili\\.ui\\.main2\\.[^.]*$")
-            val classes = DexFile(AndroidAppHelper.currentApplication().packageCodePath).entries().toList().filter {
+            val classes = classesList.filter {
                 it.matches(regex)
             }.filter { c ->
                 Log.d(c)
