@@ -73,9 +73,9 @@
             android:title="@string/comment_floor_title" />
 
         <SwitchPreference
-            android:key="simulate"
-            android:summary="@string/simulate_summary"
-            android:title="@string/simulate_title" />
+            android:key="add_live"
+            android:summary="@string/add_live_summary"
+            android:title="@string/add_live_title" />
 
         <SwitchPreference
             android:key="mini_program"

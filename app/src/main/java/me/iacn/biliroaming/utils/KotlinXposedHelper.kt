@@ -310,12 +310,12 @@ fun String.findClassOrNull(classLoader: ClassLoader): Class<*>? {
     return findClassIfExists(this, classLoader)
 }
 
-fun Class<*>.newInstance(vararg args: Any?): Any {
-    return XposedHelpers.newInstance(this, *args)
+fun Class<*>.new(vararg args: Any?): Any {
+    return newInstance(this, *args)
 }
 
-fun Class<*>.newInstance(parameterTypes: Array<Class<*>>, vararg args: Any?): Any {
-    return XposedHelpers.newInstance(this, parameterTypes, *args)
+fun Class<*>.new(parameterTypes: Array<Class<*>>, vararg args: Any?): Any {
+    return newInstance(this, parameterTypes, *args)
 }
 
 fun Class<*>.findFieldOrNull(field: String?): Field? {

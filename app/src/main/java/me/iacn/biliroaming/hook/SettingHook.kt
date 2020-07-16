@@ -31,7 +31,7 @@ class SettingHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
         "tv.danmaku.bili.ui.main2.mine.HomeUserCenterFragment".findClassOrNull(mClassLoader)?.hookBeforeMethod(
                 instance.addSetting(), Context::class.java, List::class.java) { param ->
-            val item = "com.bilibili.lib.homepage.mine.MenuGroup\$Item".findClass(mClassLoader)?.newInstance()
+            val item = "com.bilibili.lib.homepage.mine.MenuGroup\$Item".findClass(mClassLoader)?.new()
                     ?: return@hookBeforeMethod
             item.setIntField("id", 114514)
                     .setObjectField("title", "哔哩漫游设置")

@@ -39,7 +39,7 @@ class CustomThemeHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
 
                 @Suppress("UNCHECKED_CAST")
                 val mList = biliSkinList.getObjectFieldAs<MutableList<Any>>("mList")
-                val biliSkin = "tv.danmaku.bili.ui.theme.api.BiliSkin".findClass(mClassLoader)?.newInstance()
+                val biliSkin = "tv.danmaku.bili.ui.theme.api.BiliSkin".findClass(mClassLoader)?.new()
                         ?: return@hookBeforeMethod
                 biliSkin.setIntField("mId", CUSTOM_THEME_ID)
                         .setObjectField("mName", "自选颜色")
