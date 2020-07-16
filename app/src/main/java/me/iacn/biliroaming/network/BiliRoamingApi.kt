@@ -270,7 +270,7 @@ object BiliRoamingApi {
                     }
                 }
                 handler.post {
-                    val webView = WebView(XposedInit.currentActivity, null)
+                    val webView = WebView(XposedInit.currentContext, null)
                     webView.addJavascriptInterface(listener, "listener")
                     webView.webViewClient = object : WebViewClient() {
                         override fun onPageFinished(view: WebView?, url: String?) {

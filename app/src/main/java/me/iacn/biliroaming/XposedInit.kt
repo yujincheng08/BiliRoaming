@@ -1,7 +1,6 @@
 package me.iacn.biliroaming
 
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.app.AndroidAppHelper
 import android.app.Application
 import android.app.Instrumentation
@@ -11,6 +10,8 @@ import android.content.SharedPreferences
 import android.content.res.AssetManager
 import android.content.res.Configuration
 import android.content.res.Resources
+import android.os.Handler
+import android.os.Looper
 import android.util.DisplayMetrics
 import android.widget.Toast
 import de.robv.android.xposed.*
@@ -46,25 +47,14 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                     "tv.danmaku.bili", "com.bilibili.app.blue", "com.bilibili.app.in" -> {
                         Log.d("BiliBili process launched ...")
                         Log.d("Config: ${sPrefs.all}")
-                        startHook(object : BaseHook(lpparam.classLoader) {
-                            override fun startHook() {
-                                XposedBridge.hookAllMethods(XposedHelpers.findClass(
-                                        "android.app.Instrumentation", lpparam.classLoader),
-                                        "newActivity", object : XC_MethodHook() {
-                                    override fun afterHookedMethod(param: MethodHookParam) {
-                                        currentActivity = param.result as Activity
-                                        if (!started) {
-                                            if (!sPrefs.getBoolean("main_func", false)) {
-                                                toastMessage("哔哩漫游已激活，但未启用番剧解锁功能")
-                                            } else {
-                                                toastMessage("哔哩漫游已激活")
-                                            }
-                                            started = true
-                                        }
-                                    }
-                                })
+                        if (!started) {
+                            if (!sPrefs.getBoolean("main_func", false)) {
+                                toastMessage("哔哩漫游已激活，但未启用番剧解锁功能")
+                            } else {
+                                toastMessage("哔哩漫游已激活")
                             }
-                        })
+                            started = true
+                        }
                         BiliBiliPackage(lpparam.classLoader, param.args[0] as Context)
                         startHook(BangumiSeasonHook(lpparam.classLoader))
                         startHook(BangumiPlayUrlHook(lpparam.classLoader))
@@ -101,19 +91,18 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
 
     companion object {
         lateinit var sPrefs: SharedPreferences
-        lateinit var currentActivity: Activity
-        private val toast by lazy { Toast.makeText(currentActivity, "", Toast.LENGTH_SHORT) }
+        val currentContext by lazy { AndroidAppHelper.currentApplication() as Context }
+        private val handler by lazy { Handler(Looper.getMainLooper()) }
+        private val toast by lazy { Toast.makeText(currentContext, "", Toast.LENGTH_SHORT) }
         var started = false
         lateinit var modulePath: String
         lateinit var moduleRes: Resources
 
         fun toastMessage(msg: String) {
-            if (sPrefs.getBoolean("show_info", true)) {
-                currentActivity.runOnUiThread {
-                    toast.setText("哔哩漫游：$msg")
-                    toast.duration = Toast.LENGTH_SHORT
-                    toast.show()
-                }
+            handler.post {
+                toast.setText("哔哩漫游：$msg")
+                toast.duration = Toast.LENGTH_SHORT
+                toast.show()
             }
         }
 
