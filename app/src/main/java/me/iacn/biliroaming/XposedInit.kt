@@ -35,7 +35,7 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
             XposedHelpers.findAndHookMethod(MainActivity.Companion::class.java.name, lpparam.classLoader,
                     "isModuleActive", XC_MethodReplacement.returnConstant(true))
         }
-        if(!Constant.BILIBILI_PACKAGENAME.contains(lpparam.packageName)) return
+        if (!Constant.BILIBILI_PACKAGENAME.contains(lpparam.packageName)) return
         XposedHelpers.findAndHookMethod(Instrumentation::class.java, "callApplicationOnCreate", Application::class.java, object : XC_MethodHook() {
             @Throws(Throwable::class)
             override fun beforeHookedMethod(param: MethodHookParam) {
@@ -81,6 +81,10 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                         BiliBiliPackage(lpparam.classLoader, param.args[0] as Context)
                         CustomThemeHook(lpparam.classLoader).insertColorForWebProcess()
                     }
+                    "tv.danmaku.bili:download", "com.bilibili.app.in:download", "com.bilibili.app.blue:download" -> {
+                        BiliBiliPackage(lpparam.classLoader, param.args[0] as Context)
+                        startHook(CDNHook(lpparam.classLoader))
+                    }
                 }
             }
         })
@@ -98,7 +102,7 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
     companion object {
         lateinit var sPrefs: SharedPreferences
         lateinit var currentActivity: Activity
-        private val toast by lazy { Toast.makeText(currentActivity, "", Toast.LENGTH_SHORT)}
+        private val toast by lazy { Toast.makeText(currentActivity, "", Toast.LENGTH_SHORT) }
         var started = false
         lateinit var modulePath: String
         lateinit var moduleRes: Resources
