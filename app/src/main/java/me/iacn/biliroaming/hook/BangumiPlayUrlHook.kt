@@ -101,14 +101,27 @@ class BangumiPlayUrlHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
     private fun reconstructQuery(request: Any): String? {
         val serializedRequest = request.callMethodAs<ByteArray>("toByteArray")
         val req = PlayViewReq.parseFrom(serializedRequest)
-        val builder = Uri.Builder()
-        for (field in req.allFields) {
-            builder.appendQueryParameter(field.key.name, field.value.toString())
-        }
-        BangumiSeasonHook.lastSeasonInfo["access_key"]?.let {
-            builder.appendQueryParameter("access_key", it)
-        }
-        return builder.build().query
+        // CANNOT use reflection for compatibility with Xpatch
+        Log.d(com.google.protobuf.Internal::class.java.classLoader == com.google.protobuf.Descriptors.FileDescriptor::class.java.classLoader)
+        return Uri.Builder().run {
+            appendQueryParameter("ep_id", req.epId.toString())
+            appendQueryParameter("cid", req.cid.toString())
+            appendQueryParameter("qn", req.qn.toString())
+            appendQueryParameter("fnver", req.fnver.toString())
+            appendQueryParameter("fnval", req.fnval.toString())
+            appendQueryParameter("download", req.download.toString())
+            appendQueryParameter("force_host", req.forceHost.toString())
+            appendQueryParameter("fourk", req.fourk.toString())
+            appendQueryParameter("spmid", req.spmid.toString())
+            appendQueryParameter("from_spmid", req.fromSpmid.toString())
+            appendQueryParameter("teenagers_mode", req.teenagersMode.toString())
+            appendQueryParameter("prefer_codec_type", req.preferCodecType.toString())
+            appendQueryParameter("is_preview", req.isPreview.toString())
+            BangumiSeasonHook.lastSeasonInfo["access_key"]?.let {
+                appendQueryParameter("access_key", it)
+            }
+            build()
+        }.query
     }
 
 
