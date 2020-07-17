@@ -45,6 +45,7 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                     toastMessage("哔哩漫游已激活${if (sPrefs.getBoolean("main_func", false)) ""
                     else "。但未启用番剧解锁功能，请检查哔哩漫游设置。"}")
                     BiliBiliPackage(lpparam.classLoader, param.args[0] as Context)
+                    startHook(HintHook(lpparam.classLoader))
                     startHook(BangumiSeasonHook(lpparam.classLoader))
                     startHook(BangumiPlayUrlHook(lpparam.classLoader))
                     startHook(CustomThemeHook(lpparam.classLoader))

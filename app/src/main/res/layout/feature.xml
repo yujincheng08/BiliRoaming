@@ -7,13 +7,30 @@
     <TextView
         android:id="@+id/textView"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="216dp"
         android:layout_margin="14dp"
-        android:text="@string/feature_dialog" />
+        android:text="@string/feature_dialog"
+        android:textAlignment="center"
+        android:textAppearance="@android:style/TextAppearance.Material.Large"
+        android:textColor="@android:color/tab_indicator_text" />
 
-    <ImageView
-        android:id="@+id/imageView"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:src="@drawable/demo" />
+        android:layout_height="match_parent"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:id="@+id/imageView2"
+            android:layout_width="198dp"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/demo"
+            android:src="@drawable/demo2" />
+
+        <ImageView
+            android:id="@+id/imageView"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:contentDescription="@string/demo"
+            android:src="@drawable/demo" />
+    </LinearLayout>
 </LinearLayout>
