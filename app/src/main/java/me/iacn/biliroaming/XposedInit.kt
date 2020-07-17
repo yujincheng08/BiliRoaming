@@ -1,7 +1,9 @@
 package me.iacn.biliroaming
 
 import android.annotation.SuppressLint
-import android.app.*
+import android.app.AndroidAppHelper
+import android.app.Application
+import android.app.Instrumentation
 import android.content.Context
 import android.content.Context.MODE_MULTI_PROCESS
 import android.content.res.AssetManager
@@ -15,7 +17,9 @@ import de.robv.android.xposed.IXposedHookLoadPackage
 import de.robv.android.xposed.IXposedHookZygoteInit
 import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam
 import me.iacn.biliroaming.hook.*
-import me.iacn.biliroaming.utils.*
+import me.iacn.biliroaming.utils.Log
+import me.iacn.biliroaming.utils.hookBeforeMethod
+import me.iacn.biliroaming.utils.replaceMethod
 
 
 /**
@@ -42,8 +46,9 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                 "tv.danmaku.bili", "com.bilibili.app.blue", "com.bilibili.app.in" -> {
                     Log.d("BiliBili process launched ...")
                     Log.d("Config: ${sPrefs.all}")
-                    toastMessage("哔哩漫游已激活${if (sPrefs.getBoolean("main_func", false)) ""
-                    else "。但未启用番剧解锁功能，请检查哔哩漫游设置。"}")
+                    if (sPrefs.getBoolean("show_info", true))
+                        toastMessage("哔哩漫游已激活${if (sPrefs.getBoolean("main_func", false)) ""
+                        else "。但未启用番剧解锁功能，请检查哔哩漫游设置。"}")
                     BiliBiliPackage(lpparam.classLoader, param.args[0] as Context)
                     startHook(HintHook(lpparam.classLoader))
                     startHook(BangumiSeasonHook(lpparam.classLoader))
