@@ -1,12 +1,9 @@
 package me.iacn.biliroaming
 
 import android.annotation.SuppressLint
-import android.app.AndroidAppHelper
-import android.app.Application
-import android.app.Instrumentation
+import android.app.*
 import android.content.Context
 import android.content.Context.MODE_MULTI_PROCESS
-import android.content.SharedPreferences
 import android.content.res.AssetManager
 import android.content.res.Configuration
 import android.content.res.Resources
@@ -14,10 +11,11 @@ import android.os.Handler
 import android.os.Looper
 import android.util.DisplayMetrics
 import android.widget.Toast
-import de.robv.android.xposed.*
+import de.robv.android.xposed.IXposedHookLoadPackage
+import de.robv.android.xposed.IXposedHookZygoteInit
 import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam
 import me.iacn.biliroaming.hook.*
-import me.iacn.biliroaming.utils.Log
+import me.iacn.biliroaming.utils.*
 
 
 /**
@@ -33,51 +31,41 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
     @Throws(Throwable::class)
     override fun handleLoadPackage(lpparam: LoadPackageParam) {
         if (BuildConfig.APPLICATION_ID == lpparam.packageName) {
-            XposedHelpers.findAndHookMethod(MainActivity.Companion::class.java.name, lpparam.classLoader,
-                    "isModuleActive", XC_MethodReplacement.returnConstant(true))
+            MainActivity.Companion::class.java.name.replaceMethod(lpparam.classLoader,
+                    "isModuleActive") { true }
         }
         if (!Constant.BILIBILI_PACKAGENAME.contains(lpparam.packageName)) return
-        XposedHelpers.findAndHookMethod(Instrumentation::class.java, "callApplicationOnCreate", Application::class.java, object : XC_MethodHook() {
-            @Throws(Throwable::class)
-            override fun beforeHookedMethod(param: MethodHookParam) {
-                // Hook main process and download process
-                @Suppress("DEPRECATION")
-                sPrefs = AndroidAppHelper.currentApplication().getSharedPreferences("biliroaming", MODE_MULTI_PROCESS)
-                when (lpparam.processName) {
-                    "tv.danmaku.bili", "com.bilibili.app.blue", "com.bilibili.app.in" -> {
-                        Log.d("BiliBili process launched ...")
-                        Log.d("Config: ${sPrefs.all}")
-                        if (!started) {
-                            if (!sPrefs.getBoolean("main_func", false)) {
-                                toastMessage("哔哩漫游已激活，但未启用番剧解锁功能")
-                            } else {
-                                toastMessage("哔哩漫游已激活")
-                            }
-                            started = true
-                        }
-                        BiliBiliPackage(lpparam.classLoader, param.args[0] as Context)
-                        startHook(BangumiSeasonHook(lpparam.classLoader))
-                        startHook(BangumiPlayUrlHook(lpparam.classLoader))
-                        startHook(CustomThemeHook(lpparam.classLoader))
-                        startHook(TeenagersModeHook(lpparam.classLoader))
-                        startHook(CommentHook(lpparam.classLoader))
-                        startHook(JsonHook(lpparam.classLoader))
-                        startHook(CDNHook(lpparam.classLoader))
-                        startHook(MiniProgramHook(lpparam.classLoader))
-                        startHook(AutoLikeHook(lpparam.classLoader))
-                        startHook(SettingHook(lpparam.classLoader))
-                    }
-                    "tv.danmaku.bili:web", "com.bilibili.app.in:web", "com.bilibili.app.blue:web" -> {
-                        BiliBiliPackage(lpparam.classLoader, param.args[0] as Context)
-                        CustomThemeHook(lpparam.classLoader).insertColorForWebProcess()
-                    }
-                    "tv.danmaku.bili:download", "com.bilibili.app.in:download", "com.bilibili.app.blue:download" -> {
-                        BiliBiliPackage(lpparam.classLoader, param.args[0] as Context)
-                        startHook(CDNHook(lpparam.classLoader))
-                    }
+        Instrumentation::class.java.hookBeforeMethod("callApplicationOnCreate", Application::class.java) { param ->
+            // Hook main process and download process
+            @Suppress("DEPRECATION")
+            when (lpparam.processName) {
+                "tv.danmaku.bili", "com.bilibili.app.blue", "com.bilibili.app.in" -> {
+                    Log.d("BiliBili process launched ...")
+                    Log.d("Config: ${sPrefs.all}")
+                    toastMessage("哔哩漫游已激活${if (sPrefs.getBoolean("main_func", false)) ""
+                    else "。但未启用番剧解锁功能，请检查哔哩漫游设置。"}")
+                    BiliBiliPackage(lpparam.classLoader, param.args[0] as Context)
+                    startHook(BangumiSeasonHook(lpparam.classLoader))
+                    startHook(BangumiPlayUrlHook(lpparam.classLoader))
+                    startHook(CustomThemeHook(lpparam.classLoader))
+                    startHook(TeenagersModeHook(lpparam.classLoader))
+                    startHook(CommentHook(lpparam.classLoader))
+                    startHook(JsonHook(lpparam.classLoader))
+                    startHook(CDNHook(lpparam.classLoader))
+                    startHook(MiniProgramHook(lpparam.classLoader))
+                    startHook(AutoLikeHook(lpparam.classLoader))
+                    startHook(SettingHook(lpparam.classLoader))
+                }
+                "tv.danmaku.bili:web", "com.bilibili.app.in:web", "com.bilibili.app.blue:web" -> {
+                    BiliBiliPackage(lpparam.classLoader, param.args[0] as Context)
+                    CustomThemeHook(lpparam.classLoader).insertColorForWebProcess()
+                }
+                "tv.danmaku.bili:download", "com.bilibili.app.in:download", "com.bilibili.app.blue:download" -> {
+                    BiliBiliPackage(lpparam.classLoader, param.args[0] as Context)
+                    startHook(CDNHook(lpparam.classLoader))
                 }
             }
-        })
+        }
     }
 
     private fun startHook(hooker: BaseHook) {
@@ -90,11 +78,11 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
     }
 
     companion object {
-        lateinit var sPrefs: SharedPreferences
+        @Suppress("DEPRECATION")
+        val sPrefs by lazy { AndroidAppHelper.currentApplication().getSharedPreferences("biliroaming", MODE_MULTI_PROCESS)!! }
         val currentContext by lazy { AndroidAppHelper.currentApplication() as Context }
         private val handler by lazy { Handler(Looper.getMainLooper()) }
         private val toast by lazy { Toast.makeText(currentContext, "", Toast.LENGTH_SHORT) }
-        var started = false
         lateinit var modulePath: String
         lateinit var moduleRes: Resources
 

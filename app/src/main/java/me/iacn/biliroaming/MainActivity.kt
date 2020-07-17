@@ -135,7 +135,7 @@ class MainActivity : Activity() {
             return true
         }
 
-        private fun onHelpClick(): Boolean{
+        private fun onHelpClick(): Boolean {
             val uri = Uri.parse(resources.getString(R.string.help_url))
             val intent = Intent(Intent.ACTION_VIEW, uri)
             startActivity(intent)
@@ -156,13 +156,11 @@ class MainActivity : Activity() {
         }
 
         private fun onFeatureClick(): Boolean {
-            object : AlertDialog.Builder(activity) {
-                init {
-                    setView(View.inflate(activity, R.layout.feature, null))
-                    setNegativeButton("关闭", null)
-
-                }
-            }.show()
+            AlertDialog.Builder(activity).run {
+                setView(View.inflate(activity, R.layout.feature, null))
+                setNegativeButton("关闭", null)
+                show()
+            }
             return true
         }
 
