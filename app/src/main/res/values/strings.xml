@@ -80,4 +80,5 @@
     <string name="purify_search_title">净化搜索页面</string>
     <string name="purify_search_summary">去除搜索页面的热搜和推荐</string>
     <string name="demo">实例</string>
+    <string name="runtime_app_fuck">运行环境：应用转生</string>
 </resources>
