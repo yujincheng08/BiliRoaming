@@ -11,7 +11,7 @@ interface OnTaskReturn<T> {
 class CheckVersionTask(private val onResult: OnTaskReturn<JSONObject>) : AsyncTask<URL, Void, JSONObject?>() {
     override fun doInBackground(vararg url: URL?): JSONObject? {
         return try {
-            JSONObject(url[0]?.readText()!!)
+            url[0]?.readText()?.let{JSONObject(it)}
         } catch (e: Throwable) {
             null
         }

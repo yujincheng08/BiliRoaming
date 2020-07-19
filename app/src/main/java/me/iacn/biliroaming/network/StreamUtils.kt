@@ -12,7 +12,7 @@ import java.util.zip.GZIPInputStream
 object StreamUtils {
     @JvmStatic
     fun getContent(input: InputStream?, encoding: String?): String? {
-        var inputStream = input;
+        var inputStream = input
         var result: String? = null
         var byteArrayStream: ByteArrayOutputStream? = null
         try {

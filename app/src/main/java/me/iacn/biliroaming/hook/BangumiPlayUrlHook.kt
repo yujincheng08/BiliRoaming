@@ -18,7 +18,7 @@ import java.net.HttpURLConnection
  * Created by iAcn on 2019/3/29
  * Email i@iacn.me
  */
-class BangumiPlayUrlHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
+class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
         if (!XposedInit.sPrefs.getBoolean("main_func", false)) return
         Log.d("startHook: BangumiPlayUrl")

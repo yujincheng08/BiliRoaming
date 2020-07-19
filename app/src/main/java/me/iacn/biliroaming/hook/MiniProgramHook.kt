@@ -48,7 +48,7 @@ class MiniProgramHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 bundle.putString("params_title", bundle.getString("params_content"))
                 bundle.putString("params_content", "由哔哩漫游分享")
             }
-            if (bundle.getString("params_content")!!.startsWith("已观看")) {
+            if (bundle.getString("params_content")?.startsWith("已观看") == true) {
                 bundle.putString("params_content", "${bundle.getString("params_content")}\n由哔哩漫游分享")
             }
         }

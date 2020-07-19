@@ -133,6 +133,7 @@ object BiliRoamingApi {
                     result.put(field, mediaResult.get(field))
             }
         } catch (e: Throwable) {
+            Log.e(e)
         }
     }
 
@@ -152,7 +153,7 @@ object BiliRoamingApi {
             review.put("article_url", "https://member.bilibili.com/article-text/mobile?media_id=$mediaId")
             userStatus.put("review", review)
         } catch (e: Throwable) {
-
+            Log.e(e)
         }
     }
 
@@ -180,7 +181,7 @@ object BiliRoamingApi {
             getReviewInfo(userStatus, mediaId, accessKey)
             result.put("user_status", userStatus)
         } catch (e: Throwable) {
-
+            Log.e(e)
         }
     }
 

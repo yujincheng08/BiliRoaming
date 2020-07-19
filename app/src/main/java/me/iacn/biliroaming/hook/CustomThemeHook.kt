@@ -20,7 +20,7 @@ import java.util.*
  * Created by iAcn on 2019/7/14
  * Email i@iacn.me
  */
-class CustomThemeHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
+class CustomThemeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
         if (!XposedInit.sPrefs.getBoolean("custom_theme", false)) return
         Log.d("startHook: CustomTheme")

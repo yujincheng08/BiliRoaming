@@ -40,12 +40,12 @@ class CDNHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 toastMessage("CDN加速已生效")
             }
         }
-}
+    }
 
-fun getCDN(): String {
-    var cdn = XposedInit.sPrefs.getString("cdn", "")!!
-    if (cdn.isEmpty()) cdn = XposedInit.sPrefs.getString("custom_cdn", "")!!
-    return cdn
-}
+    private fun getCDN(): String {
+        var cdn = XposedInit.sPrefs.getString("cdn", "")
+        if (cdn.isNullOrEmpty()) cdn = XposedInit.sPrefs.getString("custom_cdn", "") ?: ""
+        return cdn
+    }
 
 }

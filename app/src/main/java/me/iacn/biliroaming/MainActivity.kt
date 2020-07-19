@@ -193,7 +193,7 @@ class MainActivity : Activity() {
             val uri = Uri.parse("content://me.weishu.exposed.CP/")
             return try {
                 val result = contentResolver.call(uri, "active", null, null)
-                result!!.getBoolean("active", false)
+                result?.getBoolean("active", false) ?: false
             } catch (e: Exception) {
                 false
             }

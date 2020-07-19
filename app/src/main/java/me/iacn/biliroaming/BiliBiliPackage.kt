@@ -165,6 +165,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             return checkOrPut(keys = *keys, checker = { m, ks -> ks.fold(true) { acc, k -> acc && m.containsKey(k) } }, defaultValue = defaultValue)
         }
 
+        @Suppress("unused")
         fun <K, V> MutableMap<K, V>.checkDisjunctiveOrPut(vararg keys: K, defaultValue: () -> Array<V>): MutableMap<K, V> {
             return checkOrPut(keys = *keys, checker = { m, ks -> ks.fold(false) { acc, k -> acc || m.containsKey(k) } }, defaultValue = defaultValue)
         }
@@ -172,7 +173,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         mHookInfo.checkOrPut("class_retrofit_response") {
             findRetrofitResponseClass()
         }.checkConjunctiveOrPut("field_request", "method_url") {
-            val (fieldName, methodName) = findUrlField(mHookInfo["class_retrofit_response"]!!)
+            val (fieldName, methodName) = findUrlField()
             arrayOf(fieldName, methodName)
         }.checkConjunctiveOrPut("class_fastjson", "method_fastjson_parse") {
             val fastJsonClass = findFastJsonClass()
@@ -272,8 +273,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         }?.firstOrNull()?.name
     }
 
-    private fun findUrlField(responseClassName: String): OkHttpResult {
-        val responseClass = responseClassName.findClass(mClassLoader)
+    private fun findUrlField(): OkHttpResult {
+        val responseClass = retrofitResponseClass
                 ?: return OkHttpResult(null, null)
         for (constructor in responseClass.declaredConstructors) {
             for (field in constructor.parameterTypes[0].declaredFields) {
@@ -522,10 +523,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         private var weakReference: WeakReference<Class<*>?>? = null
 
         operator fun getValue(thisRef: Any?, property: KProperty<*>): Class<*>? {
-            weakReference?.get() ?: let {
+            return weakReference?.get() ?: let {
                 weakReference = WeakReference(initializer())
-            }
-            return weakReference!!.get()
+                weakReference
+            }?.get()
         }
 
         operator fun setValue(thisRef: Any?, property: KProperty<*>, value: Class<*>) {

@@ -11,7 +11,7 @@ import me.iacn.biliroaming.utils.setIntField
  * Created by iAcn on 2020/2/27
  * Email i@iacn.me
  */
-class CommentHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
+class CommentHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
         if (!XposedInit.sPrefs.getBoolean("comment_floor", false)) return
         Log.d("startHook: Comment")

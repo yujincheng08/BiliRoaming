@@ -1,6 +1,5 @@
 package me.iacn.biliroaming.hook
 
-import android.util.ArrayMap
 import de.robv.android.xposed.XC_MethodHook
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.Constant.TYPE_EPISODE_ID
@@ -20,9 +19,9 @@ import java.net.URL
 
 data class Result(val code: Int?, val result: Any?)
 
-class BangumiSeasonHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
+class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     companion object {
-        val lastSeasonInfo: MutableMap<String, String?> = ArrayMap()
+        val lastSeasonInfo: MutableMap<String, String?> = HashMap()
     }
 
     override fun startHook() {
@@ -81,8 +80,7 @@ class BangumiSeasonHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
         }
         toastMessage("发现版权番剧，尝试解锁……")
         Log.d("Info: $lastSeasonInfo")
-        val hidden = result == null
-        val content = getSeason(lastSeasonInfo, hidden)
+        val content = getSeason(lastSeasonInfo, result == null)
         val (code, newResult) = instance.bangumiUniformSeasonClass?.let { getNewResult(content, "result", it) }
                 ?: return
 
@@ -99,7 +97,7 @@ class BangumiSeasonHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
         val newRights = newResult.getObjectField("rights") ?: return
         if (XposedInit.sPrefs.getBoolean("allow_download", false))
             newRights.setBooleanField("allowDownload", true)
-        if (!hidden) {
+        if (result != null) {
             // Replace only episodes and rights
             // Remain user information, such as follow status, watch progress, etc.
             if (!newRights.getBooleanField("areaLimit")) {
@@ -111,7 +109,7 @@ class BangumiSeasonHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
                 result.setObjectField("rights", newRights)
                         .setObjectField("episodes", newEpisodes)
                         .setObjectField("seasonLimit", null)
-                result!!.javaClass.findFieldOrNull("modules")?.let {
+                result.javaClass.findFieldOrNull("modules")?.let {
                     newModules?.let { it2 ->
                         result.setObjectField(it.name, it2)
                     }
@@ -163,10 +161,10 @@ class BangumiSeasonHook(classLoader: ClassLoader?) : BaseHook(classLoader!!) {
             return Result(null, null)
         }
         val contentJson = JSONObject(content)
-        val resultJson = contentJson.optJSONObject(fieldName)
+        val resultJson = contentJson.optJSONObject(fieldName) ?: return Result(null, null)
         val code = contentJson.optInt("code")
         val newResult = instance.fastJsonClass?.callStaticMethod(
-                instance.fastJsonParse(), resultJson!!.toString(), beanClass)
+                instance.fastJsonParse(), resultJson.toString(), beanClass)
         return Result(code, newResult)
     }
 
