@@ -46,9 +46,8 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                 "tv.danmaku.bili", "com.bilibili.app.blue", "com.bilibili.app.in" -> {
                     Log.d("BiliBili process launched ...")
                     Log.d("Config: ${sPrefs.all}")
-                    if (sPrefs.getBoolean("show_info", true))
-                        toastMessage("哔哩漫游已激活${if (sPrefs.getBoolean("main_func", false)) ""
-                        else "。但未启用番剧解锁功能，请检查哔哩漫游设置。"}")
+                    toastMessage("哔哩漫游已激活${if (sPrefs.getBoolean("main_func", false)) ""
+                    else "。但未启用番剧解锁功能，请检查哔哩漫游设置。"}")
                     BiliBiliPackage(lpparam.classLoader, param.args[0] as Context)
                     startHook(HintHook(lpparam.classLoader))
                     startHook(BangumiSeasonHook(lpparam.classLoader))
@@ -93,6 +92,7 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
         lateinit var moduleRes: Resources
 
         fun toastMessage(msg: String) {
+            if (!sPrefs.getBoolean("show_info", true)) return
             handler.post {
                 toast.setText("哔哩漫游：$msg")
                 toast.duration = Toast.LENGTH_SHORT
