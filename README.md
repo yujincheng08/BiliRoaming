@@ -42,5 +42,8 @@ https://github.com/yujincheng08/BiliRoaming/wiki#%E4%BD%BF%E7%94%A8%E6%96%B9%E6%
 - [原作者](https://github.com/iAcn/BiliRoaming)
 - [BiliPlus](https://www.biliplus.com/)
 - [Kghost](https://github.com/kghost/bilibili-area-limit)
+
+### 交流
+Telegram: [@biliroaming](https://t.me/biliroaming)
 ### License
 [GNU General Public License, version 3](LICENSE)
