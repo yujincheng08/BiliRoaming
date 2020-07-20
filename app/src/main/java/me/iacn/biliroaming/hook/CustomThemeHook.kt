@@ -57,7 +57,6 @@ class CustomThemeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             val mId = biliSkin.getIntField("mId")
             // Make colors updated immediately
             if (mId == CUSTOM_THEME_ID || mId == -1) {
-                Log.d("Custom theme item has been clicked")
                 val colorDialog = ColorChooseDialog(view.context, customColor)
                 colorDialog.setPositiveButton("确定") { _, _ ->
                     val color = colorDialog.color

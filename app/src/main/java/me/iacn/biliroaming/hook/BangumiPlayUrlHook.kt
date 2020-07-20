@@ -102,7 +102,6 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val serializedRequest = request.callMethodAs<ByteArray>("toByteArray")
         val req = PlayViewReq.parseFrom(serializedRequest)
         // CANNOT use reflection for compatibility with Xpatch
-        Log.d(com.google.protobuf.Internal::class.java.classLoader == com.google.protobuf.Descriptors.FileDescriptor::class.java.classLoader)
         return Uri.Builder().run {
             appendQueryParameter("ep_id", req.epId.toString())
             appendQueryParameter("cid", req.cid.toString())

@@ -498,7 +498,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             val classes = classesList.filter {
                 it.matches(regex)
             }.filter { c ->
-                Log.d(c)
                 c.findClassOrNull(mClassLoader)?.run {
                     declaredFields.filter {
                         it.type == navigationViewClass
