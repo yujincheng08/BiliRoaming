@@ -9,9 +9,7 @@ import android.util.SparseArray
 import android.view.View
 import dalvik.system.DexFile
 import de.robv.android.xposed.XposedHelpers.findClassIfExists
-import me.iacn.biliroaming.utils.Log
-import me.iacn.biliroaming.utils.findClass
-import me.iacn.biliroaming.utils.findClassOrNull
+import me.iacn.biliroaming.utils.*
 import java.io.*
 import java.lang.ref.WeakReference
 import java.lang.reflect.Modifier
@@ -43,6 +41,11 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     private val classesList by lazy { DexFile(AndroidAppHelper.currentApplication().packageCodePath).entries().toList() }
 
+    val accessKey by lazy{
+        "com.bilibili.bangumi.ui.page.detail.pay.BangumiPayHelperV2\$accessKey\$2".findClass(mClassLoader)
+                ?.getStaticObjectField("INSTANCE")?.callMethodAs<String>("invoke")
+    }
+
     init {
         try {
             if (checkHookInfo()) {
@@ -53,12 +56,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         }
         instance = this
     }
-
-//    private fun getAccessKey(): String {
-//        val helperClass = findClass("com.bilibili.bangumi.ui.page.detail.pay.BangumiPayHelperV2\$accessKey\$2", mClassLoader)
-//        val instance = getStaticObjectField(helperClass, "INSTANCE")
-//        return callMethod(instance, "invoke") as String
-//    }
 
     fun fastJsonParse(): String? {
         return mHookInfo["method_fastjson_parse"]
@@ -116,7 +113,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         return mHookInfo["field_theme_name"]
     }
 
-    fun shareWrapper() : String? {
+    fun shareWrapper(): String? {
         return mHookInfo["method_share_wrapper"]
     }
 

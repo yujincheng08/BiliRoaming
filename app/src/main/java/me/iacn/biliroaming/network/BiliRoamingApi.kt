@@ -11,6 +11,7 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import me.iacn.biliroaming.BuildConfig
 import me.iacn.biliroaming.XposedInit
+import me.iacn.biliroaming.XposedInit.Companion.toastMessage
 import me.iacn.biliroaming.network.StreamUtils.getContent
 import me.iacn.biliroaming.utils.Log
 import org.json.JSONArray
@@ -282,7 +283,8 @@ object BiliRoamingApi {
                     webView.loadUrl(urlString)
                 }
                 try {
-                    if (!listener.latch.await(timeout.toLong(), TimeUnit.MILLISECONDS)) {
+                    if (!listener.latch.await((timeout * 2).toLong(), TimeUnit.MILLISECONDS)) {
+                        toastMessage("连接超时，请重试")
                         throw IOException("Timeout connection to server")
                     }
                 } catch (e: InterruptedException) {

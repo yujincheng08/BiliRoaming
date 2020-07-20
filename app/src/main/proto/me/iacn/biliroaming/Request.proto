@@ -129,8 +129,249 @@ message VideoInfo {
 }
 
 message PlayViewReply {
-    VideoInfo video_info = 1;
-    PlayAbilityConf play_conf = 2;
-    BusinessInfo business = 3;
+    VideoInfo video_info = 0x1;
+    PlayAbilityConf play_conf = 0x2;
+    BusinessInfo business = 0x3;
 }
 
+message ViewReq {
+    int64 aid = 0x1;
+    string bvid = 0x2;
+    string from = 0x3;
+    string trackid = 0x4;
+    string ad_extra = 0x5;
+    int32 qn = 0x6;
+    int32 fnver = 0x7;
+    int32 fnval = 0x8;
+    int32 force_host = 0x9;
+    int32 fourk = 0xa;
+    string spmid = 0xb;
+    string from_spmid = 0xc;
+    int32 autoplay = 0xd;
+}
+
+message UserSeason {
+    string attention = 0x1;
+}
+
+message SeasonPlayer {
+    int64 aid = 0x1;
+    string vid = 0x2;
+    int64 cid = 0x3;
+    string from = 0x4;
+}
+
+message Rights {
+
+}
+
+message Stat {
+    int64 aid = 0x1;
+    int32 view = 0x2;
+    int32 danmaku = 0x3;
+    int32 reply = 0x4;
+    int32 fav = 0x5;
+    int32 coin = 0x6;
+    int32 share = 0x7;
+    int32 now_rank = 0x8;
+    int32 his_rank = 0x9;
+    int32 like = 0xa;
+    int32 dislike = 0xb;
+}
+
+message Author {
+    int64 mid = 0x1;
+    string name = 0x2;
+    string face = 0x3;
+}
+
+message Dimension {
+    int64 width = 0x1;
+    int64 height = 0x2;
+    int64 rotate = 0x3;
+}
+
+message StaffInfo {
+
+}
+
+message Arc {
+    int64 aid = 0x1;
+    int64 videos = 0x2;
+    int32 type_id = 0x3;
+    string type_name = 0x4;
+    int32 copyright = 0x5;
+    string pic = 0x6;
+    string title = 0x7;
+    int64 pubdate = 0x8;
+    int64 ctime = 0x9;
+    string desc = 0xa;
+    int32 state = 0xb;
+    int32 access = 0xc;
+    int64 attribute_v2 = 0xd;
+    string tag = 0xe;
+    repeated string tags = 0xf;
+    int64 duration = 0x10;
+    int64 mission_id = 0x11;
+    int64 order_id = 0x12;
+    string redirect_url = 0x13;
+    int64 forward = 0x14;
+    Rights rights = 0x15;
+    Author author = 0x16;
+    Stat stat = 0x17;
+    string report_result = 0x18;
+    string dynamic = 0x19;
+    int64 first_cid = 0x1a;
+    Dimension dimension = 0x1b;
+    repeated StaffInfo staff_info = 0x1c;
+    int64 season_id = 0x1d;
+    int32 attribute = 0x1e;
+}
+
+message Season {
+    string allow_download = 0x1;
+    int64 season_id = 0x2;
+    int32 is_jump = 0x3;
+    string title = 0x4;
+    string cover = 0x5;
+    int32 is_finish = 0x6;
+    int32 newest_epid = 0x7;
+    string newest_ep_index = 0x8;
+    int64 total_count = 0x9;
+    int32 weekday = 0xa;
+    UserSeason user_season = 0xb;
+    SeasonPlayer player = 0xc;
+    string ovg_playurl = 0xd;
+}
+
+message Bgm {
+
+}
+
+message CMConfig {
+
+}
+
+message CM {
+
+}
+
+message Config {
+
+}
+
+message CustomConfig {
+
+}
+
+message Dislike {
+
+}
+
+message ElecRank {
+
+}
+
+message History {
+
+}
+message Honor {
+
+}
+
+message Interaction {
+
+}
+
+message Label {
+
+}
+
+message OwnerExt {
+
+}
+
+message Audio {
+}
+message DM {
+}
+message Page {
+    int64 cid = 0x1;
+    int32 page = 0x2;
+    string from = 0x3;
+    string part = 0x4;
+    int64 duration = 0x5;
+    string vid = 0x6;
+    string desc = 0x7;
+    string web_link = 0x8;
+    Dimension dimension = 0x9;
+}
+
+message ViewPage {
+    Page page = 0x1;
+    Audio audio = 0x2;
+    DM dm = 0x3;
+    string download_title = 0x4;
+    string download_subtitle = 0x5;
+}
+
+message PlayerIcon {
+}
+
+message RelateTab {
+}
+message Relate {
+}
+message ReqUser {
+}
+message Staff {
+}
+message TIcon {
+    string icon = 0x1;
+}
+message Tag {
+    int64 id = 0x1;
+    string name = 0x2;
+    int64 likes = 0x3;
+    int64 hates  = 0x4;
+    int32 liked = 0x5;
+    int32 hated = 0x6;
+    string uri = 0x7;
+    string tag_type = 0x8;
+}
+message UgcSeason {
+}
+message ViewReply {
+    string activity_url = 0x11;
+    Arc arc = 0x1;
+    string argue_msg = 0x14;
+    repeated Bgm bgm = 0x12;
+    string bvid = 0xe;
+    CMConfig cm_config = 0x1f;
+    repeated CM cms = 0x1e;
+    Config config = 0x19;
+    CustomConfig custom_config = 0x1d;
+    Dislike dislike = 0xb;
+    int32 encode = 0x1c;
+    ElecRank elec_rank = 0x8;
+    History history = 0x9;
+    Honor honor = 0xf;
+    Interaction interaction = 0x1b;
+    Label label = 0x17;
+    OwnerExt owner_ext = 0x3;
+    repeated ViewPage pages = 0x2;
+    int32 play_param = 0x16;
+    PlayerIcon player_icon = 0xc;
+    repeated RelateTab relate_tab = 0x10;
+    repeated Relate relates = 0xa;
+    ReqUser req_user = 0x4;
+
+    Season season = 0x7;
+    string share_subtitle = 0x1a;
+    string short_link = 0x15;
+    repeated Staff staff = 0x13;
+    map<string, TIcon> t_icon = 0x6;
+    repeated Tag tag = 0x5;
+    UgcSeason ugc_season = 0x18;
+    string vip_active = 0xd;
+}
