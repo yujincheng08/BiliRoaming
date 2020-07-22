@@ -121,7 +121,7 @@ fun Class<*>.hookConstructor(vararg args: Any?): XC_MethodHook.Unhook? {
 }
 
 inline fun Class<*>.hookBeforeConstructor(vararg args: Any?, crossinline hooker: (MethodHookParam) -> Unit): XC_MethodHook.Unhook? {
-    return hookConstructor(this, *args, object : XC_MethodHook() {
+    return hookConstructor(*args, object : XC_MethodHook() {
         override fun beforeHookedMethod(param: MethodHookParam) {
             try {
                 hooker(param)
@@ -133,7 +133,7 @@ inline fun Class<*>.hookBeforeConstructor(vararg args: Any?, crossinline hooker:
 }
 
 inline fun Class<*>.hookAfterConstructor(vararg args: Any?, crossinline hooker: (MethodHookParam) -> Unit): XC_MethodHook.Unhook? {
-    return hookConstructor(this, *args, object : XC_MethodHook() {
+    return hookConstructor(*args, object : XC_MethodHook() {
         override fun afterHookedMethod(param: MethodHookParam) {
             try {
                 hooker(param)
