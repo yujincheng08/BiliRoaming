@@ -54,7 +54,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 toastMessage("已从代理服务器获取播放地址")
                 param.result = ByteArrayInputStream(it.toByteArray())
             } ?: run {
-                Log.d("Failed to get play url")
+                Log.e("Failed to get play url")
                 toastMessage("获播放地址失败")
             }
         }
@@ -78,7 +78,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         toastMessage("已从代理服务器获取播放地址")
                         param.result = reconstructResponse(response, it)
                     } ?: run {
-                        Log.d("Failed to get play url")
+                        Log.e("Failed to get play url")
                         toastMessage("获取播放地址失败")
                     }
                 }
@@ -269,7 +269,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             val serializedResponse = builder.build().toByteArray()
             return response.javaClass.callStaticMethod("parseFrom", serializedResponse)!!
         } catch (e: Throwable) {
-            Log.d(e)
+            Log.e(e)
         }
         return response
     }

@@ -310,7 +310,7 @@ object BiliRoamingApi {
             }
 
         } catch (e: Throwable) {
-            Log.d("getContent error: $e with url $urlString")
+            Log.e("getContent error: $e with url $urlString")
             Log.e(e)
             null
         }

@@ -300,7 +300,7 @@ fun String.findClass(classLoader: ClassLoader): Class<*>? {
     return try {
         findClass(this, classLoader)
     } catch (e: ClassNotFoundError) {
-        Log.d(e)
+        Log.e(e)
         null
     }
 }
