@@ -296,7 +296,7 @@ fun Class<*>.callStaticMethod(methodName: String?, parameterTypes: Array<Class<*
     return callStaticMethod(this, methodName, parameterTypes, *args)
 }
 
-fun String.findClass(classLoader: ClassLoader): Class<*>? {
+fun String.findClass(classLoader: ClassLoader?): Class<*>? {
     return try {
         findClass(this, classLoader)
     } catch (e: ClassNotFoundError) {
@@ -305,7 +305,7 @@ fun String.findClass(classLoader: ClassLoader): Class<*>? {
     }
 }
 
-fun String.findClassOrNull(classLoader: ClassLoader): Class<*>? {
+fun String.findClassOrNull(classLoader: ClassLoader?): Class<*>? {
     return findClassIfExists(this, classLoader)
 }
 
