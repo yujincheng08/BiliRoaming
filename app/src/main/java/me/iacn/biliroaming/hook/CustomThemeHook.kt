@@ -68,7 +68,7 @@ class CustomThemeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     // To make the theme color take effect immediately
                     val newId = if (mId == CUSTOM_THEME_ID) -1 else CUSTOM_THEME_ID
                     biliSkin.setIntField("mId", newId)
-                    putCustomColor(color)
+                    customColor = color
                     Log.d("Update new color: mId = $newId, " +
                             "color = 0x ${Integer.toHexString(color).toUpperCase(Locale.getDefault())}")
                     try {
@@ -105,55 +105,28 @@ class CustomThemeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
     }
 
-    /**
-     * Color Array
-     *
-     *
-     * index0: color primary        e.g. global main color.
-     * index1: color primary dark   e.g. tint when button be pressed.
-     * index2: color primary light  e.g. temporarily not used.
-     * index3: color primary trans  e.g. mini-tv cover on drawer.
-     */
-    private fun generateColorArray(primaryColor: Int): IntArray {
-        val colors = IntArray(4)
-        val hsv = FloatArray(3)
-        val result = FloatArray(3)
-        Color.colorToHSV(primaryColor, hsv)
-        colors[0] = primaryColor
-
-        // Decrease brightness
-        System.arraycopy(hsv, 0, result, 0, hsv.size)
-        result[2] -= result[2] * 0.2f
-        colors[1] = Color.HSVToColor(result)
-
-        // Increase brightness
-        System.arraycopy(hsv, 0, result, 0, hsv.size)
-        result[2] += result[2] * 0.1f
-        colors[2] = Color.HSVToColor(result)
-
-        // Increase transparency
-        colors[3] = -0x4c000000 or 0xFFFFFF and colors[1]
-        return colors
-    }
-
-    private val customColor: Int
-        get() = biliPrefs.getInt(CUSTOM_COLOR_KEY, DEFAULT_CUSTOM_COLOR)
-
-    private fun putCustomColor(color: Int) {
-        biliPrefs.edit().putInt(CUSTOM_COLOR_KEY, color).apply()
-    }
-
-    private val biliPrefs: SharedPreferences
-        get() = AndroidAppHelper.currentApplication().getSharedPreferences("bili_preference", Context.MODE_PRIVATE)
-
     fun insertColorForWebProcess() {
         if (!XposedInit.sPrefs.getBoolean("custom_theme", false)) return
 
         try {
-            @Suppress("UNCHECKED_CAST")
-            val colorArray = instance.columnHelperClass?.getStaticObjectFieldAs<SparseArray<IntArray>>(instance.columnColorArray())
-            val primaryColor = customColor
-            colorArray?.put(CUSTOM_THEME_ID, generateColorArray(primaryColor))
+            var cacheColor = customColor
+            var generatedColorArray = generateColorArray(cacheColor)
+            instance.themeNameClass?.getStaticObjectFieldAs<MutableMap<String, Int>>(instance.themeName())?.put("custom", CUSTOM_THEME_ID)
+            instance.columnHelperClass?.getStaticObjectFieldAs<SparseArray<IntArray>>(instance.columnColorArray())?.put(CUSTOM_THEME_ID, generatedColorArray)
+            instance.themeHelperClass?.getStaticObjectFieldAs<SparseArray<IntArray>>(instance.colorArray())?.put(CUSTOM_THEME_ID, generatedColorArray)
+
+            SparseArray::class.java.hookAfterMethod("get", Int::class.javaPrimitiveType, Object::class.java) { param ->
+                if (param.result == generatedColorArray) {
+                    val newColor = customColor
+                    if(newColor != cacheColor) {
+                        generatedColorArray = generateColorArray(newColor)
+                        cacheColor = newColor
+                        @Suppress("UNCHECKED_CAST")
+                        (param.thisObject as SparseArray<IntArray>).put(CUSTOM_THEME_ID, generatedColorArray)
+                        param.result = generatedColorArray
+                    }
+                }
+            }
         } catch (e: Throwable) {
             Log.e(e)
         }
@@ -161,5 +134,43 @@ class CustomThemeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     companion object {
         private const val CUSTOM_THEME_ID = 114514 // ん？
+        @Suppress("DEPRECATION")
+        private val biliPrefs: SharedPreferences
+            get() = AndroidAppHelper.currentApplication().getSharedPreferences("bili_preference", Context.MODE_MULTI_PROCESS)
+        private var customColor: Int
+            get() = biliPrefs.getInt(CUSTOM_COLOR_KEY, DEFAULT_CUSTOM_COLOR)
+            set(value) = biliPrefs.edit().putInt(CUSTOM_COLOR_KEY, value).apply()
+
+        /**
+         * Color Array
+         *
+         *
+         * index0: color primary        e.g. global main color.
+         * index1: color primary dark   e.g. tint when button be pressed.
+         * index2: color primary light  e.g. temporarily not used.
+         * index3: color primary trans  e.g. mini-tv cover on drawer.
+         */
+        @JvmStatic
+        private fun generateColorArray(primaryColor: Int): IntArray {
+            val colors = IntArray(4)
+            val hsv = FloatArray(3)
+            val result = FloatArray(3)
+            Color.colorToHSV(primaryColor, hsv)
+            colors[0] = primaryColor
+
+            // Decrease brightness
+            System.arraycopy(hsv, 0, result, 0, hsv.size)
+            result[2] -= result[2] * 0.2f
+            colors[1] = Color.HSVToColor(result)
+
+            // Increase brightness
+            System.arraycopy(hsv, 0, result, 0, hsv.size)
+            result[2] += result[2] * 0.1f
+            colors[2] = Color.HSVToColor(result)
+
+            // Increase transparency
+            colors[3] = -0x4c000000 or 0xFFFFFF and colors[1]
+            return colors
+        }
     }
 }
