@@ -13,6 +13,7 @@ import me.iacn.biliroaming.network.BiliRoamingApi.getSeason
 import me.iacn.biliroaming.utils.*
 import org.json.JSONObject
 import java.lang.reflect.Method
+import java.lang.reflect.Type
 import java.net.URL
 
 /**
@@ -25,12 +26,14 @@ data class Result(val code: Int?, val result: Any?)
 class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     companion object {
         val lastSeasonInfo: MutableMap<String, String?> = HashMap()
+        private var called = false
     }
 
     override fun startHook() {
         if (!XposedInit.sPrefs.getBoolean("main_func", false)) return
         Log.d("startHook: BangumiSeason")
-        "com.bilibili.bangumi.data.page.detail.BangumiDetailApiService\$UniformSeasonParamsMap".findClass(mClassLoader)?.hookAfterAllConstructors { param ->
+        instance.seasonParamsMapClass?.hookAfterAllConstructors { param->
+//        instance.seasonParamsMapClass?.hookAfterConstructor(String::class.java, Int::class.javaPrimitiveType, Int::class.javaPrimitiveType, String::class.java, String::class.java, String::class.java, String::class.java, Int::class.javaPrimitiveType, String::class.java, Boolean::class.javaPrimitiveType) { param ->
             @Suppress("UNCHECKED_CAST")
             val paramMap: Map<String, String> = param.thisObject as Map<String, String>
             lastSeasonInfo.clear()
@@ -45,26 +48,35 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         instance.retrofitResponseClass?.hookBeforeAllConstructors { param ->
             val url = getUrl(param.args[0])
             val body = param.args[1] ?: return@hookBeforeAllConstructors
-            // Filter non-bangumi responses
-            // If it isn't bangumi, the type variable will not exist in this map
-            if (instance.bangumiApiResponseClass?.isInstance(body) == true ||
-                    // for new blue 6.3.7
-                    instance.rxGeneralResponseClass?.isInstance(body) == true) {
-                fixBangumi(body)
-            } else if (url != null && url.startsWith("https://app.bilibili.com/x/v2/view") &&
+            if (url != null && url.startsWith("https://app.bilibili.com/x/v2/view") &&
                     body.getIntField("code") == -404) {
                 fixView(body, url)
             }
         }
 
-        "com.bapis.bilibili.app.view.v1.ViewMoss".hookAfterMethod(mClassLoader, "view", "com.bapis.bilibili.app.view.v1.ViewReq") { param ->
-            param.result?.let { return@hookAfterMethod }
-            val serializedRequest = param.args[0].callMethodAs<ByteArray>("toByteArray")
-            val req = Protos.ViewReq.parseFrom(serializedRequest)
-            val reply = fixViewProto(req)
-            val serializedReply = reply?.toByteArray() ?: return@hookAfterMethod
-            param.result = (param.method as Method).returnType.callStaticMethod("parseFrom", serializedReply)
+        instance.fastJsonClass?.hookAfterMethod(instance.fastJsonParse(), String::class.java, Type::class.java, Int::class.javaPrimitiveType, "com.alibaba.fastjson.parser.Feature[]") { param ->
+            var result = param.result ?: return@hookAfterMethod
+            if (result.javaClass == instance.generalResponseClass) {
+                result = result.getObjectField("data") ?: return@hookAfterMethod
+            }
+            when (result.javaClass) {
+                // Filter non-bangumi responses
+                // If it isn't bangumi, the type variable will not exist in this map
+                instance.bangumiApiResponseClass, instance.rxGeneralResponseClass -> {
+                    if (!called) fixBangumi(result)
+                }
+            }
         }
+
+        "com.bapis.bilibili.app.view.v1.ViewMoss".findClassOrNull(mClassLoader)
+                ?.hookAfterMethod("view", "com.bapis.bilibili.app.view.v1.ViewReq") { param ->
+                    param.result?.let { return@hookAfterMethod }
+                    val serializedRequest = param.args[0].callMethodAs<ByteArray>("toByteArray")
+                    val req = Protos.ViewReq.parseFrom(serializedRequest)
+                    val reply = fixViewProto(req)
+                    val serializedReply = reply?.toByteArray() ?: return@hookAfterMethod
+                    param.result = (param.method as Method).returnType.callStaticMethod("parseFrom", serializedReply)
+                }
 
         val urlHook = object : XC_MethodHook() {
             @Throws(Throwable::class)
@@ -282,7 +294,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private fun fixView(body: Any, urlString: String) {
         var queryString = urlString.substring(urlString.indexOf("?") + 1)
         queryString = queryString.replace("aid=", "id=")
-        val content = BiliRoamingApi.getView(queryString)
+        val content = BiliRoamingApi.getView(queryString) ?: return
         Log.d("Got view information from proxy server: $content")
         val detailClass = "tv.danmaku.bili.ui.video.api.BiliVideoDetail".findClass(mClassLoader)
                 ?: return
@@ -321,8 +333,16 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val contentJson = JSONObject(content)
         val resultJson = contentJson.optJSONObject(fieldName) ?: return Result(null, null)
         val code = contentJson.optInt("code")
-        val newResult = instance.fastJsonClass?.callStaticMethod(
-                instance.fastJsonParse(), resultJson.toString(), beanClass)
+        called = true // prevent recursive
+        val newResult = try {
+            instance.fastJsonClass?.callStaticMethod(
+                    instance.fastJsonParse(), resultJson.toString(), beanClass)
+        } catch (e: Throwable) {
+            Log.e(e)
+            null
+        } finally {
+            called = false
+        }
         return Result(code, newResult)
     }
 

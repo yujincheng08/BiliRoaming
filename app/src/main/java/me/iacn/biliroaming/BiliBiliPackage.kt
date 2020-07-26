@@ -38,13 +38,14 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val themeNameClass by Weak { mHookInfo["class_theme_name"]?.findClassOrNull(mClassLoader) }
     val themeProcessorClass by Weak { mHookInfo["class_theme_processor"]?.findClassOrNull(mClassLoader) }
     val drawerClass by Weak { mHookInfo["class_drawer"]?.findClassOrNull(mClassLoader) }
+    val generalResponseClass by Weak { "com.bilibili.okretro.GeneralResponse".findClass(mClassLoader) }
+    val seasonParamsMapClass by Weak { "com.bilibili.bangumi.data.page.detail.BangumiDetailApiService\$UniformSeasonParamsMap".findClass(mClassLoader) }
 
     private val classesList by lazy { DexFile(AndroidAppHelper.currentApplication().packageCodePath).entries().toList() }
+    private val accessKeyInstance by lazy { "com.bilibili.bangumi.ui.page.detail.pay.BangumiPayHelperV2\$accessKey\$2".findClass(mClassLoader)?.getStaticObjectField("INSTANCE") }
 
-    val accessKey by lazy{
-        "com.bilibili.bangumi.ui.page.detail.pay.BangumiPayHelperV2\$accessKey\$2".findClass(mClassLoader)
-                ?.getStaticObjectField("INSTANCE")?.callMethodAs<String>("invoke")
-    }
+    val accessKey
+        get() = accessKeyInstance?.callMethodAs<String>("invoke")
 
     init {
         try {
