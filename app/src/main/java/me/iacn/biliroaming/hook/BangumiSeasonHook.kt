@@ -13,7 +13,6 @@ import me.iacn.biliroaming.network.BiliRoamingApi.getSeason
 import me.iacn.biliroaming.utils.*
 import org.json.JSONObject
 import java.lang.reflect.Method
-import java.lang.reflect.Type
 import java.net.URL
 
 /**
@@ -26,14 +25,12 @@ data class Result(val code: Int?, val result: Any?)
 class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     companion object {
         val lastSeasonInfo: MutableMap<String, String?> = HashMap()
-        private var called = false
     }
 
     override fun startHook() {
         if (!XposedInit.sPrefs.getBoolean("main_func", false)) return
         Log.d("startHook: BangumiSeason")
-        instance.seasonParamsMapClass?.hookAfterAllConstructors { param->
-//        instance.seasonParamsMapClass?.hookAfterConstructor(String::class.java, Int::class.javaPrimitiveType, Int::class.javaPrimitiveType, String::class.java, String::class.java, String::class.java, String::class.java, Int::class.javaPrimitiveType, String::class.java, Boolean::class.javaPrimitiveType) { param ->
+        instance.seasonParamsMapClass?.hookAfterAllConstructors { param ->
             @Suppress("UNCHECKED_CAST")
             val paramMap: Map<String, String> = param.thisObject as Map<String, String>
             lastSeasonInfo.clear()
@@ -48,23 +45,15 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         instance.retrofitResponseClass?.hookBeforeAllConstructors { param ->
             val url = getUrl(param.args[0])
             val body = param.args[1] ?: return@hookBeforeAllConstructors
-            if (url != null && url.startsWith("https://app.bilibili.com/x/v2/view") &&
+            // Filter non-bangumi responses
+            // If it isn't bangumi, the type variable will not exist in this map
+            if (instance.bangumiApiResponseClass?.isInstance(body) == true ||
+                    // for new blue 6.3.7
+                    instance.rxGeneralResponseClass?.isInstance(body) == true) {
+                fixBangumi(body)
+            } else if (url != null && url.startsWith("https://app.bilibili.com/x/v2/view") &&
                     body.getIntField("code") == -404) {
                 fixView(body, url)
-            }
-        }
-
-        instance.fastJsonClass?.hookAfterMethod(instance.fastJsonParse(), String::class.java, Type::class.java, Int::class.javaPrimitiveType, "com.alibaba.fastjson.parser.Feature[]") { param ->
-            var result = param.result ?: return@hookAfterMethod
-            if (result.javaClass == instance.generalResponseClass) {
-                result = result.getObjectField("data") ?: return@hookAfterMethod
-            }
-            when (result.javaClass) {
-                // Filter non-bangumi responses
-                // If it isn't bangumi, the type variable will not exist in this map
-                instance.bangumiApiResponseClass, instance.rxGeneralResponseClass -> {
-                    if (!called) fixBangumi(result)
-                }
             }
         }
 
@@ -333,16 +322,8 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val contentJson = JSONObject(content)
         val resultJson = contentJson.optJSONObject(fieldName) ?: return Result(null, null)
         val code = contentJson.optInt("code")
-        called = true // prevent recursive
-        val newResult = try {
-            instance.fastJsonClass?.callStaticMethod(
-                    instance.fastJsonParse(), resultJson.toString(), beanClass)
-        } catch (e: Throwable) {
-            Log.e(e)
-            null
-        } finally {
-            called = false
-        }
+        val newResult = instance.fastJsonClass?.callStaticMethod(
+                instance.fastJsonParse(), resultJson.toString(), beanClass)
         return Result(code, newResult)
     }
 
