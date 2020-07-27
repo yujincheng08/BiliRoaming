@@ -17,6 +17,7 @@ import android.preference.PreferenceFragment
 import android.view.ContextThemeWrapper
 import android.view.ViewGroup
 import android.widget.TextView
+import me.iacn.biliroaming.XposedInit.Companion.moduleRes
 import me.iacn.biliroaming.XposedInit.Companion.toastMessage
 import me.iacn.biliroaming.utils.CheckVersionTask
 import me.iacn.biliroaming.utils.OnTaskReturn
@@ -46,8 +47,9 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("author").onPreferenceClickListener = this
             findPreference("test_cdn").onPreferenceClickListener = this
             findPreference("group").onPreferenceClickListener = this
+            findPreference("tg").onPreferenceClickListener = this
             findPreference("help").onPreferenceClickListener = this
-            CheckVersionTask(this).execute(URL(XposedInit.moduleRes.getString(R.string.version_url)))
+            CheckVersionTask(this).execute(URL(moduleRes.getString(R.string.version_url)))
         }
 
         override fun onPreferenceChange(preference: Preference, newValue: Any): Boolean {
@@ -77,14 +79,14 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                         val aboutGroup = findPreference("about") as PreferenceCategory
                         val updatePreference = Preference(activity)
                         updatePreference.key = "update"
-                        updatePreference.title = XposedInit.moduleRes.getString(R.string.update_title)
+                        updatePreference.title = moduleRes.getString(R.string.update_title)
                         val log = try {
                             val body = result.getString("body")
                             body.substring(body.lastIndexOf("更新日志"))
                         } catch (e: Throwable) {
                             ""
                         }
-                        updatePreference.summary = if (log.isNotEmpty()) log else XposedInit.moduleRes.getString(R.string.update_summary)
+                        updatePreference.summary = if (log.isNotEmpty()) log else moduleRes.getString(R.string.update_summary)
                         updatePreference.onPreferenceClickListener = this
                         updatePreference.order = 1
                         aboutGroup.addPreference(updatePreference)
@@ -95,28 +97,28 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         }
 
         private fun onAuthorClick(): Boolean {
-            val uri = Uri.parse(XposedInit.moduleRes.getString(R.string.github_url))
+            val uri = Uri.parse(moduleRes.getString(R.string.github_url))
             val intent = Intent(Intent.ACTION_VIEW, uri)
             startActivity(intent)
             return true
         }
 
         private fun onTestCDNClick(): Boolean {
-            val uri = Uri.parse(XposedInit.moduleRes.getString(R.string.cdn_url))
+            val uri = Uri.parse(moduleRes.getString(R.string.cdn_url))
             val intent = Intent(Intent.ACTION_VIEW, uri)
             startActivity(intent)
             return true
         }
 
         private fun onUpdateCheck(): Boolean {
-            val uri = Uri.parse(XposedInit.moduleRes.getString(R.string.update_url))
+            val uri = Uri.parse(moduleRes.getString(R.string.update_url))
             val intent = Intent(Intent.ACTION_VIEW, uri)
             startActivity(intent)
             return true
         }
 
         private fun onHelpClick(): Boolean {
-            val uri = Uri.parse(XposedInit.moduleRes.getString(R.string.help_url))
+            val uri = Uri.parse(moduleRes.getString(R.string.help_url))
             val intent = Intent(Intent.ACTION_VIEW, uri)
             startActivity(intent)
             return true
@@ -135,6 +137,13 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             }
         }
 
+        private fun onTgClick(): Boolean {
+            val uri = Uri.parse(moduleRes.getString(R.string.tg_url))
+            val intent = Intent(Intent.ACTION_VIEW, uri)
+            startActivity(intent)
+            return true
+        }
+
         override fun onPreferenceClick(preference: Preference?): Boolean {
             return when (preference?.key) {
                 "version" -> onVersionClick()
@@ -142,6 +151,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 "test_cdn" -> onTestCDNClick()
                 "update" -> onUpdateCheck()
                 "group" -> onGroupClick()
+                "tg" -> onTgClick()
                 "help" -> onHelpClick()
                 else -> false
             }
@@ -150,7 +160,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
 
     init {
         val activity = context as Activity
-        val backupRes = replaceResource(activity, XposedInit.moduleRes)
+        val backupRes = replaceResource(activity, moduleRes)
         val prefsFragment = PrefsFragment()
         activity.fragmentManager.beginTransaction().add(prefsFragment, "Setting").commit()
         activity.fragmentManager.executePendingTransactions()

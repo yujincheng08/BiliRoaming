@@ -57,7 +57,10 @@
     <string name="github_url">https://github.com/yujincheng08/BiliRoaming</string>
     <string name="cdn_url">https://yujincheng08.github.io/BiliRoaming/cdn_test.html</string>
     <string name="group_title">QQ群</string>
-    <string name="group_summary">点击加入QQ群</string>
+    <string name="group_summary">点击加入QQ群（长期禁言满员的通知群）</string>
+    <string name="tg_title">TG群</string>
+    <string name="tg_summary">点击加入TG群（不禁言但需要翻墙）</string>
+    <string name="tg_url">https://t.me/biliroaming</string>
     <string name="upos_summary">设置大陆番剧的服务器，仅对海外用户生效</string>
     <string name="upos_title">UPOS服务器设置</string>
     <string name="purify_splash_summary">去除启动客户端时的推广</string>

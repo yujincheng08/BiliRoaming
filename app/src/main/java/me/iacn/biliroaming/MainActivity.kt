@@ -59,6 +59,7 @@ class MainActivity : Activity() {
             findPreference("author").onPreferenceClickListener = this
             findPreference("group").onPreferenceClickListener = this
             findPreference("feature").onPreferenceClickListener = this
+            findPreference("tg").onPreferenceClickListener = this
             findPreference("help").onPreferenceClickListener = this
             CheckVersionTask(this).execute(URL(resources.getString(R.string.version_url)))
         }
@@ -140,6 +141,13 @@ class MainActivity : Activity() {
             return true
         }
 
+        private fun onTgClick(): Boolean {
+            val uri = Uri.parse(resources.getString(R.string.tg_url))
+            val intent = Intent(Intent.ACTION_VIEW, uri)
+            startActivity(intent)
+            return true
+        }
+
         private fun onHelpClick(): Boolean {
             val uri = Uri.parse(resources.getString(R.string.help_url))
             val intent = Intent(Intent.ACTION_VIEW, uri)
@@ -175,6 +183,7 @@ class MainActivity : Activity() {
                 "update" -> onUpdateCheck()
                 "group" -> onGroupClick()
                 "feature" -> onFeatureClick()
+                "tg" -> onTgClick()
                 "help" -> onHelpClick()
                 else -> false
             }

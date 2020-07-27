@@ -156,6 +156,11 @@
             android:title="@string/group_title" />
 
         <Preference
+            android:key="tg"
+            android:summary="@string/tg_summary"
+            android:title="@string/tg_title" />
+
+        <Preference
             android:key="thanks"
             android:summary="@string/thanks_summary"
             android:title="@string/thanks_title" />
