@@ -168,7 +168,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         prefsFragment.onActivityCreated(null)
 
         val unhook = Preference::class.java.hookAfterMethod("onCreateView", ViewGroup::class.java) { param ->
-            if (PreferenceCategory::class.java.isInstance(param.thisObject)) {
+            if (PreferenceCategory::class.java.isInstance(param.thisObject) && TextView::class.java.isInstance(param.result)) {
                 val textView = param.result as TextView
                 if (textView.textColors.defaultColor == -13816531)
                     textView.setTextColor(Color.GRAY)

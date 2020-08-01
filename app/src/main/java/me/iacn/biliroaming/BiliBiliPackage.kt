@@ -31,6 +31,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val sectionClass by Weak { mHookInfo["class_section"]?.findClassOrNull(mClassLoader) }
     val retrofitResponseClass by Weak { mHookInfo["class_retrofit_response"]?.findClassOrNull(mClassLoader) }
     val themeHelperClass by Weak { mHookInfo["class_theme_helper"]?.findClassOrNull(mClassLoader) }
+    val themeIdHelperClass by Weak { mHookInfo["class_theme_id_helper"]?.findClassOrNull(mClassLoader) }
     val columnHelperClass by Weak { mHookInfo["class_column_helper"]?.findClassOrNull(mClassLoader) }
     val settingRouteClass by Weak { mHookInfo["class_setting_route"]?.findClassOrNull(mClassLoader) }
     val themeListClickClass by Weak { mHookInfo["class_theme_list_click"]?.findClassOrNull(mClassLoader) }
@@ -64,6 +65,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     fun colorArray(): String? {
         return mHookInfo["field_color_array"]
+    }
+
+    fun colorId(): String? {
+        return mHookInfo["field_color_id"]
     }
 
     fun columnColorArray(): String? {
@@ -179,8 +184,12 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             arrayOf(fastJsonClass?.name, if (notObfuscated) "parseObject" else "a")
         }.checkOrPut("class_theme_helper") {
             findThemeHelper()
+        }.checkOrPut("class_theme_id_helper") {
+            findThemeIdHelper()
         }.checkOrPut("field_color_array") {
             findColorArrayField()
+        }.checkOrPut("field_color_id") {
+            findColorIdField()
         }.checkOrPut("class_column_helper") {
             findColumnHelper()
         }.checkOrPut("field_column_color_array") {
@@ -298,6 +307,12 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         }?.name
     }
 
+    private fun findColorIdField(): String? {
+        return themeIdHelperClass?.declaredFields?.firstOrNull {
+            it.type == SparseArray::class.java
+        }?.name
+    }
+
     private fun findColumnColorArrayField(): String? {
         return columnHelperClass?.declaredFields?.firstOrNull {
             it.type == SparseArray::class.java &&
@@ -356,7 +371,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         }?.name
     }
 
-
     private fun findVideoDetailField(): String? {
         val detailClass = "tv.danmaku.bili.ui.video.api.BiliVideoDetail".findClass(mClassLoader)
                 ?: return null
@@ -384,6 +398,23 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 }?.filter {
                     it.type == SparseArray::class.java
                 }?.count()?.let { it > 1 } ?: false
+            }
+            if (classes.size == 1) classes[0] else null
+        } catch (e: Throwable) {
+            null
+        }
+    }
+
+    private fun findThemeIdHelper(): String? {
+        return try {
+            val classes = classesList.filter {
+                it.startsWith("tv.danmaku.bili.ui.theme")
+            }.filter { c ->
+                c.findClassOrNull(mClassLoader)?.declaredFields?.filter {
+                    Modifier.isStatic(it.modifiers)
+                }?.filter {
+                    it.type == SparseArray::class.java
+                }?.count()?.let { it == 1 } ?: false
             }
             if (classes.size == 1) classes[0] else null
         } catch (e: Throwable) {

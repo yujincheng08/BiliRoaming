@@ -114,11 +114,13 @@ class CustomThemeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             instance.themeNameClass?.getStaticObjectFieldAs<MutableMap<String, Int>>(instance.themeName())?.put("custom", CUSTOM_THEME_ID)
             instance.columnHelperClass?.getStaticObjectFieldAs<SparseArray<IntArray>>(instance.columnColorArray())?.put(CUSTOM_THEME_ID, generatedColorArray)
             instance.themeHelperClass?.getStaticObjectFieldAs<SparseArray<IntArray>>(instance.colorArray())?.put(CUSTOM_THEME_ID, generatedColorArray)
+            instance.themeIdHelperClass?.getStaticObjectFieldAs<SparseArray<Int>>(instance.colorId())?.put(CUSTOM_THEME_ID, CUSTOM_THEME_ID)
 
             SparseArray::class.java.hookAfterMethod("get", Int::class.javaPrimitiveType, Object::class.java) { param ->
-                if (param.result == generatedColorArray) {
+                if(param.args[0] != CUSTOM_THEME_ID) return@hookAfterMethod
+                if (param.result?.javaClass == generatedColorArray.javaClass && param.result == generatedColorArray) {
                     val newColor = customColor
-                    if(newColor != cacheColor) {
+                    if (newColor != cacheColor) {
                         generatedColorArray = generateColorArray(newColor)
                         cacheColor = newColor
                         @Suppress("UNCHECKED_CAST")
@@ -134,6 +136,7 @@ class CustomThemeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     companion object {
         private const val CUSTOM_THEME_ID = 114514 // ん？
+
         @Suppress("DEPRECATION")
         private val biliPrefs: SharedPreferences
             get() = AndroidAppHelper.currentApplication().getSharedPreferences("bili_preference", Context.MODE_MULTI_PROCESS)
