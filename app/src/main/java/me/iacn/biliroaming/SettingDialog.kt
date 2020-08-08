@@ -212,7 +212,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             themeField.isAccessible = true
             val oldTheme = themeField.get(context) as Resources.Theme
             val newTheme = res.newTheme()
-            newTheme.applyStyle(R.style.LightTheme, true)
+            newTheme.applyStyle(R.style.MainTheme, true)
             resField.set(context, res)
             themeField.set(context, newTheme)
             return BackupRes(oldRes, oldTheme)

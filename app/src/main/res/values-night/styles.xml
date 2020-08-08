@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+<style name="MainTheme" parent="android:Theme.Material.NoActionBar">
+    <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
+    <item name="android:colorAccent">#64b5f6</item>
+    <item name="android:windowTranslucentStatus">true</item>
+    <item name="android:fitsSystemWindows">true</item>
+</style>
+
+</resources>

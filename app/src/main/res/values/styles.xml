@@ -1,15 +1,8 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
 
-    <style name="LightTheme" parent="android:Theme.Material.Light.NoActionBar">
+    <style name="MainTheme" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:windowLightStatusBar" tools:targetApi="m">true</item>
         <item name="android:colorAccent">#1a73e9</item>
-        <item name="android:windowTranslucentStatus">true</item>
-        <item name="android:fitsSystemWindows">true</item>
-    </style>
-
-    <style name="DarkTheme" parent="android:Theme.Material.NoActionBar">
-        <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
-        <item name="android:colorAccent">#64b5f6</item>
         <item name="android:windowTranslucentStatus">true</item>
         <item name="android:fitsSystemWindows">true</item>
     </style>

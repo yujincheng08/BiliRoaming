@@ -34,14 +34,6 @@ import java.net.URL
 class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        when (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) {
-            Configuration.UI_MODE_NIGHT_NO -> {
-                setTheme(R.style.LightTheme)
-            }
-            Configuration.UI_MODE_NIGHT_YES -> {
-                setTheme(R.style.DarkTheme)
-            }
-        }
         fragmentManager.beginTransaction().replace(android.R.id.content, PrefsFragment()).commit()
     }
 
