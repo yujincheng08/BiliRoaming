@@ -3,26 +3,35 @@
 package me.iacn.biliroaming
 
 import android.app.Activity
+import android.app.Activity.RESULT_CANCELED
 import android.app.AlertDialog
+import android.app.AndroidAppHelper
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.res.Resources
+import android.graphics.Bitmap
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.preference.Preference
 import android.preference.PreferenceCategory
 import android.preference.PreferenceFragment
+import android.provider.MediaStore
 import android.view.ContextThemeWrapper
 import android.view.ViewGroup
 import android.widget.TextView
 import me.iacn.biliroaming.XposedInit.Companion.moduleRes
 import me.iacn.biliroaming.XposedInit.Companion.toastMessage
+import me.iacn.biliroaming.hook.SplashHook
 import me.iacn.biliroaming.utils.CheckVersionTask
 import me.iacn.biliroaming.utils.OnTaskReturn
 import me.iacn.biliroaming.utils.hookAfterMethod
 import org.json.JSONObject
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileOutputStream
 import java.net.URL
 import kotlin.system.exitProcess
 
@@ -49,12 +58,86 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("group").onPreferenceClickListener = this
             findPreference("tg").onPreferenceClickListener = this
             findPreference("help").onPreferenceClickListener = this
+            findPreference("custom_splash").onPreferenceChangeListener = this
+            findPreference("custom_splash_logo").onPreferenceChangeListener = this
+            checkCompatibleVersion()
             CheckVersionTask(this).execute(URL(moduleRes.getString(R.string.version_url)))
         }
 
+        private fun checkCompatibleVersion() {
+            val packageName = AndroidAppHelper.currentPackageName()
+            val versionCode = XposedInit.currentContext.packageManager.getPackageInfo(packageName, 0).versionCode
+            var supportSplashHook = false
+            var supportLiveHook = false
+            when (packageName) {
+                "tv.danmaku.bili" -> {
+                    when {
+                        versionCode >= 6060600 -> supportSplashHook = true
+                    }
+                }
+                "com.bilibili.app.in" -> {
+                    when {
+                        versionCode >= 2050410 -> supportLiveHook = true
+                    }
+                }
+            }
+            if (!supportSplashHook) {
+                findPreference("custom_splash").isEnabled = false
+                findPreference("custom_splash_logo").isEnabled = false
+            }
+            if (!supportLiveHook) {
+                findPreference("add_live").isEnabled = false
+            }
+        }
+
         override fun onPreferenceChange(preference: Preference, newValue: Any): Boolean {
+            when (preference.key) {
+                "custom_splash" -> {
+                    if (newValue as Boolean)
+                        selectImage(SPLASH_SELECTION)
+                }
+                "custom_splash_logo" -> {
+                    if (newValue as Boolean)
+                        selectImage(LOGO_SELECTION)
+                }
+            }
             return true
         }
+
+        private fun selectImage(action: Int): Boolean {
+            val intent = Intent(Intent.ACTION_GET_CONTENT)
+            intent.type = "*/*"
+            intent.addCategory(Intent.CATEGORY_OPENABLE)
+
+            try {
+                startActivityForResult(Intent.createChooser(intent, "选择一张图片"), action)
+            } catch (ex: ActivityNotFoundException) {
+                toastMessage("请安装文件管理器")
+            }
+            return true
+        }
+
+        override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+            val destFile = when (requestCode) {
+                SPLASH_SELECTION ->
+                    File(XposedInit.currentContext.filesDir, SplashHook.SPLASH_IMAGE)
+                LOGO_SELECTION ->
+                    File(XposedInit.currentContext.filesDir, SplashHook.LOGO_IMAGE)
+                else -> null
+            } ?: return
+            val uri = data?.data
+            if (resultCode == RESULT_CANCELED || uri == null) {
+                destFile.delete()
+                return
+            }
+            val stream = ByteArrayOutputStream()
+            stream.flush()
+            MediaStore.Images.Media.getBitmap(activity.contentResolver, uri).compress(Bitmap.CompressFormat.PNG, 100, stream)
+            val dest = FileOutputStream(destFile)
+            stream.writeTo(dest)
+            super.onActivityResult(requestCode, resultCode, data)
+        }
+
 
         private fun onVersionClick(): Boolean {
             if (prefs.getBoolean("hidden", false) || counter == 7) {
@@ -228,6 +311,9 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             themeField.isAccessible = true
             themeField.set(context, backupRes.theme)
         }
+
+        const val SPLASH_SELECTION = 0
+        const val LOGO_SELECTION = 1
     }
 
 }

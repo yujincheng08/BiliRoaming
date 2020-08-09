@@ -15,6 +15,7 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val tabClass = "tv.danmaku.bili.ui.main2.resource.MainResourceManager\$Tab".findClass(mClassLoader)
         val defaultWordClass = "tv.danmaku.bili.ui.main2.api.SearchDefaultWord".findClass(mClassLoader)
         val defaultKeywordClass = "com.bilibili.search.api.DefaultKeyword".findClass(mClassLoader)
+        val brandSplashDataClass = "tv.danmaku.bili.ui.splash.brand.BrandSplashData".findClass(mClassLoader)
 
         instance.fastJsonClass?.hookAfterMethod(instance.fastJsonParse(), String::class.java, Type::class.java, Int::class.javaPrimitiveType, "com.alibaba.fastjson.parser.Feature[]") { param ->
             var result = param.result ?: return@hookAfterMethod
@@ -89,6 +90,14 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             if (it.type != Int::class.javaPrimitiveType)
                                 result.setObjectField(it.name, null)
                         }
+                    }
+                }
+                brandSplashDataClass -> {
+                    if (XposedInit.sPrefs.getBoolean("custom_splash", false) || XposedInit.sPrefs.getBoolean("custom_splash_logo", false)) {
+                        val brandList = result.getObjectFieldAs<MutableList<Any>>("brandList")
+                        val showList = result.getObjectFieldAs<MutableList<Any>>("showList")
+                        brandList.clear()
+                        showList.clear()
                     }
                 }
             }

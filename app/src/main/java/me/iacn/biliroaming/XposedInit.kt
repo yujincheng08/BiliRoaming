@@ -60,6 +60,7 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                     startHook(MiniProgramHook(lpparam.classLoader))
                     startHook(AutoLikeHook(lpparam.classLoader))
                     startHook(SettingHook(lpparam.classLoader))
+                    startHook(SplashHook(lpparam.classLoader))
                 }
                 "tv.danmaku.bili:web", "com.bilibili.app.in:web", "com.bilibili.app.blue:web" -> {
                     BiliBiliPackage(lpparam.classLoader, param.args[0] as Context)

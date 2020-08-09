@@ -7,6 +7,7 @@ import de.robv.android.xposed.XC_MethodHook.MethodHookParam
 import de.robv.android.xposed.XC_MethodReplacement
 import de.robv.android.xposed.XposedBridge.hookAllConstructors
 import de.robv.android.xposed.XposedBridge.hookAllMethods
+import de.robv.android.xposed.XposedHelpers
 import de.robv.android.xposed.XposedHelpers.*
 import java.lang.reflect.Field
 
@@ -323,6 +324,11 @@ fun Class<*>.findFieldOrNull(field: String?): Field? {
 
 fun <T> T.setIntField(field: String?, value: Int): T {
     setIntField(this, field, value)
+    return this
+}
+
+fun <T> T.setLongField(field: String?, value: Long): T {
+    setLongField(this, field, value)
     return this
 }
 
