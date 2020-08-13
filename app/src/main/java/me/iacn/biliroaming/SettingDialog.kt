@@ -22,6 +22,7 @@ import android.provider.MediaStore
 import android.view.ContextThemeWrapper
 import android.view.ViewGroup
 import android.widget.TextView
+import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.XposedInit.Companion.moduleRes
 import me.iacn.biliroaming.XposedInit.Companion.toastMessage
 import me.iacn.biliroaming.hook.SplashHook
@@ -67,26 +68,28 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         private fun checkCompatibleVersion() {
             val packageName = AndroidAppHelper.currentPackageName()
             val versionCode = XposedInit.currentContext.packageManager.getPackageInfo(packageName, 0).versionCode
-            var supportSplashHook = false
             var supportLiveHook = false
             when (packageName) {
-                "tv.danmaku.bili" -> {
-                    when {
-                        versionCode >= 6060600 -> supportSplashHook = true
-                    }
-                }
                 "com.bilibili.app.in" -> {
                     when {
                         versionCode >= 2050410 -> supportLiveHook = true
                     }
                 }
             }
+            val supportSplashHook: Boolean = instance.brandSplashClass != null
             if (!supportSplashHook) {
-                findPreference("custom_splash").isEnabled = false
-                findPreference("custom_splash_logo").isEnabled = false
+                disablePreference("custom_splash")
+                disablePreference("custom_splash_logo")
             }
             if (!supportLiveHook) {
-                findPreference("add_live").isEnabled = false
+                disablePreference("add_live")
+            }
+        }
+
+        private fun disablePreference(name: String) {
+            findPreference(name).run {
+                isEnabled = false
+                summary = moduleRes.getString(R.string.not_support)
             }
         }
 

@@ -86,4 +86,5 @@
     <string name="purify_search_summary">去除搜索页面的热搜和推荐</string>
     <string name="demo">实例</string>
     <string name="runtime_app_fuck">运行环境：应用转生</string>
+    <string name="not_support">当前版本客户端不支持此功能</string>
 </resources>

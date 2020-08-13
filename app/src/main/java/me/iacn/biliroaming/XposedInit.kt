@@ -96,7 +96,6 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
             if (!sPrefs.getBoolean("show_info", true)) return
             handler.post {
                 toast.setText("哔哩漫游：$msg")
-                toast.duration = Toast.LENGTH_SHORT
                 toast.show()
             }
         }
