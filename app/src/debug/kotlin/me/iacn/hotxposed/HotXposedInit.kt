@@ -3,6 +3,7 @@ package me.iacn.hotxposed
 import android.content.Context
 import dalvik.system.PathClassLoader
 import de.robv.android.xposed.IXposedHookLoadPackage
+import de.robv.android.xposed.IXposedHookZygoteInit
 import de.robv.android.xposed.IXposedHookZygoteInit.StartupParam
 import de.robv.android.xposed.XC_MethodReplacement
 import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam
@@ -15,26 +16,35 @@ import java.io.File
  * Created by iAcn on 2019/3/25
  * Email i@iacn.me
  */
-class HotXposedInit : IXposedHookLoadPackage {
+class HotXposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
+
+    override fun initZygote(startupParam: StartupParam) {
+        modulePath = startupParam.modulePath
+    }
 
     companion object {
         private const val REAL_XPOSED_INIT = "me.iacn.biliroaming.XposedInit"
+        lateinit var modulePath: String
     }
 
     override fun handleLoadPackage(lpparam: LoadPackageParam) {
         disableModulesUpdatedNotification(lpparam)
         if (!Constant.BILIBILI_PACKAGENAME.contains(lpparam.packageName) && lpparam.packageName != BuildConfig.APPLICATION_ID) return
 
-        val moduleApkFile = getModuleApkFile()
-        if (moduleApkFile?.exists() != true) return
+        try {
+            val moduleApkFile = getModuleApkFile() ?: File(modulePath)
+            if (!moduleApkFile.exists()) return
 
-        val classLoader = PathClassLoader(moduleApkFile.absolutePath, lpparam::class.java.classLoader)
-        classLoader.loadClass(REAL_XPOSED_INIT)?.new()?.run{
-            val param = StartupParam::class.java.new() as StartupParam
-            param.modulePath = moduleApkFile.absolutePath
-            param.startsSystemServer = false
-            callMethod("initZygote", param)
-            callMethod("handleLoadPackage", lpparam)
+            val classLoader = PathClassLoader(moduleApkFile.absolutePath, lpparam::class.java.classLoader)
+            classLoader.loadClass(REAL_XPOSED_INIT)?.new()?.run {
+                val param = StartupParam::class.java.new() as StartupParam
+                param.modulePath = moduleApkFile.absolutePath
+                param.startsSystemServer = false
+                callMethod("initZygote", param)
+                callMethod("handleLoadPackage", lpparam)
+            }
+        }catch(e: Throwable) {
+            Log.e(e)
         }
     }
 
@@ -46,10 +56,13 @@ class HotXposedInit : IXposedHookLoadPackage {
     }
 
     private fun getModuleApkFile(): File? {
-        val activityThread = "android.app.ActivityThread".findClassOrNull(null)?.callStaticMethod("currentActivityThread")
-        val context = activityThread?.callMethodAs<Context>("getSystemContext")
-        val applicationInfo = context?.packageManager?.getApplicationInfo(BuildConfig.APPLICATION_ID, 0)
-                ?: return null
-        return File(applicationInfo.sourceDir)
+        return try {
+            val activityThread = "android.app.ActivityThread".findClassOrNull(null)?.callStaticMethod("currentActivityThread")!!
+            val context = activityThread.callMethodAs<Context>("getSystemContext")
+            val applicationInfo = context.packageManager.getApplicationInfo(BuildConfig.APPLICATION_ID, 0)
+            File(applicationInfo.sourceDir)
+        } catch(e: Throwable) {
+            null
+        }
     }
 }
