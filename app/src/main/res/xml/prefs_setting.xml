@@ -91,10 +91,17 @@
             android:key="mini_program"
             android:summary="@string/mini_program_summary"
             android:title="@string/mini_program_title" />
+
         <SwitchPreference
             android:key="auto_like"
             android:summary="@string/auto_like_summary"
             android:title="@string/auto_like_title" />
+
+        <SwitchPreference
+            android:key="enable_av"
+            android:summary="@string/enable_av_summary"
+            android:title="@string/enable_av_title" />
+            />
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/setting_category">
         <SwitchPreference
