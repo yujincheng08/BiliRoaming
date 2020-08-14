@@ -12,7 +12,7 @@ class AutoLikeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
         if (!XposedInit.sPrefs.getBoolean("auto_like", false)) return
 
-        Log.d("startHook: auto like")
+        Log.d("startHook: AutoLike")
 
         val context = AndroidAppHelper.currentApplication()
         val likeId = context.resources.getIdentifier("frame1", "id", context.packageName)

@@ -12,7 +12,7 @@ import java.net.URL
 class MiniProgramHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
         if (!XposedInit.sPrefs.getBoolean("mini_program", false)) return
-        Log.d("startHook: mini program")
+        Log.d("startHook: MiniProgram")
         instance.shareWrapperClass?.hookBeforeMethod(instance.shareWrapper(), String::class.java, Bundle::class.java) { param ->
             val platform = param.args[0] as String
             val bundle = param.args[1] as Bundle

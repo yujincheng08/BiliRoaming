@@ -17,7 +17,7 @@ class SettingHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private val settingUri = "bilibili://biliroaming"
 
     override fun startHook() {
-        Log.d("startHook: setting")
+        Log.d("startHook: Setting")
 
         instance.drawerClass?.hookAfterMethod("onCreateView", LayoutInflater::class.java, ViewGroup::class.java, Bundle::class.java) { param ->
             val activity = param.thisObject.callMethodAs<Activity>("getActivity")
