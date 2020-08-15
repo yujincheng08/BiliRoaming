@@ -10,6 +10,7 @@ import android.webkit.JavascriptInterface
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import me.iacn.biliroaming.BuildConfig
+import me.iacn.biliroaming.Constant.AKAMAI_HOST
 import me.iacn.biliroaming.XposedInit
 import me.iacn.biliroaming.XposedInit.Companion.toastMessage
 import me.iacn.biliroaming.network.StreamUtils.getContent
@@ -129,7 +130,7 @@ object BiliRoamingApi {
             result.put("actor", JSONObject("{\"info\": \"$actors\", \"title\": \"角色声优\"}"))
             val staff = mediaResult.getString("staff")
             result.put("staff", JSONObject("{\"info\": \"$staff\", \"title\": \"制作信息\"}"))
-            for (field in listOf("alias", "area", "origin_name", "style", "type_name")) {
+            for (field in listOf("alias", "areas", "origin_name", "style", "type_name")) {
                 if (mediaResult.has(field))
                     result.put(field, mediaResult.get(field))
             }
@@ -150,9 +151,11 @@ object BiliRoamingApi {
             val reviewContent = getContent(uri)
             val reviewJson = JSONObject(reviewContent!!)
             val reviewResult = reviewJson.getJSONObject("result")
-            val review = reviewResult.getJSONObject("review")
-            review.put("article_url", "https://member.bilibili.com/article-text/mobile?media_id=$mediaId")
-            userStatus.put("review", review)
+            if (reviewResult.has("review")) {
+                val review = reviewResult.getJSONObject("review")
+                review.put("article_url", "https://member.bilibili.com/article-text/mobile?media_id=$mediaId")
+                userStatus.put("review", review)
+            }
         } catch (e: Throwable) {
             Log.e(e)
         }
@@ -197,8 +200,10 @@ object BiliRoamingApi {
         val content = getContent(builder.toString(),
                 if (XposedInit.sPrefs.getString("upos", "").isNullOrEmpty()) null else
                     mapOf("upos_server" to XposedInit.sPrefs.getString("upos", "cosu")!!))
+                ?.replace("https://${AKAMAI_HOST}", "http://${AKAMAI_HOST}")
         return if (content != null && content.contains("\"code\":0"))
             content else getBackupUrl(queryString, info)
+                ?.replace("https://${AKAMAI_HOST}", "http://${AKAMAI_HOST}")
     }
 
     @JvmStatic

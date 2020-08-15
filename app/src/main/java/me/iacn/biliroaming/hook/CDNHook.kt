@@ -1,5 +1,6 @@
 package me.iacn.biliroaming.hook
 
+import me.iacn.biliroaming.Constant.AKAMAI_HOST
 import me.iacn.biliroaming.XposedInit
 import me.iacn.biliroaming.XposedInit.Companion.toastMessage
 import me.iacn.biliroaming.utils.*
@@ -14,7 +15,7 @@ class CDNHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         "java.net.InetAddress".hookAfterMethod(mClassLoader, "getAllByName", String::class.java) { param ->
             val host = param.args[0] as String
             val cdn: String = getCDN()
-            if (cdn.isNotEmpty() && host == "upos-hz-mirrorakam.akamaized.net") {
+            if (cdn.isNotEmpty() && host == AKAMAI_HOST) {
                 param.result = arrayOf(InetAddress.getByName(cdn))
                 Log.d("Replace by CDN: $cdn")
                 toastMessage("CDN加速已生效")
@@ -24,7 +25,7 @@ class CDNHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         "java.net.InetAddress".hookAfterMethod(mClassLoader, "getByName", String::class.java) { param ->
             val host = param.args[0] as String
             val cdn: String = getCDN()
-            if (cdn.isNotEmpty() && host == "upos-hz-mirrorakam.akamaized.net") {
+            if (cdn.isNotEmpty() && host == AKAMAI_HOST) {
                 param.result = InetAddress.getByName(cdn)
                 Log.d("Replace by CDN: $cdn")
                 toastMessage("CDN加速已生效")
@@ -34,7 +35,7 @@ class CDNHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         "tv.danmaku.ijk.media.player.IjkMediaPlayerItem".hookBeforeMethod(mClassLoader, "setItemOptions") { param ->
             val url = param.thisObject.callMethod("mediaAssetToUrl", 0, 0) as String
             val cdn: String = getCDN()
-            if (cdn.isNotEmpty() && url.contains("upos-hz-mirrorakam.akamaized.net")) {
+            if (cdn.isNotEmpty() && url.contains(AKAMAI_HOST)) {
                 param.thisObject.getObjectField("mIjkMediaConfigParams").setObjectField("mHttpProxy", "http://$cdn:80")
                 Log.d("Using cdn as proxy: $cdn")
                 toastMessage("CDN加速已生效")
