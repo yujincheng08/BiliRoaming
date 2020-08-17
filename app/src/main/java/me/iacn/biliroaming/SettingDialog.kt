@@ -54,11 +54,6 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             }
             findPreference("version").summary = BuildConfig.VERSION_NAME
             findPreference("version").onPreferenceClickListener = this
-            findPreference("author").onPreferenceClickListener = this
-            findPreference("test_cdn").onPreferenceClickListener = this
-            findPreference("group").onPreferenceClickListener = this
-            findPreference("tg").onPreferenceClickListener = this
-            findPreference("help").onPreferenceClickListener = this
             findPreference("custom_splash").onPreferenceChangeListener = this
             findPreference("custom_splash_logo").onPreferenceChangeListener = this
             checkCompatibleVersion()
@@ -182,49 +177,8 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             }
         }
 
-        private fun onAuthorClick(): Boolean {
-            val uri = Uri.parse(moduleRes.getString(R.string.github_url))
-            val intent = Intent(Intent.ACTION_VIEW, uri)
-            startActivity(intent)
-            return true
-        }
-
-        private fun onTestCDNClick(): Boolean {
-            val uri = Uri.parse(moduleRes.getString(R.string.cdn_url))
-            val intent = Intent(Intent.ACTION_VIEW, uri)
-            startActivity(intent)
-            return true
-        }
-
         private fun onUpdateCheck(): Boolean {
             val uri = Uri.parse(moduleRes.getString(R.string.update_url))
-            val intent = Intent(Intent.ACTION_VIEW, uri)
-            startActivity(intent)
-            return true
-        }
-
-        private fun onHelpClick(): Boolean {
-            val uri = Uri.parse(moduleRes.getString(R.string.help_url))
-            val intent = Intent(Intent.ACTION_VIEW, uri)
-            startActivity(intent)
-            return true
-        }
-
-        private fun onGroupClick(): Boolean {
-            val intent = Intent()
-            val key = "Qk8NsOfgC-afK4Vqhnqg9FBF2l1oL0sp"
-            intent.data = Uri.parse("mqqopensdkapi://bizAgent/qm/qr?url=http%3A%2F%2Fqm.qq.com%2Fcgi-bin%2Fqm%2Fqr%3Ffrom%3Dapp%26p%3Dandroid%26k%3D$key")
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            return try {
-                startActivity(intent)
-                true
-            } catch (e: Exception) {
-                false
-            }
-        }
-
-        private fun onTgClick(): Boolean {
-            val uri = Uri.parse(moduleRes.getString(R.string.tg_url))
             val intent = Intent(Intent.ACTION_VIEW, uri)
             startActivity(intent)
             return true
@@ -233,12 +187,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         override fun onPreferenceClick(preference: Preference?): Boolean {
             return when (preference?.key) {
                 "version" -> onVersionClick()
-                "author" -> onAuthorClick()
-                "test_cdn" -> onTestCDNClick()
                 "update" -> onUpdateCheck()
-                "group" -> onGroupClick()
-                "tg" -> onTgClick()
-                "help" -> onHelpClick()
                 else -> false
             }
         }

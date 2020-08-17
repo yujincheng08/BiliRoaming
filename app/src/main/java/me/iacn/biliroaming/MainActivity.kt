@@ -9,7 +9,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
-import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
 import android.preference.Preference
@@ -48,11 +47,7 @@ class MainActivity : Activity() {
             runningStatusPref = findPreference("running_status")
             findPreference("hide_icon").onPreferenceChangeListener = this
             findPreference("version").summary = BuildConfig.VERSION_NAME
-            findPreference("author").onPreferenceClickListener = this
-            findPreference("group").onPreferenceClickListener = this
             findPreference("feature").onPreferenceClickListener = this
-            findPreference("tg").onPreferenceClickListener = this
-            findPreference("help").onPreferenceClickListener = this
             CheckVersionTask(this).execute(URL(resources.getString(R.string.version_url)))
         }
 
@@ -119,45 +114,11 @@ class MainActivity : Activity() {
             }
         }
 
-        private fun onAuthorClick(): Boolean {
-            val uri = Uri.parse(resources.getString(R.string.github_url))
-            val intent = Intent(Intent.ACTION_VIEW, uri)
-            startActivity(intent)
-            return true
-        }
-
         private fun onUpdateCheck(): Boolean {
             val uri = Uri.parse(resources.getString(R.string.update_url))
             val intent = Intent(Intent.ACTION_VIEW, uri)
             startActivity(intent)
             return true
-        }
-
-        private fun onTgClick(): Boolean {
-            val uri = Uri.parse(resources.getString(R.string.tg_url))
-            val intent = Intent(Intent.ACTION_VIEW, uri)
-            startActivity(intent)
-            return true
-        }
-
-        private fun onHelpClick(): Boolean {
-            val uri = Uri.parse(resources.getString(R.string.help_url))
-            val intent = Intent(Intent.ACTION_VIEW, uri)
-            startActivity(intent)
-            return true
-        }
-
-        private fun onGroupClick(): Boolean {
-            val intent = Intent()
-            val key = "Qk8NsOfgC-afK4Vqhnqg9FBF2l1oL0sp"
-            intent.data = Uri.parse("mqqopensdkapi://bizAgent/qm/qr?url=http%3A%2F%2Fqm.qq.com%2Fcgi-bin%2Fqm%2Fqr%3Ffrom%3Dapp%26p%3Dandroid%26k%3D$key")
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            return try {
-                startActivity(intent)
-                true
-            } catch (e: Exception) {
-                false
-            }
         }
 
         private fun onFeatureClick(): Boolean {
@@ -171,12 +132,8 @@ class MainActivity : Activity() {
 
         override fun onPreferenceClick(preference: Preference?): Boolean {
             return when (preference?.key) {
-                "author" -> onAuthorClick()
                 "update" -> onUpdateCheck()
-                "group" -> onGroupClick()
                 "feature" -> onFeatureClick()
-                "tg" -> onTgClick()
-                "help" -> onHelpClick()
                 else -> false
             }
         }

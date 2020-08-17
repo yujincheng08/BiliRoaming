@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--suppress DeprecatedClassUsageInspection -->
+<?xml version="1.0" encoding="utf-8"?><!--suppress DeprecatedClassUsageInspection -->
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
     <PreferenceCategory android:title="@string/main_category">
@@ -7,7 +6,6 @@
             android:key="main_func"
             android:summary="@string/main_func_summary"
             android:title="@string/main_func_title" />
-
 
         <SwitchPreference
             android:dependency="main_func"
@@ -43,7 +41,11 @@
             android:dependency="use_cdn"
             android:key="test_cdn"
             android:summary="@string/test_cdn_summary"
-            android:title="@string/test_cdn_title" />
+            android:title="@string/test_cdn_title">
+            <intent
+                android:action="android.intent.action.VIEW"
+                android:data="@string/cdn_url" />
+        </Preference>
 
         <!--suppress AndroidDomInspection -->
         <ListPreference
@@ -101,7 +103,7 @@
             android:key="enable_av"
             android:summary="@string/enable_av_summary"
             android:title="@string/enable_av_title" />
-            />
+        />
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/setting_category">
         <SwitchPreference
@@ -159,22 +161,38 @@
         <Preference
             android:key="author"
             android:summary="@string/author_list"
-            android:title="@string/author" />
+            android:title="@string/author">
+            <intent
+                android:action="android.intent.action.VIEW"
+                android:data="@string/github_url" />
+        </Preference>
 
         <Preference
             android:key="help"
             android:summary="@string/help_summary"
-            android:title="@string/help_title" />
+            android:title="@string/help_title">
+            <intent
+                android:action="android.intent.action.VIEW"
+                android:data="@string/help_url" />
+        </Preference>
 
         <Preference
             android:key="group"
             android:summary="@string/group_summary"
-            android:title="@string/group_title" />
+            android:title="@string/group_title">
+            <intent
+                android:action="android.intent.action.VIEW"
+                android:data="@string/group_url" />
+        </Preference>
 
         <Preference
             android:key="tg"
             android:summary="@string/tg_summary"
-            android:title="@string/tg_title" />
+            android:title="@string/tg_title">
+            <intent
+                android:action="android.intent.action.VIEW"
+                android:data="@string/tg_url" />
+        </Preference>
 
         <Preference
             android:key="thanks"

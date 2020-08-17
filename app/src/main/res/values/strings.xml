@@ -89,4 +89,5 @@
     <string name="not_support">当前版本客户端不支持此功能</string>
     <string name="enable_av_title">显示AV号</string>
     <string name="enable_av_summary">视频详情页显示为AV号</string>
+    <string name="group_url">http://qm.qq.com/cgi-bin/qm/qr?from=app&amp;p=android&amp;k=Qk8NsOfgC-afK4Vqhnqg9FBF2l1oL0sp</string>
 </resources>
