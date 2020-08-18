@@ -18,6 +18,7 @@ import android.os.Bundle
 import android.preference.Preference
 import android.preference.PreferenceCategory
 import android.preference.PreferenceFragment
+import android.preference.SwitchPreference
 import android.provider.MediaStore
 import android.view.ContextThemeWrapper
 import android.view.ViewGroup
@@ -66,8 +67,8 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             var supportLiveHook = false
             when (packageName) {
                 "com.bilibili.app.in" -> {
-                    when {
-                        versionCode >= 2050410 -> supportLiveHook = true
+                    when (versionCode) {
+                        in 2050410..2080109 -> supportLiveHook = true
                     }
                 }
             }
@@ -85,6 +86,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference(name).run {
                 isEnabled = false
                 summary = moduleRes.getString(R.string.not_support)
+                if (this is SwitchPreference) this.isChecked = false
             }
         }
 
