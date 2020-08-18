@@ -18,6 +18,8 @@ import android.preference.PreferenceCategory
 import android.preference.PreferenceFragment
 import android.util.Log
 import android.view.View
+import android.widget.Toast
+import me.iacn.biliroaming.hook.SettingHook
 import me.iacn.biliroaming.utils.CheckVersionTask
 import me.iacn.biliroaming.utils.OnTaskReturn
 import org.json.JSONObject
@@ -48,6 +50,7 @@ class MainActivity : Activity() {
             findPreference("hide_icon").onPreferenceChangeListener = this
             findPreference("version").summary = BuildConfig.VERSION_NAME
             findPreference("feature").onPreferenceClickListener = this
+            findPreference("setting").onPreferenceClickListener = this
             CheckVersionTask(this).execute(URL(resources.getString(R.string.version_url)))
         }
 
@@ -130,11 +133,53 @@ class MainActivity : Activity() {
             return true
         }
 
+        private fun onSettingClick(): Boolean {
+            val packages = Constant.BILIBILI_PACKAGENAME.filter {
+                isPackageInstalled(it)
+            }
+            when {
+                packages.size == 1 -> {
+                    startSetting(packages[0])
+                }
+                packages.isEmpty() -> {
+                    Toast.makeText(activity, "未检测到已安装的客户端", Toast.LENGTH_LONG).show()
+                }
+                else -> {
+                    AlertDialog.Builder(activity).run {
+                        setItems(packages.toTypedArray()) { _, i ->
+                            startSetting(packages[i])
+                        }
+                        setTitle("请选择包名")
+                        show()
+                    }
+                }
+            }
+            return true
+        }
+
         override fun onPreferenceClick(preference: Preference?): Boolean {
             return when (preference?.key) {
                 "update" -> onUpdateCheck()
                 "feature" -> onFeatureClick()
+                "setting" -> onSettingClick()
                 else -> false
+            }
+        }
+
+        private fun isPackageInstalled(packageName: String): Boolean {
+            return try {
+                activity.packageManager.getPackageInfo(packageName, 0)
+                true
+            } catch (e: PackageManager.NameNotFoundException) {
+                false
+            }
+        }
+
+        private fun startSetting(packageName: String) {
+            activity.packageManager.getLaunchIntentForPackage(packageName)?.run {
+                addFlags(Intent.FLAG_ACTIVITY_MULTIPLE_TASK)
+                putExtra(SettingHook.START_SETTING_KEY, true)
+                startActivity(this)
             }
         }
     }

@@ -7,6 +7,11 @@
         android:summary="@string/feature_summary"
         android:title="@string/feature_title" />
 
+    <Preference
+        android:key="setting"
+        android:summary="@string/setting_summary"
+        android:title="@string/setting_title" />
+
     <SwitchPreference
         android:key="hide_icon"
         android:summary="@string/hide_icon_summary"

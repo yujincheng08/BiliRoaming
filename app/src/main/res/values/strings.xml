@@ -90,4 +90,6 @@
     <string name="enable_av_title">显示AV号</string>
     <string name="enable_av_summary">视频详情页显示为AV号</string>
     <string name="group_url">http://qm.qq.com/cgi-bin/qm/qr?from=app&amp;p=android&amp;k=Qk8NsOfgC-afK4Vqhnqg9FBF2l1oL0sp</string>
+    <string name="setting_title">打开模块设置</string>
+    <string name="setting_summary">启动客户端并打开模块设置</string>
 </resources>

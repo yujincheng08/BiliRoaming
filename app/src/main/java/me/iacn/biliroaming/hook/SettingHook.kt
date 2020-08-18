@@ -15,9 +15,22 @@ import java.lang.reflect.Proxy
 
 class SettingHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private val settingUri = "bilibili://biliroaming"
+    private var startSetting = false
 
     override fun startHook() {
         Log.d("startHook: Setting")
+
+        "tv.danmaku.bili.ui.splash.SplashActivity".hookBeforeMethod(mClassLoader, "onCreate", Bundle::class.java) { param ->
+            val self = param.thisObject as Activity
+            startSetting = self.intent.hasExtra(START_SETTING_KEY)
+        }
+
+        "tv.danmaku.bili.MainActivityV2".hookAfterMethod(mClassLoader, "onResume") {param->
+            if(startSetting) {
+                startSetting = false
+                SettingDialog(param.thisObject as Activity).show()
+            }
+        }
 
         instance.drawerClass?.hookAfterMethod("onCreateView", LayoutInflater::class.java, ViewGroup::class.java, Bundle::class.java) { param ->
             val activity = param.thisObject.callMethodAs<Activity>("getActivity")
@@ -63,5 +76,8 @@ class SettingHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
             }
         }
+    }
+    companion object{
+        const val START_SETTING_KEY = "biliroaming_start_setting"
     }
 }
