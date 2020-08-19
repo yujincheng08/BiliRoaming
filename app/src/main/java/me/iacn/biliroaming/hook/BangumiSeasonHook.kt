@@ -34,7 +34,13 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             @Suppress("UNCHECKED_CAST")
             val paramMap: Map<String, String> = param.thisObject as Map<String, String>
             lastSeasonInfo.clear()
-            when (param.args[1] as Int) {
+            val seasonMode = when {
+                param.args[1] is Int -> param.args[1] as Int
+                param.args[3] != "0" -> TYPE_EPISODE_ID
+                param.args[2] != "0" -> TYPE_SEASON_ID
+                else -> -1
+            }
+            when (seasonMode) {
                 TYPE_SEASON_ID -> lastSeasonInfo["season_id"] = paramMap["season_id"]
                 TYPE_EPISODE_ID -> lastSeasonInfo["ep_id"] = paramMap["ep_id"]
                 else -> return@hookAfterAllConstructors
