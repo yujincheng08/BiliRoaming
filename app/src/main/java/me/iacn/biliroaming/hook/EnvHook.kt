@@ -49,8 +49,8 @@ class EnvHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         private var hookedBVCompat = false
 
         private val encryptedValueMap = hashMapOf(
-                Pair("0", "Irb5O7Q8Ka0ojD4qqScgqg=="),
-                Pair("1", "Y260Cyvp6HZEboaGO+YGMw==")
+                "0" to "Irb5O7Q8Ka0ojD4qqScgqg==",
+                "1" to "Y260Cyvp6HZEboaGO+YGMw=="
         )
 
         class ConfigTuple(val key: String, val config: String, val trueValue: String?, val falseValue: String?)
