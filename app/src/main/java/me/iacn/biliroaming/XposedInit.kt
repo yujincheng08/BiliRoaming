@@ -38,7 +38,7 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
             MainActivity.Companion::class.java.name.replaceMethod(lpparam.classLoader,
                     "isModuleActive") { true }
         }
-        if (!Constant.BILIBILI_PACKAGENAME.contains(lpparam.packageName)) return
+        if (!Constant.BILIBILI_PACKAGENAME.containsValue(lpparam.packageName)) return
         Instrumentation::class.java.hookBeforeMethod("callApplicationOnCreate", Application::class.java) { param ->
             // Hook main process and download process
             @Suppress("DEPRECATION")

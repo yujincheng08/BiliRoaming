@@ -135,21 +135,22 @@ class MainActivity : Activity() {
 
         private fun onSettingClick(): Boolean {
             val packages = Constant.BILIBILI_PACKAGENAME.filter {
-                isPackageInstalled(it)
+                isPackageInstalled(it.value)
             }
             when {
                 packages.size == 1 -> {
-                    startSetting(packages[0])
+                    startSetting(packages.values.first())
                 }
                 packages.isEmpty() -> {
                     Toast.makeText(activity, "未检测到已安装的客户端", Toast.LENGTH_LONG).show()
                 }
                 else -> {
                     AlertDialog.Builder(activity).run {
-                        setItems(packages.toTypedArray()) { _, i ->
-                            startSetting(packages[i])
+                        val keys = packages.keys.toTypedArray()
+                        setItems(keys) { _, i ->
+                            startSetting(Constant.BILIBILI_PACKAGENAME[keys[i]]!!)
                         }
-                        setTitle("请选择包名")
+                        setTitle("请选择版本")
                         show()
                     }
                 }

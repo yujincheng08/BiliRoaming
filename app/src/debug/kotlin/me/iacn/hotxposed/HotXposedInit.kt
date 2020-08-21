@@ -29,7 +29,7 @@ class HotXposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
 
     override fun handleLoadPackage(lpparam: LoadPackageParam) {
         disableModulesUpdatedNotification(lpparam)
-        if (!Constant.BILIBILI_PACKAGENAME.contains(lpparam.packageName) && lpparam.packageName != BuildConfig.APPLICATION_ID) return
+        if (!Constant.BILIBILI_PACKAGENAME.containsValue(lpparam.packageName) && lpparam.packageName != BuildConfig.APPLICATION_ID) return
 
         try {
             val moduleApkFile = getModuleApkFile() ?: File(modulePath)
@@ -43,7 +43,7 @@ class HotXposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                 callMethod("initZygote", param)
                 callMethod("handleLoadPackage", lpparam)
             }
-        }catch(e: Throwable) {
+        } catch (e: Throwable) {
             Log.e(e)
         }
     }
@@ -61,7 +61,7 @@ class HotXposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
             val context = activityThread.callMethodAs<Context>("getSystemContext")
             val applicationInfo = context.packageManager.getApplicationInfo(BuildConfig.APPLICATION_ID, 0)
             File(applicationInfo.sourceDir)
-        } catch(e: Throwable) {
+        } catch (e: Throwable) {
             null
         }
     }
