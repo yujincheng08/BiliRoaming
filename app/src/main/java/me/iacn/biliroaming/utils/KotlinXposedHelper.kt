@@ -5,8 +5,7 @@ package me.iacn.biliroaming.utils
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XC_MethodHook.MethodHookParam
 import de.robv.android.xposed.XC_MethodReplacement
-import de.robv.android.xposed.XposedBridge.hookAllConstructors
-import de.robv.android.xposed.XposedBridge.hookAllMethods
+import de.robv.android.xposed.XposedBridge.*
 import de.robv.android.xposed.XposedHelpers
 import de.robv.android.xposed.XposedHelpers.*
 import java.lang.reflect.Field
@@ -241,6 +240,10 @@ inline fun String.replaceMethod(classLoader: ClassLoader, method: String?, varar
     }
 }
 
+fun MethodHookParam.invokeOriginalMethod() : Any? {
+    return invokeOriginalMethod(method, thisObject, args)
+}
+
 fun Any.getObjectField(field: String?): Any? {
     return getObjectField(this, field)
 }
@@ -282,6 +285,11 @@ fun <T> Class<*>.getStaticObjectFieldAs(field: String?): T {
 
 fun Class<*>.getStaticObjectField(field: String?): Any? {
     return getStaticObjectField(this, field)
+}
+
+fun Class<*>.setStaticObjectField(field: String?, obj: Any?): Class<*>  {
+    setStaticObjectField(this, field, obj)
+    return this
 }
 
 @Suppress("UNCHECKED_CAST")

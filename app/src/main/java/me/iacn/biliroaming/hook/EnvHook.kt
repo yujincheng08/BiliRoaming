@@ -2,8 +2,8 @@ package me.iacn.biliroaming.hook
 
 import android.content.SharedPreferences
 import me.iacn.biliroaming.XposedInit
-import me.iacn.biliroaming.utils.Log
-import me.iacn.biliroaming.utils.hookAfterMethod
+import me.iacn.biliroaming.utils.*
+import java.util.regex.Pattern
 
 class EnvHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
@@ -15,6 +15,7 @@ class EnvHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 (if (XposedInit.sPrefs.getBoolean(config.config, false)) config.trueValue else config.falseValue)
                         ?.let { result[config.key] = it } ?: result.remove(config.key)
             }
+            hookBVCompat()
         }
         "com.bilibili.lib.blconfig.internal.TypedContext\$dataSp\$2".hookAfterMethod(mClassLoader, "invoke") { param ->
             val result = param.result as SharedPreferences
@@ -25,10 +26,28 @@ class EnvHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         ?.let { result.edit().putString(config.key, it).apply() }
                         ?: result.edit().remove(config.key).apply()
             }
+            hookBVCompat()
+        }
+
+    }
+
+    private fun hookBVCompat() {
+        if (!hookedBVCompat) {
+            if(XposedInit.sPrefs.getBoolean("enable_av", false)) {
+                val compatClass = "com.bilibili.droid.BVCompat".findClass(mClassLoader)
+                compatClass?.declaredFields?.forEach {
+                    val field = compatClass.getStaticObjectField(it.name)
+                    if (field is Pattern && field.pattern() == "av[1-9]\\d*")
+                        compatClass.setStaticObjectField(it.name, Pattern.compile("(av[1-9]\\d*)|(BV1[1-9A-NP-Za-km-z]{9})", field.flags()))
+                }
+            }
+            hookedBVCompat = true
         }
     }
 
     companion object {
+        private var hookedBVCompat = false
+
         private val encryptedValueMap = hashMapOf(
                 Pair("0", "Irb5O7Q8Ka0ojD4qqScgqg=="),
                 Pair("1", "Y260Cyvp6HZEboaGO+YGMw==")
