@@ -17,10 +17,18 @@
     <PreferenceCategory android:title="@string/cdn_category">
 
         <SwitchPreference
+            android:key="force_https"
             android:dependency="main_func"
+            android:disableDependentsState="true"
+            android:summary="@string/force_https_summary"
+            android:title="@string/force_https_title" />
+
+        <SwitchPreference
+            android:dependency="force_https"
             android:key="use_cdn"
             android:summary="@string/use_cdn_summary"
             android:title="@string/use_cdn_title" />
+
 
         <ListPreference
             android:defaultValue="@string/cdn_default"

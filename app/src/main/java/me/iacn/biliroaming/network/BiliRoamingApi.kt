@@ -197,13 +197,17 @@ object BiliRoamingApi {
         builder.appendQueryParameter("module", "pgc")
         builder.appendQueryParameter("otype", "json")
         builder.appendQueryParameter("platform", "android")
-        val content = getContent(builder.toString(),
+        return getContent(builder.toString(),
                 if (XposedInit.sPrefs.getString("upos", "").isNullOrEmpty()) null else
-                    mapOf("upos_server" to XposedInit.sPrefs.getString("upos", "cosu")!!))
-                ?.replace("https://${AKAMAI_HOST}", "http://${AKAMAI_HOST}")
-        return if (content != null && content.contains("\"code\":0"))
-            content else getBackupUrl(queryString, info)
-                ?.replace("https://${AKAMAI_HOST}", "http://${AKAMAI_HOST}")
+                    mapOf("upos_server" to XposedInit.sPrefs.getString("upos", "cosu")!!)).run {
+            if (this != null && contains("\"code\":0")) this
+            else getBackupUrl(queryString, info)
+        }?.run {
+            if (!XposedInit.sPrefs.getBoolean("force_https", false))
+                replace("https://${AKAMAI_HOST}", "http://${AKAMAI_HOST}")
+            else
+                replace("http://${AKAMAI_HOST}", "https://${AKAMAI_HOST}")
+        }
     }
 
     @JvmStatic
