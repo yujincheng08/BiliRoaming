@@ -1,0 +1,35 @@
+name: Android CI
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup JDK 1.8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+      - name: Retrieve version
+        run: |
+          echo ::set-env name=VERSION::$(echo ${{ github.event.head_commit.id }} | head -c 10)
+      - name: Build with Gradle
+        run: bash ./gradlew -PappVerName=${{ env.VERSION }} build
+      - name: Sign Android release
+        uses: r0adkll/sign-android-release@v1.0.1
+        with:
+          releaseDirectory: app/build/outputs/apk/release
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          alias: ${{ secrets.ALIAS }}
+          keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+      - name: Upload built apk
+        uses: actions/upload-artifact@v2
+        with:
+          name: snapshot
+          path: app/build/outputs/apk/release/*
