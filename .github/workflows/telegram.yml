@@ -1,0 +1,19 @@
+name: telegram message
+on: [push]
+jobs:
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    - name: send custom message with args
+      uses: appleboy/telegram-action@master
+      with:
+        to: ${{ secrets.TELEGRAM_TO }}
+        token: ${{ secrets.TELEGRAM_TOKEN }}
+        format: markdown
+        message: |+
+          New push to github!
+          *${{ github.event.head_commit.message }}* by ${{ github.event.head_commit.author.name }}
+          See [here](${{ github.event.head_commit.url }})
