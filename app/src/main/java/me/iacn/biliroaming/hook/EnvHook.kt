@@ -33,7 +33,7 @@ class EnvHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     private fun hookBVCompat() {
         if (!hookedBVCompat) {
-            if(XposedInit.sPrefs.getBoolean("enable_av", false)) {
+            if (XposedInit.sPrefs.getBoolean("enable_av", false)) {
                 val compatClass = "com.bilibili.droid.BVCompat".findClass(mClassLoader)
                 compatClass?.declaredFields?.forEach {
                     val field = compatClass.getStaticObjectField(it.name)

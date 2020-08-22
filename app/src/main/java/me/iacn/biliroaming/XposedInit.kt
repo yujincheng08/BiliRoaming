@@ -62,6 +62,7 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                     startHook(SettingHook(lpparam.classLoader))
                     startHook(SplashHook(lpparam.classLoader))
                     startHook(EnvHook(lpparam.classLoader))
+                    startHook(NotificationHook(lpparam.classLoader))
                 }
                 "tv.danmaku.bili:web", "com.bilibili.app.in:web", "com.bilibili.app.blue:web" -> {
                     BiliBiliPackage(lpparam.classLoader, param.args[0] as Context)

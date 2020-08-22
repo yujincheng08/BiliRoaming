@@ -42,6 +42,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val generalResponseClass by Weak { "com.bilibili.okretro.GeneralResponse".findClass(mClassLoader) }
     val seasonParamsMapClass by Weak { "com.bilibili.bangumi.data.page.detail.BangumiDetailApiService\$UniformSeasonParamsMap".findClass(mClassLoader) }
     val brandSplashClass by Weak { "tv.danmaku.bili.ui.splash.brand.ui.BaseBrandSplashFragment".findClassOrNull(mClassLoader) }
+    val musicServiceClass by Weak { "tv.danmaku.bili.ui.player.notification.BackgroundMusicService".findClass(mClassLoader) }
 
     private val classesList by lazy { DexFile(AndroidAppHelper.currentApplication().packageCodePath).entries().toList() }
     private val accessKeyInstance by lazy { "com.bilibili.bangumi.ui.page.detail.pay.BangumiPayHelperV2\$accessKey\$2".findClass(mClassLoader)?.getStaticObjectField("INSTANCE") }
@@ -122,6 +123,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     fun shareWrapper(): String? {
         return mHookInfo["method_share_wrapper"]
+    }
+
+    fun musicNotificationStyle(): String?{
+        return mHookInfo["method_music_notification_style"]
     }
 
     private fun readHookInfo(context: Context): MutableMap<String, String?> {
@@ -233,11 +238,22 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             findGetSettingRouteMethod()
         }.checkOrPut("method_like") {
             findLikeMethod()
+        }.checkOrPut("method_music_notification_style") {
+            findMusicNotificationStyleMethod()
         }
 
         Log.d(mHookInfo)
         Log.d("Check hook info completed: needUpdate = $needUpdate")
         return needUpdate
+    }
+
+    private fun findMusicNotificationStyleMethod(): String? {
+        return musicServiceClass?.declaredMethods?.firstOrNull {
+            it.returnType.run {
+                declaredFields.size == 2 &&
+                        declaredFields.fold(true) {p, q -> p && q.type == Int::class.javaPrimitiveType}
+            }
+        }?.name
     }
 
     private fun findShareWrapperMethod(): String? {

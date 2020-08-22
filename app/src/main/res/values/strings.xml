@@ -94,4 +94,6 @@
     <string name="setting_summary">启动客户端并打开模块设置</string>
     <string name="force_https_title">强制使用HTTPS播放地址</string>
     <string name="force_https_summary">如果没有加载速度，可以尝试打开此项。打开后，CDN加速将失效。</string>
+    <string name="music_notification_title">原生音乐通知样式</string>
+    <string name="music_notification_summary">强制音乐通知栏为原生样式</string>
 </resources>
