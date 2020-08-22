@@ -21,7 +21,9 @@ jobs:
       - name: Build with Gradle
         run: bash ./gradlew -PappVerName=${{ env.VERSION }} build
       - name: Sign Android release
-        uses: r0adkll/sign-android-release@v1.0.1
+        if: success()
+        id: sign
+        uses: r0adkll/sign-android-release@v1
         with:
           releaseDirectory: app/build/outputs/apk/release
           signingKeyBase64: ${{ secrets.SIGNING_KEY }}
@@ -29,7 +31,8 @@ jobs:
           keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
       - name: Upload built apk
+        if: success()
         uses: actions/upload-artifact@v2
         with:
           name: snapshot
-          path: app/build/outputs/apk/release/*
+          path: ${{ steps.sign.outputs.signedReleaseFile }}
