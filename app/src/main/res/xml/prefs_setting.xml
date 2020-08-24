@@ -42,6 +42,7 @@
         <EditTextPreference
             android:dependency="use_cdn"
             android:key="custom_cdn"
+            android:hint="@string/cdn_placeholder"
             android:summary="@string/custom_cdn_summary"
             android:title="@string/custom_cdn_title" />
 

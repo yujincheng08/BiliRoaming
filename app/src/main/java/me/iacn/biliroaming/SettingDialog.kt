@@ -57,6 +57,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("version").onPreferenceClickListener = this
             findPreference("custom_splash").onPreferenceChangeListener = this
             findPreference("custom_splash_logo").onPreferenceChangeListener = this
+            findPreference("custom_cdn").onPreferenceChangeListener = this
             checkCompatibleVersion()
             CheckVersionTask(this).execute(URL(moduleRes.getString(R.string.version_url)))
         }
@@ -99,6 +100,12 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 "custom_splash_logo" -> {
                     if (newValue as Boolean)
                         selectImage(LOGO_SELECTION)
+                }
+                "custom_cdn" -> {
+                    if (!(newValue as String).matches(Constant.CDN_REGEX)) {
+                        toastMessage("无效输入")
+                        return false
+                    }
                 }
             }
             return true
