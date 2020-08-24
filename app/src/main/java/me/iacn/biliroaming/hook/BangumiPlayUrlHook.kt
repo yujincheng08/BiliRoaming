@@ -32,8 +32,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
             }
         }
-        "com.bilibili.lib.okhttp.huc.OkHttpURLConnection".hookAfterMethod(mClassLoader,
-                "getInputStream") { param ->
+        instance.urlConnectionClass?.hookAfterMethod("getInputStream") { param ->
             // Found from "b.ecy" in version 5.39.1
             val connection = param.thisObject as HttpURLConnection
             val urlString = connection.url.toString()

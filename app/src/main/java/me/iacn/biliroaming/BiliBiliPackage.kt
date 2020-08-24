@@ -14,6 +14,7 @@ import java.io.*
 import java.lang.ref.WeakReference
 import java.lang.reflect.Modifier
 import java.lang.reflect.ParameterizedType
+import java.net.ProxySelector
 import kotlin.reflect.KProperty
 
 data class OkHttpResult(val fieldName: String?, val methodName: String?)
@@ -43,6 +44,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val seasonParamsMapClass by Weak { "com.bilibili.bangumi.data.page.detail.BangumiDetailApiService\$UniformSeasonParamsMap".findClass(mClassLoader) }
     val brandSplashClass by Weak { "tv.danmaku.bili.ui.splash.brand.ui.BaseBrandSplashFragment".findClassOrNull(mClassLoader) }
     val musicServiceClass by Weak { "tv.danmaku.bili.ui.player.notification.BackgroundMusicService".findClass(mClassLoader) }
+    val urlConnectionClass by Weak { "com.bilibili.lib.okhttp.huc.OkHttpURLConnection".findClass(mClassLoader) }
+    val okHttpClientClass by Weak { mHookInfo["class_http_client"]?.findClass(mClassLoader) }
+    val okHttpClientBuilderClass by Weak { mHookInfo["class_http_client_builder"]?.findClass(mClassLoader) }
 
     private val classesList by lazy { DexFile(AndroidAppHelper.currentApplication().packageCodePath).entries().toList() }
     private val accessKeyInstance by lazy { "com.bilibili.bangumi.ui.page.detail.pay.BangumiPayHelperV2\$accessKey\$2".findClass(mClassLoader)?.getStaticObjectField("INSTANCE") }
@@ -125,8 +129,16 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         return mHookInfo["method_share_wrapper"]
     }
 
-    fun musicNotificationStyle(): String?{
+    fun musicNotificationStyle(): String? {
         return mHookInfo["method_music_notification_style"]
+    }
+
+    fun httpClientBuild() : String?{
+        return mHookInfo["method_http_client_build"]
+    }
+
+    fun proxySelector() : String?{
+        return mHookInfo["field_proxy_selector"]
     }
 
     private fun readHookInfo(context: Context): MutableMap<String, String?> {
@@ -240,6 +252,14 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             findLikeMethod()
         }.checkOrPut("method_music_notification_style") {
             findMusicNotificationStyleMethod()
+        }.checkOrPut("class_http_client") {
+            findOkHttpClientClass()
+        }.checkOrPut("class_http_client_builder") {
+            findOkHttpClientBuilderClass()
+        }.checkOrPut("method_http_client_build") {
+            findHttpClientBuildMethod()
+        }.checkOrPut("field_proxy_selector") {
+            findProxySelectorField()
         }
 
         Log.d(mHookInfo)
@@ -247,11 +267,35 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         return needUpdate
     }
 
+    private fun findProxySelectorField(): String? {
+        return okHttpClientBuilderClass?.declaredFields?.firstOrNull {
+            it.type == ProxySelector::class.java
+        }?.name
+    }
+
+    private fun findHttpClientBuildMethod(): String? {
+        return okHttpClientBuilderClass?.declaredMethods?.firstOrNull {
+            it.parameterTypes.isEmpty() && it.returnType == okHttpClientClass
+        }?.name
+    }
+
+    private fun findOkHttpClientClass(): String? {
+        return urlConnectionClass?.declaredConstructors?.filter {
+            it.parameterTypes.size == 2
+        }?.map { it.parameterTypes[1] }?.firstOrNull()?.name
+    }
+
+    private fun findOkHttpClientBuilderClass(): String? {
+        return okHttpClientClass?.declaredConstructors?.filter {
+            it.parameterTypes.size == 1
+        }?.map { it.parameterTypes[0] }?.firstOrNull()?.name
+    }
+
     private fun findMusicNotificationStyleMethod(): String? {
         return musicServiceClass?.declaredMethods?.firstOrNull {
             it.returnType.run {
                 declaredFields.size == 2 &&
-                        declaredFields.fold(true) {p, q -> p && q.type == Int::class.javaPrimitiveType}
+                        declaredFields.fold(true) { p, q -> p && q.type == Int::class.javaPrimitiveType }
             }
         }?.name
     }

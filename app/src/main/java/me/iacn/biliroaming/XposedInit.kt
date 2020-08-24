@@ -6,6 +6,7 @@ import android.app.Application
 import android.app.Instrumentation
 import android.content.Context
 import android.content.Context.MODE_MULTI_PROCESS
+import android.content.SharedPreferences
 import android.content.res.AssetManager
 import android.content.res.Configuration
 import android.content.res.Resources
@@ -56,7 +57,7 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                     startHook(TeenagersModeHook(lpparam.classLoader))
                     startHook(CommentHook(lpparam.classLoader))
                     startHook(JsonHook(lpparam.classLoader))
-                    startHook(CDNHook(lpparam.classLoader))
+                    startHook(CDNHook(lpparam.classLoader, lpparam.processName))
                     startHook(MiniProgramHook(lpparam.classLoader))
                     startHook(AutoLikeHook(lpparam.classLoader))
                     startHook(SettingHook(lpparam.classLoader))
@@ -70,7 +71,7 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                 }
                 "tv.danmaku.bili:download", "com.bilibili.app.in:download", "com.bilibili.app.blue:download" -> {
                     BiliBiliPackage(lpparam.classLoader, param.args[0] as Context)
-                    startHook(CDNHook(lpparam.classLoader))
+                    startHook(CDNHook(lpparam.classLoader, lpparam.processName))
                 }
             }
         }
@@ -87,7 +88,8 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
 
     companion object {
         @Suppress("DEPRECATION")
-        val sPrefs by lazy { AndroidAppHelper.currentApplication().getSharedPreferences("biliroaming", MODE_MULTI_PROCESS)!! }
+        val sPrefs
+        get() = currentContext.getSharedPreferences("biliroaming", MODE_MULTI_PROCESS)!!
         val currentContext by lazy { AndroidAppHelper.currentApplication() as Context }
         private val handler by lazy { Handler(Looper.getMainLooper()) }
         private val toast by lazy { Toast.makeText(currentContext, "", Toast.LENGTH_SHORT) }
