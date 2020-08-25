@@ -333,7 +333,7 @@ message Tag {
     int64 id = 0x1;
     string name = 0x2;
     int64 likes = 0x3;
-    int64 hates  = 0x4;
+    int64 hates = 0x4;
     int32 liked = 0x5;
     int32 hated = 0x6;
     string uri = 0x7;
@@ -375,4 +375,17 @@ message ViewReply {
     repeated Tag tag = 0x5;
     UgcSeason ugc_season = 0x18;
     string vip_active = 0xd;
+}
+
+message Device {
+    int32 app_id = 0x1;
+    int32 build = 0x2;
+    string buvid = 0x3;
+    string mobi_app = 0x4;
+    string platform = 0x5;
+    string device = 0x6;
+    string channel = 0x7;
+    string brand = 0x8;
+    string model = 0x9;
+    string osver = 0xa;
 }

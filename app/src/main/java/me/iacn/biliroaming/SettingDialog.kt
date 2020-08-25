@@ -66,12 +66,15 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             val packageName = AndroidAppHelper.currentPackageName()
             val versionCode = XposedInit.currentContext.packageManager.getPackageInfo(packageName, 0).versionCode
             var supportLiveHook = false
+            var supportAdd4K = false
             when (packageName) {
                 "com.bilibili.app.in" -> {
                     when (versionCode) {
                         in 2050410..2080109 -> supportLiveHook = true
                     }
+                    supportAdd4K = true
                 }
+                "com.bilibili.app.blue" -> supportAdd4K = true
             }
             val supportSplashHook: Boolean = instance.brandSplashClass != null
             if (!supportSplashHook) {
@@ -81,6 +84,10 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             if (!supportLiveHook) {
                 disablePreference("add_live")
             }
+            if (!supportAdd4K) {
+                disablePreference("add_4k")
+            }
+
         }
 
         private fun disablePreference(name: String) {

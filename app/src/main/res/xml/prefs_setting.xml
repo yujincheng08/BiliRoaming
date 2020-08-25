@@ -104,6 +104,11 @@
             android:title="@string/add_live_title" />
 
         <SwitchPreference
+            android:key="add_4k"
+            android:summary="@string/add_4k_summary"
+            android:title="@string/add_4k_title" />
+
+        <SwitchPreference
             android:key="mini_program"
             android:summary="@string/mini_program_summary"
             android:title="@string/mini_program_title" />
