@@ -25,8 +25,8 @@ class SettingHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             startSetting = self.intent.hasExtra(START_SETTING_KEY)
         }
 
-        "tv.danmaku.bili.MainActivityV2".hookAfterMethod(mClassLoader, "onResume") {param->
-            if(startSetting) {
+        "tv.danmaku.bili.MainActivityV2".hookAfterMethod(mClassLoader, "onResume") { param ->
+            if (startSetting) {
                 startSetting = false
                 SettingDialog(param.thisObject as Activity).show()
             }
@@ -48,7 +48,7 @@ class SettingHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     ?: return@hookBeforeMethod
             item.setIntField("id", 114514)
                     .setObjectField("title", "哔哩漫游设置")
-                    .setObjectField("icon", "https://i0.hdslb.com/bfs/album/cd6512ea4b8cf337253202f80f84f8b24fc9f485.png")
+                    .setObjectField("icon", "https://i0.hdslb.com/bfs/album/276769577d2a5db1d9f914364abad7c5253086f6.png")
                     .setObjectField("uri", settingUri)
             val lastGroup = (param.args[1] as MutableList<*>).last() ?: return@hookBeforeMethod
             lastGroup.getObjectFieldAs<MutableList<Any>>("itemList").add(item)
@@ -77,7 +77,8 @@ class SettingHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
         }
     }
-    companion object{
+
+    companion object {
         const val START_SETTING_KEY = "biliroaming_start_setting"
     }
 }
