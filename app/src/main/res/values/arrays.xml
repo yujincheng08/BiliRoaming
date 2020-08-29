@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string-array name="cdn_entries">
-        <item>香港</item>
+        <item>香港（电信用）</item>
+        <item>香港（移动、联通用）</item>
         <item>东京</item>
         <item>台湾</item>
         <item>韩国</item>
@@ -13,6 +14,7 @@
         <item>自定义</item>
     </string-array>
     <string-array name="cdn_values">
+        <item>219.76.10.185</item>
         <item>203.186.47.170</item>
         <item>23.62.226.208</item>
         <item>203.69.81.59</item>

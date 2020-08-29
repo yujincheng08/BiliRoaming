@@ -28,7 +28,7 @@
     <string name="use_cdn_title">加速港澳台番剧</string>
     <string name="cdn_summary">选择速度最快的CDN服务器</string>
     <string name="cdn_title">CDN服务器</string>
-    <string name="cdn_default">203.186.47.170</string>
+    <string name="cdn_default">219.76.10.185</string>
     <string name="custom_cdn_title">自定义CDN</string>
     <string name="custom_cdn_summary">设置自定义CDN的IP地址</string>
     <string name="cdn_category">加速CDN设置</string>
