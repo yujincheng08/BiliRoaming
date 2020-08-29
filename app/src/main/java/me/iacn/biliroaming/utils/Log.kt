@@ -5,21 +5,20 @@ package me.iacn.biliroaming.utils
 import de.robv.android.xposed.XposedBridge
 import me.iacn.biliroaming.Constant.TAG
 import java.math.BigInteger
-import kotlin.reflect.KFunction2
 import android.util.Log as ALog
 
 fun Throwable.dump(): String {
     val sb = StringBuilder()
-    sb.appendln(toString())
+    sb.appendLine(toString())
     for (s in stackTrace)
-        sb.appendln(s)
+        sb.appendLine(s)
     return sb.toString()
 }
 
 object Log {
 
     @JvmStatic
-    private fun doLog(f: KFunction2<String, String, Int>, obj: Any?, toXposed: Boolean = false) {
+    private fun doLog(f: (String, String) -> Int, obj: Any?, toXposed: Boolean = false) {
         val str = if (obj is Throwable) obj.dump() else obj.toString()
 
         if (str.length > maxLength) {
@@ -34,7 +33,7 @@ object Log {
             }
         } else {
             f(TAG, str)
-            if(toXposed)
+            if (toXposed)
                 XposedBridge.log("$TAG : $str")
         }
     }
