@@ -12,6 +12,7 @@ import me.iacn.biliroaming.Constant
 import me.iacn.biliroaming.utils.*
 import java.io.File
 
+
 /**
  * Created by iAcn on 2019/3/25
  * Email i@iacn.me
@@ -30,6 +31,10 @@ class HotXposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
     override fun handleLoadPackage(lpparam: LoadPackageParam) {
         disableModulesUpdatedNotification(lpparam)
         if (!Constant.BILIBILI_PACKAGENAME.containsValue(lpparam.packageName) && lpparam.packageName != BuildConfig.APPLICATION_ID) return
+
+        if (!lpparam.processName.endsWith(":web")) {
+            hookSSL(lpparam.classLoader)
+        }
 
         try {
             val moduleApkFile = getModuleApkFile() ?: File(modulePath)
@@ -65,4 +70,6 @@ class HotXposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
             null
         }
     }
+
 }
+
