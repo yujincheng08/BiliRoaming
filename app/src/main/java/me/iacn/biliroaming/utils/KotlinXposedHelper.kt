@@ -2,12 +2,13 @@
 
 package me.iacn.biliroaming.utils
 
+import android.content.res.XResources
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XC_MethodHook.MethodHookParam
 import de.robv.android.xposed.XC_MethodReplacement
 import de.robv.android.xposed.XposedBridge.*
-import de.robv.android.xposed.XposedHelpers
 import de.robv.android.xposed.XposedHelpers.*
+import de.robv.android.xposed.callbacks.XC_LayoutInflated
 import java.lang.reflect.Field
 
 fun Class<*>.hookMethod(method: String?, vararg args: Any?): XC_MethodHook.Unhook? {
@@ -240,7 +241,7 @@ inline fun String.replaceMethod(classLoader: ClassLoader, method: String?, varar
     }
 }
 
-fun MethodHookParam.invokeOriginalMethod() : Any? {
+fun MethodHookParam.invokeOriginalMethod(): Any? {
     return invokeOriginalMethod(method, thisObject, args)
 }
 
@@ -287,7 +288,7 @@ fun Class<*>.getStaticObjectField(field: String?): Any? {
     return getStaticObjectField(this, field)
 }
 
-fun Class<*>.setStaticObjectField(field: String?, obj: Any?): Class<*>  {
+fun Class<*>.setStaticObjectField(field: String?, obj: Any?): Class<*> {
     setStaticObjectField(this, field, obj)
     return this
 }
@@ -348,4 +349,29 @@ fun <T> T.setObjectField(field: String?, value: Any?): T {
 fun <T> T.setBooleanField(field: String?, value: Boolean): T {
     setBooleanField(this, field, value)
     return this
+}
+
+inline fun XResources.hookLayout(id: Int, crossinline hooker: (XC_LayoutInflated.LayoutInflatedParam) -> Unit) {
+    try {
+        hookLayout(id, object : XC_LayoutInflated() {
+            override fun handleLayoutInflated(liparam: LayoutInflatedParam) {
+                try {
+                    hooker(liparam)
+                } catch (e: Throwable) {
+                    Log.e(e)
+                }
+            }
+        })
+    } catch (e: Throwable) {
+        Log.e(e)
+    }
+}
+
+inline fun XResources.hookLayout(pkg: String, type: String, name: String, crossinline hooker: (XC_LayoutInflated.LayoutInflatedParam) -> Unit) {
+    try {
+        val id = getIdentifier(name, type, pkg)
+        hookLayout(id, hooker)
+    } catch (e: Throwable) {
+        Log.e(e)
+    }
 }

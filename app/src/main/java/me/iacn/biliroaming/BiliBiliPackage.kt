@@ -133,11 +133,11 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         return mHookInfo["method_music_notification_style"]
     }
 
-    fun httpClientBuild() : String?{
+    fun httpClientBuild(): String? {
         return mHookInfo["method_http_client_build"]
     }
 
-    fun proxySelector() : String?{
+    fun proxySelector(): String? {
         return mHookInfo["field_proxy_selector"]
     }
 
@@ -183,12 +183,12 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         }
 
         fun <K, V> MutableMap<K, V>.checkConjunctiveOrPut(vararg keys: K, defaultValue: () -> Array<V>): MutableMap<K, V> {
-            return checkOrPut(keys = *keys, checker = { m, ks -> ks.fold(true) { acc, k -> acc && m.containsKey(k) } }, defaultValue = defaultValue)
+            return checkOrPut(keys = keys, checker = { m, ks -> ks.fold(true) { acc, k -> acc && m.containsKey(k) } }, defaultValue = defaultValue)
         }
 
         @Suppress("unused")
         fun <K, V> MutableMap<K, V>.checkDisjunctiveOrPut(vararg keys: K, defaultValue: () -> Array<V>): MutableMap<K, V> {
-            return checkOrPut(keys = *keys, checker = { m, ks -> ks.fold(false) { acc, k -> acc || m.containsKey(k) } }, defaultValue = defaultValue)
+            return checkOrPut(keys = keys, checker = { m, ks -> ks.fold(false) { acc, k -> acc || m.containsKey(k) } }, defaultValue = defaultValue)
         }
 
         mHookInfo.checkOrPut("class_retrofit_response") {
