@@ -42,7 +42,7 @@ fun hookSSL(classLoader: ClassLoader) {
         param.args[0] = "javax.net.ssl.SSLSocketFactory".findClass(classLoader)!!.new()
     }
 
-    "org.apache.http.conn.scheme.SchemeRegistry".hookBeforeMethod(classLoader, "register", "org.apache.http.conn.scheme.Scheme") { param ->
+    "org.apache.http.conn.scheme.SchemeRegistry".findClassOrNull(classLoader)?.hookBeforeMethod("register", "org.apache.http.conn.scheme.Scheme") { param ->
         if (param.args[0].callMethodAs<String>("getName") == "https") {
             param.args[0] = param.args[0].javaClass.new("https", SSLSocketFactory.getSocketFactory(), 443)
         }
