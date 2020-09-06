@@ -133,6 +133,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     jsonContent = jsonContent.getJSONObject("result")
                 }
             }
+            val videoCodeCid = jsonContent.getInt("video_codecid")
             val builder = PlayViewReply.newBuilder()
             builder.playConf = PlayAbilityConf.newBuilder().run {
                 dislikeDisable = true
@@ -181,6 +182,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 jsonContent.getJSONObject("dash").getJSONArray("video").let {
                     for (i in 0 until it.length()) {
                         val video = it.getJSONObject(i)
+                        if(video.getInt("codecid") != videoCodeCid) continue
                         videoInfoBuilder.addStreamList(Stream.newBuilder().run {
                             dashVideo = DashVideo.newBuilder().run {
                                 baseUrl = video.getString("base_url")
