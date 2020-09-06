@@ -57,7 +57,8 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     // for new blue 6.3.7
                     instance.rxGeneralResponseClass?.isInstance(body) == true) {
                 fixBangumi(body)
-            } else if (url != null && url.startsWith("https://app.bilibili.com/x/v2/view") &&
+            } else if (url != null && (url.startsWith("https://app.bilibili.com/x/v2/view") ||
+                            url.startsWith("https://app.bilibili.com/x/intl/view")) &&
                     body.getIntField("code") == -404) {
                 fixView(body, url)
             }
