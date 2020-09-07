@@ -30,6 +30,19 @@ class EnvHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             hookBVCompat()
         }
 
+        if (XposedInit.sPrefs.getBoolean("main_func", false)) {
+            "com.bilibili.search.api.SearchService".findClass(mClassLoader)?.run {
+                if (annotations[0].callMethod(annotations[0].javaClass.declaredMethods[0].name) != "https://appintl.biliapi.net/intl/gateway/app/") return@run
+                val annotation = declaredMethods.firstOrNull { m ->
+                    m.name == "searchType"
+                }?.annotations?.get(0) ?: return@run
+                annotation.javaClass.hookAfterMethod(annotation.javaClass.declaredMethods[0].name) { param ->
+                    if (param.thisObject == annotation)
+                        param.result = "https://app.bilibili.com/x/v2/${param.result}"
+                }
+            }
+        }
+
         if (XposedInit.sPrefs.getBoolean("add_4k", false)) {
             "com.bilibili.lib.moss.internal.impl.common.header.HeadersKt\$reqDevice\$2".hookAfterMethod(mClassLoader, "invoke") { param ->
                 param.result = Protos.Device.newBuilder().run {
