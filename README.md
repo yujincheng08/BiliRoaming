@@ -4,6 +4,12 @@
  
 Logo来自[哔哩哔哩漫游娘](https://www.weibo.com/p/230418139a6f1100102vlj6)
 
+![Android CI](https://github.com/yujincheng08/BiliRoaming/workflows/Android%20CI/badge.svg)
+[![Chat](https://img.shields.io/badge/Chat-Telegram-blue.svg?logo=telegram)](https://t.me/biliroaming)
+[![Channel](https://img.shields.io/badge/Follow-Telegram-blue.svg?logo=telegram)](https://t.me/biliroaming_channel)
+[![Download](https://img.shields.io/github/v/release/yujincheng08/biliroaming?color=critical&label=Downloads)](https://github.com/yujincheng08/BiliRoaming/releases/latest)
+![Stars](https://img.shields.io/github/stars/yujincheng08/biliroaming?label=Stars&color=important)
+
 # 哔哩漫游
 解除B站客户端番剧区域限制的Xposed模块，并且提供其他小功能
 
