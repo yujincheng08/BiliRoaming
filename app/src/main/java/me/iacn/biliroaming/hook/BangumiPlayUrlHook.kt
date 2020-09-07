@@ -36,7 +36,9 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             // Found from "b.ecy" in version 5.39.1
             val connection = param.thisObject as HttpURLConnection
             val urlString = connection.url.toString()
-            if (!urlString.startsWith("https://api.bilibili.com/pgc/player/api/playurl")) return@hookAfterMethod
+            if (!urlString.startsWith("https://api.bilibili.com/pgc/player/api/playurl") &&
+                    !urlString.startsWith("https://apiintl.biliapi.net/intl/gateway/ogv/player/api/playurl"))
+                return@hookAfterMethod
             val queryString = urlString.substring(urlString.indexOf("?") + 1)
             if ((!queryString.contains("ep_id=") && !queryString.contains("module=bangumi"))
                     || queryString.contains("ep_id=0") /*workaround*/) return@hookAfterMethod
@@ -182,7 +184,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 jsonContent.getJSONObject("dash").getJSONArray("video").let {
                     for (i in 0 until it.length()) {
                         val video = it.getJSONObject(i)
-                        if(video.getInt("codecid") != videoCodeCid) continue
+                        if (video.getInt("codecid") != videoCodeCid) continue
                         videoInfoBuilder.addStreamList(Stream.newBuilder().run {
                             dashVideo = DashVideo.newBuilder().run {
                                 baseUrl = video.getString("base_url")
