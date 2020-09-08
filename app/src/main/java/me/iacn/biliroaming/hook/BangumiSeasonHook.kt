@@ -75,16 +75,15 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     param.result = (param.method as Method).returnType.callStaticMethod("parseFrom", serializedReply)
                 }
 
-        val urlHook = object : XC_MethodHook() {
-            @Throws(Throwable::class)
-            override fun afterHookedMethod(param: MethodHookParam) {
-                val redirectUrl = param.thisObject.getObjectFieldAs<String?>("redirectUrl")
-                if (redirectUrl.isNullOrEmpty()) return
-                param.result = param.thisObject.callMethod("getUrl", redirectUrl)
-            }
+        val urlHook: (XC_MethodHook.MethodHookParam) -> Unit = fun(param) {
+            val redirectUrl = param.thisObject.getObjectFieldAs<String?>("redirectUrl")
+            if (redirectUrl.isNullOrEmpty()) return
+            param.result = param.thisObject.callMethod("getUrl", redirectUrl)
         }
-        "com.bilibili.bplus.followingcard.api.entity.cardBean.VideoCard".findClass(mClassLoader)?.hookMethod("getJumpUrl", urlHook)
-        "com.bilibili.bplus.followingcard.api.entity.cardBean.VideoCard".findClass(mClassLoader)?.hookMethod("getCommentJumpUrl", urlHook)
+        "com.bilibili.bplus.followingcard.api.entity.cardBean.VideoCard".findClass(mClassLoader)?.run {
+            hookAfterMethod("getJumpUrl", hooker = urlHook)
+            hookAfterMethod("getCommentJumpUrl", hooker = urlHook)
+        }
     }
 
     private fun fixBangumi(body: Any) {
