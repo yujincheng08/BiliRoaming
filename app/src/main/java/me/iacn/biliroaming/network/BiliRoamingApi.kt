@@ -205,9 +205,12 @@ object BiliRoamingApi {
             if (this != null && contains("\"code\":0")) this
             else getBackupUrl(queryString, info)
         }?.run {
+            val host = "http://${BILI_CACHE_HOST.format(Random.nextInt(1, 9))}"
             when {
-                XposedInit.sPrefs.getBoolean("free_flow", false) -> replace("https://${AKAMAI_HOST}",
-                        "http://${BILI_CACHE_HOST.format(Random.nextInt(1, 9))}")
+                XposedInit.sPrefs.getBoolean("free_flow", false) -> {
+                    replace("https://${AKAMAI_HOST}", host)
+                    replace("http://${AKAMAI_HOST}", host)
+                }
                 XposedInit.sPrefs.getBoolean("force_https", false) ->
                     replace("http://${AKAMAI_HOST}", "https://${AKAMAI_HOST}")
                 else -> replace("https://${AKAMAI_HOST}", "http://${AKAMAI_HOST}")
