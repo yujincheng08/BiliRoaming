@@ -17,8 +17,15 @@
     <PreferenceCategory android:title="@string/cdn_category">
 
         <SwitchPreference
-            android:key="force_https"
+            android:key="free_flow"
             android:dependency="main_func"
+            android:disableDependentsState="true"
+            android:summary="@string/free_flow_summary"
+            android:title="@string/free_flow_title" />
+
+        <SwitchPreference
+            android:key="force_https"
+            android:dependency="free_flow"
             android:disableDependentsState="true"
             android:summary="@string/force_https_summary"
             android:title="@string/force_https_title" />

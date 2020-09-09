@@ -93,10 +93,12 @@
     <string name="setting_title">打开模块设置</string>
     <string name="setting_summary">启动客户端并打开模块设置</string>
     <string name="force_https_title">强制使用HTTPS播放地址</string>
-    <string name="force_https_summary">如果没有加载速度，可以尝试打开此项。打开后，CDN加速将失效。</string>
+    <string name="force_https_summary">如果没有加载速度，可以尝试打开此项；打开后，CDN加速将失效</string>
     <string name="music_notification_title">原生音乐通知样式</string>
     <string name="music_notification_summary">强制音乐通知栏为原生样式</string>
     <string name="cdn_placeholder">如1.2.3.4:80，端口不填则默认为80</string>
     <string name="add_4k_title">添加4K支持</string>
     <string name="add_4k_summary">为概念版和Play版添加4K支持（仍需大会员）</string>
+    <string name="free_flow_title">使用免流播放地址</string>
+    <string name="free_flow_summary">如有哔哩哔哩免流卡，可启用以尝试免流解锁番剧（不保证免流效果，请自行确认）；启用后，无法强制HTTPS地址，也无法使用CDN加速</string>
 </resources>

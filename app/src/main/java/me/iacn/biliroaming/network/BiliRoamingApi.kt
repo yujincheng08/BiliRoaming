@@ -11,6 +11,7 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import me.iacn.biliroaming.BuildConfig
 import me.iacn.biliroaming.Constant.AKAMAI_HOST
+import me.iacn.biliroaming.Constant.BILI_CACHE_HOST
 import me.iacn.biliroaming.XposedInit
 import me.iacn.biliroaming.XposedInit.Companion.toastMessage
 import me.iacn.biliroaming.network.StreamUtils.getContent
@@ -23,6 +24,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import kotlin.random.Random
 
 
 /**
@@ -203,10 +205,13 @@ object BiliRoamingApi {
             if (this != null && contains("\"code\":0")) this
             else getBackupUrl(queryString, info)
         }?.run {
-            if (!XposedInit.sPrefs.getBoolean("force_https", false))
-                replace("https://${AKAMAI_HOST}", "http://${AKAMAI_HOST}")
-            else
-                replace("http://${AKAMAI_HOST}", "https://${AKAMAI_HOST}")
+            when {
+                XposedInit.sPrefs.getBoolean("free_flow", false) -> replace("https://${AKAMAI_HOST}",
+                        "http://${BILI_CACHE_HOST.format(Random.nextInt(1, 9))}")
+                XposedInit.sPrefs.getBoolean("force_https", false) ->
+                    replace("http://${AKAMAI_HOST}", "https://${AKAMAI_HOST}")
+                else -> replace("https://${AKAMAI_HOST}", "http://${AKAMAI_HOST}")
+            }
         }
     }
 
