@@ -29,6 +29,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 if (XposedInit.sPrefs.getBoolean("allow_download", false) &&
                         params.containsKey("ep_id")) {
                     params.remove("dl")
+                    params["fnval"] = "0"
                 }
             }
         }
@@ -83,6 +84,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 val request = param.args[0]
                 if (XposedInit.sPrefs.getBoolean("allow_download", false)) {
                     request.callMethod("setDownload", 0)
+                    request.callMethod("setFnval", 0)
                 }
             }
             hookAfterMethod("playView",
