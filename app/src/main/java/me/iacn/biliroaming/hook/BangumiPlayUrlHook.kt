@@ -48,8 +48,8 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         content = newContent.toString()
                     } else if (jsonContent.getInt("code") == 0) {
                         jsonContent.getJSONObject("data").run {
-                            put("player_pgc_vip_qn", newContent.getString("player_pgc_vip_qn"))
-                            put("player_ugc_vip_qn", newContent.getString("player_ugc_vip_qn"))
+                            put("player_pgc_vip_qn", newContent.getJSONObject("data").getString("player_pgc_vip_qn"))
+                            put("player_ugc_vip_qn", newContent.getJSONObject("data").getString("player_ugc_vip_qn"))
                         }
                         content = jsonContent.toString()
                     }
