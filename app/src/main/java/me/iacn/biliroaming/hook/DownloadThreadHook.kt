@@ -12,8 +12,8 @@ import me.iacn.biliroaming.XposedInit
 
 class DownloadThreadHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
-        Log.d("startHook: DownloadThread")
         if(!XposedInit.sPrefs.getBoolean("custom_download_thread", false)) return
+        Log.d("startHook: DownloadThread")
         instance.downloadThreadListenerClass?.run {
             hookBeforeAllConstructors { param ->
                 val view = param.args[1] as TextView

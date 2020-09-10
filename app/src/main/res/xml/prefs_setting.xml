@@ -136,6 +136,9 @@
             android:summary="@string/show_info_summary"
             android:title="@string/show_info_title" />
 
+        <SwitchPreference
+            android:key="save_log"
+            android:title="@string/save_log_title"/>
     </PreferenceCategory>
 
     <PreferenceCategory

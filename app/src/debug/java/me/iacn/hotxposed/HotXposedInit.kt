@@ -32,9 +32,7 @@ class HotXposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit, IXposedHook
         val moduleApkFile: File
             get() {
                 return try {
-                    val activityThread = "android.app.ActivityThread".findClassOrNull(null)?.callStaticMethod("currentActivityThread")!!
-                    val context = activityThread.callMethodAs<Context>("getSystemContext")
-                    val applicationInfo = context.packageManager.getApplicationInfo(BuildConfig.APPLICATION_ID, 0)
+                    val applicationInfo = systemContext.packageManager.getApplicationInfo(BuildConfig.APPLICATION_ID, 0)
                     File(applicationInfo.sourceDir)
                 } catch (e: Throwable) {
                     null
@@ -65,12 +63,10 @@ class HotXposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit, IXposedHook
             try {
                 callMethod("initZygote", param)
             } catch (e: Throwable) {
-                Log.e(e)
             }
             try {
                 callMethod("handleLoadPackage", lpparam)
             } catch (e: Throwable) {
-                Log.e(e)
             }
         }
     }
@@ -80,7 +76,6 @@ class HotXposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit, IXposedHook
         try {
             moduleInstance?.callMethod("handleInitPackageResources", resparam)
         } catch (e: Throwable) {
-            Log.e(e)
         }
     }
 }

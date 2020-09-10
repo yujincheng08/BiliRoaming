@@ -58,6 +58,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("custom_splash").onPreferenceChangeListener = this
             findPreference("custom_splash_logo").onPreferenceChangeListener = this
             findPreference("custom_cdn").onPreferenceChangeListener = this
+            findPreference("save_log").summary = moduleRes.getString(R.string.save_log_summary).format(XposedInit.logFile?.absolutePath)
             checkCompatibleVersion()
             CheckVersionTask(this).execute(URL(moduleRes.getString(R.string.version_url)))
         }

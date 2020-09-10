@@ -4,7 +4,6 @@ package me.iacn.biliroaming.utils
 
 import de.robv.android.xposed.XposedBridge
 import me.iacn.biliroaming.Constant.TAG
-import java.math.BigInteger
 import android.util.Log as ALog
 
 fun Throwable.dump(): String {
@@ -66,11 +65,3 @@ object Log {
     private const val maxLength = 4000
 }
 
-fun bv2av(bv: String): Long {
-    val table = HashMap<Char, Int>()
-    "fZodR9XQDSUm21yCkr6zBqiveYah8bt4xsWpHnJE7jL5VG3guMTKNPAwcF".forEachIndexed { i, b -> table[b] = i }
-    val r = intArrayOf(11, 10, 3, 8, 4, 6).withIndex().map { (i, p) ->
-        table[bv[p]]!! * BigInteger.valueOf(58).pow(i).toLong()
-    }.sum()
-    return (r - 8728348608).xor(177451812)
-}

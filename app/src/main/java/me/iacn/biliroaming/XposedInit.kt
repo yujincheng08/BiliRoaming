@@ -18,6 +18,10 @@ import me.iacn.biliroaming.hook.*
 import me.iacn.biliroaming.utils.Log
 import me.iacn.biliroaming.utils.hookBeforeMethod
 import me.iacn.biliroaming.utils.replaceMethod
+import me.iacn.biliroaming.utils.systemContext
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.*
 
 
 /**
@@ -42,6 +46,12 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
             @Suppress("DEPRECATION")
             when (lpparam.processName) {
                 "tv.danmaku.bili", "com.bilibili.app.blue", "com.bilibili.app.in" -> {
+                    val logProcess = startLog(lpparam.packageName)
+                    if (!sPrefs.getBoolean("save_log", false) &&
+                            !sPrefs.getBoolean("show_hint", true)) {
+                        logProcess?.destroy()
+                        logFile?.delete()
+                    }
                     Log.d("BiliBili process launched ...")
                     Log.d("Config: ${sPrefs.all}")
                     toastMessage("哔哩漫游已激活${
@@ -85,6 +95,21 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
         }
     }
 
+    private fun startLog(packageName: String): Process? {
+        return try {
+            val packageContext = systemContext.createPackageContext(packageName, 0)
+            val file = File(packageContext.externalCacheDir, "log.txt")
+            file.delete()
+            file.createNewFile()
+            logFile = file
+            val cmd = arrayOf("logcat", "-T", SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault()).format(Date()), "-f", file.absolutePath)
+            Runtime.getRuntime().exec(cmd)
+        } catch (e: Throwable) {
+            Log.e(e)
+            null
+        }
+    }
+
     companion object {
         @Suppress("DEPRECATION")
         val sPrefs
@@ -92,6 +117,7 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
         val currentContext by lazy { AndroidAppHelper.currentApplication() as Context }
         private val handler by lazy { Handler(Looper.getMainLooper()) }
         private val toast by lazy { Toast.makeText(currentContext, "", Toast.LENGTH_SHORT) }
+        var logFile: File? = null
         lateinit var modulePath: String
         lateinit var moduleRes: Resources
 

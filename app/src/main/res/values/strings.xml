@@ -101,4 +101,6 @@
     <string name="free_flow_summary">如有哔哩哔哩免流卡，可启用以尝试免流解锁番剧（不保证免流效果，请自行确认）；启用后，无法强制HTTPS地址，也无法使用CDN加速</string>
     <string name="custom_download_thread_title">自定义同时缓存数</string>
     <string name="custom_download_thread_summary">自定义最多可以同时下载的视频个数（超过一个需要大会员）</string>
+    <string name="save_log_title">保存日志到文件</string>
+    <string name="save_log_summary">启用后，将保存日志到文件%s</string>
 </resources>
