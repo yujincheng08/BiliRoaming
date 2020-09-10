@@ -36,15 +36,32 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             // Found from "b.ecy" in version 5.39.1
             val connection = param.thisObject as HttpURLConnection
             val urlString = connection.url.toString()
+            if (XposedInit.sPrefs.getBoolean("add_4k", false) && (urlString.startsWith("https://app.bilibili.com/x/v2/param")
+                            || urlString.startsWith("https://appintl.biliapi.net/intl/gateway/app/param"))) {
+                var content = getContent(param.result as InputStream, connection.contentEncoding)
+                if (content != null) {
+                    val jsonContent = JSONObject(content)
+                    val newContent = JSONObject("{\"code\":0,\"data\":{\"player_pgc_vip_qn\":\"74,112,116,120,125\",\"player_ugc_vip_qn\":\"74,112,116,120,125\"},\"message\":\"0\"}")
+                    if (jsonContent.getInt("code") == -304) {
+                        newContent.put("ver", jsonContent.getLong("ver"))
+                        content = newContent.toString()
+                    } else if (jsonContent.getInt("code") == 0) {
+                        jsonContent.getJSONObject("data").run {
+                            put("player_pgc_vip_qn", newContent.getString("player_pgc_vip_qn"))
+                            put("player_ugc_vip_qn", newContent.getString("player_ugc_vip_qn"))
+                        }
+                        content = jsonContent.toString()
+                    }
+                }
+                param.result = ByteArrayInputStream(content?.toByteArray())
+            }
             if (!urlString.startsWith("https://api.bilibili.com/pgc/player/api/playurl") &&
                     !urlString.startsWith("https://apiintl.biliapi.net/intl/gateway/ogv/player/api/playurl"))
                 return@hookAfterMethod
             val queryString = urlString.substring(urlString.indexOf("?") + 1)
             if ((!queryString.contains("ep_id=") && !queryString.contains("module=bangumi"))
                     || queryString.contains("ep_id=0") /*workaround*/) return@hookAfterMethod
-            val inputStream = param.result as InputStream
-            val encoding = connection.contentEncoding
-            var content = getContent(inputStream, encoding)
+            var content = getContent(param.result as InputStream, connection.contentEncoding)
             if (content == null || !isLimitWatchingArea(content)) {
                 param.result = ByteArrayInputStream(content?.toByteArray())
                 return@hookAfterMethod
