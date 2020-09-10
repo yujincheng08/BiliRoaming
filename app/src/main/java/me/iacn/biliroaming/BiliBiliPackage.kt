@@ -7,6 +7,7 @@ import android.content.Context
 import android.os.Bundle
 import android.util.SparseArray
 import android.view.View
+import android.widget.TextView
 import dalvik.system.DexFile
 import de.robv.android.xposed.XposedHelpers.findClassIfExists
 import me.iacn.biliroaming.utils.*
@@ -46,6 +47,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val urlConnectionClass by Weak { "com.bilibili.lib.okhttp.huc.OkHttpURLConnection".findClass(mClassLoader) }
     val okHttpClientClass by Weak { mHookInfo["class_http_client"]?.findClass(mClassLoader) }
     val okHttpClientBuilderClass by Weak { mHookInfo["class_http_client_builder"]?.findClass(mClassLoader) }
+    val downloadThreadListenerClass by Weak { mHookInfo["class_download_thread_listener"]?.findClass(mClassLoader) }
+    val downloadingActivityClass by Weak { "tv.danmaku.bili.ui.offline.DownloadingActivity".findClassOrNull(mClassLoader) }
+    val reportDownloadThreadClass by Weak { mHookInfo["class_report_download_thread"]?.findClass(mClassLoader)}
 
     private val classesList by lazy { DexFile(AndroidAppHelper.currentApplication().packageCodePath).entries().toList() }
     private val accessKeyInstance by lazy { "com.bilibili.bangumi.ui.page.detail.pay.BangumiPayHelperV2\$accessKey\$2".findClass(mClassLoader)?.getStaticObjectField("INSTANCE") }
@@ -134,6 +138,14 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     fun proxySelector(): String? {
         return mHookInfo["field_proxy_selector"]
+    }
+
+    fun downloadingThread(): String? {
+        return mHookInfo["field_download_thread"]
+    }
+
+    fun reportDownloadThread(): String?{
+        return mHookInfo["method_report_download_thread"]
     }
 
     private fun readHookInfo(context: Context): MutableMap<String, String?> {
@@ -253,11 +265,31 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             findHttpClientBuildMethod()
         }.checkOrPut("field_proxy_selector") {
             findProxySelectorField()
+        }.checkOrPut("class_download_thread_listener") {
+            findDownloadThreadListener()
+        }.checkOrPut("field_download_thread") {
+            findDownloadThreadField()
+        }.checkConjunctiveOrPut("class_report_download_thread", "method_report_download_thread") {
+            findReportDownloadThread()
         }
+
 
         Log.d(mHookInfo)
         Log.d("Check hook info completed: needUpdate = $needUpdate")
         return needUpdate
+    }
+
+    private fun findReportDownloadThread(): Array<String?> {
+        classesList.filter {
+            it.startsWith("tv.danmaku.bili.ui.offline.api")
+        }.forEach { c ->
+            c.findClassOrNull(mClassLoader)?.declaredMethods?.forEach { m ->
+                if (m.parameterTypes.size==2 && m.parameterTypes[0] == Context::class.java && m.parameterTypes[1] == Int::class.javaPrimitiveType) {
+                    return arrayOf(c, m.name)
+                }
+            }
+        }
+        return arrayOfNulls(2)
     }
 
     private fun findProxySelectorField(): String? {
@@ -586,6 +618,27 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             null
         }
     }
+
+    private fun findDownloadThreadListener(): String? {
+        return classesList.filter {
+            it.startsWith("tv.danmaku.bili.ui.offline")
+        }.firstOrNull { c ->
+            c.findClassOrNull(mClassLoader)?.run {
+                declaredMethods.filter { m ->
+                    m.name == "onClick"
+                }.count() > 0 && declaredFields.filter {
+                    it.type == TextView::class.java || it.type == downloadingActivityClass
+                }.count() > 1
+            } ?: false
+        }
+    }
+
+    private fun findDownloadThreadField(): String? {
+        return downloadingActivityClass?.declaredFields?.firstOrNull {
+            it.type == Int::class.javaPrimitiveType
+        }?.name
+    }
+
 
     companion object {
         @Volatile

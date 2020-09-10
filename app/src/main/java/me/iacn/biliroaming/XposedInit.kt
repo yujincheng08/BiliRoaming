@@ -15,7 +15,9 @@ import de.robv.android.xposed.IXposedHookLoadPackage
 import de.robv.android.xposed.IXposedHookZygoteInit
 import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam
 import me.iacn.biliroaming.hook.*
-import me.iacn.biliroaming.utils.*
+import me.iacn.biliroaming.utils.Log
+import me.iacn.biliroaming.utils.hookBeforeMethod
+import me.iacn.biliroaming.utils.replaceMethod
 
 
 /**
@@ -60,6 +62,7 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                     startHook(SettingHook(lpparam.classLoader))
                     startHook(SplashHook(lpparam.classLoader))
                     startHook(EnvHook(lpparam.classLoader))
+                    startHook(DownloadThreadHook(lpparam.classLoader))
                 }
                 "tv.danmaku.bili:web", "com.bilibili.app.in:web", "com.bilibili.app.blue:web" -> {
                     BiliBiliPackage(lpparam.classLoader, param.args[0] as Context)
