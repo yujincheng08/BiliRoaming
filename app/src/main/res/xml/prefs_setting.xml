@@ -87,11 +87,6 @@
             android:key="custom_splash_logo"
             android:summary="@string/custom_splash_logo_summary"
             android:title="@string/custom_splash_logo_title" />
-
-        <SwitchPreference
-            android:key="music_notification"
-            android:summary="@string/music_notification_summary"
-            android:title="@string/music_notification_title" />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/miscellaneous_category">
