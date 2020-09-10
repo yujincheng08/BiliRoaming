@@ -6,21 +6,16 @@ import android.app.Application
 import android.app.Instrumentation
 import android.content.Context
 import android.content.Context.MODE_MULTI_PROCESS
-import android.content.SharedPreferences
 import android.content.res.AssetManager
-import android.content.res.Configuration
 import android.content.res.Resources
 import android.os.Handler
 import android.os.Looper
-import android.util.DisplayMetrics
 import android.widget.Toast
 import de.robv.android.xposed.IXposedHookLoadPackage
 import de.robv.android.xposed.IXposedHookZygoteInit
 import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam
 import me.iacn.biliroaming.hook.*
-import me.iacn.biliroaming.utils.Log
-import me.iacn.biliroaming.utils.hookBeforeMethod
-import me.iacn.biliroaming.utils.replaceMethod
+import me.iacn.biliroaming.utils.*
 
 
 /**
@@ -47,8 +42,10 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                 "tv.danmaku.bili", "com.bilibili.app.blue", "com.bilibili.app.in" -> {
                     Log.d("BiliBili process launched ...")
                     Log.d("Config: ${sPrefs.all}")
-                    toastMessage("哔哩漫游已激活${if (sPrefs.getBoolean("main_func", false)) ""
-                    else "。但未启用番剧解锁功能，请检查哔哩漫游设置。"}")
+                    toastMessage("哔哩漫游已激活${
+                        if (sPrefs.getBoolean("main_func", false)) ""
+                        else "。但未启用番剧解锁功能，请检查哔哩漫游设置。"
+                    }")
                     BiliBiliPackage(lpparam.classLoader, param.args[0] as Context)
                     startHook(HintHook(lpparam.classLoader))
                     startHook(BangumiSeasonHook(lpparam.classLoader))
@@ -63,7 +60,6 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                     startHook(SettingHook(lpparam.classLoader))
                     startHook(SplashHook(lpparam.classLoader))
                     startHook(EnvHook(lpparam.classLoader))
-                    startHook(NotificationHook(lpparam.classLoader))
                 }
                 "tv.danmaku.bili:web", "com.bilibili.app.in:web", "com.bilibili.app.blue:web" -> {
                     BiliBiliPackage(lpparam.classLoader, param.args[0] as Context)
@@ -89,7 +85,7 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
     companion object {
         @Suppress("DEPRECATION")
         val sPrefs
-        get() = currentContext.getSharedPreferences("biliroaming", MODE_MULTI_PROCESS)!!
+            get() = currentContext.getSharedPreferences("biliroaming", MODE_MULTI_PROCESS)!!
         val currentContext by lazy { AndroidAppHelper.currentApplication() as Context }
         private val handler by lazy { Handler(Looper.getMainLooper()) }
         private val toast by lazy { Toast.makeText(currentContext, "", Toast.LENGTH_SHORT) }
@@ -111,11 +107,7 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
             val assetManager = AssetManager::class.java.newInstance()
             val addAssetPath = AssetManager::class.java.getDeclaredMethod("addAssetPath", String::class.java)
             addAssetPath.invoke(assetManager, path)
-            val metrics = DisplayMetrics()
-            metrics.setToDefaults()
-            val config = Configuration()
-            config.setToDefaults()
-            return Resources(assetManager, metrics, config)
+            return Resources(assetManager, null, null)
         }
     }
 }
