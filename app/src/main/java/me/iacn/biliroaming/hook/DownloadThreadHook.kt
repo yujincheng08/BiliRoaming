@@ -1,6 +1,7 @@
 package me.iacn.biliroaming.hook
 
 import android.app.AlertDialog
+import android.content.Context
 import android.view.View
 import android.view.ViewGroup
 import android.widget.NumberPicker
@@ -57,6 +58,6 @@ class DownloadThreadHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
             }
         }
-        instance.reportDownloadThreadClass?.replaceMethod(instance.reportDownloadThread()){}
+        instance.reportDownloadThreadClass?.replaceMethod(instance.reportDownloadThread(), Context::class.java, Int::class.javaPrimitiveType){}
     }
 }
