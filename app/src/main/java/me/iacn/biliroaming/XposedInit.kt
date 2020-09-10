@@ -81,7 +81,7 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
             hooker.startHook()
         } catch (e: Throwable) {
             Log.e(e)
-            toastMessage("出现错误，部分功能可能失效。")
+            toastMessage("出现错误${e.message}，部分功能可能失效。")
         }
     }
 
