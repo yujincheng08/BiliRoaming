@@ -75,6 +75,10 @@ message StreamInfo {
     bool need_login = 0x7;
     bool intact = 0x8;
     bool no_rexcode = 0x9;
+    int64 attribute = 0xa;
+    string new_description = 0xb;
+    string display_desc = 0xc;
+    string superscript = 0xd;
 }
 
 message DashVideo {

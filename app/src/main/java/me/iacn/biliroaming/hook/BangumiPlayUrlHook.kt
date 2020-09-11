@@ -172,11 +172,14 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             val qualityMap = jsonContent.getJSONArray("accept_quality").let {
                 (0 until it.length()).map { idx -> it.getInt(idx) }
             }
-            val descMap = qualityMap.zip(jsonContent.getJSONArray("accept_description").let {
-                (0 until it.length()).map { idx -> it.getString(idx) }
-            }).toMap()
-            val formatMap = qualityMap.zip(jsonContent.getString("accept_format").split(",")).toMap()
             val type = jsonContent.getString("type")
+            val formatMap = HashMap<Int, JSONObject>()
+            jsonContent.getJSONArray("support_formats").run {
+                for (i in 0 until length()) {
+                    val format = getJSONObject(i)
+                    formatMap[format.getInt("quality")] = format
+                }
+            }
             if (type == "DASH") {
                 val audioIds = jsonContent.getJSONObject("dash").getJSONArray("audio").let {
                     val ids = IntArray(it.length())
@@ -222,12 +225,11 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             }
                             streamInfo = StreamInfo.newBuilder().run {
                                 quality = video.getInt("id")
-                                format = if (formatMap.containsKey(quality))
-                                    formatMap[quality] else jsonContent.getString("format")
-                                description = descMap[quality]
                                 intact = true
-                                needLogin = needLoginMap[quality] ?: false
-                                needVip = needVipMap[quality] ?: false
+                                attribute = 0
+                                formatMap[quality]?.let { fmt ->
+                                    reconstructFormat(this, fmt)
+                                }
                                 build()
                             }
                             build()
@@ -236,53 +238,42 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
                 }
             } else if (type == "FLV") {
-                videoInfoBuilder.addStreamList(Stream.newBuilder().run {
-                    segmentVideo = SegmentVideo.newBuilder().run {
-                        jsonContent.getJSONArray("durl").let { durl ->
-                            for (i in 0 until durl.length()) {
-                                val segment = durl.getJSONObject(i)
-                                addSegment(ResponseUrl.newBuilder().run {
-                                    length = segment.getLong("length")
-                                    segment.getJSONArray("backup_url").let { bk ->
-                                        for (j in 0 until bk.length()) {
-                                            addBackupUrl(bk.getString(i))
-                                        }
+                qualityMap.forEach { quality ->
+                    videoInfoBuilder.addStreamList(Stream.newBuilder().run {
+                        streamInfo = StreamInfo.newBuilder().run {
+                            this.quality = quality
+                            intact = true
+                            attribute = 0
+                            formatMap[quality]?.let { fmt ->
+                                reconstructFormat(this, fmt)
+                            }
+                            build()
+                        }
+                        if (quality == jsonContent.getInt("quality")) {
+                            segmentVideo = SegmentVideo.newBuilder().run {
+                                jsonContent.getJSONArray("durl").let { durl ->
+                                    for (i in 0 until durl.length()) {
+                                        val segment = durl.getJSONObject(i)
+                                        addSegment(ResponseUrl.newBuilder().run {
+                                            length = segment.getLong("length")
+                                            segment.getJSONArray("backup_url").let { bk ->
+                                                for (j in 0 until bk.length()) {
+                                                    addBackupUrl(bk.getString(i))
+                                                }
+                                            }
+                                            md5 = segment.getString("md5")
+                                            order = segment.getInt("order")
+                                            size = segment.getLong("size")
+                                            url = segment.getString("url")
+                                            build()
+                                        })
                                     }
-                                    md5 = segment.getString("md5")
-                                    order = segment.getInt("order")
-                                    size = segment.getLong("size")
-                                    url = segment.getString("url")
-                                    build()
-                                })
+                                }
+                                build()
                             }
                         }
                         build()
-                    }
-                    streamInfo = StreamInfo.newBuilder().run {
-                        quality = jsonContent.getInt("quality")
-                        description = descMap[quality]
-                        format = formatMap[quality]
-                        intact = true
-                        needVip = needVipMap[quality] ?: false
-                        needLogin = needLoginMap[quality] ?: false
-                        build()
-                    }
-                    build()
-                })
-                qualityMap.forEach { quality ->
-                    if (quality != jsonContent.getInt("quality")) {
-                        videoInfoBuilder.addStreamList(Stream.newBuilder().run {
-                            streamInfo = StreamInfo.newBuilder().run {
-                                description = descMap[quality]
-                                format = formatMap[quality]
-                                needLogin = needLoginMap[quality] ?: false
-                                needVip = needVipMap[quality] ?: false
-                                this.quality = quality
-                                build()
-                            }
-                            build()
-                        })
-                    }
+                    })
                 }
             }
 
@@ -296,26 +287,15 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         return response
     }
 
-    companion object {
-        private val needVipMap = hashMapOf(
-                16 to false,
-                32 to false,
-                64 to false,
-                74 to false,
-                80 to false,
-                112 to true, // 1080P+ needs VIP
-                116 to true,
-                120 to true
-        )
-        private val needLoginMap = hashMapOf(
-                16 to false,
-                32 to true, // 480P needs login
-                64 to true,
-                74 to true,
-                80 to true,
-                112 to true,
-                116 to true,
-                120 to true
-        )
+    private fun reconstructFormat(builder: StreamInfo.Builder, fmt: JSONObject) {
+        builder.run {
+            description = fmt.getString("description")
+            format = fmt.getString("format")
+            needVip = if (fmt.has("need_vip")) fmt.getBoolean("need_vip") else false
+            needLogin = if (fmt.has("need_login")) fmt.getBoolean("need_login") else false
+            newDescription = fmt.getString("new_description")
+            superscript = fmt.getString("superscript")
+            displayDesc = fmt.getString("display_desc")
+        }
     }
 }
