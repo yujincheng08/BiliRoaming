@@ -16,6 +16,7 @@ import de.robv.android.xposed.IXposedHookZygoteInit
 import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam
 import me.iacn.biliroaming.hook.*
 import me.iacn.biliroaming.utils.Log
+import me.iacn.biliroaming.utils.getPackageVersion
 import me.iacn.biliroaming.utils.hookBeforeMethod
 import me.iacn.biliroaming.utils.replaceMethod
 import java.io.File
@@ -50,6 +51,8 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                         startLog()
                     }
                     Log.d("BiliBili process launched ...")
+                    Log.d("BiliRoaming version: ${BuildConfig.VERSION_NAME}(${BuildConfig.VERSION_CODE})")
+                    Log.d("Bilibili version: ${getPackageVersion(lpparam.packageName)}")
                     Log.d("Config: ${sPrefs.all}")
                     toastMessage("哔哩漫游已激活${
                         if (sPrefs.getBoolean("main_func", false)) ""

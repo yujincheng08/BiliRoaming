@@ -6,7 +6,7 @@ import java.math.BigInteger
 val systemContext: Context
     get() {
         val activityThread = "android.app.ActivityThread".findClassOrNull(null)?.callStaticMethod("currentActivityThread")!!
-        return activityThread.callMethodAs<Context>("getSystemContext")
+        return activityThread.callMethodAs("getSystemContext")
     }
 
 fun bv2av(bv: String): Long {
@@ -16,4 +16,16 @@ fun bv2av(bv: String): Long {
         table[bv[p]]!! * BigInteger.valueOf(58).pow(i).toLong()
     }.sum()
     return (r - 8728348608).xor(177451812)
+}
+
+fun getPackageVersion(packageName: String): String? {
+    return try {
+        systemContext.packageManager.getPackageInfo(packageName, 0).run {
+            @Suppress("DEPRECATION")
+            String.format("${packageName}@%s(%d)", versionName, versionCode)
+        }
+    } catch (e: Throwable) {
+        Log.e(e)
+        "(unknown)"
+    }
 }
