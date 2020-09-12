@@ -9,6 +9,7 @@ import me.iacn.biliroaming.Protos
 import me.iacn.biliroaming.XposedInit
 import me.iacn.biliroaming.XposedInit.Companion.toastMessage
 import me.iacn.biliroaming.network.BiliRoamingApi
+import me.iacn.biliroaming.network.BiliRoamingApi.getContent
 import me.iacn.biliroaming.network.BiliRoamingApi.getSeason
 import me.iacn.biliroaming.utils.*
 import org.json.JSONObject
@@ -62,6 +63,8 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             url.startsWith("https://appintl.biliapi.net/intl/gateway/app/view")) &&
                     body.getIntField("code") == -404) {
                 fixView(body, url)
+            } else if (url != null && url.startsWith("https://appintl.biliapi.net/intl/gateway/app/search/type")) {
+                fixPlaySearchType(body, url)
             }
         }
 
@@ -84,6 +87,16 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             hookAfterMethod("getJumpUrl", hooker = urlHook)
             hookAfterMethod("getCommentJumpUrl", hooker = urlHook)
         }
+    }
+
+    private fun fixPlaySearchType(body: Any, url: String) {
+        val resultClass = body.getObjectField("data")?.javaClass ?: return
+        if(!url.contains("type=7") && !url.contains("type=8")) return
+        val newUrl = url.replace("appintl.biliapi.net/intl/gateway/app/", "app.bilibili.com/x/v2/")
+        val content = getContent(newUrl) ?: return
+        val (_, newResult) = getNewResult(content, "data", resultClass)
+        newResult ?: return
+        body.setObjectField("data", newResult)
     }
 
     private fun fixBangumi(body: Any) {

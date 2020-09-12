@@ -263,7 +263,7 @@ object BiliRoamingApi {
     }
 
     @SuppressLint("SetJavaScriptEnabled")
-    private fun getContent(urlString: String, cookie: Map<String, String>? = null): String? {
+    fun getContent(urlString: String, cookie: Map<String, String>? = null): String? {
         val timeout = 3000
         return try {
             // Work around for android 7
