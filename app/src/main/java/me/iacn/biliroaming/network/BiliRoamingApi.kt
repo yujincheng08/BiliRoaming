@@ -312,6 +312,7 @@ object BiliRoamingApi {
                 connection.requestMethod = "GET"
                 connection.setRequestProperty("Build", BuildConfig.VERSION_CODE.toString())
                 connection.connectTimeout = timeout
+                connection.readTimeout = timeout
                 val cookies = cookie?.map { item ->
                     "${item.key}=${item.value}"
                 }?.joinToString(separator = "; ")
