@@ -11,7 +11,7 @@ android {
         applicationId "me.iacn.biliroaming"
         minSdkVersion 21
         targetSdkVersion 29  // Target Android Q
-        versionCode 33
+        versionCode 34
         versionName appVerName
     }
 
