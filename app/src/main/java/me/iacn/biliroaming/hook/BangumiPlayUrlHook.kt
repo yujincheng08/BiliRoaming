@@ -29,9 +29,10 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 val params = param.args[0] as MutableMap<String, String>
                 if (XposedInit.sPrefs.getBoolean("allow_download", false) &&
                         params.containsKey("ep_id") && params.containsKey("dl")) {
-                    if (XposedInit.sPrefs.getBoolean("fix_download", false)
-                            && params["fnval"] != "0" && params["qn"] != "0") {
+                    if (XposedInit.sPrefs.getBoolean("fix_download", false) && params["qn"] != "0") {
                         params["fix_dl"] = "1"
+                        if (params["fnval"] == "0")
+                            params["fnval"] = params["qn"]!!
                     } else {
                         params["fnval"] = "0"
                     }
@@ -141,7 +142,8 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         var audioId = 0
         for (i in 0 until videos.length()) {
             val video = videos.getJSONObject(i)
-            if (video.getInt("id") == quality) {
+            if (video.getInt("id") == quality
+                    && video.getInt("codecid") == json.getInt("video_codecid")) {
                 preservedVideo = video
             }
         }
@@ -157,7 +159,6 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
         dash.put("video", JSONArray(arrayOf(preservedVideo)))
         dash.put("audio", JSONArray(arrayOf(preservedAudio)))
-
         return json.toString()
     }
 
@@ -173,7 +174,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             videoInfo = VideoInfo.newBuilder(builder.videoInfo).run {
                 var audioId = 0
                 val streams = streamListList.map {
-                    if (it.streamInfo.quality != quality) {
+                    if (it.streamInfo.quality != quality && it.dashVideo.codecid == videoCodecid) {
                         Stream.newBuilder(it).run {
                             clearContent()
                             build()
