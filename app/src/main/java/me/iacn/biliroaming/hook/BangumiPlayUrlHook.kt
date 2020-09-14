@@ -8,6 +8,7 @@ import me.iacn.biliroaming.XposedInit.Companion.toastMessage
 import me.iacn.biliroaming.network.BiliRoamingApi.getPlayUrl
 import me.iacn.biliroaming.network.StreamUtils.getContent
 import me.iacn.biliroaming.utils.*
+import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 import java.io.ByteArrayInputStream
@@ -27,9 +28,14 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 @Suppress("UNCHECKED_CAST")
                 val params = param.args[0] as MutableMap<String, String>
                 if (XposedInit.sPrefs.getBoolean("allow_download", false) &&
-                        params.containsKey("ep_id")) {
+                        params.containsKey("ep_id") && params.containsKey("dl")) {
+                    if (XposedInit.sPrefs.getBoolean("fix_download", false)
+                            && params["fnval"] != "0" && params["qn"] != "0") {
+                        params["fix_dl"] = "1"
+                    } else {
+                        params["fnval"] = "0"
+                    }
                     params.remove("dl")
-                    params["fnval"] = "0"
                 }
             }
         }
@@ -64,10 +70,18 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     || queryString.contains("ep_id=0") /*workaround*/) return@hookAfterMethod
             var content = getContent(param.result as InputStream, connection.contentEncoding)
             if (content == null || !isLimitWatchingArea(content)) {
+                if (urlString.contains("fix_dl=1")) {
+                    content = content?.let { fixDownload(it) }
+                }
                 param.result = ByteArrayInputStream(content?.toByteArray())
                 return@hookAfterMethod
             }
             content = getPlayUrl(queryString, BangumiSeasonHook.lastSeasonInfo)
+            content = content?.let {
+                if (urlString.contains("fix_dl=1")) {
+                    fixDownload(it)
+                } else content
+            }
             content?.let {
                 Log.d("Has replaced play url with proxy server $it")
                 toastMessage("已从代理服务器获取播放地址")
@@ -79,13 +93,20 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
 
         "com.bapis.bilibili.pgc.gateway.player.v1.PlayURLMoss".findClass(mClassLoader)?.run {
+            var isDownload = false
             hookBeforeMethod("playView",
                     "com.bapis.bilibili.pgc.gateway.player.v1.PlayViewReq") { param ->
                 val request = param.args[0]
-                val isDownload = request.callMethodAs<Int>("getDownload")
-                if (XposedInit.sPrefs.getBoolean("allow_download", false) && isDownload == 1) {
+                if (XposedInit.sPrefs.getBoolean("allow_download", false)
+                        && request.callMethodAs<Int>("getDownload") >= 1) {
+                    if (XposedInit.sPrefs.getBoolean("fix_download", false)
+                            && request.callMethodAs<Long>("getQn") != 0L
+                            && request.callMethodAs<Int>("getFnval") != 0) {
+                        isDownload = true
+                    } else {
+                        request.callMethod("setFnval", 0)
+                    }
                     request.callMethod("setDownload", 0)
-                    request.callMethod("setFnval", 0)
                 }
             }
             hookAfterMethod("playView",
@@ -97,13 +118,81 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     content?.let {
                         Log.d("Has replaced play url with proxy server $it")
                         toastMessage("已从代理服务器获取播放地址")
-                        param.result = reconstructResponse(response, it)
+                        param.result = reconstructResponse(response, it, isDownload)
                     } ?: run {
                         Log.e("Failed to get play url")
                         toastMessage("获取播放地址失败")
                     }
+                } else if (isDownload) {
+                    param.result = fixDownloadProto(response)
                 }
             }
+        }
+    }
+
+    private fun fixDownload(content: String): String {
+        val json = JSONObject(content)
+        if (json.getString("type") != "DASH") return content
+        val quality = json.getInt("quality")
+        val dash = json.getJSONObject("dash")
+        val videos = dash.getJSONArray("video")
+        val audios = dash.getJSONArray("audio")
+        var preservedVideo: JSONObject? = null
+        var audioId = 0
+        for (i in 0 until videos.length()) {
+            val video = videos.getJSONObject(i)
+            if (video.getInt("id") == quality) {
+                preservedVideo = video
+            }
+        }
+
+        var preservedAudio: JSONObject? = null
+        for (i in 0 until audios.length()) {
+            val audio = audios.getJSONObject(i)
+            if (audio.getInt("id") > audioId) {
+                audioId = audio.getInt("id")
+                preservedAudio = audio
+            }
+        }
+
+        dash.put("video", JSONArray(arrayOf(preservedVideo)))
+        dash.put("audio", JSONArray(arrayOf(preservedAudio)))
+
+        return json.toString()
+    }
+
+    private fun fixDownloadProto(response: Any): Any {
+        val serializedRequest = response.callMethodAs<ByteArray>("toByteArray")
+        val newRes = fixDownloadProto(PlayViewReply.newBuilder(PlayViewReply.parseFrom(serializedRequest)))
+        val serializedResponse = newRes.toByteArray()
+        return response.javaClass.callStaticMethod("parseFrom", serializedResponse)!!
+    }
+
+    private fun fixDownloadProto(builder: PlayViewReply.Builder): PlayViewReply {
+        return builder.run {
+            videoInfo = VideoInfo.newBuilder(builder.videoInfo).run {
+                var audioId = 0
+                val streams = streamListList.map {
+                    if (it.streamInfo.quality != quality) {
+                        Stream.newBuilder(it).run {
+                            clearContent()
+                            build()
+                        }
+                    } else {
+                        audioId = it.dashVideo.audioId
+                        it
+                    }
+                }
+                val audio = dashAudioList.first {
+                    it.id != audioId
+                }
+                clearStreamList()
+                clearDashAudio()
+                addAllStreamList(streams)
+                addDashAudio(audio)
+                build()
+            }
+            build()
         }
     }
 
@@ -129,7 +218,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             appendQueryParameter("qn", req.qn.toString())
             appendQueryParameter("fnver", req.fnver.toString())
             appendQueryParameter("fnval", req.fnval.toString())
-            appendQueryParameter("download", req.download.toString())
+            appendQueryParameter("dl", req.download.toString())
             appendQueryParameter("force_host", req.forceHost.toString())
             appendQueryParameter("fourk", req.fourk.toString())
             appendQueryParameter("spmid", req.spmid.toString())
@@ -145,7 +234,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
 
-    private fun reconstructResponse(response: Any, content: String): Any {
+    private fun reconstructResponse(response: Any, content: String, isDownload: Boolean): Any {
         try {
             var jsonContent = JSONObject(content)
             if (jsonContent.has("result")) {
@@ -220,7 +309,9 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                 codecid = video.getInt("codecid")
                                 md5 = video.getString("md5")
                                 size = video.getLong("size")
-                                audioId = audioIds[0]
+                                // Not knowing the extract matching,
+                                // just use the largest id
+                                audioId = audioIds.maxOrNull() ?: audioIds[0]
                                 noRexcode = jsonContent.getInt("no_rexcode") != 0
                                 build()
                             }
@@ -280,7 +371,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
             builder.videoInfo = videoInfoBuilder.build()
             builder.business = BusinessInfo.newBuilder().build()
-            val serializedResponse = builder.build().toByteArray()
+            val serializedResponse = (if (isDownload) fixDownloadProto(builder) else builder.build()).toByteArray()
             return response.javaClass.callStaticMethod("parseFrom", serializedResponse)!!
         } catch (e: Throwable) {
             Log.e(e)
@@ -292,8 +383,8 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         builder.run {
             description = fmt.getString("description")
             format = fmt.getString("format")
-            needVip = if (fmt.has("need_vip")) fmt.getBoolean("need_vip") else false
-            needLogin = if (fmt.has("need_login")) fmt.getBoolean("need_login") else false
+            needVip = fmt.optBoolean("need_vip", false)
+            needLogin = fmt.optBoolean("need_login", false)
             newDescription = fmt.getString("new_description")
             superscript = fmt.getString("superscript")
             displayDesc = fmt.getString("display_desc")
