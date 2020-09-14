@@ -82,7 +82,8 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             hookBeforeMethod("playView",
                     "com.bapis.bilibili.pgc.gateway.player.v1.PlayViewReq") { param ->
                 val request = param.args[0]
-                if (XposedInit.sPrefs.getBoolean("allow_download", false)) {
+                val isDownload = request.callMethodAs<Int>("getDownload")
+                if (XposedInit.sPrefs.getBoolean("allow_download", false) && isDownload == 1) {
                     request.callMethod("setDownload", 0)
                     request.callMethod("setFnval", 0)
                 }
