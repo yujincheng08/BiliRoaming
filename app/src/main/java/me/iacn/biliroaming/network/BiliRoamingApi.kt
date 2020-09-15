@@ -203,7 +203,9 @@ object BiliRoamingApi {
                 if (XposedInit.sPrefs.getString("upos", "").isNullOrEmpty()) null else
                     mapOf("upos_server" to XposedInit.sPrefs.getString("upos", "cosu")!!)).run {
             if (this != null && contains("\"code\":0")) this
-            else getBackupUrl(queryString, info)
+            else getBackupUrl(queryString, info)?.let{
+                JSONObject(it).optJSONObject("result")?.toString()
+            }
         }?.run {
             when {
                 XposedInit.sPrefs.getBoolean("free_flow", false) -> {
