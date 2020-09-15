@@ -6,10 +6,7 @@ import android.app.Activity
 import android.app.Activity.RESULT_CANCELED
 import android.app.AlertDialog
 import android.app.AndroidAppHelper
-import android.content.ActivityNotFoundException
-import android.content.Context
-import android.content.Intent
-import android.content.SharedPreferences
+import android.content.*
 import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.Color
@@ -22,6 +19,7 @@ import android.preference.SwitchPreference
 import android.provider.MediaStore
 import android.view.ContextThemeWrapper
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.XposedInit.Companion.moduleRes
@@ -59,6 +57,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("custom_splash_logo").onPreferenceChangeListener = this
             findPreference("custom_cdn").onPreferenceChangeListener = this
             findPreference("save_log").summary = moduleRes.getString(R.string.save_log_summary).format(XposedInit.logFile.absolutePath)
+            findPreference("thanks").onPreferenceClickListener = this
             checkCompatibleVersion()
             CheckVersionTask(this).execute(URL(moduleRes.getString(R.string.version_url)))
         }
@@ -201,10 +200,42 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             return true
         }
 
+        private fun onThanksCheck(): Boolean {
+            AlertDialog.Builder(activity).run {
+                setTitle("赞助服务器提供者(不是模块作者)")
+                setItems(arrayOf("BiliPlus (主服务器)", "kghost (备用服务器)")) { _: DialogInterface, i: Int ->
+                    when (i) {
+                        0 -> {
+                            AlertDialog.Builder(activity).create().run {
+                                setTitle("BiliPlus赞助")
+                                setView(ImageView(activity).run {
+                                    setImageDrawable(moduleRes.getDrawable(R.drawable.biliplus_alipay))
+                                    setOnClickListener {
+                                        val uri = Uri.parse(moduleRes.getString(R.string.biliplus_alipay))
+                                        val intent = Intent(Intent.ACTION_VIEW, uri)
+                                        startActivity(intent)
+                                    }
+                                    this
+                                }, 50, 50, 50, 50)
+                                setButton(AlertDialog.BUTTON_NEGATIVE, "关闭") { _, _ -> }
+                                show()
+                            }
+                        }
+                        1 -> {
+                        }
+                    }
+                }
+                setNegativeButton("关闭", null)
+                show()
+            }
+            return true
+        }
+
         override fun onPreferenceClick(preference: Preference?): Boolean {
             return when (preference?.key) {
                 "version" -> onVersionClick()
                 "update" -> onUpdateCheck()
+                "thanks" -> onThanksCheck()
                 else -> false
             }
         }

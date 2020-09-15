@@ -78,7 +78,7 @@
     <string name="feature_summary">打开哔哩哔哩客户端，进入【我的】页面，点击【哔哩漫游设置】；旧版本打开侧边栏，长按【设置】</string>
     <string name="feature_dialog">当哔哩漫游被正确激活后，打开哔哩哔哩客户端，进入【我的】页面，就能看到【哔哩漫游设置】；使用旧版本客户端则打开侧边栏，长按【设置】。如果不知道如何激活插件，请直接使用Xpatch版。</string>
     <string name="thanks_summary">BiliPlus/Kghost</string>
-    <string name="thanks_title">服务器提供</string>
+    <string name="thanks_title">赞助服务器提供者</string>
     <string name="help_title">帮助</string>
     <string name="help_summary">点击查看激活方法、常见问题等</string>
     <string name="help_url">https://github.com/yujincheng08/BiliRoaming/wiki</string>
@@ -105,4 +105,5 @@
     <string name="save_log_summary">启用后，将保存日志到文件%s</string>
     <string name="fix_download_title">解除国内版权番剧下载限速</string>
     <string name="fix_download_summary">提高版权番剧的下载速度，但是会导致音视频分离</string>
+    <string name="biliplus_alipay">https://qr.alipay.com/c1x01823e8yxrglpzdwwy89</string>
 </resources>
