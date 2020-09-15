@@ -40,11 +40,15 @@ object BiliRoamingApi {
     private const val BILI_MEDIA_URL = "bangumi.bilibili.com/view/web_api/media"
     private const val BILI_MODULE_TEMPLATE = "{\"data\": {},\"id\": 0,\"module_style\": {\"hidden\": 0,\"line\": 1},\"more\": \"查看更多\",\"style\": \"positive\",\"title\": \"选集\"}"
 
-    private const val KGHOST_TW_API_URL = "bilibili-tw-api.kghost.info/"
-    private const val KGHOST_HK_API_URL = "bilibili-hk-api.kghost.info/"
-    private const val KGHOST_SG_API_URL = "bilibili-sg-api.kghost.info/"
-    private const val KGHOST_CN_API_URL = "bilibili-cn-api.kghost.info/"
-    private const val KGHOST_PLAYURL = "pgc/player/web/playurl"
+    private const val KGHOST_TW_API_URL = "bilibili-tw-api.kghost.info"
+    private const val KGHOST_HK_API_URL = "bilibili-hk-api.kghost.info"
+    private const val KGHOST_SG_API_URL = "bilibili-sg-api.kghost.info"
+
+    // this one is invalid since platform check exists in mainland server
+    // private const val KGHOST_CN_API_URL = "bilibili-cn-api.kghost.info"
+    private const val KGHOST_CN_API_URL = "bili.lovesykun.cn"
+    private const val KGHOST_PLAYURL = "/pgc/player/web/playurl"
+    private const val BACKUP_PLAYURL = "/pgc/player/api/playurl"
 
     @JvmStatic
     fun getSeason(info: Map<String, String?>, hidden: Boolean): String? {
@@ -203,17 +207,17 @@ object BiliRoamingApi {
                 if (XposedInit.sPrefs.getString("upos", "").isNullOrEmpty()) null else
                     mapOf("upos_server" to XposedInit.sPrefs.getString("upos", "cosu")!!)).run {
             if (this != null && contains("\"code\":0")) this
-            else getBackupUrl(queryString, info)?.let{
-                JSONObject(it).optJSONObject("result")?.toString()
+            else getBackupUrl(queryString, info)?.let {
+                JSONObject(it).optJSONObject("result")?.toString() ?: it
             }
         }?.run {
             when {
                 XposedInit.sPrefs.getBoolean("free_flow", false) -> {
-                    replace(Regex("https?://${AKAMAI_HOST}"), "http://${BILI_CACHE_HOST.format(Random.nextInt(1, 9))}")
+                    replace(Regex("""https?:\\?/\\?/${AKAMAI_HOST}"""), "http://${BILI_CACHE_HOST.format(Random.nextInt(1, 9))}")
                 }
                 XposedInit.sPrefs.getBoolean("force_https", false) ->
-                    replace("http://${AKAMAI_HOST}", "https://${AKAMAI_HOST}")
-                else -> replace("https://${AKAMAI_HOST}", "http://${AKAMAI_HOST}")
+                    replace(Regex("""http:\\?/\\?/${AKAMAI_HOST}"""), "https://${AKAMAI_HOST}")
+                else -> replace(Regex("""https:\\?/\\?/${AKAMAI_HOST}"""), "http://${AKAMAI_HOST}")
             }
         }
     }
@@ -221,32 +225,28 @@ object BiliRoamingApi {
     @JvmStatic
     fun getBackupUrl(queryString: String?, info: Map<String, String?>): String? {
         Log.d("Title: ${info["title"]}")
+        val twUrl = XposedInit.sPrefs.getString("tw_server", KGHOST_TW_API_URL)!!
+        val hkUrl = XposedInit.sPrefs.getString("hk_server", KGHOST_HK_API_URL)!!
+        val cnUrl = XposedInit.sPrefs.getString("cn_server", KGHOST_CN_API_URL)!!
+        val sgUrl = XposedInit.sPrefs.getString("sg_server", KGHOST_SG_API_URL)!!
         val hostList: Array<String> = info["title"]?.run {
             when {
-                contains(Regex("僅.*台")) -> {
-                    arrayOf(KGHOST_TW_API_URL)
-                }
-                contains(Regex("僅.*港")) -> {
-                    arrayOf(KGHOST_HK_API_URL)
-                }
-                contains(Regex("仅.*东南亚")) -> {
-                    arrayOf(KGHOST_SG_API_URL)
-                }
-                else -> {
-                    arrayOf(KGHOST_CN_API_URL)
-                }
+                contains(Regex("僅.*台")) -> arrayOf(twUrl)
+                contains(Regex("僅.*港")) -> arrayOf(hkUrl)
+                contains(Regex("仅.*东南亚")) -> arrayOf(sgUrl)
+                else -> arrayOf(cnUrl)
             }
         } ?: run {
-            arrayOf(KGHOST_CN_API_URL, KGHOST_TW_API_URL, KGHOST_HK_API_URL, KGHOST_SG_API_URL)
+            arrayOf(cnUrl, twUrl, hkUrl, sgUrl)
         }
         for (host in hostList) {
             val uri = Uri.Builder()
                     .scheme("https")
-                    .encodedAuthority(host + KGHOST_PLAYURL)
+                    .encodedAuthority(host + if (host.endsWith("kghost.info")) KGHOST_PLAYURL else BACKUP_PLAYURL)
                     .encodedQuery(queryString)
                     .toString()
             getContent(uri)?.let {
-                Log.d("use backup for playurl from kghost instead")
+                Log.d("use backup for playurl instead")
                 if (it.contains("\"code\":0")) return it
             }
         }
@@ -319,6 +319,7 @@ object BiliRoamingApi {
                     "${item.key}=${item.value}"
                 }?.joinToString(separator = "; ")
                 connection.setRequestProperty("Cookie", cookies)
+                connection.setRequestProperty("x-from-biliroaming", BuildConfig.VERSION_NAME)
                 connection.connect()
                 if (connection.responseCode == HttpURLConnection.HTTP_OK) {
                     val inputStream = connection.inputStream

@@ -49,7 +49,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val okHttpClientBuilderClass by Weak { mHookInfo["class_http_client_builder"]?.findClass(mClassLoader) }
     val downloadThreadListenerClass by Weak { mHookInfo["class_download_thread_listener"]?.findClass(mClassLoader) }
     val downloadingActivityClass by Weak { "tv.danmaku.bili.ui.offline.DownloadingActivity".findClassOrNull(mClassLoader) }
-    val reportDownloadThreadClass by Weak { mHookInfo["class_report_download_thread"]?.findClass(mClassLoader)}
+    val reportDownloadThreadClass by Weak { mHookInfo["class_report_download_thread"]?.findClass(mClassLoader) }
+    val libBiliClass by Weak { "com.bilibili.nativelibrary.LibBili".findClass(mClassLoader) }
 
     private val classesList by lazy { DexFile(AndroidAppHelper.currentApplication().packageCodePath).entries().toList() }
     private val accessKeyInstance by lazy { "com.bilibili.bangumi.ui.page.detail.pay.BangumiPayHelperV2\$accessKey\$2".findClass(mClassLoader)?.getStaticObjectField("INSTANCE") }
@@ -144,7 +145,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         return mHookInfo["field_download_thread"]
     }
 
-    fun reportDownloadThread(): String?{
+    fun reportDownloadThread(): String? {
         return mHookInfo["method_report_download_thread"]
     }
 
@@ -284,7 +285,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             it.startsWith("tv.danmaku.bili.ui.offline.api")
         }.forEach { c ->
             c.findClassOrNull(mClassLoader)?.declaredMethods?.forEach { m ->
-                if (m.parameterTypes.size==2 && m.parameterTypes[0] == Context::class.java && m.parameterTypes[1] == Int::class.javaPrimitiveType) {
+                if (m.parameterTypes.size == 2 && m.parameterTypes[0] == Context::class.java && m.parameterTypes[1] == Int::class.javaPrimitiveType) {
                     return arrayOf(c, m.name)
                 }
             }
@@ -459,8 +460,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     private fun findSignQueryMethod(): String? {
         val signedQueryClass = "com.bilibili.nativelibrary.SignedQuery".findClass(mClassLoader)
                 ?: return null
-        return "com.bilibili.nativelibrary.LibBili".findClass(mClassLoader)?.declaredMethods?.firstOrNull {
-            it.parameterTypes.size == 1 && it.parameterTypes[0] == MutableMap::class.java &&
+        return libBiliClass?.declaredMethods?.firstOrNull {
+            it.parameterTypes.size == 1 && it.parameterTypes[0] == Map::class.java &&
                     it.returnType == signedQueryClass
         }?.name
     }

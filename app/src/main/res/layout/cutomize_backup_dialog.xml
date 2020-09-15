@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:rowCount="4"
+    android:columnCount="2"
+    android:orientation="horizontal"
+    android:paddingStart="25dp"
+    android:paddingEnd="20dp">
+
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="1"
+        android:text="中国大陆"
+        tools:ignore="HardcodedText" />
+
+    <EditText
+        android:id="@+id/cn_server"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="20"
+        android:hint="bili.lovesykun.cn"
+        android:tag="cn_server"
+        tools:ignore="HardcodedText" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="1"
+        android:text="香港"
+        tools:ignore="HardcodedText" />
+
+    <EditText
+        android:id="@+id/hk_server"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="20"
+        android:hint="bilibili-hk-api.kghost.info"
+        android:tag="hk_server"
+        tools:ignore="HardcodedText" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="1"
+        android:text="台湾"
+        tools:ignore="HardcodedText" />
+
+    <EditText
+        android:id="@+id/tw_server"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="20"
+        android:hint="bilibili-sg-api.kghost.info"
+        android:tag="tw_server"
+        tools:ignore="HardcodedText" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="1"
+        android:text="星加坡"
+        tools:ignore="HardcodedText" />
+
+    <EditText
+        android:id="@+id/sg_server"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="20"
+        android:hint="bilibili-cn-api.kghost.info"
+        android:tag="sg_server"
+        tools:ignore="HardcodedText" />
+
+</GridLayout>

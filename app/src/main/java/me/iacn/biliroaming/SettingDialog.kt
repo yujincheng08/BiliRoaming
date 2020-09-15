@@ -18,7 +18,10 @@ import android.preference.PreferenceFragment
 import android.preference.SwitchPreference
 import android.provider.MediaStore
 import android.view.ContextThemeWrapper
+import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
@@ -58,6 +61,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("custom_cdn").onPreferenceChangeListener = this
             findPreference("save_log").summary = moduleRes.getString(R.string.save_log_summary).format(XposedInit.logFile.absolutePath)
             findPreference("thanks").onPreferenceClickListener = this
+            findPreference("custom_backup").onPreferenceClickListener = this
             checkCompatibleVersion()
             CheckVersionTask(this).execute(URL(moduleRes.getString(R.string.version_url)))
         }
@@ -193,14 +197,14 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             }
         }
 
-        private fun onUpdateCheck(): Boolean {
+        private fun onUpdateClick(): Boolean {
             val uri = Uri.parse(moduleRes.getString(R.string.update_url))
             val intent = Intent(Intent.ACTION_VIEW, uri)
             startActivity(intent)
             return true
         }
 
-        private fun onThanksCheck(): Boolean {
+        private fun onThanksClick(): Boolean {
             AlertDialog.Builder(activity).run {
                 setTitle("赞助服务器提供者(不是模块作者)")
                 setItems(arrayOf("BiliPlus (主服务器)", "kghost (备用服务器)")) { _: DialogInterface, i: Int ->
@@ -231,11 +235,39 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             return true
         }
 
+        private fun onCustomBackupClick(): Boolean {
+            AlertDialog.Builder(activity).run {
+                val layout = moduleRes.getLayout(R.layout.cutomize_backup_dialog)
+                val inflater = LayoutInflater.from(context)
+                val view = inflater.inflate(layout, null)
+                val editTexts = arrayOf(
+                        view.findViewById<EditText>(R.id.cn_server),
+                        view.findViewById(R.id.hk_server),
+                        view.findViewById(R.id.tw_server),
+                        view.findViewById(R.id.sg_server))
+                editTexts.forEach { it.setText(prefs.getString(it.tag.toString(), "")) }
+                setTitle("自定义备份服务器")
+                setView(view)
+                setPositiveButton("确定") { _, _ ->
+                    editTexts.forEach {
+                        val host = it.text.toString()
+                        if (host.isNotEmpty())
+                            prefs.edit().putString(it.tag.toString(), host).apply()
+                        else
+                            prefs.edit().remove(it.tag.toString()).apply()
+                    }
+                }
+                show()
+            }
+            return true
+        }
+
         override fun onPreferenceClick(preference: Preference?): Boolean {
             return when (preference?.key) {
                 "version" -> onVersionClick()
-                "update" -> onUpdateCheck()
-                "thanks" -> onThanksCheck()
+                "update" -> onUpdateClick()
+                "thanks" -> onThanksClick()
+                "custom_backup" -> onCustomBackupClick()
                 else -> false
             }
         }

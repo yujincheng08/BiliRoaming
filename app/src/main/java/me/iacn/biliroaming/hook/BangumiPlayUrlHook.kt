@@ -24,7 +24,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         if (!XposedInit.sPrefs.getBoolean("main_func", false)) return
         Log.d("startHook: BangumiPlayUrl")
         instance.signQueryName()?.let {
-            "com.bilibili.nativelibrary.LibBili".hookBeforeMethod(mClassLoader, it, MutableMap::class.java) { param ->
+            instance.libBiliClass?.hookBeforeMethod(it, Map::class.java) { param ->
                 @Suppress("UNCHECKED_CAST")
                 val params = param.args[0] as MutableMap<String, String>
                 if (XposedInit.sPrefs.getBoolean("allow_download", false) &&
@@ -213,25 +213,20 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val serializedRequest = request.callMethodAs<ByteArray>("toByteArray")
         val req = PlayViewReq.parseFrom(serializedRequest)
         // CANNOT use reflection for compatibility with Xpatch
-        return Uri.Builder().run {
+        val query = Uri.Builder().run {
             appendQueryParameter("ep_id", req.epId.toString())
             appendQueryParameter("cid", req.cid.toString())
             appendQueryParameter("qn", req.qn.toString())
             appendQueryParameter("fnver", req.fnver.toString())
             appendQueryParameter("fnval", req.fnval.toString())
-            appendQueryParameter("dl", req.download.toString())
             appendQueryParameter("force_host", req.forceHost.toString())
             appendQueryParameter("fourk", req.fourk.toString())
-            appendQueryParameter("spmid", req.spmid.toString())
-            appendQueryParameter("from_spmid", req.fromSpmid.toString())
-            appendQueryParameter("teenagers_mode", req.teenagersMode.toString())
-            appendQueryParameter("prefer_codec_type", req.preferCodecType.toString())
-            appendQueryParameter("is_preview", req.isPreview.toString())
             BangumiSeasonHook.lastSeasonInfo["access_key"]?.let {
                 appendQueryParameter("access_key", it)
             }
             build()
         }.query
+        return signQuery(query)
     }
 
 

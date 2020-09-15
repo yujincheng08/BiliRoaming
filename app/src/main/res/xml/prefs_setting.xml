@@ -18,6 +18,13 @@
             android:key="fix_download"
             android:summary="@string/fix_download_summary"
             android:title="@string/fix_download_title" />
+
+        <Preference
+            android:dependency="main_func"
+            android:key="custom_backup"
+            android:title="自定义备份服务器"
+            android:summary="在主服务器宕机时，可以从自定义备份服务器解析解锁番剧。默认备份服务器由kghost提供。"
+            />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/cdn_category">
