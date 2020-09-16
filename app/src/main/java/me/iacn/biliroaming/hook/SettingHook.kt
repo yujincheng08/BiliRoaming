@@ -50,7 +50,7 @@ class SettingHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     .setObjectField("title", "哔哩漫游设置")
                     .setObjectField("icon", "https://i0.hdslb.com/bfs/album/276769577d2a5db1d9f914364abad7c5253086f6.png")
                     .setObjectField("uri", settingUri)
-            val lastGroup = (param.args[1] as MutableList<*>).last() ?: return@hookBeforeMethod
+            val lastGroup = (param.args[1] as MutableList<*>).lastOrNull() ?: return@hookBeforeMethod
             lastGroup.getObjectFieldAs<MutableList<Any>>("itemList").add(item)
         }
 

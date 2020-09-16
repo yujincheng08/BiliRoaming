@@ -67,13 +67,23 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 accountMineClass -> {
                     if (XposedInit.sPrefs.getBoolean("purify_drawer", false) &&
                             XposedInit.sPrefs.getBoolean("hidden", false)) {
-                        result.javaClass.findFieldOrNull("sectionList")?.run {
-                            val sections = get(result) as MutableList<*>?
-                            sections?.removeAt(sections.size - 1)
-                        }
-                        result.javaClass.findFieldOrNull("sectionListV2")?.run {
-                            val sections = get(result) as MutableList<*>?
-                            sections?.removeAt(sections.size - 2)
+                        arrayOf(result.getObjectFieldAs<MutableList<*>?>("sectionList"),
+                                result.getObjectFieldAs<MutableList<*>>("sectionListV2")).forEach { sections ->
+                            var button: Any? = null
+                            sections?.removeAll { item ->
+                                item?.getObjectField("button")?.run {
+                                    if (!getObjectFieldAs<String?>("text").isNullOrEmpty())
+                                        button = this
+                                }
+                                when {
+                                    item?.getObjectFieldAs<String?>("title").isNullOrEmpty() -> false
+                                    item?.getIntField("style") == 2 -> {
+                                        item.setObjectField("button", button)
+                                        false
+                                    }
+                                    else -> true
+                                }
+                            }
                         }
                     }
                 }
