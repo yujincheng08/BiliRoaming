@@ -100,6 +100,10 @@
             android:key="custom_splash_logo"
             android:summary="@string/custom_splash_logo_summary"
             android:title="@string/custom_splash_logo_title" />
+        <SwitchPreference
+            android:key="follow_dark"
+            android:summary="@string/follow_dark_summary"
+            android:title="@string/follow_dark_title"/>
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/miscellaneous_category">

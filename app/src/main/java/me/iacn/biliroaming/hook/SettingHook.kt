@@ -20,12 +20,12 @@ class SettingHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
         Log.d("startHook: Setting")
 
-        "tv.danmaku.bili.ui.splash.SplashActivity".hookBeforeMethod(mClassLoader, "onCreate", Bundle::class.java) { param ->
+        instance.splashActivityClass?.hookBeforeMethod("onCreate", Bundle::class.java) { param ->
             val self = param.thisObject as Activity
             startSetting = self.intent.hasExtra(START_SETTING_KEY)
         }
 
-        "tv.danmaku.bili.MainActivityV2".hookAfterMethod(mClassLoader, "onResume") { param ->
+        instance.mainActivityClass?.hookAfterMethod("onResume") { param ->
             if (startSetting) {
                 startSetting = false
                 SettingDialog(param.thisObject as Activity).show()
@@ -42,7 +42,7 @@ class SettingHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
         }
 
-        "tv.danmaku.bili.ui.main2.mine.HomeUserCenterFragment".findClassOrNull(mClassLoader)?.hookBeforeMethod(
+        instance.homeUserCenterClass?.hookBeforeMethod(
                 instance.addSetting(), Context::class.java, List::class.java) { param ->
             val item = "com.bilibili.lib.homepage.mine.MenuGroup\$Item".findClass(mClassLoader)?.new()
                     ?: return@hookBeforeMethod
@@ -50,7 +50,8 @@ class SettingHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     .setObjectField("title", "哔哩漫游设置")
                     .setObjectField("icon", "https://i0.hdslb.com/bfs/album/276769577d2a5db1d9f914364abad7c5253086f6.png")
                     .setObjectField("uri", settingUri)
-            val lastGroup = (param.args[1] as MutableList<*>).lastOrNull() ?: return@hookBeforeMethod
+            val lastGroup = (param.args[1] as MutableList<*>).lastOrNull()
+                    ?: return@hookBeforeMethod
             lastGroup.getObjectFieldAs<MutableList<Any>>("itemList").add(item)
         }
 

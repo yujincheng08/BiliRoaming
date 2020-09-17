@@ -108,4 +108,6 @@
     <string name="biliplus_alipay">https://qr.alipay.com/c1x01823e8yxrglpzdwwy89</string>
     <string name="purify_home_tab_title">净化首页标签</string>
     <string name="purify_home_tab_summary">去除首页的热点标签</string>
+    <string name="follow_dark_title">夜间模式跟随系统</string>
+    <string name="follow_dark_summary">开启后，会根据系统是否在暗黑模式自动切换主题的夜间模式</string>
 </resources>

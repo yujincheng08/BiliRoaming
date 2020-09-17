@@ -51,6 +51,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val downloadingActivityClass by Weak { "tv.danmaku.bili.ui.offline.DownloadingActivity".findClassOrNull(mClassLoader) }
     val reportDownloadThreadClass by Weak { mHookInfo["class_report_download_thread"]?.findClass(mClassLoader) }
     val libBiliClass by Weak { "com.bilibili.nativelibrary.LibBili".findClass(mClassLoader) }
+    val splashActivityClass by Weak { "tv.danmaku.bili.ui.splash.SplashActivity".findClass(mClassLoader) }
+    val mainActivityClass by Weak { "tv.danmaku.bili.MainActivityV2".findClass(mClassLoader) }
+    val homeUserCenterClass by Weak { "tv.danmaku.bili.ui.main2.mine.HomeUserCenterFragment".findClass(mClassLoader) }
 
     private val classesList by lazy { DexFile(AndroidAppHelper.currentApplication().packageCodePath).entries().toList() }
     private val accessKeyInstance by lazy { "com.bilibili.bangumi.ui.page.detail.pay.BangumiPayHelperV2\$accessKey\$2".findClass(mClassLoader)?.getStaticObjectField("INSTANCE") }
