@@ -55,6 +55,12 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             }
                         }
                     }
+                    if (XposedInit.sPrefs.getBoolean("purify_home_tab", false)) {
+                        val tab = data?.getObjectFieldAs<MutableList<Any>>("tab")
+                        tab?.removeAll {
+                            it.getObjectFieldAs<String>("uri").startsWith("bilibili://pegasus/op/")
+                        }
+                    }
                     if (XposedInit.sPrefs.getBoolean("purify_game", false) &&
                             XposedInit.sPrefs.getBoolean("hidden", false)) {
                         val top = data?.getObjectFieldAs<MutableList<*>?>("top")

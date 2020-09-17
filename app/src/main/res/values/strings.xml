@@ -106,4 +106,6 @@
     <string name="fix_download_title">解除国内版权番剧下载限速</string>
     <string name="fix_download_summary">提高版权番剧的下载速度，但是会导致音视频分离</string>
     <string name="biliplus_alipay">https://qr.alipay.com/c1x01823e8yxrglpzdwwy89</string>
+    <string name="purify_home_tab_title">净化首页标签</string>
+    <string name="purify_home_tab_summary">去除首页的热点标签</string>
 </resources>
