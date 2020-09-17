@@ -229,16 +229,15 @@ object BiliRoamingApi {
         val hkUrl = XposedInit.sPrefs.getString("hk_server", KGHOST_HK_API_URL)!!
         val cnUrl = XposedInit.sPrefs.getString("cn_server", KGHOST_CN_API_URL)!!
         val sgUrl = XposedInit.sPrefs.getString("sg_server", KGHOST_SG_API_URL)!!
-        val hostList: Array<String> = info["title"]?.run {
-            when {
-                contains(Regex("僅.*台")) -> arrayOf(twUrl)
-                contains(Regex("僅.*港")) -> arrayOf(hkUrl)
-                contains(Regex("仅.*东南亚")) -> arrayOf(sgUrl)
-                else -> arrayOf(cnUrl)
-            }
-        } ?: run {
-            arrayOf(cnUrl, twUrl, hkUrl, sgUrl)
+        val hostList = ArrayList<String>()
+        info["title"]?.run {
+            if (contains(Regex("僅.*台"))) hostList += twUrl
+            if (contains(Regex("僅.*港"))) hostList += hkUrl
+            if (contains(Regex("[仅|僅].*[东南亚|其他]"))) hostList += sgUrl
         }
+        if (hostList.isEmpty())
+            hostList += arrayOf(cnUrl, twUrl, hkUrl, sgUrl)
+
         for (host in hostList) {
             val uri = Uri.Builder()
                     .scheme("https")
@@ -246,7 +245,7 @@ object BiliRoamingApi {
                     .encodedQuery(queryString)
                     .toString()
             getContent(uri)?.let {
-                Log.d("use backup for playurl instead")
+                Log.d("use backup $host for playurl instead")
                 if (it.contains("\"code\":0")) return it
             }
         }
