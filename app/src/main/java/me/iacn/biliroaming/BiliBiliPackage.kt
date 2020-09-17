@@ -54,6 +54,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val splashActivityClass by Weak { "tv.danmaku.bili.ui.splash.SplashActivity".findClass(mClassLoader) }
     val mainActivityClass by Weak { "tv.danmaku.bili.MainActivityV2".findClass(mClassLoader) }
     val homeUserCenterClass by Weak { "tv.danmaku.bili.ui.main2.mine.HomeUserCenterFragment".findClass(mClassLoader) }
+    val garbHelperClass by Weak { mHookInfo["class_garb_helper"]?.findClass(mClassLoader) }
 
     private val classesList by lazy { DexFile(AndroidAppHelper.currentApplication().packageCodePath).entries().toList() }
     private val accessKeyInstance by lazy { "com.bilibili.bangumi.ui.page.detail.pay.BangumiPayHelperV2\$accessKey\$2".findClass(mClassLoader)?.getStaticObjectField("INSTANCE") }
@@ -150,6 +151,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     fun reportDownloadThread(): String? {
         return mHookInfo["method_report_download_thread"]
+    }
+
+    fun garb(): String? {
+        return mHookInfo["method_garb"]
     }
 
     private fun readHookInfo(context: Context): MutableMap<String, String?> {
@@ -275,12 +280,26 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             findDownloadThreadField()
         }.checkConjunctiveOrPut("class_report_download_thread", "method_report_download_thread") {
             findReportDownloadThread()
+        }.checkConjunctiveOrPut("class_garb_helper", "method_garb") {
+            findGarbHelper()
         }
-
 
         Log.d(mHookInfo)
         Log.d("Check hook info completed: needUpdate = $needUpdate")
         return needUpdate
+    }
+
+    private fun findGarbHelper(): Array<String?> {
+        val garbClass = "com.bilibili.lib.ui.garb.Garb".findClass(mClassLoader)
+        classesList.filter {
+            it.startsWith("com.bilibili.lib.ui.garb")
+        }.forEach { c ->
+            c.findClassOrNull(mClassLoader)?.declaredMethods?.forEach { m ->
+                if (Modifier.isStatic(m.modifiers) && m.returnType == garbClass)
+                    return arrayOf(c, m.name)
+            }
+        }
+        return arrayOfNulls(2)
     }
 
     private fun findReportDownloadThread(): Array<String?> {

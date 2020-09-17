@@ -5,23 +5,22 @@ import android.content.res.Configuration
 import android.content.res.Resources
 import android.os.Bundle
 import android.view.View
+import de.robv.android.xposed.XC_MethodHook
+import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.BiliBiliPackage.Weak
 import me.iacn.biliroaming.XposedInit
 import me.iacn.biliroaming.utils.*
-import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 
 class DarkHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
         if (!XposedInit.sPrefs.getBoolean("follow_dark", false)) return
         Log.d("startHook: Dark")
-        instance.splashActivityClass?.hookBeforeMethod("onCreate", Bundle::class.java) { param ->
-            val self = param.thisObject as Activity
-            if (inDark != isNight) switch(self)
+        val hooker = { param: XC_MethodHook.MethodHookParam ->
+            if (isNight != null && inDark != isNight) switch(param.thisObject as Activity)
         }
-        instance.mainActivityClass?.hookBeforeMethod("onResume") { param ->
-            val self = param.thisObject as Activity
-            if (inDark != isNight) switch(self)
-        }
+        instance.splashActivityClass?.hookBeforeMethod("onCreate", Bundle::class.java, hooker = hooker)
+        instance.mainActivityClass?.hookBeforeMethod("onCreate", Bundle::class.java, hooker = hooker)
+        instance.mainActivityClass?.hookBeforeMethod("onResume", hooker = hooker)
     }
 
     fun switch(activity: Activity) {
@@ -36,17 +35,13 @@ class DarkHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
     }
 
-    private val garbClass by Weak { "com.bilibili.lib.ui.garb.Garb".findClass(mClassLoader) }
-    private val historySearchActivityClass by Weak { "com.bilibili.app.history.search.ui.HistorySearchActivity".findClass(mClassLoader) }
-    private val fragmentClass by Weak { "androidx.fragment.app.Fragment".findClass(mClassLoader) }
-
-    private val garb
-        get() = historySearchActivityClass?.run {
-            new().getObjectField(declaredFields.firstOrNull { it.type == garbClass }?.name)
-        }
+    private val fragmentClass by Weak {
+        "androidx.fragment.app.Fragment".findClassOrNull(mClassLoader)
+                ?: "android.support.v4.app.Fragment".findClassOrNull(mClassLoader)
+    }
 
     private val isNight
-        get() = garb?.callMethodAs<Boolean>("isNight")
+        get() = instance.garb()?.let { instance.garbHelperClass?.callStaticMethod(it)?.callMethodAs<Boolean?>("isNight") }
 
     private val inDark
         get() = Resources.getSystem().configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
