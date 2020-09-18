@@ -18,9 +18,8 @@ class DarkHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val hooker = { param: XC_MethodHook.MethodHookParam ->
             if (isNight != null && inDark != isNight) switch(param.thisObject as Activity)
         }
-        instance.splashActivityClass?.hookBeforeMethod("onCreate", Bundle::class.java, hooker = hooker)
-        instance.mainActivityClass?.hookBeforeMethod("onCreate", Bundle::class.java, hooker = hooker)
-        instance.mainActivityClass?.hookBeforeMethod("onResume", hooker = hooker)
+        Activity::class.java.hookBeforeMethod("onCreate", Bundle::class.java, hooker = hooker)
+        Activity::class.java.hookAfterMethod("onPostResume", hooker = hooker)
     }
 
     fun switch(activity: Activity) {
