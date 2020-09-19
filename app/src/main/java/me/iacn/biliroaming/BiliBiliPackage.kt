@@ -3,7 +3,9 @@
 package me.iacn.biliroaming
 
 import android.app.AndroidAppHelper
+import android.app.Notification
 import android.content.Context
+import android.graphics.Bitmap
 import android.os.Bundle
 import android.util.SparseArray
 import android.view.View
@@ -55,6 +57,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val mainActivityClass by Weak { "tv.danmaku.bili.MainActivityV2".findClass(mClassLoader) }
     val homeUserCenterClass by Weak { "tv.danmaku.bili.ui.main2.mine.HomeUserCenterFragment".findClass(mClassLoader) }
     val garbHelperClass by Weak { mHookInfo["class_garb_helper"]?.findClass(mClassLoader) }
+    val musicNotificationManagerClass by Weak { "tv.danmaku.bili.ui.player.notification.MusicNotificationManager".findClass(mClassLoader) }
+    val musicNotificationHelperClass by Weak { mHookInfo["class_music_notification_helper"]?.findClass(mClassLoader) }
 
     private val classesList by lazy { DexFile(AndroidAppHelper.currentApplication().packageCodePath).entries().toList() }
     private val accessKeyInstance by lazy { "com.bilibili.bangumi.ui.page.detail.pay.BangumiPayHelperV2\$accessKey\$2".findClass(mClassLoader)?.getStaticObjectField("INSTANCE") }
@@ -155,6 +159,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     fun garb(): String? {
         return mHookInfo["method_garb"]
+    }
+
+    fun createNotification(): String? {
+        return mHookInfo["methods_create_notification"]
     }
 
     private fun readHookInfo(context: Context): MutableMap<String, String?> {
@@ -282,11 +290,29 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             findReportDownloadThread()
         }.checkConjunctiveOrPut("class_garb_helper", "method_garb") {
             findGarbHelper()
+        }.checkOrPut("class_music_notification_helper") {
+            findMusicNotificationHelper()
+        }.checkOrPut("methods_create_notification") {
+            findCreateNotificationMethods()
         }
 
         Log.d(mHookInfo)
         Log.d("Check hook info completed: needUpdate = $needUpdate")
         return needUpdate
+    }
+
+    private fun findCreateNotificationMethods(): String? {
+        return musicNotificationHelperClass?.declaredMethods?.filter {
+            it.parameterTypes.size == 1 && it.parameterTypes[0] == Bitmap::class.java
+                    && it.returnType == Notification::class.java
+        }?.joinToString(";") { it.name }
+    }
+
+    private fun findMusicNotificationHelper(): String? {
+        return musicNotificationManagerClass?.declaredFields?.firstOrNull {
+            it.type.name.startsWith("tv.danmaku.bili.ui.player.notification.") &&
+                    !it.type.name.endsWith("AbsMusicService")
+        }?.type?.name
     }
 
     private fun findGarbHelper(): Array<String?> {

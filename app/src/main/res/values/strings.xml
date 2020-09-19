@@ -110,4 +110,6 @@
     <string name="purify_home_tab_summary">去除首页的热点标签</string>
     <string name="follow_dark_title">夜间模式跟随系统</string>
     <string name="follow_dark_summary">开启后，会根据系统是否在暗黑模式自动切换主题的夜间模式</string>
+    <string name="music_notification_title">原生音乐通知样式</string>
+    <string name="music_notification_summary">强制音乐通知栏为模块自制的原生样式</string>
 </resources>
