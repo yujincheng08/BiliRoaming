@@ -2,12 +2,15 @@ package me.iacn.biliroaming.hook
 
 import android.app.Notification
 import android.app.PendingIntent
+import android.app.Service
 import android.graphics.Bitmap
+import android.os.Bundle
 import de.robv.android.xposed.XC_MethodHook
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.BiliBiliPackage.Weak
 import me.iacn.biliroaming.XposedInit
 import me.iacn.biliroaming.utils.*
+import java.lang.reflect.Modifier
 
 
 class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
@@ -18,13 +21,22 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private val reflectionActionClass by Weak { "android.widget.RemoteViews.ReflectionAction".findClass(mClassLoader) }
     private val onClickActionClass by Weak { "android.widget.RemoteViews.SetOnClickResponse".findClass(mClassLoader) }
 
+    private val mediaStyleCompatClass by Weak { "androidx.media.app.NotificationCompat\$MediaStyle".findClass(mClassLoader) }
+
+    private var inside = false
+
     override fun startHook() {
         if (!XposedInit.sPrefs.getBoolean("music_notification", false)) return
 
         Log.d("startHook: MusicNotification")
+
+        instance.musicNotificationHelperClass?.replaceMethod(instance.setNotification(), instance.notificationCompatBuilderClass) { param ->
+            if (inside)
+                param.invokeOriginalMethod()
+        }
+
         val hooker = fun(param: XC_MethodHook.MethodHookParam) {
             val old = param.result as Notification? ?: return
-            if (old.extras.containsKey("Primitive")) return
             val res = XposedInit.currentContext.resources
             val getId = { name: String -> res.getIdentifier(name, "id", XposedInit.currentContext.packageName) }
             val iconId = getId("icon")
@@ -36,11 +48,13 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             val action4Id = getId("action4")
             val stopId = getId("stop")
 
-            @Suppress("DEPRECATION")
-            old.bigContentView ?: return
+            if (old.extras.containsKey("Primitive")) return
 
             @Suppress("DEPRECATION")
-            val actions = old.bigContentView.getObjectFieldAs<ArrayList<Any>>("mActions")
+            val view = old.bigContentView ?: old.contentView ?: return
+
+            @Suppress("DEPRECATION")
+            val actions = view.getObjectFieldAs<ArrayList<Any>>("mActions")
             val buttons = linkedMapOf(
                     action1Id to ActionDesc(),
                     action2Id to ActionDesc(),
@@ -49,30 +63,37 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     stopId to ActionDesc(),
             )
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                param.result = Notification.Builder(XposedInit.currentContext, old.channelId).run {
-                    setSmallIcon(old.smallIcon)
-                    setColor(old.color)
-                    setOnlyAlertOnce(true)
-                    setShowWhen(false)
-                    setOngoing(true)
-                    setUsesChronometer(false)
-                    setContentIntent(old.contentIntent)
-                    style = Notification.MediaStyle().setShowActionsInCompactView(1, 2, 3)
+                param.result = instance.notificationCompatBuilderClass?.new(param.thisObject.getObjectFieldAs<Service>("a"), old.channelId)?.run {
+                    callMethod("setSmallIcon", old.smallIcon.getIntField("mInt1"))
+                    callMethod("setColor", old.color)
+                    callMethod("setUsesChronometer", false)
+                    inside = true
+                    param.thisObject.callMethod(instance.setNotification(), this)
+                    inside = false
+                    callMethod("setContentIntent", old.contentIntent)
+                    callMethod("setVisibility", 1)
+                    callMethod("setWhen", System.currentTimeMillis())
+                    callMethod("setCategory", old.category)
+                    callMethod("setStyle",
+                            mediaStyleCompatClass?.new()?.run {
+                                callMethod("setShowActionsInCompactView", intArrayOf(1, 2, 3))
+                                this
+                            })
 
                     for (action in actions) {
                         val viewId = action.getIntField("viewId")
                         when (action.javaClass) {
                             bitmapActionClass -> {
                                 when (viewId) {
-                                    iconId -> setLargeIcon(action.getObjectFieldAs<Bitmap>("bitmap"))
+                                    iconId -> callMethod("setLargeIcon", action.getObjectFieldAs<Bitmap>("bitmap"))
                                 }
                             }
                             reflectionActionClass -> {
                                 when (action.getObjectFieldAs<String>("methodName")) {
                                     "setText" ->
                                         when (viewId) {
-                                            text1Id -> setContentTitle(action.getObjectFieldAs<CharSequence>("value"))
-                                            text2Id -> setContentText(action.getObjectFieldAs<CharSequence>("value"))
+                                            text1Id -> callMethod("setContentTitle", action.getObjectFieldAs<CharSequence>("value"))
+                                            text2Id -> callMethod("setContentText", action.getObjectFieldAs<CharSequence>("value"))
                                         }
                                     "setImageResource" ->
                                         when (viewId) {
@@ -110,21 +131,24 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     }
 
                     buttons[stopId]?.icon = res.getIdentifier("sobot_icon_close_normal", "drawable", XposedInit.currentContext.packageName)
-
                     for (button in buttons) {
-                        button.value.run {
+                        button.value.let {
                             @Suppress("DEPRECATION")
-                            addAction(icon ?: 0, title, intent)
+                            callMethod("addAction",
+                                    arrayOf(Int::class.javaPrimitiveType!!, CharSequence::class.java, PendingIntent::class.java),
+                                    it.icon ?: 0, it.title, it.intent)
                         }
                     }
-                    extras.putBoolean("Primitive", true)
-                    build()
+                    (callMethod("getExtras") as Bundle).putBoolean("Primitive", true)
+                    callMethod("build")
                 }
             }
         }
 
-        instance.createNotification()?.split(";")?.forEach {
-            instance.musicNotificationHelperClass?.hookAfterMethod(it, Bitmap::class.java, hooker = hooker)
+        instance.musicNotificationHelperClass?.declaredMethods?.filter {
+            !Modifier.isStatic(it.modifiers) && it.returnType == Notification::class.java
+        }?.forEach {
+            it.hookAfterMethod(hooker)
         }
     }
 }

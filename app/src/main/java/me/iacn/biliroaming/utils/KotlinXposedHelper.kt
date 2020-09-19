@@ -10,6 +10,7 @@ import de.robv.android.xposed.XposedBridge.*
 import de.robv.android.xposed.XposedHelpers.*
 import de.robv.android.xposed.callbacks.XC_LayoutInflated
 import java.lang.reflect.Field
+import java.lang.reflect.Member
 
 fun Class<*>.hookMethod(method: String?, vararg args: Any?): XC_MethodHook.Unhook? {
     return try {
@@ -21,6 +22,39 @@ fun Class<*>.hookMethod(method: String?, vararg args: Any?): XC_MethodHook.Unhoo
         Log.e(e)
         null
     }
+}
+
+fun Member.hookMethod(callback: XC_MethodHook): XC_MethodHook.Unhook? {
+    return try {
+        hookMethod(this, callback)
+    } catch (e: Throwable) {
+        Log.e(e)
+        null
+    }
+}
+
+inline fun Member.hookAfterMethod(crossinline hooker: (MethodHookParam) -> Unit): XC_MethodHook.Unhook? {
+    return hookMethod(object : XC_MethodHook() {
+        override fun afterHookedMethod(param: MethodHookParam) {
+            try {
+                hooker(param)
+            } catch (e: Throwable) {
+                Log.e(e)
+            }
+        }
+    })
+}
+
+inline fun Member.hookBeforeMethod(crossinline hooker: (MethodHookParam) -> Unit): XC_MethodHook.Unhook? {
+    return hookMethod(object : XC_MethodHook() {
+        override fun beforeHookedMethod(param: MethodHookParam) {
+            try {
+                hooker(param)
+            } catch (e: Throwable) {
+                Log.e(e)
+            }
+        }
+    })
 }
 
 inline fun Class<*>.hookBeforeMethod(method: String?, vararg args: Any?, crossinline hooker: (MethodHookParam) -> Unit): XC_MethodHook.Unhook? {

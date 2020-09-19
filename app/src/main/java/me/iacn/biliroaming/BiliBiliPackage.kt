@@ -59,6 +59,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val garbHelperClass by Weak { mHookInfo["class_garb_helper"]?.findClass(mClassLoader) }
     val musicNotificationManagerClass by Weak { "tv.danmaku.bili.ui.player.notification.MusicNotificationManager".findClass(mClassLoader) }
     val musicNotificationHelperClass by Weak { mHookInfo["class_music_notification_helper"]?.findClass(mClassLoader) }
+    val notificationCompatBuilderClass by Weak { "androidx.core.app.NotificationCompat\$Builder".findClass(mClassLoader) }
 
     private val classesList by lazy { DexFile(AndroidAppHelper.currentApplication().packageCodePath).entries().toList() }
     private val accessKeyInstance by lazy { "com.bilibili.bangumi.ui.page.detail.pay.BangumiPayHelperV2\$accessKey\$2".findClass(mClassLoader)?.getStaticObjectField("INSTANCE") }
@@ -161,8 +162,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         return mHookInfo["method_garb"]
     }
 
-    fun createNotification(): String? {
-        return mHookInfo["methods_create_notification"]
+    fun setNotification(): String? {
+        return mHookInfo["methods_set_notification"]
     }
 
     private fun readHookInfo(context: Context): MutableMap<String, String?> {
@@ -292,8 +293,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             findGarbHelper()
         }.checkOrPut("class_music_notification_helper") {
             findMusicNotificationHelper()
-        }.checkOrPut("methods_create_notification") {
-            findCreateNotificationMethods()
+        }.checkOrPut("methods_set_notification") {
+            findSetNotificationMethods()
         }
 
         Log.d(mHookInfo)
@@ -301,11 +302,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         return needUpdate
     }
 
-    private fun findCreateNotificationMethods(): String? {
-        return musicNotificationHelperClass?.declaredMethods?.filter {
-            it.parameterTypes.size == 1 && it.parameterTypes[0] == Bitmap::class.java
-                    && it.returnType == Notification::class.java
-        }?.joinToString(";") { it.name }
+    private fun findSetNotificationMethods(): String? {
+        return musicNotificationHelperClass?.declaredMethods?.lastOrNull {
+            it.parameterTypes.size == 1 && it.parameterTypes[0] == notificationCompatBuilderClass
+        }?.name
     }
 
     private fun findMusicNotificationHelper(): String? {

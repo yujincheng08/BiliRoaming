@@ -91,7 +91,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     private fun fixPlaySearchType(body: Any, url: String) {
         val resultClass = body.getObjectField("data")?.javaClass ?: return
-        if(!url.contains("type=7") && !url.contains("type=8")) return
+        if (!url.contains("type=7") && !url.contains("type=8")) return
         val newUrl = url.replace("appintl.biliapi.net/intl/gateway/app/", "app.bilibili.com/x/v2/")
         val content = getContent(newUrl) ?: return
         val (_, newResult) = getNewResult(content, "data", resultClass)
