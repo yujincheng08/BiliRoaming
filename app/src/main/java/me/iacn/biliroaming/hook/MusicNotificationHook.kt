@@ -20,20 +20,14 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private val bitmapActionClass by Weak { "android.widget.RemoteViews.BitmapReflectionAction".findClass(mClassLoader) }
     private val reflectionActionClass by Weak { "android.widget.RemoteViews.ReflectionAction".findClass(mClassLoader) }
     private val onClickActionClass by Weak { "android.widget.RemoteViews.SetOnClickResponse".findClass(mClassLoader) }
-
     private val mediaStyleCompatClass by Weak { "androidx.media.app.NotificationCompat\$MediaStyle".findClass(mClassLoader) }
-
-    private var inside = false
 
     override fun startHook() {
         if (!XposedInit.sPrefs.getBoolean("music_notification", false)) return
 
         Log.d("startHook: MusicNotification")
 
-        instance.musicNotificationHelperClass?.replaceMethod(instance.setNotification(), instance.notificationCompatBuilderClass) { param ->
-            if (inside)
-                param.invokeOriginalMethod()
-        }
+        instance.musicNotificationHelperClass?.replaceMethod(instance.setNotification(), instance.notificationCompatBuilderClass) {}
 
         val hooker = fun(param: XC_MethodHook.MethodHookParam) {
             val old = param.result as Notification? ?: return
@@ -67,18 +61,11 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     callMethod("setSmallIcon", old.smallIcon.getIntField("mInt1"))
                     callMethod("setColor", old.color)
                     callMethod("setUsesChronometer", false)
-                    inside = true
-                    param.thisObject.callMethod(instance.setNotification(), this)
-                    inside = false
+                    callMethod("setOngoing", false)
                     callMethod("setContentIntent", old.contentIntent)
                     callMethod("setVisibility", 1)
                     callMethod("setWhen", System.currentTimeMillis())
                     callMethod("setCategory", old.category)
-                    callMethod("setStyle",
-                            mediaStyleCompatClass?.new()?.run {
-                                callMethod("setShowActionsInCompactView", intArrayOf(1, 2, 3))
-                                this
-                            })
 
                     for (action in actions) {
                         val viewId = action.getIntField("viewId")
@@ -131,14 +118,28 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     }
 
                     buttons[stopId]?.icon = res.getIdentifier("sobot_icon_close_normal", "drawable", XposedInit.currentContext.packageName)
+                    var buttonCount = 0
                     for (button in buttons) {
                         button.value.let {
-                            @Suppress("DEPRECATION")
-                            callMethod("addAction",
-                                    arrayOf(Int::class.javaPrimitiveType!!, CharSequence::class.java, PendingIntent::class.java),
-                                    it.icon ?: 0, it.title, it.intent)
+                            if(it.icon!=null) {
+                                callMethod("addAction",
+                                        arrayOf(Int::class.javaPrimitiveType!!, CharSequence::class.java, PendingIntent::class.java),
+                                        it.icon ?: 0, it.title, it.intent)
+                                buttonCount += 1
+                            }
                         }
                     }
+                    callMethod("setStyle",
+                            mediaStyleCompatClass?.new()?.run {
+                                callMethod("setShowActionsInCompactView", when (buttonCount) {
+                                    0 -> intArrayOf()
+                                    1 -> intArrayOf(0)
+                                    2 -> intArrayOf(0, 1)
+                                    3 -> intArrayOf(0, 1, 2)
+                                    else -> intArrayOf(1, 2, 3)
+                                })
+                                this
+                            })
                     (callMethod("getExtras") as Bundle).putBoolean("Primitive", true)
                     callMethod("build")
                 }
