@@ -3,6 +3,7 @@
 package me.iacn.biliroaming
 
 import android.app.AndroidAppHelper
+import android.app.PendingIntent
 import android.content.Context
 import android.os.Bundle
 import android.util.SparseArray
@@ -55,7 +56,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val mainActivityClass by Weak { "tv.danmaku.bili.MainActivityV2".findClass(mClassLoader) }
     val homeUserCenterClass by Weak { "tv.danmaku.bili.ui.main2.mine.HomeUserCenterFragment".findClass(mClassLoader) }
     val garbHelperClass by Weak { mHookInfo["class_garb_helper"]?.findClass(mClassLoader) }
-    val musicNotificationManagerClass by Weak { "tv.danmaku.bili.ui.player.notification.MusicNotificationManager".findClass(mClassLoader) }
     val musicNotificationHelperClass by Weak { mHookInfo["class_music_notification_helper"]?.findClass(mClassLoader) }
     val notificationBuilderClass by Weak { mHookInfo["class_notification_builder"]?.findClass(mClassLoader) }
 
@@ -306,16 +306,19 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 startsWith("android.support.v4.app") ||
                         startsWith("androidx.core.app.NotificationCompat\$Builder")
             }
-        }?.run{
+        }?.run {
             arrayOf(name, parameterTypes[0].name)
         } ?: arrayOfNulls(2)
     }
 
     private fun findMusicNotificationHelper(): String? {
-        return musicNotificationManagerClass?.declaredFields?.firstOrNull {
-            it.type.name.startsWith("tv.danmaku.bili.ui.player.notification.") &&
-                    !it.type.name.endsWith("AbsMusicService")
-        }?.type?.name
+        return classesList.filter {
+            it.startsWith("tv.danmaku.bili.ui.player.notification")
+        }.firstOrNull { c ->
+            c.findClassOrNull(mClassLoader)?.declaredFields?.filter {
+                it.type == PendingIntent::class.java
+            }?.count()?.let { it > 0 } ?: false
+        }
     }
 
     private fun findGarbHelper(): Array<String?> {
