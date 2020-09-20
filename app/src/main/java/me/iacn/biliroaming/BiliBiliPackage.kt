@@ -3,9 +3,7 @@
 package me.iacn.biliroaming
 
 import android.app.AndroidAppHelper
-import android.app.Notification
 import android.content.Context
-import android.graphics.Bitmap
 import android.os.Bundle
 import android.util.SparseArray
 import android.view.View
@@ -59,7 +57,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val garbHelperClass by Weak { mHookInfo["class_garb_helper"]?.findClass(mClassLoader) }
     val musicNotificationManagerClass by Weak { "tv.danmaku.bili.ui.player.notification.MusicNotificationManager".findClass(mClassLoader) }
     val musicNotificationHelperClass by Weak { mHookInfo["class_music_notification_helper"]?.findClass(mClassLoader) }
-    val notificationCompatBuilderClass by Weak { "androidx.core.app.NotificationCompat\$Builder".findClass(mClassLoader) }
+    val notificationBuilderClass by Weak { mHookInfo["class_notification_builder"]?.findClass(mClassLoader) }
 
     private val classesList by lazy { DexFile(AndroidAppHelper.currentApplication().packageCodePath).entries().toList() }
     private val accessKeyInstance by lazy { "com.bilibili.bangumi.ui.page.detail.pay.BangumiPayHelperV2\$accessKey\$2".findClass(mClassLoader)?.getStaticObjectField("INSTANCE") }
@@ -293,7 +291,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             findGarbHelper()
         }.checkOrPut("class_music_notification_helper") {
             findMusicNotificationHelper()
-        }.checkOrPut("methods_set_notification") {
+        }.checkConjunctiveOrPut("methods_set_notification", "class_notification_builder") {
             findSetNotificationMethods()
         }
 
@@ -302,10 +300,15 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         return needUpdate
     }
 
-    private fun findSetNotificationMethods(): String? {
+    private fun findSetNotificationMethods(): Array<String?> {
         return musicNotificationHelperClass?.declaredMethods?.lastOrNull {
-            it.parameterTypes.size == 1 && it.parameterTypes[0] == notificationCompatBuilderClass
-        }?.name
+            it.parameterTypes.size == 1 && it.parameterTypes[0].name.run {
+                startsWith("android.support.v4.app") ||
+                        startsWith("androidx.core.app.NotificationCompat\$Builder")
+            }
+        }?.run{
+            arrayOf(name, parameterTypes[0].name)
+        } ?: arrayOfNulls(2)
     }
 
     private fun findMusicNotificationHelper(): String? {

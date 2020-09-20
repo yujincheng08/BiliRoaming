@@ -4,7 +4,6 @@ import android.app.Notification
 import android.app.PendingIntent
 import android.app.Service
 import android.graphics.Bitmap
-import android.os.Bundle
 import de.robv.android.xposed.XC_MethodHook
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.BiliBiliPackage.Weak
@@ -20,14 +19,13 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private val bitmapActionClass by Weak { "android.widget.RemoteViews.BitmapReflectionAction".findClass(mClassLoader) }
     private val reflectionActionClass by Weak { "android.widget.RemoteViews.ReflectionAction".findClass(mClassLoader) }
     private val onClickActionClass by Weak { "android.widget.RemoteViews.SetOnClickResponse".findClass(mClassLoader) }
-    private val mediaStyleCompatClass by Weak { "androidx.media.app.NotificationCompat\$MediaStyle".findClass(mClassLoader) }
 
     override fun startHook() {
         if (!XposedInit.sPrefs.getBoolean("music_notification", false)) return
 
         Log.d("startHook: MusicNotification")
 
-        instance.musicNotificationHelperClass?.replaceMethod(instance.setNotification(), instance.notificationCompatBuilderClass) {}
+        instance.musicNotificationHelperClass?.replaceMethod(instance.setNotification(), instance.notificationBuilderClass) {}
 
         val hooker = fun(param: XC_MethodHook.MethodHookParam) {
             val old = param.result as Notification? ?: return
@@ -57,30 +55,30 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     stopId to ActionDesc(),
             )
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                param.result = instance.notificationCompatBuilderClass?.new(param.thisObject.getObjectFieldAs<Service>("a"), old.channelId)?.run {
-                    callMethod("setSmallIcon", old.smallIcon.getIntField("mInt1"))
-                    callMethod("setColor", old.color)
-                    callMethod("setUsesChronometer", false)
-                    callMethod("setOngoing", false)
-                    callMethod("setContentIntent", old.contentIntent)
-                    callMethod("setVisibility", 1)
-                    callMethod("setWhen", System.currentTimeMillis())
-                    callMethod("setCategory", old.category)
+                param.result = Notification.Builder(param.thisObject.getObjectFieldAs<Service>("a"), old.channelId).run {
+                    setSmallIcon(old.smallIcon)
+                    setColor(old.color)
+                    setUsesChronometer(false)
+                    setOngoing(false) // Important
+                    setContentIntent(old.contentIntent)
+                    setVisibility(Notification.VISIBILITY_PUBLIC)
+                    setWhen(System.currentTimeMillis())
+                    setCategory(old.category)
 
                     for (action in actions) {
                         val viewId = action.getIntField("viewId")
                         when (action.javaClass) {
                             bitmapActionClass -> {
                                 when (viewId) {
-                                    iconId -> callMethod("setLargeIcon", action.getObjectFieldAs<Bitmap>("bitmap"))
+                                    iconId -> setLargeIcon(action.getObjectFieldAs<Bitmap>("bitmap"))
                                 }
                             }
                             reflectionActionClass -> {
                                 when (action.getObjectFieldAs<String>("methodName")) {
                                     "setText" ->
                                         when (viewId) {
-                                            text1Id -> callMethod("setContentTitle", action.getObjectFieldAs<CharSequence>("value"))
-                                            text2Id -> callMethod("setContentText", action.getObjectFieldAs<CharSequence>("value"))
+                                            text1Id -> setContentTitle(action.getObjectFieldAs<CharSequence>("value"))
+                                            text2Id -> setContentText(action.getObjectFieldAs<CharSequence>("value"))
                                         }
                                     "setImageResource" ->
                                         when (viewId) {
@@ -120,28 +118,23 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     buttons[stopId]?.icon = res.getIdentifier("sobot_icon_close_normal", "drawable", XposedInit.currentContext.packageName)
                     var buttonCount = 0
                     for (button in buttons) {
-                        button.value.let {
-                            if(it.icon!=null) {
-                                callMethod("addAction",
-                                        arrayOf(Int::class.javaPrimitiveType!!, CharSequence::class.java, PendingIntent::class.java),
-                                        it.icon ?: 0, it.title, it.intent)
+                        button.value.run {
+                            icon?.let {
+                                @Suppress("DEPRECATION")
+                                addAction(it, title, intent)
                                 buttonCount += 1
                             }
                         }
                     }
-                    callMethod("setStyle",
-                            mediaStyleCompatClass?.new()?.run {
-                                callMethod("setShowActionsInCompactView", when (buttonCount) {
-                                    0 -> intArrayOf()
-                                    1 -> intArrayOf(0)
-                                    2 -> intArrayOf(0, 1)
-                                    3 -> intArrayOf(0, 1, 2)
-                                    else -> intArrayOf(1, 2, 3)
-                                })
-                                this
-                            })
-                    (callMethod("getExtras") as Bundle).putBoolean("Primitive", true)
-                    callMethod("build")
+                    style = Notification.MediaStyle().setShowActionsInCompactView(*when (buttonCount) {
+                        0 -> intArrayOf()
+                        1 -> intArrayOf(0)
+                        2 -> intArrayOf(0, 1)
+                        3 -> intArrayOf(0, 1, 2)
+                        else -> intArrayOf(1, 2, 3)
+                    })
+                    extras.putBoolean("Primitive", true)
+                    build()
                 }
             }
         }
