@@ -4,6 +4,7 @@ package me.iacn.biliroaming
 
 import android.app.AndroidAppHelper
 import android.app.PendingIntent
+import android.app.Service
 import android.content.Context
 import android.os.Bundle
 import android.util.SparseArray
@@ -58,6 +59,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val garbHelperClass by Weak { mHookInfo["class_garb_helper"]?.findClass(mClassLoader) }
     val musicNotificationHelperClass by Weak { mHookInfo["class_music_notification_helper"]?.findClass(mClassLoader) }
     val notificationBuilderClass by Weak { mHookInfo["class_notification_builder"]?.findClass(mClassLoader) }
+    val absMusicServiceClass by Weak { mHookInfo["class_abs_music_service"]?.findClass(mClassLoader) }
 
     private val classesList by lazy { DexFile(AndroidAppHelper.currentApplication().packageCodePath).entries().toList() }
     private val accessKeyInstance by lazy { "com.bilibili.bangumi.ui.page.detail.pay.BangumiPayHelperV2\$accessKey\$2".findClass(mClassLoader)?.getStaticObjectField("INSTANCE") }
@@ -162,6 +164,14 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     fun setNotification(): String? {
         return mHookInfo["methods_set_notification"]
+    }
+
+    fun mediaSessionToken(): String? {
+        return mHookInfo["method_media_session_token"]
+    }
+
+    fun absMusicService(): String? {
+        return mHookInfo["field_abs_music_service"]
     }
 
     private fun readHookInfo(context: Context): MutableMap<String, String?> {
@@ -293,11 +303,37 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             findMusicNotificationHelper()
         }.checkConjunctiveOrPut("methods_set_notification", "class_notification_builder") {
             findSetNotificationMethods()
+        }.checkOrPut("class_abs_music_service") {
+            findAbsMusicService()
+        }.checkOrPut("method_media_session_token") {
+            findMediaSessionTokenMethod()
+        }.checkOrPut("field_abs_music_service") {
+            findAbsMusicServiceField()
         }
 
         Log.d(mHookInfo)
         Log.d("Check hook info completed: needUpdate = $needUpdate")
         return needUpdate
+    }
+
+    private fun findAbsMusicServiceField(): String? {
+        return musicNotificationHelperClass?.declaredFields?.firstOrNull {
+            it.type == absMusicServiceClass
+        }?.name
+    }
+
+    private fun findMediaSessionTokenMethod(): String? {
+        return absMusicServiceClass?.declaredMethods?.firstOrNull {
+            it.returnType.name.endsWith("Token")
+        }?.name
+    }
+
+    private fun findAbsMusicService(): String? {
+        return classesList.filter {
+            it.startsWith("tv.danmaku.bili.ui.player.notification")
+        }.firstOrNull { c ->
+            c.findClassOrNull(mClassLoader)?.superclass == Service::class.java
+        }
     }
 
     private fun findSetNotificationMethods(): Array<String?> {

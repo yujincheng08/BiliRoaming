@@ -4,7 +4,9 @@ import android.app.Notification
 import android.app.PendingIntent
 import android.app.Service
 import android.graphics.Bitmap
-import de.robv.android.xposed.XC_MethodHook
+import android.media.session.MediaSession
+import android.os.Build
+import de.robv.android.xposed.XC_MethodHook.MethodHookParam
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.BiliBiliPackage.Weak
 import me.iacn.biliroaming.XposedInit
@@ -27,7 +29,7 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
         instance.musicNotificationHelperClass?.replaceMethod(instance.setNotification(), instance.notificationBuilderClass) {}
 
-        val hooker = fun(param: XC_MethodHook.MethodHookParam) {
+        val hooker = fun(param: MethodHookParam) {
             val old = param.result as Notification? ?: return
             val res = XposedInit.currentContext.resources
             val getId = { name: String -> res.getIdentifier(name, "id", XposedInit.currentContext.packageName) }
@@ -54,7 +56,7 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     action4Id to ActionDesc(),
                     stopId to ActionDesc(),
             )
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 param.result = Notification.Builder(param.thisObject.getObjectFieldAs<Service>("a"), old.channelId).run {
                     setSmallIcon(old.smallIcon)
                     setColor(old.color)
@@ -126,13 +128,20 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             }
                         }
                     }
-                    style = Notification.MediaStyle().setShowActionsInCompactView(*when (buttonCount) {
+                    val mediaStyle = Notification.MediaStyle().setShowActionsInCompactView(*when (buttonCount) {
                         0 -> intArrayOf()
                         1 -> intArrayOf(0)
                         2 -> intArrayOf(0, 1)
                         3 -> intArrayOf(0, 1, 2)
                         else -> intArrayOf(1, 2, 3)
                     })
+                    instance.absMusicService()?.let { f ->
+                        instance.mediaSessionToken()?.let { m ->
+                            val token = param.thisObject.getObjectField(f)?.callMethod(m)?.getObjectField("a") as MediaSession.Token
+                            mediaStyle.setMediaSession(token)
+                        }
+                    }
+                    style = mediaStyle
                     extras.putBoolean("Primitive", true)
                     build()
                 }
