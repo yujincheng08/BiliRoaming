@@ -11,6 +11,7 @@ import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.preference.Preference
 import android.preference.PreferenceCategory
@@ -19,7 +20,6 @@ import android.preference.SwitchPreference
 import android.provider.MediaStore
 import android.view.ContextThemeWrapper
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.ImageView
@@ -71,6 +71,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             val versionCode = XposedInit.currentContext.packageManager.getPackageInfo(packageName, 0).versionCode
             var supportLiveHook = false
             var supportAdd4K = false
+            var supportMusicNotificationHook = true
             when (packageName) {
                 "com.bilibili.app.in" -> {
                     when (versionCode) {
@@ -80,6 +81,8 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 }
                 "com.bilibili.app.blue" -> supportAdd4K = true
             }
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
+                supportMusicNotificationHook = false
             val supportSplashHook: Boolean = instance.brandSplashClass != null
             if (!supportSplashHook) {
                 disablePreference("custom_splash")
@@ -91,13 +94,16 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             if (!supportAdd4K) {
                 disablePreference("add_4k")
             }
+            if (!supportMusicNotificationHook) {
+                disablePreference("music_notification", moduleRes.getString(R.string.os_not_support))
+            }
 
         }
 
-        private fun disablePreference(name: String) {
+        private fun disablePreference(name: String, message: String = moduleRes.getString(R.string.not_support)) {
             findPreference(name).run {
                 isEnabled = false
-                summary = moduleRes.getString(R.string.not_support)
+                summary = message
                 if (this is SwitchPreference) this.isChecked = false
             }
         }
@@ -262,8 +268,8 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             return true
         }
 
-        override fun onPreferenceClick(preference: Preference?): Boolean {
-            return when (preference?.key) {
+        override fun onPreferenceClick(preference: Preference): Boolean {
+            return when (preference.key) {
                 "version" -> onVersionClick()
                 "update" -> onUpdateClick()
                 "thanks" -> onThanksClick()

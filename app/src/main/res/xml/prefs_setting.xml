@@ -22,8 +22,8 @@
         <Preference
             android:dependency="main_func"
             android:key="custom_backup"
-            android:title="自定义备份服务器"
-            android:summary="在主服务器宕机时，可以从自定义备份服务器解析解锁番剧。默认备份服务器由kghost提供。"
+            android:title="@string/custom_backup_title"
+            android:summary="@string/custom_backup_summary"
             />
     </PreferenceCategory>
 
@@ -76,7 +76,6 @@
                 android:data="@string/cdn_url" />
         </Preference>
 
-        <!--suppress AndroidDomInspection -->
         <ListPreference
             android:defaultValue=""
             android:entries="@array/upos_entries"

@@ -87,6 +87,7 @@
     <string name="demo">实例</string>
     <string name="runtime_app_fuck">运行环境：应用转生</string>
     <string name="not_support">当前版本客户端不支持此功能</string>
+    <string name="os_not_support">当前系统版本不支持此功能</string>
     <string name="enable_av_title">显示AV号</string>
     <string name="enable_av_summary">视频详情页显示为AV号</string>
     <string name="group_url">http://qm.qq.com/cgi-bin/qm/qr?from=app&amp;p=android&amp;k=Qk8NsOfgC-afK4Vqhnqg9FBF2l1oL0sp</string>
@@ -112,4 +113,6 @@
     <string name="follow_dark_summary">开启后，会根据系统是否在暗黑模式自动切换主题的夜间模式</string>
     <string name="music_notification_title">原生音乐通知样式</string>
     <string name="music_notification_summary">强制音乐通知栏为模块自制的原生样式</string>
+    <string name="custom_backup_title">自定义备份服务器</string>
+    <string name="custom_backup_summary">在主服务器宕机时，可以从自定义备份服务器解析解锁番剧。默认备份服务器由kghost提供。</string>
 </resources>
