@@ -91,6 +91,7 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                 }
                             }
                         }
+                        result.setObjectField("vipSectionRight", null)
                     }
                 }
                 splashClass -> {
