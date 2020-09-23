@@ -4,8 +4,11 @@ import android.app.Notification
 import android.app.PendingIntent
 import android.app.Service
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Canvas
 import android.media.session.MediaSession
 import android.os.Build
+import android.os.Bundle
 import de.robv.android.xposed.XC_MethodHook.MethodHookParam
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.BiliBiliPackage.Weak
@@ -89,6 +92,15 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                             action3Id -> buttons[action3Id]?.icon = action.getObjectFieldAs<Int>("value")
                                             action4Id -> buttons[action4Id]?.icon = action.getObjectFieldAs<Int>("value")
                                             stopId -> buttons[stopId]?.icon = action.getObjectFieldAs<Int>("value")
+                                            iconId -> {
+                                                val originIcon = BitmapFactory.decodeResource(XposedInit.currentContext.resources, action.getObjectFieldAs("value"))
+                                                val largeIcon = originIcon.copy(originIcon.config, true)
+                                                largeIcon.eraseColor(old.color)
+                                                val canvas = Canvas(largeIcon)
+                                                canvas.drawBitmap(originIcon, 0f, 0f, null)
+                                                setLargeIcon(largeIcon)
+                                                originIcon.recycle()
+                                            }
                                         }
                                 }
                             }
