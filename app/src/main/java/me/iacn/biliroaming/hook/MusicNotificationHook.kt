@@ -25,10 +25,76 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private val reflectionActionClass by Weak { "android.widget.RemoteViews.ReflectionAction".findClass(mClassLoader) }
     private val onClickActionClass by Weak { "android.widget.RemoteViews.SetOnClickResponse".findClass(mClassLoader) }
 
+    private var position = 0L
+    private var speed = 1f
+    private var lastState = 0
+
+
     override fun startHook() {
         if (!XposedInit.sPrefs.getBoolean("music_notification", false)) return
 
         Log.d("startHook: MusicNotification")
+
+        "com.bilibili.opd.app.bizcommon.mediaplayer.rx.c1".hookAfterMethod(mClassLoader, "l0") { param ->
+            // trick to notify notification to change speed
+            param.thisObject.callMethod("toggle")
+            param.thisObject.callMethod("toggle")
+        }
+
+        "tv.danmaku.bili.ui.player.notification.AbsMusicService".hookBeforeMethod(mClassLoader, "u", Boolean::class.javaPrimitiveType) { param ->
+            val playerHelper = param.thisObject.getObjectField("f")
+            val bundle = param.thisObject.getObjectField("e")?.getObjectField("a") as Bundle?
+                    ?: return@hookBeforeMethod
+
+            val currentDuration = bundle.getLong(DURATION_KEY)
+            if (currentDuration != 0L) return@hookBeforeMethod
+            param.args[0] = true
+            val duration = when (playerHelper?.javaClass?.name) {
+                "com.bilibili.music.app.base.mediaplayer.p0" ->
+                    playerHelper.getObjectField("b")?.callMethodAs<Long>("getDuration")!!
+                "tv.danmaku.biliplayerv2.service.business.background.d" ->
+                    playerHelper.getObjectField("e")?.callMethod("w")?.callMethodAs<Int>("getDuration")?.toLong()!!
+                else -> 0L
+            }
+            bundle.putLong(DURATION_KEY, duration)
+        }
+
+        "android.support.v4.media.session.MediaSessionCompat\$c\$b".hookAfterMethod(mClassLoader, "onSeekTo", Long::class.javaPrimitiveType) { param ->
+            position = param.args[0] as Long
+            val absMusicService = param.thisObject.getObjectField("a")?.getObjectField("e")
+            val playerHelper = absMusicService?.getObjectField("f")
+            when (playerHelper?.javaClass?.name) {
+                "com.bilibili.music.app.base.mediaplayer.p0" ->
+                    playerHelper.getObjectField("b")?.callMethod("seekTo", position)
+                "tv.danmaku.biliplayerv2.service.business.background.d" -> playerHelper.getObjectField("e")?.callMethod("w")?.callMethod("seekTo", position.toInt())
+            }
+            absMusicService?.callMethod("v", lastState)
+        }
+        "tv.danmaku.bili.ui.player.notification.AbsMusicService".hookBeforeMethod(mClassLoader, "v", Int::class.javaPrimitiveType) { param ->
+            lastState = param.args[0] as Int
+            val playerHelper = param.thisObject.getObjectField("f")
+            when (playerHelper?.javaClass?.name) {
+                "com.bilibili.music.app.base.mediaplayer.p0" ->
+                    playerHelper.getObjectField("b")?.getObjectField("q")?.callMethod("h")?.run {
+                        position = callMethodAs("getCurrentPosition")
+                        speed = callMethodAs("getSpeed", 0.0f)
+                    }
+                "tv.danmaku.biliplayerv2.service.business.background.d" -> playerHelper.getObjectField("e")?.callMethod("w")?.run {
+                    position = callMethodAs<Int>("getCurrentPosition").toLong()
+                    speed = callMethodAs("q0", true)
+                }
+            }
+        }
+
+        "tv.danmaku.bili.ui.player.notification.AbsMusicService".hookAfterMethod(mClassLoader, "d") { param ->
+            param.result = (1L shl 8) or (param.result as Long)
+        }
+
+        "android.support.v4.media.session.PlaybackStateCompat\$b".hookBeforeMethod(mClassLoader, "c", Int::class.javaPrimitiveType, Long::class.javaPrimitiveType, Float::class.javaPrimitiveType, Long::class.javaPrimitiveType) { param ->
+            param.args[1] = position
+            param.args[2] = speed
+        }
+
 
         instance.musicNotificationHelperClass?.replaceMethod(instance.setNotification(), instance.notificationBuilderClass) {}
 
@@ -165,5 +231,9 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }?.forEach {
             it.hookAfterMethod(hooker)
         }
+    }
+
+    companion object {
+        private const val DURATION_KEY = "android.media.metadata.DURATION"
     }
 }
