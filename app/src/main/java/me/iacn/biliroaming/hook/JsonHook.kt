@@ -58,7 +58,10 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     if (XposedInit.sPrefs.getBoolean("purify_home_tab", false)) {
                         val tab = data?.getObjectFieldAs<MutableList<Any>>("tab")
                         tab?.removeAll {
-                            it.getObjectFieldAs<String>("uri").startsWith("bilibili://pegasus/op/")
+                            it.getObjectFieldAs<String>("uri").run {
+                                startsWith("bilibili://pegasus/op/") ||
+                                        startsWith("bilibili://following/home_activity_tab")
+                            }
                         }
                     }
                     if (XposedInit.sPrefs.getBoolean("purify_game", false) &&
