@@ -125,15 +125,32 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
         val searchRankClass = "com.bilibili.search.api.SearchRank".findClass(mClassLoader)
         val searchGuessClass = "com.bilibili.search.api.SearchReferral\$Guess".findClass(mClassLoader)
+        val categoryClass = "tv.danmaku.bili.category.CategoryMeta".findClass(mClassLoader)
 
         instance.fastJsonClass?.hookAfterMethod("parseArray", String::class.java, Class::class.java) { param ->
-            val result = param.result as MutableList<*>?
+            @Suppress("UNCHECKED_CAST")
+            val result = param.result as MutableList<Any>?
             when (param.args[1] as Class<*>) {
-                searchRankClass, searchGuessClass -> {
+                searchRankClass, searchGuessClass ->
                     if (XposedInit.sPrefs.getBoolean("purify_search", false) && XposedInit.sPrefs.getBoolean("hidden", false)) {
                         result?.clear()
                     }
-                }
+                categoryClass ->
+                    if (XposedInit.sPrefs.getBoolean("music_notification", false)) {
+                        val hasMusic = result?.fold(false) { r, i ->
+                            r || (i.getObjectFieldAs<String?>("mUri")?.startsWith("bilibili://music")
+                                    ?: false)
+                        } ?: false
+                        if (!hasMusic) {
+                            result?.add(categoryClass.new()
+                                    .setObjectField("mTypeName", "音頻")
+                                    .setObjectField("mCoverUrl", "http://i0.hdslb.com/bfs/archive/85d6dddbdc9746fed91c65c2c3eb3a0a453eadaf.png")
+                                    .setObjectField("mUri", "bilibili://music/home?from=category")
+                                    .setIntField("mType", 1)
+                                    .setIntField("mParentTid", 0)
+                                    .setIntField("mTid", 65543))
+                        }
+                    }
             }
         }
     }
