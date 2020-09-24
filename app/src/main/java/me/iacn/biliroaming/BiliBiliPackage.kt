@@ -61,7 +61,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val notificationBuilderClass by Weak { mHookInfo["class_notification_builder"]?.findClass(mClassLoader) }
     val absMusicServiceClass by Weak { mHookInfo["class_abs_music_service"]?.findClass(mClassLoader) }
 
-    private val classesList by lazy { DexFile(AndroidAppHelper.currentApplication().packageCodePath).entries().toList() }
+    val classesList by lazy { DexFile(AndroidAppHelper.currentApplication().packageCodePath).entries().toList() }
     private val accessKeyInstance by lazy { "com.bilibili.bangumi.ui.page.detail.pay.BangumiPayHelperV2\$accessKey\$2".findClass(mClassLoader)?.getStaticObjectField("INSTANCE") }
 
     val accessKey
@@ -199,7 +199,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     private fun checkHookInfo(): Boolean {
         var needUpdate = false
 
-        fun <K, V> MutableMap<K, V>.checkOrPut(key: K, defaultValue: () -> V): MutableMap<K, V> {
+        fun <K, V> MutableMap<K, V>.checkOrPut(key: K, checkOption: String? = null, defaultValue: () -> V): MutableMap<K, V> {
+            if (checkOption != null) {
+                if (!XposedInit.sPrefs.getBoolean(checkOption, false)) return this
+            }
             if (!containsKey(key)) {
                 put(key, defaultValue())
                 needUpdate = true
@@ -207,7 +210,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             return this
         }
 
-        fun <K, V> MutableMap<K, V>.checkOrPut(vararg keys: K, checker: (map: MutableMap<K, V>, keys: Array<out K>) -> Boolean, defaultValue: () -> Array<V>): MutableMap<K, V> {
+        fun <K, V> MutableMap<K, V>.checkOrPut(vararg keys: K, checkOption: String? = null, checker: (map: MutableMap<K, V>, keys: Array<out K>) -> Boolean, defaultValue: () -> Array<V>): MutableMap<K, V> {
+            if (checkOption != null) {
+                if (!XposedInit.sPrefs.getBoolean(checkOption, false)) return this
+            }
             if (!checker(this, keys)) {
                 putAll(keys.zip(defaultValue()))
                 needUpdate = true
@@ -272,7 +278,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         }.checkOrPut("class_setting_route", "method_add_setting", checker = { m, keys ->
             keys.fold(true) { acc, s -> acc && m.containsKey(s) } ||
                     findClassIfExists("tv.danmaku.bili.ui.main2.mine.HomeUserCenterFragment", mClassLoader) == null
-        }) {
+        }, checkOption = null) {
             arrayOf(findSettingRouteClass(), findAddSettingMethod())
         }.checkOrPut("class_drawer", checker = { m, keys ->
             keys.fold(true) { acc, s -> acc && m.containsKey(s) } ||

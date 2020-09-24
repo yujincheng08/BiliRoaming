@@ -6,7 +6,9 @@ import android.app.Service
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
+import android.media.MediaMetadata
 import android.media.session.MediaSession
+import android.media.session.PlaybackState
 import android.os.Build
 import android.os.Bundle
 import de.robv.android.xposed.XC_MethodHook.MethodHookParam
@@ -24,11 +26,271 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private val bitmapActionClass by Weak { "android.widget.RemoteViews.BitmapReflectionAction".findClass(mClassLoader) }
     private val reflectionActionClass by Weak { "android.widget.RemoteViews.ReflectionAction".findClass(mClassLoader) }
     private val onClickActionClass by Weak { "android.widget.RemoteViews.SetOnClickResponse".findClass(mClassLoader) }
+    private val mediaMetadataClass by Weak { "android.support.v4.media.MediaMetadataCompat".findClass(mClassLoader) }
+
+    private var position = 0L
+    private var speed = 1f
+    private var lastState = 0
+
+    private val getFlagMethod by lazy {
+        instance.absMusicServiceClass?.declaredMethods?.firstOrNull {
+            it.parameterTypes.isEmpty() &&
+                    it.returnType == Long::class.javaPrimitiveType
+        }
+    }
+
+    private val updateStateMethod by lazy {
+        instance.absMusicServiceClass?.declaredMethods?.firstOrNull {
+            it.parameterTypes.size == 1 &&
+                    it.parameterTypes[0] == Int::class.javaPrimitiveType &&
+                    it.returnType == Void::class.javaPrimitiveType &&
+                    Modifier.isProtected(it.modifiers)
+        }
+    }
+
+    private val updateMetadataMethod by lazy {
+        instance.absMusicServiceClass?.declaredMethods?.firstOrNull {
+            it.parameterTypes.size == 1 &&
+                    it.parameterTypes[0] == Boolean::class.javaPrimitiveType
+        }
+    }
+
+    private val playerHelperField by lazy {
+        instance.absMusicServiceClass?.declaredFields?.firstOrNull {
+            it.type.name.startsWith("tv.danmaku.bili.ui.player.notification") &&
+                    Modifier.isProtected(it.modifiers)
+        }
+    }
+
+    private val backgroundHelper by lazy {
+        instance.classesList.filter {
+            it.startsWith("tv.danmaku.biliplayerv2.service.business.background")
+        }.firstOrNull { c ->
+            c.findClass(mClassLoader)?.interfaces?.filter {
+                it == playerHelperField?.type
+            }?.count()?.let { it > 0 } ?: false
+        }
+    }
+
+    private val musicHelper by lazy {
+        instance.classesList.filter {
+            it.startsWith("com.bilibili.music.app.base.mediaplayer")
+        }.firstOrNull { c ->
+            c.findClass(mClassLoader)?.interfaces?.filter {
+                it == playerHelperField?.type
+            }?.count()?.let { it > 0 } ?: false
+        }
+    }
+
+    private val metadataField by lazy {
+        instance.absMusicServiceClass?.declaredFields?.firstOrNull {
+            it.type == mediaMetadataClass
+        }
+    }
+
+    private val metadataBundleField by lazy {
+        mediaMetadataClass?.declaredFields?.firstOrNull {
+            it.type == Bundle::class.java
+        }
+    }
+
+    private val mediaSessionCallbackClass by lazy {
+        instance.classesList.filter {
+            it.startsWith("android.support.v4.media.session")
+        }.firstOrNull { c ->
+            c.findClass(mClassLoader)?.declaredMethods?.filter {
+                it.name == "onSeekTo"
+            }?.count()?.let { it > 0 } ?: false
+        }
+    }
+
+    private val playbackStateBuilderClass by lazy {
+        instance.classesList.filter {
+            it.startsWith("android.support.v4.media.session.PlaybackStateCompat")
+        }.firstOrNull { c ->
+            c.findClass(mClassLoader)?.declaredMethods?.filter {
+                it.returnType.name == "android.support.v4.media.session.PlaybackStateCompat" &&
+                        it.parameterTypes.isEmpty()
+            }?.count()?.let { it > 0 } ?: false
+        }
+    }
+
+    private val setPlaybackStateMethod by lazy {
+        playbackStateBuilderClass?.findClass(mClassLoader)?.declaredMethods?.firstOrNull {
+            it.parameterTypes.size == 4
+        }
+    }
+
+    private val backgroundPlayerField by lazy {
+        backgroundHelper?.findClass(mClassLoader)?.declaredFields?.firstOrNull {
+            it.type.name.run {
+                startsWith("tv.danmaku.biliplayerv2") &&
+                        !startsWith("tv.danmaku.biliplayerv2.service")
+            }
+        }
+    }
+
+    private val corePlayerClass by lazy {
+        "tv.danmaku.biliplayerv2.service.core.PlayerCoreServiceV2".findClassOrNull(mClassLoader)
+                ?: instance.classesList.filter {
+                    it.startsWith("tv.danmaku.biliplayerv2.service")
+                }.firstOrNull { c ->
+                    c.findClass(mClassLoader)?.declaredFields?.filter {
+                        it.type.name == "tv.danmaku.ijk.media.player.IMediaPlayer\$OnErrorListener"
+                    }?.count()?.let { it > 0 } ?: false
+                }?.findClass(mClassLoader)
+    }
+
+    private val corePlayerMethod by lazy {
+        backgroundPlayerField?.type?.declaredMethods?.firstOrNull {
+            corePlayerClass?.interfaces?.contains(it.returnType) ?: false
+        }
+    }
+
+    private val getSpeedMethod by lazy {
+        corePlayerClass?.declaredMethods?.firstOrNull {
+            it.returnType == Float::class.javaPrimitiveType && it.parameterTypes.size == 1 && it.parameterTypes[0] == Boolean::class.javaPrimitiveType
+        }?.name ?: "o"
+    }
+
+    private val getDurationMethod by lazy {
+        try {
+            corePlayerClass?.getDeclaredMethod("getDuration")?.name
+        } catch (e: Throwable) {
+            "i"
+        }
+    }
+
+    private val getCurrentPositionMethod by lazy {
+        try {
+            corePlayerClass?.getDeclaredMethod("getCurrentPosition")?.name
+        } catch (e: Throwable) {
+            "j"
+        }
+    }
+
+    private val seekToMethod by lazy {
+        try {
+            corePlayerClass?.getDeclaredMethod("seekTo", Int::class.javaPrimitiveType)?.name
+        } catch (e: Throwable) {
+            "a"
+        }
+    }
+
+    private val rxMediaPlayerInterface by lazy {
+        "com.bilibili.opd.app.bizcommon.mediaplayer.rx.RxMediaPlayer".findClass(mClassLoader)
+    }
+
+    private val rxMediaPlayerField by lazy {
+        musicHelper?.findClass(mClassLoader)?.declaredFields?.firstOrNull {
+            it.type == rxMediaPlayerInterface
+        }
+    }
+
+    private val rxMediaPlayerImplClass by lazy {
+        instance.classesList.filter {
+            it.startsWith("com.bilibili.opd.app.bizcommon.mediaplayer.rx")
+        }.firstOrNull { c ->
+            c.findClass(mClassLoader)?.declaredFields?.filter {
+                it.type.name == "tv.danmaku.ijk.media.player.IMediaPlayer"
+            }?.count()?.let { it > 0 } ?: false
+        }?.findClass(mClassLoader)
+    }
+
+    private val rxMediaPlayerClass by lazy {
+        instance.classesList.filter {
+            it.startsWith("com.bilibili.opd.app.bizcommon.mediaplayer.rx")
+        }.firstOrNull { c ->
+            c.findClass(mClassLoader)?.interfaces?.contains(rxMediaPlayerInterface) ?: false
+        }?.findClass(mClassLoader)
+    }
+
+    private val rxMediaPlayerImplField by lazy {
+        rxMediaPlayerClass?.declaredFields?.firstOrNull {
+            it.type == rxMediaPlayerImplClass
+        }
+    }
+
+    private val mediaPlayerField by lazy {
+        rxMediaPlayerImplClass?.declaredFields?.firstOrNull {
+            it.type.name == "tv.danmaku.ijk.media.player.IMediaPlayer"
+        }
+    }
 
     override fun startHook() {
         if (!XposedInit.sPrefs.getBoolean("music_notification", false)) return
 
         Log.d("startHook: MusicNotification")
+
+        updateMetadataMethod?.hookBeforeMethod { param ->
+            val playerHelper = param.thisObject.getObjectField(playerHelperField?.name)
+            metadataField?.isAccessible = true
+            val bundle = metadataField?.get(param.thisObject)?.getObjectFieldAs<Bundle>(metadataBundleField?.name)
+                    ?: return@hookBeforeMethod
+            val currentDuration = bundle.getLong(MediaMetadata.METADATA_KEY_DURATION)
+            if (currentDuration != 0L) return@hookBeforeMethod
+            param.args[0] = true
+            val duration = when (playerHelper?.javaClass?.name) {
+                musicHelper ->
+                    playerHelper?.getObjectField(rxMediaPlayerField?.name)?.getObjectField(rxMediaPlayerImplField?.name)?.getObjectField(mediaPlayerField?.name)?.callMethodAs<Long>("getDuration")
+                            ?: 0L
+                backgroundHelper ->
+                    playerHelper?.getObjectField(backgroundPlayerField?.name)?.callMethod(corePlayerMethod?.name)?.callMethodAs<Int>(getDurationMethod)?.toLong()
+                            ?: 0L
+                else -> 0L
+            }
+            bundle.putLong(MediaMetadata.METADATA_KEY_DURATION, duration)
+        }
+
+        mediaSessionCallbackClass?.hookAfterMethod(mClassLoader, "onSeekTo", Long::class.javaPrimitiveType) { param ->
+            position = param.args[0] as Long
+            val absMusicService = mediaSessionCallbackClass?.findClass(mClassLoader)?.declaredFields?.get(0)?.run {
+                val res = param.thisObject.getObjectField(name)?.run {
+                    getObjectField(javaClass.declaredFields.last().name)
+                }
+                if (instance.absMusicServiceClass?.isInstance(res) != true)
+                    res?.getObjectField(res.javaClass.declaredFields.last().name)
+                else
+                    res
+            }
+            val playerHelper = absMusicService?.getObjectField(playerHelperField?.name)
+            when (playerHelper?.javaClass?.name) {
+                musicHelper ->
+                    playerHelper?.getObjectField(rxMediaPlayerField?.name)?.getObjectField(rxMediaPlayerImplField?.name)?.getObjectField(mediaPlayerField?.name)?.callMethod("seekTo", position)
+                backgroundHelper -> playerHelper?.getObjectField(backgroundPlayerField?.name)?.callMethod(corePlayerMethod?.name)?.callMethod(seekToMethod, position.toInt())
+            }
+            absMusicService?.callMethod(updateStateMethod?.name, lastState)
+        }
+
+        updateStateMethod?.hookBeforeMethod { param ->
+            lastState = param.args[0] as Int
+            val playerHelper = param.thisObject.getObjectField(playerHelperField?.name)
+            when (playerHelper?.javaClass?.name) {
+                musicHelper ->
+                    playerHelper?.getObjectField(rxMediaPlayerField?.name)?.getObjectField(rxMediaPlayerImplField?.name)?.getObjectField(mediaPlayerField?.name)?.run {
+                        position = callMethodAs("getCurrentPosition")
+                        speed = callMethodAs("getSpeed", 0.0f)
+                    }
+                backgroundHelper -> playerHelper?.getObjectField(backgroundPlayerField?.name)?.callMethod(corePlayerMethod?.name)?.run {
+                    position = callMethodAs<Int>(getCurrentPositionMethod).toLong()
+                    speed = try {
+                        callMethodAs(getSpeedMethod, true)
+                    } catch (e: Throwable) {
+                        callMethodAs(getSpeedMethod)
+                    }
+                }
+            }
+        }
+
+        getFlagMethod?.hookAfterMethod { param ->
+            param.result = PlaybackState.ACTION_SEEK_TO or (param.result as Long)
+        }
+
+        setPlaybackStateMethod?.hookBeforeMethod { param ->
+            param.args[1] = position
+            param.args[2] = speed
+        }
+
 
         instance.musicNotificationHelperClass?.replaceMethod(instance.setNotification(), instance.notificationBuilderClass) {}
 
@@ -145,7 +407,7 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         1 -> intArrayOf(0)
                         2 -> intArrayOf(0, 1)
                         3 -> intArrayOf(0, 1, 2)
-                        else -> intArrayOf(1, 2, 3)
+                        else -> intArrayOf(2, 3, 4)
                     })
                     instance.absMusicService()?.let { f ->
                         instance.mediaSessionToken()?.let { m ->
