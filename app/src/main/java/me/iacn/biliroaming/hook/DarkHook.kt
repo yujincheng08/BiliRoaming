@@ -16,7 +16,8 @@ class DarkHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         if (!XposedInit.sPrefs.getBoolean("follow_dark", false)) return
         Log.d("startHook: Dark")
         val hooker = { param: XC_MethodHook.MethodHookParam ->
-            if (isNight != null && inDark != isNight) switch(param.thisObject as Activity)
+            val dark = inDark
+            if (isNight != null && dark != isNight) switch(param.thisObject as Activity)
         }
         Activity::class.java.hookBeforeMethod("onCreate", Bundle::class.java, hooker = hooker)
         Activity::class.java.hookAfterMethod("onPostResume", hooker = hooker)
