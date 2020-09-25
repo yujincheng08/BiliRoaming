@@ -16,6 +16,7 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val defaultWordClass = "tv.danmaku.bili.ui.main2.api.SearchDefaultWord".findClass(mClassLoader)
         val defaultKeywordClass = "com.bilibili.search.api.DefaultKeyword".findClass(mClassLoader)
         val brandSplashDataClass = "tv.danmaku.bili.ui.splash.brand.BrandSplashData".findClassOrNull(mClassLoader)
+        val eventEntranceClass = "tv.danmaku.bili.ui.main.event.model.EventEntranceModel".findClass(mClassLoader)
 
         instance.fastJsonClass?.hookAfterMethod(instance.fastJsonParse(), String::class.java, Type::class.java, Int::class.javaPrimitiveType, "com.alibaba.fastjson.parser.Feature[]") { param ->
             var result = param.result ?: return@hookAfterMethod
@@ -73,52 +74,51 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         }
                     }
                 }
-                accountMineClass -> {
-                    if (XposedInit.sPrefs.getBoolean("purify_drawer", false) &&
-                            XposedInit.sPrefs.getBoolean("hidden", false)) {
-                        arrayOf(result.getObjectFieldAs<MutableList<*>?>("sectionList"),
-                                result.getObjectFieldAs<MutableList<*>>("sectionListV2")).forEach { sections ->
-                            var button: Any? = null
-                            sections?.removeAll { item ->
-                                item?.getObjectField("button")?.run {
-                                    if (!getObjectFieldAs<String?>("text").isNullOrEmpty())
-                                        button = this
+                accountMineClass -> if (XposedInit.sPrefs.getBoolean("purify_drawer", false) &&
+                        XposedInit.sPrefs.getBoolean("hidden", false)) {
+                    arrayOf(result.getObjectFieldAs<MutableList<*>?>("sectionList"),
+                            result.getObjectFieldAs<MutableList<*>>("sectionListV2")).forEach { sections ->
+                        var button: Any? = null
+                        sections?.removeAll { item ->
+                            item?.getObjectField("button")?.run {
+                                if (!getObjectFieldAs<String?>("text").isNullOrEmpty())
+                                    button = this
+                            }
+                            when {
+                                item?.getObjectFieldAs<String?>("title").isNullOrEmpty() -> false
+                                item?.getIntField("style") == 2 -> {
+                                    item.setObjectField("button", button)
+                                    false
                                 }
-                                when {
-                                    item?.getObjectFieldAs<String?>("title").isNullOrEmpty() -> false
-                                    item?.getIntField("style") == 2 -> {
-                                        item.setObjectField("button", button)
-                                        false
-                                    }
-                                    else -> true
-                                }
+                                else -> true
                             }
                         }
-                        result.setObjectField("vipSectionRight", null)
+                    }
+                    result.setObjectField("vipSectionRight", null)
+                }
+                splashClass -> if (XposedInit.sPrefs.getBoolean("purify_splash", false) &&
+                        XposedInit.sPrefs.getBoolean("hidden", false)) {
+                    result.getObjectFieldAs<MutableList<*>?>("splashList")?.clear()
+                    result.getObjectFieldAs<MutableList<*>?>("strategyList")?.clear()
+                }
+                defaultWordClass, defaultKeywordClass -> if (XposedInit.sPrefs.getBoolean("purify_search", false) &&
+                        XposedInit.sPrefs.getBoolean("hidden", false)) {
+                    result.javaClass.fields.forEach {
+                        if (it.type != Int::class.javaPrimitiveType)
+                            result.setObjectField(it.name, null)
                     }
                 }
-                splashClass -> {
-                    if (XposedInit.sPrefs.getBoolean("purify_splash", false) &&
-                            XposedInit.sPrefs.getBoolean("hidden", false)) {
-                        result.getObjectFieldAs<MutableList<*>?>("splashList")?.clear()
-                        result.getObjectFieldAs<MutableList<*>?>("strategyList")?.clear()
-                    }
+                brandSplashDataClass -> if (XposedInit.sPrefs.getBoolean("custom_splash", false) ||
+                        XposedInit.sPrefs.getBoolean("custom_splash_logo", false)) {
+                    val brandList = result.getObjectFieldAs<MutableList<Any>>("brandList")
+                    val showList = result.getObjectFieldAs<MutableList<Any>>("showList")
+                    brandList.clear()
+                    showList.clear()
                 }
-                defaultWordClass, defaultKeywordClass -> {
-                    if (XposedInit.sPrefs.getBoolean("purify_search", false) && XposedInit.sPrefs.getBoolean("hidden", false)) {
-                        result.javaClass.fields.forEach {
-                            if (it.type != Int::class.javaPrimitiveType)
-                                result.setObjectField(it.name, null)
-                        }
-                    }
-                }
-                brandSplashDataClass -> {
-                    if (XposedInit.sPrefs.getBoolean("custom_splash", false) || XposedInit.sPrefs.getBoolean("custom_splash_logo", false)) {
-                        val brandList = result.getObjectFieldAs<MutableList<Any>>("brandList")
-                        val showList = result.getObjectFieldAs<MutableList<Any>>("showList")
-                        brandList.clear()
-                        showList.clear()
-                    }
+                eventEntranceClass -> if (XposedInit.sPrefs.getBoolean("purify_game", false) &&
+                        XposedInit.sPrefs.getBoolean("hidden", false)) {
+                    result.setObjectField("online", null)
+                    result.setObjectField("hash", "")
                 }
             }
         }
