@@ -32,6 +32,7 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private var speed = 1f
     private var duration = 0L
     private var lastState = 0
+    private var lastSeekService: Any? = null
 
     private val getFlagMethod by lazy {
         instance.absMusicServiceClass?.declaredMethods?.firstOrNull {
@@ -131,6 +132,10 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
     }
 
+    private val mediaPlayerInterface by lazy {
+        "tv.danmaku.ijk.media.player.IMediaPlayer".findClass(mClassLoader)
+    }
+
     private val corePlayerClass by lazy {
         "tv.danmaku.biliplayerv2.service.core.PlayerCoreServiceV2".findClassOrNull(mClassLoader)
                 ?: instance.classesList.filter {
@@ -140,6 +145,20 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         it.type.name == "tv.danmaku.ijk.media.player.IMediaPlayer\$OnErrorListener"
                     }?.count()?.let { it > 0 } ?: false
                 }?.findClass(mClassLoader)
+    }
+
+    private val corePlayerOnSeekListenerClass by lazy {
+        instance.classesList.filter {
+            it.startsWith("tv.danmaku.biliplayerv2.service.core")
+        }.firstOrNull { c ->
+            c.findClass(mClassLoader)?.interfaces?.map { it.name }?.contains("tv.danmaku.ijk.media.player.IMediaPlayer\$OnSeekCompleteListener")
+                    ?: false
+        }?.findClass(mClassLoader) ?: instance.classesList.filter {
+            it.startsWith("tv.danmaku.biliplayerv2.service")
+        }.firstOrNull { c ->
+            c.findClass(mClassLoader)?.interfaces?.map { it.name }?.contains("tv.danmaku.ijk.media.player.IMediaPlayer\$OnSeekCompleteListener")
+                    ?: false
+        }?.findClass(mClassLoader)
     }
 
     private val corePlayerMethod by lazy {
@@ -193,7 +212,7 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             it.startsWith("com.bilibili.opd.app.bizcommon.mediaplayer.rx")
         }.firstOrNull { c ->
             c.findClass(mClassLoader)?.declaredFields?.filter {
-                it.type.name == "tv.danmaku.ijk.media.player.IMediaPlayer"
+                it.type == mediaPlayerInterface
             }?.count()?.let { it > 0 } ?: false
         }?.findClass(mClassLoader)
     }
@@ -214,7 +233,7 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     private val mediaPlayerField by lazy {
         rxMediaPlayerImplClass?.declaredFields?.firstOrNull {
-            it.type.name == "tv.danmaku.ijk.media.player.IMediaPlayer"
+            it.type == mediaPlayerInterface
         }
     }
 
@@ -243,6 +262,14 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             bundle.putLong(MediaMetadata.METADATA_KEY_DURATION, duration)
         }
 
+        rxMediaPlayerClass?.hookBeforeMethod("onSeekComplete", mediaPlayerInterface) {
+            lastSeekService?.callMethod(updateStateMethod?.name, lastState)
+        }
+
+        corePlayerOnSeekListenerClass?.hookBeforeMethod("onSeekComplete", mediaPlayerInterface) {
+            lastSeekService?.callMethod(updateStateMethod?.name, lastState)
+        }
+
         mediaSessionCallbackClass?.hookAfterMethod(mClassLoader, "onSeekTo", Long::class.javaPrimitiveType) { param ->
             position = param.args[0] as Long
             val absMusicService = mediaSessionCallbackClass?.findClass(mClassLoader)?.declaredFields?.get(0)?.run {
@@ -258,8 +285,10 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             when (playerHelper?.javaClass?.name) {
                 musicHelper ->
                     playerHelper?.getObjectField(rxMediaPlayerField?.name)?.getObjectField(rxMediaPlayerImplField?.name)?.getObjectField(mediaPlayerField?.name)?.callMethod("seekTo", position)
-                backgroundHelper -> playerHelper?.getObjectField(backgroundPlayerField?.name)?.callMethod(corePlayerMethod?.name)?.callMethod(seekToMethod, position.toInt())
+                backgroundHelper ->
+                    playerHelper?.getObjectField(backgroundPlayerField?.name)?.callMethod(corePlayerMethod?.name)?.callMethod(seekToMethod, position.toInt())
             }
+            lastSeekService = absMusicService
             absMusicService?.callMethod(updateStateMethod?.name, lastState)
         }
 
@@ -281,14 +310,15 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     }
                 }
             }
-            if (duration - position < 200L)
-                position = 0L
+            if (duration == position)
+                lastSeekService = param.thisObject
         }
 
         instance.absMusicServiceClass?.hookAfterMethod("onDestroy") {
             duration = 0L
             position = 0L
             speed = 1.0f
+            lastSeekService = null
         }
 
         getFlagMethod?.hookAfterMethod { param ->

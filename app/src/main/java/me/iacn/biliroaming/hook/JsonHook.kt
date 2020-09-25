@@ -16,7 +16,7 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val defaultWordClass = "tv.danmaku.bili.ui.main2.api.SearchDefaultWord".findClass(mClassLoader)
         val defaultKeywordClass = "com.bilibili.search.api.DefaultKeyword".findClass(mClassLoader)
         val brandSplashDataClass = "tv.danmaku.bili.ui.splash.brand.BrandSplashData".findClassOrNull(mClassLoader)
-        val eventEntranceClass = "tv.danmaku.bili.ui.main.event.model.EventEntranceModel".findClass(mClassLoader)
+        val eventEntranceClass = "tv.danmaku.bili.ui.main.event.model.EventEntranceModel".findClassOrNull(mClassLoader)
 
         instance.fastJsonClass?.hookAfterMethod(instance.fastJsonParse(), String::class.java, Type::class.java, Int::class.javaPrimitiveType, "com.alibaba.fastjson.parser.Feature[]") { param ->
             var result = param.result ?: return@hookAfterMethod
