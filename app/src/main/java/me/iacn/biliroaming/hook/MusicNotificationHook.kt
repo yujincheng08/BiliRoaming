@@ -30,6 +30,7 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     private var position = 0L
     private var speed = 1f
+    private var duration = 0L
     private var lastState = 0
 
     private val getFlagMethod by lazy {
@@ -230,7 +231,7 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             val currentDuration = bundle.getLong(MediaMetadata.METADATA_KEY_DURATION)
             if (currentDuration != 0L) return@hookBeforeMethod
             param.args[0] = true
-            val duration = when (playerHelper?.javaClass?.name) {
+            duration = when (playerHelper?.javaClass?.name) {
                 musicHelper ->
                     playerHelper?.getObjectField(rxMediaPlayerField?.name)?.getObjectField(rxMediaPlayerImplField?.name)?.getObjectField(mediaPlayerField?.name)?.callMethodAs<Long>("getDuration")
                             ?: 0L
@@ -280,6 +281,14 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     }
                 }
             }
+            if (duration - position < 200L)
+                position = 0L
+        }
+
+        instance.absMusicServiceClass?.hookAfterMethod("onDestroy") {
+            duration = 0L
+            position = 0L
+            speed = 1.0f
         }
 
         getFlagMethod?.hookAfterMethod { param ->
