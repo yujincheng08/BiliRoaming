@@ -3,6 +3,7 @@ package me.iacn.biliroaming.hook
 import android.app.Activity
 import android.content.res.Configuration
 import android.content.res.Resources
+import android.graphics.Color
 import android.os.Bundle
 import android.view.View
 import de.robv.android.xposed.XC_MethodHook
@@ -21,6 +22,12 @@ class DarkHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
         Activity::class.java.hookBeforeMethod("onCreate", Bundle::class.java, hooker = hooker)
         Activity::class.java.hookAfterMethod("onPostResume", hooker = hooker)
+
+        instance.brandSplashClass?.hookBeforeMethod("onViewCreated", View::class.java, Bundle::class.java) { param ->
+            if (inDark) {
+                (param.args[0] as View).setBackgroundColor(Color.BLACK)
+            }
+        }
     }
 
     fun switch(activity: Activity) {
