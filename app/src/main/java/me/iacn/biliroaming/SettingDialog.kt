@@ -83,7 +83,10 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             }
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
                 supportMusicNotificationHook = false
-            val supportSplashHook: Boolean = instance.brandSplashClass != null
+            val supportSplashHook= instance.brandSplashClass != null
+            val supportDrawer = instance.homeUserCenterClass != null
+            if (!supportDrawer)
+                disablePreference("drawer")
             if (!supportSplashHook) {
                 disablePreference("custom_splash")
                 disablePreference("custom_splash_logo")
