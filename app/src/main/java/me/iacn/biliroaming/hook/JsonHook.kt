@@ -35,6 +35,13 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         }
                     }
 
+                    if (XposedInit.sPrefs.getBoolean("drawer", false)) {
+                        data?.getObjectFieldAs<MutableList<*>?>("bottom")?.removeAll {
+                            it?.getObjectFieldAs<String?>("uri")?.startsWith("bilibili://user_center/mine")
+                                    ?: false
+                        }
+                    }
+
                     if (XposedInit.sPrefs.getBoolean("add_live", false)) {
                         val tab = data?.getObjectFieldAs<MutableList<Any>>("tab")
                         val hasLive = tab?.fold(false) { acc, it ->

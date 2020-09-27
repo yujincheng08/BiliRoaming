@@ -39,7 +39,7 @@
     <string name="purify_game_summary">去除首页右上角游戏中心</string>
     <string name="purify_game_title">净化游戏中心</string>
     <string name="purify_drawer_summary">净化【我的】页面（一刀切）</string>
-    <string name="purify_drawer_title">净化侧边栏</string>
+    <string name="purify_drawer_title">净化我的页面</string>
     <string name="hidden_group">隐藏功能</string>
     <string name="show_info_summary">显示解锁版权、允许下载等状态信息</string>
     <string name="show_info_title">提示模块运行信息</string>
@@ -115,4 +115,6 @@
     <string name="music_notification_summary">强制音乐通知栏为模块自制的原生样式</string>
     <string name="custom_backup_title">自定义备份服务器</string>
     <string name="custom_backup_summary">在主服务器宕机时，可以从自定义备份服务器解析解锁番剧。默认备份服务器由kghost提供。</string>
+    <string name="drawer_title">移动我的页面到侧边栏</string>
+    <string name="drawer_summary">移动后，可以点击首页的头像或者在空白地方左划打开侧边栏</string>
 </resources>

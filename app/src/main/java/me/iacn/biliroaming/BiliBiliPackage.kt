@@ -9,6 +9,7 @@ import android.content.Context
 import android.os.Bundle
 import android.util.SparseArray
 import android.view.View
+import android.view.ViewGroup
 import android.widget.TextView
 import dalvik.system.DexFile
 import me.iacn.biliroaming.utils.*
@@ -59,6 +60,11 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val notificationBuilderClass by Weak { mHookInfo["class_notification_builder"]?.findClass(mClassLoader) }
     val absMusicServiceClass by Weak { mHookInfo["class_abs_music_service"]?.findClass(mClassLoader) }
     val menuGroupItemClass by Weak { "com.bilibili.lib.homepage.mine.MenuGroup\$Item".findClassOrNull(mClassLoader) }
+    val drawerLayoutClass by Weak {
+        "androidx.drawerlayout.widget.DrawerLayout".findClassOrNull(mClassLoader)
+                ?: "android.support.v4.widget.DrawerLayout".findClass(mClassLoader)
+    }
+    val drawerLayoutParamsClass by Weak { mHookInfo["class_drawer_layout_params"]?.findClass(mClassLoader) }
 
     val classesList by lazy { DexFile(AndroidAppHelper.currentApplication().packageCodePath).entries().toList() }
     private val okHttpClientClass by Weak { mHookInfo["class_http_client"]?.findClass(mClassLoader) }
@@ -172,6 +178,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     fun absMusicService(): String? {
         return mHookInfo["field_abs_music_service"]
+    }
+
+    fun openDrawer(): String? {
+        return mHookInfo["method_open_drawer"]
     }
 
     private fun readHookInfo(context: Context): MutableMap<String, String?> {
@@ -309,11 +319,33 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             findMediaSessionTokenMethod()
         }.checkOrPut("field_abs_music_service") {
             findAbsMusicServiceField()
+        }.checkOrPut("class_drawer_layout_params") {
+            findDrawerLayoutParams()
+        }.checkOrPut("method_open_drawer") {
+            findOpenDrawerMethod()
         }
 
         Log.d(mHookInfo)
         Log.d("Check hook info completed: needUpdate = $needUpdate")
         return needUpdate
+    }
+
+    private fun findOpenDrawerMethod(): String? {
+        return try {
+            drawerLayoutClass?.getMethod("openDrawer", View::class.java, Boolean::class.javaPrimitiveType)?.name
+        } catch (e: Throwable) {
+            drawerLayoutClass?.declaredMethods?.firstOrNull {
+                Modifier.isPublic(it.modifiers) &&
+                        it.parameterTypes.size == 2 && it.parameterTypes[0] == View::class.java &&
+                        it.parameterTypes[1] == Boolean::class.javaPrimitiveType
+            }?.name
+        }
+    }
+
+    private fun findDrawerLayoutParams(): String? {
+        return drawerLayoutClass?.declaredClasses?.firstOrNull {
+            it.superclass == ViewGroup.MarginLayoutParams::class.java
+        }?.name
     }
 
     private fun findAbsMusicServiceField(): String? {

@@ -8,11 +8,12 @@ import me.iacn.biliroaming.R
 import me.iacn.biliroaming.XposedInit
 import me.iacn.biliroaming.utils.hookAfterMethod
 import me.iacn.biliroaming.utils.setObjectField
+import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 
 class HintHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
         if (!XposedInit.sPrefs.getBoolean("show_hint", true)) return
-        "tv.danmaku.bili.MainActivityV2".hookAfterMethod(mClassLoader, "onCreate", Bundle::class.java) { param ->
+        instance.mainActivityClass?.hookAfterMethod("onCreate", Bundle::class.java) { param ->
             AlertDialog.Builder(param.thisObject as Activity).run {
                 val newContext = context.createConfigurationContext(XposedInit.moduleRes.configuration)
                 newContext.setObjectField("mResources", XposedInit.moduleRes)
