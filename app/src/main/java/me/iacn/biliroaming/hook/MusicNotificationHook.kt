@@ -68,9 +68,7 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         instance.classesList.filter {
             it.startsWith("tv.danmaku.biliplayerv2.service.business.background")
         }.firstOrNull { c ->
-            c.findClass(mClassLoader)?.interfaces?.filter {
-                it == playerHelperField?.type
-            }?.count()?.let { it > 0 } ?: false
+            c.findClass(mClassLoader)?.interfaces?.contains(playerHelperField?.type) ?: false
         }
     }
 
@@ -103,22 +101,20 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             c.findClass(mClassLoader)?.declaredMethods?.filter {
                 it.name == "onSeekTo"
             }?.count()?.let { it > 0 } ?: false
-        }
+        }?.findClass(mClassLoader)
     }
 
     private val playbackStateBuilderClass by lazy {
-        instance.classesList.filter {
-            it.startsWith("android.support.v4.media.session.PlaybackStateCompat")
-        }.firstOrNull { c ->
-            c.findClass(mClassLoader)?.declaredMethods?.filter {
-                it.returnType.name == "android.support.v4.media.session.PlaybackStateCompat" &&
-                        it.parameterTypes.isEmpty()
-            }?.count()?.let { it > 0 } ?: false
+        val playbackStateClass = "android.support.v4.media.session.PlaybackStateCompat".findClassOrNull(mClassLoader)
+        playbackStateClass?.declaredClasses?.firstOrNull { c ->
+            c.declaredMethods.filter {
+                it.returnType == playbackStateClass && it.parameterTypes.isEmpty()
+            }.count() > 0
         }
     }
 
     private val setPlaybackStateMethod by lazy {
-        playbackStateBuilderClass?.findClass(mClassLoader)?.declaredMethods?.firstOrNull {
+        playbackStateBuilderClass?.declaredMethods?.firstOrNull {
             it.parameterTypes.size == 4
         }
     }
@@ -149,14 +145,10 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     private val corePlayerOnSeekListenerClass by lazy {
         instance.classesList.filter {
-            it.startsWith("tv.danmaku.biliplayerv2.service.core")
+            corePlayerClass?.name?.let { name -> it.startsWith(name) } ?: false
         }.firstOrNull { c ->
-            c.findClass(mClassLoader)?.interfaces?.map { it.name }?.contains("tv.danmaku.ijk.media.player.IMediaPlayer\$OnSeekCompleteListener")
-                    ?: false
-        }?.findClass(mClassLoader) ?: instance.classesList.filter {
-            it.startsWith("tv.danmaku.biliplayerv2.service")
-        }.firstOrNull { c ->
-            c.findClass(mClassLoader)?.interfaces?.map { it.name }?.contains("tv.danmaku.ijk.media.player.IMediaPlayer\$OnSeekCompleteListener")
+            c.findClass(mClassLoader)?.interfaces?.map { it.name }
+                    ?.contains("tv.danmaku.ijk.media.player.IMediaPlayer\$OnSeekCompleteListener")
                     ?: false
         }?.findClass(mClassLoader)
     }
@@ -207,22 +199,20 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
     }
 
-    private val rxMediaPlayerImplClass by lazy {
-        instance.classesList.filter {
-            it.startsWith("com.bilibili.opd.app.bizcommon.mediaplayer.rx")
-        }.firstOrNull { c ->
-            c.findClass(mClassLoader)?.declaredFields?.filter {
-                it.type == mediaPlayerInterface
-            }?.count()?.let { it > 0 } ?: false
-        }?.findClass(mClassLoader)
-    }
-
     private val rxMediaPlayerClass by lazy {
         instance.classesList.filter {
             it.startsWith("com.bilibili.opd.app.bizcommon.mediaplayer.rx")
         }.firstOrNull { c ->
             c.findClass(mClassLoader)?.interfaces?.contains(rxMediaPlayerInterface) ?: false
         }?.findClass(mClassLoader)
+    }
+
+    private val rxMediaPlayerImplClass by lazy {
+        rxMediaPlayerClass?.declaredClasses?.firstOrNull { c ->
+            c.declaredFields.filter {
+                it.type == mediaPlayerInterface
+            }.count() > 0
+        }
     }
 
     private val rxMediaPlayerImplField by lazy {
@@ -270,9 +260,9 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             lastSeekService?.callMethod(updateStateMethod?.name, lastState)
         }
 
-        mediaSessionCallbackClass?.hookAfterMethod(mClassLoader, "onSeekTo", Long::class.javaPrimitiveType) { param ->
+        mediaSessionCallbackClass?.hookAfterMethod("onSeekTo", Long::class.javaPrimitiveType) { param ->
             position = param.args[0] as Long
-            val absMusicService = mediaSessionCallbackClass?.findClass(mClassLoader)?.declaredFields?.get(0)?.run {
+            val absMusicService = mediaSessionCallbackClass?.declaredFields?.get(0)?.run {
                 val res = param.thisObject.getObjectField(name)?.run {
                     getObjectField(javaClass.declaredFields.last().name)
                 }

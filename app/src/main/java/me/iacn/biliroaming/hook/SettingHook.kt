@@ -44,7 +44,7 @@ class SettingHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
         instance.homeUserCenterClass?.hookBeforeMethod(
                 instance.addSetting(), Context::class.java, List::class.java) { param ->
-            val item = "com.bilibili.lib.homepage.mine.MenuGroup\$Item".findClass(mClassLoader)?.new()
+            val item = instance.menuGroupItemClass?.new()
                     ?: return@hookBeforeMethod
             item.setIntField("id", 114514)
                     .setObjectField("title", "哔哩漫游设置")
@@ -55,7 +55,7 @@ class SettingHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             lastGroup.getObjectFieldAs<MutableList<Any>>("itemList").add(item)
         }
 
-        instance.settingRouteClass?.hookAfterMethod(instance.getSettingRoute(), "com.bilibili.lib.homepage.mine.MenuGroup\$Item") { param ->
+        instance.settingRouteClass?.hookAfterMethod(instance.getSettingRoute(), instance.menuGroupItemClass) { param ->
             val item = param.args[0]
             val uri = item.getObjectFieldAs<String>("uri")
             if (uri != settingUri) return@hookAfterMethod

@@ -11,7 +11,6 @@ import android.util.SparseArray
 import android.view.View
 import android.widget.TextView
 import dalvik.system.DexFile
-import de.robv.android.xposed.XposedHelpers.findClassIfExists
 import me.iacn.biliroaming.utils.*
 import java.io.*
 import java.lang.ref.WeakReference
@@ -47,7 +46,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val seasonParamsMapClass by Weak { "com.bilibili.bangumi.data.page.detail.BangumiDetailApiService\$UniformSeasonParamsMap".findClass(mClassLoader) }
     val brandSplashClass by Weak { "tv.danmaku.bili.ui.splash.brand.ui.BaseBrandSplashFragment".findClassOrNull(mClassLoader) }
     val urlConnectionClass by Weak { "com.bilibili.lib.okhttp.huc.OkHttpURLConnection".findClass(mClassLoader) }
-    val okHttpClientClass by Weak { mHookInfo["class_http_client"]?.findClass(mClassLoader) }
     val okHttpClientBuilderClass by Weak { mHookInfo["class_http_client_builder"]?.findClass(mClassLoader) }
     val downloadThreadListenerClass by Weak { mHookInfo["class_download_thread_listener"]?.findClass(mClassLoader) }
     val downloadingActivityClass by Weak { "tv.danmaku.bili.ui.offline.DownloadingActivity".findClassOrNull(mClassLoader) }
@@ -60,8 +58,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val musicNotificationHelperClass by Weak { mHookInfo["class_music_notification_helper"]?.findClass(mClassLoader) }
     val notificationBuilderClass by Weak { mHookInfo["class_notification_builder"]?.findClass(mClassLoader) }
     val absMusicServiceClass by Weak { mHookInfo["class_abs_music_service"]?.findClass(mClassLoader) }
+    val menuGroupItemClass by Weak { "com.bilibili.lib.homepage.mine.MenuGroup\$Item".findClassOrNull(mClassLoader) }
 
     val classesList by lazy { DexFile(AndroidAppHelper.currentApplication().packageCodePath).entries().toList() }
+    private val okHttpClientClass by Weak { mHookInfo["class_http_client"]?.findClass(mClassLoader) }
     private val accessKeyInstance by lazy { "com.bilibili.bangumi.ui.page.detail.pay.BangumiPayHelperV2\$accessKey\$2".findClass(mClassLoader)?.getStaticObjectField("INSTANCE") }
 
     val accessKey
@@ -275,16 +275,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             findVideoDetailField()
         }.checkOrPut("method_sign_query") {
             findSignQueryMethod()
-        }.checkOrPut("class_setting_route", "method_add_setting", checker = { m, keys ->
-            keys.fold(true) { acc, s -> acc && m.containsKey(s) } ||
-                    findClassIfExists("tv.danmaku.bili.ui.main2.mine.HomeUserCenterFragment", mClassLoader) == null
-        }, checkOption = null) {
+        }.checkConjunctiveOrPut("class_setting_route", "method_add_setting") {
             arrayOf(findSettingRouteClass(), findAddSettingMethod())
-        }.checkOrPut("class_drawer", checker = { m, keys ->
-            keys.fold(true) { acc, s -> acc && m.containsKey(s) } ||
-                    findClassIfExists("tv.danmaku.bili.ui.main2.mine.HomeUserCenterFragment", mClassLoader) != null
-        }) {
-            arrayOf(findDrawerClass())
+        }.checkOrPut("class_drawer") {
+            findDrawerClass()
         }.checkOrPut("method_get_setting_route") {
             findGetSettingRouteMethod()
         }.checkOrPut("method_like") {
@@ -511,30 +505,18 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     }
 
     private fun findThemeListClickClass(): String? {
-        val themeStoreActivityClass = "tv.danmaku.bili.ui.theme.ThemeStoreActivity".findClass(mClassLoader)
-                ?: return null
-        for (innerClass in themeStoreActivityClass.declaredClasses) {
-            for (interfaceClass in innerClass.interfaces) {
-                if (interfaceClass == View.OnClickListener::class.java) {
-                    return innerClass.name
-                }
-            }
-        }
-        return null
+        return "tv.danmaku.bili.ui.theme.ThemeStoreActivity".findClassOrNull(mClassLoader)?.declaredClasses?.firstOrNull {
+            it.interfaces.contains(View.OnClickListener::class.java)
+        }?.name
     }
 
     private fun findThemeNameClass(): String? {
-        return try {
-            val classes = classesList.filter {
-                it.startsWith("tv.danmaku.bili.ui.garb")
-            }.filter { c ->
-                c.findClassOrNull(mClassLoader)?.declaredFields?.filter {
-                    Modifier.isStatic(it.modifiers) && it.type == Map::class.java
-                }?.count() == 1
-            }
-            if (classes.size == 1) classes[0] else null
-        } catch (e: Throwable) {
-            null
+        return classesList.filter {
+            it.startsWith("tv.danmaku.bili.ui.garb")
+        }.firstOrNull { c ->
+            c.findClassOrNull(mClassLoader)?.declaredFields?.filter {
+                Modifier.isStatic(it.modifiers) && it.type == Map::class.java
+            }?.count() == 1
         }
     }
 
@@ -563,70 +545,49 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     }
 
     private fun findThemeHelper(): String? {
-        return try {
-            val classes = classesList.filter {
-                it.startsWith("tv.danmaku.bili.ui.theme")
-            }.filter { c ->
-                c.findClassOrNull(mClassLoader)?.declaredFields?.filter {
-                    Modifier.isStatic(it.modifiers)
-                }?.filter {
-                    it.type == SparseArray::class.java
-                }?.count()?.let { it > 1 } ?: false
-            }
-            if (classes.size == 1) classes[0] else null
-        } catch (e: Throwable) {
-            null
+        return classesList.filter {
+            it.startsWith("tv.danmaku.bili.ui.theme")
+        }.firstOrNull { c ->
+            c.findClassOrNull(mClassLoader)?.declaredFields?.filter {
+                Modifier.isStatic(it.modifiers)
+            }?.filter {
+                it.type == SparseArray::class.java
+            }?.count()?.let { it > 1 } ?: false
         }
     }
 
     private fun findThemeIdHelper(): String? {
-        return try {
-            val classes = classesList.filter {
-                it.startsWith("tv.danmaku.bili.ui.theme")
-            }.filter { c ->
-                c.findClassOrNull(mClassLoader)?.declaredFields?.filter {
-                    Modifier.isStatic(it.modifiers)
-                }?.filter {
-                    it.type == SparseArray::class.java
-                }?.count()?.let { it == 1 } ?: false
-            }
-            if (classes.size == 1) classes[0] else null
-        } catch (e: Throwable) {
-            null
+        return classesList.filter {
+            it.startsWith("tv.danmaku.bili.ui.theme")
+        }.firstOrNull { c ->
+            c.findClassOrNull(mClassLoader)?.declaredFields?.filter {
+                Modifier.isStatic(it.modifiers)
+            }?.filter {
+                it.type == SparseArray::class.java
+            }?.count()?.let { it == 1 } ?: false
         }
     }
 
     private fun findColumnHelper(): String? {
-        return try {
-            val classes = classesList.filter {
-                it.startsWith("com.bilibili.column.helper")
-            }.filter { c ->
-                c.findClassOrNull(mClassLoader)?.declaredFields?.filter {
-                    Modifier.isStatic(it.modifiers)
-                }?.filter {
-                    it.type == SparseArray::class.java
-                }?.count()?.let { it > 1 } ?: false
-            }
-            if (classes.size == 1) classes[0] else null
-        } catch (e: Throwable) {
-            null
+        return classesList.filter {
+            it.startsWith("com.bilibili.column.helper")
+        }.firstOrNull { c ->
+            c.findClassOrNull(mClassLoader)?.declaredFields?.filter {
+                Modifier.isStatic(it.modifiers)
+            }?.filter {
+                it.type == SparseArray::class.java
+            }?.count()?.let { it > 1 } ?: false
         }
     }
 
     private fun findThemeProcessor(): String? {
-        return try {
-            val biliSkinListClass = "tv.danmaku.bili.ui.theme.api.BiliSkinList".findClass(mClassLoader)
-                    ?: return null
-            val classes = classesList.filter {
-                it.startsWith("tv.danmaku.bili.ui.theme")
-            }.filter { c ->
-                c.findClassOrNull(mClassLoader)?.declaredFields?.filter {
-                    it.type == biliSkinListClass
-                }?.count()?.let { it > 1 } ?: false
-            }
-            if (classes.size == 1) classes[0] else null
-        } catch (e: Throwable) {
-            null
+        val biliSkinListClass = "tv.danmaku.bili.ui.theme.api.BiliSkinList".findClassOrNull(mClassLoader)
+        return classesList.filter {
+            it.startsWith("tv.danmaku.bili.ui.theme")
+        }.firstOrNull { c ->
+            c.findClassOrNull(mClassLoader)?.declaredFields?.filter {
+                it.type == biliSkinListClass
+            }?.count()?.let { it > 1 } ?: false
         }
     }
 
@@ -637,54 +598,38 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     }
 
     private fun findAddSettingMethod(): String? {
-        return "tv.danmaku.bili.ui.main2.mine.HomeUserCenterFragment".findClass(mClassLoader)?.declaredMethods?.firstOrNull {
+        return homeUserCenterClass?.declaredMethods?.firstOrNull {
             it.parameterTypes.size == 2 && it.parameterTypes[0] == Context::class.java && it.parameterTypes[1] == List::class.java
         }?.name
     }
 
     private fun findSettingRouteClass(): String? {
-        return try {
-            val menuGroupItemClass = "com.bilibili.lib.homepage.mine.MenuGroup\$Item".findClass(mClassLoader)
-                    ?: return null
-            val accountMineClass = "tv.danmaku.bili.ui.main2.api.AccountMine".findClass(mClassLoader)
-                    ?: return null
-            val classes = classesList.filter {
-                it.startsWith("tv.danmaku.bili.ui.main2")
-            }.filter { c ->
-                c.findClass(mClassLoader)?.run {
-                    declaredFields.filter {
-                        it.type == accountMineClass
-                    }.count() > 0 && declaredMethods.filter {
-                        it.parameterTypes.size == 1 && it.parameterTypes[0] == menuGroupItemClass
-                    }.count() > 0
-                } ?: false
-            }
-            if (classes.size == 1) classes[0] else null
-        } catch (e: Throwable) {
-            null
+        val accountMineClass = "tv.danmaku.bili.ui.main2.api.AccountMine".findClassOrNull(mClassLoader)
+        return classesList.filter {
+            it.startsWith("tv.danmaku.bili.ui.main2")
+        }.firstOrNull { c ->
+            c.findClass(mClassLoader)?.run {
+                declaredFields.filter {
+                    it.type == accountMineClass
+                }.count() > 0 && declaredMethods.filter {
+                    it.parameterTypes.size == 1 && it.parameterTypes[0] == menuGroupItemClass
+                }.count() > 0
+            } ?: false
         }
     }
 
     private fun findSectionClass(): String? {
-        return try {
-            val progressBarClass = "tv.danmaku.biliplayer.view.RingProgressBar".findClass(mClassLoader)
-                    ?: return null
-            val classes = classesList.filter {
-                it.startsWith("tv.danmaku.bili.ui.video.section")
-            }.filter { c ->
-                c.findClassOrNull(mClassLoader)?.declaredFields?.filter {
-                    it.type == progressBarClass
-                }?.count()?.let { it > 0 } ?: false
-            }
-            if (classes.size == 1) classes[0] else null
-        } catch (e: Throwable) {
-            null
+        val progressBarClass = "tv.danmaku.biliplayer.view.RingProgressBar".findClass(mClassLoader)
+        return classesList.filter {
+            it.startsWith("tv.danmaku.bili.ui.video.section")
+        }.firstOrNull { c ->
+            c.findClassOrNull(mClassLoader)?.declaredFields?.filter {
+                it.type == progressBarClass
+            }?.count()?.let { it > 0 } ?: false
         }
     }
 
     private fun findGetSettingRouteMethod(): String? {
-        val menuGroupItemClass = "com.bilibili.lib.homepage.mine.MenuGroup\$Item".findClass(mClassLoader)
-                ?: return null
         return settingRouteClass?.declaredMethods?.firstOrNull {
             it.parameterTypes.size == 1 && it.parameterTypes[0] == menuGroupItemClass
         }?.name
@@ -697,22 +642,17 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     }
 
     private fun findDrawerClass(): String? {
-        return try {
-            val navigationViewClass = "android.support.design.widget.NavigationView".findClass(mClassLoader)
-                    ?: return null
-            val regex = Regex("^tv\\.danmaku\\.bili\\.ui\\.main2\\.[^.]*$")
-            val classes = classesList.filter {
-                it.matches(regex)
-            }.filter { c ->
-                c.findClassOrNull(mClassLoader)?.run {
-                    declaredFields.filter {
-                        it.type == navigationViewClass
-                    }.count() > 0
-                } ?: false
-            }
-            if (classes.size == 1) classes[0] else null
-        } catch (e: Throwable) {
-            null
+        val navigationViewClass = "android.support.design.widget.NavigationView".findClassOrNull(mClassLoader)
+                ?: return null
+        val regex = Regex("^tv\\.danmaku\\.bili\\.ui\\.main2\\.[^.]*$")
+        return classesList.filter {
+            it.matches(regex)
+        }.firstOrNull { c ->
+            c.findClassOrNull(mClassLoader)?.run {
+                declaredFields.filter {
+                    it.type == navigationViewClass
+                }.count() > 0
+            } ?: false
         }
     }
 
