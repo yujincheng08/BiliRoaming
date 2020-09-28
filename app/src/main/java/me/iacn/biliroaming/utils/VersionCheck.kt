@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package me.iacn.biliroaming.utils
 
 import android.os.AsyncTask
@@ -11,7 +13,7 @@ interface OnTaskReturn<T> {
 class CheckVersionTask(private val onResult: OnTaskReturn<JSONObject>) : AsyncTask<URL, Void, JSONObject?>() {
     override fun doInBackground(vararg url: URL?): JSONObject? {
         return try {
-            url[0]?.readText()?.let{JSONObject(it)}
+            url[0]?.readText()?.let { JSONObject(it) }
         } catch (e: Throwable) {
             null
         }
