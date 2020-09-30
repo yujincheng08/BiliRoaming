@@ -79,7 +79,8 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     }
                     supportAdd4K = true
                 }
-                "com.bilibili.app.blue" -> supportAdd4K = true
+                "com.bilibili.app.blue" -> if(versionCode < 6080000)
+                        supportAdd4K = true
             }
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
                 supportMusicNotificationHook = false
