@@ -48,13 +48,25 @@ class DrawerHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             drawerLayout?.callMethod("addView", navView, 1, layoutParams)
         }
 
+        instance.mainActivityClass?.replaceMethod("onBackPressed") { param ->
+            try {
+                if (drawerLayout?.callMethodAs<Boolean>("isDrawerOpen", navView) == true) {
+                    drawerLayout?.callMethod("closeDrawer", navView)
+                } else {
+                    param.invokeOriginalMethod()
+                }
+            } catch (e: Throwable) {
+                param.invokeOriginalMethod()
+            }
+        }
+
         "tv.danmaku.bili.ui.main2.basic.BaseMainFrameFragment".hookAfterMethod(mClassLoader, "onViewCreated", View::class.java, Bundle::class.java) { param ->
             val activity = param.thisObject.callMethodAs<Activity>("getActivity")
             val id = activity.resources.getIdentifier("avatar_layout", "id", activity.packageName)
             (param.args[0] as View).findViewById<View>(id).setOnClickListener {
                 try {
                     drawerLayout?.callMethod(instance.openDrawer(), navView, true)
-                }catch(e:Throwable) {
+                } catch (e: Throwable) {
                     Log.e(e)
                 }
             }
