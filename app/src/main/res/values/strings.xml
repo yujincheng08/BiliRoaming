@@ -65,10 +65,10 @@
     <string name="upos_title">UPOS服务器设置</string>
     <string name="purify_splash_summary">去除启动客户端时的推广</string>
     <string name="purify_splash_title">净化开屏页面</string>
-    <string name="custom_splash_title">替换开屏图片</string>
-    <string name="custom_splash_summary">替换开屏图片为自定义图片（仅支持6.6.0及以上版本，不选择图片则隐藏）</string>
-    <string name="custom_splash_logo_title">替换开屏Logo</string>
-    <string name="custom_splash_logo_summary">替换开屏Logo为自定义图片（仅支持6.6.0及以上版本，不选择图片则隐藏，延迟生效）</string>
+    <string name="custom_splash_title">替换启动图</string>
+    <string name="custom_splash_summary">替换启动图为自定义图片（仅支持6.6.0及以上版本，不选择图片则隐藏）</string>
+    <string name="custom_splash_logo_title">替换启动Logo</string>
+    <string name="custom_splash_logo_summary">替换启动Logo为自定义图片（仅支持6.6.0及以上版本，不选择图片则隐藏，延迟生效）</string>
     <string name="beautify_title">美化客户端</string>
     <string name="beautify_summary">简单地美化客户端</string>
     <string name="beautify_category">美化</string>
@@ -117,4 +117,6 @@
     <string name="custom_backup_summary">在主服务器宕机时，可以从自定义备份服务器解析解锁番剧。默认备份服务器由kghost提供。</string>
     <string name="drawer_title">移动我的页面到侧边栏</string>
     <string name="drawer_summary">移动后，可以点击首页的头像或者在空白地方左划打开侧边栏</string>
+    <string name="full_splash_title">强制满屏启动图</string>
+    <string name="full_splash_summary">去两头留中间形式满屏，无论是否自定启动图</string>
 </resources>

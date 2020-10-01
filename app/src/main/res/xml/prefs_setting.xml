@@ -100,6 +100,10 @@
             android:summary="@string/custom_splash_logo_summary"
             android:title="@string/custom_splash_logo_title" />
         <SwitchPreference
+            android:key="full_splash"
+            android:summary="@string/full_splash_summary"
+            android:title="@string/full_splash_title" />
+        <SwitchPreference
             android:key="music_notification"
             android:summary="@string/music_notification_summary"
             android:title="@string/music_notification_title" />

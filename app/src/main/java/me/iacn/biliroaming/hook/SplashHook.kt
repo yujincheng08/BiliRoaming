@@ -14,20 +14,35 @@ import java.io.File
 
 class SplashHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
-        if (!XposedInit.sPrefs.getBoolean("custom_splash", false) && !XposedInit.sPrefs.getBoolean("custom_splash_logo", false)) return
+        if (!XposedInit.sPrefs.getBoolean("custom_splash", false) && !XposedInit.sPrefs.getBoolean("custom_splash_logo", false)
+                && !XposedInit.sPrefs.getBoolean("full_splash", false)) return
         Log.d("startHook: Splash")
+
+        "tv.danmaku.bili.ui.splash.brand.BrandShowInfo".hookAfterMethod(mClassLoader, "getMode") { param ->
+            param.result = if (XposedInit.sPrefs.getBoolean("full_splash", false)) {
+                "full"
+            } else {
+                param.result
+            }
+        }
 
         instance.brandSplashClass?.hookAfterMethod("onViewCreated", View::class.java, Bundle::class.java) { param ->
             val activity = param.thisObject.callMethodAs<Activity>("getActivity")
             val view = param.args[0] as View
             if (XposedInit.sPrefs.getBoolean("custom_splash", false)) {
                 val brandId = activity.resources.getIdentifier("brand_splash", "id", activity.packageName)
+                val fullId = activity.resources.getIdentifier("full_brand_splash", "id", activity.packageName)
                 val brandSplash = view.findViewById<ImageView>(brandId)
+                val full = if (fullId != 0) view.findViewById<ImageView>(fullId) else null
                 val splashImage = File(XposedInit.currentContext.filesDir, SPLASH_IMAGE)
-                if (splashImage.exists())
-                    brandSplash.setImageURI(Uri.fromFile(splashImage))
-                else
+                if (splashImage.exists()) {
+                    val uri = Uri.fromFile(splashImage)
+                    brandSplash.setImageURI(uri)
+                    full?.setImageURI(uri)
+                } else {
                     brandSplash.alpha = .0f
+                    full?.alpha = .0f
+                }
             }
             if (XposedInit.sPrefs.getBoolean("custom_splash_logo", false)) {
                 val logoId = activity.resources.getIdentifier("brand_logo", "id", activity.packageName)

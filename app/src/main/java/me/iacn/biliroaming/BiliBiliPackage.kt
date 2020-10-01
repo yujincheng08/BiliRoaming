@@ -65,6 +65,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 ?: "android.support.v4.widget.DrawerLayout".findClass(mClassLoader)
     }
     val drawerLayoutParamsClass by Weak { mHookInfo["class_drawer_layout_params"]?.findClass(mClassLoader) }
+    val splashInfoClass by Weak { "tv.danmaku.bili.ui.splash.brand.BrandShowInfo".findClass(mClassLoader) }
 
     val classesList by lazy { DexFile(AndroidAppHelper.currentApplication().packageCodePath).entries().toList() }
     private val okHttpClientClass by Weak { mHookInfo["class_http_client"]?.findClass(mClassLoader) }

@@ -72,6 +72,11 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             var supportLiveHook = false
             var supportAdd4K = false
             var supportMusicNotificationHook = true
+            var supportFullSplash = try {
+                instance.splashInfoClass?.getMethod("getMode") != null
+            } catch (e: Throwable) {
+                false
+            }
             when (packageName) {
                 "com.bilibili.app.in" -> {
                     when (versionCode) {
@@ -79,18 +84,21 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     }
                     supportAdd4K = true
                 }
-                "com.bilibili.app.blue" -> if(versionCode < 6080000)
-                        supportAdd4K = true
+                "com.bilibili.app.blue" -> if (versionCode < 6080000)
+                    supportAdd4K = true
             }
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
                 supportMusicNotificationHook = false
-            val supportSplashHook= instance.brandSplashClass != null
+            val supportSplashHook = instance.brandSplashClass != null
             val supportDrawer = instance.homeUserCenterClass != null
             if (!supportDrawer)
                 disablePreference("drawer")
             if (!supportSplashHook) {
                 disablePreference("custom_splash")
                 disablePreference("custom_splash_logo")
+            }
+            if (!supportFullSplash) {
+                disablePreference("full_splash")
             }
             if (!supportLiveHook) {
                 disablePreference("add_live")
