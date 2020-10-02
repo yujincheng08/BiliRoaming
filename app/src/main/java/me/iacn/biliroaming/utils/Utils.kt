@@ -2,10 +2,15 @@ package me.iacn.biliroaming.utils
 
 import android.app.AndroidAppHelper
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
+import java.io.IOException
 import java.math.BigInteger
+import java.net.URL
 import java.util.*
 import kotlin.collections.HashMap
+
 
 val systemContext: Context
     get() {
@@ -72,4 +77,18 @@ fun signQuery(query: String?): String? {
     queryMap["mobi_app"] = platform[packageName] ?: "android"
     queryMap["platform"] = platform[packageName] ?: "android"
     return instance.libBiliClass?.callStaticMethod(instance.signQueryName(), queryMap).toString()
+}
+
+fun getBitmapFromURL(src: String?, callback: (Bitmap?) -> Unit) {
+    Thread {
+        callback(try {
+            src?.let {
+                val bytes = URL(it).readBytes()
+                BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+            }
+        } catch (e: IOException) {
+            Log.e(e)
+            null
+        })
+    }.start()
 }

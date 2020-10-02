@@ -152,10 +152,16 @@
             android:key="enable_av"
             android:summary="@string/enable_av_summary"
             android:title="@string/enable_av_title" />
+
         <SwitchPreference
             android:key="custom_download_thread"
             android:summary="@string/custom_download_thread_summary"
             android:title="@string/custom_download_thread_title"/>
+
+        <SwitchPreference
+            android:key="get_cover"
+            android:summary="@string/get_cover_summary"
+            android:title="@string/get_cover_title"/>
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/setting_category">
         <SwitchPreference
