@@ -17,6 +17,7 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val defaultKeywordClass = "com.bilibili.search.api.DefaultKeyword".findClass(mClassLoader)
         val brandSplashDataClass = "tv.danmaku.bili.ui.splash.brand.BrandSplashData".findClassOrNull(mClassLoader)
         val eventEntranceClass = "tv.danmaku.bili.ui.main.event.model.EventEntranceModel".findClassOrNull(mClassLoader)
+        val cursorListClass = "com.bilibili.app.comm.comment2.model.BiliCommentCursorList".findClassOrNull(mClassLoader)
 
         instance.fastJsonClass?.hookAfterMethod(instance.fastJsonParse(), String::class.java, Type::class.java, Int::class.javaPrimitiveType, "com.alibaba.fastjson.parser.Feature[]") { param ->
             var result = param.result ?: return@hookAfterMethod
@@ -126,6 +127,9 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         XposedInit.sPrefs.getBoolean("hidden", false)) {
                     result.setObjectField("online", null)
                     result.setObjectField("hash", "")
+                }
+                cursorListClass -> if (XposedInit.sPrefs.getBoolean("comment_floor", false)) {
+                    result.getObjectField("cursor")?.setObjectField("supportMode", intArrayOf(1, 2, 3))
                 }
             }
         }
