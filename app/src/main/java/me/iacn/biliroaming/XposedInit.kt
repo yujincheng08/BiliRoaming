@@ -122,8 +122,8 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
         lateinit var modulePath: String
         lateinit var moduleRes: Resources
 
-        fun toastMessage(msg: String) {
-            if (!sPrefs.getBoolean("show_info", true)) return
+        fun toastMessage(msg: String, force: Boolean = false) {
+            if (!force && !sPrefs.getBoolean("show_info", true)) return
             handler.post {
                 toast.setText("哔哩漫游：$msg")
                 toast.show()

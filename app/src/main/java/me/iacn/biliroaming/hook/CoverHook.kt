@@ -50,7 +50,7 @@ class CoverHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     }
                 }
 
-                toastMessage("开始获取封面")
+                toastMessage("开始获取封面", true)
                 getBitmapFromURL(url) { bitmap ->
                     bitmap?.let {
                         val path = activity.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
@@ -58,9 +58,9 @@ class CoverHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         val out = FileOutputStream(file)
                         it.compress(Bitmap.CompressFormat.PNG, 100, out)
                         out.close()
-                        toastMessage("封面已保存到${file.absolutePath}")
+                        toastMessage("封面已保存到${file.absolutePath}", true)
                     } ?: run {
-                        toastMessage("获取封面失败")
+                        toastMessage("获取封面失败", true)
                         return@getBitmapFromURL
                     }
                 }
