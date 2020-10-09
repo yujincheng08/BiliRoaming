@@ -9,7 +9,7 @@ import android.view.ViewGroup
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.SettingDialog
 import me.iacn.biliroaming.utils.*
-import java.lang.reflect.Method
+import java.lang.reflect.Constructor
 import java.lang.reflect.Proxy
 
 
@@ -55,14 +55,12 @@ class SettingHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             lastGroup.getObjectFieldAs<MutableList<Any>>("itemList").add(item)
         }
 
-        instance.settingRouteClass?.hookAfterMethod(instance.getSettingRoute(), instance.menuGroupItemClass) { param ->
-            val item = param.args[0]
-            val uri = item.getObjectFieldAs<String>("uri")
-            if (uri != settingUri) return@hookAfterMethod
-            val returnType = (param.method as Method).returnType
-            param.result = Proxy.newProxyInstance(returnType.classLoader, arrayOf(returnType)) { _, method, _ ->
-                val returnType2 = method.returnType
-                Proxy.newProxyInstance(returnType2.classLoader, arrayOf(returnType2)) { _, method2, args ->
+        instance.settingRouterClass?.hookBeforeAllConstructors { param ->
+            if (param.args[1] != settingUri) return@hookBeforeAllConstructors
+            val routerType = (param.method as Constructor<*>).parameterTypes[3]
+            param.args[3] = Proxy.newProxyInstance(routerType.classLoader, arrayOf(routerType)) { _, method, _ ->
+                val returnType = method.returnType
+                Proxy.newProxyInstance(returnType.classLoader, arrayOf(returnType)) { _, method2, args ->
                     when (method2.returnType) {
                         Boolean::class.javaPrimitiveType -> false
                         else -> {
