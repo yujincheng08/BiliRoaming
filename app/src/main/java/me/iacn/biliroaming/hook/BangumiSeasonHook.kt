@@ -1,12 +1,15 @@
 package me.iacn.biliroaming.hook
 
 import android.net.Uri
+import android.os.Build
 import de.robv.android.xposed.XC_MethodHook
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.Constant.TYPE_EPISODE_ID
 import me.iacn.biliroaming.Constant.TYPE_SEASON_ID
 import me.iacn.biliroaming.Protos
 import me.iacn.biliroaming.XposedInit
+import me.iacn.biliroaming.XposedInit.Companion.is64
+import me.iacn.biliroaming.XposedInit.Companion.isBuiltIn
 import me.iacn.biliroaming.XposedInit.Companion.toastMessage
 import me.iacn.biliroaming.network.BiliRoamingApi
 import me.iacn.biliroaming.network.BiliRoamingApi.getContent
@@ -49,22 +52,27 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             lastSeasonInfo["access_key"] = paramMap["access_key"]
         }
 
-        instance.retrofitResponseClass?.hookBeforeAllConstructors { param ->
-            val url = getUrl(param.args[0])
-            val body = param.args[1] ?: return@hookBeforeAllConstructors
-            // Filter non-bangumi responses
-            // If it isn't bangumi, the type variable will not exist in this map
-            if (instance.bangumiApiResponseClass?.isInstance(body) == true ||
-                    // for new blue 6.3.7
-                    instance.rxGeneralResponseClass?.isInstance(body) == true) {
-                fixBangumi(body)
-            } else if (url != null && (url.startsWith("https://app.bilibili.com/x/v2/view") ||
-                            url.startsWith("https://app.bilibili.com/x/intl/view") ||
-                            url.startsWith("https://appintl.biliapi.net/intl/gateway/app/view")) &&
-                    body.getIntField("code") == -404) {
-                fixView(body, url)
-            } else if (url != null && url.startsWith("https://appintl.biliapi.net/intl/gateway/app/search/type")) {
-                fixPlaySearchType(body, url)
+        if (isBuiltIn && is64 && Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            Log.e("Not support")
+            toastMessage("Android O以下系统不支持64位Xpatch版，请使用32位版")
+        } else {
+            instance.retrofitResponseClass?.hookBeforeAllConstructors { param ->
+                val url = getUrl(param.args[0])
+                val body = param.args[1] ?: return@hookBeforeAllConstructors
+                // Filter non-bangumi responses
+                // If it isn't bangumi, the type variable will not exist in this map
+                if (instance.bangumiApiResponseClass?.isInstance(body) == true ||
+                        // for new blue 6.3.7
+                        instance.rxGeneralResponseClass?.isInstance(body) == true) {
+                    fixBangumi(body)
+                } else if (url != null && (url.startsWith("https://app.bilibili.com/x/v2/view") ||
+                                url.startsWith("https://app.bilibili.com/x/intl/view") ||
+                                url.startsWith("https://appintl.biliapi.net/intl/gateway/app/view")) &&
+                        body.getIntField("code") == -404) {
+                    fixView(body, url)
+                } else if (url != null && url.startsWith("https://appintl.biliapi.net/intl/gateway/app/search/type")) {
+                    fixPlaySearchType(body, url)
+                }
             }
         }
 

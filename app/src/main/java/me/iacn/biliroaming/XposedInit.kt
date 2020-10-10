@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.Context.MODE_MULTI_PROCESS
 import android.content.res.AssetManager
 import android.content.res.Resources
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.widget.Toast
@@ -51,8 +52,9 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                         startLog()
                     }
                     Log.d("BiliBili process launched ...")
-                    Log.d("BiliRoaming version: ${BuildConfig.VERSION_NAME}(${BuildConfig.VERSION_CODE})")
-                    Log.d("Bilibili version: ${getPackageVersion(lpparam.packageName)}")
+                    Log.d("BiliRoaming version: ${BuildConfig.VERSION_NAME}(${BuildConfig.VERSION_CODE}) from $modulePath${if (isBuiltIn) "(BuiltIn)" else ""}")
+                    Log.d("Bilibili version: ${getPackageVersion(lpparam.packageName)} (${if (is64) "64" else "32"}bit)")
+                    Log.d("SDK: ${Build.VERSION.RELEASE}(${Build.VERSION.SDK_INT}); Phone: ${Build.BRAND} ${Build.MODEL}")
                     Log.d("Config: ${sPrefs.all}")
                     toastMessage("哔哩漫游已激活${
                         if (sPrefs.getBoolean("main_func", false)) ""
@@ -121,6 +123,12 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
         val logFile by lazy { File(currentContext.externalCacheDir, "log.txt") }
         lateinit var modulePath: String
         lateinit var moduleRes: Resources
+
+        val isBuiltIn
+            get() = modulePath.endsWith("so")
+
+        val is64
+            get() = currentContext.applicationInfo.nativeLibraryDir.contains("64")
 
         fun toastMessage(msg: String, force: Boolean = false) {
             if (!force && !sPrefs.getBoolean("show_info", true)) return

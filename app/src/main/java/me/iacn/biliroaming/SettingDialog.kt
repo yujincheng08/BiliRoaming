@@ -72,11 +72,12 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             var supportLiveHook = false
             var supportAdd4K = false
             var supportMusicNotificationHook = true
-            var supportFullSplash = try {
+            val supportFullSplash = try {
                 instance.splashInfoClass?.getMethod("getMode") != null
             } catch (e: Throwable) {
                 false
             }
+            val supportMain = !XposedInit.isBuiltIn || !XposedInit.is64 || Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
             when (packageName) {
                 "com.bilibili.app.in" -> {
                     when (versionCode) {
@@ -108,6 +109,9 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             }
             if (!supportMusicNotificationHook) {
                 disablePreference("music_notification", moduleRes.getString(R.string.os_not_support))
+            }
+            if (!supportMain) {
+                disablePreference("main_func", "Android O以下系统不支持64位Xpatch版，请使用32位版")
             }
 
         }
