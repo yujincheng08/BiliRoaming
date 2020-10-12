@@ -6,6 +6,7 @@ import android.content.res.XResources
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XC_MethodHook.MethodHookParam
 import de.robv.android.xposed.XC_MethodReplacement
+import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.XposedBridge.*
 import de.robv.android.xposed.XposedHelpers.*
 import de.robv.android.xposed.callbacks.XC_LayoutInflated
@@ -31,6 +32,19 @@ fun Member.hookMethod(callback: XC_MethodHook): XC_MethodHook.Unhook? {
         Log.e(e)
         null
     }
+}
+
+inline fun Member.replaceMethod(crossinline hooker: (MethodHookParam) -> Any?): XC_MethodHook.Unhook? {
+    return hookMethod(object : XC_MethodReplacement() {
+        override fun replaceHookedMethod(param: MethodHookParam): Any? {
+            return try {
+                hooker(param)
+            } catch (e: Throwable) {
+                Log.e(e)
+                null
+            }
+        }
+    })
 }
 
 inline fun Member.hookAfterMethod(crossinline hooker: (MethodHookParam) -> Unit): XC_MethodHook.Unhook? {

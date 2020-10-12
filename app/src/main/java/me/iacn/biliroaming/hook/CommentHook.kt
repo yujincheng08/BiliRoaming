@@ -1,5 +1,6 @@
 package me.iacn.biliroaming.hook
 
+import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.XposedInit
 import me.iacn.biliroaming.utils.Log
 import me.iacn.biliroaming.utils.replaceMethod
@@ -17,4 +18,13 @@ class CommentHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
     }
 
+    override fun lateInitHook() {
+        if (!XposedInit.sPrefs.getBoolean("comment_floor", false)) return
+        Log.d("lateHook: Comment")
+        instance.commentRpcClass?.methods?.forEach {
+            if (it.parameterTypes.isEmpty() && it.returnType == Boolean::class.java) {
+                it.replaceMethod { return@replaceMethod false }
+            }
+        }
+    }
 }

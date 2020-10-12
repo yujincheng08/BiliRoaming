@@ -16,7 +16,6 @@ class EnvHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 (if (XposedInit.sPrefs.getBoolean(config.config, false)) config.trueValue else config.falseValue)
                         ?.let { result[config.key] = it } ?: result.remove(config.key)
             }
-            hookBVCompat()
         }
         "com.bilibili.lib.blconfig.internal.TypedContext\$dataSp\$2".hookAfterMethod(mClassLoader, "invoke") { param ->
             val result = param.result as SharedPreferences
@@ -27,7 +26,6 @@ class EnvHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         ?.let { result.edit().putString(config.key, it).apply() }
                         ?: result.edit().remove(config.key).apply()
             }
-            hookBVCompat()
         }
 
         if (XposedInit.sPrefs.getBoolean("add_4k", false)) {
@@ -41,25 +39,21 @@ class EnvHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }.toByteArray()
             }
         }
-
     }
 
-    private fun hookBVCompat() {
-        if (!hookedBVCompat) {
-            if (XposedInit.sPrefs.getBoolean("enable_av", false)) {
-                val compatClass = "com.bilibili.droid.BVCompat".findClass(mClassLoader)
-                compatClass?.declaredFields?.forEach {
-                    val field = compatClass.getStaticObjectField(it.name)
-                    if (field is Pattern && field.pattern() == "av[1-9]\\d*")
-                        compatClass.setStaticObjectField(it.name, Pattern.compile("(av[1-9]\\d*)|(BV1[1-9A-NP-Za-km-z]{9})", field.flags()))
-                }
+    override fun lateInitHook() {
+        Log.d("lateHook: Env")
+        if (XposedInit.sPrefs.getBoolean("enable_av", false)) {
+            val compatClass = "com.bilibili.droid.BVCompat".findClass(mClassLoader)
+            compatClass?.declaredFields?.forEach {
+                val field = compatClass.getStaticObjectField(it.name)
+                if (field is Pattern && field.pattern() == "av[1-9]\\d*")
+                    compatClass.setStaticObjectField(it.name, Pattern.compile("(av[1-9]\\d*)|(BV1[1-9A-NP-Za-km-z]{9})", field.flags()))
             }
-            hookedBVCompat = true
         }
     }
 
     companion object {
-        private var hookedBVCompat = false
 
         private val encryptedValueMap = hashMapOf(
                 "0" to "Irb5O7Q8Ka0ojD4qqScgqg==",
@@ -70,7 +64,8 @@ class EnvHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
         val configSet = listOf(
                 ConfigTuple("bv.enable_bv", "enable_av", encryptedValueMap["0"], encryptedValueMap["1"]),
-                ConfigTuple("comment.rpc_enable", "comment_floor", encryptedValueMap["0"], null)
+                ConfigTuple("comment.rpc_enable", "comment_floor", encryptedValueMap["0"], null),
+                ConfigTuple("comment.rpc_enable_ff", "comment_floor", encryptedValueMap["0"], null)
         )
     }
 }

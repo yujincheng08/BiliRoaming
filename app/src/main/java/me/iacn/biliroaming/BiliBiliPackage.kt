@@ -66,6 +66,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     }
     val drawerLayoutParamsClass by Weak { mHookInfo["class_drawer_layout_params"]?.findClass(mClassLoader) }
     val splashInfoClass by Weak { "tv.danmaku.bili.ui.splash.brand.BrandShowInfo".findClass(mClassLoader) }
+    val commentRpcClass by Weak { "com.bilibili.app.comm.comment2.model.rpc.CommentRpcKt".findClass(mClassLoader) }
 
     val classesList by lazy { DexFile(AndroidAppHelper.currentApplication().packageCodePath).entries().toList() }
     private val okHttpClientClass by Weak { mHookInfo["class_http_client"]?.findClass(mClassLoader) }
@@ -369,6 +370,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         return musicNotificationHelperClass?.declaredMethods?.lastOrNull {
             it.parameterTypes.size == 1 && it.parameterTypes[0].name.run {
                 startsWith("android.support.v4.app") ||
+                        startsWith("androidx.core.app") ||
                         startsWith("androidx.core.app.NotificationCompat\$Builder")
             }
         }?.run {

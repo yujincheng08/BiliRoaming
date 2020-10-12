@@ -6,4 +6,5 @@ package me.iacn.biliroaming.hook
  */
 abstract class BaseHook(val mClassLoader: ClassLoader) {
     abstract fun startHook()
+    open fun lateInitHook() {}
 }

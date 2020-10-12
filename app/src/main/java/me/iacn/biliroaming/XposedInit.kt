@@ -1,6 +1,7 @@
 package me.iacn.biliroaming
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.app.AndroidAppHelper
 import android.app.Application
 import android.app.Instrumentation
@@ -14,12 +15,10 @@ import android.os.Looper
 import android.widget.Toast
 import de.robv.android.xposed.IXposedHookLoadPackage
 import de.robv.android.xposed.IXposedHookZygoteInit
+import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam
 import me.iacn.biliroaming.hook.*
-import me.iacn.biliroaming.utils.Log
-import me.iacn.biliroaming.utils.getPackageVersion
-import me.iacn.biliroaming.utils.hookBeforeMethod
-import me.iacn.biliroaming.utils.replaceMethod
+import me.iacn.biliroaming.utils.*
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
@@ -90,14 +89,30 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                 }
             }
         }
+        lateInitHook = Activity::class.java.hookBeforeMethod("onResume") {
+            startLateHook()
+            lateInitHook?.unhook()
+        }
     }
 
     private fun startHook(hooker: BaseHook) {
         try {
+            hookers.add(hooker)
             hooker.startHook()
         } catch (e: Throwable) {
             Log.e(e)
             toastMessage("出现错误${e.message}，部分功能可能失效。")
+        }
+    }
+
+    private fun startLateHook() {
+        hookers.forEach {
+            try {
+                it.lateInitHook()
+            } catch (e: Throwable) {
+                Log.e(e)
+                toastMessage("出现错误${e.message}，部分功能可能失效。")
+            }
         }
     }
 
@@ -123,6 +138,10 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
         val logFile by lazy { File(currentContext.externalCacheDir, "log.txt") }
         lateinit var modulePath: String
         lateinit var moduleRes: Resources
+
+        private val hookers = ArrayList<BaseHook>()
+        private var lateInitHook: XC_MethodHook.Unhook? = null
+
 
         val isBuiltIn
             get() = modulePath.endsWith("so")
