@@ -121,4 +121,6 @@
     <string name="full_splash_summary">去两头留中间形式满屏，无论是否自定启动图</string>
     <string name="get_cover_title">长按保存封面</string>
     <string name="get_cover_summary">开启后，长按播放器可保存视频封面或番剧海报</string>
+    <string name="purify_city_title">净化同城标签</string>
+    <string name="purify_city_summary">去除动态页面的同城标签</string>
 </resources>
