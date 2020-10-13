@@ -18,7 +18,10 @@ import de.robv.android.xposed.IXposedHookZygoteInit
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam
 import me.iacn.biliroaming.hook.*
-import me.iacn.biliroaming.utils.*
+import me.iacn.biliroaming.utils.Log
+import me.iacn.biliroaming.utils.getPackageVersion
+import me.iacn.biliroaming.utils.hookBeforeMethod
+import me.iacn.biliroaming.utils.replaceMethod
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
@@ -82,6 +85,7 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                 "tv.danmaku.bili:web", "com.bilibili.app.in:web", "com.bilibili.app.blue:web" -> {
                     BiliBiliPackage(lpparam.classLoader, param.args[0] as Context)
                     CustomThemeHook(lpparam.classLoader).insertColorForWebProcess()
+                    startHook(WebViewHook(lpparam.classLoader))
                 }
                 "tv.danmaku.bili:download", "com.bilibili.app.in:download", "com.bilibili.app.blue:download" -> {
                     BiliBiliPackage(lpparam.classLoader, param.args[0] as Context)
