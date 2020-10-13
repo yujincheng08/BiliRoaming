@@ -5,18 +5,17 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import de.robv.android.xposed.XC_MethodHook
 import me.iacn.biliroaming.XposedInit
-import me.iacn.biliroaming.utils.Log
-import me.iacn.biliroaming.utils.hookBeforeMethod
+import me.iacn.biliroaming.utils.*
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
 
 class WebViewHook(classLoader: ClassLoader) : BaseHook(classLoader) {
+    private val x5WebViewClass by Weak { "com.tencent.smtt.sdk.WebView".findClassOrNull(mClassLoader) }
+
     private val hookedClient = HashSet<Class<*>>()
-    private val hooker = { param: XC_MethodHook.MethodHookParam ->
-        (param.args[0] as WebView).run {
-            loadUrl("""javascript:(function(){$js})()""".trimMargin())
-        }
+    private val hooker: (XC_MethodHook.MethodHookParam) -> Unit = { param ->
+        param.args[0].callMethod("loadUrl", """javascript:(function(){$js})()""".trimMargin())
     }
 
     private val jsHooker = object : Any() {
@@ -53,6 +52,17 @@ class WebViewHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             if (hookedClient.contains(clazz)) return@hookBeforeMethod
             try {
                 clazz.getDeclaredMethod("onPageFinished", WebView::class.java, String::class.java).hookBeforeMethod(hooker)
+                hookedClient.add(clazz)
+                Log.d("hook webview $clazz")
+            } catch (e: NoSuchMethodException) {
+            }
+        }
+        x5WebViewClass?.hookBeforeMethod("setWebViewClient", "com.tencent.smtt.sdk.WebViewClient") { param ->
+            val clazz = param.args[0].javaClass
+            param.thisObject.callMethod("addJavascriptInterface", jsHooker, "hooker")
+            if (hookedClient.contains(clazz)) return@hookBeforeMethod
+            try {
+                clazz.getDeclaredMethod("onPageFinished", x5WebViewClass, String::class.java).hookBeforeMethod(hooker)
                 hookedClient.add(clazz)
                 Log.d("hook webview $clazz")
             } catch (e: NoSuchMethodException) {
