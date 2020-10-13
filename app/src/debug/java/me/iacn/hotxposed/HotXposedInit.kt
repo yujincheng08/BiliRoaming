@@ -1,6 +1,5 @@
 package me.iacn.hotxposed
 
-import android.content.Context
 import dalvik.system.PathClassLoader
 import de.robv.android.xposed.IXposedHookInitPackageResources
 import de.robv.android.xposed.IXposedHookLoadPackage
@@ -52,9 +51,7 @@ class HotXposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit, IXposedHook
     override fun handleLoadPackage(lpparam: LoadPackageParam) {
         if (!Constant.BILIBILI_PACKAGENAME.containsValue(lpparam.packageName) && lpparam.packageName != BuildConfig.APPLICATION_ID) return
 
-        if (!lpparam.processName.endsWith(":web")) {
-            hookSSL(lpparam.classLoader)
-        }
+        hookSSL(lpparam.classLoader)
 
         moduleInstance?.run {
             val param = StartupParam::class.java.new() as StartupParam

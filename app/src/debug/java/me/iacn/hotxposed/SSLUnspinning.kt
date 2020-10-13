@@ -3,6 +3,9 @@
 package me.iacn.hotxposed
 
 import android.annotation.SuppressLint
+import android.net.http.SslError
+import android.webkit.SslErrorHandler
+import android.webkit.WebView
 import me.iacn.biliroaming.utils.*
 import org.apache.http.conn.scheme.HostNameResolver
 import org.apache.http.conn.ssl.SSLSocketFactory
@@ -14,17 +17,24 @@ import javax.net.ssl.*
 
 // From https://github.com/ac-pm/SSLUnpinning_Xposed/blob/master/app/src/main/java/mobi/acpm/sslunpinning/Module.java
 fun hookSSL(classLoader: ClassLoader) {
+    Log.d("startHook: Ssl")
+
     val emptyTrustManagers = arrayOf(object : X509TrustManager {
         @SuppressLint("TrustAllX509TrustManager")
-        override fun checkClientTrusted(chain: Array<out X509Certificate>?, authType: String?) {
+        override fun checkClientTrusted(chain: Array<out X509Certificate>, authType: String) {
         }
 
         @SuppressLint("TrustAllX509TrustManager")
-        override fun checkServerTrusted(chain: Array<out X509Certificate>?, authType: String?) {
+        override fun checkServerTrusted(chain: Array<out X509Certificate>, authType: String) {
         }
 
         override fun getAcceptedIssuers(): Array<X509Certificate> {
             return emptyArray()
+        }
+
+        @Suppress("unused", "UNUSED_PARAMETER")
+        fun checkServerTrusted(chain: Array<X509Certificate>, authType: String, host: String): List<X509Certificate> {
+            return ArrayList()
         }
     })
 
@@ -85,5 +95,14 @@ fun hookSSL(classLoader: ClassLoader) {
     "okhttp3.CertificatePinner".findClassOrNull(classLoader)?.hookBeforeMethod("findMatchingPins", String::class.java) { param ->
         param.args[0] = ""
     }
-}
 
+    "android.webkit.WebViewClient".findClass(classLoader)?.run {
+        replaceMethod("onReceivedSslError", WebView::class.java, SslErrorHandler::class.java, SslError::class.java) { param ->
+            (param.args[1] as SslErrorHandler).proceed()
+            null
+        }
+        replaceMethod("onReceivedError", WebView::class.java, Int::class.javaPrimitiveType, String::class.java, String::class.java) {
+            null
+        }
+    }
+}
