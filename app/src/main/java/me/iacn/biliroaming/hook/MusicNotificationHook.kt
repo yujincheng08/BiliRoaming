@@ -13,7 +13,6 @@ import android.os.Build
 import android.os.Bundle
 import de.robv.android.xposed.XC_MethodHook.MethodHookParam
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
-import me.iacn.biliroaming.BiliBiliPackage.Weak
 import me.iacn.biliroaming.XposedInit
 import me.iacn.biliroaming.utils.*
 import java.lang.reflect.Modifier

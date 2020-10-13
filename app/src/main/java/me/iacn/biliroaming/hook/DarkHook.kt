@@ -8,7 +8,6 @@ import android.os.Bundle
 import android.view.View
 import de.robv.android.xposed.XC_MethodHook
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
-import me.iacn.biliroaming.BiliBiliPackage.Weak
 import me.iacn.biliroaming.XposedInit
 import me.iacn.biliroaming.utils.*
 

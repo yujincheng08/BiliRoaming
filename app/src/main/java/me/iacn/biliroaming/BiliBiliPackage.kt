@@ -14,11 +14,9 @@ import android.widget.TextView
 import dalvik.system.DexFile
 import me.iacn.biliroaming.utils.*
 import java.io.*
-import java.lang.ref.WeakReference
 import java.lang.reflect.Modifier
 import java.lang.reflect.ParameterizedType
 import java.net.ProxySelector
-import kotlin.reflect.KProperty
 
 data class OkHttpResult(val fieldName: String?, val methodName: String?)
 
@@ -702,20 +700,5 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     companion object {
         @Volatile
         lateinit var instance: BiliBiliPackage
-    }
-
-    class Weak(val initializer: () -> Class<*>?) {
-        private var weakReference: WeakReference<Class<*>?>? = null
-
-        operator fun getValue(thisRef: Any?, property: KProperty<*>): Class<*>? {
-            return weakReference?.get() ?: let {
-                weakReference = WeakReference(initializer())
-                weakReference
-            }?.get()
-        }
-
-        operator fun setValue(thisRef: Any?, property: KProperty<*>, value: Class<*>) {
-            weakReference = WeakReference(value)
-        }
     }
 }

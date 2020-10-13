@@ -6,11 +6,27 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import java.io.IOException
+import java.lang.ref.WeakReference
 import java.math.BigInteger
 import java.net.URL
 import java.util.*
 import kotlin.collections.HashMap
+import kotlin.reflect.KProperty
 
+class Weak(val initializer: () -> Class<*>?) {
+    private var weakReference: WeakReference<Class<*>?>? = null
+
+    operator fun getValue(thisRef: Any?, property: KProperty<*>): Class<*>? {
+        return weakReference?.get() ?: let {
+            weakReference = WeakReference(initializer())
+            weakReference
+        }?.get()
+    }
+
+    operator fun setValue(thisRef: Any?, property: KProperty<*>, value: Class<*>) {
+        weakReference = WeakReference(value)
+    }
+}
 
 val systemContext: Context
     get() {

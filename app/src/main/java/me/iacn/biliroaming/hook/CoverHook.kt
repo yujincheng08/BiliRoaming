@@ -10,7 +10,6 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import de.robv.android.xposed.XC_MethodHook
-import me.iacn.biliroaming.BiliBiliPackage.Weak
 import me.iacn.biliroaming.XposedInit
 import me.iacn.biliroaming.XposedInit.Companion.toastMessage
 import me.iacn.biliroaming.utils.*
