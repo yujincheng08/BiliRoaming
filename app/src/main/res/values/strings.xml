@@ -123,4 +123,5 @@
     <string name="get_cover_summary">开启后，长按播放器可保存视频封面或番剧海报</string>
     <string name="purify_city_title">净化同城标签</string>
     <string name="purify_city_summary">去除动态页面的同城标签</string>
+    <string name="setting">设置</string>
 </resources>

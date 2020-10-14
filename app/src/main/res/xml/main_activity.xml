@@ -1,30 +1,33 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--suppress DeprecatedClassUsageInspection -->
+<?xml version="1.0" encoding="utf-8"?><!--suppress DeprecatedClassUsageInspection -->
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <Preference
-        android:key="feature"
-        android:summary="@string/feature_summary"
-        android:title="@string/feature_title" />
+    <PreferenceCategory
+        android:title="@string/setting">
 
-    <Preference
-        android:key="setting"
-        android:summary="@string/setting_summary"
-        android:title="@string/setting_title" />
+        <Preference
+            android:key="feature"
+            android:summary="@string/feature_summary"
+            android:title="@string/feature_title" />
 
-    <SwitchPreference
-        android:key="hide_icon"
-        android:summary="@string/hide_icon_summary"
-        android:title="@string/hide_icon_title" />
+        <Preference
+            android:key="setting"
+            android:summary="@string/setting_summary"
+            android:title="@string/setting_title" />
 
-    <Preference
-        android:key="help"
-        android:summary="@string/help_summary"
-        android:title="@string/help_title">
-        <intent
-            android:action="android.intent.action.VIEW"
-            android:data="@string/help_url" />
-    </Preference>
+        <SwitchPreference
+            android:key="hide_icon"
+            android:summary="@string/hide_icon_summary"
+            android:title="@string/hide_icon_title" />
+
+        <Preference
+            android:key="help"
+            android:summary="@string/help_summary"
+            android:title="@string/help_title">
+            <intent
+                android:action="android.intent.action.VIEW"
+                android:data="@string/help_url" />
+        </Preference>
+    </PreferenceCategory>
 
     <PreferenceCategory
         android:key="about"
