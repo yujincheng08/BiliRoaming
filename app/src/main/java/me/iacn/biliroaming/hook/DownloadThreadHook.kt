@@ -38,13 +38,12 @@ class DownloadThreadHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 if (view.tag as Int == 1) {
                     AlertDialog.Builder(view.context).create().run {
                         setTitle("自定义同时缓存数")
-                        val numberPicker = NumberPicker(context).run {
+                        val numberPicker = NumberPicker(context).apply {
                             minValue = 1
                             maxValue = 64
                             wrapSelectorWheel = false
                             value = param.thisObject.getObjectField(activityField)?.getIntField(instance.downloadingThread())
                                     ?: 1
-                            this
                         }
                         setView(numberPicker, 50, 0, 50, 0)
                         setButton(AlertDialog.BUTTON_POSITIVE, "OK") { _, _ ->

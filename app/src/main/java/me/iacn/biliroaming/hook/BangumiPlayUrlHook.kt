@@ -248,12 +248,11 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 elecDisable = true
                 build()
             }
-            val videoInfoBuilder = VideoInfo.newBuilder().run {
+            val videoInfoBuilder = VideoInfo.newBuilder().apply {
                 timelength = jsonContent.getLong("timelength")
                 videoCodecid = jsonContent.getInt("video_codecid")
                 quality = jsonContent.getInt("quality")
                 format = jsonContent.getString("format")
-                this
             }
             val qualityMap = jsonContent.getJSONArray("accept_quality").let {
                 (0 until it.length()).map { idx -> it.getInt(idx) }

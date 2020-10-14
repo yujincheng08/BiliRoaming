@@ -203,12 +203,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                         val updatePreference = Preference(activity)
                         updatePreference.key = "update"
                         updatePreference.title = moduleRes.getString(R.string.update_title)
-                        val log = try {
-                            val body = result.getString("body")
-                            body.substring(body.lastIndexOf("更新日志"))
-                        } catch (e: Throwable) {
-                            ""
-                        }
+                        val log = result.optString("body").substringAfterLast("更新日志")
                         updatePreference.summary = if (log.isNotEmpty()) log else moduleRes.getString(R.string.update_summary)
                         updatePreference.onPreferenceClickListener = this
                         updatePreference.order = 1
@@ -234,14 +229,13 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                         0 -> {
                             AlertDialog.Builder(activity).create().run {
                                 setTitle("BiliPlus赞助")
-                                setView(ImageView(activity).run {
+                                setView(ImageView(activity).apply {
                                     setImageDrawable(moduleRes.getDrawable(R.drawable.biliplus_alipay))
                                     setOnClickListener {
                                         val uri = Uri.parse(moduleRes.getString(R.string.biliplus_alipay))
                                         val intent = Intent(Intent.ACTION_VIEW, uri)
                                         startActivity(intent)
                                     }
-                                    this
                                 }, 50, 50, 50, 50)
                                 setButton(AlertDialog.BUTTON_NEGATIVE, "关闭") { _, _ -> }
                                 show()
