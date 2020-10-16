@@ -6,7 +6,6 @@ import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
-import me.iacn.biliroaming.XposedInit
 import me.iacn.biliroaming.utils.*
 
 class DrawerHook(classLoader: ClassLoader) : BaseHook(classLoader) {
@@ -15,7 +14,7 @@ class DrawerHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private var navView: View? = null
 
     override fun startHook() {
-        if (!XposedInit.sPrefs.getBoolean("drawer", false)) return
+        if (!sPrefs.getBoolean("drawer", false)) return
 
         Log.d("startHook: DrawerHook")
 

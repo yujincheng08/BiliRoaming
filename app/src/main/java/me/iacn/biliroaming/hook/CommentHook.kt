@@ -1,9 +1,7 @@
 package me.iacn.biliroaming.hook
 
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
-import me.iacn.biliroaming.XposedInit
-import me.iacn.biliroaming.utils.Log
-import me.iacn.biliroaming.utils.replaceMethod
+import me.iacn.biliroaming.utils.*
 
 /**
  * Created by iAcn on 2020/2/27
@@ -11,7 +9,7 @@ import me.iacn.biliroaming.utils.replaceMethod
  */
 class CommentHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
-        if (!XposedInit.sPrefs.getBoolean("comment_floor", false)) return
+        if (!sPrefs.getBoolean("comment_floor", false)) return
         Log.d("startHook: Comment")
         "com.bilibili.app.comm.comment2.model.BiliCommentConfig".replaceMethod(mClassLoader, "isShowFloor") {
             return@replaceMethod true
@@ -19,7 +17,7 @@ class CommentHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     override fun lateInitHook() {
-        if (!XposedInit.sPrefs.getBoolean("comment_floor", false)) return
+        if (!sPrefs.getBoolean("comment_floor", false)) return
         Log.d("lateHook: Comment")
         instance.commentRpcClass?.methods?.forEach {
             if (it.parameterTypes.isEmpty() && it.returnType == Boolean::class.java) {

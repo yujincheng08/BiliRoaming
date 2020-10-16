@@ -2,27 +2,18 @@ package me.iacn.biliroaming
 
 import android.annotation.SuppressLint
 import android.app.Activity
-import android.app.AndroidAppHelper
 import android.app.Application
 import android.app.Instrumentation
 import android.content.Context
-import android.content.Context.MODE_MULTI_PROCESS
 import android.content.res.AssetManager
 import android.content.res.Resources
 import android.os.Build
-import android.os.Handler
-import android.os.Looper
-import android.widget.Toast
 import de.robv.android.xposed.IXposedHookLoadPackage
 import de.robv.android.xposed.IXposedHookZygoteInit
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam
 import me.iacn.biliroaming.hook.*
-import me.iacn.biliroaming.utils.Log
-import me.iacn.biliroaming.utils.getPackageVersion
-import me.iacn.biliroaming.utils.hookBeforeMethod
-import me.iacn.biliroaming.utils.replaceMethod
-import java.io.File
+import me.iacn.biliroaming.utils.*
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -58,7 +49,7 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                     Log.d("Bilibili version: ${getPackageVersion(lpparam.packageName)} (${if (is64) "64" else "32"}bit)")
                     Log.d("SDK: ${Build.VERSION.RELEASE}(${Build.VERSION.SDK_INT}); Phone: ${Build.BRAND} ${Build.MODEL}")
                     Log.d("Config: ${sPrefs.all}")
-                    toastMessage("哔哩漫游已激活${
+                    Log.toast("哔哩漫游已激活${
                         if (sPrefs.getBoolean("main_func", false)) ""
                         else "。但未启用番剧解锁功能，请检查哔哩漫游设置。"
                     }")
@@ -105,7 +96,7 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
             hooker.startHook()
         } catch (e: Throwable) {
             Log.e(e)
-            toastMessage("出现错误${e.message}，部分功能可能失效。")
+            Log.toast("出现错误${e.message}，部分功能可能失效。")
         }
     }
 
@@ -115,7 +106,7 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                 it.lateInitHook()
             } catch (e: Throwable) {
                 Log.e(e)
-                toastMessage("出现错误${e.message}，部分功能可能失效。")
+                Log.toast("出现错误${e.message}，部分功能可能失效。")
             }
         }
     }
@@ -133,33 +124,12 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
     }
 
     companion object {
-        @Suppress("DEPRECATION")
-        val sPrefs
-            get() = currentContext.getSharedPreferences("biliroaming", MODE_MULTI_PROCESS)!!
-        val currentContext by lazy { AndroidAppHelper.currentApplication() as Context }
-        private val handler by lazy { Handler(Looper.getMainLooper()) }
-        private val toast by lazy { Toast.makeText(currentContext, "", Toast.LENGTH_SHORT) }
-        val logFile by lazy { File(currentContext.externalCacheDir, "log.txt") }
         lateinit var modulePath: String
         lateinit var moduleRes: Resources
 
         private val hookers = ArrayList<BaseHook>()
         private var lateInitHook: XC_MethodHook.Unhook? = null
 
-
-        val isBuiltIn
-            get() = modulePath.endsWith("so")
-
-        val is64
-            get() = currentContext.applicationInfo.nativeLibraryDir.contains("64")
-
-        fun toastMessage(msg: String, force: Boolean = false) {
-            if (!force && !sPrefs.getBoolean("show_info", true)) return
-            handler.post {
-                toast.setText("哔哩漫游：$msg")
-                toast.show()
-            }
-        }
 
         @Suppress("DEPRECATION")
         @SuppressLint("DiscouragedPrivateApi")

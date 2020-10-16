@@ -6,13 +6,12 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.NumberPicker
 import android.widget.TextView
-import me.iacn.biliroaming.utils.*
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
-import me.iacn.biliroaming.XposedInit
+import me.iacn.biliroaming.utils.*
 
 class DownloadThreadHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
-        if(!XposedInit.sPrefs.getBoolean("custom_download_thread", false)) return
+        if (!sPrefs.getBoolean("custom_download_thread", false)) return
         Log.d("startHook: DownloadThread")
         instance.downloadThreadListenerClass?.run {
             hookBeforeAllConstructors { param ->
@@ -57,6 +56,6 @@ class DownloadThreadHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
             }
         }
-        instance.reportDownloadThreadClass?.replaceMethod(instance.reportDownloadThread(), Context::class.java, Int::class.javaPrimitiveType){}
+        instance.reportDownloadThreadClass?.replaceMethod(instance.reportDownloadThread(), Context::class.java, Int::class.javaPrimitiveType) {}
     }
 }

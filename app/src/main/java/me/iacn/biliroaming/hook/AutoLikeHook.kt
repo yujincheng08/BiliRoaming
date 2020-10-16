@@ -3,14 +3,13 @@ package me.iacn.biliroaming.hook
 import android.app.AndroidAppHelper
 import android.view.View
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
-import me.iacn.biliroaming.XposedInit
 import me.iacn.biliroaming.utils.*
 
 class AutoLikeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private val likedVideos = HashSet<Long>()
 
     override fun startHook() {
-        if (!XposedInit.sPrefs.getBoolean("auto_like", false)) return
+        if (!sPrefs.getBoolean("auto_like", false)) return
 
         Log.d("startHook: AutoLike")
 

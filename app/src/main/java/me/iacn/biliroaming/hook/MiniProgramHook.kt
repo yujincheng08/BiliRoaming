@@ -2,16 +2,13 @@ package me.iacn.biliroaming.hook
 
 import android.os.Bundle
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
-import me.iacn.biliroaming.XposedInit
-import me.iacn.biliroaming.utils.Log
-import me.iacn.biliroaming.utils.bv2av
-import me.iacn.biliroaming.utils.hookBeforeMethod
+import me.iacn.biliroaming.utils.*
 import java.net.HttpURLConnection
 import java.net.URL
 
 class MiniProgramHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
-        if (!XposedInit.sPrefs.getBoolean("mini_program", false)) return
+        if (!sPrefs.getBoolean("mini_program", false)) return
         Log.d("startHook: MiniProgram")
         instance.shareWrapperClass?.hookBeforeMethod(instance.shareWrapper(), String::class.java, Bundle::class.java) { param ->
             val platform = param.args[0] as String

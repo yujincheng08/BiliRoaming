@@ -1,7 +1,6 @@
 package me.iacn.biliroaming.hook
 
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
-import me.iacn.biliroaming.XposedInit
 import me.iacn.biliroaming.utils.*
 import java.lang.reflect.Type
 
@@ -28,22 +27,22 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             when (result.javaClass) {
                 tabResponseClass -> {
                     val data = result.getObjectField("tabData")
-                    if (XposedInit.sPrefs.getBoolean("purify_mall", false) &&
-                            XposedInit.sPrefs.getBoolean("hidden", false)) {
+                    if (sPrefs.getBoolean("purify_mall", false) &&
+                            sPrefs.getBoolean("hidden", false)) {
                         data?.getObjectFieldAs<MutableList<*>?>("bottom")?.removeAll {
                             it?.getObjectFieldAs<String?>("uri")?.startsWith("bilibili://mall/home")
                                     ?: false
                         }
                     }
 
-                    if (XposedInit.sPrefs.getBoolean("drawer", false)) {
+                    if (sPrefs.getBoolean("drawer", false)) {
                         data?.getObjectFieldAs<MutableList<*>?>("bottom")?.removeAll {
                             it?.getObjectFieldAs<String?>("uri")?.startsWith("bilibili://user_center/mine")
                                     ?: false
                         }
                     }
 
-                    if (XposedInit.sPrefs.getBoolean("add_live", false)) {
+                    if (sPrefs.getBoolean("add_live", false)) {
                         val tab = data?.getObjectFieldAs<MutableList<Any>>("tab")
                         val hasLive = tab?.fold(false) { acc, it ->
                             val uri = it.getObjectFieldAs<String>("uri")
@@ -64,7 +63,7 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             }
                         }
                     }
-                    if (XposedInit.sPrefs.getBoolean("purify_home_tab", false)) {
+                    if (sPrefs.getBoolean("purify_home_tab", false)) {
                         val tab = data?.getObjectFieldAs<MutableList<Any>>("tab")
                         tab?.removeAll {
                             it.getObjectFieldAs<String>("uri").run {
@@ -73,8 +72,8 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             }
                         }
                     }
-                    if (XposedInit.sPrefs.getBoolean("purify_game", false) &&
-                            XposedInit.sPrefs.getBoolean("hidden", false)) {
+                    if (sPrefs.getBoolean("purify_game", false) &&
+                            sPrefs.getBoolean("hidden", false)) {
                         val top = data?.getObjectFieldAs<MutableList<*>?>("top")
                         top?.removeAll {
                             val uri = it?.getObjectFieldAs<String?>("uri")
@@ -82,8 +81,8 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         }
                     }
                 }
-                accountMineClass -> if (XposedInit.sPrefs.getBoolean("purify_drawer", false) &&
-                        XposedInit.sPrefs.getBoolean("hidden", false)) {
+                accountMineClass -> if (sPrefs.getBoolean("purify_drawer", false) &&
+                        sPrefs.getBoolean("hidden", false)) {
                     arrayOf(result.getObjectFieldAs<MutableList<*>?>("sectionList"),
                             result.getObjectFieldAs<MutableList<*>>("sectionListV2")).forEach { sections ->
                         var button: Any? = null
@@ -104,31 +103,31 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     }
                     result.setObjectField("vipSectionRight", null)
                 }
-                splashClass -> if (XposedInit.sPrefs.getBoolean("purify_splash", false) &&
-                        XposedInit.sPrefs.getBoolean("hidden", false)) {
+                splashClass -> if (sPrefs.getBoolean("purify_splash", false) &&
+                        sPrefs.getBoolean("hidden", false)) {
                     result.getObjectFieldAs<MutableList<*>?>("splashList")?.clear()
                     result.getObjectFieldAs<MutableList<*>?>("strategyList")?.clear()
                 }
-                defaultWordClass, defaultKeywordClass -> if (XposedInit.sPrefs.getBoolean("purify_search", false) &&
-                        XposedInit.sPrefs.getBoolean("hidden", false)) {
+                defaultWordClass, defaultKeywordClass -> if (sPrefs.getBoolean("purify_search", false) &&
+                        sPrefs.getBoolean("hidden", false)) {
                     result.javaClass.fields.forEach {
                         if (it.type != Int::class.javaPrimitiveType)
                             result.setObjectField(it.name, null)
                     }
                 }
-                brandSplashDataClass -> if (XposedInit.sPrefs.getBoolean("custom_splash", false) ||
-                        XposedInit.sPrefs.getBoolean("custom_splash_logo", false)) {
+                brandSplashDataClass -> if (sPrefs.getBoolean("custom_splash", false) ||
+                        sPrefs.getBoolean("custom_splash_logo", false)) {
                     val brandList = result.getObjectFieldAs<MutableList<Any>>("brandList")
                     val showList = result.getObjectFieldAs<MutableList<Any>>("showList")
                     brandList.clear()
                     showList.clear()
                 }
-                eventEntranceClass -> if (XposedInit.sPrefs.getBoolean("purify_game", false) &&
-                        XposedInit.sPrefs.getBoolean("hidden", false)) {
+                eventEntranceClass -> if (sPrefs.getBoolean("purify_game", false) &&
+                        sPrefs.getBoolean("hidden", false)) {
                     result.setObjectField("online", null)
                     result.setObjectField("hash", "")
                 }
-                cursorListClass -> if (XposedInit.sPrefs.getBoolean("comment_floor", false)) {
+                cursorListClass -> if (sPrefs.getBoolean("comment_floor", false)) {
                     result.getObjectField("cursor")?.setObjectField("supportMode", intArrayOf(1, 2, 3))
                 }
             }
@@ -143,11 +142,11 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             val result = param.result as MutableList<Any>?
             when (param.args[1] as Class<*>) {
                 searchRankClass, searchGuessClass ->
-                    if (XposedInit.sPrefs.getBoolean("purify_search", false) && XposedInit.sPrefs.getBoolean("hidden", false)) {
+                    if (sPrefs.getBoolean("purify_search", false) && sPrefs.getBoolean("hidden", false)) {
                         result?.clear()
                     }
                 categoryClass ->
-                    if (XposedInit.sPrefs.getBoolean("music_notification", false)) {
+                    if (sPrefs.getBoolean("music_notification", false)) {
                         val hasMusic = result?.fold(false) { r, i ->
                             r || (i.getObjectFieldAs<String?>("mUri")?.startsWith("bilibili://music")
                                     ?: false)
@@ -165,8 +164,8 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
         }
 
-        if (XposedInit.sPrefs.getBoolean("purify_city", false) &&
-                XposedInit.sPrefs.getBoolean("hidden", false)) {
+        if (sPrefs.getBoolean("purify_city", false) &&
+                sPrefs.getBoolean("hidden", false)) {
             "com.bapis.bilibili.app.dynamic.v1.DynTabReply".hookAfterMethod(mClassLoader, "getDynTabList") { param ->
                 param.result = (param.result as List<*>).filter {
                     it?.callMethodAs<Long>("getCityId") != 0L

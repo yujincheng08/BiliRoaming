@@ -10,15 +10,13 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import de.robv.android.xposed.XC_MethodHook
-import me.iacn.biliroaming.XposedInit
-import me.iacn.biliroaming.XposedInit.Companion.toastMessage
 import me.iacn.biliroaming.utils.*
 import java.io.File
 import java.io.FileOutputStream
 
 class CoverHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
-        if (!XposedInit.sPrefs.getBoolean("get_cover", false)) return
+        if (!sPrefs.getBoolean("get_cover", false)) return
         Log.d("startHook: GetCover")
         arrayOf(bgmClass, ugcClass).forEach {
             it?.hookAfterMethod("onViewCreated", View::class.java, Bundle::class.java, hooker = hooker)
@@ -49,7 +47,7 @@ class CoverHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     }
                 }
 
-                toastMessage("开始获取封面", true)
+                Log.toast("开始获取封面", true)
                 getBitmapFromURL(url) { bitmap ->
                     bitmap?.let {
                         val path = activity.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
@@ -57,9 +55,9 @@ class CoverHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         val out = FileOutputStream(file)
                         it.compress(Bitmap.CompressFormat.PNG, 100, out)
                         out.close()
-                        toastMessage("封面已保存到${file.absolutePath}", true)
+                        Log.toast("封面已保存到${file.absolutePath}", true)
                     } ?: run {
-                        toastMessage("获取封面失败", true)
+                        Log.toast("获取封面失败", true)
                         return@getBitmapFromURL
                     }
                 }

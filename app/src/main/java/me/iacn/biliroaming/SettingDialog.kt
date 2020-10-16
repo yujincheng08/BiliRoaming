@@ -26,11 +26,8 @@ import android.widget.ImageView
 import android.widget.TextView
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.XposedInit.Companion.moduleRes
-import me.iacn.biliroaming.XposedInit.Companion.toastMessage
 import me.iacn.biliroaming.hook.SplashHook
-import me.iacn.biliroaming.utils.CheckVersionTask
-import me.iacn.biliroaming.utils.OnTaskReturn
-import me.iacn.biliroaming.utils.hookAfterMethod
+import me.iacn.biliroaming.utils.*
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -59,7 +56,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("custom_splash").onPreferenceChangeListener = this
             findPreference("custom_splash_logo").onPreferenceChangeListener = this
             findPreference("custom_cdn").onPreferenceChangeListener = this
-            findPreference("save_log").summary = moduleRes.getString(R.string.save_log_summary).format(XposedInit.logFile.absolutePath)
+            findPreference("save_log").summary = moduleRes.getString(R.string.save_log_summary).format(logFile.absolutePath)
             findPreference("thanks").onPreferenceClickListener = this
             findPreference("custom_backup").onPreferenceClickListener = this
             checkCompatibleVersion()
@@ -68,7 +65,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
 
         private fun checkCompatibleVersion() {
             val packageName = AndroidAppHelper.currentPackageName()
-            val versionCode = XposedInit.currentContext.packageManager.getPackageInfo(packageName, 0).versionCode
+            val versionCode = currentContext.packageManager.getPackageInfo(packageName, 0).versionCode
             var supportLiveHook = false
             var supportAdd4K = false
             var supportMusicNotificationHook = true
@@ -77,7 +74,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             } catch (e: Throwable) {
                 false
             }
-            val supportMain = !XposedInit.isBuiltIn || !XposedInit.is64 || Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
+            val supportMain = !isBuiltIn || !is64 || Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
             when (packageName) {
                 "com.bilibili.app.in" -> {
                     when (versionCode) {
@@ -136,7 +133,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 }
                 "custom_cdn" -> {
                     if (!(newValue as String).matches(Constant.CDN_REGEX)) {
-                        toastMessage("无效输入")
+                        Log.toast("无效输入")
                         return false
                     }
                 }
@@ -152,7 +149,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             try {
                 startActivityForResult(Intent.createChooser(intent, "选择一张图片"), action)
             } catch (ex: ActivityNotFoundException) {
-                toastMessage("请安装文件管理器")
+                Log.toast("请安装文件管理器")
             }
             return true
         }
@@ -160,9 +157,9 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
             val destFile = when (requestCode) {
                 SPLASH_SELECTION ->
-                    File(XposedInit.currentContext.filesDir, SplashHook.SPLASH_IMAGE)
+                    File(currentContext.filesDir, SplashHook.SPLASH_IMAGE)
                 LOGO_SELECTION ->
-                    File(XposedInit.currentContext.filesDir, SplashHook.LOGO_IMAGE)
+                    File(currentContext.filesDir, SplashHook.LOGO_IMAGE)
                 else -> null
             } ?: return
             val uri = data?.data
@@ -186,9 +183,9 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             counter++
             if (counter == 7) {
                 prefs.edit()?.putBoolean("hidden", true)?.apply()
-                toastMessage("已开启隐藏功能，重启应用生效")
+                Log.toast("已开启隐藏功能，重启应用生效")
             } else if (counter >= 4) {
-                toastMessage("再按${7 - counter}次开启隐藏功能")
+                Log.toast("再按${7 - counter}次开启隐藏功能")
             }
 
             return true

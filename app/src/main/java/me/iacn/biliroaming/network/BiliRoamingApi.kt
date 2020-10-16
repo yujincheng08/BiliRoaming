@@ -12,10 +12,8 @@ import android.webkit.WebViewClient
 import me.iacn.biliroaming.BuildConfig
 import me.iacn.biliroaming.Constant.AKAMAI_HOST
 import me.iacn.biliroaming.Constant.BILI_CACHE_HOST
-import me.iacn.biliroaming.XposedInit
-import me.iacn.biliroaming.XposedInit.Companion.toastMessage
 import me.iacn.biliroaming.network.StreamUtils.getContent
-import me.iacn.biliroaming.utils.Log
+import me.iacn.biliroaming.utils.*
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
@@ -106,7 +104,7 @@ object BiliRoamingApi {
         val rights = result.getJSONObject("rights")
         rights.put("area_limit", 0)
 
-        if (XposedInit.sPrefs.getBoolean("allow_download", false)) {
+        if (sPrefs.getBoolean("allow_download", false)) {
             rights.put("allow_download", 1)
         }
     }
@@ -204,18 +202,18 @@ object BiliRoamingApi {
         builder.appendQueryParameter("otype", "json")
         builder.appendQueryParameter("platform", "android")
         return getContent(builder.toString(),
-                if (XposedInit.sPrefs.getString("upos", "").isNullOrEmpty()) null else
-                    mapOf("upos_server" to XposedInit.sPrefs.getString("upos", "cosu")!!)).run {
+                if (sPrefs.getString("upos", "").isNullOrEmpty()) null else
+                    mapOf("upos_server" to sPrefs.getString("upos", "cosu")!!)).run {
             if (this != null && contains("\"code\":0")) this
             else getBackupUrl(queryString, info)?.let {
                 JSONObject(it).optJSONObject("result")?.toString() ?: it
             }
         }?.run {
             when {
-                XposedInit.sPrefs.getBoolean("free_flow", false) -> {
+                sPrefs.getBoolean("free_flow", false) -> {
                     replace(Regex("""https?:\\?/\\?/${AKAMAI_HOST}"""), "http://${BILI_CACHE_HOST.format(Random.nextInt(1, 9))}")
                 }
-                XposedInit.sPrefs.getBoolean("force_https", false) ->
+                sPrefs.getBoolean("force_https", false) ->
                     replace(Regex("""http:\\?/\\?/${AKAMAI_HOST}"""), "https://${AKAMAI_HOST}")
                 else -> replace(Regex("""https:\\?/\\?/${AKAMAI_HOST}"""), "http://${AKAMAI_HOST}")
             }
@@ -225,10 +223,10 @@ object BiliRoamingApi {
     @JvmStatic
     fun getBackupUrl(queryString: String?, info: Map<String, String?>): String? {
         Log.d("Title: ${info["title"]}")
-        val twUrl = XposedInit.sPrefs.getString("tw_server", KGHOST_TW_API_URL)!!
-        val hkUrl = XposedInit.sPrefs.getString("hk_server", KGHOST_HK_API_URL)!!
-        val cnUrl = XposedInit.sPrefs.getString("cn_server", KGHOST_CN_API_URL)!!
-        val sgUrl = XposedInit.sPrefs.getString("sg_server", KGHOST_SG_API_URL)!!
+        val twUrl = sPrefs.getString("tw_server", KGHOST_TW_API_URL)!!
+        val hkUrl = sPrefs.getString("hk_server", KGHOST_HK_API_URL)!!
+        val cnUrl = sPrefs.getString("cn_server", KGHOST_CN_API_URL)!!
+        val sgUrl = sPrefs.getString("sg_server", KGHOST_SG_API_URL)!!
         val hostList = ArrayList<String>()
         info["title"]?.run {
             if (contains(Regex("僅.*台"))) hostList += twUrl
@@ -288,7 +286,7 @@ object BiliRoamingApi {
                     }
                 }
                 handler.post {
-                    val webView = WebView(XposedInit.currentContext, null)
+                    val webView = WebView(currentContext, null)
                     webView.addJavascriptInterface(listener, "listener")
                     webView.webViewClient = object : WebViewClient() {
                         override fun onPageFinished(view: WebView?, url: String?) {
@@ -300,7 +298,7 @@ object BiliRoamingApi {
                 }
                 try {
                     if (!listener.latch.await((timeout * 2).toLong(), TimeUnit.MILLISECONDS)) {
-                        toastMessage("连接超时，请重试")
+                        Log.toast("连接超时，请重试")
                         throw IOException("Timeout connection to server")
                     }
                 } catch (e: InterruptedException) {

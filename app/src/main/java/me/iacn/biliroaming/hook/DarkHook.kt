@@ -6,18 +6,19 @@ import android.content.res.Resources
 import android.graphics.Color
 import android.os.Bundle
 import android.view.View
+import android.view.WindowManager
 import de.robv.android.xposed.XC_MethodHook
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
-import me.iacn.biliroaming.XposedInit
 import me.iacn.biliroaming.utils.*
 
 class DarkHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
-        if (!XposedInit.sPrefs.getBoolean("follow_dark", false)) return
+        if (!sPrefs.getBoolean("follow_dark", false)) return
         Log.d("startHook: Dark")
         val hooker = { param: XC_MethodHook.MethodHookParam ->
             val dark = inDark
-            if (isNight != null && dark != isNight) switch(param.thisObject as Activity)
+            val night = isNight
+            if (night != null && dark != night) switch(param.thisObject as Activity)
         }
         Activity::class.java.hookBeforeMethod("onCreate", Bundle::class.java, hooker = hooker)
         Activity::class.java.hookAfterMethod("onPostResume", hooker = hooker)
@@ -36,7 +37,7 @@ class DarkHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     param2.result = activity
             }
             val viewId = activity.resources.getIdentifier("mine_day_night_setting", "id", activity.packageName)
-            callMethod("onClick", View(activity).run { id = viewId; this })
+            callMethod("onClick", View(activity).apply { id = viewId })
             unhook?.unhook()
         }
     }

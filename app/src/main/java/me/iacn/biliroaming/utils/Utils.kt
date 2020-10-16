@@ -2,9 +2,12 @@ package me.iacn.biliroaming.utils
 
 import android.app.AndroidAppHelper
 import android.content.Context
+import android.content.pm.PackageManager.GET_META_DATA
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
+import me.iacn.biliroaming.XposedInit
+import java.io.File
 import java.io.IOException
 import java.lang.ref.WeakReference
 import java.math.BigInteger
@@ -67,17 +70,33 @@ fun getVersionCode(packageName: String): String? {
     }
 }
 
+
 val appKey = mapOf(
         "tv.danmaku.bili" to "1d8b6e7d45233436",
         "com.bilibili.app.blue" to "07da50c9a0bf829f",
         "com.bilibili.app.in" to "bb3101000e232e27",
 )
 
-val platform = mapOf(
-        "tv.danmaku.bili" to "android",
-        "com.bilibili.app.blue" to "android_b",
-        "com.bilibili.app.in" to "android_i",
-)
+val currentContext by lazy { AndroidAppHelper.currentApplication() as Context }
+
+val packageName: String by lazy { currentContext.packageName }
+
+val isBuiltIn
+    get() = XposedInit.modulePath.endsWith("so")
+
+val is64
+    get() = currentContext.applicationInfo.nativeLibraryDir.contains("64")
+
+val platform by lazy {
+    currentContext.packageManager.getApplicationInfo(packageName, GET_META_DATA).metaData.getString("MOBI_APP")
+            ?: "android"
+}
+
+val logFile by lazy { File(currentContext.externalCacheDir, "log.txt") }
+
+@Suppress("DEPRECATION")
+val sPrefs
+    get() = currentContext.getSharedPreferences("biliroaming", Context.MODE_MULTI_PROCESS)!!
 
 fun signQuery(query: String?): String? {
     val queryMap = TreeMap<String, String>()
@@ -90,8 +109,8 @@ fun signQuery(query: String?): String? {
     queryMap["appkey"] = appKey[packageName] ?: "1d8b6e7d45233436"
     queryMap["build"] = getVersionCode(packageName) ?: "6080000"
     queryMap["device"] = "android"
-    queryMap["mobi_app"] = platform[packageName] ?: "android"
-    queryMap["platform"] = platform[packageName] ?: "android"
+    queryMap["mobi_app"] = platform
+    queryMap["platform"] = platform
     return instance.libBiliClass?.callStaticMethod(instance.signQueryName(), queryMap).toString()
 }
 

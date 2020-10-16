@@ -1,8 +1,8 @@
 package me.iacn.biliroaming.hook
 
+import android.content.Context
 import android.content.SharedPreferences
 import me.iacn.biliroaming.Protos
-import me.iacn.biliroaming.XposedInit
 import me.iacn.biliroaming.utils.*
 import java.util.regex.Pattern
 
@@ -13,7 +13,7 @@ class EnvHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             @Suppress("UNCHECKED_CAST")
             val result = param.result as MutableMap<String, String?>
             for (config in configSet) {
-                (if (XposedInit.sPrefs.getBoolean(config.config, false)) config.trueValue else config.falseValue)
+                (if (sPrefs.getBoolean(config.config, false)) config.trueValue else config.falseValue)
                         ?.let { result[config.key] = it } ?: result.remove(config.key)
             }
         }
@@ -22,13 +22,13 @@ class EnvHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             // this indicates the proper instance
             if (!result.contains("bv.enable_bv")) return@hookAfterMethod
             for (config in configSet) {
-                (if (XposedInit.sPrefs.getBoolean(config.config, false)) config.trueValue else config.falseValue)
+                (if (sPrefs.getBoolean(config.config, false)) config.trueValue else config.falseValue)
                         ?.let { result.edit().putString(config.key, it).apply() }
                         ?: result.edit().remove(config.key).apply()
             }
         }
 
-        if (XposedInit.sPrefs.getBoolean("add_4k", false)) {
+        if (sPrefs.getBoolean("add_4k", false)) {
             "com.bilibili.lib.moss.internal.impl.common.header.HeadersKt\$reqDevice\$2".hookAfterMethod(mClassLoader, "invoke") { param ->
                 param.result = Protos.Device.newBuilder().run {
                     mergeFrom(Protos.Device.parseFrom(param.result as ByteArray))
@@ -43,7 +43,7 @@ class EnvHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     override fun lateInitHook() {
         Log.d("lateHook: Env")
-        if (XposedInit.sPrefs.getBoolean("enable_av", false)) {
+        if (sPrefs.getBoolean("enable_av", false)) {
             val compatClass = "com.bilibili.droid.BVCompat".findClass(mClassLoader)
             compatClass?.declaredFields?.forEach {
                 val field = compatClass.getStaticObjectField(it.name)

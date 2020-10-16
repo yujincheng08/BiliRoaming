@@ -12,7 +12,6 @@ import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.ColorChooseDialog
 import me.iacn.biliroaming.Constant.CUSTOM_COLOR_KEY
 import me.iacn.biliroaming.Constant.DEFAULT_CUSTOM_COLOR
-import me.iacn.biliroaming.XposedInit
 import me.iacn.biliroaming.utils.*
 import java.util.*
 
@@ -22,7 +21,7 @@ import java.util.*
  */
 class CustomThemeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
-        if (!XposedInit.sPrefs.getBoolean("custom_theme", false)) return
+        if (!sPrefs.getBoolean("custom_theme", false)) return
         Log.d("startHook: CustomTheme")
 
         instance.themeNameClass?.getStaticObjectFieldAs<MutableMap<String, Int>>(instance.themeName())?.put("custom", CUSTOM_THEME_ID)
@@ -106,7 +105,7 @@ class CustomThemeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     fun insertColorForWebProcess() {
-        if (!XposedInit.sPrefs.getBoolean("custom_theme", false)) return
+        if (!sPrefs.getBoolean("custom_theme", false)) return
 
         try {
             var cacheColor = customColor
@@ -117,7 +116,7 @@ class CustomThemeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             instance.themeIdHelperClass?.getStaticObjectFieldAs<SparseArray<Int>>(instance.colorId())?.put(CUSTOM_THEME_ID, CUSTOM_THEME_ID)
 
             SparseArray::class.java.hookAfterMethod("get", Int::class.javaPrimitiveType, Object::class.java) { param ->
-                if(param.args[0] != CUSTOM_THEME_ID) return@hookAfterMethod
+                if (param.args[0] != CUSTOM_THEME_ID) return@hookAfterMethod
                 if (param.result?.javaClass == generatedColorArray.javaClass && param.result == generatedColorArray) {
                     val newColor = customColor
                     if (newColor != cacheColor) {

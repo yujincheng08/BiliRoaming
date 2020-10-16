@@ -13,7 +13,6 @@ import android.os.Build
 import android.os.Bundle
 import de.robv.android.xposed.XC_MethodHook.MethodHookParam
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
-import me.iacn.biliroaming.XposedInit
 import me.iacn.biliroaming.utils.*
 import java.lang.reflect.Modifier
 
@@ -227,7 +226,7 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     override fun startHook() {
-        if (!XposedInit.sPrefs.getBoolean("music_notification", false)) return
+        if (!sPrefs.getBoolean("music_notification", false)) return
 
         Log.d("startHook: MusicNotification")
 
@@ -324,8 +323,8 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
         val hooker = fun(param: MethodHookParam) {
             val old = param.result as Notification? ?: return
-            val res = XposedInit.currentContext.resources
-            val getId = { name: String -> res.getIdentifier(name, "id", XposedInit.currentContext.packageName) }
+            val res = currentContext.resources
+            val getId = { name: String -> res.getIdentifier(name, "id", packageName) }
             val iconId = getId("icon")
             val text1Id = getId("text1")
             val text2Id = getId("text2")
@@ -383,7 +382,7 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                             action4Id -> buttons[action4Id]?.icon = action.getObjectFieldAs<Int>("value")
                                             stopId -> buttons[stopId]?.icon = action.getObjectFieldAs<Int>("value")
                                             iconId -> {
-                                                val originIcon = BitmapFactory.decodeResource(XposedInit.currentContext.resources, action.getObjectFieldAs("value"))
+                                                val originIcon = BitmapFactory.decodeResource(currentContext.resources, action.getObjectFieldAs("value"))
                                                 val largeIcon = originIcon.copy(originIcon.config, true)
                                                 largeIcon.eraseColor(old.color)
                                                 val canvas = Canvas(largeIcon)
@@ -419,7 +418,7 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         }
                     }
 
-                    buttons[stopId]?.icon = res.getIdentifier("sobot_icon_close_normal", "drawable", XposedInit.currentContext.packageName)
+                    buttons[stopId]?.icon = res.getIdentifier("sobot_icon_close_normal", "drawable", packageName)
                     var buttonCount = 0
                     for (button in buttons) {
                         button.value.run {

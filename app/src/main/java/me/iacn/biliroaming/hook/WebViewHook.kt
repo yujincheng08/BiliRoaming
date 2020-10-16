@@ -4,7 +4,6 @@ import android.webkit.JavascriptInterface
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import de.robv.android.xposed.XC_MethodHook
-import me.iacn.biliroaming.XposedInit
 import me.iacn.biliroaming.utils.*
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -71,7 +70,7 @@ class WebViewHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     fun hook(url: String, text: String): String {
-        if (XposedInit.sPrefs.getBoolean("comment_floor", false)) {
+        if (sPrefs.getBoolean("comment_floor", false)) {
             if (url.contains("api.bilibili.com/x/v2/reply/main"))
                 return text.replace("\"showfloor\":0", "\"showfloor\":1")
         }

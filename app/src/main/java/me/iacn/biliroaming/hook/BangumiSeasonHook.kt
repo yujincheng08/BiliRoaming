@@ -7,10 +7,6 @@ import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.Constant.TYPE_EPISODE_ID
 import me.iacn.biliroaming.Constant.TYPE_SEASON_ID
 import me.iacn.biliroaming.Protos
-import me.iacn.biliroaming.XposedInit
-import me.iacn.biliroaming.XposedInit.Companion.is64
-import me.iacn.biliroaming.XposedInit.Companion.isBuiltIn
-import me.iacn.biliroaming.XposedInit.Companion.toastMessage
 import me.iacn.biliroaming.network.BiliRoamingApi
 import me.iacn.biliroaming.network.BiliRoamingApi.getContent
 import me.iacn.biliroaming.network.BiliRoamingApi.getSeason
@@ -32,7 +28,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     override fun startHook() {
-        if (!XposedInit.sPrefs.getBoolean("main_func", false)) return
+        if (!sPrefs.getBoolean("main_func", false)) return
         Log.d("startHook: BangumiSeason")
         instance.seasonParamsMapClass?.hookAfterAllConstructors { param ->
             @Suppress("UNCHECKED_CAST")
@@ -54,7 +50,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
         if (isBuiltIn && is64 && Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
             Log.e("Not support")
-            toastMessage("Android O以下系统不支持64位Xpatch版，请使用32位版")
+            Log.toast("Android O以下系统不支持64位Xpatch版，请使用32位版")
         } else {
             instance.retrofitResponseClass?.hookBeforeAllConstructors { param ->
                 val url = getUrl(param.args[0])
@@ -119,7 +115,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
             return
         }
-        toastMessage("发现版权番剧，尝试解锁……")
+        Log.toast("发现版权番剧，尝试解锁……")
         Log.d("Info: $lastSeasonInfo")
         val content = getSeason(lastSeasonInfo, result == null)
         val (code, newResult) = instance.bangumiUniformSeasonClass?.let { getNewResult(content, "result", it) }
@@ -128,15 +124,15 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         if (newResult != null && code != null && isBangumiWithWatchPermission(code, newResult)) {
             Log.d("Got new season information from proxy server: $content")
             lastSeasonInfo["title"] = newResult.getObjectFieldAs<String>("title").toString()
-            toastMessage("已从代理服务器获取番剧信息")
+            Log.toast("已从代理服务器获取番剧信息")
         } else {
             Log.d("Failed to get new season information from proxy server")
-            toastMessage("解锁失败，请重试")
+            Log.toast("解锁失败，请重试")
             lastSeasonInfo.clear()
             return
         }
         val newRights = newResult.getObjectField("rights") ?: return
-        if (XposedInit.sPrefs.getBoolean("allow_download", false))
+        if (sPrefs.getBoolean("allow_download", false))
             newRights.setBooleanField("allowDownload", true)
         if (result != null) {
             // Replace only episodes and rights
@@ -351,7 +347,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     private fun allowDownload(result: Any?) {
-        if (XposedInit.sPrefs.getBoolean("allow_download", false)) {
+        if (sPrefs.getBoolean("allow_download", false)) {
             try {
                 val rights = result?.getObjectField("rights")
                 rights?.setBooleanField("allowDownload", true)
@@ -370,7 +366,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 Log.e(e)
             }
             Log.d("Download allowed")
-            toastMessage("已允许下载")
+            Log.toast("已允许下载")
         }
     }
 

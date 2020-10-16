@@ -3,8 +3,6 @@ package me.iacn.biliroaming.hook
 import android.net.Uri
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.Protos.*
-import me.iacn.biliroaming.XposedInit
-import me.iacn.biliroaming.XposedInit.Companion.toastMessage
 import me.iacn.biliroaming.network.BiliRoamingApi.getPlayUrl
 import me.iacn.biliroaming.network.StreamUtils.getContent
 import me.iacn.biliroaming.utils.*
@@ -21,15 +19,15 @@ import java.net.HttpURLConnection
  */
 class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
-        if (!XposedInit.sPrefs.getBoolean("main_func", false)) return
+        if (!sPrefs.getBoolean("main_func", false)) return
         Log.d("startHook: BangumiPlayUrl")
         instance.signQueryName()?.let {
             instance.libBiliClass?.hookBeforeMethod(it, Map::class.java) { param ->
                 @Suppress("UNCHECKED_CAST")
                 val params = param.args[0] as MutableMap<String, String>
-                if (XposedInit.sPrefs.getBoolean("allow_download", false) &&
+                if (sPrefs.getBoolean("allow_download", false) &&
                         params.containsKey("ep_id") && params.containsKey("dl")) {
-                    if (XposedInit.sPrefs.getBoolean("fix_download", false) && params["qn"] != "0") {
+                    if (sPrefs.getBoolean("fix_download", false) && params["qn"] != "0") {
                         params["fix_dl"] = "1"
                         if (params["fnval"] == "0")
                             params["fnval"] = params["qn"]!!
@@ -44,7 +42,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             // Found from "b.ecy" in version 5.39.1
             val connection = param.thisObject as HttpURLConnection
             val urlString = connection.url.toString()
-            if (XposedInit.sPrefs.getBoolean("add_4k", false) && (urlString.startsWith("https://app.bilibili.com/x/v2/param")
+            if (sPrefs.getBoolean("add_4k", false) && (urlString.startsWith("https://app.bilibili.com/x/v2/param")
                             || urlString.startsWith("https://appintl.biliapi.net/intl/gateway/app/param"))) {
                 var content = getContent(param.result as InputStream, connection.contentEncoding)
                 if (content != null) {
@@ -85,11 +83,11 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
             content?.let {
                 Log.d("Has replaced play url with proxy server $it")
-                toastMessage("已从代理服务器获取播放地址")
+                Log.toast("已从代理服务器获取播放地址")
                 param.result = ByteArrayInputStream(it.toByteArray())
             } ?: run {
                 Log.e("Failed to get play url")
-                toastMessage("获播放地址失败")
+                Log.toast("获播放地址失败")
             }
         }
 
@@ -98,9 +96,9 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             hookBeforeMethod("playView",
                     "com.bapis.bilibili.pgc.gateway.player.v1.PlayViewReq") { param ->
                 val request = param.args[0]
-                if (XposedInit.sPrefs.getBoolean("allow_download", false)
+                if (sPrefs.getBoolean("allow_download", false)
                         && request.callMethodAs<Int>("getDownload") >= 1) {
-                    if (XposedInit.sPrefs.getBoolean("fix_download", false)
+                    if (sPrefs.getBoolean("fix_download", false)
                             && request.callMethodAs<Long>("getQn") != 0L
                             && request.callMethodAs<Int>("getFnval") != 0) {
                         isDownload = true
@@ -118,11 +116,11 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     val content = getPlayUrl(reconstructQuery(request), BangumiSeasonHook.lastSeasonInfo)
                     content?.let {
                         Log.d("Has replaced play url with proxy server $it")
-                        toastMessage("已从代理服务器获取播放地址")
+                        Log.toast("已从代理服务器获取播放地址")
                         param.result = reconstructResponse(response, it, isDownload)
                     } ?: run {
                         Log.e("Failed to get play url")
-                        toastMessage("获取播放地址失败")
+                        Log.toast("获取播放地址失败")
                     }
                 } else if (isDownload) {
                     param.result = fixDownloadProto(response)

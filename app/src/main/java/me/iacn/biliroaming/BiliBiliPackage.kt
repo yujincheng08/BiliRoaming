@@ -207,7 +207,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
         fun <K, V> MutableMap<K, V>.checkOrPut(key: K, checkOption: String? = null, defaultValue: () -> V): MutableMap<K, V> {
             if (checkOption != null) {
-                if (!XposedInit.sPrefs.getBoolean(checkOption, false)) return this
+                if (!sPrefs.getBoolean(checkOption, false)) return this
             }
             if (!containsKey(key)) {
                 put(key, defaultValue())
@@ -218,7 +218,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
         fun <K, V> MutableMap<K, V>.checkOrPut(vararg keys: K, checkOption: String? = null, checker: (map: MutableMap<K, V>, keys: Array<out K>) -> Boolean, defaultValue: () -> Array<V>): MutableMap<K, V> {
             if (checkOption != null) {
-                if (!XposedInit.sPrefs.getBoolean(checkOption, false)) return this
+                if (!sPrefs.getBoolean(checkOption, false)) return this
             }
             if (!checker(this, keys)) {
                 putAll(keys.zip(defaultValue()))
