@@ -1,5 +1,6 @@
 package me.iacn.biliroaming.hook
 
+import android.content.Context
 import android.net.Uri
 import android.os.Build
 import de.robv.android.xposed.XC_MethodHook
@@ -19,8 +20,6 @@ import java.net.URL
  * Created by iAcn on 2019/3/27
  * Email i@iacn.me
  */
-
-data class Result(val code: Int?, val result: Any?)
 
 class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     companion object {
@@ -91,6 +90,11 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             hookAfterMethod("getJumpUrl", hooker = urlHook)
             hookAfterMethod("getCommentJumpUrl", hooker = urlHook)
         }
+
+        if (sPrefs.getBoolean("allow_download", false))
+            instance.checkBlueClass?.replaceMethod(instance.checkBlue(), Context::class.java) {
+                return@replaceMethod false
+            }
     }
 
     private fun fixPlaySearchType(body: Any, url: String) {
@@ -334,16 +338,16 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         return code != -404
     }
 
-    private fun getNewResult(content: String?, fieldName: String, beanClass: Class<*>): Result {
+    private fun getNewResult(content: String?, fieldName: String, beanClass: Class<*>): Pair<Int?, Any?> {
         if (content == null) {
-            return Result(null, null)
+            return null to null
         }
         val contentJson = JSONObject(content)
-        val resultJson = contentJson.optJSONObject(fieldName) ?: return Result(null, null)
+        val resultJson = contentJson.optJSONObject(fieldName) ?: return null to null
         val code = contentJson.optInt("code")
         val newResult = instance.fastJsonClass?.callStaticMethod(
                 instance.fastJsonParse(), resultJson.toString(), beanClass)
-        return Result(code, newResult)
+        return code to newResult
     }
 
     private fun allowDownload(result: Any?) {

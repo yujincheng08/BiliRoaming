@@ -18,8 +18,6 @@ import java.lang.reflect.Modifier
 import java.lang.reflect.ParameterizedType
 import java.net.ProxySelector
 
-data class OkHttpResult(val fieldName: String?, val methodName: String?)
-
 /**
  * Created by iAcn on 2019/4/5
  * Email i@iacn.me
@@ -65,6 +63,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val drawerLayoutParamsClass by Weak { mHookInfo["class_drawer_layout_params"]?.findClass(mClassLoader) }
     val splashInfoClass by Weak { "tv.danmaku.bili.ui.splash.brand.BrandShowInfo".findClass(mClassLoader) }
     val commentRpcClass by Weak { "com.bilibili.app.comm.comment2.model.rpc.CommentRpcKt".findClassOrNull(mClassLoader) }
+    val checkBlueClass by Weak { mHookInfo["class_check_blue"]?.findClass(mClassLoader) }
 
     val classesList by lazy { DexFile(AndroidAppHelper.currentApplication().packageCodePath).entries().toList() }
     private val okHttpClientClass by Weak { mHookInfo["class_http_client"]?.findClass(mClassLoader) }
@@ -82,6 +81,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             Log.e(e)
         }
         instance = this
+    }
+
+    fun checkBlue(): String?{
+        return mHookInfo["method_check_blue"]
     }
 
     fun fastJsonParse(): String? {
@@ -319,11 +322,28 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             findDrawerLayoutParams()
         }.checkOrPut("method_open_drawer") {
             findOpenDrawerMethod()
+        }.checkConjunctiveOrPut("class_check_blue", "method_check_blue") {
+            findCheckBlue()
         }
 
         Log.d(mHookInfo)
         Log.d("Check hook info completed: needUpdate = $needUpdate")
         return needUpdate
+    }
+
+    private fun findCheckBlue(): Array<String?> {
+        if (platform != "android_b") return arrayOfNulls(2)
+        classesList.filter {
+            it.startsWith("tv.danmaku.android.util")
+        }.forEach { c ->
+            c.findClassOrNull(mClassLoader)?.declaredMethods?.forEach {
+                if (!Modifier.isStatic(it.modifiers) && it.parameterTypes.size == 1 &&
+                        it.parameterTypes[0] == Context::class.java &&
+                        it.returnType == Boolean::class.javaPrimitiveType)
+                    return arrayOf(c, it.name)
+            }
+        }
+        return arrayOfNulls(2)
     }
 
     private fun findOpenDrawerMethod(): String? {
@@ -477,19 +497,17 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         }?.firstOrNull()?.name
     }
 
-    private fun findUrlField(): OkHttpResult {
-        val responseClass = retrofitResponseClass
-                ?: return OkHttpResult(null, null)
-        for (constructor in responseClass.declaredConstructors) {
+    private fun findUrlField(): Pair<String?, String?> {
+        for (constructor in retrofitResponseClass?.declaredConstructors.orEmpty()) {
             for (field in constructor.parameterTypes[0].declaredFields) {
                 for (method in field.type.declaredMethods) {
                     if (method.returnType.name == "okhttp3.HttpUrl") {
-                        return OkHttpResult(field.name, method.name)
+                        return field.name to method.name
                     }
                 }
             }
         }
-        return OkHttpResult(null, null)
+        return null to null
     }
 
     private fun findFastJsonClass(): Class<*>? {
