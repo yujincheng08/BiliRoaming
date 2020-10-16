@@ -168,7 +168,7 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 sPrefs.getBoolean("hidden", false)) {
             "com.bapis.bilibili.app.dynamic.v1.DynTabReply".hookAfterMethod(mClassLoader, "getDynTabList") { param ->
                 param.result = (param.result as List<*>).filter {
-                    it?.callMethodAs<Long>("getCityId") != 0L
+                    it?.callMethodAs<Long>("getCityId") == 0L
                 }
             }
         }
