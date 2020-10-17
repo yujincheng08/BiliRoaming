@@ -37,11 +37,12 @@ class CoverHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 var title: String? = null
                 when (param.thisObject.javaClass) {
                     bgmClass -> activity.run {
-                        javaClass.declaredFields.firstOrNull { it.type.name == "com.bilibili.bangumi.data.page.detail.entity.BangumiUniformSeason" }?.let {
-                            url = getObjectField(it.name)?.getObjectFieldAs("cover")
-                            filename = "s${getObjectField(it.name)?.getObjectField("seasonId").toString()}"
-                            title = getObjectField(it.name)?.getObjectFieldAs("seasonTitle")
-                        }
+                        val viewModelField = activity.javaClass.declaredFields.firstOrNull { it.type.name == "com.bilibili.bangumi.logic.page.detail.BangumiDetailViewModelV2" }
+                        val episodeMethod = viewModelField?.type?.declaredMethods?.lastOrNull { it.returnType.name == "com.bilibili.bangumi.data.page.detail.entity.BangumiUniformEpisode" }
+                        val episode = getObjectField(viewModelField?.name)?.callMethod(episodeMethod?.name)
+                        url = episode?.getObjectFieldAs("cover")
+                        filename = "ep${episode?.getLongField("epid").toString()}"
+                        title = episode?.getObjectFieldAs("longTitle") ?: ""
                     }
                     ugcClass -> activity.run {
                         javaClass.declaredFields.firstOrNull { it.type.name == "tv.danmaku.bili.ui.video.api.BiliVideoDetail" }?.let {
@@ -72,12 +73,12 @@ class CoverHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             put(MediaStore.MediaColumns.DISPLAY_NAME, filename)
                             put(MediaStore.MediaColumns.MIME_TYPE, "image/png")
                             put(MediaStore.MediaColumns.TITLE, title)
-                            put(MediaStore.Video.Media.DATE_ADDED, System.currentTimeMillis() / 1000);
-                            put(MediaStore.Video.Media.DATE_MODIFIED, System.currentTimeMillis() / 1000);
+                            put(MediaStore.Video.Media.DATE_ADDED, System.currentTimeMillis() / 1000)
+                            put(MediaStore.Video.Media.DATE_MODIFIED, System.currentTimeMillis() / 1000)
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                                put(MediaStore.Video.Media.DATE_TAKEN, System.currentTimeMillis());
+                                put(MediaStore.Video.Media.DATE_TAKEN, System.currentTimeMillis())
                                 put(MediaStore.MediaColumns.RELATIVE_PATH, relativePath)
-                                put(MediaStore.Video.Media.IS_PENDING, 1);
+                                put(MediaStore.Video.Media.IS_PENDING, 1)
                             } else {
                                 val path = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "bilibili")
                                 path.mkdirs()
@@ -98,7 +99,7 @@ class CoverHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                                 contentValues.apply {
                                     clear()
-                                    put(MediaStore.Video.Media.IS_PENDING, 0);
+                                    put(MediaStore.Video.Media.IS_PENDING, 0)
                                 }
                                 resolver.update(uri, contentValues, null, null);
                             }
