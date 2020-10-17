@@ -18,7 +18,7 @@ class CoverHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
         if (!sPrefs.getBoolean("get_cover", false)) return
         Log.d("startHook: GetCover")
-        arrayOf(bgmClass, ugcClass).forEach {
+        arrayOf(bgmClass, ugcClass, liveClass).forEach {
             it?.hookAfterMethod("onViewCreated", View::class.java, Bundle::class.java, hooker = hooker)
         }
     }
@@ -43,6 +43,15 @@ class CoverHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         javaClass.declaredFields.firstOrNull { it.type.name == "tv.danmaku.bili.ui.video.api.BiliVideoDetail" }?.let {
                             url = getObjectField(it.name)?.getObjectFieldAs("mCover")
                             filename = "av${getObjectField(it.name)?.getObjectField("mAvid").toString()}"
+                        }
+                    }
+                    else -> if (liveClass?.isInstance(param.thisObject) == true) {
+                        val viewModelField = activity.javaClass.declaredFields.firstOrNull { it.type.name == "com.bilibili.bililive.videoliveplayer.ui.roomv3.player.LiveRoomPlayerViewModel" }
+                        val roomDataField = "com.bilibili.bililive.videoliveplayer.ui.roomv3.base.viewmodel.LiveRoomBaseViewModel".findClassOrNull(mClassLoader)?.declaredFields?.firstOrNull { it.type.name == "com.bilibili.bililive.videoliveplayer.ui.roomv3.base.viewmodel.LiveRoomData" }
+                        val essentialInfoField = roomDataField?.type?.declaredFields?.firstOrNull { it.type.name == "com.bilibili.bililive.videoliveplayer.net.beans.gateway.roominfo.BiliLiveRoomEssentialInfo" }
+                        activity.getObjectField(viewModelField?.name)?.getObjectField(roomDataField?.name)?.getObjectField(essentialInfoField?.name)?.run {
+                            url = getObjectFieldAs("cover")
+                            filename = "live${getObjectField("roomId").toString()}"
                         }
                     }
                 }
@@ -73,9 +82,15 @@ class CoverHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
             }
         }
+        val liveId = activity.resources.getIdentifier("controller_underlay", "id", activity.packageName)
+        activity.findViewById<View>(liveId)?.setOnTouchListener { _, event ->
+            gestureDetector.onTouchEvent(event)
+            false
+        }
     }
 
     val bgmClass by Weak { "com.bilibili.bangumi.ui.page.detail.playerV2.BangumiPlayerFragmentV2".findClass(mClassLoader) }
     val ugcClass by Weak { "tv.danmaku.bili.ui.video.playerv2.UgcPlayerFragment".findClass(mClassLoader) }
+    val liveClass by Weak { "com.bilibili.bililive.blps.core.business.player.container.AbsLivePlayerFragment".findClass(mClassLoader) }
 
 }
