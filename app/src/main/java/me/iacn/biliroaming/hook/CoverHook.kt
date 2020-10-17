@@ -2,9 +2,12 @@ package me.iacn.biliroaming.hook
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.ContentValues
 import android.graphics.Bitmap
+import android.os.Build
 import android.os.Bundle
 import android.os.Environment
+import android.provider.MediaStore
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
@@ -12,7 +15,6 @@ import android.view.ViewGroup
 import de.robv.android.xposed.XC_MethodHook
 import me.iacn.biliroaming.utils.*
 import java.io.File
-import java.io.FileOutputStream
 
 class CoverHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
@@ -59,12 +61,30 @@ class CoverHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 Log.toast("开始获取封面", true)
                 getBitmapFromURL(url) { bitmap ->
                     bitmap?.let {
-                        val path = activity.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
-                        val file = File(path, "$filename.png")
-                        val out = FileOutputStream(file)
-                        it.compress(Bitmap.CompressFormat.PNG, 100, out)
-                        out.close()
-                        Log.toast("封面已保存到${file.absolutePath}", true)
+                        val relativePath = "${Environment.DIRECTORY_PICTURES}${File.separator}bilibili"
+                        @Suppress("DEPRECATION")
+                        val contentValues = ContentValues().apply {
+                            put(MediaStore.MediaColumns.DISPLAY_NAME, filename)
+                            put(MediaStore.MediaColumns.MIME_TYPE, "image/png")
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                                put(MediaStore.MediaColumns.RELATIVE_PATH, relativePath)
+                            } else {
+                                val path = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "bilibili")
+                                path.mkdirs()
+                                put(MediaStore.MediaColumns.DATA, File(path, "$filename.png").absolutePath)
+                            }
+                        }
+                        try {
+                            val resolver = activity.contentResolver
+                            val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+                            val stream = resolver.openOutputStream(uri!!)
+                            it.compress(Bitmap.CompressFormat.PNG, 100, stream)
+                            Log.toast("保存封面成功到\n$relativePath${File.separator}$filename.png", true)
+                            stream?.close()
+                        } catch (e: Throwable) {
+                            Log.e(e)
+                            Log.toast("获取封面失败", true)
+                        }
                     } ?: run {
                         Log.toast("获取封面失败", true)
                         return@getBitmapFromURL
