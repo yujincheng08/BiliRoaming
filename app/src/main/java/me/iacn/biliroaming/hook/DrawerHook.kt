@@ -49,8 +49,8 @@ class DrawerHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
         instance.mainActivityClass?.replaceMethod("onBackPressed") { param ->
             try {
-                if (drawerLayout?.callMethodAs<Boolean>("isDrawerOpen", navView) == true) {
-                    drawerLayout?.callMethod("closeDrawer", navView)
+                if (drawerLayout?.callMethodAs<Boolean>(instance.isDrawerOpen(), navView) == true) {
+                    drawerLayout?.callMethod(instance.closeDrawer(), navView, true)
                 } else {
                     param.invokeOriginalMethod()
                 }

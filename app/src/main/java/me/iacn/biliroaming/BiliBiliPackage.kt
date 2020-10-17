@@ -83,7 +83,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         instance = this
     }
 
-    fun checkBlue(): String?{
+    fun checkBlue(): String? {
         return mHookInfo["method_check_blue"]
     }
 
@@ -181,6 +181,14 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     fun openDrawer(): String? {
         return mHookInfo["method_open_drawer"]
+    }
+
+    fun closeDrawer(): String? {
+        return mHookInfo["method_close_drawer"]
+    }
+
+    fun isDrawerOpen(): String? {
+        return mHookInfo["method_is_drawer_open"]
     }
 
     private fun readHookInfo(context: Context): MutableMap<String, String?> {
@@ -320,8 +328,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             findAbsMusicServiceField()
         }.checkOrPut("class_drawer_layout_params") {
             findDrawerLayoutParams()
-        }.checkOrPut("method_open_drawer") {
-            findOpenDrawerMethod()
+        }.checkConjunctiveOrPut("method_open_drawer", "method_close_drawer") {
+            findDrawerMethod()
+        }.checkOrPut("method_is_drawer_open") {
+            findIsDrawerOpenMethod()
         }.checkConjunctiveOrPut("class_check_blue", "method_check_blue") {
             findCheckBlue()
         }
@@ -329,6 +339,18 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         Log.d(mHookInfo)
         Log.d("Check hook info completed: needUpdate = $needUpdate")
         return needUpdate
+    }
+
+    private fun findIsDrawerOpenMethod(): String? {
+        return try {
+            drawerLayoutClass?.getMethod("isDrawerOpen", View::class.java)?.name
+        } catch (e: Throwable) {
+            drawerLayoutClass?.declaredMethods?.firstOrNull {
+                Modifier.isPublic(it.modifiers) &&
+                        it.parameterTypes.size == 1 && it.parameterTypes[0] == View::class.java &&
+                        it.returnType == Boolean::class.javaPrimitiveType
+            }?.name
+        }
     }
 
     private fun findCheckBlue(): Array<String?> {
@@ -346,15 +368,16 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         return arrayOfNulls(2)
     }
 
-    private fun findOpenDrawerMethod(): String? {
+    private fun findDrawerMethod(): Array<String?> {
         return try {
-            drawerLayoutClass?.getMethod("openDrawer", View::class.java, Boolean::class.javaPrimitiveType)?.name
+            arrayOf(drawerLayoutClass?.getMethod("openDrawer", View::class.java, Boolean::class.javaPrimitiveType)?.name,
+                    drawerLayoutClass?.getMethod("closeDrawer", View::class.java, Boolean::class.javaPrimitiveType)?.name)
         } catch (e: Throwable) {
-            drawerLayoutClass?.declaredMethods?.firstOrNull {
+            drawerLayoutClass?.declaredMethods?.filter {
                 Modifier.isPublic(it.modifiers) &&
                         it.parameterTypes.size == 2 && it.parameterTypes[0] == View::class.java &&
                         it.parameterTypes[1] == Boolean::class.javaPrimitiveType
-            }?.name
+            }?.map { it.name }?.toTypedArray() ?: arrayOfNulls(2)
         }
     }
 
