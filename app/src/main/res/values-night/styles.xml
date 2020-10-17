@@ -9,6 +9,5 @@
         <item name="android:windowTranslucentStatus">true</item>
         <item name="android:windowTranslucentNavigation">true</item>
         <item name="android:fitsSystemWindows">true</item>
-        <item name="android:background">@android:color/black</item>
     </style>
 </resources>
