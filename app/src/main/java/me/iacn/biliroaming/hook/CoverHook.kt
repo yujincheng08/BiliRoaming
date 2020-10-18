@@ -52,7 +52,7 @@ class CoverHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         }
                     }
                     else -> if (liveClass?.isInstance(param.thisObject) == true) {
-                        val viewModelField = activity.javaClass.declaredFields.firstOrNull { it.type.name == "com.bilibili.bililive.videoliveplayer.ui.roomv3.player.LiveRoomPlayerViewModel" }
+                        val viewModelField = activity.javaClass.declaredFields.firstOrNull { it.type.name == "com.bilibili.bililive.videoliveplayer.ui.roomv3.base.viewmodel.LiveRoomRootViewModel" }
                         val roomDataField = "com.bilibili.bililive.videoliveplayer.ui.roomv3.base.viewmodel.LiveRoomBaseViewModel".findClassOrNull(mClassLoader)?.declaredFields?.firstOrNull { it.type.name == "com.bilibili.bililive.videoliveplayer.ui.roomv3.base.viewmodel.LiveRoomData" }
                         val essentialInfoField = roomDataField?.type?.declaredFields?.firstOrNull { it.type.name == "com.bilibili.bililive.videoliveplayer.net.beans.gateway.roominfo.BiliLiveRoomEssentialInfo" }
                         activity.getObjectField(viewModelField?.name)?.getObjectField(roomDataField?.name)?.getObjectField(essentialInfoField?.name)?.run {
