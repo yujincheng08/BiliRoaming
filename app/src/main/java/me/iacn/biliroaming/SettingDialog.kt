@@ -28,7 +28,6 @@ import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.XposedInit.Companion.moduleRes
 import me.iacn.biliroaming.hook.SplashHook
 import me.iacn.biliroaming.utils.*
-import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -38,7 +37,7 @@ import kotlin.system.exitProcess
 
 class SettingDialog(context: Context) : AlertDialog.Builder(context) {
 
-    class PrefsFragment : PreferenceFragment(), Preference.OnPreferenceChangeListener, Preference.OnPreferenceClickListener, OnTaskReturn<JSONObject> {
+    class PrefsFragment : PreferenceFragment(), Preference.OnPreferenceChangeListener, Preference.OnPreferenceClickListener {
         private lateinit var prefs: SharedPreferences
         private var counter: Int = 0
 
@@ -60,7 +59,27 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("thanks").onPreferenceClickListener = this
             findPreference("custom_backup").onPreferenceClickListener = this
             checkCompatibleVersion()
-            CheckVersionTask(this).execute(URL(moduleRes.getString(R.string.version_url)))
+            checkUpdate()
+        }
+
+        private fun checkUpdate() {
+            val url = URL(moduleRes.getString(R.string.version_url))
+            launchMain {
+                val result = fetchJson(url) ?: return@launchMain
+                val newestVer = result.optString("name")
+                if (newestVer.isNotEmpty() && BuildConfig.VERSION_NAME != newestVer) {
+                    findPreference("version").summary = "${BuildConfig.VERSION_NAME}（最新版$newestVer）"
+                    (findPreference("about") as PreferenceCategory).addPreference(Preference(activity).apply {
+                        key = "update"
+                        title = moduleRes.getString(R.string.update_title)
+                        summary = result.optString("body").substringAfterLast("更新日志\r\n").run {
+                            if (isNotEmpty()) this else moduleRes.getString(R.string.update_summary)
+                        }
+                        onPreferenceClickListener = this@PrefsFragment
+                        order = 1
+                    })
+                }
+            }
         }
 
         private fun checkCompatibleVersion() {
@@ -189,26 +208,6 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             }
 
             return true
-        }
-
-        override fun onReturn(result: JSONObject?) {
-            try {
-                result?.getString("name")?.let {
-                    if (BuildConfig.VERSION_NAME != it) {
-                        findPreference("version").summary = "${BuildConfig.VERSION_NAME}（最新版${it}）"
-                        val aboutGroup = findPreference("about") as PreferenceCategory
-                        val updatePreference = Preference(activity)
-                        updatePreference.key = "update"
-                        updatePreference.title = moduleRes.getString(R.string.update_title)
-                        val log = result.optString("body").substringAfterLast("更新日志")
-                        updatePreference.summary = if (log.isNotEmpty()) log else moduleRes.getString(R.string.update_summary)
-                        updatePreference.onPreferenceClickListener = this
-                        updatePreference.order = 1
-                        aboutGroup.addPreference(updatePreference)
-                    }
-                }
-            } catch (e: Throwable) {
-            }
         }
 
         private fun onUpdateClick(): Boolean {

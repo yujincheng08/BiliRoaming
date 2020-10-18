@@ -20,9 +20,8 @@ import android.util.Log
 import android.view.View
 import android.widget.Toast
 import me.iacn.biliroaming.hook.SettingHook
-import me.iacn.biliroaming.utils.CheckVersionTask
-import me.iacn.biliroaming.utils.OnTaskReturn
-import org.json.JSONObject
+import me.iacn.biliroaming.utils.fetchJson
+import me.iacn.biliroaming.utils.launchMain
 import java.io.InputStream
 import java.net.URL
 
@@ -38,7 +37,7 @@ class MainActivity : Activity() {
         fragmentManager.beginTransaction().replace(android.R.id.content, PrefsFragment()).commit()
     }
 
-    class PrefsFragment : PreferenceFragment(), OnPreferenceChangeListener, OnPreferenceClickListener, OnTaskReturn<JSONObject> {
+    class PrefsFragment : PreferenceFragment(), OnPreferenceChangeListener, OnPreferenceClickListener {
         private lateinit var runningStatusPref: Preference
         private lateinit var prefs: SharedPreferences
 
@@ -51,9 +50,8 @@ class MainActivity : Activity() {
             findPreference("version").summary = BuildConfig.VERSION_NAME
             findPreference("feature").onPreferenceClickListener = this
             findPreference("setting").onPreferenceClickListener = this
-            CheckVersionTask(this).execute(URL(resources.getString(R.string.version_url)))
+            checkUpdate()
         }
-
 
         override fun onPreferenceChange(preference: Preference, newValue: Any): Boolean {
             when (preference.key) {
@@ -92,28 +90,23 @@ class MainActivity : Activity() {
             }
         }
 
-        override fun onReturn(result: JSONObject?) {
-            try {
-                result?.getString("name")?.let {
-                    if (BuildConfig.VERSION_NAME != it) {
-                        findPreference("version").summary = "${BuildConfig.VERSION_NAME}（最新版${it}）"
-                        val aboutGroup = findPreference("about") as PreferenceCategory
-                        val updatePreference = Preference(activity)
-                        updatePreference.key = "update"
-                        updatePreference.title = resources.getString(R.string.update_title)
-                        var log = ""
-                        try {
-                            val body = result.getString("body")
-                            log = body.substring(body.lastIndexOf("更新日志"))
-                        } catch (e: Throwable) {
+        private fun checkUpdate() {
+            val url = URL(resources.getString(R.string.version_url))
+            launchMain {
+                val result = fetchJson(url) ?: return@launchMain
+                val newestVer = result.optString("name")
+                if (newestVer.isNotEmpty() && BuildConfig.VERSION_NAME != newestVer) {
+                    findPreference("version").summary = "${BuildConfig.VERSION_NAME}（最新版$newestVer）"
+                    (findPreference("about") as PreferenceCategory).addPreference(Preference(activity).apply {
+                        key = "update"
+                        title = resources.getString(R.string.update_title)
+                        summary = result.optString("body").substringAfterLast("更新日志\r\n").run {
+                            if (isNotEmpty()) this else resources.getString(R.string.update_summary)
                         }
-                        updatePreference.summary = if (log.isNotEmpty()) log else resources.getString(R.string.update_summary)
-                        updatePreference.onPreferenceClickListener = this
-                        updatePreference.order = 1
-                        aboutGroup.addPreference(updatePreference)
-                    }
+                        onPreferenceClickListener = this@PrefsFragment
+                        order = 1
+                    })
                 }
-            } catch (e: Throwable) {
             }
         }
 
