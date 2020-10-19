@@ -19,11 +19,12 @@ import android.preference.PreferenceFragment
 import android.util.Log
 import android.view.View
 import android.widget.Toast
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import me.iacn.biliroaming.hook.SettingHook
 import me.iacn.biliroaming.utils.fetchJson
-import me.iacn.biliroaming.utils.launchMain
 import java.io.InputStream
-import java.net.URL
 
 
 /**
@@ -32,6 +33,7 @@ import java.net.URL
  */
 
 class MainActivity : Activity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         fragmentManager.beginTransaction().replace(android.R.id.content, PrefsFragment()).commit()
@@ -40,6 +42,7 @@ class MainActivity : Activity() {
     class PrefsFragment : PreferenceFragment(), OnPreferenceChangeListener, OnPreferenceClickListener {
         private lateinit var runningStatusPref: Preference
         private lateinit var prefs: SharedPreferences
+        private val scope = MainScope()
 
         override fun onCreate(savedInstanceState: Bundle?) {
             super.onCreate(savedInstanceState)
@@ -51,6 +54,11 @@ class MainActivity : Activity() {
             findPreference("feature").onPreferenceClickListener = this
             findPreference("setting").onPreferenceClickListener = this
             checkUpdate()
+        }
+
+        override fun onDestroy() {
+            super.onDestroy()
+            scope.cancel()
         }
 
         override fun onPreferenceChange(preference: Preference, newValue: Any): Boolean {
@@ -90,23 +98,20 @@ class MainActivity : Activity() {
             }
         }
 
-        private fun checkUpdate() {
-            val url = URL(resources.getString(R.string.version_url))
-            launchMain {
-                val result = fetchJson(url) ?: return@launchMain
-                val newestVer = result.optString("name")
-                if (newestVer.isNotEmpty() && BuildConfig.VERSION_NAME != newestVer) {
-                    findPreference("version").summary = "${BuildConfig.VERSION_NAME}（最新版$newestVer）"
-                    (findPreference("about") as PreferenceCategory).addPreference(Preference(activity).apply {
-                        key = "update"
-                        title = resources.getString(R.string.update_title)
-                        summary = result.optString("body").substringAfterLast("更新日志\r\n").run {
-                            if (isNotEmpty()) this else resources.getString(R.string.update_summary)
-                        }
-                        onPreferenceClickListener = this@PrefsFragment
-                        order = 1
-                    })
-                }
+        private fun checkUpdate() = scope.launch {
+            val result = fetchJson(resources.getString(R.string.version_url)) ?: return@launch
+            val newestVer = result.optString("name")
+            if (newestVer.isNotEmpty() && BuildConfig.VERSION_NAME != newestVer) {
+                findPreference("version").summary = "${BuildConfig.VERSION_NAME}（最新版$newestVer）"
+                (findPreference("about") as PreferenceCategory).addPreference(Preference(activity).apply {
+                    key = "update"
+                    title = resources.getString(R.string.update_title)
+                    summary = result.optString("body").substringAfterLast("更新日志\r\n").run {
+                        if (isNotEmpty()) this else resources.getString(R.string.update_summary)
+                    }
+                    onPreferenceClickListener = this@PrefsFragment
+                    order = 1
+                })
             }
         }
 
@@ -151,22 +156,18 @@ class MainActivity : Activity() {
             return true
         }
 
-        override fun onPreferenceClick(preference: Preference?): Boolean {
-            return when (preference?.key) {
-                "update" -> onUpdateCheck()
-                "feature" -> onFeatureClick()
-                "setting" -> onSettingClick()
-                else -> false
-            }
+        override fun onPreferenceClick(preference: Preference?) = when (preference?.key) {
+            "update" -> onUpdateCheck()
+            "feature" -> onFeatureClick()
+            "setting" -> onSettingClick()
+            else -> false
         }
 
-        private fun isPackageInstalled(packageName: String): Boolean {
-            return try {
-                activity.packageManager.getPackageInfo(packageName, 0)
-                true
-            } catch (e: PackageManager.NameNotFoundException) {
-                false
-            }
+        private fun isPackageInstalled(packageName: String) = try {
+            activity.packageManager.getPackageInfo(packageName, 0)
+            true
+        } catch (e: PackageManager.NameNotFoundException) {
+            false
         }
 
         private fun startSetting(packageName: String) {

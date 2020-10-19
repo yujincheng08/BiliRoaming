@@ -24,6 +24,10 @@ import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.XposedInit.Companion.moduleRes
 import me.iacn.biliroaming.hook.SplashHook
@@ -38,6 +42,7 @@ import kotlin.system.exitProcess
 class SettingDialog(context: Context) : AlertDialog.Builder(context) {
 
     class PrefsFragment : PreferenceFragment(), Preference.OnPreferenceChangeListener, Preference.OnPreferenceClickListener {
+        private val scope = MainScope()
         private lateinit var prefs: SharedPreferences
         private var counter: Int = 0
 
@@ -52,6 +57,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             }
             findPreference("version").summary = BuildConfig.VERSION_NAME
             findPreference("version").onPreferenceClickListener = this
+            findPreference("test_cdn").onPreferenceClickListener = this
             findPreference("custom_splash").onPreferenceChangeListener = this
             findPreference("custom_splash_logo").onPreferenceChangeListener = this
             findPreference("custom_cdn").onPreferenceChangeListener = this
@@ -62,10 +68,15 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             checkUpdate()
         }
 
+        override fun onDestroy() {
+            super.onDestroy()
+            scope.cancel()
+        }
+
         private fun checkUpdate() {
             val url = URL(moduleRes.getString(R.string.version_url))
-            launchMain {
-                val result = fetchJson(url) ?: return@launchMain
+            scope.launch {
+                val result = fetchJson(url) ?: return@launch
                 val newestVer = result.optString("name")
                 if (newestVer.isNotEmpty() && BuildConfig.VERSION_NAME != newestVer) {
                     findPreference("version").summary = "${BuildConfig.VERSION_NAME}（最新版$newestVer）"
@@ -274,12 +285,20 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             return true
         }
 
+        @FlowPreview
+        private fun onTestCdnClick(): Boolean {
+            SpeedTestDialog(activity).show()
+            return true
+        }
+
+        @FlowPreview
         override fun onPreferenceClick(preference: Preference): Boolean {
             return when (preference.key) {
                 "version" -> onVersionClick()
                 "update" -> onUpdateClick()
                 "thanks" -> onThanksClick()
                 "custom_backup" -> onCustomBackupClick()
+                "test_cdn" -> onTestCdnClick()
                 else -> false
             }
         }

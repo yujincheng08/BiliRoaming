@@ -71,9 +71,6 @@
             android:key="test_cdn"
             android:summary="@string/test_cdn_summary"
             android:title="@string/test_cdn_title">
-            <intent
-                android:action="android.intent.action.VIEW"
-                android:data="@string/cdn_url" />
         </Preference>
 
         <ListPreference
