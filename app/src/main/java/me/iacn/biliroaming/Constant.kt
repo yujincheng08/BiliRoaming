@@ -5,10 +5,13 @@ package me.iacn.biliroaming
  * Email i@iacn.me
  */
 object Constant {
-    val BILIBILI_PACKAGENAME = hashMapOf(
-            "原版" to "tv.danmaku.bili",
-            "概念版" to "com.bilibili.app.blue",
-            "play版" to "com.bilibili.app.in"
+    const val PINK_PACKAGE_NAME = "tv.danmaku.bili"
+    const val BLUE_PACKAGE_NAME = "com.bilibili.app.blue"
+    const val PLAY_PACKAGE_NAME = "com.bilibili.app.in"
+    val BILIBILI_PACKAGE_NAME = hashMapOf(
+            "原版" to PINK_PACKAGE_NAME,
+            "概念版" to BLUE_PACKAGE_NAME,
+            "play版" to PLAY_PACKAGE_NAME
     )
     const val TAG = "BiliRoaming"
     const val HOOK_INFO_FILE_NAME = "hookinfo.dat"

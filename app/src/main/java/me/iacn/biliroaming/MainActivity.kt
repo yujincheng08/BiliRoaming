@@ -132,7 +132,7 @@ class MainActivity : Activity() {
         }
 
         private fun onSettingClick(): Boolean {
-            val packages = Constant.BILIBILI_PACKAGENAME.filter {
+            val packages = Constant.BILIBILI_PACKAGE_NAME.filter {
                 isPackageInstalled(it.value)
             }
             when {
@@ -146,7 +146,7 @@ class MainActivity : Activity() {
                     AlertDialog.Builder(activity).run {
                         val keys = packages.keys.toTypedArray()
                         setItems(keys) { _, i ->
-                            startSetting(Constant.BILIBILI_PACKAGENAME[keys[i]]!!)
+                            startSetting(Constant.BILIBILI_PACKAGE_NAME[keys[i]]!!)
                         }
                         setTitle("请选择版本")
                         show()

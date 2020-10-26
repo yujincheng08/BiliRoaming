@@ -96,6 +96,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             var supportLiveHook = false
             var supportAdd4K = false
             var supportMusicNotificationHook = true
+            var supportDark = true
             val supportFullSplash = try {
                 instance.splashInfoClass?.getMethod("getMode") != null
             } catch (e: Throwable) {
@@ -103,14 +104,16 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             }
             val supportMain = !isBuiltIn || !is64 || Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
             when (packageName) {
-                "com.bilibili.app.in" -> {
-                    when (versionCode) {
-                        in 2050410..2080109 -> supportLiveHook = true
-                    }
+                Constant.PLAY_PACKAGE_NAME -> {
+                    if (versionCode in 2050410..2080109) supportLiveHook = true
                     supportAdd4K = true
                 }
-                "com.bilibili.app.blue" -> if (versionCode < 6080000)
-                    supportAdd4K = true
+                Constant.BLUE_PACKAGE_NAME -> {
+                    if (versionCode < 6080000) supportAdd4K = true
+                }
+                Constant.PINK_PACKAGE_NAME -> {
+                    if (versionCode >= 6120000) supportDark = false
+                }
             }
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
                 supportMusicNotificationHook = false
@@ -137,7 +140,9 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             if (!supportMain) {
                 disablePreference("main_func", "Android O以下系统不支持64位Xpatch版，请使用32位版")
             }
-
+            if (!supportDark) {
+                disablePreference("follow_dark")
+            }
         }
 
         private fun disablePreference(name: String, message: String = moduleRes.getString(R.string.not_support)) {

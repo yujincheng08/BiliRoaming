@@ -34,12 +34,12 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
             MainActivity.Companion::class.java.name.replaceMethod(lpparam.classLoader,
                     "isModuleActive") { true }
         }
-        if (!Constant.BILIBILI_PACKAGENAME.containsValue(lpparam.packageName)) return
+        if (!Constant.BILIBILI_PACKAGE_NAME.containsValue(lpparam.packageName)) return
         Instrumentation::class.java.hookBeforeMethod("callApplicationOnCreate", Application::class.java) { param ->
             // Hook main process and download process
             @Suppress("DEPRECATION")
-            when (lpparam.processName) {
-                "tv.danmaku.bili", "com.bilibili.app.blue", "com.bilibili.app.in" -> {
+            when {
+                !lpparam.processName.contains(":") -> {
                     if (sPrefs.getBoolean("save_log", false) ||
                             sPrefs.getBoolean("show_hint", true)) {
                         startLog()
@@ -73,12 +73,12 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                     startHook(DrawerHook(lpparam.classLoader))
                     startHook(CoverHook(lpparam.classLoader))
                 }
-                "tv.danmaku.bili:web", "com.bilibili.app.in:web", "com.bilibili.app.blue:web" -> {
+                lpparam.processName.endsWith(":web") -> {
                     BiliBiliPackage(lpparam.classLoader, param.args[0] as Context)
                     CustomThemeHook(lpparam.classLoader).insertColorForWebProcess()
                     startHook(WebViewHook(lpparam.classLoader))
                 }
-                "tv.danmaku.bili:download", "com.bilibili.app.in:download", "com.bilibili.app.blue:download" -> {
+                lpparam.processName.endsWith(":download") -> {
                     BiliBiliPackage(lpparam.classLoader, param.args[0] as Context)
                     startHook(CDNHook(lpparam.classLoader, lpparam.processName))
                 }

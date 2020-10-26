@@ -10,7 +10,9 @@ import de.robv.android.xposed.callbacks.XC_InitPackageResources
 import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam
 import me.iacn.biliroaming.BuildConfig
 import me.iacn.biliroaming.Constant
-import me.iacn.biliroaming.utils.*
+import me.iacn.biliroaming.utils.callMethod
+import me.iacn.biliroaming.utils.new
+import me.iacn.biliroaming.utils.systemContext
 import java.io.File
 
 
@@ -49,7 +51,7 @@ class HotXposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit, IXposedHook
     }
 
     override fun handleLoadPackage(lpparam: LoadPackageParam) {
-        if (!Constant.BILIBILI_PACKAGENAME.containsValue(lpparam.packageName) && lpparam.packageName != BuildConfig.APPLICATION_ID) return
+        if (!Constant.BILIBILI_PACKAGE_NAME.containsValue(lpparam.packageName) && lpparam.packageName != BuildConfig.APPLICATION_ID) return
 
         hookSSL(lpparam.classLoader)
 
@@ -69,7 +71,7 @@ class HotXposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit, IXposedHook
     }
 
     override fun handleInitPackageResources(resparam: XC_InitPackageResources.InitPackageResourcesParam) {
-        if (!Constant.BILIBILI_PACKAGENAME.containsValue(resparam.packageName)) return
+        if (!Constant.BILIBILI_PACKAGE_NAME.containsValue(resparam.packageName)) return
         try {
             moduleInstance?.callMethod("handleInitPackageResources", resparam)
         } catch (e: Throwable) {
