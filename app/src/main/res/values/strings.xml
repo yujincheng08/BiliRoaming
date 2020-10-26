@@ -123,5 +123,7 @@
     <string name="purify_city_title">净化同城标签</string>
     <string name="purify_city_summary">去除动态页面的同城标签</string>
     <string name="setting">设置</string>
-    <string name="speed_test_formatter">%-20s %-6sKB/s</string>
+    <string name="speed_formatter">%sKB/s</string>
+    <string name="cdn">CDN</string>
+    <string name="speed">速度</string>
 </resources>

@@ -13,10 +13,7 @@ import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.preference.Preference
-import android.preference.PreferenceCategory
-import android.preference.PreferenceFragment
-import android.preference.SwitchPreference
+import android.preference.*
 import android.provider.MediaStore
 import android.view.ContextThemeWrapper
 import android.view.LayoutInflater
@@ -287,7 +284,8 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
 
         @FlowPreview
         private fun onTestCdnClick(): Boolean {
-            SpeedTestDialog(activity).show()
+            val pref = findPreference("custom_cdn") as EditTextPreference
+            SpeedTestDialog(pref, activity).show()
             return true
         }
 

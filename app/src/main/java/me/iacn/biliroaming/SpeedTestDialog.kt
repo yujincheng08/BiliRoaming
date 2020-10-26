@@ -1,8 +1,12 @@
+@file:Suppress("DEPRECATION")
+
 package me.iacn.biliroaming
 
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.Context
+import android.preference.EditTextPreference
+import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
@@ -21,18 +25,43 @@ import java.util.concurrent.Executors
 class SpeedTestResult(val ip: String, var speed: String)
 
 class SpeedTestAdapter(context: Context) : ArrayAdapter<SpeedTestResult>(context, 0) {
+    class ViewHolder(var ip: String?, val ipView: TextView, val speedView: TextView)
+
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
-        return TextView(context).apply {
-            getItem(position)?.run {
-                text = moduleRes.getString(R.string.speed_test_formatter).format(ip, speed)
-                tag = ip
-            }
+        val layout = moduleRes.getLayout(R.layout.cdn_speedtest_item)
+        val inflater = LayoutInflater.from(context)
+        val view = convertView ?: inflater.inflate(layout, null).apply {
+            tag = ViewHolder(
+                    getItem(position)?.ip,
+                    findViewById(R.id.cdn_ip),
+                    findViewById(R.id.cdn_speed)
+            )
+        }
+        val holder = view.tag as ViewHolder
+        holder.ip = getItem(position)?.ip
+        holder.ipView.text = holder.ip
+        holder.speedView.text = moduleRes.getString(R.string.speed_formatter).format(getItem(position)?.speed)
+        return view
+    }
+
+    fun sort() {
+        return sort { a, b ->
+            val aSpeed = a.speed.toLongOrNull()
+            val bSpeed = b.speed.toLongOrNull()
+            if (aSpeed == null && bSpeed == null)
+                0
+            else if (aSpeed == null)
+                1
+            else if (bSpeed == null)
+                -1
+            else
+                (bSpeed - aSpeed).toInt()
         }
     }
 }
 
 @FlowPreview
-class SpeedTestDialog(activity: Activity) : AlertDialog.Builder(activity) {
+class SpeedTestDialog(private val pref: EditTextPreference, activity: Activity) : AlertDialog.Builder(activity) {
     private val scope = MainScope()
     private val speedTestDispatcher = Executors.newFixedThreadPool(5).asCoroutineDispatcher()
 
@@ -50,15 +79,29 @@ class SpeedTestDialog(activity: Activity) : AlertDialog.Builder(activity) {
     init {
         view.adapter = adapter
 
+        val layout = moduleRes.getLayout(R.layout.cdn_speedtest_item)
+        val inflater = LayoutInflater.from(context)
+        view.addHeaderView(inflater.inflate(layout, null).apply {
+            findViewById<TextView>(R.id.cdn_ip).text = moduleRes.getString(R.string.cdn)
+            findViewById<TextView>(R.id.cdn_speed).text = moduleRes.getString(R.string.speed)
+        }, null, false)
+
+        view.setPadding(50, 20, 50, 20)
+
         setView(view)
+
+        setPositiveButton("关闭", null)
+
         setOnDismissListener {
             scope.cancel()
         }
 
         view.setOnItemClickListener { _, view, _, _ ->
-            Log.d("Use ${view.tag}")
-            sPrefs.edit().putString("custom_cdn", view.tag.toString()).apply()
-            Log.toast("已把${view.tag}填入自定义CDN中")
+            val ip = (view.tag as SpeedTestAdapter.ViewHolder).ip
+            Log.d("Use $ip")
+            pref.text = ip
+            sPrefs.edit().putString(pref.key, ip).apply()
+            Log.toast("已把${ip}填入自定义CDN中。请选择CDN服务器为自定义以使用该CDN。")
         }
 
         setTitle("CDN测速")
@@ -67,20 +110,21 @@ class SpeedTestDialog(activity: Activity) : AlertDialog.Builder(activity) {
     override fun show(): AlertDialog {
         val dialog = super.show()
         scope.launch {
-            dialog.setTitle("正在测速")
+            dialog.setTitle("正在测速……")
             val url = getTestUrl() ?: run {
                 dialog.setTitle("测速失败")
                 return@launch
             }
             digIps().flatMapMerge {
                 handleScript(it)
-            }.withIndex().map {
+            }.map {
                 scope.launch {
-                    adapter.add(SpeedTestResult(it.value, ""))
-                    val speed = speedTest(it.value, url)
-                    adapter.getItem(it.index)?.speed = speed.toString()
-                    view.invalidateViews()
-                    adapter.notifyDataSetChanged()
+                    val item = SpeedTestResult(it, "...")
+                    adapter.add(item)
+                    adapter.sort()
+                    val speed = speedTest(it, url)
+                    item.speed = speed.toString()
+                    adapter.sort()
                 }
             }.toList().joinAll()
             dialog.setTitle("测速完成")
@@ -107,11 +151,12 @@ class SpeedTestDialog(activity: Activity) : AlertDialog.Builder(activity) {
                     if (read <= 0) break
                     size += read
                 }
+                stream.close() // release connection
                 size / (System.currentTimeMillis() - start) // KB/s
             }
         }
     } catch (e: Throwable) {
-        -1L
+        0L
     }
 
 
