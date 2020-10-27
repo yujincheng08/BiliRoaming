@@ -27,8 +27,8 @@ class SplashHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             val activity = param.thisObject.callMethodAs<Activity>("getActivity")
             val view = param.args[0] as View
             if (sPrefs.getBoolean("custom_splash", false)) {
-                val brandId = activity.resources.getIdentifier("brand_splash", "id", activity.packageName)
-                val fullId = activity.resources.getIdentifier("full_brand_splash", "id", activity.packageName)
+                val brandId = instance.getId("brand_splash")
+                val fullId = instance.getId("full_brand_splash")
                 val brandSplash = view.findViewById<ImageView>(brandId)
                 val full = if (fullId != 0) view.findViewById<ImageView>(fullId) else null
                 val splashImage = File(currentContext.filesDir, SPLASH_IMAGE)
@@ -42,7 +42,7 @@ class SplashHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
             }
             if (sPrefs.getBoolean("custom_splash_logo", false)) {
-                val logoId = activity.resources.getIdentifier("brand_logo", "id", activity.packageName)
+                val logoId = instance.getId("brand_logo")
                 val brandLogo = view.findViewById<ImageView>(logoId)
                 val logoImage = File(currentContext.filesDir, LOGO_IMAGE)
                 if (logoImage.exists())

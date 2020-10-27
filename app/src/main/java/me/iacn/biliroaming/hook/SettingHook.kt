@@ -33,8 +33,7 @@ class SettingHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
 
         instance.drawerClass?.hookAfterMethod("onCreateView", LayoutInflater::class.java, ViewGroup::class.java, Bundle::class.java) { param ->
-            val activity = param.thisObject.callMethodAs<Activity>("getActivity")
-            val navSettingId = activity.resources.getIdentifier("${activity.packageName}:id/nav_settings", null, null)
+            val navSettingId = instance.getId("nav_settings")
             val nav = param.thisObject.javaClass.declaredFields.first { it.type.name == "android.support.design.widget.NavigationView" }.name
             param.thisObject.getObjectField(nav)?.callMethodAs<View>("findViewById", navSettingId)?.setOnLongClickListener {
                 SettingDialog(param.thisObject.callMethodAs<Activity>("getActivity")).show()

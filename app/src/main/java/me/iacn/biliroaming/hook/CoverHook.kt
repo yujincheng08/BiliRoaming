@@ -13,6 +13,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import de.robv.android.xposed.XC_MethodHook
+import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.utils.*
 import java.io.File
 
@@ -121,7 +122,7 @@ class CoverHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
             }
         }
-        val liveId = activity.resources.getIdentifier("controller_underlay", "id", activity.packageName)
+        val liveId = instance.getId("controller_underlay")
         activity.findViewById<View>(liveId)?.setOnTouchListener { _, event ->
             gestureDetector.onTouchEvent(event)
             false

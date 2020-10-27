@@ -6,7 +6,6 @@ import android.content.res.Resources
 import android.graphics.Color
 import android.os.Bundle
 import android.view.View
-import android.view.WindowManager
 import de.robv.android.xposed.XC_MethodHook
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.utils.*
@@ -36,7 +35,7 @@ class DarkHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 if (param2.thisObject == this)
                     param2.result = activity
             }
-            val viewId = activity.resources.getIdentifier("mine_day_night_setting", "id", activity.packageName)
+            val viewId = instance.getId("mine_day_night_setting")
             callMethod("onClick", View(activity).apply { id = viewId })
             unhook?.unhook()
         }

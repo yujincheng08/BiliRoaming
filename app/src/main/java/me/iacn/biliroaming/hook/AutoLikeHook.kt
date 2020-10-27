@@ -1,6 +1,5 @@
 package me.iacn.biliroaming.hook
 
-import android.app.AndroidAppHelper
 import android.view.View
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.utils.*
@@ -13,8 +12,7 @@ class AutoLikeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
         Log.d("startHook: AutoLike")
 
-        val context = AndroidAppHelper.currentApplication()
-        val likeId = context.resources.getIdentifier("frame1", "id", context.packageName)
+        val likeId = instance.getId("frame1")
 
         instance.sectionClass?.hookAfterMethod(instance.likeMethod(), Object::class.java) { param ->
             val sec = param.thisObject ?: return@hookAfterMethod

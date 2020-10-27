@@ -7,6 +7,7 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.os.Bundle
+import android.util.Base64
 import android.util.SparseArray
 import android.view.View
 import android.view.ViewGroup
@@ -69,6 +70,12 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     private val okHttpClientClass by Weak { mHookInfo["class_http_client"]?.findClass(mClassLoader) }
     private val accessKeyInstance by lazy { "com.bilibili.bangumi.ui.page.detail.pay.BangumiPayHelperV2\$accessKey\$2".findClass(mClassLoader)?.getStaticObjectField("INSTANCE") }
 
+    @Suppress("UNCHECKED_CAST")
+    val ids by lazy {
+        ObjectInputStream(ByteArrayInputStream(Base64.decode(mHookInfo["map_ids"], Base64.DEFAULT))).readObject() as Map<String, Int>
+    }
+
+
     val accessKey
         get() = accessKeyInstance?.callMethodAs<String>("invoke")
 
@@ -83,113 +90,61 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         instance = this
     }
 
-    fun checkBlue(): String? {
-        return mHookInfo["method_check_blue"]
-    }
+    fun checkBlue() = mHookInfo["method_check_blue"]
 
-    fun fastJsonParse(): String? {
-        return mHookInfo["method_fastjson_parse"]
-    }
+    fun fastJsonParse() = mHookInfo["method_fastjson_parse"]
 
-    fun colorArray(): String? {
-        return mHookInfo["field_color_array"]
-    }
+    fun colorArray() = mHookInfo["field_color_array"]
 
-    fun colorId(): String? {
-        return mHookInfo["field_color_id"]
-    }
+    fun colorId() = mHookInfo["field_color_id"]
 
-    fun columnColorArray(): String? {
-        return mHookInfo["field_column_color_array"]
-    }
+    fun columnColorArray() = mHookInfo["field_column_color_array"]
 
-    fun videoDetailName(): String? {
-        return mHookInfo["field_video_detail"]
-    }
+    fun videoDetailName() = mHookInfo["field_video_detail"]
 
-    fun signQueryName(): String? {
-        return mHookInfo["method_sign_query"]
-    }
+    fun signQueryName() = mHookInfo["method_sign_query"]
 
-    fun skinList(): String? {
-        return mHookInfo["method_skin_list"]
-    }
+    fun skinList() = mHookInfo["method_skin_list"]
 
-    fun saveSkinList(): String? {
-        return mHookInfo["method_save_skin"]
-    }
+    fun saveSkinList() = mHookInfo["method_save_skin"]
 
-    fun themeReset(): String? {
-        return mHookInfo["methods_theme_reset"]
-    }
+    fun themeReset() = mHookInfo["methods_theme_reset"]
 
-    fun addSetting(): String? {
-        return mHookInfo["method_add_setting"]
-    }
+    fun addSetting() = mHookInfo["method_add_setting"]
 
-    fun requestField(): String? {
-        return mHookInfo["field_request"]
-    }
+    fun requestField() = mHookInfo["field_request"]
 
-    fun urlMethod(): String? {
-        return mHookInfo["method_url"]
-    }
+    fun urlMethod() = mHookInfo["method_url"]
 
-    fun likeMethod(): String? {
-        return mHookInfo["method_like"]
-    }
+    fun likeMethod() = mHookInfo["method_like"]
 
-    fun themeName(): String? {
-        return mHookInfo["field_theme_name"]
-    }
+    fun themeName() = mHookInfo["field_theme_name"]
 
-    fun shareWrapper(): String? {
-        return mHookInfo["method_share_wrapper"]
-    }
+    fun shareWrapper() = mHookInfo["method_share_wrapper"]
 
-    fun httpClientBuild(): String? {
-        return mHookInfo["method_http_client_build"]
-    }
+    fun httpClientBuild() = mHookInfo["method_http_client_build"]
 
-    fun proxySelector(): String? {
-        return mHookInfo["field_proxy_selector"]
-    }
+    fun proxySelector() = mHookInfo["field_proxy_selector"]
 
-    fun downloadingThread(): String? {
-        return mHookInfo["field_download_thread"]
-    }
+    fun downloadingThread() = mHookInfo["field_download_thread"]
 
-    fun reportDownloadThread(): String? {
-        return mHookInfo["method_report_download_thread"]
-    }
+    fun reportDownloadThread() = mHookInfo["method_report_download_thread"]
 
-    fun garb(): String? {
-        return mHookInfo["method_garb"]
-    }
+    fun garb() = mHookInfo["method_garb"]
 
-    fun setNotification(): String? {
-        return mHookInfo["methods_set_notification"]
-    }
+    fun setNotification() = mHookInfo["methods_set_notification"]
 
-    fun mediaSessionToken(): String? {
-        return mHookInfo["method_media_session_token"]
-    }
+    fun mediaSessionToken() = mHookInfo["method_media_session_token"]
 
-    fun absMusicService(): String? {
-        return mHookInfo["field_abs_music_service"]
-    }
+    fun absMusicService() = mHookInfo["field_abs_music_service"]
 
-    fun openDrawer(): String? {
-        return mHookInfo["method_open_drawer"]
-    }
+    fun openDrawer() = mHookInfo["method_open_drawer"]
 
-    fun closeDrawer(): String? {
-        return mHookInfo["method_close_drawer"]
-    }
+    fun closeDrawer() = mHookInfo["method_close_drawer"]
 
-    fun isDrawerOpen(): String? {
-        return mHookInfo["method_is_drawer_open"]
-    }
+    fun isDrawerOpen() = mHookInfo["method_is_drawer_open"]
+
+    fun getId(name: String) = ids[name] ?: 0
 
     private fun readHookInfo(context: Context): MutableMap<String, String?> {
         try {
@@ -334,11 +289,34 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             findIsDrawerOpenMethod()
         }.checkConjunctiveOrPut("class_check_blue", "method_check_blue") {
             findCheckBlue()
+        }.checkOrPut("map_ids") {
+            getMapIds()
         }
 
-        Log.d(mHookInfo)
+        Log.d(mHookInfo.filterKeys { it != "map_ids" })
         Log.d("Check hook info completed: needUpdate = $needUpdate")
         return needUpdate
+    }
+
+    private fun getMapIds(): String? {
+        val reg = Regex("^tv\\.danmaku\\.bili\\.[^.]*$")
+        val ids = classesList.filter {
+            it.matches(reg)
+        }.flatMap { c ->
+            c.findClass(mClassLoader)?.declaredFields?.filter {
+                Modifier.isStatic(it.modifiers) && Modifier.isPublic(it.modifiers) && Modifier.isFinal(it.modifiers)
+                        && it.type == Int::class.javaPrimitiveType
+            }?.map {
+                it.name to it.get(null) as Int
+            }.orEmpty()
+        }.toMap()
+        val bao = ByteArrayOutputStream()
+        ObjectOutputStream(bao).run {
+            writeObject(ids)
+            flush()
+            close()
+        }
+        return Base64.encodeToString(bao.toByteArray(), Base64.DEFAULT)
     }
 
     private fun findIsDrawerOpenMethod(): String? {
