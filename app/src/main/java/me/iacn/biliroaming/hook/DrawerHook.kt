@@ -20,8 +20,7 @@ class DrawerHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
         instance.mainActivityClass?.hookAfterMethod("onCreate", Bundle::class.java) { param ->
             val self = param.thisObject as Activity
-            val drawerId = self.resources.getIdentifier("drawer", "id", self.packageName)
-            val view = self.findViewById<View?>(drawerId) ?: return@hookAfterMethod
+            val view = self.findViewById<ViewGroup>(android.R.id.content).getChildAt(0)
             (view.parent as ViewGroup).removeViewInLayout(view)
             drawerLayout = instance.drawerLayoutClass?.new(self)
             drawerLayout?.callMethod("addView", view, 0, view.layoutParams)
@@ -62,7 +61,7 @@ class DrawerHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         "tv.danmaku.bili.ui.main2.basic.BaseMainFrameFragment".hookAfterMethod(mClassLoader, "onViewCreated", View::class.java, Bundle::class.java) { param ->
             val activity = param.thisObject.callMethodAs<Activity>("getActivity")
             val id = activity.resources.getIdentifier("avatar_layout", "id", activity.packageName)
-            (param.args[0] as View).findViewById<View>(id).setOnClickListener {
+            (param.args[0] as View).findViewById<View>(id)?.setOnClickListener {
                 try {
                     drawerLayout?.callMethod(instance.openDrawer(), navView, true)
                 } catch (e: Throwable) {
