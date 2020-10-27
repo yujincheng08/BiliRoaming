@@ -167,44 +167,40 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         return response.javaClass.callStaticMethod("parseFrom", serializedResponse)!!
     }
 
-    private fun fixDownloadProto(builder: PlayViewReply.Builder): PlayViewReply {
-        return builder.run {
-            videoInfo = VideoInfo.newBuilder(builder.videoInfo).run {
-                var audioId = 0
-                val streams = streamListList.map {
-                    if (it.streamInfo.quality != quality && it.dashVideo.codecid == videoCodecid) {
-                        Stream.newBuilder(it).run {
-                            clearContent()
-                            build()
-                        }
-                    } else {
-                        audioId = it.dashVideo.audioId
-                        it
+    private fun fixDownloadProto(builder: PlayViewReply.Builder) = builder.run {
+        videoInfo = VideoInfo.newBuilder(builder.videoInfo).run {
+            var audioId = 0
+            val streams = streamListList.map {
+                if (it.streamInfo.quality != quality && it.dashVideo.codecid == videoCodecid) {
+                    Stream.newBuilder(it).run {
+                        clearContent()
+                        build()
                     }
+                } else {
+                    audioId = it.dashVideo.audioId
+                    it
                 }
-                val audio = dashAudioList.first {
-                    it.id != audioId
-                }
-                clearStreamList()
-                clearDashAudio()
-                addAllStreamList(streams)
-                addDashAudio(audio)
-                build()
             }
+            val audio = dashAudioList.first {
+                it.id != audioId
+            }
+            clearStreamList()
+            clearDashAudio()
+            addAllStreamList(streams)
+            addDashAudio(audio)
             build()
         }
+        build()
     }
 
 
-    private fun isLimitWatchingArea(jsonText: String): Boolean {
-        return try {
-            val json = JSONObject(jsonText)
-            val code = json.optInt("code")
-            code == -10403
-        } catch (e: JSONException) {
-            Log.e(e)
-            false
-        }
+    private fun isLimitWatchingArea(jsonText: String) = try {
+        val json = JSONObject(jsonText)
+        val code = json.optInt("code")
+        code == -10403
+    } catch (e: JSONException) {
+        Log.e(e)
+        false
     }
 
     private fun reconstructQuery(request: Any): String? {

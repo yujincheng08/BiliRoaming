@@ -1,6 +1,5 @@
 package me.iacn.biliroaming.hook
 
-import android.app.Activity
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
@@ -24,11 +23,10 @@ class SplashHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
 
         instance.brandSplashClass?.hookAfterMethod("onViewCreated", View::class.java, Bundle::class.java) { param ->
-            val activity = param.thisObject.callMethodAs<Activity>("getActivity")
             val view = param.args[0] as View
             if (sPrefs.getBoolean("custom_splash", false)) {
-                val brandId = instance.getId("brand_splash")
-                val fullId = instance.getId("full_brand_splash")
+                val brandId = getId("brand_splash")
+                val fullId = getId("full_brand_splash")
                 val brandSplash = view.findViewById<ImageView>(brandId)
                 val full = if (fullId != 0) view.findViewById<ImageView>(fullId) else null
                 val splashImage = File(currentContext.filesDir, SPLASH_IMAGE)
@@ -42,7 +40,7 @@ class SplashHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
             }
             if (sPrefs.getBoolean("custom_splash_logo", false)) {
-                val logoId = instance.getId("brand_logo")
+                val logoId = getId("brand_logo")
                 val brandLogo = view.findViewById<ImageView>(logoId)
                 val logoImage = File(currentContext.filesDir, LOGO_IMAGE)
                 if (logoImage.exists())

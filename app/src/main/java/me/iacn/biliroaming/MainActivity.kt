@@ -205,9 +205,7 @@ class MainActivity : Activity() {
                 val modClass = appContext.classLoader.loadClass("com.bug.xposed.ModConfig\$Mod")
                 val list = bugSerializeClass.getDeclaredMethod("deserialize", InputStream::class.java).invoke(null, mods.inputStream()) as ArrayList<*>
                 for (mod in list) {
-                    if (modClass.getMethod("getPkg").invoke(mod) == BuildConfig.APPLICATION_ID) {
-                        return true
-                    }
+                    if (modClass.getMethod("getPkg").invoke(mod) == BuildConfig.APPLICATION_ID) return true
                 }
             } catch (e: Throwable) {
             }

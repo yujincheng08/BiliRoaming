@@ -31,14 +31,12 @@ class HotXposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit, IXposedHook
         lateinit var modulePath: String
 
         val moduleApkFile: File
-            get() {
-                return try {
-                    val applicationInfo = systemContext.packageManager.getApplicationInfo(BuildConfig.APPLICATION_ID, 0)
-                    File(applicationInfo.sourceDir)
-                } catch (e: Throwable) {
-                    null
-                } ?: File(modulePath)
-            }
+            get() = try {
+                val applicationInfo = systemContext.packageManager.getApplicationInfo(BuildConfig.APPLICATION_ID, 0)
+                File(applicationInfo.sourceDir)
+            } catch (e: Throwable) {
+                null
+            } ?: File(modulePath)
 
         val moduleInstance: Any?
             get() {

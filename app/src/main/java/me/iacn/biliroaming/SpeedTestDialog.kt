@@ -44,19 +44,17 @@ class SpeedTestAdapter(context: Context) : ArrayAdapter<SpeedTestResult>(context
         return view
     }
 
-    fun sort() {
-        return sort { a, b ->
-            val aSpeed = a.speed.toLongOrNull()
-            val bSpeed = b.speed.toLongOrNull()
-            if (aSpeed == null && bSpeed == null)
-                0
-            else if (aSpeed == null)
-                1
-            else if (bSpeed == null)
-                -1
-            else
-                (bSpeed - aSpeed).toInt()
-        }
+    fun sort() = sort { a, b ->
+        val aSpeed = a.speed.toLongOrNull()
+        val bSpeed = b.speed.toLongOrNull()
+        if (aSpeed == null && bSpeed == null)
+            0
+        else if (aSpeed == null)
+            1
+        else if (bSpeed == null)
+            -1
+        else
+            (bSpeed - aSpeed).toInt()
     }
 }
 

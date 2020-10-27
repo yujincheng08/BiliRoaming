@@ -144,8 +144,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     fun isDrawerOpen() = mHookInfo["method_is_drawer_open"]
 
-    fun getId(name: String) = ids[name] ?: 0
-
     private fun readHookInfo(context: Context): MutableMap<String, String?> {
         try {
             val hookInfoFile = File(context.cacheDir, Constant.HOOK_INFO_FILE_NAME)
@@ -193,14 +191,12 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             return this
         }
 
-        fun <K, V> MutableMap<K, V>.checkConjunctiveOrPut(vararg keys: K, defaultValue: () -> Array<V>): MutableMap<K, V> {
-            return checkOrPut(keys = keys, checker = { m, ks -> ks.fold(true) { acc, k -> acc && m.containsKey(k) } }, defaultValue = defaultValue)
-        }
+        fun <K, V> MutableMap<K, V>.checkConjunctiveOrPut(vararg keys: K, defaultValue: () -> Array<V>) =
+                checkOrPut(keys = keys, checker = { m, ks -> ks.fold(true) { acc, k -> acc && m.containsKey(k) } }, defaultValue = defaultValue)
 
         @Suppress("unused")
-        fun <K, V> MutableMap<K, V>.checkDisjunctiveOrPut(vararg keys: K, defaultValue: () -> Array<V>): MutableMap<K, V> {
-            return checkOrPut(keys = keys, checker = { m, ks -> ks.fold(false) { acc, k -> acc || m.containsKey(k) } }, defaultValue = defaultValue)
-        }
+        fun <K, V> MutableMap<K, V>.checkDisjunctiveOrPut(vararg keys: K, defaultValue: () -> Array<V>) =
+                checkOrPut(keys = keys, checker = { m, ks -> ks.fold(false) { acc, k -> acc || m.containsKey(k) } }, defaultValue = defaultValue)
 
         mHookInfo.checkOrPut("class_retrofit_response") {
             findRetrofitResponseClass()
@@ -300,16 +296,15 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     private fun getMapIds(): String? {
         val reg = Regex("^tv\\.danmaku\\.bili\\.[^.]*$")
+        val mask = Modifier.STATIC or Modifier.PUBLIC or Modifier.FINAL
         val ids = classesList.filter {
             it.matches(reg)
         }.flatMap { c ->
             c.findClass(mClassLoader)?.declaredFields?.filter {
-                Modifier.isStatic(it.modifiers) && Modifier.isPublic(it.modifiers) && Modifier.isFinal(it.modifiers)
+                it.modifiers == mask
                         && it.type == Int::class.javaPrimitiveType
-            }?.map {
-                it.name to it.get(null) as Int
             }.orEmpty()
-        }.toMap()
+        }.associate { it.name to it.get(null) as Int }
         val bao = ByteArrayOutputStream()
         ObjectOutputStream(bao).run {
             writeObject(ids)
@@ -319,16 +314,14 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         return Base64.encodeToString(bao.toByteArray(), Base64.DEFAULT)
     }
 
-    private fun findIsDrawerOpenMethod(): String? {
-        return try {
-            drawerLayoutClass?.getMethod("isDrawerOpen", View::class.java)?.name
-        } catch (e: Throwable) {
-            drawerLayoutClass?.declaredMethods?.firstOrNull {
-                Modifier.isPublic(it.modifiers) &&
-                        it.parameterTypes.size == 1 && it.parameterTypes[0] == View::class.java &&
-                        it.returnType == Boolean::class.javaPrimitiveType
-            }?.name
-        }
+    private fun findIsDrawerOpenMethod() = try {
+        drawerLayoutClass?.getMethod("isDrawerOpen", View::class.java)?.name
+    } catch (e: Throwable) {
+        drawerLayoutClass?.declaredMethods?.firstOrNull {
+            Modifier.isPublic(it.modifiers) &&
+                    it.parameterTypes.size == 1 && it.parameterTypes[0] == View::class.java &&
+                    it.returnType == Boolean::class.javaPrimitiveType
+        }?.name
     }
 
     private fun findCheckBlue(): Array<String?> {
@@ -346,65 +339,51 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         return arrayOfNulls(2)
     }
 
-    private fun findDrawerMethod(): Array<String?> {
-        return try {
-            arrayOf(drawerLayoutClass?.getMethod("openDrawer", View::class.java, Boolean::class.javaPrimitiveType)?.name,
-                    drawerLayoutClass?.getMethod("closeDrawer", View::class.java, Boolean::class.javaPrimitiveType)?.name)
-        } catch (e: Throwable) {
-            drawerLayoutClass?.declaredMethods?.filter {
-                Modifier.isPublic(it.modifiers) &&
-                        it.parameterTypes.size == 2 && it.parameterTypes[0] == View::class.java &&
-                        it.parameterTypes[1] == Boolean::class.javaPrimitiveType
-            }?.map { it.name }?.toTypedArray() ?: arrayOfNulls(2)
+    private fun findDrawerMethod() = try {
+        arrayOf(drawerLayoutClass?.getMethod("openDrawer", View::class.java, Boolean::class.javaPrimitiveType)?.name,
+                drawerLayoutClass?.getMethod("closeDrawer", View::class.java, Boolean::class.javaPrimitiveType)?.name)
+    } catch (e: Throwable) {
+        drawerLayoutClass?.declaredMethods?.filter {
+            Modifier.isPublic(it.modifiers) &&
+                    it.parameterTypes.size == 2 && it.parameterTypes[0] == View::class.java &&
+                    it.parameterTypes[1] == Boolean::class.javaPrimitiveType
+        }?.map { it.name }?.toTypedArray() ?: arrayOfNulls(2)
+    }
+
+    private fun findDrawerLayoutParams() = drawerLayoutClass?.declaredClasses?.firstOrNull {
+        it.superclass == ViewGroup.MarginLayoutParams::class.java
+    }?.name
+
+    private fun findAbsMusicServiceField() = musicNotificationHelperClass?.declaredFields?.firstOrNull {
+        it.type == absMusicServiceClass
+    }?.name
+
+    private fun findMediaSessionTokenMethod() = absMusicServiceClass?.declaredMethods?.firstOrNull {
+        it.returnType.name.endsWith("Token")
+    }?.name
+
+    private fun findAbsMusicService() = classesList.filter {
+        it.startsWith("tv.danmaku.bili.ui.player.notification")
+    }.firstOrNull { c ->
+        c.findClassOrNull(mClassLoader)?.superclass == Service::class.java
+    }
+
+    private fun findSetNotificationMethods() = musicNotificationHelperClass?.declaredMethods?.lastOrNull {
+        it.parameterTypes.size == 1 && it.parameterTypes[0].name.run {
+            startsWith("android.support.v4.app") ||
+                    startsWith("androidx.core.app") ||
+                    startsWith("androidx.core.app.NotificationCompat\$Builder")
         }
-    }
+    }?.run {
+        arrayOf(name, parameterTypes[0].name)
+    } ?: arrayOfNulls(2)
 
-    private fun findDrawerLayoutParams(): String? {
-        return drawerLayoutClass?.declaredClasses?.firstOrNull {
-            it.superclass == ViewGroup.MarginLayoutParams::class.java
-        }?.name
-    }
-
-    private fun findAbsMusicServiceField(): String? {
-        return musicNotificationHelperClass?.declaredFields?.firstOrNull {
-            it.type == absMusicServiceClass
-        }?.name
-    }
-
-    private fun findMediaSessionTokenMethod(): String? {
-        return absMusicServiceClass?.declaredMethods?.firstOrNull {
-            it.returnType.name.endsWith("Token")
-        }?.name
-    }
-
-    private fun findAbsMusicService(): String? {
-        return classesList.filter {
-            it.startsWith("tv.danmaku.bili.ui.player.notification")
-        }.firstOrNull { c ->
-            c.findClassOrNull(mClassLoader)?.superclass == Service::class.java
-        }
-    }
-
-    private fun findSetNotificationMethods(): Array<String?> {
-        return musicNotificationHelperClass?.declaredMethods?.lastOrNull {
-            it.parameterTypes.size == 1 && it.parameterTypes[0].name.run {
-                startsWith("android.support.v4.app") ||
-                        startsWith("androidx.core.app") ||
-                        startsWith("androidx.core.app.NotificationCompat\$Builder")
-            }
-        }?.run {
-            arrayOf(name, parameterTypes[0].name)
-        } ?: arrayOfNulls(2)
-    }
-
-    private fun findMusicNotificationHelper(): String? {
-        return classesList.filter {
-            it.startsWith("tv.danmaku.bili.ui.player.notification")
-        }.firstOrNull { c ->
-            c.findClassOrNull(mClassLoader)?.declaredFields?.filter {
-                it.type == PendingIntent::class.java
-            }?.count()?.let { it > 0 } ?: false
-        }
+    private fun findMusicNotificationHelper() = classesList.filter {
+        it.startsWith("tv.danmaku.bili.ui.player.notification")
+    }.firstOrNull { c ->
+        c.findClassOrNull(mClassLoader)?.declaredFields?.filter {
+            it.type == PendingIntent::class.java
+        }?.count()?.let { it > 0 } ?: false
     }
 
     private fun findGarbHelper(): Array<String?> {
@@ -425,43 +404,32 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             it.startsWith("tv.danmaku.bili.ui.offline.api")
         }.forEach { c ->
             c.findClassOrNull(mClassLoader)?.declaredMethods?.forEach { m ->
-                if (m.parameterTypes.size == 2 && m.parameterTypes[0] == Context::class.java && m.parameterTypes[1] == Int::class.javaPrimitiveType) {
+                if (m.parameterTypes.size == 2 && m.parameterTypes[0] == Context::class.java && m.parameterTypes[1] == Int::class.javaPrimitiveType)
                     return arrayOf(c, m.name)
-                }
             }
         }
         return arrayOfNulls(2)
     }
 
-    private fun findProxySelectorField(): String? {
-        return okHttpClientBuilderClass?.declaredFields?.firstOrNull {
-            it.type == ProxySelector::class.java
-        }?.name
-    }
+    private fun findProxySelectorField() = okHttpClientBuilderClass?.declaredFields?.firstOrNull {
+        it.type == ProxySelector::class.java
+    }?.name
 
-    private fun findHttpClientBuildMethod(): String? {
-        return okHttpClientBuilderClass?.declaredMethods?.firstOrNull {
-            it.parameterTypes.isEmpty() && it.returnType == okHttpClientClass
-        }?.name
-    }
+    private fun findHttpClientBuildMethod() = okHttpClientBuilderClass?.declaredMethods?.firstOrNull {
+        it.parameterTypes.isEmpty() && it.returnType == okHttpClientClass
+    }?.name
 
-    private fun findOkHttpClientClass(): String? {
-        return urlConnectionClass?.declaredConstructors?.filter {
-            it.parameterTypes.size == 2
-        }?.map { it.parameterTypes[1] }?.firstOrNull()?.name
-    }
+    private fun findOkHttpClientClass() = urlConnectionClass?.declaredConstructors?.filter {
+        it.parameterTypes.size == 2
+    }?.map { it.parameterTypes[1] }?.firstOrNull()?.name
 
-    private fun findOkHttpClientBuilderClass(): String? {
-        return okHttpClientClass?.declaredConstructors?.filter {
-            it.parameterTypes.size == 1
-        }?.map { it.parameterTypes[0] }?.firstOrNull()?.name
-    }
+    private fun findOkHttpClientBuilderClass() = okHttpClientClass?.declaredConstructors?.filter {
+        it.parameterTypes.size == 1
+    }?.map { it.parameterTypes[0] }?.firstOrNull()?.name
 
-    private fun findShareWrapperMethod(): String? {
-        return shareWrapperClass?.declaredMethods?.firstOrNull {
-            it.parameterTypes.size == 2 && it.parameterTypes[0] == String::class.java && it.parameterTypes[1] == Bundle::class.java
-        }?.name
-    }
+    private fun findShareWrapperMethod() = shareWrapperClass?.declaredMethods?.firstOrNull {
+        it.parameterTypes.size == 2 && it.parameterTypes[0] == String::class.java && it.parameterTypes[1] == Bundle::class.java
+    }?.name
 
     private fun findShareWrapperClass(): String? {
         val reg = Regex("^com\\.bilibili\\.lib\\.sharewrapper\\.[^.]*$")
@@ -490,51 +458,40 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         Log.d("Write hook info completed")
     }
 
-    private fun findRetrofitResponseClass(): String? {
-        return bangumiApiResponseClass?.methods?.filter {
-            "extractResult" == it.name
-        }?.map {
-            it.parameterTypes[0]
-        }?.firstOrNull()?.name
-    }
+    private fun findRetrofitResponseClass() = bangumiApiResponseClass?.methods?.filter {
+        "extractResult" == it.name
+    }?.map {
+        it.parameterTypes[0]
+    }?.firstOrNull()?.name
 
     private fun findUrlField(): Pair<String?, String?> {
         for (constructor in retrofitResponseClass?.declaredConstructors.orEmpty()) {
             for (field in constructor.parameterTypes[0].declaredFields) {
                 for (method in field.type.declaredMethods) {
-                    if (method.returnType.name == "okhttp3.HttpUrl") {
+                    if (method.returnType.name == "okhttp3.HttpUrl")
                         return field.name to method.name
-                    }
                 }
             }
         }
         return null to null
     }
 
-    private fun findFastJsonClass(): Class<*>? {
-        return "com.alibaba.fastjson.JSON".findClassOrNull(mClassLoader)
-                ?: "com.alibaba.fastjson.a".findClass(mClassLoader)
-    }
+    private fun findFastJsonClass(): Class<*>? = "com.alibaba.fastjson.JSON".findClassOrNull(mClassLoader)
+            ?: "com.alibaba.fastjson.a".findClass(mClassLoader)
 
-    private fun findColorArrayField(): String? {
-        return themeHelperClass?.declaredFields?.firstOrNull {
-            it.type == SparseArray::class.java &&
-                    (it.genericType as ParameterizedType).actualTypeArguments[0].toString() == "int[]"
-        }?.name
-    }
+    private fun findColorArrayField() = themeHelperClass?.declaredFields?.firstOrNull {
+        it.type == SparseArray::class.java &&
+                (it.genericType as ParameterizedType).actualTypeArguments[0].toString() == "int[]"
+    }?.name
 
-    private fun findColorIdField(): String? {
-        return themeIdHelperClass?.declaredFields?.firstOrNull {
-            it.type == SparseArray::class.java
-        }?.name
-    }
+    private fun findColorIdField() = themeIdHelperClass?.declaredFields?.firstOrNull {
+        it.type == SparseArray::class.java
+    }?.name
 
-    private fun findColumnColorArrayField(): String? {
-        return columnHelperClass?.declaredFields?.firstOrNull {
-            it.type == SparseArray::class.java &&
-                    (it.genericType as ParameterizedType).actualTypeArguments[0].toString() == "int[]"
-        }?.name
-    }
+    private fun findColumnColorArrayField() = columnHelperClass?.declaredFields?.firstOrNull {
+        it.type == SparseArray::class.java &&
+                (it.genericType as ParameterizedType).actualTypeArguments[0].toString() == "int[]"
+    }?.name
 
     private fun findSkinListMethod(): String? {
         val biliSkinListClass = "tv.danmaku.bili.ui.theme.api.BiliSkinList".findClass(mClassLoader)
@@ -545,35 +502,27 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         }?.name
     }
 
-    private fun findSaveSkinMethod(): String? {
-        return themeHelperClass?.declaredMethods?.firstOrNull {
-            it.parameterTypes.size == 2 && it.parameterTypes[0] == Context::class.java &&
-                    it.parameterTypes[1] == Int::class.javaPrimitiveType
-        }?.name
+    private fun findSaveSkinMethod() = themeHelperClass?.declaredMethods?.firstOrNull {
+        it.parameterTypes.size == 2 && it.parameterTypes[0] == Context::class.java &&
+                it.parameterTypes[1] == Int::class.javaPrimitiveType
+    }?.name
+
+    private fun findThemeListClickClass() = "tv.danmaku.bili.ui.theme.ThemeStoreActivity".findClassOrNull(mClassLoader)?.declaredClasses?.firstOrNull {
+        it.interfaces.contains(View.OnClickListener::class.java)
+    }?.name
+
+    private fun findThemeNameClass() = classesList.filter {
+        it.startsWith("tv.danmaku.bili.ui.garb")
+    }.firstOrNull { c ->
+        c.findClassOrNull(mClassLoader)?.declaredFields?.filter {
+            Modifier.isStatic(it.modifiers) && it.type == Map::class.java
+        }?.count() == 1
     }
 
-    private fun findThemeListClickClass(): String? {
-        return "tv.danmaku.bili.ui.theme.ThemeStoreActivity".findClassOrNull(mClassLoader)?.declaredClasses?.firstOrNull {
-            it.interfaces.contains(View.OnClickListener::class.java)
-        }?.name
-    }
-
-    private fun findThemeNameClass(): String? {
-        return classesList.filter {
-            it.startsWith("tv.danmaku.bili.ui.garb")
-        }.firstOrNull { c ->
-            c.findClassOrNull(mClassLoader)?.declaredFields?.filter {
-                Modifier.isStatic(it.modifiers) && it.type == Map::class.java
-            }?.count() == 1
-        }
-    }
-
-    private fun findThemeNameField(): String? {
-        return themeNameClass?.declaredFields?.firstOrNull {
-            it.type == Map::class.java
-                    && Modifier.isStatic(it.modifiers)
-        }?.name
-    }
+    private fun findThemeNameField() = themeNameClass?.declaredFields?.firstOrNull {
+        it.type == Map::class.java
+                && Modifier.isStatic(it.modifiers)
+    }?.name
 
     private fun findVideoDetailField(): String? {
         val detailClass = "tv.danmaku.bili.ui.video.api.BiliVideoDetail".findClass(mClassLoader)
@@ -592,40 +541,34 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         }?.name
     }
 
-    private fun findThemeHelper(): String? {
-        return classesList.filter {
-            it.startsWith("tv.danmaku.bili.ui.theme")
-        }.firstOrNull { c ->
-            c.findClassOrNull(mClassLoader)?.declaredFields?.filter {
-                Modifier.isStatic(it.modifiers)
-            }?.filter {
-                it.type == SparseArray::class.java
-            }?.count()?.let { it > 1 } ?: false
-        }
+    private fun findThemeHelper() = classesList.filter {
+        it.startsWith("tv.danmaku.bili.ui.theme")
+    }.firstOrNull { c ->
+        c.findClassOrNull(mClassLoader)?.declaredFields?.filter {
+            Modifier.isStatic(it.modifiers)
+        }?.filter {
+            it.type == SparseArray::class.java
+        }?.count()?.let { it > 1 } ?: false
     }
 
-    private fun findThemeIdHelper(): String? {
-        return classesList.filter {
-            it.startsWith("tv.danmaku.bili.ui.theme")
-        }.firstOrNull { c ->
-            c.findClassOrNull(mClassLoader)?.declaredFields?.filter {
-                Modifier.isStatic(it.modifiers)
-            }?.filter {
-                it.type == SparseArray::class.java
-            }?.count()?.let { it == 1 } ?: false
-        }
+    private fun findThemeIdHelper() = classesList.filter {
+        it.startsWith("tv.danmaku.bili.ui.theme")
+    }.firstOrNull { c ->
+        c.findClassOrNull(mClassLoader)?.declaredFields?.filter {
+            Modifier.isStatic(it.modifiers)
+        }?.filter {
+            it.type == SparseArray::class.java
+        }?.count()?.let { it == 1 } ?: false
     }
 
-    private fun findColumnHelper(): String? {
-        return classesList.filter {
-            it.startsWith("com.bilibili.column.helper")
-        }.firstOrNull { c ->
-            c.findClassOrNull(mClassLoader)?.declaredFields?.filter {
-                Modifier.isStatic(it.modifiers)
-            }?.filter {
-                it.type == SparseArray::class.java
-            }?.count()?.let { it > 1 } ?: false
-        }
+    private fun findColumnHelper() = classesList.filter {
+        it.startsWith("com.bilibili.column.helper")
+    }.firstOrNull { c ->
+        c.findClassOrNull(mClassLoader)?.declaredFields?.filter {
+            Modifier.isStatic(it.modifiers)
+        }?.filter {
+            it.type == SparseArray::class.java
+        }?.count()?.let { it > 1 } ?: false
     }
 
     private fun findThemeProcessor(): String? {
@@ -639,28 +582,22 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         }
     }
 
-    private fun findThemeResetMethods(): String? {
-        return themeProcessorClass?.declaredMethods?.filter {
-            it.parameterTypes.isEmpty() && it.modifiers == 0
-        }?.joinToString(";") { it.name }
-    }
+    private fun findThemeResetMethods() = themeProcessorClass?.declaredMethods?.filter {
+        it.parameterTypes.isEmpty() && it.modifiers == 0
+    }?.joinToString(";") { it.name }
 
-    private fun findAddSettingMethod(): String? {
-        return homeUserCenterClass?.declaredMethods?.firstOrNull {
-            it.parameterTypes.size == 2 && it.parameterTypes[0] == Context::class.java && it.parameterTypes[1] == List::class.java
-        }?.name
-    }
+    private fun findAddSettingMethod() = homeUserCenterClass?.declaredMethods?.firstOrNull {
+        it.parameterTypes.size == 2 && it.parameterTypes[0] == Context::class.java && it.parameterTypes[1] == List::class.java
+    }?.name
 
-    private fun findSettingRouterClass(): String? {
-        return classesList.filter {
-            it.startsWith("tv.danmaku.bili.ui.main2.mine")
-        }.firstOrNull { c ->
-            c.findClass(mClassLoader)?.run {
-                declaredFields.filter {
-                    it.type == menuGroupItemClass && Modifier.isPublic(it.modifiers)
-                }.count() > 0
-            } ?: false
-        }
+    private fun findSettingRouterClass() = classesList.filter {
+        it.startsWith("tv.danmaku.bili.ui.main2.mine")
+    }.firstOrNull { c ->
+        c.findClass(mClassLoader)?.run {
+            declaredFields.filter {
+                it.type == menuGroupItemClass && Modifier.isPublic(it.modifiers)
+            }.count() > 0
+        } ?: false
     }
 
     private fun findSectionClass(): String? {
@@ -674,11 +611,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         }
     }
 
-    private fun findLikeMethod(): String? {
-        return sectionClass?.declaredMethods?.firstOrNull {
-            it.parameterTypes.size == 1 && it.parameterTypes[0] == Object::class.java
-        }?.name
-    }
+    private fun findLikeMethod() = sectionClass?.declaredMethods?.firstOrNull {
+        it.parameterTypes.size == 1 && it.parameterTypes[0] == Object::class.java
+    }?.name
 
     private fun findDrawerClass(): String? {
         val navigationViewClass = "android.support.design.widget.NavigationView".findClassOrNull(mClassLoader)
@@ -695,25 +630,21 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         }
     }
 
-    private fun findDownloadThreadListener(): String? {
-        return classesList.filter {
-            it.startsWith("tv.danmaku.bili.ui.offline")
-        }.firstOrNull { c ->
-            c.findClassOrNull(mClassLoader)?.run {
-                declaredMethods.filter { m ->
-                    m.name == "onClick"
-                }.count() > 0 && declaredFields.filter {
-                    it.type == TextView::class.java || it.type == downloadingActivityClass
-                }.count() > 1
-            } ?: false
-        }
+    private fun findDownloadThreadListener() = classesList.filter {
+        it.startsWith("tv.danmaku.bili.ui.offline")
+    }.firstOrNull { c ->
+        c.findClassOrNull(mClassLoader)?.run {
+            declaredMethods.filter { m ->
+                m.name == "onClick"
+            }.count() > 0 && declaredFields.filter {
+                it.type == TextView::class.java || it.type == downloadingActivityClass
+            }.count() > 1
+        } ?: false
     }
 
-    private fun findDownloadThreadField(): String? {
-        return downloadingActivityClass?.declaredFields?.firstOrNull {
-            it.type == Int::class.javaPrimitiveType
-        }?.name
-    }
+    private fun findDownloadThreadField() = downloadingActivityClass?.declaredFields?.firstOrNull {
+        it.type == Int::class.javaPrimitiveType
+    }?.name
 
 
     companion object {

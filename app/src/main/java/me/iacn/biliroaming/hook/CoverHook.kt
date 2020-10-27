@@ -13,7 +13,6 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import de.robv.android.xposed.XC_MethodHook
-import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.utils.*
 import java.io.File
 
@@ -102,7 +101,7 @@ class CoverHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                     clear()
                                     put(MediaStore.Video.Media.IS_PENDING, 0)
                                 }
-                                resolver.update(uri, contentValues, null, null);
+                                resolver.update(uri, contentValues, null, null)
                             }
                         }
                     } ?: run {
@@ -122,7 +121,7 @@ class CoverHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
             }
         }
-        val liveId = instance.getId("controller_underlay")
+        val liveId = getId("controller_underlay")
         activity.findViewById<View>(liveId)?.setOnTouchListener { _, event ->
             gestureDetector.onTouchEvent(event)
             false

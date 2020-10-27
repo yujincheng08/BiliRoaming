@@ -35,7 +35,7 @@ class DarkHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 if (param2.thisObject == this)
                     param2.result = activity
             }
-            val viewId = instance.getId("mine_day_night_setting")
+            val viewId = getId("mine_day_night_setting")
             callMethod("onClick", View(activity).apply { id = viewId })
             unhook?.unhook()
         }

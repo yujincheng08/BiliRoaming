@@ -1,6 +1,5 @@
 package me.iacn.biliroaming.hook
 
-import android.content.Context
 import android.content.SharedPreferences
 import me.iacn.biliroaming.Protos
 import me.iacn.biliroaming.utils.*
@@ -39,6 +38,10 @@ class EnvHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }.toByteArray()
             }
         }
+//        // Disable tinker
+//        "com.tencent.tinker.loader.app.TinkerApplication".findClass(mClassLoader)?.hookBeforeAllConstructors { param ->
+//            param.args[0] = 0
+//        }
     }
 
     override fun lateInitHook() {

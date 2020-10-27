@@ -19,12 +19,10 @@ import kotlin.reflect.KProperty
 class Weak(val initializer: () -> Class<*>?) {
     private var weakReference: WeakReference<Class<*>?>? = null
 
-    operator fun getValue(thisRef: Any?, property: KProperty<*>): Class<*>? {
-        return weakReference?.get() ?: let {
-            weakReference = WeakReference(initializer())
-            weakReference
-        }?.get()
-    }
+    operator fun getValue(thisRef: Any?, property: KProperty<*>) = weakReference?.get() ?: let {
+        weakReference = WeakReference(initializer())
+        weakReference
+    }?.get()
 
     operator fun setValue(thisRef: Any?, property: KProperty<*>, value: Class<*>) {
         weakReference = WeakReference(value)
@@ -46,28 +44,24 @@ fun bv2av(bv: String): Long {
     return (r - 8728348608).xor(177451812)
 }
 
-fun getPackageVersion(packageName: String): String {
-    return try {
-        systemContext.packageManager.getPackageInfo(packageName, 0).run {
-            @Suppress("DEPRECATION")
-            String.format("${packageName}@%s(%d)", versionName, versionCode)
-        }
-    } catch (e: Throwable) {
-        Log.e(e)
-        "(unknown)"
+fun getPackageVersion(packageName: String) = try {
+    systemContext.packageManager.getPackageInfo(packageName, 0).run {
+        @Suppress("DEPRECATION")
+        String.format("${packageName}@%s(%d)", versionName, versionCode)
     }
+} catch (e: Throwable) {
+    Log.e(e)
+    "(unknown)"
 }
 
-fun getVersionCode(packageName: String): String? {
-    return try {
-        systemContext.packageManager.getPackageInfo(packageName, 0).run {
-            @Suppress("DEPRECATION")
-            versionCode.toString()
-        }
-    } catch (e: Throwable) {
-        Log.e(e)
-        null
+fun getVersionCode(packageName: String) = try {
+    systemContext.packageManager.getPackageInfo(packageName, 0).run {
+        @Suppress("DEPRECATION")
+        versionCode.toString()
     }
+} catch (e: Throwable) {
+    Log.e(e)
+    null
 }
 
 
@@ -113,6 +107,8 @@ fun signQuery(query: String?): String? {
     queryMap["platform"] = platform
     return instance.libBiliClass?.callStaticMethod(instance.signQueryName(), queryMap).toString()
 }
+
+fun getId(name: String) = instance.ids[name] ?: currentContext.resources.getIdentifier(name, "id", currentContext.packageName)
 
 fun getBitmapFromURL(src: String?, callback: (Bitmap?) -> Unit) {
     Thread {

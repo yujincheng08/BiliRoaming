@@ -14,7 +14,6 @@ import java.lang.reflect.Proxy
 
 
 class SettingHook(classLoader: ClassLoader) : BaseHook(classLoader) {
-    private val settingUri = "bilibili://biliroaming"
     private var startSetting = false
 
     override fun startHook() {
@@ -33,7 +32,7 @@ class SettingHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
 
         instance.drawerClass?.hookAfterMethod("onCreateView", LayoutInflater::class.java, ViewGroup::class.java, Bundle::class.java) { param ->
-            val navSettingId = instance.getId("nav_settings")
+            val navSettingId = getId("nav_settings")
             val nav = param.thisObject.javaClass.declaredFields.first { it.type.name == "android.support.design.widget.NavigationView" }.name
             param.thisObject.getObjectField(nav)?.callMethodAs<View>("findViewById", navSettingId)?.setOnLongClickListener {
                 SettingDialog(param.thisObject.callMethodAs<Activity>("getActivity")).show()
@@ -48,14 +47,14 @@ class SettingHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             item.setIntField("id", 114514)
                     .setObjectField("title", "哔哩漫游设置")
                     .setObjectField("icon", "https://i0.hdslb.com/bfs/album/276769577d2a5db1d9f914364abad7c5253086f6.png")
-                    .setObjectField("uri", settingUri)
+                    .setObjectField("uri", SETTING_URI)
             val lastGroup = (param.args[1] as MutableList<*>).lastOrNull()
                     ?: return@hookBeforeMethod
             lastGroup.getObjectFieldAs<MutableList<Any>>("itemList").add(item)
         }
 
         instance.settingRouterClass?.hookBeforeAllConstructors { param ->
-            if (param.args[1] != settingUri) return@hookBeforeAllConstructors
+            if (param.args[1] != SETTING_URI) return@hookBeforeAllConstructors
             val routerType = (param.method as Constructor<*>).parameterTypes[3]
             param.args[3] = Proxy.newProxyInstance(routerType.classLoader, arrayOf(routerType)) { _, method, _ ->
                 val returnType = method.returnType
@@ -78,5 +77,6 @@ class SettingHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     companion object {
         const val START_SETTING_KEY = "biliroaming_start_setting"
+        const val SETTING_URI = "bilibili://biliroaming"
     }
 }

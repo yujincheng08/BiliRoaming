@@ -209,9 +209,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
 
 
         private fun onVersionClick(): Boolean {
-            if (prefs.getBoolean("hidden", false) || counter == 7) {
-                return true
-            }
+            if (prefs.getBoolean("hidden", false) || counter == 7) return true
             counter++
             if (counter == 7) {
                 prefs.edit()?.putBoolean("hidden", true)?.apply()
@@ -295,15 +293,13 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         }
 
         @FlowPreview
-        override fun onPreferenceClick(preference: Preference): Boolean {
-            return when (preference.key) {
-                "version" -> onVersionClick()
-                "update" -> onUpdateClick()
-                "thanks" -> onThanksClick()
-                "custom_backup" -> onCustomBackupClick()
-                "test_cdn" -> onTestCdnClick()
-                else -> false
-            }
+        override fun onPreferenceClick(preference: Preference) = when (preference.key) {
+            "version" -> onVersionClick()
+            "update" -> onUpdateClick()
+            "thanks" -> onThanksClick()
+            "custom_backup" -> onCustomBackupClick()
+            "test_cdn" -> onTestCdnClick()
+            else -> false
         }
     }
 

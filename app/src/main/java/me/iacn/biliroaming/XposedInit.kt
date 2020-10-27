@@ -111,16 +111,14 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
         }
     }
 
-    private fun startLog(): Process? {
-        return try {
-            logFile.delete()
-            logFile.createNewFile()
-            val cmd = arrayOf("logcat", "-T", SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault()).format(Date()), "-f", logFile.absolutePath)
-            Runtime.getRuntime().exec(cmd)
-        } catch (e: Throwable) {
-            Log.e(e)
-            null
-        }
+    private fun startLog() = try {
+        logFile.delete()
+        logFile.createNewFile()
+        val cmd = arrayOf("logcat", "-T", SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault()).format(Date()), "-f", logFile.absolutePath)
+        Runtime.getRuntime().exec(cmd)
+    } catch (e: Throwable) {
+        Log.e(e)
+        null
     }
 
     companion object {

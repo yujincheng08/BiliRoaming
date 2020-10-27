@@ -79,13 +79,12 @@ class ColorChooseDialog(context: Context, defColor: Int) : AlertDialog.Builder(c
         tvColorB.text = progressB.toString()
     }
 
-    private fun handleUnknownColor(color: String): Int {
-        return try {
-            Color.parseColor("#$color")
-        } catch (e: IllegalArgumentException) {
-            Color.BLACK
-        }
-    }
+    private fun handleUnknownColor(color: String) =
+            try {
+                Color.parseColor("#$color")
+            } catch (e: IllegalArgumentException) {
+                Color.BLACK
+            }
 
     init {
         setView(view)

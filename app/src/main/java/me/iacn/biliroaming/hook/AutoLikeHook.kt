@@ -12,7 +12,7 @@ class AutoLikeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
         Log.d("startHook: AutoLike")
 
-        val likeId = instance.getId("frame1")
+        val likeId = getId("frame1")
 
         instance.sectionClass?.hookAfterMethod(instance.likeMethod(), Object::class.java) { param ->
             val sec = param.thisObject ?: return@hookAfterMethod

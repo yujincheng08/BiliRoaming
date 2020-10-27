@@ -28,14 +28,10 @@ fun hookSSL(classLoader: ClassLoader) {
         override fun checkServerTrusted(chain: Array<out X509Certificate>, authType: String) {
         }
 
-        override fun getAcceptedIssuers(): Array<X509Certificate> {
-            return emptyArray()
-        }
+        override fun getAcceptedIssuers(): Array<X509Certificate> = emptyArray()
 
         @Suppress("unused", "UNUSED_PARAMETER")
-        fun checkServerTrusted(chain: Array<X509Certificate>, authType: String, host: String): List<X509Certificate> {
-            return ArrayList()
-        }
+        fun checkServerTrusted(chain: Array<X509Certificate>, authType: String, host: String): List<X509Certificate> = emptyList()
     })
 
     "javax.net.ssl.TrustManagerFactory".hookBeforeMethod(classLoader, "getTrustManagers") { param ->

@@ -323,14 +323,14 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
         val hooker = fun(param: MethodHookParam) {
             val old = param.result as Notification? ?: return
-            val iconId = instance.getId("icon")
-            val text1Id = instance.getId("text1")
-            val text2Id = instance.getId("text2")
-            val action1Id = instance.getId("action1")
-            val action2Id = instance.getId("action2")
-            val action3Id = instance.getId("action3")
-            val action4Id = instance.getId("action4")
-            val stopId = instance.getId("stop")
+            val iconId = getId("icon")
+            val text1Id = getId("text1")
+            val text2Id = getId("text2")
+            val action1Id = getId("action1")
+            val action2Id = getId("action2")
+            val action3Id = getId("action3")
+            val action4Id = getId("action4")
+            val stopId = getId("stop")
 
             if (old.extras.containsKey("Primitive")) return
 
@@ -416,7 +416,7 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         }
                     }
 
-                    buttons[stopId]?.icon = instance.getId("sobot_icon_close_normal")
+                    buttons[stopId]?.icon = getId("sobot_icon_close_normal")
                     var buttonCount = 0
                     for (button in buttons) {
                         button.value.run {

@@ -339,9 +339,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     private fun getNewResult(content: String?, fieldName: String, beanClass: Class<*>): Pair<Int?, Any?> {
-        if (content == null) {
-            return null to null
-        }
+        content ?: return null to null
         val contentJson = JSONObject(content)
         val resultJson = contentJson.optJSONObject(fieldName) ?: return null to null
         val code = contentJson.optInt("code")
