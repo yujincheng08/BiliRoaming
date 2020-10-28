@@ -5,9 +5,11 @@ import android.app.Activity
 import android.app.Application
 import android.app.Instrumentation
 import android.content.Context
+import android.content.SharedPreferences
 import android.content.res.AssetManager
 import android.content.res.Resources
 import android.os.Build
+import com.crossbowffs.remotepreferences.RemotePreferences
 import de.robv.android.xposed.IXposedHookLoadPackage
 import de.robv.android.xposed.IXposedHookZygoteInit
 import de.robv.android.xposed.XC_MethodHook
@@ -33,7 +35,9 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
         if (BuildConfig.APPLICATION_ID == lpparam.packageName) {
             MainActivity.Companion::class.java.name.replaceMethod(lpparam.classLoader,
                     "isModuleActive") { true }
+            return
         }
+        extendPackages(lpparam.classLoader, lpparam.packageName)
         if (!Constant.BILIBILI_PACKAGE_NAME.containsValue(lpparam.packageName)) return
         Instrumentation::class.java.hookBeforeMethod("callApplicationOnCreate", Application::class.java) { param ->
             // Hook main process and download process
@@ -109,6 +113,25 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                 Log.toast("出现错误${e.message}，部分功能可能失效。")
             }
         }
+    }
+
+    private fun extendPackages(classLoader: ClassLoader, packageName: String) = try {
+        val thread = "android.app.ActivityThread".findClass(classLoader)?.callStaticMethod("currentActivityThread")
+        val systemContext = thread?.callMethodAs<Context>("getSystemContext")
+        val appContext = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val oldPackageName = systemContext?.getObjectField("mOpPackageName")
+            systemContext?.setObjectField("mOpPackageName", packageName)
+            val appContext = systemContext?.createPackageContext(packageName, 0)
+            systemContext?.setObjectField("mOpPackageName", oldPackageName)
+            appContext
+        } else {
+            systemContext?.createPackageContext(packageName, 0)
+        }
+        val prefs: SharedPreferences = RemotePreferences(appContext, BuildConfig.APPLICATION_ID, "${BuildConfig.APPLICATION_ID}_preferences")
+        val value = prefs.getStringSet("extra_packages", emptySet())!!
+        Constant.BILIBILI_PACKAGE_NAME.putAll(value.associateWith { it })
+    } catch (e: Throwable) {
+        Log.e(e)
     }
 
     private fun startLog() = try {

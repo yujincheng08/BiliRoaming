@@ -91,7 +91,6 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         }
 
         private fun checkCompatibleVersion() {
-            val packageName = AndroidAppHelper.currentPackageName()
             val versionCode = currentContext.packageManager.getPackageInfo(packageName, 0).versionCode
             var supportLiveHook = false
             var supportAdd4K = false
@@ -103,15 +102,15 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 false
             }
             val supportMain = !isBuiltIn || !is64 || Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
-            when (packageName) {
-                Constant.PLAY_PACKAGE_NAME -> {
+            when (platform) {
+                "android_i" -> {
                     if (versionCode in 2050410..2080109) supportLiveHook = true
                     supportAdd4K = true
                 }
-                Constant.BLUE_PACKAGE_NAME -> {
+                "android_b" -> {
                     if (versionCode < 6080000) supportAdd4K = true
                 }
-                Constant.PINK_PACKAGE_NAME -> {
+                "android" -> {
                     if (versionCode >= 6120000) supportDark = false
                 }
             }

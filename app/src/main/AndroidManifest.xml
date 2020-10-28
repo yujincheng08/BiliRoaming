@@ -43,6 +43,11 @@
             android:name="xposedminversion"
             android:value="53" />
 
+        <provider
+            android:name=".MyPreferenceProvider"
+            android:authorities="me.iacn.biliroaming"
+            android:exported="true"
+            tools:ignore="ExportedContentProvider" />
     </application>
 
 </manifest>
