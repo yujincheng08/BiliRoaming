@@ -5,7 +5,6 @@ package me.iacn.biliroaming
 import android.app.Activity
 import android.app.Activity.RESULT_CANCELED
 import android.app.AlertDialog
-import android.app.AndroidAppHelper
 import android.content.*
 import android.content.res.Resources
 import android.graphics.Bitmap
