@@ -2,6 +2,7 @@
 
 package me.iacn.biliroaming
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.ComponentName
@@ -27,6 +28,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import me.iacn.biliroaming.hook.SettingHook
 import me.iacn.biliroaming.utils.fetchJson
+import java.io.File
 import java.io.InputStream
 
 
@@ -91,6 +93,7 @@ class MainActivity : Activity() {
 
         override fun onResume() {
             super.onResume()
+            setWorldReadable()
             when {
                 isModuleActive() -> {
                     runningStatusPref.setTitle(R.string.running_status_enable)
@@ -108,6 +111,18 @@ class MainActivity : Activity() {
                     runningStatusPref.setTitle(R.string.running_status_disable)
                     runningStatusPref.setSummary(R.string.not_running_summary)
                 }
+            }
+        }
+
+        @SuppressLint("SetWorldReadable")
+        private fun setWorldReadable() {
+            val dataDir = File(activity.applicationInfo.dataDir)
+            val sharedPrefsDir = File(dataDir, "shared_prefs")
+            val prefsXmlFile = File(sharedPrefsDir, "${preferenceManager.sharedPreferencesName}.xml")
+            if (!prefsXmlFile.exists()) return
+            arrayOf(dataDir, sharedPrefsDir, prefsXmlFile).forEach {
+                it.setReadable(true, false)
+                it.setExecutable(true, false)
             }
         }
 
