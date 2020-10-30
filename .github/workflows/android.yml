@@ -23,7 +23,9 @@ jobs:
       - name: Sign Android release
         if: success()
         id: sign
-        uses: r0adkll/sign-android-release@v1
+        uses: yujincheng08/sign-android-release@29bfd09
+        env:
+          BUILD_TOOLS_VERSION: "30.0.2"
         with:
           releaseDirectory: app/build/outputs/apk/release
           signingKeyBase64: ${{ secrets.SIGNING_KEY }}
