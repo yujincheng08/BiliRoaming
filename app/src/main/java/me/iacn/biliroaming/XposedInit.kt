@@ -12,6 +12,7 @@ import com.crossbowffs.remotepreferences.RemotePreferences
 import de.robv.android.xposed.IXposedHookLoadPackage
 import de.robv.android.xposed.IXposedHookZygoteInit
 import de.robv.android.xposed.XC_MethodHook
+import de.robv.android.xposed.XSharedPreferences
 import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam
 import me.iacn.biliroaming.hook.*
 import me.iacn.biliroaming.utils.*
@@ -115,13 +116,17 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
     }
 
     private fun extendPackages(classLoader: ClassLoader, packageName: String) = try {
-        val thread = "android.app.ActivityThread".findClass(classLoader)?.callStaticMethod("currentActivityThread")
-        val systemContext = thread?.callMethodAs<Context>("getSystemContext")
-        val appContext = systemContext?.createPackageContext(packageName, 0)?.apply {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
-                setObjectField("mOpPackageName", packageName)
+        val prefs = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val thread = "android.app.ActivityThread".findClass(classLoader)?.callStaticMethod("currentActivityThread")
+            val systemContext = thread?.callMethodAs<Context>("getSystemContext")
+            val appContext = systemContext?.createPackageContext(packageName, 0)?.apply {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
+                    setObjectField("mOpPackageName", packageName)
+            }
+            RemotePreferences(appContext, BuildConfig.APPLICATION_ID, "${BuildConfig.APPLICATION_ID}_preferences")
+        } else {
+            XSharedPreferences(BuildConfig.APPLICATION_ID, "${BuildConfig.APPLICATION_ID}_preferences")
         }
-        val prefs = RemotePreferences(appContext, BuildConfig.APPLICATION_ID, "${BuildConfig.APPLICATION_ID}_preferences")
         val value = prefs.getStringSet("extra_packages", emptySet()).orEmpty()
         Constant.BILIBILI_PACKAGE_NAME.putAll(value.associateWith { it })
     } catch (e: Throwable) {
