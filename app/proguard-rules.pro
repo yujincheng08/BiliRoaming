@@ -11,7 +11,8 @@
 }
 
 # For Xpatch only
--keepclassmembers class kotlinx.coroutines.internal.MainDispatcherLoader { <fields>; }
+-keep class kotlinx.coroutines.internal.MainDispatcherFactory { <clinit>(); }
+-keep class kotlinx.coroutines.CoroutineExceptionHandler { <clinit>(); }
 
 -keepclassmembers class * {
     @android.webkit.JavascriptInterface <methods>;

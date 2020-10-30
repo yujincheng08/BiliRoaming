@@ -112,20 +112,19 @@ class CoverHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
         })
 
-        for (i in 0 until group.childCount) {
-            val view = group.getChildAt(i)
-            if (view.javaClass.name.startsWith("tv.danmaku.biliplayerv2.widget.gesture")) {
-                view.setOnTouchListener { _, event ->
-                    gestureDetector.onTouchEvent(event)
-                    false
-                }
-            }
-        }
-        val liveId = getId("controller_underlay")
-        activity.findViewById<View>(liveId)?.setOnTouchListener { _, event ->
+        val onTouchListener = View.OnTouchListener { _, event ->
             gestureDetector.onTouchEvent(event)
             false
         }
+
+        for (i in 0 until group.childCount) {
+            val view = group.getChildAt(i)
+            if (view.javaClass.name.startsWith("tv.danmaku.biliplayerv2.widget.gesture")) {
+                view.setOnTouchListener(onTouchListener)
+            }
+        }
+        val liveId = getId("controller_underlay")
+        activity.findViewById<View>(liveId)?.setOnTouchListener(onTouchListener)
     }
 
     val bgmClass by Weak { "com.bilibili.bangumi.ui.page.detail.playerV2.BangumiPlayerFragmentV2".findClass(mClassLoader) }
