@@ -190,7 +190,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             Protos.ViewReply.newBuilder().run {
                 arc = Protos.Arc.newBuilder().run {
                     aid = result.getLong("aid")
-                    attribute = result.getInt("attribute")
+                    attribute = result.optInt("attribute")
                     author = Protos.Author.newBuilder().run {
                         val owner = result.getJSONObject("owner")
                         mid = owner.getLong("mid")
@@ -280,6 +280,11 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     })
                 }
                 shortLink = result.getString("short_link")
+                val tIcon = result.getJSONObject("t_icon")
+                for (key in tIcon.keys()) {
+                    val icon = tIcon.getJSONObject(key).getString("icon")
+                    putTIcon(key, Protos.TIcon.newBuilder().setIcon(icon).build())
+                }
                 val tags = result.getJSONArray("tag")
                 for (i in 0 until tags.length()) {
                     val tag = tags.getJSONObject(i)

@@ -374,8 +374,7 @@ message ViewReply {
     string share_subtitle = 0x1a;
     string short_link = 0x15;
     repeated Staff staff = 0x13;
-    // This one should be removed for Xpatch compatibility
-    // map<string, TIcon> t_icon = 0x6;
+    map<string, TIcon> t_icon = 0x6;
     repeated Tag tag = 0x5;
     UgcSeason ugc_season = 0x18;
     string vip_active = 0xd;
