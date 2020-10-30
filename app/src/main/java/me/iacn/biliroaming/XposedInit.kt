@@ -5,7 +5,6 @@ import android.app.Activity
 import android.app.Application
 import android.app.Instrumentation
 import android.content.Context
-import android.content.SharedPreferences
 import android.content.res.AssetManager
 import android.content.res.Resources
 import android.os.Build
@@ -118,17 +117,12 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
     private fun extendPackages(classLoader: ClassLoader, packageName: String) = try {
         val thread = "android.app.ActivityThread".findClass(classLoader)?.callStaticMethod("currentActivityThread")
         val systemContext = thread?.callMethodAs<Context>("getSystemContext")
-        val appContext = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            val oldPackageName = systemContext?.getObjectField("mOpPackageName")
-            systemContext?.setObjectField("mOpPackageName", packageName)
-            val appContext = systemContext?.createPackageContext(packageName, 0)
-            systemContext?.setObjectField("mOpPackageName", oldPackageName)
-            appContext
-        } else {
-            systemContext?.createPackageContext(packageName, 0)
+        val appContext = systemContext?.createPackageContext(packageName, 0)?.apply {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
+                setObjectField("mOpPackageName", packageName)
         }
-        val prefs: SharedPreferences = RemotePreferences(appContext, BuildConfig.APPLICATION_ID, "${BuildConfig.APPLICATION_ID}_preferences")
-        val value = prefs.getStringSet("extra_packages", emptySet())!!
+        val prefs = RemotePreferences(appContext, BuildConfig.APPLICATION_ID, "${BuildConfig.APPLICATION_ID}_preferences")
+        val value = prefs.getStringSet("extra_packages", emptySet()).orEmpty()
         Constant.BILIBILI_PACKAGE_NAME.putAll(value.associateWith { it })
     } catch (e: Throwable) {
         Log.e(e)
