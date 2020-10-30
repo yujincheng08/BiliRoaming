@@ -1,3 +1,5 @@
+-repackageclasses "biliroaming"
+
 -keep class * implements de.robv.android.xposed.IXposedHookLoadPackage {
     public void *(de.robv.android.xposed.callbacks.XC_LoadPackage$LoadPackageParam);
 }
@@ -9,10 +11,6 @@
 -keepclassmembers class * extends com.google.protobuf.GeneratedMessageLite {
   <fields>;
 }
-
-# For Xpatch only
--keep class kotlinx.coroutines.internal.MainDispatcherFactory { <clinit>(); }
--keep class kotlinx.coroutines.CoroutineExceptionHandler { <clinit>(); }
 
 -keepclassmembers class * {
     @android.webkit.JavascriptInterface <methods>;
