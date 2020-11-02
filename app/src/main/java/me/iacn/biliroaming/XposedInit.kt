@@ -8,11 +8,9 @@ import android.content.Context
 import android.content.res.AssetManager
 import android.content.res.Resources
 import android.os.Build
-import com.crossbowffs.remotepreferences.RemotePreferences
 import de.robv.android.xposed.IXposedHookLoadPackage
 import de.robv.android.xposed.IXposedHookZygoteInit
 import de.robv.android.xposed.XC_MethodHook
-import de.robv.android.xposed.XSharedPreferences
 import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam
 import me.iacn.biliroaming.hook.*
 import me.iacn.biliroaming.utils.*
@@ -37,8 +35,8 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                     "isModuleActive") { true }
             return
         }
-        extendPackages(lpparam.classLoader, lpparam.packageName)
-        if (!Constant.BILIBILI_PACKAGE_NAME.containsValue(lpparam.packageName)) return
+        if (!Constant.BILIBILI_PACKAGE_NAME.containsValue(lpparam.packageName) &&
+                "tv.danmaku.bili.MainActivityV2".findClassOrNull(lpparam.classLoader) == null) return
         Instrumentation::class.java.hookBeforeMethod("callApplicationOnCreate", Application::class.java) { param ->
             // Hook main process and download process
             @Suppress("DEPRECATION")
@@ -113,24 +111,6 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                 Log.toast("出现错误${e.message}，部分功能可能失效。")
             }
         }
-    }
-
-    private fun extendPackages(classLoader: ClassLoader, packageName: String) = try {
-        val prefs = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val thread = "android.app.ActivityThread".findClass(classLoader)?.callStaticMethod("currentActivityThread")
-            val systemContext = thread?.callMethodAs<Context>("getSystemContext")
-            val appContext = systemContext?.createPackageContext(packageName, 0)?.apply {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
-                    setObjectField("mOpPackageName", packageName)
-            }
-            RemotePreferences(appContext, BuildConfig.APPLICATION_ID, "${BuildConfig.APPLICATION_ID}_preferences")
-        } else {
-            XSharedPreferences(BuildConfig.APPLICATION_ID, "${BuildConfig.APPLICATION_ID}_preferences")
-        }
-        val value = prefs.getStringSet("extra_packages", emptySet()).orEmpty()
-        Constant.BILIBILI_PACKAGE_NAME.putAll(value.associateWith { it })
-    } catch (e: Throwable) {
-        Log.e(e)
     }
 
     private fun startLog() = try {

@@ -12,14 +12,12 @@ import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
-import android.preference.MultiSelectListPreference
 import android.preference.Preference
 import android.preference.Preference.OnPreferenceChangeListener
 import android.preference.Preference.OnPreferenceClickListener
 import android.preference.PreferenceCategory
 import android.preference.PreferenceFragment
 import android.support.annotation.Keep
-import android.util.AttributeSet
 import android.util.Log
 import android.view.View
 import android.widget.Toast
@@ -36,16 +34,6 @@ import java.io.InputStream
  * Created by iAcn on 2019/3/23
  * Email i@iacn.me
  */
-
-@Keep
-class PackageSelectionPreference(context: Context, attributeSet: AttributeSet) : MultiSelectListPreference(context, attributeSet) {
-    override fun onPrepareDialogBuilder(builder: AlertDialog.Builder?) {
-        val packageNames = context.packageManager.getInstalledPackages(0).map { it.packageName }.toTypedArray()
-        entries = packageNames
-        entryValues = packageNames
-        super.onPrepareDialogBuilder(builder)
-    }
-}
 
 class MainActivity : Activity() {
 
@@ -160,9 +148,7 @@ class MainActivity : Activity() {
         }
 
         private fun onSettingClick(): Boolean {
-            val packages = HashMap<String, String>()
-            Constant.BILIBILI_PACKAGE_NAME.filterTo(packages) { isPackageInstalled(it.value) }
-            prefs.getStringSet("extra_packages", emptySet())?.associateWithTo(packages) { it }
+            val packages = Constant.BILIBILI_PACKAGE_NAME.filter { isPackageInstalled(it.value) }
             when {
                 packages.size == 1 -> startSetting(packages.values.first())
                 packages.isEmpty() -> Toast.makeText(activity, "未检测到已安装的客户端", Toast.LENGTH_LONG).show()

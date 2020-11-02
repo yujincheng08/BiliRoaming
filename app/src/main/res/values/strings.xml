@@ -126,6 +126,4 @@
     <string name="speed_formatter">%sKB/s</string>
     <string name="cdn">CDN</string>
     <string name="speed">速度</string>
-    <string name="extra_packages_title">添加额外包名</string>
-    <string name="extra_packages_summary">可以添加各种共存版包名以实现兼容</string>
 </resources>

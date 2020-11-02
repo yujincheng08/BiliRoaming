@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?><!--suppress DeprecatedClassUsageInspection -->
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <PreferenceCategory
-        android:title="@string/setting">
+    <PreferenceCategory android:title="@string/setting">
 
         <Preference
             android:key="feature"
@@ -18,14 +17,6 @@
             android:key="hide_icon"
             android:summary="@string/hide_icon_summary"
             android:title="@string/hide_icon_title" />
-
-        <me.iacn.biliroaming.PackageSelectionPreference
-            android:key="extra_packages"
-            android:title="@string/extra_packages_title"
-            android:summary="@string/extra_packages_summary"
-            android:entries="@array/empty"
-            android:entryValues="@array/empty"
-            />
 
         <Preference
             android:key="help"
