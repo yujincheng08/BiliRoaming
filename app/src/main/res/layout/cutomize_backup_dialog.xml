@@ -39,7 +39,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_columnWeight="4"
-        android:hint="bilibili-hk-api.kghost.info"
+        android:hint="bili-hk.lovesykun.cn"
         android:tag="hk_server"
         tools:ignore="HardcodedText" />
 
@@ -55,7 +55,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_columnWeight="4"
-        android:hint="bilibili-sg-api.kghost.info"
+        android:hint="bilibili-tw-api.kghost.info"
         android:tag="tw_server"
         tools:ignore="HardcodedText" />
 
@@ -71,7 +71,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_columnWeight="4"
-        android:hint="bilibili-cn-api.kghost.info"
+        android:hint="bilibili-sg-api.kghost.info"
         android:tag="sg_server"
         tools:ignore="HardcodedText" />
 
