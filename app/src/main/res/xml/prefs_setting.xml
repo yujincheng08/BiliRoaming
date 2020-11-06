@@ -23,61 +23,15 @@
             android:dependency="main_func"
             android:key="custom_backup"
             android:title="@string/custom_backup_title"
-            android:summary="@string/custom_backup_summary"
-            />
+            android:summary="@string/custom_backup_summary" />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/cdn_category">
-
-        <SwitchPreference
-            android:key="free_flow"
-            android:dependency="main_func"
-            android:disableDependentsState="true"
-            android:summary="@string/free_flow_summary"
-            android:title="@string/free_flow_title" />
-
-        <SwitchPreference
-            android:key="force_https"
-            android:dependency="free_flow"
-            android:disableDependentsState="true"
-            android:summary="@string/force_https_summary"
-            android:title="@string/force_https_title" />
-
-        <SwitchPreference
-            android:dependency="force_https"
-            android:key="use_cdn"
-            android:summary="@string/use_cdn_summary"
-            android:title="@string/use_cdn_title" />
-
-
         <ListPreference
-            android:defaultValue="@string/cdn_default"
-            android:dependency="use_cdn"
-            android:entries="@array/cdn_entries"
-            android:entryValues="@array/cdn_values"
-            android:key="cdn"
-            android:summary="@string/cdn_summary"
-            android:title="@string/cdn_title" />
-
-        <EditTextPreference
-            android:dependency="use_cdn"
-            android:key="custom_cdn"
-            android:hint="@string/cdn_placeholder"
-            android:summary="@string/custom_cdn_summary"
-            android:title="@string/custom_cdn_title" />
-
-        <Preference
-            android:dependency="use_cdn"
-            android:key="test_cdn"
-            android:summary="@string/test_cdn_summary"
-            android:title="@string/test_cdn_title">
-        </Preference>
-
-        <ListPreference
-            android:defaultValue=""
+            android:defaultValue="@string/cos_host"
             android:entries="@array/upos_entries"
             android:entryValues="@array/upos_values"
-            android:key="upos"
+            android:key="upos_host"
             android:summary="@string/upos_summary"
             android:title="@string/upos_title" />
 
@@ -107,11 +61,11 @@
         <SwitchPreference
             android:key="follow_dark"
             android:summary="@string/follow_dark_summary"
-            android:title="@string/follow_dark_title"/>
+            android:title="@string/follow_dark_title" />
         <SwitchPreference
             android:key="drawer"
             android:summary="@string/drawer_summary"
-            android:title="@string/drawer_title"/>
+            android:title="@string/drawer_title" />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/miscellaneous_category">
@@ -153,12 +107,12 @@
         <SwitchPreference
             android:key="custom_download_thread"
             android:summary="@string/custom_download_thread_summary"
-            android:title="@string/custom_download_thread_title"/>
+            android:title="@string/custom_download_thread_title" />
 
         <SwitchPreference
             android:key="get_cover"
             android:summary="@string/get_cover_summary"
-            android:title="@string/get_cover_title"/>
+            android:title="@string/get_cover_title" />
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/setting_category">
         <SwitchPreference
@@ -169,7 +123,7 @@
 
         <SwitchPreference
             android:key="save_log"
-            android:title="@string/save_log_title"/>
+            android:title="@string/save_log_title" />
     </PreferenceCategory>
 
     <PreferenceCategory
@@ -211,8 +165,7 @@
             android:dependency="hidden"
             android:key="purify_home_tab"
             android:summary="@string/purify_home_tab_summary"
-            android:title="@string/purify_home_tab_title"
-            />
+            android:title="@string/purify_home_tab_title" />
         <SwitchPreference
             android:dependency="hidden"
             android:key="purify_city"

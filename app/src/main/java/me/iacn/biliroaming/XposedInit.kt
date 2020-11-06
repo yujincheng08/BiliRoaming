@@ -63,7 +63,6 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                     startHook(TeenagersModeHook(lpparam.classLoader))
                     startHook(CommentHook(lpparam.classLoader))
                     startHook(JsonHook(lpparam.classLoader))
-                    startHook(CDNHook(lpparam.classLoader, lpparam.processName))
                     startHook(MiniProgramHook(lpparam.classLoader))
                     startHook(AutoLikeHook(lpparam.classLoader))
                     startHook(SettingHook(lpparam.classLoader))
@@ -82,7 +81,6 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                 }
                 lpparam.processName.endsWith(":download") -> {
                     BiliBiliPackage(lpparam.classLoader, param.args[0] as Context)
-                    startHook(CDNHook(lpparam.classLoader, lpparam.processName))
                 }
             }
         }

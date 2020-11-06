@@ -1,33 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string-array name="cdn_entries">
-        <item>香港（电信用）</item>
-        <item>香港（移动、联通用）</item>
-        <item>东京</item>
-        <item>台湾</item>
-        <item>韩国</item>
-        <item>俄罗斯</item>
-        <item>马来西亚</item>
-        <item>德国</item>
-        <item>瑞典</item>
-        <item>美国</item>
-        <item>自定义</item>
-    </string-array>
-    <string-array name="cdn_values">
-        <item>219.76.10.185</item>
-        <item>203.186.47.170</item>
-        <item>23.62.226.208</item>
-        <item>203.69.81.59</item>
-        <item>173.223.227.56</item>
-        <item>2.20.254.184</item>
-        <item>23.45.232.26</item>
-        <item>2.21.78.123</item>
-        <item>23.211.136.74</item>
-        <item>23.44.51.8</item>
-        <item />
-    </string-array>
     <string-array name="upos_entries">
-        <item>不替换</item>
         <item>ks3（金山）</item>
         <item>kodo（七牛）</item>
         <item>cos（腾讯）</item>
@@ -35,15 +8,16 @@
         <item>wcs（网宿）</item>
         <item>xycdn（迅雷）</item>
         <item>hw（251）</item>
+        <item>akamai（海外，不能免流）</item>
     </string-array>
     <string-array name="upos_values">
-        <item />
-        <item>ks3u</item>
-        <item>kodou</item>
-        <item>cosu</item>
-        <item>bosu</item>
-        <item>wcsu</item>
-        <item>xycdn</item>
-        <item>hw</item>
+        <item>@string/ks3_host</item>
+        <item>@string/kodo_host</item>
+        <item>@string/cos_host</item>
+        <item>@string/bos_host</item>
+        <item>@string/wcs_host</item>
+        <item>@string/xycdn_host</item>
+        <item>@string/hw_host</item>
+        <item>@string/akamai_host</item>
     </string-array>
 </resources>

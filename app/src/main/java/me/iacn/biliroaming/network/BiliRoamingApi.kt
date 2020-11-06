@@ -5,15 +5,16 @@ import android.app.AndroidAppHelper
 import android.net.Uri
 import android.os.Build
 import android.os.Handler
-import android.webkit.CookieManager
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import me.iacn.biliroaming.BuildConfig
-import me.iacn.biliroaming.Constant.AKAMAI_HOST
-import me.iacn.biliroaming.Constant.BILI_CACHE_HOST
+import me.iacn.biliroaming.R
+import me.iacn.biliroaming.XposedInit
 import me.iacn.biliroaming.network.StreamUtils.getContent
-import me.iacn.biliroaming.utils.*
+import me.iacn.biliroaming.utils.Log
+import me.iacn.biliroaming.utils.currentContext
+import me.iacn.biliroaming.utils.sPrefs
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
@@ -22,7 +23,6 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
-import kotlin.random.Random
 
 
 /**
@@ -47,6 +47,8 @@ object BiliRoamingApi {
     private const val KGHOST_CN_API_URL = "bili.lovesykun.cn"
     private const val KGHOST_PLAYURL = "/pgc/player/web/playurl"
     private const val BACKUP_PLAYURL = "/pgc/player/api/playurl"
+
+    private val HOST_REGEX = Regex("""://[^/]+/""")
 
     @JvmStatic
     fun getSeason(info: Map<String, String?>, hidden: Boolean): String? {
@@ -201,23 +203,15 @@ object BiliRoamingApi {
         builder.appendQueryParameter("module", "pgc")
         builder.appendQueryParameter("otype", "json")
         builder.appendQueryParameter("platform", "android")
-        return getContent(builder.toString(),
-                if (sPrefs.getString("upos", "").isNullOrEmpty()) null else
-                    mapOf("upos_server" to sPrefs.getString("upos", "cosu")!!)).run {
+        return getContent(builder.toString()).run {
             if (this != null && contains("\"code\":0")) this
             else getBackupUrl(queryString, info)?.let {
                 JSONObject(it).optJSONObject("result")?.toString() ?: it
             }
-        }?.run {
-            when {
-                sPrefs.getBoolean("free_flow", false) -> {
-                    replace(Regex("""https?:\\?/\\?/${AKAMAI_HOST}"""), "http://${BILI_CACHE_HOST.format(Random.nextInt(1, 9))}")
-                }
-                sPrefs.getBoolean("force_https", false) ->
-                    replace(Regex("""http:\\?/\\?/${AKAMAI_HOST}"""), "https://${AKAMAI_HOST}")
-                else -> replace(Regex("""https:\\?/\\?/${AKAMAI_HOST}"""), "http://${AKAMAI_HOST}")
-            }
-        }
+        }?.replace(HOST_REGEX, "://${
+            sPrefs.getString("upos_host", null)
+                    ?: XposedInit.moduleRes.getString(R.string.cos_host)
+        }/")
     }
 
     @JvmStatic
@@ -262,7 +256,7 @@ object BiliRoamingApi {
     }
 
     @SuppressLint("SetJavaScriptEnabled")
-    fun getContent(urlString: String, cookie: Map<String, String>? = null): String? {
+    fun getContent(urlString: String): String? {
         val timeout = 3000
         return try {
             // Work around for android 7
@@ -270,10 +264,6 @@ object BiliRoamingApi {
                     urlString.startsWith("https") &&
                     !urlString.contains("bilibili.com")) {
                 Log.d("Found Android 7, try to bypass ssl issue")
-                val cookieManger = CookieManager.getInstance()
-                URL(urlString).host.let {
-                    cookie?.forEach { k, v -> cookieManger.setCookie(it, "${k}=${v}") }
-                }
                 val handler = Handler(AndroidAppHelper.currentApplication().mainLooper)
                 val listener = object : Any() {
                     val latch = CountDownLatch(1)
@@ -312,10 +302,6 @@ object BiliRoamingApi {
                 connection.setRequestProperty("Build", BuildConfig.VERSION_CODE.toString())
                 connection.connectTimeout = timeout
                 connection.readTimeout = timeout
-                val cookies = cookie?.map { item ->
-                    "${item.key}=${item.value}"
-                }?.joinToString(separator = "; ")
-                connection.setRequestProperty("Cookie", cookies)
                 connection.setRequestProperty("x-from-biliroaming", BuildConfig.VERSION_NAME)
                 connection.connect()
                 if (connection.responseCode == HttpURLConnection.HTTP_OK) {

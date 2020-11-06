@@ -12,7 +12,10 @@ import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.preference.*
+import android.preference.Preference
+import android.preference.PreferenceCategory
+import android.preference.PreferenceFragment
+import android.preference.SwitchPreference
 import android.provider.MediaStore
 import android.view.ContextThemeWrapper
 import android.view.LayoutInflater
@@ -53,10 +56,8 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             }
             findPreference("version").summary = BuildConfig.VERSION_NAME
             findPreference("version").onPreferenceClickListener = this
-            findPreference("test_cdn").onPreferenceClickListener = this
             findPreference("custom_splash").onPreferenceChangeListener = this
             findPreference("custom_splash_logo").onPreferenceChangeListener = this
-            findPreference("custom_cdn").onPreferenceChangeListener = this
             findPreference("save_log").summary = moduleRes.getString(R.string.save_log_summary).format(logFile.absolutePath)
             findPreference("thanks").onPreferenceClickListener = this
             findPreference("custom_backup").onPreferenceClickListener = this
@@ -160,12 +161,6 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 "custom_splash_logo" -> {
                     if (newValue as Boolean)
                         selectImage(LOGO_SELECTION)
-                }
-                "custom_cdn" -> {
-                    if (!(newValue as String).matches(Constant.CDN_REGEX)) {
-                        Log.toast("无效输入")
-                        return false
-                    }
                 }
             }
             return true
@@ -284,19 +279,11 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         }
 
         @FlowPreview
-        private fun onTestCdnClick(): Boolean {
-            val pref = findPreference("custom_cdn") as EditTextPreference
-            SpeedTestDialog(pref, activity).show()
-            return true
-        }
-
-        @FlowPreview
         override fun onPreferenceClick(preference: Preference) = when (preference.key) {
             "version" -> onVersionClick()
             "update" -> onUpdateClick()
             "thanks" -> onThanksClick()
             "custom_backup" -> onCustomBackupClick()
-            "test_cdn" -> onTestCdnClick()
             else -> false
         }
     }

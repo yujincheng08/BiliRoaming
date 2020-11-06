@@ -20,7 +20,4 @@ object Constant {
     const val TYPE_EPISODE_ID = 2
     const val CUSTOM_COLOR_KEY = "biliroaming_custom_color"
     const val DEFAULT_CUSTOM_COLOR = -0xe6b7d
-    const val AKAMAI_HOST = "upos-hz-mirrorakam.akamaized.net"
-    const val BILI_CACHE_HOST = "cn-hk-eq-bcache-0%d.bilivideo.com"
-    val CDN_REGEX = Regex("""^(?<ip>(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))(?::(?![7-9]\d\d\d\d)(?!6[6-9]\d\d\d)(?!65[6-9]\d\d)(?!655[4-9]\d)(?!6553[6-9])(?!0+)(?<port>\d{1,5}))?$""")
 }

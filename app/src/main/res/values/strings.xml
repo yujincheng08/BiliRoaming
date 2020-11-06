@@ -24,13 +24,6 @@
     <string name="comment_floor_summary">恢复以前版本的评论楼层显示</string>
     <string name="add_live_summary">开启Play版的直播功能</string>
     <string name="add_live_title">Play版添加直播</string>
-    <string name="use_cdn_summary">设置CDN加速港澳台番剧加载（海外用户没必要开）</string>
-    <string name="use_cdn_title">加速港澳台番剧</string>
-    <string name="cdn_summary">选择速度最快的CDN服务器</string>
-    <string name="cdn_title">CDN服务器</string>
-    <string name="cdn_default">219.76.10.185</string>
-    <string name="custom_cdn_title">自定义CDN</string>
-    <string name="custom_cdn_summary">设置自定义CDN的IP地址</string>
     <string name="cdn_category">加速CDN设置</string>
     <string name="hidden_title">启用隐藏功能</string>
     <string name="hidden_summary">打开后可以使用隐藏功能</string>
@@ -43,8 +36,6 @@
     <string name="hidden_group">隐藏功能</string>
     <string name="show_info_summary">显示解锁版权、允许下载等状态信息</string>
     <string name="show_info_title">提示模块运行信息</string>
-    <string name="test_cdn_title">CDN测速</string>
-    <string name="test_cdn_summary">点击打开CDN测速器</string>
     <string name="main_category">解锁番剧限制</string>
     <string name="miscellaneous_category">杂项</string>
     <string name="setting_category">设置</string>
@@ -60,7 +51,7 @@
     <string name="tg_title">TG群</string>
     <string name="tg_summary">点击加入TG群（不禁言但需要翻墙）</string>
     <string name="tg_url">https://t.me/biliroaming</string>
-    <string name="upos_summary">设置大陆番剧的服务器，仅对海外用户生效</string>
+    <string name="upos_summary">设置解锁番剧的服务器，可加快视频加载速度</string>
     <string name="upos_title">UPOS服务器设置</string>
     <string name="purify_splash_summary">去除启动客户端时的推广</string>
     <string name="purify_splash_title">净化开屏页面</string>
@@ -83,7 +74,7 @@
     <string name="help_url">https://github.com/yujincheng08/BiliRoaming/wiki</string>
     <string name="purify_search_title">净化搜索页面</string>
     <string name="purify_search_summary">去除搜索页面的热搜和推荐</string>
-    <string name="demo">实例</string>
+    <string name="demo">示例</string>
     <string name="runtime_app_fuck">运行环境：应用转生</string>
     <string name="not_support">当前版本客户端不支持此功能</string>
     <string name="os_not_support">当前系统版本不支持此功能</string>
@@ -92,13 +83,8 @@
     <string name="group_url">http://qm.qq.com/cgi-bin/qm/qr?from=app&amp;p=android&amp;k=Qk8NsOfgC-afK4Vqhnqg9FBF2l1oL0sp</string>
     <string name="setting_title">打开模块设置</string>
     <string name="setting_summary">启动客户端并打开模块设置</string>
-    <string name="force_https_title">强制使用HTTPS播放地址</string>
-    <string name="force_https_summary">如果没有加载速度，可以尝试打开此项；打开后，CDN加速将失效</string>
-    <string name="cdn_placeholder">如1.2.3.4:80，端口不填则默认为80</string>
     <string name="add_4k_title">添加4K支持</string>
     <string name="add_4k_summary">为概念版和Play版添加4K支持（仍需大会员）</string>
-    <string name="free_flow_title">使用免流播放地址</string>
-    <string name="free_flow_summary">如有哔哩哔哩免流卡，可启用以尝试免流解锁番剧（不保证免流效果，请自行确认）；启用后，无法强制HTTPS地址，也无法使用CDN加速</string>
     <string name="custom_download_thread_title">自定义同时缓存数</string>
     <string name="custom_download_thread_summary">自定义最多可以同时下载的视频个数（超过一个需要大会员）</string>
     <string name="save_log_title">保存日志到文件</string>
@@ -123,7 +109,12 @@
     <string name="purify_city_title">净化同城标签</string>
     <string name="purify_city_summary">去除动态页面的同城标签</string>
     <string name="setting">设置</string>
-    <string name="speed_formatter">%sKB/s</string>
-    <string name="cdn">CDN</string>
-    <string name="speed">速度</string>
+    <string name="ks3_host">upos-sz-mirrorks3.bilivideo.com</string>
+    <string name="kodo_host">upos-sz-mirrorkodo.bilivideo.com</string>
+    <string name="cos_host">upos-sz-mirrorcos.bilivideo.com</string>
+    <string name="bos_host">upos-sz-mirrorbos.bilivideo.com</string>
+    <string name="wcs_host">upos-sz-mirrorwcs.bilivideo.com</string>
+    <string name="xycdn_host">upos-sz-mirrorxycdn.bilivideo.com</string>
+    <string name="hw_host">upos-sz-mirrorhw.bilivideo.com</string>
+    <string name="akamai_host">upos-hz-mirrorakam.akamaized.net</string>
 </resources>
