@@ -12,10 +12,7 @@ import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.preference.Preference
-import android.preference.PreferenceCategory
-import android.preference.PreferenceFragment
-import android.preference.SwitchPreference
+import android.preference.*
 import android.provider.MediaStore
 import android.view.ContextThemeWrapper
 import android.view.LayoutInflater
@@ -23,7 +20,6 @@ import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
@@ -61,6 +57,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("save_log").summary = moduleRes.getString(R.string.save_log_summary).format(logFile.absolutePath)
             findPreference("thanks").onPreferenceClickListener = this
             findPreference("custom_backup").onPreferenceClickListener = this
+            findPreference("test_upos").onPreferenceClickListener = this
             checkCompatibleVersion()
             checkUpdate()
         }
@@ -278,12 +275,18 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             return true
         }
 
-        @FlowPreview
+        private fun onTestUposClick(): Boolean {
+            SpeedTestDialog(findPreference("upos_host") as ListPreference, activity).show()
+            return true
+        }
+
+
         override fun onPreferenceClick(preference: Preference) = when (preference.key) {
             "version" -> onVersionClick()
             "update" -> onUpdateClick()
             "thanks" -> onThanksClick()
             "custom_backup" -> onCustomBackupClick()
+            "test_upos" -> onTestUposClick()
             else -> false
         }
     }

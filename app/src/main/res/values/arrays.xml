@@ -1,23 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string-array name="upos_entries">
-        <item>ks3（金山）</item>
-        <item>kodo（七牛）</item>
         <item>cos（腾讯）</item>
-        <item>bos（百度）</item>
+        <item>cosb（腾讯）</item>
+        <item>uptx（腾讯）</item>
+        <item>ks3（金山）</item>
+        <item>ks3b（金山）</item>
+        <item>ks3c（金山）</item>
+        <item>ks32（金山）</item>
+        <item>kodo（七牛）</item>
+        <item>kodob（七牛）</item>
         <item>wcs（网宿）</item>
-        <item>xycdn（迅雷）</item>
+        <item>wcsb（网宿）</item>
+        <item>upws（网宿）</item>
+        <item>bda2（网宿）</item>
         <item>hw（251）</item>
+        <item>hwb（251）</item>
+        <item>uphw（251）</item>
+        <item>js（251）</item>
+        <item>hk（香港）</item>
         <item>akamai（海外，不能免流）</item>
     </string-array>
     <string-array name="upos_values">
-        <item>@string/ks3_host</item>
-        <item>@string/kodo_host</item>
         <item>@string/cos_host</item>
-        <item>@string/bos_host</item>
+        <item>@string/cosb_host</item>
+        <item>@string/uptx_host</item>
+        <item>@string/ks3_host</item>
+        <item>@string/ks3b_host</item>
+        <item>@string/ks3c_host</item>
+        <item>@string/ks32_host</item>
+        <item>@string/kodo_host</item>
+        <item>@string/kodob_host</item>
         <item>@string/wcs_host</item>
-        <item>@string/xycdn_host</item>
+        <item>@string/wcsb_host</item>
+        <item>@string/upws_host</item>
+        <item>@string/upbda2_host</item>
         <item>@string/hw_host</item>
+        <item>@string/hwb_host</item>
+        <item>@string/uphw_host</item>
+        <item>@string/js_host</item>
         <item>@string/akamai_host</item>
     </string-array>
 </resources>

@@ -35,6 +35,11 @@
             android:summary="@string/upos_summary"
             android:title="@string/upos_title" />
 
+        <Preference
+            android:key="test_upos"
+            android:summary="@string/test_upos_summary"
+            android:title="@string/test_upos_title">
+        </Preference>
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/beautify_category">
