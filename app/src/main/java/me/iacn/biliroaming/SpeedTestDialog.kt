@@ -155,7 +155,7 @@ class SpeedTestDialog(private val pref: ListPreference, activity: Activity) : Al
 
     private suspend fun getTestUrl() = withContext(Dispatchers.Default) {
         fetchJson(fileUrl)?.optJSONObject("dash")?.getJSONArray("audio")?.run {
-            (0 until length()).map { idx -> getJSONObject(idx) }
+            (0 until length()).map { idx -> optJSONObject(idx) }
         }?.minWithOrNull { a, b -> a.optInt("bandwidth") - b.optInt("bandwidth") }?.optString("base_url")?.replace("https", "http")
     }
 }

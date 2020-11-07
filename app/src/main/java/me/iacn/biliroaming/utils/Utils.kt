@@ -129,5 +129,9 @@ fun getBitmapFromURL(src: String?, callback: (Bitmap?) -> Unit) {
 
 fun String?.toJSONObject() = JSONObject(this.orEmpty())
 
+@Suppress("UNCHECKED_CAST")
+fun <T> JSONArray.asSequence() = (0 until length()).asSequence().map { get(it) as T }
+
 operator fun JSONArray.iterator(): Iterator<JSONObject> = (0 until length()).asSequence().map { get(it) as JSONObject }.iterator()
+
 fun JSONArray?.orEmpty() = this ?: JSONArray()
