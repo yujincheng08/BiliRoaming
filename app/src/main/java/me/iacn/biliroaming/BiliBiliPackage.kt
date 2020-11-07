@@ -65,6 +65,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val splashInfoClass by Weak { "tv.danmaku.bili.ui.splash.brand.BrandShowInfo".findClass(mClassLoader) }
     val commentRpcClass by Weak { "com.bilibili.app.comm.comment2.model.rpc.CommentRpcKt".findClassOrNull(mClassLoader) }
     val checkBlueClass by Weak { mHookInfo["class_check_blue"]?.findClass(mClassLoader) }
+    val kotlinJsonClass by Weak { "kotlinx.serialization.json.Json".findClassOrNull(mClassLoader) }
+    val kotlinSerializableClass by Weak { "kotlinx.serialization.Serializable".findClassOrNull(mClassLoader) }
+
 
     val classesList by lazy { DexFile(AndroidAppHelper.currentApplication().packageCodePath).entries().toList() }
     private val okHttpClientClass by Weak { mHookInfo["class_http_client"]?.findClass(mClassLoader) }
@@ -121,10 +124,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     fun themeName() = mHookInfo["field_theme_name"]
 
     fun shareWrapper() = mHookInfo["method_share_wrapper"]
-
-    fun httpClientBuild() = mHookInfo["method_http_client_build"]
-
-    fun proxySelector() = mHookInfo["field_proxy_selector"]
 
     fun downloadingThread() = mHookInfo["field_download_thread"]
 

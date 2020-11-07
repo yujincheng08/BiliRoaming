@@ -24,7 +24,28 @@ import java.net.URL
 class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     companion object {
         val lastSeasonInfo: MutableMap<String, String?> = HashMap()
+
+        private val jsonNonStrict = lazy {
+            instance.kotlinJsonClass?.getStaticObjectField("Companion")?.callMethod("getNonstrict")
+        }
+        const val FAIL_CODE = -404
     }
+
+    private val isSerializable by lazy {
+        "com.bilibili.bangumi.data.page.detail.entity.BangumiUniformSeason\$\$serializer".findClassOrNull(mClassLoader) != null
+    }
+
+    private fun Any.toJson() = if (isSerializable)
+        jsonNonStrict.value?.callMethodAs<String>("stringify", javaClass.getStaticObjectField("Companion")?.callMethod("serializer"), this).toJSONObject()
+    else
+        instance.fastJsonClass?.callStaticMethodAs<String>("toJSONString", this).toJSONObject()
+
+    private fun Class<*>.fromJson(json: String) = if (isSerializable)
+        jsonNonStrict.value?.callMethod("parse", getStaticObjectField("Companion")?.callMethod("serializer"), json)
+    else
+        instance.fastJsonClass?.callStaticMethod(instance.fastJsonParse(), json, this)
+
+    private fun Class<*>.fromJson(json: JSONObject) = fromJson(json.toString())
 
     override fun startHook() {
         if (!sPrefs.getBoolean("main_func", false)) return
@@ -63,7 +84,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 } else if (url != null && (url.startsWith("https://app.bilibili.com/x/v2/view") ||
                                 url.startsWith("https://app.bilibili.com/x/intl/view") ||
                                 url.startsWith("https://appintl.biliapi.net/intl/gateway/app/view")) &&
-                        body.getIntField("code") == -404) {
+                        body.getIntField("code") == FAIL_CODE) {
                     fixView(body, url)
                 } else if (url != null && url.startsWith("https://appintl.biliapi.net/intl/gateway/app/search/type")) {
                     fixPlaySearchType(body, url)
@@ -101,65 +122,47 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val resultClass = body.getObjectField("data")?.javaClass ?: return
         if (!url.contains("type=7") && !url.contains("type=8")) return
         val newUrl = url.replace("appintl.biliapi.net/intl/gateway/app/", "app.bilibili.com/x/v2/")
-        val content = getContent(newUrl) ?: return
-        val (_, newResult) = getNewResult(content, "data", resultClass)
-        newResult ?: return
+        val content = getContent(newUrl)?.toJSONObject()?.optJSONObject("data") ?: return
+        val newResult = resultClass.fromJson(content) ?: return
         body.setObjectField("data", newResult)
     }
 
     private fun fixBangumi(body: Any) {
-        val result = body.getObjectField("result")
+        val fieldName = if (isSerializable) "data" else "result"
+        val result = body.getObjectField(fieldName)
+        val code = body.getIntField("code")
+        if (instance.bangumiUniformSeasonClass?.isInstance(result) != true && code != FAIL_CODE) return
+        val jsonResult = result?.toJson()
         // Filter normal bangumi and other responses
-        if (isBangumiWithWatchPermission(body.getIntField("code"), result)) {
-            result?.let {
-                if (instance.bangumiUniformSeasonClass?.isInstance(it) == true) {
-                    allowDownload(it)
-                    lastSeasonInfo.clear()
-                }
-            }
-            return
-        }
-        Log.toast("发现版权番剧，尝试解锁……")
-        Log.d("Info: $lastSeasonInfo")
-        val content = getSeason(lastSeasonInfo, result == null)
-        val (code, newResult) = instance.bangumiUniformSeasonClass?.let { getNewResult(content, "result", it) }
-                ?: return
-
-        if (newResult != null && code != null && isBangumiWithWatchPermission(code, newResult)) {
-            Log.d("Got new season information from proxy server: $content")
-            lastSeasonInfo["title"] = newResult.getObjectFieldAs<String>("title").toString()
-            Log.toast("已从代理服务器获取番剧信息")
+        if (isBangumiWithWatchPermission(jsonResult, code)) {
+            jsonResult?.also { allowDownload(it) }
         } else {
+            Log.toast("发现版权番剧，尝试解锁……")
+            Log.d("Info: $lastSeasonInfo")
+            val (newCode, newJsonResult) = getSeason(lastSeasonInfo, result == null)?.toJSONObject()?.let {
+                it.optInt("code", FAIL_CODE) to it.optJSONObject("result")
+            } ?: FAIL_CODE to null
+            if (isBangumiWithWatchPermission(newJsonResult, newCode)) {
+                Log.d("Got new season information from proxy server: $newJsonResult")
+                lastSeasonInfo["title"] = newJsonResult?.optString("title")
+                allowDownload(newJsonResult, false)
+            }
+            jsonResult?.apply {
+                // Replace only episodes and rights
+                // Remain user information, such as follow status, watch progress, etc.
+                put("rights", newJsonResult?.optJSONObject("rights"))
+                put("episodes", newJsonResult?.optJSONArray("episodes"))
+                remove("limit")
+                put("modules", newJsonResult?.optJSONArray("modules"))
+                remove("dialog")
+            } ?: newJsonResult
+        }?.let {
+            body.setIntField("code", 0).setObjectField(fieldName, instance.bangumiUniformSeasonClass?.fromJson(it))
+        } ?: run {
             Log.d("Failed to get new season information from proxy server")
             Log.toast("解锁失败，请重试")
-            lastSeasonInfo.clear()
-            return
         }
-        val newRights = newResult.getObjectField("rights") ?: return
-        if (sPrefs.getBoolean("allow_download", false))
-            newRights.setBooleanField("allowDownload", true)
-        if (result != null) {
-            // Replace only episodes and rights
-            // Remain user information, such as follow status, watch progress, etc.
-            if (!newRights.getBooleanField("areaLimit")) {
-                val newEpisodes = newResult.getObjectField("episodes")
-                var newModules: Any? = null
-                newResult.javaClass.findFieldOrNull("modules")?.let {
-                    newModules = newResult.getObjectField("modules")
-                }
-                result.setObjectField("rights", newRights)
-                        .setObjectField("episodes", newEpisodes)
-                        .setObjectField("seasonLimit", null)
-                result.javaClass.findFieldOrNull("modules")?.let {
-                    newModules?.let { it2 ->
-                        result.setObjectField(it.name, it2)
-                    }
-                }
-            }
-        } else {
-            body.setIntField("code", 0)
-                    .setObjectField("result", newResult)
-        }
+        lastSeasonInfo.clear()
     }
 
     private fun fixViewProto(req: Protos.ViewReq): Protos.ViewReply? {
@@ -182,129 +185,134 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             build()
         }.query
 
-        val content = BiliRoamingApi.getView(query) ?: return null
-        val result = JSONObject(content).getJSONObject("v2_app_api")
-        if (!result.has("season")) return null
+        val content = BiliRoamingApi.getView(query)?.toJSONObject() ?: return null
+        val result = content.optJSONObject("v2_app_api")
+        if (result?.has("season") != true) return null
 
-        return try {
-            Protos.ViewReply.newBuilder().run {
-                arc = Protos.Arc.newBuilder().run {
-                    aid = result.getLong("aid")
-                    attribute = result.optInt("attribute")
-                    author = Protos.Author.newBuilder().run {
-                        val owner = result.getJSONObject("owner")
-                        mid = owner.getLong("mid")
-                        face = owner.getString("face")
-                        name = owner.getString("name")
-                        build()
+        return Protos.ViewReply.newBuilder().run {
+            arc = Protos.Arc.newBuilder().run {
+                author = Protos.Author.newBuilder().run {
+                    result.optJSONObject("owner")?.run {
+                        mid = optLong("mid")
+                        face = optString("face")
+                        name = optString("name")
                     }
-                    copyright = result.getInt("copyright")
-                    ctime = result.getLong("ctime")
-                    desc = result.getString("desc")
-
-                    dimension = Protos.Dimension.newBuilder().run {
-                        val dimension = result.getJSONObject("dimension")
-                        width = dimension.getLong("width")
-                        height = dimension.getLong("height")
-                        rotate = dimension.getLong("rotate")
-                        build()
-                    }
-
-                    stat = Protos.Stat.newBuilder().run {
-                        val stat = result.getJSONObject("stat")
-                        aid = stat.getLong("aid")
-                        view = stat.getInt("view")
-                        danmaku = stat.getInt("danmaku")
-                        reply = stat.getInt("reply")
-                        fav = stat.getInt("favorite")
-                        coin = stat.getInt("coin")
-                        share = stat.getInt("share")
-                        nowRank = stat.getInt("now_rank")
-                        hisRank = stat.getInt("his_rank")
-                        like = stat.getInt("like")
-                        dislike = stat.getInt("dislike")
-                        build()
-                    }
-                    duration = result.getLong("duration")
-                    firstCid = result.getLong("cid")
-                    pic = result.getString("pic")
-                    pubdate = result.getLong("pubdate")
-                    redirectUrl = result.getString("redirect_url")
-                    state = result.getInt("state")
-                    title = result.getString("title")
-                    typeId = result.getInt("tid")
-                    typeName = result.getString("tname")
-                    videos = result.getLong("videos")
                     build()
                 }
-                bvid = result.getString("bvid")
-                season = Protos.Season.newBuilder().run {
-                    val season = result.getJSONObject("season")
+
+                dimension = Protos.Dimension.newBuilder().run {
+                    result.optJSONObject("dimension")?.run {
+                        width = optLong("width")
+                        height = optLong("height")
+                        rotate = optLong("rotate")
+                    }
+                    build()
+                }
+
+                stat = Protos.Stat.newBuilder().run {
+                    result.optJSONObject("stat")?.run {
+                        aid = optLong("aid")
+                        view = optInt("view")
+                        danmaku = optInt("danmaku")
+                        reply = optInt("reply")
+                        fav = optInt("favorite")
+                        coin = optInt("coin")
+                        share = optInt("share")
+                        nowRank = optInt("now_rank")
+                        hisRank = optInt("his_rank")
+                        like = optInt("like")
+                        dislike = optInt("dislike")
+                    }
+                    build()
+                }
+                result.run {
+                    aid = optLong("aid")
+                    attribute = optInt("attribute")
+                    copyright = optInt("copyright")
+                    ctime = optLong("ctime")
+                    desc = optString("desc")
+                    duration = optLong("duration")
+                    firstCid = optLong("cid")
+                    pic = optString("pic")
+                    pubdate = optLong("pubdate")
+                    redirectUrl = optString("redirect_url")
+                    state = optInt("state")
+                    title = optString("title")
+                    typeId = optInt("tid")
+                    typeName = optString("tname")
+                    videos = optLong("videos")
+                }
+                build()
+            }
+            bvid = result.optString("bvid")
+            season = Protos.Season.newBuilder().run {
+                result.optJSONObject("season")?.run {
                     allowDownload = "1"
-                    seasonId = season.getString("season_id").toLong()
-                    title = season.getString("title")
-                    cover = season.getString("cover")
-                    isFinish = season.getString("is_finish").toInt()
-                    newestEpIndex = season.getString("newest_ep_index")
-                    newestEpid = season.getString("newest_ep_id").toInt()
-                    totalCount = season.getString("total_count").toLong()
-                    weekday = season.getString("weekday").toInt()
-                    ovgPlayurl = season.getString("ogv_play_url")
-                    isJump = season.getInt("is_jump")
-                    build()
+                    seasonId = optString("season_id").toLong()
+                    title = optString("title")
+                    cover = optString("cover")
+                    isFinish = optString("is_finish").toInt()
+                    newestEpIndex = optString("newest_ep_index")
+                    newestEpid = optString("newest_ep_id").toInt()
+                    totalCount = optString("total_count").toLong()
+                    weekday = optString("weekday").toInt()
+                    ovgPlayurl = optString("ogv_play_url")
+                    isJump = optInt("is_jump")
                 }
-                val pages = result.getJSONArray("pages")
-                for (i in 0 until pages.length()) {
-                    addPages(Protos.ViewPage.newBuilder().run {
-                        val page = pages.getJSONObject(i)
-                        downloadSubtitle = page.getString("download_subtitle")
-                        downloadTitle = page.getString("download_title")
-                        this.page = Protos.Page.newBuilder().run {
-                            cid = page.getLong("cid")
-                            this.page = page.getInt("page")
-                            from = page.getString("from")
-                            part = page.getString("part")
-                            duration = page.getLong("duration")
-                            vid = page.getString("vid")
-                            webLink = page.getString("weblink")
-                            dimension = Protos.Dimension.newBuilder().run {
-                                val dimension = page.getJSONObject("dimension")
-                                width = dimension.getLong("width")
-                                height = dimension.getLong("height")
-                                rotate = dimension.getLong("rotate")
-                                build()
+                build()
+            }
+            val pages = result.optJSONArray("pages")
+            for (page in pages.orEmpty()) {
+                addPages(Protos.ViewPage.newBuilder().run {
+                    downloadSubtitle = page.optString("download_subtitle")
+                    downloadTitle = page.optString("download_title")
+                    this.page = Protos.Page.newBuilder().run {
+                        this.page = page.optInt("page")
+                        page.run {
+                            cid = optLong("cid")
+                            from = optString("from")
+                            part = optString("part")
+                            duration = optLong("duration")
+                            vid = optString("vid")
+                            webLink = optString("weblink")
+                        }
+                        dimension = Protos.Dimension.newBuilder().run {
+                            page.optJSONObject("dimension")?.run {
+                                width = optLong("width")
+                                height = optLong("height")
+                                rotate = optLong("rotate")
                             }
                             build()
                         }
                         build()
-                    })
-                }
-                shortLink = result.getString("short_link")
-                val tIcon = result.getJSONObject("t_icon")
-                for (key in tIcon.keys()) {
-                    val icon = tIcon.getJSONObject(key).getString("icon")
+                    }
+                    build()
+                })
+            }
+            shortLink = result.optString("short_link")
+            result.optJSONObject("t_icon")?.let {
+                for (key in it.keys()) {
+                    val icon = it.optJSONObject(key)?.optString("icon")
                     putTIcon(key, Protos.TIcon.newBuilder().setIcon(icon).build())
                 }
-                val tags = result.getJSONArray("tag")
-                for (i in 0 until tags.length()) {
-                    val tag = tags.getJSONObject(i)
-                    addTag(Protos.Tag.newBuilder().run {
-                        id = tag.getLong("tag_id")
-                        name = tag.getString("tag_name")
-                        likes = tag.getLong("likes")
-                        liked = tag.getInt("liked")
-                        hates = tag.getLong("hates")
-                        hated = tag.getInt("hated")
-                        tagType = tag.getString("tag_type")
-                        uri = tag.getString("uri")
-                        build()
-                    })
-                }
-                build()
             }
-        } catch (e: Throwable) {
-            Log.e(e)
-            null
+            val tags = result.optJSONArray("tag")
+            for (tag in tags.orEmpty()) {
+                addTag(Protos.Tag.newBuilder().run {
+                    tag.run {
+                        id = optLong("tag_id")
+                        name = optString("tag_name")
+                        likes = optLong("likes")
+                        liked = optInt("liked")
+                        hates = optLong("hates")
+                        hated = optInt("hated")
+                        tagType = optString("tag_type")
+                        uri = optString("uri")
+                    }
+                    build()
+                })
+            }
+            build()
         }
     }
 
@@ -315,65 +323,38 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         Log.d("Got view information from proxy server: $content")
         val detailClass = "tv.danmaku.bili.ui.video.api.BiliVideoDetail".findClass(mClassLoader)
                 ?: return
-        val (_, newResult) = getNewResult(content, "v2_app_api", detailClass)
-        body.setIntField("code", 0).setObjectField("data", newResult)
-        val bangumiInfo = newResult?.getObjectField("mBangumiInfo")
-        bangumiInfo?.let {
-            val episodeId = bangumiInfo.getObjectField("mEpId") as String?
-            episodeId?.let {
-                lastSeasonInfo["ep_id"] = it
-                val url = URL(urlString)
-                url.query.split("&").filter { it2 ->
-                    it2.startsWith("access_key=")
-                }.forEach { it2 ->
-                    lastSeasonInfo["access_key"] = it2.substring(it2.indexOf("=") + 1)
-                }
+        val newJsonResult = content.toJSONObject().optJSONObject("v2_app_api") ?: return
+        newJsonResult.optJSONObject("season")?.optString("newest_ep_id")?.let {
+            lastSeasonInfo["ep_id"] = it
+            val url = URL(urlString)
+            url.query.split("&").filter { it2 ->
+                it2.startsWith("access_key=")
+            }.forEach { it2 ->
+                lastSeasonInfo["access_key"] = it2.substring(it2.indexOf("=") + 1)
             }
         }
+        body.setIntField("code", 0).setObjectField("data", detailClass.fromJson(newJsonResult))
     }
 
-    private fun isBangumiWithWatchPermission(code: Int, result: Any?): Boolean {
-        if (result != null) {
-            if (instance.bangumiUniformSeasonClass?.isInstance(result) == true) {
-                val rights = result.getObjectField("rights")
-                val areaLimit = rights?.getBooleanField("areaLimit")
-                return areaLimit == null || !areaLimit
-            }
-        }
-        return code != -404
-    }
+    private fun isBangumiWithWatchPermission(result: JSONObject?, code: Int) = result?.let {
+        result.optJSONObject("rights")?.run { !optBoolean("area_limit", true) || optInt("area_limit", 1) == 0 }
+    } ?: run { code != FAIL_CODE }
 
-    private fun getNewResult(content: String?, fieldName: String, beanClass: Class<*>): Pair<Int?, Any?> {
-        content ?: return null to null
-        val contentJson = JSONObject(content)
-        val resultJson = contentJson.optJSONObject(fieldName) ?: return null to null
-        val code = contentJson.optInt("code")
-        val newResult = instance.fastJsonClass?.callStaticMethod(
-                instance.fastJsonParse(), resultJson.toString(), beanClass)
-        return code to newResult
-    }
 
-    private fun allowDownload(result: Any?) {
+    private fun allowDownload(result: JSONObject?, toast: Boolean = true) {
         if (sPrefs.getBoolean("allow_download", false)) {
-            try {
-                val rights = result?.getObjectField("rights")
-                rights?.setBooleanField("allowDownload", true)
-                val modules = result?.getObjectField("modules") as MutableList<*>? ?: return
-                for (it in modules) {
-                    val data = it?.getObjectField("data")
-                    val moduleEpisodes = data?.callMethod("getJSONArray", "episodes") ?: continue
-                    val size = moduleEpisodes.callMethodAs<Int>("size")
-                    for (i in 0 until size) {
-                        val episode = moduleEpisodes.callMethod("getJSONObject", i)
-                        val episodeRights = episode?.callMethod("getJSONObject", "rights")
-                        episodeRights?.callMethod("put", "allow_download", 1)
-                    }
+            val rights = result?.optJSONObject("rights")
+            rights?.put("allow_download", 1)
+            val modules = result?.optJSONArray("modules")
+            for (module in modules.orEmpty()) {
+                val data = module.optJSONObject("data")
+                val moduleEpisodes = data?.optJSONArray("episodes")
+                for (episode in moduleEpisodes.orEmpty()) {
+                    episode.optJSONObject("rights")?.put("allow_download", 1)
                 }
-            } catch (e: Throwable) {
-                Log.e(e)
             }
             Log.d("Download allowed")
-            Log.toast("已允许下载")
+            if (toast) Log.toast("已允许下载")
         }
     }
 

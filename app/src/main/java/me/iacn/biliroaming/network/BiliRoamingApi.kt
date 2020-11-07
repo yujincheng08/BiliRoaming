@@ -39,7 +39,9 @@ object BiliRoamingApi {
     private const val BILI_MODULE_TEMPLATE = "{\"data\": {},\"id\": 0,\"module_style\": {\"hidden\": 0,\"line\": 1},\"more\": \"查看更多\",\"style\": \"positive\",\"title\": \"选集\"}"
 
     private const val KGHOST_TW_API_URL = "bilibili-tw-api.kghost.info"
-    private const val KGHOST_HK_API_URL = "bilibili-hk-api.kghost.info"
+
+    //    private const val KGHOST_HK_API_URL = "bilibili-hk-api.kghost.info"
+    private const val KGHOST_HK_API_URL = "bili-hk.lovesykun.cn"
     private const val KGHOST_SG_API_URL = "bilibili-sg-api.kghost.info"
 
     // this one is invalid since platform check exists in mainland server

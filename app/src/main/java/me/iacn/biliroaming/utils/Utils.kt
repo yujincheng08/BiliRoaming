@@ -7,6 +7,8 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.XposedInit
+import org.json.JSONArray
+import org.json.JSONObject
 import java.io.File
 import java.io.IOException
 import java.lang.ref.WeakReference
@@ -108,7 +110,8 @@ fun signQuery(query: String?): String? {
     return instance.libBiliClass?.callStaticMethod(instance.signQueryName(), queryMap).toString()
 }
 
-fun getId(name: String) = instance.ids[name] ?: currentContext.resources.getIdentifier(name, "id", currentContext.packageName)
+fun getId(name: String) = instance.ids[name]
+        ?: currentContext.resources.getIdentifier(name, "id", currentContext.packageName)
 
 fun getBitmapFromURL(src: String?, callback: (Bitmap?) -> Unit) {
     Thread {
@@ -123,3 +126,8 @@ fun getBitmapFromURL(src: String?, callback: (Bitmap?) -> Unit) {
         })
     }.start()
 }
+
+fun String?.toJSONObject() = JSONObject(this.orEmpty())
+
+operator fun JSONArray.iterator(): Iterator<JSONObject> = (0 until length()).asSequence().map { get(it) as JSONObject }.iterator()
+fun JSONArray?.orEmpty() = this ?: JSONArray()

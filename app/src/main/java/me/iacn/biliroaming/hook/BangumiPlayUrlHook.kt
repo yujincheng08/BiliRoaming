@@ -127,6 +127,42 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
             }
         }
+        "com.bapis.bilibili.pgc.gateway.player.v2.PlayURLMoss".findClass(mClassLoader)?.run {
+            var isDownload = false
+            hookBeforeMethod("playView",
+                    "com.bapis.bilibili.pgc.gateway.player.v2.PlayViewReq") { param ->
+                val request = param.args[0]
+                if (sPrefs.getBoolean("allow_download", false)
+                        && request.callMethodAs<Int>("getDownload") >= 1) {
+                    if (sPrefs.getBoolean("fix_download", false)
+                            && request.callMethodAs<Long>("getQn") != 0L
+                            && request.callMethodAs<Int>("getFnval") != 0) {
+                        isDownload = true
+                    } else {
+                        request.callMethod("setFnval", 0)
+                    }
+                    request.callMethod("setDownload", 0)
+                }
+            }
+            hookAfterMethod("playView",
+                    "com.bapis.bilibili.pgc.gateway.player.v2.PlayViewReq") { param ->
+                val request = param.args[0]
+                val response = param.result
+                if (!response.callMethodAs<Boolean>("hasVideoInfo")) {
+                    val content = getPlayUrl(reconstructQuery(request), BangumiSeasonHook.lastSeasonInfo)
+                    content?.let {
+                        Log.d("Has replaced play url with proxy server $it")
+                        Log.toast("已从代理服务器获取播放地址")
+                        param.result = reconstructResponse(response, it, isDownload)
+                    } ?: run {
+                        Log.e("Failed to get play url")
+                        Log.toast("获取播放地址失败")
+                    }
+                } else if (isDownload) {
+                    param.result = fixDownloadProto(response)
+                }
+            }
+        }
     }
 
     private fun fixDownload(content: String): String {
