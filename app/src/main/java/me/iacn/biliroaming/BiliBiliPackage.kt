@@ -17,7 +17,6 @@ import me.iacn.biliroaming.utils.*
 import java.io.*
 import java.lang.reflect.Modifier
 import java.lang.reflect.ParameterizedType
-import java.net.ProxySelector
 
 /**
  * Created by iAcn on 2019/4/5
@@ -44,7 +43,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val seasonParamsMapClass by Weak { "com.bilibili.bangumi.data.page.detail.BangumiDetailApiService\$UniformSeasonParamsMap".findClass(mClassLoader) }
     val brandSplashClass by Weak { "tv.danmaku.bili.ui.splash.brand.ui.BaseBrandSplashFragment".findClassOrNull(mClassLoader) }
     val urlConnectionClass by Weak { "com.bilibili.lib.okhttp.huc.OkHttpURLConnection".findClass(mClassLoader) }
-    val okHttpClientBuilderClass by Weak { mHookInfo["class_http_client_builder"]?.findClass(mClassLoader) }
     val downloadThreadListenerClass by Weak { mHookInfo["class_download_thread_listener"]?.findClass(mClassLoader) }
     val downloadingActivityClass by Weak { "tv.danmaku.bili.ui.offline.DownloadingActivity".findClassOrNull(mClassLoader) }
     val reportDownloadThreadClass by Weak { mHookInfo["class_report_download_thread"]?.findClass(mClassLoader) }
@@ -66,11 +64,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val commentRpcClass by Weak { "com.bilibili.app.comm.comment2.model.rpc.CommentRpcKt".findClassOrNull(mClassLoader) }
     val checkBlueClass by Weak { mHookInfo["class_check_blue"]?.findClass(mClassLoader) }
     val kotlinJsonClass by Weak { "kotlinx.serialization.json.Json".findClassOrNull(mClassLoader) }
-    val kotlinSerializableClass by Weak { "kotlinx.serialization.Serializable".findClassOrNull(mClassLoader) }
 
 
     val classesList by lazy { DexFile(AndroidAppHelper.currentApplication().packageCodePath).entries().toList() }
-    private val okHttpClientClass by Weak { mHookInfo["class_http_client"]?.findClass(mClassLoader) }
     private val accessKeyInstance by lazy { "com.bilibili.bangumi.ui.page.detail.pay.BangumiPayHelperV2\$accessKey\$2".findClass(mClassLoader)?.getStaticObjectField("INSTANCE") }
 
     @Suppress("UNCHECKED_CAST")
@@ -250,14 +246,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             findDrawerClass()
         }.checkOrPut("method_like") {
             findLikeMethod()
-        }.checkOrPut("class_http_client") {
-            findOkHttpClientClass()
-        }.checkOrPut("class_http_client_builder") {
-            findOkHttpClientBuilderClass()
-        }.checkOrPut("method_http_client_build") {
-            findHttpClientBuildMethod()
-        }.checkOrPut("field_proxy_selector") {
-            findProxySelectorField()
         }.checkOrPut("class_download_thread_listener") {
             findDownloadThreadListener()
         }.checkOrPut("field_download_thread") {
@@ -409,22 +397,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         }
         return arrayOfNulls(2)
     }
-
-    private fun findProxySelectorField() = okHttpClientBuilderClass?.declaredFields?.firstOrNull {
-        it.type == ProxySelector::class.java
-    }?.name
-
-    private fun findHttpClientBuildMethod() = okHttpClientBuilderClass?.declaredMethods?.firstOrNull {
-        it.parameterTypes.isEmpty() && it.returnType == okHttpClientClass
-    }?.name
-
-    private fun findOkHttpClientClass() = urlConnectionClass?.declaredConstructors?.filter {
-        it.parameterTypes.size == 2
-    }?.map { it.parameterTypes[1] }?.firstOrNull()?.name
-
-    private fun findOkHttpClientBuilderClass() = okHttpClientClass?.declaredConstructors?.filter {
-        it.parameterTypes.size == 1
-    }?.map { it.parameterTypes[0] }?.firstOrNull()?.name
 
     private fun findShareWrapperMethod() = shareWrapperClass?.declaredMethods?.firstOrNull {
         it.parameterTypes.size == 2 && it.parameterTypes[0] == String::class.java && it.parameterTypes[1] == Bundle::class.java

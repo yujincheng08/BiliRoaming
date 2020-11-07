@@ -238,12 +238,6 @@ fun MethodHookParam.invokeOriginalMethod(): Any? = invokeOriginalMethod(method, 
 
 fun Any.getObjectField(field: String?): Any? = getObjectField(this, field)
 
-fun Any.getObjectFieldOrNull(field: String?): Any? = try {
-    getObjectField(this, field)
-} catch (e: Throwable) {
-    null
-}
-
 @Suppress("UNCHECKED_CAST")
 fun <T> Any.getObjectFieldAs(field: String?) = getObjectField(this, field) as T
 

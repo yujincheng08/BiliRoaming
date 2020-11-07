@@ -12,9 +12,7 @@ import me.iacn.biliroaming.BuildConfig
 import me.iacn.biliroaming.R
 import me.iacn.biliroaming.XposedInit
 import me.iacn.biliroaming.network.StreamUtils.getContent
-import me.iacn.biliroaming.utils.Log
-import me.iacn.biliroaming.utils.currentContext
-import me.iacn.biliroaming.utils.sPrefs
+import me.iacn.biliroaming.utils.*
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
@@ -57,41 +55,39 @@ object BiliRoamingApi {
         val builder = Uri.Builder()
         builder.scheme("https").encodedAuthority(BILI_SEASON_URL)
         info.filter { !it.value.isNullOrEmpty() }.forEach { builder.appendQueryParameter(it.key, it.value) }
-        val seasonContent = getContent(builder.toString()) ?: return null
-        val seasonJson = JSONObject(seasonContent)
-        val result = seasonJson.getJSONObject("result")
-        reconstructModules(result)
-        fixRight(result)
-        if (hidden) getExtraInfo(result, info["access_key"])
+        val seasonJson = getContent(builder.toString())?.toJSONObject() ?: return null
+        seasonJson.optJSONObject("result")?.also {
+            reconstructModules(it)
+            fixRight(it)
+            if (hidden) getExtraInfo(it, info["access_key"])
+        }
         return seasonJson.toString()
     }
 
     @JvmStatic
     private fun reconstructModules(result: JSONObject) {
         var id = 0
-        val module = JSONObject(BILI_MODULE_TEMPLATE)
-        val episodes = result.getJSONArray("episodes")
-        module.getJSONObject("data").put("episodes", episodes)
+        val module = BILI_MODULE_TEMPLATE.toJSONObject()
+        val episodes = result.optJSONArray("episodes")
+        module.optJSONObject("data")?.put("episodes", episodes)
         module.put("id", ++id)
         val modules = arrayListOf(module)
 
         if (result.has("section")) {
-            val sections = result.getJSONArray("section")
-            for (i in 0 until sections.length()) {
-                val section = sections.getJSONObject(i)
-                val sectionModule = JSONObject(BILI_MODULE_TEMPLATE)
+            val sections = result.optJSONArray("section")
+            for (section in sections.orEmpty()) {
+                val sectionModule = BILI_MODULE_TEMPLATE.toJSONObject()
                         .put("data", section)
                         .put("style", "section")
-                        .put("title", section.getString("title"))
+                        .put("title", section.optString("title"))
                         .put("id", ++id)
                 modules.add(sectionModule)
             }
         }
         if (result.has("seasons")) {
-            val seasons = result.getJSONArray("seasons")
-            val seasonModule = JSONObject(BILI_MODULE_TEMPLATE)
-            val data = JSONObject().put("seasons", seasons)
-            seasonModule.put("data", data)
+            val seasons = result.optJSONArray("seasons")
+            val seasonModule = BILI_MODULE_TEMPLATE.toJSONObject()
+            seasonModule.put("data", JSONObject().put("seasons", seasons))
                     .put("style", "season")
                     .put("title", "")
                     .put("id", ++id)
@@ -105,68 +101,51 @@ object BiliRoamingApi {
 
     @JvmStatic
     private fun fixRight(result: JSONObject) {
-        val rights = result.getJSONObject("rights")
-        rights.put("area_limit", 0)
-
-        if (sPrefs.getBoolean("allow_download", false)) {
-            rights.put("allow_download", 1)
-        }
+        val rights = result.optJSONObject("rights")
+        rights?.put("area_limit", 0)
     }
 
     @JvmStatic
     @Throws(JSONException::class)
     private fun getExtraInfo(result: JSONObject, accessKey: String?) {
-        val mediaId = result.getString("media_id")
+        val mediaId = result.optString("media_id")
         getMediaInfo(result, mediaId, accessKey)
-        val seasonId = result.getString("season_id")
+        val seasonId = result.optString("season_id")
         getUserStatus(result, seasonId, mediaId, accessKey)
     }
 
     @JvmStatic
     private fun getMediaInfo(result: JSONObject, mediaId: String, accessKey: String?) {
-        try {
-            val uri = Uri.Builder()
-                    .scheme("https")
-                    .encodedAuthority(BILI_MEDIA_URL)
-                    .appendQueryParameter("media_id", mediaId)
-                    .appendQueryParameter("access_key", accessKey)
-                    .toString()
-            val mediaContent = getContent(uri)
-            val mediaJson = JSONObject(mediaContent!!)
-            val mediaResult = mediaJson.getJSONObject("result")
-            val actors = mediaResult.getString("actors")
-            result.put("actor", JSONObject("{\"info\": \"$actors\", \"title\": \"角色声优\"}"))
-            val staff = mediaResult.getString("staff")
-            result.put("staff", JSONObject("{\"info\": \"$staff\", \"title\": \"制作信息\"}"))
-            for (field in listOf("alias", "areas", "origin_name", "style", "type_name")) {
-                if (mediaResult.has(field))
-                    result.put(field, mediaResult.get(field))
-            }
-        } catch (e: Throwable) {
-            Log.e(e)
+        val uri = Uri.Builder()
+                .scheme("https")
+                .encodedAuthority(BILI_MEDIA_URL)
+                .appendQueryParameter("media_id", mediaId)
+                .appendQueryParameter("access_key", accessKey)
+                .toString()
+        val mediaJson = getContent(uri)?.toJSONObject()
+        val mediaResult = mediaJson?.optJSONObject("result")
+        val actors = mediaResult?.optString("actors")
+        result.put("actor", "{\"info\": \"$actors\", \"title\": \"角色声优\"}".toJSONObject())
+        val staff = mediaResult?.optString("staff")
+        result.put("staff", "{\"info\": \"$staff\", \"title\": \"制作信息\"}".toJSONObject())
+        for (field in listOf("alias", "areas", "origin_name", "style", "type_name")) {
+            result.put(field, mediaResult?.opt(field))
         }
     }
 
     @JvmStatic
     private fun getReviewInfo(userStatus: JSONObject, mediaId: String, accessKey: String?) {
-        try {
-            val uri = Uri.Builder()
-                    .scheme("https")
-                    .encodedAuthority(BILI_REVIEW_URL)
-                    .appendQueryParameter("media_id", mediaId)
-                    .appendQueryParameter("access_key", accessKey)
-                    .toString()
-            val reviewContent = getContent(uri)
-            val reviewJson = JSONObject(reviewContent!!)
-            val reviewResult = reviewJson.getJSONObject("result")
-            if (reviewResult.has("review")) {
-                val review = reviewResult.getJSONObject("review")
-                review.put("article_url", "https://member.bilibili.com/article-text/mobile?media_id=$mediaId")
-                userStatus.put("review", review)
-            }
-        } catch (e: Throwable) {
-            Log.e(e)
-        }
+        val uri = Uri.Builder()
+                .scheme("https")
+                .encodedAuthority(BILI_REVIEW_URL)
+                .appendQueryParameter("media_id", mediaId)
+                .appendQueryParameter("access_key", accessKey)
+                .toString()
+        val reviewJson = getContent(uri)?.toJSONObject()
+        val reviewResult = reviewJson?.optJSONObject("result")
+        val review = reviewResult?.optJSONObject("review")
+        review?.put("article_url", "https://member.bilibili.com/article-text/mobile?media_id=$mediaId")
+        userStatus.put("review", review)
     }
 
     @JvmStatic
@@ -178,16 +157,13 @@ object BiliRoamingApi {
                     .appendQueryParameter("season_id", seasonId)
                     .appendQueryParameter("access_key", accessKey)
                     .toString()
-            val statusContent = getContent(uri)
-            val reviewJson = JSONObject(statusContent!!)
-            val statusResult = reviewJson.getJSONObject("result")
+            val statusJson = getContent(uri)?.toJSONObject()
+            val statusResult = statusJson?.optJSONObject("result")
             val userStatus = JSONObject()
             for (field in listOf("follow", "follow_status", "pay", "progress", "sponsor", "paster")) {
-                if (statusResult.has(field))
-                    userStatus.put(field, statusResult.get(field))
+                userStatus.put(field, statusResult?.opt(field))
             }
-            if (statusResult.has("vip_info") &&
-                    statusResult.getJSONObject("vip_info").getInt("status") == 1) {
+            if (statusResult?.optJSONObject("vip_info")?.optInt("status") == 1) {
                 userStatus.put("vip", 1)
             }
             getReviewInfo(userStatus, mediaId, accessKey)
