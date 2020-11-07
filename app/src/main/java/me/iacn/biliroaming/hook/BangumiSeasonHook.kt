@@ -345,13 +345,15 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         if (sPrefs.getBoolean("allow_download", false)) {
             val rights = result?.optJSONObject("rights")
             rights?.put("allow_download", 1)
-            val modules = result?.optJSONArray("modules")
-            for (module in modules.orEmpty()) {
+            for (module in result?.optJSONArray("modules").orEmpty()) {
                 val data = module.optJSONObject("data")
                 val moduleEpisodes = data?.optJSONArray("episodes")
                 for (episode in moduleEpisodes.orEmpty()) {
                     episode.optJSONObject("rights")?.put("allow_download", 1)
                 }
+            }
+            for (episode in result?.optJSONArray("episodes").orEmpty()) {
+                episode.optJSONObject("rights")?.put("allow_download", 1)
             }
             Log.d("Download allowed")
             if (toast) Log.toast("已允许下载")
