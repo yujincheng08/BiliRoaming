@@ -277,6 +277,9 @@ fun String.findClass(classLoader: ClassLoader?) = try {
 } catch (e: ClassNotFoundError) {
     Log.e(e)
     null
+} catch (e: ClassNotFoundException) {
+    Log.e(e)
+    null
 }
 
 fun String.findClassOrNull(classLoader: ClassLoader?): Class<*>? = findClassIfExists(this, classLoader)

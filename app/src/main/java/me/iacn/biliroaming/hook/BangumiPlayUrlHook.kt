@@ -71,7 +71,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     || queryString.contains("ep_id=0") /*workaround*/) return@hookAfterMethod
             var content = getContent(param.result as InputStream, connection.contentEncoding)
             if (content == null || !isLimitWatchingArea(content)) {
-                if (urlString.contains("fix_dl=1")) {
+                if (urlString.contains("fix_dl=1") || urlString.contains("dl=1")) {
                     content = content?.let { fixDownload(it) }
                 }
                 param.result = ByteArrayInputStream(content?.toByteArray())
@@ -79,7 +79,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
             content = getPlayUrl(queryString, BangumiSeasonHook.lastSeasonInfo)
             content = content?.let {
-                if (urlString.contains("fix_dl=1")) {
+                if (urlString.contains("fix_dl=1") || urlString.contains("dl=1")) {
                     fixDownload(it)
                 } else content
             }
@@ -129,7 +129,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
             }
         }
-        "com.bapis.bilibili.pgc.gateway.player.v2.PlayURLMoss".findClass(mClassLoader)?.run {
+        "com.bapis.bilibili.pgc.gateway.player.v2.PlayURLMoss".findClassOrNull(mClassLoader)?.run {
             var isDownload = false
             hookBeforeMethod("playView",
                     "com.bapis.bilibili.pgc.gateway.player.v2.PlayViewReq") { param ->
@@ -169,7 +169,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     private fun fixDownload(content: String): String {
         val json = JSONObject(content)
-        if (json.optString("type") != "DASH" && !json.has("DASH")) return content
+        if (json.optString("type") != "DASH" && !json.has("dash")) return content
         val quality = json.optInt("quality")
         val dash = json.optJSONObject("dash")
         val videos = dash?.optJSONArray("video")
