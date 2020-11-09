@@ -6,7 +6,6 @@ import android.content.SharedPreferences
 import android.graphics.Color
 import android.util.SparseArray
 import android.view.View
-import de.robv.android.xposed.XC_MethodHook.MethodHookParam
 import de.robv.android.xposed.XposedBridge.invokeOriginalMethod
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.ColorChooseDialog

@@ -12,6 +12,8 @@ import de.robv.android.xposed.callbacks.XC_LayoutInflated
 import java.lang.reflect.Field
 import java.lang.reflect.Member
 
+typealias MethodHookParam = MethodHookParam
+
 fun Class<*>.hookMethod(method: String?, vararg args: Any?) = try {
     findAndHookMethod(this, method, *args)
 } catch (e: NoSuchMethodError) {

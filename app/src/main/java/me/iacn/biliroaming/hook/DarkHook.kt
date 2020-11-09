@@ -6,7 +6,6 @@ import android.content.res.Resources
 import android.graphics.Color
 import android.os.Bundle
 import android.view.View
-import de.robv.android.xposed.XC_MethodHook
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.utils.*
 
@@ -14,7 +13,7 @@ class DarkHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
         if (!sPrefs.getBoolean("follow_dark", false)) return
         Log.d("startHook: Dark")
-        val hooker = { param: XC_MethodHook.MethodHookParam ->
+        val hooker = { param: MethodHookParam ->
             val dark = inDark
             val night = isNight
             if (night != null && dark != night) switch(param.thisObject as Activity)

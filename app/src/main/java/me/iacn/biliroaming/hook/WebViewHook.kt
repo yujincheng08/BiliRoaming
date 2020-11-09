@@ -3,7 +3,6 @@ package me.iacn.biliroaming.hook
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import de.robv.android.xposed.XC_MethodHook
 import me.iacn.biliroaming.utils.*
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -13,7 +12,7 @@ class WebViewHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private val x5WebViewClass by Weak { "com.tencent.smtt.sdk.WebView".findClassOrNull(mClassLoader) }
 
     private val hookedClient = HashSet<Class<*>>()
-    private val hooker: (XC_MethodHook.MethodHookParam) -> Unit = { param ->
+    private val hooker: (MethodHookParam) -> Unit = { param ->
         param.args[0].callMethod("loadUrl", """javascript:(function(){$js})()""".trimMargin())
     }
 

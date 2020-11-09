@@ -3,7 +3,6 @@ package me.iacn.biliroaming.hook
 import android.content.Context
 import android.net.Uri
 import android.os.Build
-import de.robv.android.xposed.XC_MethodHook
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.Constant.TYPE_EPISODE_ID
 import me.iacn.biliroaming.Constant.TYPE_SEASON_ID
@@ -102,7 +101,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     param.result = (param.method as Method).returnType.callStaticMethod("parseFrom", serializedReply)
                 }
 
-        val urlHook: (XC_MethodHook.MethodHookParam) -> Unit = fun(param) {
+        val urlHook: (MethodHookParam) -> Unit = fun(param) {
             val redirectUrl = param.thisObject.getObjectFieldAs<String?>("redirectUrl")
             if (redirectUrl.isNullOrEmpty()) return
             param.result = param.thisObject.callMethod("getUrl", redirectUrl)

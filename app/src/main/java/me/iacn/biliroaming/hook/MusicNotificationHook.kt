@@ -11,7 +11,6 @@ import android.media.session.MediaSession
 import android.media.session.PlaybackState
 import android.os.Build
 import android.os.Bundle
-import de.robv.android.xposed.XC_MethodHook.MethodHookParam
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.utils.*
 import java.lang.reflect.Modifier

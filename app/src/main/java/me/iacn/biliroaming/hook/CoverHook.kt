@@ -12,7 +12,6 @@ import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
-import de.robv.android.xposed.XC_MethodHook
 import me.iacn.biliroaming.utils.*
 import java.io.File
 
@@ -26,7 +25,7 @@ class CoverHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     @SuppressLint("ClickableViewAccessibility")
-    val hooker = fun(param: XC_MethodHook.MethodHookParam) {
+    val hooker = fun(param: MethodHookParam) {
         val group = param.args[0] as ViewGroup
         val activity = param.thisObject.callMethodAs<Activity>("getActivity")
 
