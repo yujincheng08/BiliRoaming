@@ -160,8 +160,8 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         } ?: run {
             Log.d("Failed to get new season information from proxy server")
             Log.toast("解锁失败，请重试")
+            lastSeasonInfo.clear()
         }
-        lastSeasonInfo.clear()
     }
 
     private fun fixViewProto(req: Protos.ViewReq): Protos.ViewReply? {
