@@ -28,9 +28,13 @@ An Xposed module that unblocks bangumi area limit of BILIBILI, and miscellaneous
 - 自定义主题色
 - 关闭青少年模式弹窗
 - 显示评论区楼层
-- 概念版添加直播入口
+- ~概念版添加直播入口~
 - 不以小程序形式分享
 - 自动点赞视频
+- 把我的页面移到侧边栏
+- 替换音乐状态栏为原生样式
+- 提取视频、直播封面
+- 自定义屏启动图
 
 # Features
 
@@ -41,9 +45,13 @@ An Xposed module that unblocks bangumi area limit of BILIBILI, and miscellaneous
 - Customize theme
 - Close teenager dialog
 - Show comment floor
-- Add live entry to blue ver
+- ~Add live entry to blue ver~
 - Share without mini programs
 - Like videos automatically
+- Move 'Mine page' to sidebar drawer
+- Change music notification style to Primitive
+- Extra covers from videos and live rooms
+- Customized splash images
 
 # download/下载
 https://github.com/yujincheng08/BiliRoaming/releases/latest
