@@ -99,7 +99,9 @@ fun signQuery(query: String?): String? {
     val pairs = query?.split("&".toRegex())?.toTypedArray() ?: return null
     for (pair in pairs) {
         val idx = pair.indexOf("=")
-        queryMap[pair.substring(0, idx)] = pair.substring(idx + 1)
+        val key = pair.substring(0, idx)
+        if (key !in arrayOf("t", "sign"))
+            queryMap[key] = pair.substring(idx + 1)
     }
     val packageName = AndroidAppHelper.currentPackageName()
     queryMap["appkey"] = appKey[packageName] ?: "1d8b6e7d45233436"

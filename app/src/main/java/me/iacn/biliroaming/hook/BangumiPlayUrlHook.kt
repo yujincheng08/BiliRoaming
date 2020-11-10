@@ -77,7 +77,12 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 param.result = ByteArrayInputStream(content?.toByteArray())
                 return@hookAfterMethod
             }
-            content = getPlayUrl(queryString, BangumiSeasonHook.lastSeasonInfo)
+            // Replace because in Android R, the sign query hook may not success.
+            // As a workaround, the request will fallback to request from proxy server.
+            // If biliplus is down, we can still get result from proxy server.
+            // However, the speed may not be fast.
+            content = getPlayUrl(signQuery(queryString.replace("dl=1", "fix_dl=1")),
+                    BangumiSeasonHook.lastSeasonInfo)
             content = content?.let {
                 if (urlString.contains("fix_dl=1") || urlString.contains("dl=1")) {
                     fixDownload(it)
