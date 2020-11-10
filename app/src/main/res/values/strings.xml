@@ -89,7 +89,7 @@
     <string name="custom_download_thread_summary">自定义最多可以同时下载的视频个数（超过一个需要大会员）</string>
     <string name="save_log_title">保存日志到文件</string>
     <string name="save_log_summary">启用后，将保存日志到文件%s</string>
-    <string name="fix_download_title">解除国内版权番剧下载限速</string>
+    <string name="fix_download_title">解除版权番剧下载限速</string>
     <string name="fix_download_summary">提高版权番剧的下载速度，但是会导致音视频分离</string>
     <string name="biliplus_alipay">https://qr.alipay.com/tsx09956vdaapx6rdrfxre3</string>
     <string name="purify_home_tab_title">净化首页标签</string>
