@@ -92,7 +92,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             var supportLiveHook = false
             var supportAdd4K = false
             var supportMusicNotificationHook = true
-            var supportDark = true
+            var supportDark = false
             val supportFullSplash = try {
                 instance.splashInfoClass?.getMethod("getMode") != null
             } catch (e: Throwable) {
@@ -108,7 +108,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     if (versionCode < 6080000) supportAdd4K = true
                 }
                 "android" -> {
-                    if (versionCode >= 6120000) supportDark = false
+                    if (versionCode in 6000000 until 6120000) supportDark = true
                 }
             }
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
