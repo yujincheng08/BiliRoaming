@@ -26,14 +26,14 @@ class WebViewHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private val js by lazy {
         val sb = StringBuilder()
         try {
-            val `is` = WebViewHook::class.java.classLoader?.getResourceAsStream("assets/xhook.js")
-            val isr = InputStreamReader(`is`)
-            val br = BufferedReader(isr)
-            var line: String
-            while (br.readLine().also { line = it } != null) {
-                sb.appendLine(line)
+            WebViewHook::class.java.classLoader?.getResourceAsStream("assets/xhook.js").use { `is` ->
+                val isr = InputStreamReader(`is`)
+                val br = BufferedReader(isr)
+                var line: String
+                while (br.readLine().also { line = it } != null) {
+                    sb.appendLine(line)
+                }
             }
-            `is`?.close()
         } catch (e: Exception) {
         }
         sb.appendLine()

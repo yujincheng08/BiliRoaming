@@ -87,10 +87,10 @@ class CoverHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         val resolver = activity.contentResolver
                         val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)!!
                         try {
-                            val stream = resolver.openOutputStream(uri)
-                            it.compress(Bitmap.CompressFormat.PNG, 100, stream)
+                            resolver.openOutputStream(uri).use { stream ->
+                                it.compress(Bitmap.CompressFormat.PNG, 100, stream)
+                            }
                             Log.toast("保存封面成功到\n$relativePath${File.separator}$filename.png", true)
-                            stream?.close()
                         } catch (e: Throwable) {
                             Log.e(e)
                             Log.toast("保存封面失败，请检查权限", true)

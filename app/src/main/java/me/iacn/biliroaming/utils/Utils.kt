@@ -11,6 +11,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
 import java.io.IOException
+import java.io.InputStream
 import java.lang.ref.WeakReference
 import java.math.BigInteger
 import java.net.URL
@@ -137,3 +138,12 @@ fun <T> JSONArray.asSequence() = (0 until length()).asSequence().map { get(it) a
 operator fun JSONArray.iterator(): Iterator<JSONObject> = (0 until length()).asSequence().map { get(it) as JSONObject }.iterator()
 
 fun JSONArray?.orEmpty() = this ?: JSONArray()
+
+fun getStreamContent(input: InputStream) = try {
+    input.bufferedReader().use {
+        it.readText()
+    }
+} catch (e: Throwable) {
+    Log.e(e)
+    null
+}

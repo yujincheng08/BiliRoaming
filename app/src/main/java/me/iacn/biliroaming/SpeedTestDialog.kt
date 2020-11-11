@@ -136,16 +136,16 @@ class SpeedTestDialog(private val pref: ListPreference, activity: Activity) : Al
                 connection.readTimeout = 5000
                 connection.setRequestProperty("User-Agent", "Bilibili Freedoooooom/MarkII")
                 connection.connect()
-                val stream = connection.getInputStream()
                 val buffer = ByteArray(2048)
                 var size = 0
                 val start = System.currentTimeMillis()
-                while (isActive) {
-                    val read = stream.read(buffer)
-                    if (read <= 0) break
-                    size += read
+                connection.getInputStream().use { stream ->
+                    while (isActive) {
+                        val read = stream.read(buffer)
+                        if (read <= 0) break
+                        size += read
+                    }
                 }
-                stream.close() // release connection
                 size / (System.currentTimeMillis() - start) // KB/s
             }
         }

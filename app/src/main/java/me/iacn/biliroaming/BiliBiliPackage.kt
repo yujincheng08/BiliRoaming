@@ -293,10 +293,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             }.orEmpty()
         }.associate { it.name to it.get(null) as Int }
         val bao = ByteArrayOutputStream()
-        ObjectOutputStream(bao).run {
-            writeObject(ids)
-            flush()
-            close()
+        ObjectOutputStream(bao).use {
+            it.writeObject(ids)
         }
         return Base64.encodeToString(bao.toByteArray(), Base64.DEFAULT)
     }
@@ -418,11 +416,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             val hookInfoFile = File(context.cacheDir, Constant.HOOK_INFO_FILE_NAME)
             val lastUpdateTime = context.packageManager.getPackageInfo(AndroidAppHelper.currentPackageName(), 0).lastUpdateTime
             if (hookInfoFile.exists()) hookInfoFile.delete()
-            val stream = ObjectOutputStream(FileOutputStream(hookInfoFile))
-            stream.writeLong(lastUpdateTime)
-            stream.writeObject(mHookInfo)
-            stream.flush()
-            stream.close()
+            ObjectOutputStream(FileOutputStream(hookInfoFile)).use { stream ->
+                stream.writeLong(lastUpdateTime)
+                stream.writeObject(mHookInfo)
+            }
         } catch (e: Exception) {
             e.printStackTrace()
         }

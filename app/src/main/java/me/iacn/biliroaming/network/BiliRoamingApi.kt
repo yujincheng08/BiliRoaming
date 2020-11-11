@@ -11,7 +11,6 @@ import android.webkit.WebViewClient
 import me.iacn.biliroaming.BuildConfig
 import me.iacn.biliroaming.R
 import me.iacn.biliroaming.XposedInit
-import me.iacn.biliroaming.network.StreamUtils.getContent
 import me.iacn.biliroaming.utils.*
 import org.json.JSONArray
 import org.json.JSONException
@@ -279,8 +278,7 @@ object BiliRoamingApi {
                 connection.connect()
                 if (connection.responseCode == HttpURLConnection.HTTP_OK) {
                     val inputStream = connection.inputStream
-                    val encoding = connection.contentEncoding
-                    getContent(inputStream, encoding)
+                    getStreamContent(inputStream)
                 } else null
             }
 

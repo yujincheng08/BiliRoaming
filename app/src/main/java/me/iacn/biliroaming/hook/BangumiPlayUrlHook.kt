@@ -4,7 +4,6 @@ import android.net.Uri
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.Protos.*
 import me.iacn.biliroaming.network.BiliRoamingApi.getPlayUrl
-import me.iacn.biliroaming.network.StreamUtils.getContent
 import me.iacn.biliroaming.utils.*
 import org.json.JSONArray
 import org.json.JSONException
@@ -44,7 +43,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             val urlString = connection.url.toString()
             if (sPrefs.getBoolean("add_4k", false) && (urlString.startsWith("https://app.bilibili.com/x/v2/param")
                             || urlString.startsWith("https://appintl.biliapi.net/intl/gateway/app/param"))) {
-                val content = getContent(param.result as InputStream, connection.contentEncoding)?.toJSONObject()?.let {
+                val content = getStreamContent(param.result as InputStream)?.toJSONObject()?.let {
                     val newContent = "{\"code\":0,\"data\":{\"player_pgc_vip_qn\":\"74,112,116,120,125\",\"player_ugc_vip_qn\":\"74,112,116,120,125\"},\"message\":\"0\"}".toJSONObject()
                     when {
                         it.optInt("code") == -304 -> {
@@ -69,7 +68,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             val queryString = urlString.substring(urlString.indexOf("?") + 1)
             if ((!queryString.contains("ep_id=") && !queryString.contains("module=bangumi"))
                     || queryString.contains("ep_id=0") /*workaround*/) return@hookAfterMethod
-            var content = getContent(param.result as InputStream, connection.contentEncoding)
+            var content = getStreamContent(param.result as InputStream)
             if (content == null || !isLimitWatchingArea(content)) {
                 if (urlString.contains("fix_dl=1") || urlString.contains("dl=1")) {
                     content = content?.let { fixDownload(it) }
