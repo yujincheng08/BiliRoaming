@@ -77,7 +77,6 @@ class CoverHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                                 put(MediaStore.Video.Media.DATE_TAKEN, System.currentTimeMillis())
                                 put(MediaStore.MediaColumns.RELATIVE_PATH, relativePath)
-                                put(MediaStore.Video.Media.IS_PENDING, 1)
                             } else {
                                 val path = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "bilibili")
                                 path.mkdirs()
@@ -94,14 +93,6 @@ class CoverHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         } catch (e: Throwable) {
                             Log.e(e)
                             Log.toast("保存封面失败，请检查权限", true)
-                        } finally {
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                                contentValues.apply {
-                                    clear()
-                                    put(MediaStore.Video.Media.IS_PENDING, 0)
-                                }
-                                resolver.update(uri, contentValues, null, null)
-                            }
                         }
                     } ?: run {
                         Log.toast("获取封面失败", true)
