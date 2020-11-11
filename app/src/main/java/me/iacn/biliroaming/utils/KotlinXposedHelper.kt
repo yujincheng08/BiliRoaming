@@ -22,6 +22,9 @@ fun Class<*>.hookMethod(method: String?, vararg args: Any?) = try {
 } catch (e: ClassNotFoundError) {
     Log.e(e)
     null
+} catch (e: ClassNotFoundException) {
+    Log.e(e)
+    null
 }
 
 fun Member.hookMethod(callback: XC_MethodHook) = try {
@@ -93,10 +96,13 @@ fun Class<*>.hookAllMethods(methodName: String?, hooker: XC_MethodHook): Set<XC_
     hookAllMethods(this, methodName, hooker)
 } catch (e: NoSuchMethodError) {
     Log.e(e)
-    HashSet()
+    emptySet()
 } catch (e: ClassNotFoundError) {
     Log.e(e)
-    HashSet()
+    emptySet()
+} catch (e: ClassNotFoundException) {
+    Log.e(e)
+    emptySet()
 }
 
 inline fun Class<*>.hookBeforeAllMethods(methodName: String?, crossinline hooker: (MethodHookParam) -> Unit): Set<XC_MethodHook.Unhook> = hookAllMethods(methodName, object : XC_MethodHook() {
@@ -136,6 +142,9 @@ fun Class<*>.hookConstructor(vararg args: Any?) = try {
 } catch (e: ClassNotFoundError) {
     Log.e(e)
     null
+} catch (e: ClassNotFoundException) {
+    Log.e(e)
+    null
 }
 
 inline fun Class<*>.hookBeforeConstructor(vararg args: Any?, crossinline hooker: (MethodHookParam) -> Unit) = hookConstructor(*args, object : XC_MethodHook() {
@@ -172,10 +181,13 @@ fun Class<*>.hookAllConstructors(hooker: XC_MethodHook): Set<XC_MethodHook.Unhoo
     hookAllConstructors(this, hooker)
 } catch (e: NoSuchMethodError) {
     Log.e(e)
-    HashSet()
+    emptySet()
 } catch (e: ClassNotFoundError) {
     Log.e(e)
-    HashSet()
+    emptySet()
+} catch (e: ClassNotFoundException) {
+    Log.e(e)
+    emptySet()
 }
 
 inline fun Class<*>.hookAfterAllConstructors(crossinline hooker: (MethodHookParam) -> Unit) = hookAllConstructors(object : XC_MethodHook() {
@@ -213,11 +225,17 @@ fun String.hookMethod(classLoader: ClassLoader, method: String?, vararg args: An
 } catch (e: ClassNotFoundError) {
     Log.e(e)
     null
+} catch (e: ClassNotFoundException) {
+    Log.e(e)
+    null
 }
 
 inline fun String.hookBeforeMethod(classLoader: ClassLoader, method: String?, vararg args: Any?, crossinline hooker: (MethodHookParam) -> Unit) = try {
     findClass(classLoader)?.hookBeforeMethod(method, *args, hooker = hooker)
 } catch (e: ClassNotFoundError) {
+    Log.e(e)
+    null
+} catch (e: ClassNotFoundException) {
     Log.e(e)
     null
 }
@@ -227,11 +245,17 @@ inline fun String.hookAfterMethod(classLoader: ClassLoader, method: String?, var
 } catch (e: ClassNotFoundError) {
     Log.e(e)
     null
+} catch (e: ClassNotFoundException) {
+    Log.e(e)
+    null
 }
 
 inline fun String.replaceMethod(classLoader: ClassLoader, method: String?, vararg args: Any?, crossinline hooker: (MethodHookParam) -> Any?) = try {
     findClass(classLoader)?.replaceMethod(method, *args, hooker = hooker)
 } catch (e: ClassNotFoundError) {
+    Log.e(e)
+    null
+} catch (e: ClassNotFoundException) {
     Log.e(e)
     null
 }
