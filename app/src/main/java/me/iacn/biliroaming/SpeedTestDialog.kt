@@ -26,7 +26,7 @@ import java.util.concurrent.Executors
 class SpeedTestResult(val name: String, val value: String?, var speed: String)
 
 class SpeedTestAdapter(context: Context) : ArrayAdapter<SpeedTestResult>(context, 0) {
-    class ViewHolder(var name: String?, val value: String?, val nameView: TextView, val speedView: TextView)
+    class ViewHolder(var name: String?, var value: String?, val nameView: TextView, val speedView: TextView)
 
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
         val layout = moduleRes.getLayout(R.layout.cdn_speedtest_item)
@@ -41,6 +41,7 @@ class SpeedTestAdapter(context: Context) : ArrayAdapter<SpeedTestResult>(context
         }
         val holder = view.tag as ViewHolder
         holder.name = getItem(position)?.name
+        holder.value = getItem(position)?.value
         holder.nameView.text = holder.name
         holder.speedView.text = moduleRes.getString(R.string.speed_formatter).format(getItem(position)?.speed)
         return view
@@ -65,7 +66,9 @@ class SpeedTestDialog(private val pref: ListPreference, activity: Activity) : Al
     private val speedTestDispatcher = Executors.newFixedThreadPool(1).asCoroutineDispatcher()
 
     companion object {
-        const val fileUrl = "https://www.biliplus.com/BPplayurl.php?cid=235297653&otype=json&fnval=16&module=pgc&platform=android"
+        const val mainlandUrl = "https://www.biliplus.com/BPplayurl.php?cid=235297653&otype=json&fnval=16&module=pgc&platform=android"
+        const val overseaUrl = "https://www.biliplus.com/BPplayurl.php?cid=13073143&otype=json&fnval=16&module=pgc&platform=android"
+        const val infoUrl = "https://api.bilibili.com/client_info"
         private val HOST_REGEX = Regex("""://[^/]+/""")
     }
 
@@ -94,7 +97,7 @@ class SpeedTestDialog(private val pref: ListPreference, activity: Activity) : Al
 
         view.setOnItemClickListener { _, view, _, _ ->
             val (name, value) = (view.tag as SpeedTestAdapter.ViewHolder).run { name to value }
-            Log.d("Use $value")
+            Log.d("Use UPOS $name: $value")
             pref.value = value
             sPrefs.edit().putString(pref.key, value).apply()
             Log.toast("已启用UPOS服务器：${name}")
@@ -154,6 +157,8 @@ class SpeedTestDialog(private val pref: ListPreference, activity: Activity) : Al
     }
 
     private suspend fun getTestUrl() = withContext(Dispatchers.Default) {
+        val country = fetchJson(infoUrl)?.optJSONObject("data")?.optString("country")
+        val fileUrl = if (country == "中国") mainlandUrl else overseaUrl
         fetchJson(fileUrl)?.optJSONObject("dash")?.getJSONArray("audio")?.run {
             (0 until length()).map { idx -> optJSONObject(idx) }
         }?.minWithOrNull { a, b -> a.optInt("bandwidth") - b.optInt("bandwidth") }?.optString("base_url")?.replace("https", "http")

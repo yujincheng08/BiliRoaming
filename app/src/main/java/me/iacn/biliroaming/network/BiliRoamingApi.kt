@@ -182,7 +182,7 @@ object BiliRoamingApi {
             }
         }?.replace(HOST_REGEX, "://${
             sPrefs.getString("upos_host", null)
-                    ?: XposedInit.moduleRes.getString(R.string.cos_host)
+                    ?: XposedInit.moduleRes.getString(R.string.uptx_host)
         }/")
     }
 
