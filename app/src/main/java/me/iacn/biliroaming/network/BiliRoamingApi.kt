@@ -9,6 +9,7 @@ import android.webkit.JavascriptInterface
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import me.iacn.biliroaming.BuildConfig
+import me.iacn.biliroaming.Constant.HOST_REGEX
 import me.iacn.biliroaming.R
 import me.iacn.biliroaming.XposedInit
 import me.iacn.biliroaming.utils.*
@@ -41,8 +42,6 @@ object BiliRoamingApi {
     private const val KGHOST_CN_API_URL = "bilibili-cn-api.kghost.info"
 
     private const val BACKUP_PLAYURL = "/pgc/player/api/playurl"
-
-    private val HOST_REGEX = Regex("""://[^/]+/""")
 
     @JvmStatic
     fun getSeason(info: Map<String, String?>, hidden: Boolean): String? {

@@ -16,6 +16,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
+import me.iacn.biliroaming.Constant.HOST_REGEX
 import me.iacn.biliroaming.XposedInit.Companion.moduleRes
 import me.iacn.biliroaming.utils.Log
 import me.iacn.biliroaming.utils.fetchJson
@@ -69,7 +70,6 @@ class SpeedTestDialog(private val pref: ListPreference, activity: Activity) : Al
         const val mainlandUrl = "https://www.biliplus.com/BPplayurl.php?cid=235297653&otype=json&fnval=16&module=pgc&platform=android"
         const val overseaUrl = "https://www.biliplus.com/BPplayurl.php?cid=13073143&otype=json&fnval=16&module=pgc&platform=android"
         const val infoUrl = "https://api.bilibili.com/client_info"
-        private val HOST_REGEX = Regex("""://[^/]+/""")
     }
 
     private val view = ListView(activity)

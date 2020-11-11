@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string-array name="upos_entries">
+        <item>不替换</item>
         <item>cos（腾讯）</item>
         <item>cosb（腾讯）</item>
         <item>uptx（腾讯）</item>
@@ -22,6 +23,7 @@
         <item>akamai（海外，不能免流）</item>
     </string-array>
     <string-array name="upos_values">
+        <item>$1</item>
         <item>@string/cos_host</item>
         <item>@string/cosb_host</item>
         <item>@string/uptx_host</item>
