@@ -39,6 +39,7 @@
         <item>@string/hwb_host</item>
         <item>@string/uphw_host</item>
         <item>@string/js_host</item>
+        <item>@string/hk_host</item>
         <item>@string/akamai_host</item>
     </string-array>
 </resources>
