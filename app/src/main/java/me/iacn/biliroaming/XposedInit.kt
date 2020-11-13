@@ -81,6 +81,7 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                 }
                 lpparam.processName.endsWith(":download") -> {
                     BiliBiliPackage(lpparam.classLoader, param.args[0] as Context)
+                    startHook(BangumiPlayUrlHook(lpparam.classLoader))
                 }
             }
         }
