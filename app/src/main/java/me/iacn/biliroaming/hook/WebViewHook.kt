@@ -13,7 +13,11 @@ class WebViewHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     private val hookedClient = HashSet<Class<*>>()
     private val hooker: (MethodHookParam) -> Unit = { param ->
-        param.args[0].callMethod("loadUrl", """javascript:(function(){$js})()""".trimMargin())
+        try {
+            param.args[0].callMethod("evaluateJavascript", """(function(){$js})()""".trimMargin(), null)
+        } catch (e: Throwable) {
+            Log.e(e)
+        }
     }
 
     private val jsHooker = object : Any() {
