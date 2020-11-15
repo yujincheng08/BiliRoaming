@@ -6,6 +6,7 @@ import android.content.pm.PackageManager.GET_META_DATA
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
+import me.iacn.biliroaming.Constant
 import me.iacn.biliroaming.XposedInit
 import org.json.JSONArray
 import org.json.JSONObject
@@ -50,22 +51,21 @@ fun bv2av(bv: String): Long {
 fun getPackageVersion(packageName: String) = try {
     systemContext.packageManager.getPackageInfo(packageName, 0).run {
         @Suppress("DEPRECATION")
-        String.format("${packageName}@%s(%d)", versionName, versionCode)
+        String.format("${packageName}@%s(%s)", versionName, getVersionCode(packageName))
     }
 } catch (e: Throwable) {
     Log.e(e)
     "(unknown)"
 }
 
+
 fun getVersionCode(packageName: String) = try {
-    systemContext.packageManager.getPackageInfo(packageName, 0).run {
-        @Suppress("DEPRECATION")
-        versionCode.toString()
-    }
+    @Suppress("DEPRECATION")
+    systemContext.packageManager.getPackageInfo(packageName, 0).versionCode
 } catch (e: Throwable) {
     Log.e(e)
     null
-}
+} ?: 6080000
 
 
 val appKey = mapOf(
@@ -86,7 +86,11 @@ val is64
 
 val platform by lazy {
     currentContext.packageManager.getApplicationInfo(packageName, GET_META_DATA).metaData.getString("MOBI_APP")
-            ?: "android"
+            ?: when(packageName) {
+                Constant.BLUE_PACKAGE_NAME -> "android_b"
+                Constant.PLAY_PACKAGE_NAME -> "android_i"
+                else -> "android"
+            }
 }
 
 val logFile by lazy { File(currentContext.externalCacheDir, "log.txt") }
@@ -106,7 +110,7 @@ fun signQuery(query: String?): String? {
     }
     val packageName = AndroidAppHelper.currentPackageName()
     queryMap["appkey"] = appKey[packageName] ?: "1d8b6e7d45233436"
-    queryMap["build"] = getVersionCode(packageName) ?: "6080000"
+    queryMap["build"] = getVersionCode(packageName).toString()
     queryMap["device"] = "android"
     queryMap["mobi_app"] = platform
     queryMap["platform"] = platform
