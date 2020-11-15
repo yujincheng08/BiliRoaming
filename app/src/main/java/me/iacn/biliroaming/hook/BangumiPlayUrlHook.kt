@@ -97,7 +97,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
         }
 
-        "com.bapis.bilibili.pgc.gateway.player.v1.PlayURLMoss".findClass(mClassLoader)?.run {
+        "com.bapis.bilibili.pgc.gateway.player.v1.PlayURLMoss".findClassOrNull(mClassLoader)?.run {
             var isDownload = false
             hookBeforeMethod("playView",
                     "com.bapis.bilibili.pgc.gateway.player.v1.PlayViewReq") { param ->

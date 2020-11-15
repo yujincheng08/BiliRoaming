@@ -88,7 +88,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         }
 
         private fun checkCompatibleVersion() {
-            val versionCode = currentContext.packageManager.getPackageInfo(packageName, 0).versionCode
+            val versionCode = getVersionCode(packageName)
             var supportLiveHook = false
             var supportAdd4K = false
             var supportMusicNotificationHook = true
