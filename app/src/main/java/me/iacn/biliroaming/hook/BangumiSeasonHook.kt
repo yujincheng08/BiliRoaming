@@ -12,6 +12,7 @@ import me.iacn.biliroaming.network.BiliRoamingApi.getContent
 import me.iacn.biliroaming.network.BiliRoamingApi.getSeason
 import me.iacn.biliroaming.utils.*
 import org.json.JSONObject
+import java.lang.reflect.Array
 import java.lang.reflect.Method
 import java.net.URL
 
@@ -34,10 +35,18 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         "com.bilibili.bangumi.data.page.detail.entity.BangumiUniformSeason\$\$serializer".findClassOrNull(mClassLoader) != null
     }
 
+    private val serializerFeatures = lazy {
+        val serializerFeatureClass = "com.alibaba.fastjson.serializer.SerializerFeature".findClass(mClassLoader) ?: return@lazy null
+        val feature = serializerFeatureClass.getStaticObjectField("WriteNonStringKeyAsString")
+        val serializerFeatures = Array.newInstance(serializerFeatureClass, 1)
+        Array.set(serializerFeatures, 0, feature)
+        serializerFeatures
+    }
+
     private fun Any.toJson() = if (isSerializable)
         jsonNonStrict.value?.callMethodAs<String>("stringify", javaClass.getStaticObjectField("Companion")?.callMethod("serializer"), this).toJSONObject()
     else
-        instance.fastJsonClass?.callStaticMethodAs<String>("toJSONString", this).toJSONObject()
+        instance.fastJsonClass?.callStaticMethodAs<String>("toJSONString", this, serializerFeatures.value).toJSONObject()
 
     private fun Class<*>.fromJson(json: String) = if (isSerializable)
         jsonNonStrict.value?.callMethod("parse", getStaticObjectField("Companion")?.callMethod("serializer"), json)
