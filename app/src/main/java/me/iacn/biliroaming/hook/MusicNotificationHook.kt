@@ -323,13 +323,21 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val hooker = fun(param: MethodHookParam) {
             val old = param.result as Notification? ?: return
             val iconId = getId("icon")
+            val notificationIconId = getId("notification_icon")
             val text1Id = getId("text1")
             val text2Id = getId("text2")
+            val notificationText1Id = getId("notification_text1")
+            val notificationText2Id = getId("notification_text2")
             val action1Id = getId("action1")
             val action2Id = getId("action2")
             val action3Id = getId("action3")
             val action4Id = getId("action4")
+            val notificationAction1Id = getId("notification_action1")
+            val notificationAction2Id = getId("notification_action2")
+            val notificationAction3Id = getId("notification_action3")
+            val notificationAction4Id = getId("notification_action4")
             val stopId = getId("stop")
+            val notificationStopId = getId("notification_stop")
 
             if (old.extras.containsKey("Primitive")) return
 
@@ -361,24 +369,25 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         when (action.javaClass) {
                             bitmapActionClass -> {
                                 when (viewId) {
-                                    iconId -> setLargeIcon(action.getObjectFieldAs<Bitmap>("bitmap"))
+                                    iconId, notificationIconId -> setLargeIcon(action.getObjectFieldAs<Bitmap>("bitmap"))
                                 }
                             }
                             reflectionActionClass -> {
                                 when (action.getObjectFieldAs<String>("methodName")) {
                                     "setText" ->
                                         when (viewId) {
-                                            text1Id -> setContentTitle(action.getObjectFieldAs<CharSequence>("value"))
-                                            text2Id -> setContentText(action.getObjectFieldAs<CharSequence>("value"))
+                                            text1Id, notificationText1Id -> setContentTitle(action.getObjectFieldAs<CharSequence>("value"))
+                                            text2Id, notificationText2Id -> setContentText(action.getObjectFieldAs<CharSequence>("value"))
+                                            else -> Log.w("Unknown viewId $viewId")
                                         }
                                     "setImageResource" ->
                                         when (viewId) {
-                                            action1Id -> buttons[action1Id]?.icon = action.getObjectFieldAs<Int>("value")
-                                            action2Id -> buttons[action2Id]?.icon = action.getObjectFieldAs<Int>("value")
-                                            action3Id -> buttons[action3Id]?.icon = action.getObjectFieldAs<Int>("value")
-                                            action4Id -> buttons[action4Id]?.icon = action.getObjectFieldAs<Int>("value")
-                                            stopId -> buttons[stopId]?.icon = action.getObjectFieldAs<Int>("value")
-                                            iconId -> {
+                                            action1Id, notificationAction1Id -> buttons[action1Id]?.icon = action.getObjectFieldAs<Int>("value")
+                                            action2Id, notificationAction2Id -> buttons[action2Id]?.icon = action.getObjectFieldAs<Int>("value")
+                                            action3Id, notificationAction3Id -> buttons[action3Id]?.icon = action.getObjectFieldAs<Int>("value")
+                                            action4Id, notificationAction4Id -> buttons[action4Id]?.icon = action.getObjectFieldAs<Int>("value")
+                                            stopId, notificationStopId -> buttons[stopId]?.icon = action.getObjectFieldAs<Int>("value")
+                                            iconId, notificationIconId -> {
                                                 val originIcon = BitmapFactory.decodeResource(currentContext.resources, action.getObjectFieldAs("value"))
                                                 val largeIcon = originIcon.copy(originIcon.config, true)
                                                 largeIcon.eraseColor(old.color)
@@ -387,6 +396,7 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                                 setLargeIcon(largeIcon)
                                                 originIcon.recycle()
                                             }
+                                            else -> Log.w("Unknown viewId $viewId")
                                         }
                                 }
                             }
@@ -394,11 +404,12 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                 val response = action.getObjectField("mResponse")
                                 val pendingIntent = response?.getObjectFieldAs<PendingIntent?>("mPendingIntent")
                                 when (viewId) {
-                                    action1Id -> buttons[action1Id]?.intent = pendingIntent
-                                    action2Id -> buttons[action2Id]?.intent = pendingIntent
-                                    action3Id -> buttons[action3Id]?.intent = pendingIntent
-                                    action4Id -> buttons[action4Id]?.intent = pendingIntent
-                                    stopId -> buttons[stopId]?.intent = pendingIntent
+                                    action1Id, notificationAction1Id -> buttons[action1Id]?.intent = pendingIntent
+                                    action2Id, notificationAction2Id -> buttons[action2Id]?.intent = pendingIntent
+                                    action3Id, notificationAction3Id -> buttons[action3Id]?.intent = pendingIntent
+                                    action4Id, notificationAction4Id -> buttons[action4Id]?.intent = pendingIntent
+                                    stopId, notificationStopId -> buttons[stopId]?.intent = pendingIntent
+                                    else -> Log.w("Unknown viewId $viewId")
                                 }
                             }
                         }
