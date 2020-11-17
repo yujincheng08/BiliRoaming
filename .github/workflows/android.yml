@@ -17,13 +17,13 @@ jobs:
           java-version: 1.8
       - name: Retrieve version
         run: |
-          echo ::set-env name=VERSION::$(echo ${{ github.event.head_commit.id }} | head -c 10)
+          echo VERSION=$(echo ${{ github.event.head_commit.id }} | head -c 10) >> $GITHUB_ENV
       - name: Build with Gradle
         run: bash ./gradlew -PappVerName=${{ env.VERSION }} assembleRelease
       - name: Sign Android release
         if: success()
         id: sign
-        uses: yujincheng08/sign-android-release@29bfd09
+        uses: r0adkll/sign-android-release@v1.0.4
         env:
           BUILD_TOOLS_VERSION: "30.0.2"
         with:
