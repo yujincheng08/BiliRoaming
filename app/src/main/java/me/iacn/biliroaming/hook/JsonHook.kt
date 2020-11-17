@@ -65,6 +65,14 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             }
                         }
                     }
+
+                    if (sPrefs.getBoolean("bangumi_tab_only", false)) {
+                        val tab = data?.getObjectFieldAs<MutableList<Any>>("tab")
+                        tab?.removeAll {
+                            it.getObjectFieldAs<String>("uri") != "bilibili://pgc/home"
+                        }
+                    }
+
                     if (sPrefs.getBoolean("purify_home_tab", false)) {
                         val tab = data?.getObjectFieldAs<MutableList<Any>>("tab")
                         tab?.removeAll {
@@ -74,6 +82,7 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             }
                         }
                     }
+
                     if (sPrefs.getBoolean("purify_game", false) &&
                             sPrefs.getBoolean("hidden", false)) {
                         val top = data?.getObjectFieldAs<MutableList<*>?>("top")
@@ -82,6 +91,7 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             uri?.startsWith("bilibili://game_center/home") ?: false
                         }
                     }
+
                 }
                 accountMineClass -> if (sPrefs.getBoolean("purify_drawer", false) &&
                         sPrefs.getBoolean("hidden", false)) {

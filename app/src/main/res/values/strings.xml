@@ -134,4 +134,6 @@
     <string name="speed">速度</string>
     <string name="test_upos_title">UPOS服务器测速</string>
     <string name="test_upos_summary">选择最快的UPOS以获得最好体验</string>
+    <string name="bangumi_tab_only_title">我只想看番</string>
+    <string name="bangumi_tab_only_summary">去除首页除番剧外所有标签（与前者二选一）</string>
 </resources>
