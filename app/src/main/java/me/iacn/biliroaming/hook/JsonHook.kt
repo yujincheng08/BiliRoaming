@@ -66,19 +66,19 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         }
                     }
 
-                    if (sPrefs.getBoolean("bangumi_tab_only", false)) {
-                        val tab = data?.getObjectFieldAs<MutableList<Any>>("tab")
-                        tab?.removeAll {
-                            it.getObjectFieldAs<String>("uri") != "bilibili://pgc/home"
-                        }
-                    }
-
                     if (sPrefs.getBoolean("purify_home_tab", false)) {
                         val tab = data?.getObjectFieldAs<MutableList<Any>>("tab")
                         tab?.removeAll {
                             it.getObjectFieldAs<String>("uri").run {
-                                startsWith("bilibili://pegasus/op/") ||
-                                        startsWith("bilibili://following/home_activity_tab")
+                                when{
+                                    this == "bilibili://live/home" -> sPrefs.getBoolean("purify_live", false)
+                                    this == "bilibili://pegasus/promo" -> sPrefs.getBoolean("purify_promo", false)
+                                    this == "bilibili://pegasus/hottopic" -> sPrefs.getBoolean("purify_hottopic", false)
+                                    this == "bilibili://pgc/home" -> sPrefs.getBoolean("purify_bangumi", false)
+                                    this == "bilibili://pgc/home?home_flow_type=2" || this == "bilibili://pegasus/op/70465?name=影視" -> sPrefs.getBoolean("purify_movie", false)
+                                    startsWith("bilibili://pegasus/op/") || startsWith("bilibili://following/home_activity_tab") -> sPrefs.getBoolean("purify_activity", false)
+                                    else -> sPrefs.getBoolean("purify_other_tabs", false)
+                                }
                             }
                         }
                     }

@@ -170,11 +170,34 @@
             android:key="purify_home_tab"
             android:summary="@string/purify_home_tab_summary"
             android:title="@string/purify_home_tab_title" />
-        <SwitchPreference
-            android:dependency="hidden"
-            android:key="bangumi_tab_only"
-            android:summary="@string/bangumi_tab_only_summary"
-            android:title="@string/bangumi_tab_only_title" />
+        <CheckBoxPreference
+            android:dependency="purify_home_tab"
+            android:key="purify_live"
+            android:title="@string/purify_live_title" />
+        <CheckBoxPreference
+            android:dependency="purify_home_tab"
+            android:key="purify_promo"
+            android:title="@string/purify_promo_title" />
+        <CheckBoxPreference
+            android:dependency="purify_home_tab"
+            android:key="purify_hottopic"
+            android:title="@string/purify_hottopic_title" />
+        <CheckBoxPreference
+            android:dependency="purify_home_tab"
+            android:key="purify_bangumi"
+            android:title="@string/purify_bangumi_title" />
+        <CheckBoxPreference
+            android:dependency="purify_home_tab"
+            android:key="purify_movie"
+            android:title="@string/purify_movie_title" />
+        <CheckBoxPreference
+            android:dependency="purify_home_tab"
+            android:key="purify_activity"
+            android:title="@string/purify_activity_title" />
+        <CheckBoxPreference
+            android:dependency="purify_home_tab"
+            android:key="purify_other_tabs"
+            android:title="@string/purify_other_tabs_title" />
         <SwitchPreference
             android:dependency="hidden"
             android:key="purify_city"
