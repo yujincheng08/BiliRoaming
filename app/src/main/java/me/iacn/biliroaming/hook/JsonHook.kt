@@ -66,19 +66,19 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         }
                     }
 
-                    if (sPrefs.getStringSet("purify_home_tab", setOf())?.isNotEmpty() == true) {
+                    if (sPrefs.getStringSet("purify_home_tab", emptySet())?.isNotEmpty() == true) {
                         val tab = data?.getObjectFieldAs<MutableList<Any>>("tab")
-                        val purifytabset = sPrefs.getStringSet("purify_home_tab", setOf())
+                        val purifytabset = sPrefs.getStringSet("purify_home_tab", emptySet())
                         tab?.removeAll {
                             it.getObjectFieldAs<String>("uri").run {
                                 when{
-                                    this == "bilibili://live/home" -> purifytabset!!.contains("live")
-                                    this == "bilibili://pegasus/promo" -> purifytabset!!.contains("promo")
-                                    this == "bilibili://pegasus/hottopic" -> purifytabset!!.contains("hottopic")
-                                    this == "bilibili://pgc/home" -> purifytabset!!.contains("bangumi")
-                                    this == "bilibili://pgc/home?home_flow_type=2" || this == "bilibili://pegasus/op/70465?name=影視" -> purifytabset!!.contains("movie")
-                                    startsWith("bilibili://pegasus/op/") || startsWith("bilibili://following/home_activity_tab") -> purifytabset!!.contains("activity")
-                                    else -> purifytabset!!.contains("other_tabs")
+                                    this == "bilibili://live/home" -> purifytabset.orEmpty().contains("live")
+                                    this == "bilibili://pegasus/promo" -> purifytabset.orEmpty().contains("promo")
+                                    this == "bilibili://pegasus/hottopic" -> purifytabset.orEmpty().contains("hottopic")
+                                    this == "bilibili://pgc/home" -> purifytabset.orEmpty().contains("bangumi")
+                                    this == "bilibili://pgc/home?home_flow_type=2" || this == "bilibili://pegasus/op/70465?name=影視" -> purifytabset.orEmpty().contains("movie")
+                                    startsWith("bilibili://pegasus/op/") || startsWith("bilibili://following/home_activity_tab") -> purifytabset.orEmpty().contains("activity")
+                                    else -> purifytabset.orEmpty().contains("other_tabs")
                                 }
                             }
                         }
