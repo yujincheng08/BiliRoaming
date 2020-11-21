@@ -65,15 +65,25 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             }
                         }
                     }
-                    if (sPrefs.getBoolean("purify_home_tab", false)) {
+
+                    if (sPrefs.getStringSet("purify_home_tab", emptySet())?.isNotEmpty() == true) {
                         val tab = data?.getObjectFieldAs<MutableList<Any>>("tab")
+                        val purifytabset = sPrefs.getStringSet("purify_home_tab", emptySet()).orEmpty()
                         tab?.removeAll {
                             it.getObjectFieldAs<String>("uri").run {
-                                startsWith("bilibili://pegasus/op/") ||
-                                        startsWith("bilibili://following/home_activity_tab")
+                                when{
+                                    this == "bilibili://live/home" -> purifytabset.contains("live")
+                                    this == "bilibili://pegasus/promo" -> purifytabset.contains("promo")
+                                    this == "bilibili://pegasus/hottopic" -> purifytabset.contains("hottopic")
+                                    this == "bilibili://pgc/home" -> purifytabset.contains("bangumi")
+                                    this == "bilibili://pgc/home?home_flow_type=2" || this == "bilibili://pegasus/op/70465?name=影視" -> purifytabset.contains("movie")
+                                    startsWith("bilibili://pegasus/op/") || startsWith("bilibili://following/home_activity_tab") -> purifytabset.contains("activity")
+                                    else -> purifytabset.contains("other_tabs")
+                                }
                             }
                         }
                     }
+
                     if (sPrefs.getBoolean("purify_game", false) &&
                             sPrefs.getBoolean("hidden", false)) {
                         val top = data?.getObjectFieldAs<MutableList<*>?>("top")
@@ -82,6 +92,7 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             uri?.startsWith("bilibili://game_center/home") ?: false
                         }
                     }
+
                 }
                 accountMineClass -> if (sPrefs.getBoolean("purify_drawer", false) &&
                         sPrefs.getBoolean("hidden", false)) {
