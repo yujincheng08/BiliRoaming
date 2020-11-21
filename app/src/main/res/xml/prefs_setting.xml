@@ -165,10 +165,9 @@
             android:key="purify_search"
             android:summary="@string/purify_search_summary"
             android:title="@string/purify_search_title" />
-        <MultiSelectListPreference
+
+        <SwitchPreference
             android:dependency="hidden"
-            android:entries="@array/tab_entries"
-            android:entryValues="@array/tab_values"
             android:key="purify_home_tab"
             android:summary="@string/purify_home_tab_summary"
             android:title="@string/purify_home_tab_title" />

@@ -93,7 +93,7 @@
     <string name="fix_download_summary">提高版权番剧的下载速度，但是会导致音视频分离</string>
     <string name="biliplus_alipay">https://qr.alipay.com/tsx09956vdaapx6rdrfxre3</string>
     <string name="purify_home_tab_title">净化首页标签</string>
-    <string name="purify_home_tab_summary">请勿全部选择，会使用之前的的标签</string>
+    <string name="purify_home_tab_summary">去除首页的热点标签</string>
     <string name="follow_dark_title">夜间模式跟随系统</string>
     <string name="follow_dark_summary">开启后，会根据系统是否在暗黑模式自动切换主题的夜间模式</string>
     <string name="music_notification_title">原生音乐通知样式</string>
@@ -134,11 +134,4 @@
     <string name="speed">速度</string>
     <string name="test_upos_title">UPOS服务器测速</string>
     <string name="test_upos_summary">选择最快的UPOS以获得最好体验</string>
-    <string name="live_title">直播</string>
-    <string name="promo_title">推荐</string>
-    <string name="hottopic_title">热门</string>
-    <string name="bangumi_title">番剧</string>
-    <string name="movie_title">影视</string>
-    <string name="activity_title">热点</string>
-    <string name="other_tabs_title">其它</string>
 </resources>
