@@ -37,9 +37,11 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     private val serializerFeatures = lazy {
         val serializerFeatureClass = "com.alibaba.fastjson.serializer.SerializerFeature".findClass(mClassLoader) ?: return@lazy null
-        val feature = serializerFeatureClass.getStaticObjectField("WriteNonStringKeyAsString")
-        val serializerFeatures = Array.newInstance(serializerFeatureClass, 1)
-        Array.set(serializerFeatures, 0, feature)
+        val keyAsString = serializerFeatureClass.getStaticObjectField("WriteNonStringKeyAsString")
+        val noDefault = serializerFeatureClass.getStaticObjectField("NotWriteDefaultValue")
+        val serializerFeatures = Array.newInstance(serializerFeatureClass, 2)
+        Array.set(serializerFeatures, 0, keyAsString)
+        Array.set(serializerFeatures, 1, noDefault)
         serializerFeatures
     }
 
