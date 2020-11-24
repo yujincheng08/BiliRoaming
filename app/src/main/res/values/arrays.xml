@@ -44,4 +44,22 @@
         <item>@string/hk_host</item>
         <item>@string/akamai_host</item>
     </string-array>
+    <string-array name="tab_entries">
+        <item>直播</item>
+        <item>推荐</item>
+        <item>热门</item>
+        <item>番剧</item>
+        <item>影视</item>
+        <item>热点</item>
+        <item>其它</item>
+    </string-array>
+    <string-array name="tab_values">
+        <item>live</item>
+        <item>promo</item>
+        <item>hottopic</item>
+        <item>bangumi</item>
+        <item>movie</item>
+        <item>activity</item>
+        <item>other_tabs</item>
+    </string-array>
 </resources>
