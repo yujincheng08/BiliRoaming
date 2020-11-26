@@ -34,32 +34,39 @@ class CoverHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 var url: String? = null
                 var filename: String? = null
                 var title: String? = null
-                when (param.thisObject.javaClass) {
-                    bgmClass -> activity.run {
-                        val viewModelField = activity.javaClass.declaredFields.firstOrNull { it.type.name == "com.bilibili.bangumi.logic.page.detail.BangumiDetailViewModelV2" }
-                        val episodeMethod = viewModelField?.type?.declaredMethods?.lastOrNull { it.returnType.name == "com.bilibili.bangumi.data.page.detail.entity.BangumiUniformEpisode" }
-                        val episode = getObjectField(viewModelField?.name)?.callMethod(episodeMethod?.name)
-                        url = episode?.getObjectFieldAs("cover")
-                        filename = "ep${episode?.getLongField("epid").toString()}"
-                        title = episode?.getObjectFieldAs("longTitle") ?: ""
-                    }
-                    ugcClass -> activity.run {
-                        javaClass.declaredFields.firstOrNull { it.type.name == "tv.danmaku.bili.ui.video.api.BiliVideoDetail" }?.let {
-                            url = getObjectField(it.name)?.getObjectFieldAs("mCover")
-                            filename = "av${getObjectField(it.name)?.getObjectField("mAvid").toString()}"
-                            title = getObjectField(it.name)?.getObjectFieldAs("mTitle")
+                try {
+                    when (param.thisObject.javaClass) {
+                        bgmClass -> activity.run {
+                            val viewModelField = activity.javaClass.declaredFields.firstOrNull { it.type.name == "com.bilibili.bangumi.logic.page.detail.BangumiDetailViewModelV2" }
+                            val episodeMethod = viewModelField?.type?.declaredMethods?.lastOrNull { it.returnType.name == "com.bilibili.bangumi.data.page.detail.entity.BangumiUniformEpisode" }
+                            val episode = getObjectField(viewModelField?.name)?.callMethod(episodeMethod?.name)
+                            url = episode?.getObjectFieldAs("cover")
+                            filename = "ep${episode?.getLongField("epid").toString()}"
+                            title = episode?.getObjectFieldAs("longTitle") ?: ""
+                        }
+                        ugcClass -> activity.run {
+                            javaClass.declaredFields.firstOrNull { it.type.name == "tv.danmaku.bili.ui.video.api.BiliVideoDetail" }?.let {
+                                url = getObjectField(it.name)?.getObjectFieldAs("mCover")
+                                filename = "av${getObjectField(it.name)?.getObjectField("mAvid").toString()}"
+                                title = getObjectField(it.name)?.getObjectFieldAs("mTitle")
+                            }
+                        }
+                        else -> if (liveClass?.isInstance(param.thisObject) == true) {
+                            val viewModelField = activity.javaClass.declaredFields.firstOrNull { it.type.name == "com.bilibili.bililive.videoliveplayer.ui.roomv3.base.viewmodel.LiveRoomRootViewModel" }
+                            val roomFeedField = viewModelField?.type?.declaredFields?.firstOrNull { it.type.name == "com.bilibili.bililive.videoliveplayer.ui.roomv3.vertical.roomfeed.LiveRoomFeedViewModel" }
+                            val currentFeedField = roomFeedField?.type?.declaredFields?.firstOrNull { it.type.name.startsWith("com.bilibili.bililive.videoliveplayer.ui.roomv3.vertical.roomfeed") }
+                            val roomIdField = currentFeedField?.type?.declaredFields?.firstOrNull { it.type == Long::class.java }
+                            val coverField = currentFeedField?.type?.declaredFields?.firstOrNull { it.type == String::class.java }
+                            val titleField = currentFeedField?.type?.declaredFields?.lastOrNull { it.type == String::class.java }
+                            activity.getObjectField(viewModelField?.name)?.getObjectField(roomFeedField?.name)?.getObjectField(currentFeedField?.name)?.run {
+                                url = getObjectFieldAs(coverField?.name)
+                                filename = "live${getObjectField(roomIdField?.name).toString()}"
+                                title = getObjectFieldAs(titleField?.name)
+                            }
                         }
                     }
-                    else -> if (liveClass?.isInstance(param.thisObject) == true) {
-                        val viewModelField = activity.javaClass.declaredFields.firstOrNull { it.type.name == "com.bilibili.bililive.videoliveplayer.ui.roomv3.base.viewmodel.LiveRoomRootViewModel" }
-                        val roomDataField = "com.bilibili.bililive.videoliveplayer.ui.roomv3.base.viewmodel.LiveRoomBaseViewModel".findClassOrNull(mClassLoader)?.declaredFields?.firstOrNull { it.type.name == "com.bilibili.bililive.videoliveplayer.ui.roomv3.base.viewmodel.LiveRoomData" }
-                        val essentialInfoField = roomDataField?.type?.declaredFields?.firstOrNull { it.type.name == "com.bilibili.bililive.videoliveplayer.net.beans.gateway.roominfo.BiliLiveRoomEssentialInfo" }
-                        activity.getObjectField(viewModelField?.name)?.getObjectField(roomDataField?.name)?.getObjectField(essentialInfoField?.name)?.run {
-                            url = getObjectFieldAs("cover")
-                            filename = "live${getObjectField("roomId").toString()}"
-                            title = getObjectFieldAs("title")
-                        }
-                    }
+                } catch (e: Throwable) {
+                    Log.e(e)
                 }
 
                 Log.toast("开始获取封面", true)
