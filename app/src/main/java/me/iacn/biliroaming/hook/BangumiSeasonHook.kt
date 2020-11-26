@@ -12,7 +12,7 @@ import me.iacn.biliroaming.network.BiliRoamingApi.getContent
 import me.iacn.biliroaming.network.BiliRoamingApi.getSeason
 import me.iacn.biliroaming.utils.*
 import org.json.JSONObject
-import java.lang.reflect.Array
+import java.lang.reflect.Array as RArray
 import java.lang.reflect.Method
 import java.net.URL
 
@@ -39,9 +39,9 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val serializerFeatureClass = "com.alibaba.fastjson.serializer.SerializerFeature".findClass(mClassLoader) ?: return@lazy null
         val keyAsString = serializerFeatureClass.getStaticObjectField("WriteNonStringKeyAsString")
         val noDefault = serializerFeatureClass.getStaticObjectField("NotWriteDefaultValue")
-        val serializerFeatures = Array.newInstance(serializerFeatureClass, 2)
-        Array.set(serializerFeatures, 0, keyAsString)
-        Array.set(serializerFeatures, 1, noDefault)
+        val serializerFeatures = RArray.newInstance(serializerFeatureClass, 2)
+        RArray.set(serializerFeatures, 0, keyAsString)
+        RArray.set(serializerFeatures, 1, noDefault)
         serializerFeatures
     }
 
@@ -57,25 +57,34 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     private fun Class<*>.fromJson(json: JSONObject) = fromJson(json.toString())
 
+    private fun updateSeasonInfo(args: Array<*>, paramMap: Map<String, String>) {
+        lastSeasonInfo.clear()
+        val seasonMode = when {
+            args[1] is Int -> args[1] as Int
+            args[3] != "0" -> TYPE_EPISODE_ID
+            args[2] != "0" -> TYPE_SEASON_ID
+            else -> -1
+        }
+        when (seasonMode) {
+            TYPE_SEASON_ID -> lastSeasonInfo["season_id"] = paramMap["season_id"]
+            TYPE_EPISODE_ID -> lastSeasonInfo["ep_id"] = paramMap["ep_id"]
+            else -> return
+        }
+        lastSeasonInfo["access_key"] = paramMap["access_key"]
+    }
+
     override fun startHook() {
         if (!sPrefs.getBoolean("main_func", false)) return
         Log.d("startHook: BangumiSeason")
         instance.seasonParamsMapClass?.hookAfterAllConstructors { param ->
             @Suppress("UNCHECKED_CAST")
-            val paramMap: Map<String, String> = param.thisObject as Map<String, String>
-            lastSeasonInfo.clear()
-            val seasonMode = when {
-                param.args[1] is Int -> param.args[1] as Int
-                param.args[3] != "0" -> TYPE_EPISODE_ID
-                param.args[2] != "0" -> TYPE_SEASON_ID
-                else -> -1
-            }
-            when (seasonMode) {
-                TYPE_SEASON_ID -> lastSeasonInfo["season_id"] = paramMap["season_id"]
-                TYPE_EPISODE_ID -> lastSeasonInfo["ep_id"] = paramMap["ep_id"]
-                else -> return@hookAfterAllConstructors
-            }
-            lastSeasonInfo["access_key"] = paramMap["access_key"]
+            val paramMap = param.thisObject as Map<String, String>
+            updateSeasonInfo(param.args, paramMap)
+        }
+
+        instance.seasonParamsClass?.hookAfterAllConstructors { param->
+            val paramMap = param.thisObject.callMethodAs<Map<String, String>>(instance.paramsToMap())
+            updateSeasonInfo(param.args, paramMap)
         }
 
         if (isBuiltIn && is64 && Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {

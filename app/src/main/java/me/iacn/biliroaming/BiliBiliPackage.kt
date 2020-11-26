@@ -40,7 +40,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val themeProcessorClass by Weak { mHookInfo["class_theme_processor"]?.findClassOrNull(mClassLoader) }
     val drawerClass by Weak { mHookInfo["class_drawer"]?.findClassOrNull(mClassLoader) }
     val generalResponseClass by Weak { "com.bilibili.okretro.GeneralResponse".findClass(mClassLoader) }
-    val seasonParamsMapClass by Weak { "com.bilibili.bangumi.data.page.detail.BangumiDetailApiService\$UniformSeasonParamsMap".findClass(mClassLoader) }
+    val seasonParamsMapClass by Weak { "com.bilibili.bangumi.data.page.detail.BangumiDetailApiService\$UniformSeasonParamsMap".findClassOrNull(mClassLoader) }
+    val seasonParamsClass by Weak { mHookInfo["class_bangumi_params_map"]?.findClassOrNull(mClassLoader) }
     val brandSplashClass by Weak { "tv.danmaku.bili.ui.splash.brand.ui.BaseBrandSplashFragment".findClassOrNull(mClassLoader) }
     val urlConnectionClass by Weak { "com.bilibili.lib.okhttp.huc.OkHttpURLConnection".findClass(mClassLoader) }
     val downloadThreadListenerClass by Weak { mHookInfo["class_download_thread_listener"]?.findClass(mClassLoader) }
@@ -138,6 +139,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     fun closeDrawer() = mHookInfo["method_close_drawer"]
 
     fun isDrawerOpen() = mHookInfo["method_is_drawer_open"]
+
+    fun paramsToMap() = mHookInfo["method_params_to_map"]
 
     private fun readHookInfo(context: Context): MutableMap<String, String?> {
         try {
@@ -274,11 +277,30 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             findCheckBlue()
         }.checkOrPut("map_ids") {
             getMapIds()
+        }.checkConjunctiveOrPut("class_bangumi_params_map", "method_params_to_map") {
+            findBangumiParamsMap()
         }
 
         Log.d(mHookInfo.filterKeys { it != "map_ids" })
         Log.d("Check hook info completed: needUpdate = $needUpdate")
         return needUpdate
+    }
+
+    private fun findBangumiParamsMap(): Array<String?> {
+        val bangumiDetailApiServiceClass = classesList.filter {
+            it.startsWith("com.bilibili.bangumi.data.page.detail")
+        }.map { c ->
+            c.findClass(mClassLoader)
+        }.findLast { c ->
+            c?.declaredMethods?.map { it.name }?.contains("getViewSeasonV2") == true
+        }
+        bangumiDetailApiServiceClass?.declaredClasses?.forEach { c ->
+            c.declaredMethods.forEach { m ->
+                if (m.returnType == Map::class.java && m.parameterTypes.isEmpty())
+                    return arrayOf(c.name, m.name)
+            }
+        }
+        return arrayOfNulls<String>(2)
     }
 
     private fun getMapIds(): String? {
