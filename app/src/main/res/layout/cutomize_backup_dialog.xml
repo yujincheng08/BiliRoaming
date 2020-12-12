@@ -4,7 +4,7 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:rowCount="4"
-    android:columnCount="2"
+    android:columnCount="4"
     android:orientation="horizontal"
     android:paddingStart="25dp"
     android:paddingEnd="20dp">
@@ -27,6 +27,31 @@
         android:tag="cn_server"
         android:inputType="textUri"
         android:autofillHints="no"
+        android:singleLine="true"
+        tools:ignore="HardcodedText" />
+
+    <EditText
+        android:id="@+id/cn_server_ip"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="3"
+        android:hint="cnip"
+        android:tag="cn_server_ip"
+        android:inputType="textUri"
+        android:autofillHints="no"
+        android:singleLine="true"
+        tools:ignore="HardcodedText" />
+
+    <EditText
+        android:id="@+id/cn_server_port"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="2"
+        android:hint="cnport"
+        android:tag="cn_server_port"
+        android:inputType="number"
+        android:autofillHints="no"
+        android:singleLine="true"
         tools:ignore="HardcodedText" />
 
     <TextView
@@ -34,6 +59,7 @@
         android:layout_height="wrap_content"
         android:layout_columnWeight="1"
         android:text="香港"
+        android:singleLine="true"
         tools:ignore="HardcodedText" />
 
     <EditText
@@ -45,6 +71,31 @@
         android:tag="hk_server"
         android:inputType="textUri"
         android:autofillHints="no"
+        android:singleLine="true"
+        tools:ignore="HardcodedText" />
+
+    <EditText
+        android:id="@+id/hk_server_ip"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="3"
+        android:hint="hkip"
+        android:tag="hk_server_ip"
+        android:inputType="textUri"
+        android:autofillHints="no"
+        android:singleLine="true"
+        tools:ignore="HardcodedText" />
+
+    <EditText
+        android:id="@+id/hk_server_port"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="2"
+        android:hint="hkport"
+        android:tag="hk_server_port"
+        android:inputType="number"
+        android:autofillHints="no"
+        android:singleLine="true"
         tools:ignore="HardcodedText" />
 
     <TextView
@@ -52,6 +103,7 @@
         android:layout_height="wrap_content"
         android:layout_columnWeight="1"
         android:text="台湾"
+        android:singleLine="true"
         tools:ignore="HardcodedText" />
 
     <EditText
@@ -63,6 +115,31 @@
         android:tag="tw_server"
         android:inputType="textUri"
         android:autofillHints="no"
+        android:singleLine="true"
+        tools:ignore="HardcodedText" />
+
+    <EditText
+        android:id="@+id/tw_server_ip"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="3"
+        android:hint="twip"
+        android:tag="tw_server_ip"
+        android:inputType="textUri"
+        android:autofillHints="no"
+        android:singleLine="true"
+        tools:ignore="HardcodedText" />
+
+    <EditText
+        android:id="@+id/tw_server_port"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="2"
+        android:hint="twport"
+        android:tag="tw_server_port"
+        android:inputType="number"
+        android:autofillHints="no"
+        android:singleLine="true"
         tools:ignore="HardcodedText" />
 
     <TextView
@@ -70,6 +147,7 @@
         android:layout_height="wrap_content"
         android:layout_columnWeight="1"
         android:text="泰国/东南亚"
+        android:singleLine="true"
         tools:ignore="HardcodedText" />
 
     <EditText
@@ -81,5 +159,30 @@
         android:tag="th_server"
         android:inputType="textUri"
         android:autofillHints="no"
+        android:singleLine="true"
+        tools:ignore="HardcodedText" />
+
+    <EditText
+        android:id="@+id/th_server_ip"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="3"
+        android:hint="thip"
+        android:tag="th_server_ip"
+        android:inputType="textUri"
+        android:autofillHints="no"
+        android:singleLine="true"
+        tools:ignore="HardcodedText" />
+
+    <EditText
+        android:id="@+id/th_server_port"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="2"
+        android:hint="thport"
+        android:tag="th_server_port"
+        android:inputType="number"
+        android:autofillHints="no"
+        android:singleLine="true"
         tools:ignore="HardcodedText" />
 </GridLayout>

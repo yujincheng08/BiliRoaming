@@ -102,7 +102,7 @@
     <string name="music_notification_title">原生音乐通知样式</string>
     <string name="music_notification_summary">强制音乐通知栏为模块自制的原生样式</string>
     <string name="custom_server_title">设置解析服务器</string>
-    <string name="custom_server_summary">使用设置的服务器解析区域限制番剧的播放地址；如不知如何设置，请查看帮助文档</string>
+    <string name="custom_server_summary">使用设置的服务器解析区域限制番剧的播放地址，ip不知道填什么就别填；如不知如何设置，请查看帮助文档</string>
     <string name="drawer_title">移动我的页面到侧边栏</string>
     <string name="drawer_summary">移动后，可以点击首页的头像或者在空白地方左划打开侧边栏</string>
     <string name="full_splash_title">强制满屏启动图</string>

@@ -21,9 +21,11 @@ import org.json.JSONObject
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
+import java.net.URLStreamHandler
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
-import kotlin.collections.LinkedHashMap
+import javax.net.ssl.HttpsURLConnection
+import javax.net.ssl.SSLContext
 
 
 /**
@@ -46,6 +48,7 @@ object BiliRoamingApi {
     private const val THAILAND_PATH_PLAYURL = "/intl/gateway/v2/ogv/playurl"
     private const val THAILAND_PATH_SUBTITLES = "/intl/gateway/v2/app/subtitle"
     private const val THAILAND_PATH_SEARCH = "/intl/gateway/v2/app/search/type"
+    var httpshandler: URLStreamHandler? = null
 
     @JvmStatic
     fun getSeason(info: Map<String, String?>, hidden: Boolean): String? {
@@ -289,19 +292,27 @@ object BiliRoamingApi {
     @JvmStatic
     private fun getFromCustomUrl(queryString: String?, priorityArea: Array<String>?): String? {
         queryString ?: return null
-        val twUrl = sPrefs.getString("tw_server", null)
         val hkUrl = sPrefs.getString("hk_server", null)
+        val hkip = sPrefs.getString("hk_server_ip", null)
+        val hkport = sPrefs.getString("hk_server_port", null)
+        val twUrl = sPrefs.getString("tw_server", null)
+        val twip = sPrefs.getString("tw_server_ip", null)
+        val twport = sPrefs.getString("tw_server_port", null)
         val cnUrl = sPrefs.getString("cn_server", null)
+        val cnip = sPrefs.getString("cn_server_ip", null)
+        val cnport = sPrefs.getString("cn_server_port", null)
         val thUrl = sPrefs.getString("th_server", null)
+        val thip = sPrefs.getString("th_server_ip", null)
+        val thport = sPrefs.getString("th_server_port", null)
 
-        val hostList = LinkedHashMap<String, String>(4, 1f, true)
+        val hostList = LinkedHashMap<String, Array<String?>>(4, 1f, true)
 
         if (hostList.isEmpty())
         // reversely
-            linkedMapOf("th" to thUrl, "tw" to twUrl, "cn" to cnUrl, "hk" to hkUrl).filterValues {
-                it != null
+            linkedMapOf("th" to arrayOf(thUrl, thip, thport), "cn" to arrayOf(cnUrl, cnip, cnport), "tw" to arrayOf(twUrl, twip, twport), "hk" to arrayOf(hkUrl, hkip, hkport)).filterValues {
+                it[0] != null
             }.mapValuesTo(hostList) {
-                it.value!!
+                it.value
             }
 
         val epIdStartIdx = queryString.indexOf("ep_id=")
@@ -312,9 +323,9 @@ object BiliRoamingApi {
             lastSeasonInfo.clear()
 
         lastSeasonInfo["title"]?.run {
+            if (contains(Regex("[仅|僅].*[东南亚|其他]")) && thUrl != null) hostList["th"]
             if (contains(Regex("僅.*台")) && twUrl != null) hostList["tw"]
             if (contains(Regex("僅.*港")) && hkUrl != null) hostList["hk"]
-            if (contains(Regex("[仅|僅].*[东南亚|其他]")) && thUrl != null) hostList["th"]
         }
 
         priorityArea?.forEach { area ->
@@ -347,11 +358,31 @@ object BiliRoamingApi {
             val path = if (area == "th") THAILAND_PATH_PLAYURL else PATH_PLAYURL
             val uri = Uri.Builder()
                     .scheme("https")
-                    .encodedAuthority(host + path)
+                    .encodedAuthority(host[0] + path)
                     .encodedQuery(signQuery(queryString, extraMap))
                     .toString()
-            getContent(uri)?.let {
-                Log.d("use server $area $host for playurl")
+
+            if (host[1] != null && host[2] != null) {
+                Log.toast("trying "+host[0]+" with "+host[1]+":"+host[2])
+            } else if (host[1] != null) {
+                Log.toast("trying "+host[0]+" with "+host[1])
+            } else if (host[2] != null) {
+                Log.toast("trying "+host[0]+":"+host[2])
+            } else {
+                Log.toast("trying "+host[0])
+            }
+
+            getContent(uri, host[1], host[2])?.let {
+                if (host[1] != null && host[2] != null) {
+                    Log.d("use server $area "+host[0]+" with "+host[1]+":"+host[2]+" for playurl")
+                } else if (host[1] != null) {
+                    Log.d("use server $area "+host[0]+" with "+host[1]+" for playurl")
+                } else if (host[2] != null) {
+                    Log.d("use server $area "+host[0]+":"+host[2]+" for playurl")
+                } else {
+                    Log.d("use server $area "+host[0]+" for playurl")
+                }
+
                 if (it.contains("\"code\":0")) {
                     if (seasonId != null && !sCaches.contains(seasonId) || sCaches.getString(seasonId, null) != area) {
                         sCaches.edit().run {
@@ -441,8 +472,9 @@ object BiliRoamingApi {
         return getContent(builder.toString())
     }
 
+
     @SuppressLint("SetJavaScriptEnabled")
-    fun getContent(urlString: String): String? {
+    fun getContent(urlString: String, ip: String? = null, port: String? = null): String? {
         val timeout = 10000
         return try {
             // Work around for android 7
@@ -485,13 +517,24 @@ object BiliRoamingApi {
                 }
                 return listener.result
             } else {
-                val url = URL(urlString)
-                val connection = url.openConnection() as HttpURLConnection
+                lateinit var connection: HttpsURLConnection
+                if (ip != null || port != null){
+                    val sslcontext = SSLContext.getDefault()
+                    val sslsocketfactory = SSLSocketFactoryWrapper(sslcontext.socketFactory, ip, port)
+                    val url = URL(null, urlString, httpshandler)
+                    connection = url.openConnection() as HttpsURLConnection
+                    connection.sslSocketFactory = sslsocketfactory
+                } else {
+                    val url = URL(urlString)
+                    connection = url.openConnection() as HttpsURLConnection
+                }
+
                 connection.requestMethod = "GET"
                 connection.setRequestProperty("Build", BuildConfig.VERSION_CODE.toString())
                 connection.connectTimeout = timeout
                 connection.readTimeout = timeout
                 connection.setRequestProperty("x-from-biliroaming", BuildConfig.VERSION_NAME)
+
                 connection.connect()
                 if (connection.responseCode == HttpURLConnection.HTTP_OK) {
                     val inputStream = connection.inputStream
