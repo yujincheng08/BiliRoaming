@@ -18,6 +18,7 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val cursorListClass = "com.bilibili.app.comm.comment2.model.BiliCommentCursorList".findClassOrNull(mClassLoader)
         val searchRanksClass = "com.bilibili.search.api.SearchRanks".findClass(mClassLoader)
         val searchReferralClass = "com.bilibili.search.api.SearchReferral".findClass(mClassLoader)
+        val followingcardSearchRanksClass = "com.bilibili.bplus.followingcard.net.entity.b".findClass(mClassLoader)
 
         instance.fastJsonClass?.hookAfterMethod(instance.fastJsonParse(), String::class.java, Type::class.java, Int::class.javaPrimitiveType, "com.alibaba.fastjson.parser.Feature[]") { param ->
             var result = param.result ?: return@hookAfterMethod
@@ -120,7 +121,7 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     result.getObjectFieldAs<MutableList<*>?>("splashList")?.clear()
                     result.getObjectFieldAs<MutableList<*>?>("strategyList")?.clear()
                 }
-                defaultWordClass, defaultKeywordClass, searchRanksClass, searchReferralClass -> if (sPrefs.getBoolean("purify_search", false) &&
+                defaultWordClass, defaultKeywordClass, searchRanksClass, searchReferralClass, followingcardSearchRanksClass -> if (sPrefs.getBoolean("purify_search", false) &&
                         sPrefs.getBoolean("hidden", false)) {
                     result.javaClass.fields.forEach {
                         if (it.type != Int::class.javaPrimitiveType)
