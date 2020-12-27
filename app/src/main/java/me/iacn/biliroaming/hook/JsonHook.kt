@@ -9,7 +9,6 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         Log.d("startHook: Json")
 
         val tabResponseClass = "tv.danmaku.bili.ui.main2.resource.MainResourceManager\$TabResponse".findClass(mClassLoader)
-        val accountMineClass = "tv.danmaku.bili.ui.main2.api.AccountMine".findClass(mClassLoader)
         val splashClass = "tv.danmaku.bili.ui.splash.SplashData".findClass(mClassLoader)
         val tabClass = "tv.danmaku.bili.ui.main2.resource.MainResourceManager\$Tab".findClass(mClassLoader)
         val defaultWordClass = "tv.danmaku.bili.ui.main2.api.SearchDefaultWord".findClassOrNull(mClassLoader)
@@ -94,7 +93,7 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     }
 
                 }
-                accountMineClass -> if (sPrefs.getBoolean("purify_drawer", false) &&
+                instance.accountMineClass -> if (sPrefs.getBoolean("purify_drawer", false) &&
                         sPrefs.getBoolean("hidden", false)) {
                     arrayOf(result.getObjectFieldAs<MutableList<*>?>("sectionList"),
                             result.getObjectFieldAs<MutableList<*>>("sectionListV2")).forEach { sections ->
