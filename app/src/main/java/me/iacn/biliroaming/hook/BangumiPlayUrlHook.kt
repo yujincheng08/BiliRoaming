@@ -154,7 +154,8 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     "com.bapis.bilibili.pgc.gateway.player.v2.PlayViewReq") { param ->
                 val request = param.args[0]
                 val response = param.result
-                if (!response.callMethodAs<Boolean>("hasVideoInfo")) {
+                if (!response.callMethodAs<Boolean>("hasVideoInfo") ||
+                        (response.callMethodAs("hasViewInfo") && response.callMethod("getViewInfo")?.callMethodAs<Boolean>("hasDialog") == true)) {
                     val content = getPlayUrl(reconstructQuery(request), BangumiSeasonHook.lastSeasonInfo)
                     content?.let {
                         Log.d("Has replaced play url with proxy server $it")
@@ -163,6 +164,12 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     } ?: run {
                         Log.e("Failed to get play url")
                         Log.toast("获取播放地址失败")
+                        if (response.callMethodAs("hasViewInfo")) {
+                            response.callMethod("getViewInfo")?.callMethod("getDialog")?.run{
+                                callMethod("setMsg", "获取播放地址失败")
+                                callMethod("getTitle")?.callMethod("setText", "获取播放地址失败。请检查哔哩漫游设置里的解析服务器设置。")
+                            }
+                        }
                     }
                 } else if (isDownload) {
                     param.result = fixDownloadProto(response)

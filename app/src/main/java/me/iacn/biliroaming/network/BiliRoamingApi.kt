@@ -60,6 +60,9 @@ object BiliRoamingApi {
             if (episode.optInt("badge_type", -1) == 0)
                 episode.remove("badge_info")
         }
+        for (section in result.optJSONArray("section").orEmpty()) {
+            fixEpisodes(section)
+        }
     }
 
     @JvmStatic
@@ -174,7 +177,7 @@ object BiliRoamingApi {
     @JvmStatic
     fun getPlayUrl(queryString: String?, info: Map<String, String?>): String? {
         return getFromCustomUrl(queryString, info)?.let {
-                JSONObject(it).optJSONObject("result")?.toString() ?: it
+            JSONObject(it).optJSONObject("result")?.toString() ?: it
         }?.replace(HOST_REGEX, "://${
             sPrefs.getString("upos_host", null)
                     ?: XposedInit.moduleRes.getString(R.string.uptx_host)
@@ -195,10 +198,9 @@ object BiliRoamingApi {
             if (contains(Regex("[仅|僅].*[东南亚|其他]")) && sgUrl != null) hostList += sgUrl
         }
         if (hostList.isEmpty())
-            arrayOf(cnUrl, twUrl, hkUrl, sgUrl).forEach { if(it != null) hostList += it }
+            arrayOf(cnUrl, twUrl, hkUrl, sgUrl).forEach { if (it != null) hostList += it }
 
         if (hostList.isEmpty()) {
-            Log.toast("未设置服务器，请到哔哩漫游漫游设置添加")
             return null
         }
 
