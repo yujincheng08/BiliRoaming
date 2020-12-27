@@ -50,11 +50,22 @@ object BiliRoamingApi {
         info.filter { !it.value.isNullOrEmpty() }.forEach { builder.appendQueryParameter(it.key, it.value) }
         val seasonJson = getContent(builder.toString())?.toJSONObject() ?: return null
         seasonJson.optJSONObject("result")?.also {
+            fixEpisodes(it)
             reconstructModules(it)
             fixRight(it)
             if (hidden) getExtraInfo(it, info["access_key"])
         }
         return seasonJson.toString()
+    }
+
+    @JvmStatic
+    private fun fixEpisodes(result: JSONObject) {
+        val episodes = result.optJSONArray("episodes")
+        for (episode in episodes.orEmpty()) {
+            episode.optJSONObject("rights")?.put("area_limit", 0)
+            if (episode.optInt("badge_type", -1) == 0)
+                episode.remove("badge_info")
+        }
     }
 
     @JvmStatic
