@@ -21,9 +21,9 @@
 
         <Preference
             android:dependency="main_func"
-            android:key="custom_backup"
-            android:title="@string/custom_backup_title"
-            android:summary="@string/custom_backup_summary" />
+            android:key="custom_server"
+            android:title="@string/custom_server_title"
+            android:summary="@string/custom_server_summary" />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/cdn_category">
@@ -222,11 +222,6 @@
                 android:action="android.intent.action.VIEW"
                 android:data="@string/tg_url" />
         </Preference>
-
-        <Preference
-            android:key="thanks"
-            android:summary="@string/thanks_summary"
-            android:title="@string/thanks_title" />
 
     </PreferenceCategory>
 

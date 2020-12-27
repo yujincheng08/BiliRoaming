@@ -29,19 +29,13 @@ import java.util.concurrent.TimeUnit
  */
 object BiliRoamingApi {
     private const val BILI_SEASON_URL = "api.bilibili.com/pgc/view/web/season"
-    private const val BILIPLUS_PLAYURL_URL = "www.biliplus.com/BPplayurl.php"
     private const val BILIPLUS_VIEW_URL = "www.biliplus.com/api/view"
     private const val BILI_REVIEW_URL = "api.bilibili.com/pgc/review/user"
     private const val BILI_USER_STATUS_URL = "api.bilibili.com/pgc/view/web/season/user/status"
     private const val BILI_MEDIA_URL = "bangumi.bilibili.com/view/web_api/media"
     private const val BILI_MODULE_TEMPLATE = "{\"data\": {},\"id\": 0,\"module_style\": {\"hidden\": 0,\"line\": 1},\"more\": \"查看更多\",\"style\": \"positive\",\"title\": \"选集\"}"
 
-    private const val KGHOST_TW_API_URL = "bilibili-tw-api.kghost.info"
-    private const val KGHOST_HK_API_URL = "bilibili-hk-api.kghost.info"
-    private const val KGHOST_SG_API_URL = "bilibili-sg-api.kghost.info"
-    private const val KGHOST_CN_API_URL = "bilibili-cn-api.kghost.info"
-
-    private const val BACKUP_PLAYURL = "/pgc/player/api/playurl"
+    private const val PATH_PLAYURL = "/pgc/player/api/playurl"
 
     @JvmStatic
     fun getSeason(info: Map<String, String?>, hidden: Boolean): String? {
@@ -179,17 +173,8 @@ object BiliRoamingApi {
 
     @JvmStatic
     fun getPlayUrl(queryString: String?, info: Map<String, String?>): String? {
-        val builder = Uri.Builder()
-        builder.scheme("https").encodedAuthority(BILIPLUS_PLAYURL_URL)
-        builder.encodedQuery(queryString)
-        builder.appendQueryParameter("module", "pgc")
-        builder.appendQueryParameter("otype", "json")
-        builder.appendQueryParameter("platform", "android")
-        return getContent(builder.toString()).run {
-            if (this != null && contains("\"code\":0")) this
-            else getBackupUrl(queryString, info)?.let {
+        return getFromCustomUrl(queryString, info)?.let {
                 JSONObject(it).optJSONObject("result")?.toString() ?: it
-            }
         }?.replace(HOST_REGEX, "://${
             sPrefs.getString("upos_host", null)
                     ?: XposedInit.moduleRes.getString(R.string.uptx_host)
@@ -197,25 +182,30 @@ object BiliRoamingApi {
     }
 
     @JvmStatic
-    fun getBackupUrl(queryString: String?, info: Map<String, String?>): String? {
+    fun getFromCustomUrl(queryString: String?, info: Map<String, String?>): String? {
         Log.d("Title: ${info["title"]}")
-        val twUrl = sPrefs.getString("tw_server", KGHOST_TW_API_URL)!!
-        val hkUrl = sPrefs.getString("hk_server", KGHOST_HK_API_URL)!!
-        val cnUrl = sPrefs.getString("cn_server", KGHOST_CN_API_URL)!!
-        val sgUrl = sPrefs.getString("sg_server", KGHOST_SG_API_URL)!!
+        val twUrl = sPrefs.getString("tw_server", null)
+        val hkUrl = sPrefs.getString("hk_server", null)
+        val cnUrl = sPrefs.getString("cn_server", null)
+        val sgUrl = sPrefs.getString("sg_server", null)
         val hostList = ArrayList<String>()
         info["title"]?.run {
-            if (contains(Regex("僅.*台"))) hostList += twUrl
-            if (contains(Regex("僅.*港"))) hostList += hkUrl
-            if (contains(Regex("[仅|僅].*[东南亚|其他]"))) hostList += sgUrl
+            if (contains(Regex("僅.*台")) && twUrl != null) hostList += twUrl
+            if (contains(Regex("僅.*港")) && hkUrl != null) hostList += hkUrl
+            if (contains(Regex("[仅|僅].*[东南亚|其他]")) && sgUrl != null) hostList += sgUrl
         }
         if (hostList.isEmpty())
-            hostList += arrayOf(cnUrl, twUrl, hkUrl, sgUrl)
+            arrayOf(cnUrl, twUrl, hkUrl, sgUrl).forEach { if(it != null) hostList += it }
+
+        if (hostList.isEmpty()) {
+            Log.toast("未设置服务器，请到哔哩漫游漫游设置添加")
+            return null
+        }
 
         for (host in hostList) {
             val uri = Uri.Builder()
                     .scheme("https")
-                    .encodedAuthority(host + BACKUP_PLAYURL)
+                    .encodedAuthority(host + PATH_PLAYURL)
                     .encodedQuery(queryString)
                     .toString()
             getContent(uri)?.let {

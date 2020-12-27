@@ -18,7 +18,6 @@ import android.view.ContextThemeWrapper
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.EditText
-import android.widget.ImageView
 import android.widget.TextView
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
@@ -55,8 +54,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("custom_splash").onPreferenceChangeListener = this
             findPreference("custom_splash_logo").onPreferenceChangeListener = this
             findPreference("save_log").summary = moduleRes.getString(R.string.save_log_summary).format(logFile.absolutePath)
-            findPreference("thanks").onPreferenceClickListener = this
-            findPreference("custom_backup").onPreferenceClickListener = this
+            findPreference("custom_server").onPreferenceClickListener = this
             findPreference("test_upos").onPreferenceClickListener = this
             checkCompatibleVersion()
             checkUpdate()
@@ -220,37 +218,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             return true
         }
 
-        private fun onThanksClick(): Boolean {
-            AlertDialog.Builder(activity).run {
-                setTitle("赞助服务器提供者(不是模块作者)")
-                setItems(arrayOf("BiliPlus (主服务器)", "kghost (备用服务器)")) { _: DialogInterface, i: Int ->
-                    when (i) {
-                        0 -> {
-                            AlertDialog.Builder(activity).create().run {
-                                setTitle("BiliPlus赞助")
-                                setView(ImageView(activity).apply {
-                                    setImageDrawable(moduleRes.getDrawable(R.drawable.biliplus_alipay))
-                                    setOnClickListener {
-                                        val uri = Uri.parse(moduleRes.getString(R.string.biliplus_alipay))
-                                        val intent = Intent(Intent.ACTION_VIEW, uri)
-                                        startActivity(intent)
-                                    }
-                                }, 50, 50, 50, 50)
-                                setButton(AlertDialog.BUTTON_NEGATIVE, "关闭") { _, _ -> }
-                                show()
-                            }
-                        }
-                        1 -> {
-                        }
-                    }
-                }
-                setNegativeButton("关闭", null)
-                show()
-            }
-            return true
-        }
-
-        private fun onCustomBackupClick(): Boolean {
+        private fun onCustomServerClick(): Boolean {
             AlertDialog.Builder(activity).run {
                 val layout = moduleRes.getLayout(R.layout.cutomize_backup_dialog)
                 val inflater = LayoutInflater.from(context)
@@ -261,7 +229,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                         view.findViewById(R.id.tw_server),
                         view.findViewById(R.id.sg_server))
                 editTexts.forEach { it.setText(prefs.getString(it.tag.toString(), "")) }
-                setTitle("自定义备份服务器")
+                setTitle("设置解析服务器")
                 setView(view)
                 setPositiveButton("确定") { _, _ ->
                     editTexts.forEach {
@@ -286,8 +254,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         override fun onPreferenceClick(preference: Preference) = when (preference.key) {
             "version" -> onVersionClick()
             "update" -> onUpdateClick()
-            "thanks" -> onThanksClick()
-            "custom_backup" -> onCustomBackupClick()
+            "custom_server" -> onCustomServerClick()
             "test_upos" -> onTestUposClick()
             else -> false
         }

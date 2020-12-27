@@ -64,11 +64,6 @@
                 android:data="@string/tg_url" />
         </Preference>
 
-        <Preference
-            android:key="thanks"
-            android:summary="@string/thanks_summary"
-            android:title="@string/thanks_title" />
-
         <Preference android:key="running_status" />
 
     </PreferenceCategory>
