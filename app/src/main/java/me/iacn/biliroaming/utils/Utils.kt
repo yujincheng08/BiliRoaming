@@ -99,7 +99,7 @@ val logFile by lazy { File(currentContext.externalCacheDir, "log.txt") }
 val sPrefs
     get() = currentContext.getSharedPreferences("biliroaming", Context.MODE_MULTI_PROCESS)!!
 
-fun signQuery(query: String?): String? {
+fun signQuery(query: String?, extraMap: Map<String, String> = emptyMap()): String? {
     val queryMap = TreeMap<String, String>()
     val pairs = query?.split("&".toRegex())?.toTypedArray() ?: return null
     for (pair in pairs) {
@@ -114,6 +114,7 @@ fun signQuery(query: String?): String? {
     queryMap["device"] = "android"
     queryMap["mobi_app"] = platform
     queryMap["platform"] = platform
+    queryMap.putAll(extraMap)
     return instance.libBiliClass?.callStaticMethod(instance.signQueryName(), queryMap).toString()
 }
 

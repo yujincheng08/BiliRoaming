@@ -80,7 +80,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             // As a workaround, the request will fallback to request from proxy server.
             // If biliplus is down, we can still get result from proxy server.
             // However, the speed may not be fast.
-            content = getPlayUrl(signQuery(queryString.replace("dl=1", "fix_dl=1")),
+            content = getPlayUrl(queryString.replace("dl=1", "fix_dl=1"),
                     BangumiSeasonHook.lastSeasonInfo)
             content = content?.let {
                 if (urlString.contains("fix_dl=1") || urlString.contains("dl=1")) {
@@ -254,7 +254,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val serializedRequest = request.callMethodAs<ByteArray>("toByteArray")
         val req = PlayViewReq.parseFrom(serializedRequest)
         // CANNOT use reflection for compatibility with Xpatch
-        val query = Uri.Builder().run {
+        return Uri.Builder().run {
             appendQueryParameter("ep_id", req.epId.toString())
             appendQueryParameter("cid", req.cid.toString())
             appendQueryParameter("qn", req.qn.toString())
@@ -267,7 +267,6 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
             build()
         }.query
-        return signQuery(query)
     }
 
 

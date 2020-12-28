@@ -191,24 +191,27 @@ object BiliRoamingApi {
         val hkUrl = sPrefs.getString("hk_server", null)
         val cnUrl = sPrefs.getString("cn_server", null)
         val sgUrl = sPrefs.getString("sg_server", null)
-        val hostList = ArrayList<String>()
+        val hostList = LinkedHashMap<String, String>()
         info["title"]?.run {
-            if (contains(Regex("僅.*台")) && twUrl != null) hostList += twUrl
-            if (contains(Regex("僅.*港")) && hkUrl != null) hostList += hkUrl
-            if (contains(Regex("[仅|僅].*[东南亚|其他]")) && sgUrl != null) hostList += sgUrl
+            if (contains(Regex("僅.*台")) && twUrl != null) hostList += "tw" to twUrl
+            if (contains(Regex("僅.*港")) && hkUrl != null) hostList += "hk" to hkUrl
+            if (contains(Regex("[仅|僅].*[东南亚|其他]")) && sgUrl != null) hostList += "sg" to sgUrl
         }
-        if (hostList.isEmpty())
-            arrayOf(cnUrl, twUrl, hkUrl, sgUrl).forEach { if (it != null) hostList += it }
 
-        if (hostList.isEmpty()) {
-            return null
-        }
+        if (hostList.isEmpty())
+            linkedMapOf("tw" to twUrl, "cn" to cnUrl, "hk" to hkUrl, "sg" to sgUrl).filterValues {
+                it != null
+            }.mapValuesTo(hostList) {
+                it.value!!
+            }
+
+        if (hostList.isEmpty()) return null
 
         for (host in hostList) {
             val uri = Uri.Builder()
                     .scheme("https")
-                    .encodedAuthority(host + PATH_PLAYURL)
-                    .encodedQuery(queryString)
+                    .encodedAuthority(host.value + PATH_PLAYURL)
+                    .encodedQuery(signQuery(queryString, mapOf("area" to host.key)))
                     .toString()
             getContent(uri)?.let {
                 Log.d("use backup $host for playurl instead")
