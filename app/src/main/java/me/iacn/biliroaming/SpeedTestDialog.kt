@@ -23,6 +23,8 @@ import me.iacn.biliroaming.utils.fetchJson
 import me.iacn.biliroaming.utils.sPrefs
 import java.net.URL
 import java.util.concurrent.Executors
+import me.iacn.biliroaming.network.BiliRoamingApi.getPlayUrl
+import me.iacn.biliroaming.utils.toJSONObject
 
 class SpeedTestResult(val name: String, val value: String?, var speed: String)
 
@@ -67,8 +69,8 @@ class SpeedTestDialog(private val pref: ListPreference, activity: Activity) : Al
     private val speedTestDispatcher = Executors.newFixedThreadPool(1).asCoroutineDispatcher()
 
     companion object {
-        const val mainlandUrl = "https://www.biliplus.com/BPplayurl.php?cid=235297653&otype=json&fnval=16&module=pgc&platform=android"
-        const val overseaUrl = "https://www.biliplus.com/BPplayurl.php?cid=13073143&otype=json&fnval=16&module=pgc&platform=android"
+        const val mainlandParams = "cid=120453316&otype=json&fnval=16&module=pgc&platform=android"
+        const val overseaParams = "cid=13073143&otype=json&fnval=16&module=pgc&platform=android"
         const val infoUrl = "https://api.bilibili.com/client_info"
     }
 
@@ -158,8 +160,8 @@ class SpeedTestDialog(private val pref: ListPreference, activity: Activity) : Al
 
     private suspend fun getTestUrl() = withContext(Dispatchers.Default) {
         val country = fetchJson(infoUrl)?.optJSONObject("data")?.optString("country")
-        val fileUrl = if (country == "中国") mainlandUrl else overseaUrl
-        fetchJson(fileUrl)?.optJSONObject("dash")?.getJSONArray("audio")?.run {
+        val json = if (country == "中国") getPlayUrl(mainlandParams, mapOf("title" to "僅港澳台")) else getPlayUrl(overseaParams, emptyMap())
+        json?.toJSONObject()?.optJSONObject("dash")?.getJSONArray("audio")?.run {
             (0 until length()).map { idx -> optJSONObject(idx) }
         }?.minWithOrNull { a, b -> a.optInt("bandwidth") - b.optInt("bandwidth") }?.optString("base_url")?.replace("https", "http")
     }
