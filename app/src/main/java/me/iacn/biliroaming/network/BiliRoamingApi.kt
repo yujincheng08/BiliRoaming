@@ -29,6 +29,7 @@ import java.util.concurrent.TimeUnit
  */
 object BiliRoamingApi {
     private const val BILI_SEASON_URL = "api.bilibili.com/pgc/view/web/season"
+    private const val BILI_HIDDEN_SEASON_URL = "bangumi.bilibili.com/view/web_api/season"
     private const val BILIPLUS_VIEW_URL = "www.biliplus.com/api/view"
     private const val BILI_REVIEW_URL = "api.bilibili.com/pgc/review/user"
     private const val BILI_USER_STATUS_URL = "api.bilibili.com/pgc/view/web/season/user/status"
@@ -40,16 +41,26 @@ object BiliRoamingApi {
     @JvmStatic
     fun getSeason(info: Map<String, String?>, hidden: Boolean): String? {
         val builder = Uri.Builder()
-        builder.scheme("https").encodedAuthority(BILI_SEASON_URL)
+        builder.scheme("https").encodedAuthority(if (hidden) BILI_HIDDEN_SEASON_URL else BILI_SEASON_URL)
         info.filter { !it.value.isNullOrEmpty() }.forEach { builder.appendQueryParameter(it.key, it.value) }
         val seasonJson = getContent(builder.toString())?.toJSONObject() ?: return null
         seasonJson.optJSONObject("result")?.also {
+            if (hidden) fixHiddenSeason(it)
             fixEpisodes(it)
             reconstructModules(it)
             fixRight(it)
             if (hidden) getExtraInfo(it, info["access_key"])
         }
         return seasonJson.toString()
+    }
+
+    @JvmStatic
+    private fun fixHiddenSeason(result: JSONObject) {
+        for (episode in result.optJSONArray("episodes").orEmpty()) {
+            episode.put("long_title", episode.optString("index_title"))
+            episode.put("id", episode.optString("ep_id"))
+            episode.put("title", episode.optString("index"))
+        }
     }
 
     @JvmStatic

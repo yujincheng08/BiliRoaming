@@ -124,7 +124,6 @@
     <string name="hwb_host">upos-sz-mirrorhwb.bilivideo.com</string>
     <string name="upbda2_host">upos-sz-upcdnbda2.bilivideo.com</string>
     <string name="upws_host">upos-sz-upcdnws.bilivideo.com</string>
-    <string name="uptx_host">upos-sz-upcdntx.bilivideo.com</string>
     <string name="uphw_host">upos-sz-upcdnhw.bilivideo.com</string>
     <string name="js_host">upos-tf-all-js.bilivideo.com</string>
     <string name="hk_host">cn-hk-eq-bcache-01.bilivideo.com</string>
