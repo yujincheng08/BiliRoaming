@@ -180,7 +180,7 @@ object BiliRoamingApi {
             JSONObject(it).optJSONObject("result")?.toString() ?: it
         }?.replace(HOST_REGEX, "://${
             sPrefs.getString("upos_host", null)
-                    ?: XposedInit.moduleRes.getString(R.string.uptx_host)
+                    ?: XposedInit.moduleRes.getString(R.string.wcs_host)
         }/")
     }
 
