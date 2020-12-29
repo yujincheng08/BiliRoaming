@@ -168,6 +168,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             response.callMethod("getViewInfo")?.callMethod("getDialog")?.run{
                                 callMethod("setMsg", "获取播放地址失败")
                                 callMethod("getTitle")?.callMethod("setText", "获取播放地址失败。请检查哔哩漫游设置里的解析服务器设置。")
+                                callMethod("getImage")?.callMethod("setUrl", "https://i0.hdslb.com/bfs/album/08d5ce2fef8da8adf91024db4a69919b8d02fd5c.png")
                             }
                         }
                     }
