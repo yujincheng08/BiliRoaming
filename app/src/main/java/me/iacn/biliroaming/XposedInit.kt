@@ -13,7 +13,10 @@ import de.robv.android.xposed.IXposedHookZygoteInit
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam
 import me.iacn.biliroaming.hook.*
+import me.iacn.biliroaming.network.BiliRoamingApi
 import me.iacn.biliroaming.utils.*
+import java.net.URL
+import java.net.URLStreamHandlerFactory
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -37,6 +40,11 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
         }
         if (!Constant.BILIBILI_PACKAGE_NAME.containsValue(lpparam.packageName) &&
                 "tv.danmaku.bili.MainActivityV2".findClassOrNull(lpparam.classLoader) == null) return
+        URL::class.java.hookBeforeMethod("setURLStreamHandlerFactory", URLStreamHandlerFactory::class.java) {
+            if (BiliRoamingApi.httpshandler == null) {
+                BiliRoamingApi.httpshandler = URL::class.java.callStaticMethodAs("getURLStreamHandler", "https")
+            }
+        }
         Instrumentation::class.java.hookBeforeMethod("callApplicationOnCreate", Application::class.java) { param ->
             // Hook main process and download process
             @Suppress("DEPRECATION")

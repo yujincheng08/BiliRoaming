@@ -4,7 +4,7 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:rowCount="4"
-    android:columnCount="2"
+    android:columnCount="3"
     android:orientation="horizontal"
     android:paddingStart="25dp"
     android:paddingEnd="20dp">
@@ -25,6 +25,17 @@
         android:layout_columnWeight="4"
         android:hint="cn.biliroaming.example.com"
         android:tag="cn_server"
+        android:singleLine="true"
+        tools:ignore="HardcodedText" />
+
+    <EditText
+        android:id="@+id/cn_server_ip"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="4"
+        android:hint="cnip"
+        android:tag="cn_server_ip"
+        android:singleLine="true"
         tools:ignore="HardcodedText" />
 
     <TextView
@@ -32,6 +43,7 @@
         android:layout_height="wrap_content"
         android:layout_columnWeight="1"
         android:text="香港"
+        android:singleLine="true"
         tools:ignore="HardcodedText" />
 
     <EditText
@@ -41,6 +53,17 @@
         android:layout_columnWeight="4"
         android:hint="hk.biliroaming.example.com"
         android:tag="hk_server"
+        android:singleLine="true"
+        tools:ignore="HardcodedText" />
+
+    <EditText
+        android:id="@+id/hk_server_ip"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="4"
+        android:hint="hkip"
+        android:tag="hk_server_ip"
+        android:singleLine="true"
         tools:ignore="HardcodedText" />
 
     <TextView
@@ -48,6 +71,7 @@
         android:layout_height="wrap_content"
         android:layout_columnWeight="1"
         android:text="台湾"
+        android:singleLine="true"
         tools:ignore="HardcodedText" />
 
     <EditText
@@ -57,6 +81,17 @@
         android:layout_columnWeight="4"
         android:hint="tw.biliroaming.example.com"
         android:tag="tw_server"
+        android:singleLine="true"
+        tools:ignore="HardcodedText" />
+
+    <EditText
+        android:id="@+id/tw_server_ip"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="4"
+        android:hint="twip"
+        android:tag="tw_server_ip"
+        android:singleLine="true"
         tools:ignore="HardcodedText" />
 
     <TextView
@@ -64,6 +99,7 @@
         android:layout_height="wrap_content"
         android:layout_columnWeight="1"
         android:text="星加坡"
+        android:singleLine="true"
         tools:ignore="HardcodedText" />
 
     <EditText
@@ -73,6 +109,17 @@
         android:layout_columnWeight="4"
         android:hint="sg.biliroaming.example.com"
         android:tag="sg_server"
+        android:singleLine="true"
+        tools:ignore="HardcodedText" />
+
+    <EditText
+        android:id="@+id/sg_server_ip"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="4"
+        android:hint="sgip"
+        android:tag="sg_server_ip"
+        android:singleLine="true"
         tools:ignore="HardcodedText" />
 
 </GridLayout>
