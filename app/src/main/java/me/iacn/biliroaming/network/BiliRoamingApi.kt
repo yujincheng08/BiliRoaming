@@ -36,6 +36,7 @@ object BiliRoamingApi {
     private const val BILI_USER_STATUS_URL = "api.bilibili.com/pgc/view/web/season/user/status"
     private const val BILI_MEDIA_URL = "bangumi.bilibili.com/view/web_api/media"
     private const val BILI_MODULE_TEMPLATE = "{\"data\": {},\"id\": 0,\"module_style\": {\"hidden\": 0,\"line\": 1},\"more\": \"查看更多\",\"style\": \"positive\",\"title\": \"选集\"}"
+    private const val BILI_RIGHT_TEMPLATE = "{\"allow_demand\":0,\"allow_dm\":1,\"allow_download\":0,\"area_limit\":0}"
 
     private const val PATH_PLAYURL = "/pgc/player/api/playurl"
     private const val THAILAND_PATH_PLAYURL = "/intl/gateway/v2/ogv/playurl"
@@ -75,6 +76,8 @@ object BiliRoamingApi {
             episode.put("long_title", episode.optString("index_title"))
             episode.put("id", episode.optString("ep_id"))
             episode.put("title", episode.optString("index"))
+            episode.put("rights", BILI_RIGHT_TEMPLATE.toJSONObject())
+            episode.put("status", episode.optInt("episode_status"))
         }
     }
 
