@@ -12,6 +12,7 @@ import me.iacn.biliroaming.BuildConfig
 import me.iacn.biliroaming.Constant.HOST_REGEX
 import me.iacn.biliroaming.R
 import me.iacn.biliroaming.XposedInit
+import me.iacn.biliroaming.hook.BangumiSeasonHook.Companion.lastSeasonInfo
 import me.iacn.biliroaming.utils.*
 import org.json.JSONArray
 import org.json.JSONException
@@ -38,6 +39,7 @@ object BiliRoamingApi {
 
     private const val PATH_PLAYURL = "/pgc/player/api/playurl"
     private const val THAILAND_PATH_PLAYURL = "/intl/gateway/v2/ogv/playurl"
+    private const val THAILAND_PATH_SUBTITLES = "/intl/gateway/v2/app/subtitle"
 
     @JvmStatic
     fun getSeason(info: Map<String, String?>, hidden: Boolean): String? {
@@ -53,6 +55,18 @@ object BiliRoamingApi {
             if (hidden) getExtraInfo(it, info["access_key"])
         }
         return seasonJson.toString()
+    }
+
+    @JvmStatic
+    fun getThailandSubtitles(epId: String?): String? {
+        epId?: return null
+        val thUrl = sPrefs.getString("th_server", null) ?: return null
+        val uri = Uri.Builder()
+                .scheme("https")
+                .encodedAuthority(thUrl + THAILAND_PATH_SUBTITLES)
+                .appendQueryParameter("ep_id", epId)
+                .toString()
+        return getContent(uri)
     }
 
     @JvmStatic

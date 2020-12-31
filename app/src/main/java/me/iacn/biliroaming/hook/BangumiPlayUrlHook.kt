@@ -3,7 +3,9 @@ package me.iacn.biliroaming.hook
 import android.net.Uri
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.Protos.*
+import me.iacn.biliroaming.hook.BangumiSeasonHook.Companion.lastSeasonInfo
 import me.iacn.biliroaming.network.BiliRoamingApi.getPlayUrl
+import me.iacn.biliroaming.network.BiliRoamingApi.getThailandSubtitles
 import me.iacn.biliroaming.utils.*
 import org.json.JSONArray
 import org.json.JSONException
@@ -81,7 +83,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             // If biliplus is down, we can still get result from proxy server.
             // However, the speed may not be fast.
             content = getPlayUrl(queryString.replace("dl=1", "fix_dl=1"),
-                    BangumiSeasonHook.lastSeasonInfo)
+                    lastSeasonInfo)
             content = content?.let {
                 if (urlString.contains("fix_dl=1") || urlString.contains("dl=1")) {
                     fixDownload(it)
@@ -119,7 +121,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 val request = param.args[0]
                 val response = param.result
                 if (!response.callMethodAs<Boolean>("hasVideoInfo")) {
-                    val content = getPlayUrl(reconstructQuery(request), BangumiSeasonHook.lastSeasonInfo)
+                    val content = getPlayUrl(reconstructQuery(request), lastSeasonInfo)
                     content?.let {
                         Log.d("Has replaced play url with proxy server $it")
                         Log.toast("已从代理服务器获取播放地址")
@@ -156,7 +158,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 val response = param.result
                 if (!response.callMethodAs<Boolean>("hasVideoInfo") ||
                         (response.callMethodAs("hasViewInfo") && response.callMethod("getViewInfo")?.callMethodAs<Boolean>("hasDialog") == true)) {
-                    val content = getPlayUrl(reconstructQuery(request), BangumiSeasonHook.lastSeasonInfo)
+                    val content = getPlayUrl(reconstructQuery(request), lastSeasonInfo)
                     content?.let {
                         Log.d("Has replaced play url with proxy server $it")
                         Log.toast("已从代理服务器获取播放地址")
@@ -165,7 +167,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         Log.e("Failed to get play url")
                         Log.toast("获取播放地址失败")
                         if (response.callMethodAs("hasViewInfo")) {
-                            response.callMethod("getViewInfo")?.callMethod("getDialog")?.run{
+                            response.callMethod("getViewInfo")?.callMethod("getDialog")?.run {
                                 callMethod("setMsg", "获取播放地址失败")
                                 callMethod("getTitle")?.callMethod("setText", "获取播放地址失败。请检查哔哩漫游设置里的解析服务器设置。")
                                 callMethod("getImage")?.callMethod("setUrl", "https://i0.hdslb.com/bfs/album/08d5ce2fef8da8adf91024db4a69919b8d02fd5c.png")
@@ -175,6 +177,35 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 } else if (isDownload) {
                     param.result = fixDownloadProto(response)
                 }
+            }
+        }
+
+        "com.bapis.bilibili.community.service.dm.v1.DMMoss".hookAfterMethod(mClassLoader, "dmView", "com.bapis.bilibili.community.service.dm.v1.DmViewReq") { param ->
+            val oid = param.args[0].callMethod("getOid").toString()
+            if (lastSeasonInfo.containsKey("watch_platform") && lastSeasonInfo["watch_platform"] == "1"
+                    && lastSeasonInfo.containsKey(oid) && param.result.callMethod("getSubtitle")?.callMethod("getSubtitlesCount") == 0) {
+                val result = getThailandSubtitles(lastSeasonInfo[oid])?.toJSONObject()
+                        ?: return@hookAfterMethod
+                if (result.optInt("code") != 0) return@hookAfterMethod
+                val data = result.optJSONObject("data") ?: return@hookAfterMethod
+                val subtitles = data.optJSONArray("subtitles").orEmpty()
+                if (subtitles.length() == 0) return@hookAfterMethod
+                val newResBuilder = DmViewReply.newBuilder(DmViewReply.parseFrom(param.result.callMethodAs<ByteArray>("toByteArray")))
+                newResBuilder.subtitle = VideoSubtitle.newBuilder().run {
+                    for (subtitle in subtitles) {
+                        addSubtitles(SubtitleItem.newBuilder().run {
+                            //id就是id，id_str就是str(id)，url就是subtitle_url，lan就是key，lan_doc就是title
+                            id = subtitle.optLong("id")
+                            idStr = subtitle.optLong("id").toString()
+                            subtitleUrl = subtitle.optString("url")
+                            lan = subtitle.optString("key")
+                            lanDoc = subtitle.optString("title")
+                            build()
+                        })
+                    }
+                    build()
+                }
+                param.result = param.result.javaClass.callStaticMethod("parseFrom", newResBuilder.build().toByteArray())
             }
         }
     }
@@ -263,7 +294,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             appendQueryParameter("fnval", req.fnval.toString())
             appendQueryParameter("force_host", req.forceHost.toString())
             appendQueryParameter("fourk", req.fourk.toString())
-            BangumiSeasonHook.lastSeasonInfo["access_key"]?.let {
+            lastSeasonInfo["access_key"]?.let {
                 appendQueryParameter("access_key", it)
             }
             build()

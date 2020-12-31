@@ -36,7 +36,8 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     private val serializerFeatures = lazy {
-        val serializerFeatureClass = "com.alibaba.fastjson.serializer.SerializerFeature".findClass(mClassLoader) ?: return@lazy null
+        val serializerFeatureClass = "com.alibaba.fastjson.serializer.SerializerFeature".findClass(mClassLoader)
+                ?: return@lazy null
         val keyAsString = serializerFeatureClass.getStaticObjectField("WriteNonStringKeyAsString")
         val noDefault = serializerFeatureClass.getStaticObjectField("NotWriteDefaultValue")
         val serializerFeatures = RArray.newInstance(serializerFeatureClass, 2)
@@ -82,7 +83,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             updateSeasonInfo(param.args, paramMap)
         }
 
-        instance.seasonParamsClass?.hookAfterAllConstructors { param->
+        instance.seasonParamsClass?.hookAfterAllConstructors { param ->
             val paramMap = param.thisObject.callMethodAs<Map<String, String>>(instance.paramsToMap())
             updateSeasonInfo(param.args, paramMap)
         }
@@ -164,6 +165,12 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             if (isBangumiWithWatchPermission(newJsonResult, newCode)) {
                 Log.d("Got new season information from proxy server: $newJsonResult")
                 lastSeasonInfo["title"] = newJsonResult?.optString("title")
+                lastSeasonInfo["watch_platform"] = newJsonResult?.optJSONObject("rights")?.optInt("watch_platform")?.toString()
+                for (episode in newJsonResult?.optJSONArray("episodes").orEmpty()) {
+                    if (episode.has("cid") && episode.has("ep_id")) {
+                        lastSeasonInfo[episode.getString("cid")] = episode.getString("ep_id")
+                    }
+                }
                 allowDownload(newJsonResult, false)
             }
             jsonResult?.apply {
