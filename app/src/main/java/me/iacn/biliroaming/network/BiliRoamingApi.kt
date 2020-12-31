@@ -37,6 +37,7 @@ object BiliRoamingApi {
     private const val BILI_MODULE_TEMPLATE = "{\"data\": {},\"id\": 0,\"module_style\": {\"hidden\": 0,\"line\": 1},\"more\": \"查看更多\",\"style\": \"positive\",\"title\": \"选集\"}"
 
     private const val PATH_PLAYURL = "/pgc/player/api/playurl"
+    private const val THAILAND_PATH_PLAYURL = "/intl/gateway/v2/ogv/playurl"
 
     @JvmStatic
     fun getSeason(info: Map<String, String?>, hidden: Boolean): String? {
@@ -233,7 +234,87 @@ object BiliRoamingApi {
                 if (it.contains("\"code\":0")) return it
             }
         }
+
+        Log.d("try to ues Thailand api")
+        val uri = Uri.Builder()
+                .scheme("https")
+                .encodedAuthority(sgUrl + THAILAND_PATH_PLAYURL)
+                .encodedQuery(signQuery(queryString, mapOf(
+                        "appkey" to "7d089525d3611b1c",
+                        "build" to "1001310",
+                        "mobi_app" to "bstar_a",
+                        "platform" to "android",
+                        )))
+                .toString()
+        getContent(uri)?.let {
+            Log.d("Thailand !!! use backup $sgUrl for playurl instead")
+            if (it.contains("\"code\":0")) return fixThailandPlayurl(it)
+        }
+
         return null
+    }
+
+    @JvmStatic
+    fun fixThailandPlayurl(result: String): String {
+        val input = JSONObject(result)
+        val videoInfo = result.toJSONObject().optJSONObject("data")?.optJSONObject("video_info")
+        val streamList = videoInfo?.optJSONArray("stream_list")
+        val dashAudio = videoInfo?.optJSONArray("dash_audio")
+
+        val output = JSONObject().apply {
+            put("format", "flv720")
+            put("type", "DASH")
+            put("result", "suee")
+            put("video_codecid", 7)
+            put("no_rexcode", 0)
+
+            put("code", input.optInt("code"))
+            put("message", input.optInt("message"))
+            put("timelength", videoInfo?.optInt("timelength"))
+            put("quality", videoInfo?.optInt("quality"))
+            put("accept_format", "hdflv2,flv,flv720,flv480,mp4")
+        }
+
+        val acceptQuality = JSONArray()
+        val acceptDescription = JSONArray()
+
+        val dash = JSONObject().apply {
+            put("duration", 0)
+            put("minBufferTime", 0.0)
+            put("min_buffer_time", 0.0)
+        }
+        val fixedAudio = JSONArray().apply {
+            for (audio in dashAudio.orEmpty()) {
+                put(audio)
+            }
+        }
+        dash.put("audio", fixedAudio)
+
+        val supportFormats = JSONArray()
+        val dashVideo = JSONArray()
+        for (stream in streamList.orEmpty()) {
+            stream.optJSONObject("stream_info")?.let {
+                supportFormats.put(it)
+            }
+            stream.optJSONObject("stream_info")?.let {
+                acceptQuality.put(it.optInt("quality"))
+            }
+            stream.optJSONObject("stream_info")?.let {
+                acceptDescription.put(it.optString("new_description"))
+            }
+            stream.optJSONObject("dash_video")?.let {
+                it.put("id", stream.optJSONObject("stream_info")?.optInt("quality"))
+                dashVideo.put(it)
+            }
+        }
+        dash.put("video", dashVideo)
+
+        output.put("accept_quality", acceptQuality)
+        output.put("accept_description", acceptDescription)
+        output.put("support_formats", supportFormats)
+        output.put("dash", dash)
+
+        return output.toString()
     }
 
     @JvmStatic
