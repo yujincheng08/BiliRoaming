@@ -392,3 +392,58 @@ message Device {
     string model = 0x9;
     string osver = 0xa;
 }
+
+message DmViewReq {
+    int32 pid = 0x1;
+    int64 oid = 0x2;
+    int32 type = 0x3;
+    string spmid = 0x4;
+    int32 is_hard_boot = 0x5;
+}
+
+message DanmakuFlagConfig {
+
+}
+
+message VideoMask {
+
+}
+
+message DanmuPlayerViewConfig {
+
+}
+
+message UserInfo {
+
+}
+
+message SubtitleItem {
+    int64 id = 0x1;
+    string id_str = 0x2;
+    string lan = 0x3;
+    string lan_doc = 0x4;
+    string subtitle_url = 0x5;
+    UserInfo author = 0x6;
+}
+
+message VideoSubtitle {
+    string lan = 0x1;
+    string lan_doc = 0x2;
+    repeated SubtitleItem subtitles = 0x3;
+}
+
+message DmViewReply {
+    bool closed = 0x1;
+    VideoMask mask = 0x2;
+    VideoSubtitle subtitle = 0x3;
+    repeated string special_dms = 0x4;
+    DanmakuFlagConfig ai_flag = 0x5;
+    DanmuPlayerViewConfig player_config = 0x6;
+    int32 send_box_style = 0x7;
+    bool allow = 0x8;
+    bool check_box = 0x9;
+    string check_box_show_msg = 0xa;
+    string text_placeholder = 0xb;
+    string input_place_holder = 0xc;
+    repeated string report_filter_content = 0xd;
+}
