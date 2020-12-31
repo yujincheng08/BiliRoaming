@@ -45,6 +45,7 @@
     <string name="update_title">更新</string>
     <string name="update_summary">点击打开最新版下载地址</string>
     <string name="update_url">https://github.com/yujincheng08/BiliRoaming/releases/latest</string>
+    <string name="server_url">https://github.com/yujincheng08/BiliRoaming/wiki/%E5%85%AC%E5%85%B1%E8%A7%A3%E6%9E%90%E6%9C%8D%E5%8A%A1%E5%99%A8</string>
     <string name="github_url">https://github.com/yujincheng08/BiliRoaming</string>
     <string name="group_title">QQ群</string>
     <string name="group_summary">点击加入QQ群（长期禁言满员的通知群）</string>

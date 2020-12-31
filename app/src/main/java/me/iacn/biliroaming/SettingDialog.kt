@@ -240,6 +240,11 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                             prefs.edit().remove(it.tag.toString()).apply()
                     }
                 }
+                setNegativeButton("获取公共解析服务器") { _, _ ->
+                    val uri = Uri.parse(moduleRes.getString(R.string.server_url))
+                    val intent = Intent(Intent.ACTION_VIEW, uri)
+                    startActivity(intent)
+                }
                 show()
             }
             return true
