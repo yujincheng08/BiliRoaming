@@ -99,7 +99,7 @@ val logFile by lazy { File(currentContext.externalCacheDir, "log.txt") }
 val sPrefs
     get() = currentContext.getSharedPreferences("biliroaming", Context.MODE_MULTI_PROCESS)!!
 
-fun signQuery(query: String?): String? {
+fun signQuery(query: String?, Thailand:Boolean = false): String? {
     val queryMap = TreeMap<String, String>()
     val pairs = query?.split("&".toRegex())?.toTypedArray() ?: return null
     for (pair in pairs) {
@@ -109,11 +109,19 @@ fun signQuery(query: String?): String? {
             queryMap[key] = pair.substring(idx + 1)
     }
     val packageName = AndroidAppHelper.currentPackageName()
-    queryMap["appkey"] = appKey[packageName] ?: "1d8b6e7d45233436"
-    queryMap["build"] = getVersionCode(packageName).toString()
-    queryMap["device"] = "android"
-    queryMap["mobi_app"] = platform
-    queryMap["platform"] = platform
+    if (Thailand) {
+        queryMap.remove("sign")
+        queryMap["appkey"] = "7d089525d3611b1c"
+        queryMap["build"] = "1001310"
+        queryMap["mobi_app"] = "bstar_a"
+        queryMap["platform"] = "android"
+    } else {
+        queryMap["appkey"] = appKey[packageName] ?: "1d8b6e7d45233436"
+        queryMap["build"] = getVersionCode(packageName).toString()
+        queryMap["device"] = "android"
+        queryMap["mobi_app"] = platform
+        queryMap["platform"] = platform
+    }
     return instance.libBiliClass?.callStaticMethod(instance.signQueryName(), queryMap).toString()
 }
 
