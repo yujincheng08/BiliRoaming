@@ -67,7 +67,10 @@ object BiliRoamingApi {
     private fun fixEpisodes(result: JSONObject) {
         val episodes = result.optJSONArray("episodes")
         for (episode in episodes.orEmpty()) {
-            episode.optJSONObject("rights")?.put("area_limit", 0)
+            episode.optJSONObject("rights")?.run {
+                put("area_limit", 0)
+                put("allow_dm", 1)
+            }
             if (episode.optInt("badge_type", -1) == 0)
                 episode.remove("badge_info")
         }
@@ -115,6 +118,7 @@ object BiliRoamingApi {
     private fun fixRight(result: JSONObject) {
         val rights = result.optJSONObject("rights")
         rights?.put("area_limit", 0)
+        rights?.put("allow_dm", 1)
     }
 
     @JvmStatic
