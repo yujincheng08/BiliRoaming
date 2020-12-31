@@ -117,9 +117,10 @@ object BiliRoamingApi {
 
     @JvmStatic
     private fun fixRight(result: JSONObject) {
-        val rights = result.optJSONObject("rights")
-        rights?.put("area_limit", 0)
-        rights?.put("allow_dm", 1)
+        result.optJSONObject("rights")?.run {
+            put("area_limit", 0)
+            put("allow_dm", 1)
+        }
     }
 
     @JvmStatic
@@ -207,6 +208,7 @@ object BiliRoamingApi {
         val hkUrl = sPrefs.getString("hk_server", null)
         val cnUrl = sPrefs.getString("cn_server", null)
         val sgUrl = sPrefs.getString("sg_server", null)
+        val thUrl = sPrefs.getString("th_server", null)
         val hostList = LinkedHashMap<String, String>()
         info["title"]?.run {
             if (contains(Regex("僅.*台")) && twUrl != null) hostList += "tw" to twUrl
@@ -215,7 +217,7 @@ object BiliRoamingApi {
         }
 
         if (hostList.isEmpty())
-            linkedMapOf("tw" to twUrl, "cn" to cnUrl, "hk" to hkUrl, "sg" to sgUrl).filterValues {
+            linkedMapOf("hk" to hkUrl, "cn" to cnUrl, "tw" to twUrl, "th" to thUrl, "sg" to sgUrl).filterValues {
                 it != null
             }.mapValuesTo(hostList) {
                 it.value!!
@@ -224,33 +226,29 @@ object BiliRoamingApi {
         if (hostList.isEmpty()) return null
 
         for (host in hostList) {
+            val extraMap = if (host.key == "th") mapOf(
+                    "area" to host.key,
+                    "appkey" to "7d089525d3611b1c",
+                    "build" to "1001310",
+                    "mobi_app" to "bstar_a",
+                    "platform" to "android",
+
+                    )
+            else mapOf(
+                    "area" to host.key
+            )
+            val path = if (host.key == "th") THAILAND_PATH_PLAYURL else PATH_PLAYURL
             val uri = Uri.Builder()
                     .scheme("https")
-                    .encodedAuthority(host.value + PATH_PLAYURL)
-                    .encodedQuery(signQuery(queryString, mapOf("area" to host.key)))
+                    .encodedAuthority(host.value + path)
+                    .encodedQuery(signQuery(queryString, extraMap))
                     .toString()
             getContent(uri)?.let {
                 Log.d("use backup $host for playurl instead")
-                if (it.contains("\"code\":0")) return it
+                if (it.contains("\"code\":0"))
+                    return if (host.key == "th") fixThailandPlayurl(it) else it
             }
         }
-
-        Log.d("try to ues Thailand api")
-        val uri = Uri.Builder()
-                .scheme("https")
-                .encodedAuthority(sgUrl + THAILAND_PATH_PLAYURL)
-                .encodedQuery(signQuery(queryString, mapOf(
-                        "appkey" to "7d089525d3611b1c",
-                        "build" to "1001310",
-                        "mobi_app" to "bstar_a",
-                        "platform" to "android",
-                        )))
-                .toString()
-        getContent(uri)?.let {
-            Log.d("Thailand !!! use backup $sgUrl for playurl instead")
-            if (it.contains("\"code\":0")) return fixThailandPlayurl(it)
-        }
-
         return null
     }
 

@@ -75,4 +75,19 @@
         android:tag="sg_server"
         tools:ignore="HardcodedText" />
 
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="1"
+        android:text="泰国"
+        tools:ignore="HardcodedText" />
+
+    <EditText
+        android:id="@+id/th_server"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="4"
+        android:hint="th.biliroaming.example.com"
+        android:tag="th_server"
+        tools:ignore="HardcodedText" />
 </GridLayout>
