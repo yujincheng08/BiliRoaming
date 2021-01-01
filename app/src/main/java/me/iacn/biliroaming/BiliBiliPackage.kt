@@ -33,7 +33,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val themeHelperClass by Weak { mHookInfo["class_theme_helper"]?.findClassOrNull(mClassLoader) }
     val themeIdHelperClass by Weak { mHookInfo["class_theme_id_helper"]?.findClassOrNull(mClassLoader) }
     val columnHelperClass by Weak { mHookInfo["class_column_helper"]?.findClassOrNull(mClassLoader) }
-    val settingRouteClass by Weak { mHookInfo["class_setting_route"]?.findClassOrNull(mClassLoader) }
+    val settingRouterClass by Weak { mHookInfo["class_setting_router"]?.findClassOrNull(mClassLoader) }
     val themeListClickClass by Weak { mHookInfo["class_theme_list_click"]?.findClassOrNull(mClassLoader) }
     val shareWrapperClass by Weak { mHookInfo["class_share_wrapper"]?.findClassOrNull(mClassLoader) }
     val themeNameClass by Weak { mHookInfo["class_theme_name"]?.findClassOrNull(mClassLoader) }
@@ -65,7 +65,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val commentRpcClass by Weak { "com.bilibili.app.comm.comment2.model.rpc.CommentRpcKt".findClassOrNull(mClassLoader) }
     val checkBlueClass by Weak { mHookInfo["class_check_blue"]?.findClass(mClassLoader) }
     val kotlinJsonClass by Weak { "kotlinx.serialization.json.Json".findClassOrNull(mClassLoader) }
-    val accountMineClass by Weak { "tv.danmaku.bili.ui.main2.api.AccountMine".findClass(mClassLoader) }
 
 
     val classesList by lazy { DexFile(AndroidAppHelper.currentApplication().packageCodePath).entries().toList() }
@@ -114,8 +113,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     fun addSetting() = mHookInfo["method_add_setting"]
 
     fun requestField() = mHookInfo["field_request"]
-
-    fun getSettingRoute() = mHookInfo["method_get_setting_route"]
 
     fun urlMethod() = mHookInfo["method_url"]
 
@@ -244,12 +241,12 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             findVideoDetailField()
         }.checkOrPut("method_sign_query") {
             findSignQueryMethod()
-        }.checkConjunctiveOrPut("class_setting_route", "method_add_setting") {
-            arrayOf(findSettingRouteClass(), findAddSettingMethod())
+        }.checkOrPut("class_setting_router") {
+            findSettingRouterClass()
+        }.checkOrPut("method_add_setting") {
+            findAddSettingMethod()
         }.checkOrPut("class_drawer") {
             findDrawerClass()
-        }.checkOrPut("method_get_setting_route") {
-            findGetSettingRouteMethod()
         }.checkOrPut("method_like") {
             findLikeMethod()
         }.checkOrPut("class_download_thread_listener") {
@@ -303,7 +300,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     return arrayOf(c.name, m.name)
             }
         }
-        return arrayOfNulls(2)
+        return arrayOfNulls<String>(2)
     }
 
     private fun getMapIds(): String? {
@@ -583,14 +580,12 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         it.parameterTypes.size == 2 && it.parameterTypes[0] == Context::class.java && it.parameterTypes[1] == List::class.java
     }?.name
 
-    private fun findSettingRouteClass() = classesList.filter {
-        it.startsWith("tv.danmaku.bili.ui.main2")
+    private fun findSettingRouterClass() = classesList.filter {
+        it.startsWith("tv.danmaku.bili.ui.main2.mine")
     }.firstOrNull { c ->
         c.findClass(mClassLoader)?.run {
             declaredFields.filter {
-                it.type == accountMineClass
-            }.count() > 0 && declaredMethods.filter {
-                it.parameterTypes.size == 1 && it.parameterTypes[0] == menuGroupItemClass
+                it.type == menuGroupItemClass && Modifier.isPublic(it.modifiers)
             }.count() > 0
         } ?: false
     }
@@ -608,10 +603,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     private fun findLikeMethod() = sectionClass?.declaredMethods?.firstOrNull {
         it.parameterTypes.size == 1 && it.parameterTypes[0] == Object::class.java
-    }?.name
-
-    private fun findGetSettingRouteMethod() = settingRouteClass?.declaredMethods?.firstOrNull {
-        it.parameterTypes.size == 1 && it.parameterTypes[0] == menuGroupItemClass
     }?.name
 
     private fun findDrawerClass(): String? {
