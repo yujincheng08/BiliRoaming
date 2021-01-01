@@ -106,7 +106,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     fun skinList() = mHookInfo["method_skin_list"]
 
-    fun saveSkinList() = mHookInfo["method_save_skin"]
+    fun saveSkinList() = mHookInfo["method_save_skin_id"]
 
     fun themeReset() = mHookInfo["methods_theme_reset"]
 
@@ -219,7 +219,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             findColumnColorArrayField()
         }.checkOrPut("method_skin_list") {
             findSkinListMethod()
-        }.checkOrPut("method_save_skin") {
+        }.checkOrPut("method_save_skin_id") {
             findSaveSkinMethod()
         }.checkOrPut("class_theme_processor") {
             findThemeProcessor()
@@ -300,7 +300,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     return arrayOf(c.name, m.name)
             }
         }
-        return arrayOfNulls<String>(2)
+        return arrayOfNulls(2)
     }
 
     private fun getMapIds(): String? {
@@ -493,8 +493,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     }
 
     private fun findSaveSkinMethod() = themeHelperClass?.declaredMethods?.firstOrNull {
-        it.parameterTypes.size == 2 && it.parameterTypes[0] == Context::class.java &&
-                it.parameterTypes[1] == Int::class.javaPrimitiveType
+        it.parameterTypes.size == 3 && it.parameterTypes[0] == Context::class.java &&
+                it.parameterTypes[1] == Int::class.javaPrimitiveType &&
+                it.parameterTypes[2] == Boolean::class.javaPrimitiveType
     }?.name
 
     private fun findThemeListClickClass() = "tv.danmaku.bili.ui.theme.ThemeStoreActivity".findClassOrNull(mClassLoader)?.declaredClasses?.firstOrNull {

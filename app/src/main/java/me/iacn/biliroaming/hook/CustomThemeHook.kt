@@ -60,15 +60,10 @@ class CustomThemeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     val color = colorDialog.color
                     val colors = generateColorArray(color)
                     colorArray?.put(CUSTOM_THEME_ID, colors)
-                    colorArray?.put(-1, colors) // Add a new color id but it won't be saved
-
-                    // If it is currently use the custom theme, it will use temporary id
-                    // To make the theme color take effect immediately
-                    val newId = if (mId == CUSTOM_THEME_ID) -1 else CUSTOM_THEME_ID
-                    biliSkin.setIntField("mId", newId)
+                    biliSkin.setIntField("mId", CUSTOM_THEME_ID)
                     customColor = color
-                    Log.d("Update new color: mId = $newId, " +
-                            "color = 0x ${Integer.toHexString(color).toUpperCase(Locale.getDefault())}")
+                    Log.d("Update new color: mId = $CUSTOM_THEME_ID, " +
+                            "color = 0x${Integer.toHexString(color).toUpperCase(Locale.getDefault())}")
                     try {
                         invokeOriginalMethod(param.method, param.thisObject, param.args)
                     } catch (e: Exception) {
@@ -79,12 +74,6 @@ class CustomThemeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
                 // Stop executing the original method
                 param.result = null
-            }
-        }
-        instance.saveSkinList()?.let {
-            instance.themeHelperClass?.hookBeforeMethod(it, Context::class.java, Int::class.javaPrimitiveType) { param ->
-                val currentThemeKey = param.args[1] as Int
-                if (currentThemeKey == -1) param.args[1] = CUSTOM_THEME_ID
             }
         }
 
