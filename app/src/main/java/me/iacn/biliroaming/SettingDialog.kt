@@ -227,7 +227,6 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                         view.findViewById<EditText>(R.id.cn_server),
                         view.findViewById(R.id.hk_server),
                         view.findViewById(R.id.tw_server),
-                        view.findViewById(R.id.sg_server),
                         view.findViewById(R.id.th_server))
                 editTexts.forEach { it.setText(prefs.getString(it.tag.toString(), "")) }
                 setTitle("设置解析服务器")

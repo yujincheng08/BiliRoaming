@@ -25,6 +25,8 @@
         android:layout_columnWeight="4"
         android:hint="cn.biliroaming.example.com"
         android:tag="cn_server"
+        android:inputType="textUri"
+        android:autofillHints="no"
         tools:ignore="HardcodedText" />
 
     <TextView
@@ -41,6 +43,8 @@
         android:layout_columnWeight="4"
         android:hint="hk.biliroaming.example.com"
         android:tag="hk_server"
+        android:inputType="textUri"
+        android:autofillHints="no"
         tools:ignore="HardcodedText" />
 
     <TextView
@@ -57,29 +61,15 @@
         android:layout_columnWeight="4"
         android:hint="tw.biliroaming.example.com"
         android:tag="tw_server"
+        android:inputType="textUri"
+        android:autofillHints="no"
         tools:ignore="HardcodedText" />
 
     <TextView
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_columnWeight="1"
-        android:text="星加坡"
-        tools:ignore="HardcodedText" />
-
-    <EditText
-        android:id="@+id/sg_server"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_columnWeight="4"
-        android:hint="sg.biliroaming.example.com"
-        android:tag="sg_server"
-        tools:ignore="HardcodedText" />
-
-    <TextView
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_columnWeight="1"
-        android:text="泰国"
+        android:text="泰国/东南亚"
         tools:ignore="HardcodedText" />
 
     <EditText
@@ -89,5 +79,7 @@
         android:layout_columnWeight="4"
         android:hint="th.biliroaming.example.com"
         android:tag="th_server"
+        android:inputType="textUri"
+        android:autofillHints="no"
         tools:ignore="HardcodedText" />
 </GridLayout>

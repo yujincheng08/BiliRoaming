@@ -224,17 +224,16 @@ object BiliRoamingApi {
         val twUrl = sPrefs.getString("tw_server", null)
         val hkUrl = sPrefs.getString("hk_server", null)
         val cnUrl = sPrefs.getString("cn_server", null)
-        val sgUrl = sPrefs.getString("sg_server", null)
         val thUrl = sPrefs.getString("th_server", null)
         val hostList = LinkedHashMap<String, String>()
         info["title"]?.run {
             if (contains(Regex("僅.*台")) && twUrl != null) hostList += "tw" to twUrl
             if (contains(Regex("僅.*港")) && hkUrl != null) hostList += "hk" to hkUrl
-            if (contains(Regex("[仅|僅].*[东南亚|其他]")) && sgUrl != null) hostList += "sg" to sgUrl
+            if (contains(Regex("[仅|僅].*[东南亚|其他]")) && thUrl != null) hostList += "th" to thUrl
         }
 
         if (hostList.isEmpty())
-            linkedMapOf("hk" to hkUrl, "cn" to cnUrl, "tw" to twUrl, "th" to thUrl, "sg" to sgUrl).filterValues {
+            linkedMapOf("hk" to hkUrl, "cn" to cnUrl, "tw" to twUrl, "th" to thUrl).filterValues {
                 it != null
             }.mapValuesTo(hostList) {
                 it.value!!

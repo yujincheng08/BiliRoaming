@@ -74,8 +74,8 @@ dependencies {
     compileOnly 'de.robv.android.xposed:api:82:sources'
     implementation "org.jetbrains.kotlin:kotlin-stdlib:${kotlin_version}"
     compileOnly 'com.android.support:support-annotations:28.0.0'
-    implementation 'com.google.protobuf:protobuf-javalite:3.13.0'
-    compileOnly 'com.google.protobuf:protoc:3.13.0'
+    implementation 'com.google.protobuf:protobuf-javalite:3.14.0'
+    compileOnly 'com.google.protobuf:protoc:3.14.0'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.1'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.4.1'
 }
