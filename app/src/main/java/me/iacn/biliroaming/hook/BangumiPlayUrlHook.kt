@@ -33,6 +33,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         if (params["fnval"] == "0")
                             params["fnval"] = params["qn"]!!
                     } else {
+                        params["dl_fix"] = "1"
                         params["fnval"] = "0"
                     }
                     params.remove("dl")
