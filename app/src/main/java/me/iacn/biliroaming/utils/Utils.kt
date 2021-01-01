@@ -99,6 +99,10 @@ val logFile by lazy { File(currentContext.externalCacheDir, "log.txt") }
 val sPrefs
     get() = currentContext.getSharedPreferences("biliroaming", Context.MODE_MULTI_PROCESS)!!
 
+@Suppress("DEPRECATION")
+val sCaches
+    get() = currentContext.getSharedPreferences("biliroaming_cache", Context.MODE_MULTI_PROCESS)!!
+
 fun signQuery(query: String?, extraMap: Map<String, String> = emptyMap()): String? {
     val queryMap = TreeMap<String, String>()
     val pairs = query?.split("&".toRegex())?.toTypedArray() ?: return null

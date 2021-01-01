@@ -20,8 +20,10 @@ import org.json.JSONObject
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
+import java.util.*
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import kotlin.collections.LinkedHashMap
 
 
 /**
@@ -60,7 +62,7 @@ object BiliRoamingApi {
 
     @JvmStatic
     fun getThailandSubtitles(epId: String?): String? {
-        epId?: return null
+        epId ?: return null
         val thUrl = sPrefs.getString("th_server", null) ?: return null
         val uri = Uri.Builder()
                 .scheme("https")
@@ -226,6 +228,7 @@ object BiliRoamingApi {
         val cnUrl = sPrefs.getString("cn_server", null)
         val thUrl = sPrefs.getString("th_server", null)
         val hostList = LinkedHashMap<String, String>()
+
         info["title"]?.run {
             if (contains(Regex("僅.*台")) && twUrl != null) hostList += "tw" to twUrl
             if (contains(Regex("僅.*港")) && hkUrl != null) hostList += "hk" to hkUrl
@@ -240,6 +243,15 @@ object BiliRoamingApi {
             }
 
         if (hostList.isEmpty()) return null
+
+        val seasonId = lastSeasonInfo["season_id"]
+        if (seasonId != null && sCaches.contains(seasonId)) {
+            val cachedArea = sCaches.getString(seasonId, null)
+            if (hostList.containsKey(cachedArea)) {
+                Log.d("use cached area $cachedArea for $seasonId")
+                hostList.entries.removeAll { it.key != cachedArea }
+            }
+        }
 
         for (host in hostList) {
             val extraMap = if (host.key == "th") mapOf(
@@ -260,9 +272,13 @@ object BiliRoamingApi {
                     .encodedQuery(signQuery(queryString, extraMap))
                     .toString()
             getContent(uri)?.let {
-                Log.d("use backup $host for playurl instead")
-                if (it.contains("\"code\":0"))
+                Log.d("use server $host for playurl")
+                if (it.contains("\"code\":0")) {
+                    if(!sCaches.contains(seasonId) || sCaches.getString(seasonId, null) != host.key) {
+                        sCaches.edit().putString(seasonId, host.key).apply()
+                    }
                     return if (host.key == "th") fixThailandPlayurl(it) else it
+                }
             }
         }
         return null

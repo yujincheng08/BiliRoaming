@@ -165,6 +165,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             if (isBangumiWithWatchPermission(newJsonResult, newCode)) {
                 Log.d("Got new season information from proxy server: $newJsonResult")
                 lastSeasonInfo["title"] = newJsonResult?.optString("title")
+                lastSeasonInfo["season_id"] = newJsonResult?.optString("season_id")
                 lastSeasonInfo["watch_platform"] = newJsonResult?.optJSONObject("rights")?.optInt("watch_platform")?.toString()
                 for (episode in newJsonResult?.optJSONArray("episodes").orEmpty()) {
                     if (episode.has("cid") && episode.has("ep_id")) {
