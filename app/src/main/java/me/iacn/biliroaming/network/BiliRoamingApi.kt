@@ -12,7 +12,6 @@ import me.iacn.biliroaming.BuildConfig
 import me.iacn.biliroaming.Constant.HOST_REGEX
 import me.iacn.biliroaming.R
 import me.iacn.biliroaming.XposedInit
-import me.iacn.biliroaming.hook.BangumiSeasonHook.Companion.lastSeasonInfo
 import me.iacn.biliroaming.utils.*
 import org.json.JSONArray
 import org.json.JSONException
@@ -222,6 +221,7 @@ object BiliRoamingApi {
     @JvmStatic
     fun getFromCustomUrl(queryString: String?, info: Map<String, String?>): String? {
         Log.d("Title: ${info["title"]}")
+        queryString ?: return null
         val twUrl = sPrefs.getString("tw_server", null)
         val hkUrl = sPrefs.getString("hk_server", null)
         val cnUrl = sPrefs.getString("cn_server", null)
@@ -230,7 +230,7 @@ object BiliRoamingApi {
         val hostList = LinkedHashMap<String, String>(4, 1f, true)
 
         if (hostList.isEmpty())
-            // reversely
+        // reversely
             linkedMapOf("th" to thUrl, "tw" to twUrl, "cn" to cnUrl, "hk" to hkUrl).filterValues {
                 it != null
             }.mapValuesTo(hostList) {
@@ -245,8 +245,13 @@ object BiliRoamingApi {
 
         if (hostList.isEmpty()) return null
 
-        val seasonId = lastSeasonInfo["season_id"]
-        if (seasonId != null && sCaches.contains(seasonId)) {
+        val seasonId = info["season_id"] ?: run {
+            val epIdStartIdx = queryString.indexOf("ep_id=")
+            val epIdEndIdx = queryString.indexOf("&", epIdStartIdx)
+            val epId = queryString.substring(epIdStartIdx + 6, epIdEndIdx)
+            if (epId.isEmpty()) null else "ep$epId"
+        }
+        if (sCaches.contains(seasonId)) {
             val cachedArea = sCaches.getString(seasonId, null)
             if (hostList.containsKey(cachedArea)) {
                 Log.d("use cached area $cachedArea for $seasonId")
@@ -273,10 +278,14 @@ object BiliRoamingApi {
                     .encodedQuery(signQuery(queryString, extraMap))
                     .toString()
             getContent(uri)?.let {
-                Log.d("use server $host for playurl")
+                Log.d("use server $area $host for playurl")
                 if (it.contains("\"code\":0")) {
-                    if(!sCaches.contains(seasonId) || sCaches.getString(seasonId, null) != area) {
-                        sCaches.edit().putString(seasonId, area).apply()
+                    if (!sCaches.contains(seasonId) || sCaches.getString(seasonId, null) != area) {
+                        sCaches.edit().run {
+                            putString(seasonId, area)
+                            info["ep_ids"]?.split(";")?.forEach { epId -> putString("ep$epId", area) }
+                            apply()
+                        }
                     }
                     return if (area == "th") fixThailandPlayurl(it) else it
                 }

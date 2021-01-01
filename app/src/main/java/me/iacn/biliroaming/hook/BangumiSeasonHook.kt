@@ -62,8 +62,8 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         lastSeasonInfo.clear()
         val seasonMode = when {
             args[1] is Int -> args[1] as Int
-            args[3] != "0" -> TYPE_EPISODE_ID
-            args[2] != "0" -> TYPE_SEASON_ID
+            args[3] != "0" && paramMap.containsKey("ep_id") -> TYPE_EPISODE_ID
+            args[2] != "0" && paramMap.containsKey("season_id") -> TYPE_SEASON_ID
             else -> -1
         }
         when (seasonMode) {
@@ -170,6 +170,8 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 for (episode in newJsonResult?.optJSONArray("episodes").orEmpty()) {
                     if (episode.has("cid") && episode.has("ep_id")) {
                         lastSeasonInfo[episode.getString("cid")] = episode.getString("ep_id")
+                        lastSeasonInfo["ep_ids"] = lastSeasonInfo["ep_ids"]?.let { it + ";" + episode.getString("ep_id") }
+                                ?: episode.getString("ep_id")
                     }
                 }
                 allowDownload(newJsonResult, false)

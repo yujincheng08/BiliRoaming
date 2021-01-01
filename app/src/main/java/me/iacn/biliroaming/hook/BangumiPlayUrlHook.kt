@@ -29,7 +29,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 if (sPrefs.getBoolean("allow_download", false) &&
                         params.containsKey("ep_id") && params.containsKey("dl")) {
                     if (sPrefs.getBoolean("fix_download", false) && params["qn"] != "0") {
-                        params["fix_dl"] = "1"
+                        params["dl_fix"] = "1"
                         if (params["fnval"] == "0")
                             params["fnval"] = params["qn"]!!
                     } else {
@@ -72,7 +72,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     || queryString.contains("ep_id=0") /*workaround*/) return@hookAfterMethod
             var content = getStreamContent(param.result as InputStream)
             if (content == null || !isLimitWatchingArea(content)) {
-                if (urlString.contains("fix_dl=1") || urlString.contains("dl=1")) {
+                if (urlString.contains("dl_fix=1") || urlString.contains("dl=1")) {
                     content = content?.let { fixDownload(it) }
                 }
                 param.result = ByteArrayInputStream(content?.toByteArray())
@@ -82,10 +82,10 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             // As a workaround, the request will fallback to request from proxy server.
             // If biliplus is down, we can still get result from proxy server.
             // However, the speed may not be fast.
-            content = getPlayUrl(queryString.replace("dl=1", "fix_dl=1"),
+            content = getPlayUrl(queryString.replace("dl=1", "dl_fix=1"),
                     lastSeasonInfo)
             content = content?.let {
-                if (urlString.contains("fix_dl=1") || urlString.contains("dl=1")) {
+                if (urlString.contains("dl_fix=1") || urlString.contains("dl=1")) {
                     fixDownload(it)
                 } else content
             }
@@ -97,6 +97,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 Log.e("Failed to get play url")
                 Log.toast("获播放地址失败")
             }
+            lastSeasonInfo.clear()
         }
 
         "com.bapis.bilibili.pgc.gateway.player.v1.PlayURLMoss".findClassOrNull(mClassLoader)?.run {
@@ -130,6 +131,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         Log.e("Failed to get play url")
                         Log.toast("获取播放地址失败")
                     }
+                    lastSeasonInfo.clear()
                 } else if (isDownload) {
                     param.result = fixDownloadProto(response)
                 }
@@ -174,6 +176,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             }
                         }
                     }
+                    lastSeasonInfo.clear()
                 } else if (isDownload) {
                     param.result = fixDownloadProto(response)
                 }
@@ -194,7 +197,6 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 newResBuilder.subtitle = VideoSubtitle.newBuilder().run {
                     for (subtitle in subtitles) {
                         addSubtitles(SubtitleItem.newBuilder().run {
-                            //id就是id，id_str就是str(id)，url就是subtitle_url，lan就是key，lan_doc就是title
                             id = subtitle.optLong("id")
                             idStr = subtitle.optLong("id").toString()
                             subtitleUrl = subtitle.optString("url")
