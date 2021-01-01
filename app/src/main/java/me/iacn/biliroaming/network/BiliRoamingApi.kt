@@ -20,7 +20,6 @@ import org.json.JSONObject
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
-import java.util.*
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.collections.LinkedHashMap
@@ -227,20 +226,22 @@ object BiliRoamingApi {
         val hkUrl = sPrefs.getString("hk_server", null)
         val cnUrl = sPrefs.getString("cn_server", null)
         val thUrl = sPrefs.getString("th_server", null)
-        val hostList = LinkedHashMap<String, String>()
 
-        info["title"]?.run {
-            if (contains(Regex("僅.*台")) && twUrl != null) hostList += "tw" to twUrl
-            if (contains(Regex("僅.*港")) && hkUrl != null) hostList += "hk" to hkUrl
-            if (contains(Regex("[仅|僅].*[东南亚|其他]")) && thUrl != null) hostList += "th" to thUrl
-        }
+        val hostList = LinkedHashMap<String, String>(4, 1f, true)
 
         if (hostList.isEmpty())
-            linkedMapOf("hk" to hkUrl, "cn" to cnUrl, "tw" to twUrl, "th" to thUrl).filterValues {
+            // reversely
+            linkedMapOf("th" to thUrl, "tw" to twUrl, "cn" to cnUrl, "hk" to hkUrl).filterValues {
                 it != null
             }.mapValuesTo(hostList) {
                 it.value!!
             }
+
+        info["title"]?.run {
+            if (contains(Regex("僅.*台")) && twUrl != null) hostList["tw"]
+            if (contains(Regex("僅.*港")) && hkUrl != null) hostList["hk"]
+            if (contains(Regex("[仅|僅].*[东南亚|其他]")) && thUrl != null) hostList["th"]
+        }
 
         if (hostList.isEmpty()) return null
 
@@ -249,13 +250,13 @@ object BiliRoamingApi {
             val cachedArea = sCaches.getString(seasonId, null)
             if (hostList.containsKey(cachedArea)) {
                 Log.d("use cached area $cachedArea for $seasonId")
-                hostList.entries.removeAll { it.key != cachedArea }
+                hostList[cachedArea]
             }
         }
 
-        for (host in hostList) {
-            val extraMap = if (host.key == "th") mapOf(
-                    "area" to host.key,
+        for ((area, host) in hostList.toList().asReversed()) {
+            val extraMap = if (area == "th") mapOf(
+                    "area" to area,
                     "appkey" to "7d089525d3611b1c",
                     "build" to "1001310",
                     "mobi_app" to "bstar_a",
@@ -263,21 +264,21 @@ object BiliRoamingApi {
 
                     )
             else mapOf(
-                    "area" to host.key
+                    "area" to area
             )
-            val path = if (host.key == "th") THAILAND_PATH_PLAYURL else PATH_PLAYURL
+            val path = if (area == "th") THAILAND_PATH_PLAYURL else PATH_PLAYURL
             val uri = Uri.Builder()
                     .scheme("https")
-                    .encodedAuthority(host.value + path)
+                    .encodedAuthority(host + path)
                     .encodedQuery(signQuery(queryString, extraMap))
                     .toString()
             getContent(uri)?.let {
                 Log.d("use server $host for playurl")
                 if (it.contains("\"code\":0")) {
-                    if(!sCaches.contains(seasonId) || sCaches.getString(seasonId, null) != host.key) {
-                        sCaches.edit().putString(seasonId, host.key).apply()
+                    if(!sCaches.contains(seasonId) || sCaches.getString(seasonId, null) != area) {
+                        sCaches.edit().putString(seasonId, area).apply()
                     }
-                    return if (host.key == "th") fixThailandPlayurl(it) else it
+                    return if (area == "th") fixThailandPlayurl(it) else it
                 }
             }
         }
