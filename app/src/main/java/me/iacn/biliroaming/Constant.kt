@@ -19,6 +19,7 @@ object Constant {
     const val TYPE_MEDIA_ID = 1
     const val TYPE_EPISODE_ID = 2
     const val CUSTOM_COLOR_KEY = "biliroaming_custom_color"
+    const val CURRENT_COLOR_KEY = "theme_entries_current_key"
     const val DEFAULT_CUSTOM_COLOR = -0xe6b7d
     val HOST_REGEX = Regex(""":\\?/\\?/([^/]+)\\?/""")
 }
