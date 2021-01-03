@@ -14,10 +14,10 @@
         <item>wcsb（网宿）</item>
         <item>upws（网宿）</item>
         <item>bda2（网宿）</item>
-        <item>hw（251）</item>
-        <item>hwb（251）</item>
-        <item>uphw（251）</item>
-        <item>js（251）</item>
+        <item>hw（华为）</item>
+        <item>hwb（华为）</item>
+        <item>uphw（华为）</item>
+        <item>js（华为）</item>
         <item>hk（香港）</item>
         <item>akamai（海外，不能免流）</item>
     </string-array>
