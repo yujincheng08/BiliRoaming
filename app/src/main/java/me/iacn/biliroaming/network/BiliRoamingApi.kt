@@ -83,7 +83,8 @@ object BiliRoamingApi {
                         "build" to "1001310",
                         "mobi_app" to "bstar_a",
                         "platform" to "android",
-                        "s_locale" to "zh_SG"
+                        "s_locale" to "zh_SG",
+                        "c_locale" to "zh_SG"
                 )))
                 .toString()
         return getContent(uri)?.replace("bstar://bangumi/season/", "https://bangumi.bilibili.com/anime/")
@@ -388,7 +389,7 @@ object BiliRoamingApi {
 
     @SuppressLint("SetJavaScriptEnabled")
     fun getContent(urlString: String): String? {
-        val timeout = 5000
+        val timeout = 10000
         return try {
             // Work around for android 7
             if (Build.VERSION.SDK_INT == Build.VERSION_CODES.N &&
@@ -415,7 +416,10 @@ object BiliRoamingApi {
                             view?.loadUrl("javascript:listener.callback(document.documentElement.innerText)")
                         }
                     }
-                    webView.loadUrl(urlString)
+                    webView.loadUrl(urlString, mapOf(
+                            "x-from-biliroaming" to BuildConfig.VERSION_NAME,
+                            "Build" to BuildConfig.VERSION_CODE.toString()
+                    ))
                 }
                 try {
                     if (!listener.latch.await((timeout * 2).toLong(), TimeUnit.MILLISECONDS)) {

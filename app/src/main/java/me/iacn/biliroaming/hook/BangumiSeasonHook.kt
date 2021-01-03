@@ -115,14 +115,17 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                 url.startsWith("https://appintl.biliapi.net/intl/gateway/app/view")) &&
                         body.getIntField("code") == FAIL_CODE) {
                     fixView(body, url)
-                } else if (url != null && url.startsWith("https://appintl.biliapi.net/intl/gateway/app/search/type")) {
+                } else if (url != null && url.startsWith("https://appintl.biliapi.net/intl/gateway/app/search/type") && !url.contains("type=$TH_TYPE")) {
                     fixPlaySearchType(body, url)
                 } else if (instance.generalResponseClass?.isInstance(body) == true) {
                     val data = body.getObjectField("data") ?: return@hookBeforeAllConstructors
                     if (data.javaClass == searchAllResultClass) {
                         addThailandTag(data)
                     }
-                    if (url != null && data.javaClass == bangumiSearchPageClass && url.startsWith("https://app.bilibili.com/x/v2/search/type") && url.contains("type=$TH_TYPE")) {
+                    if (url != null && data.javaClass == bangumiSearchPageClass &&
+                            (url.startsWith("https://app.bilibili.com/x/v2/search/type") ||
+                                    url.startsWith("https://appintl.biliapi.net/intl/gateway/app/search/type"))
+                            && url.contains("type=$TH_TYPE")) {
                         body.setObjectField("data", retrieveThailandSearch(data, url))
                     }
                 }
@@ -156,7 +159,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
         if (sPrefs.getBoolean("hidden", false) && sPrefs.getBoolean("search_th", false)) {
             "com.bilibili.bangumi.ui.page.search.BangumiSearchResultFragment".findClassOrNull(mClassLoader)?.run {
-                hookBeforeMethod("loadFirstPage") { param ->
+                hookBeforeMethod("setUserVisibleCompat", Boolean::class.javaPrimitiveType) { param ->
                     param.thisObject.callMethodAs<Bundle>("getArguments").run {
                         if (getString("from") == "th") {
                             declaredFields.filter {
