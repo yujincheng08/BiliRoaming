@@ -141,4 +141,6 @@
     <string name="movie_title">影视</string>
     <string name="activity_title">热点</string>
     <string name="other_tabs_title">其它</string>
+    <string name="search_th_title">开启泰区番剧搜索</string>
+    <string name="search_th_summary">在搜索页面添加泰区番剧搜索结果，需要解析服务器支持</string>
 </resources>

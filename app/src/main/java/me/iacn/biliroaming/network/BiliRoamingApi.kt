@@ -41,6 +41,7 @@ object BiliRoamingApi {
     private const val PATH_PLAYURL = "/pgc/player/api/playurl"
     private const val THAILAND_PATH_PLAYURL = "/intl/gateway/v2/ogv/playurl"
     private const val THAILAND_PATH_SUBTITLES = "/intl/gateway/v2/app/subtitle"
+    private const val THAILAND_PATH_SEARCH = "/intl/gateway/v2/app/search/type"
 
     @JvmStatic
     fun getSeason(info: Map<String, String?>, hidden: Boolean): String? {
@@ -68,6 +69,24 @@ object BiliRoamingApi {
                 .appendQueryParameter("ep_id", epId)
                 .toString()
         return getContent(uri)
+    }
+
+    @JvmStatic
+    fun getThailandSearchBangumi(queryString: String): String? {
+        val thUrl = sPrefs.getString("th_server", null) ?: return null
+        val uri = Uri.Builder()
+                .scheme("https")
+                .encodedAuthority(thUrl + THAILAND_PATH_SEARCH)
+                .encodedQuery(signQuery(queryString, mapOf(
+                        "type" to "7",
+                        "appkey" to "7d089525d3611b1c",
+                        "build" to "1001310",
+                        "mobi_app" to "bstar_a",
+                        "platform" to "android",
+                        "s_locale" to "zh_SG"
+                )))
+                .toString()
+        return getContent(uri)?.replace("bstar://bangumi/season/", "https://bangumi.bilibili.com/anime/")
     }
 
     @JvmStatic
@@ -266,8 +285,7 @@ object BiliRoamingApi {
                     "build" to "1001310",
                     "mobi_app" to "bstar_a",
                     "platform" to "android",
-
-                    )
+            )
             else mapOf(
                     "area" to area
             )

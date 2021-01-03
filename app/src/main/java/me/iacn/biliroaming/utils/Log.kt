@@ -9,15 +9,6 @@ import de.robv.android.xposed.XposedBridge
 import me.iacn.biliroaming.Constant.TAG
 import android.util.Log as ALog
 
-fun Throwable.dump(): String {
-    val sb = StringBuilder()
-    sb.appendLine(toString())
-    for (s in stackTrace)
-        sb.appendLine(s)
-    return sb.toString()
-}
-
-
 object Log {
 
     private val handler by lazy { Handler(Looper.getMainLooper()) }
@@ -33,7 +24,7 @@ object Log {
 
     @JvmStatic
     private fun doLog(f: (String, String) -> Int, obj: Any?, toXposed: Boolean = false) {
-        val str = if (obj is Throwable) obj.dump() else obj.toString()
+        val str = if (obj is Throwable) ALog.getStackTraceString(obj) else obj.toString()
 
         if (str.length > maxLength) {
             val chunkCount: Int = str.length / maxLength

@@ -3,6 +3,7 @@ package me.iacn.biliroaming.hook
 import android.content.Context
 import android.net.Uri
 import android.os.Build
+import android.os.Bundle
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.Constant.TYPE_EPISODE_ID
 import me.iacn.biliroaming.Constant.TYPE_SEASON_ID
@@ -10,11 +11,13 @@ import me.iacn.biliroaming.Protos
 import me.iacn.biliroaming.network.BiliRoamingApi
 import me.iacn.biliroaming.network.BiliRoamingApi.getContent
 import me.iacn.biliroaming.network.BiliRoamingApi.getSeason
+import me.iacn.biliroaming.network.BiliRoamingApi.getThailandSearchBangumi
 import me.iacn.biliroaming.utils.*
 import org.json.JSONObject
 import java.lang.reflect.Array as RArray
 import java.lang.reflect.Method
 import java.net.URL
+import java.net.URLDecoder
 
 /**
  * Created by iAcn on 2019/3/27
@@ -29,6 +32,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             instance.kotlinJsonClass?.getStaticObjectField("Companion")?.callMethod("getNonstrict")
         }
         const val FAIL_CODE = -404
+        private const val TH_TYPE = 114514
     }
 
     private val isSerializable by lazy {
@@ -74,6 +78,10 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         lastSeasonInfo["access_key"] = paramMap["access_key"]
     }
 
+    private val searchAllResultClass by Weak { "com.bilibili.search.api.SearchResultAll".findClassOrNull(mClassLoader) }
+    private val searchAllResultNavInfoClass by Weak { "com.bilibili.search.api.SearchResultAll\$NavInfo".findClassOrNull(mClassLoader) }
+    private val bangumiSearchPageClass by Weak { "com.bilibili.bangumi.data.page.search.BangumiSearchPage".findClassOrNull(mClassLoader) }
+
     override fun startHook() {
         if (!sPrefs.getBoolean("main_func", false)) return
         Log.d("startHook: BangumiSeason")
@@ -87,6 +95,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             val paramMap = param.thisObject.callMethodAs<Map<String, String>>(instance.paramsToMap())
             updateSeasonInfo(param.args, paramMap)
         }
+
 
         if (isBuiltIn && is64 && Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
             Log.e("Not support")
@@ -108,6 +117,14 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     fixView(body, url)
                 } else if (url != null && url.startsWith("https://appintl.biliapi.net/intl/gateway/app/search/type")) {
                     fixPlaySearchType(body, url)
+                } else if (instance.generalResponseClass?.isInstance(body) == true) {
+                    val data = body.getObjectField("data") ?: return@hookBeforeAllConstructors
+                    if (data.javaClass == searchAllResultClass) {
+                        addThailandTag(data)
+                    }
+                    if (url != null && data.javaClass == bangumiSearchPageClass && url.startsWith("https://app.bilibili.com/x/v2/search/type") && url.contains("type=$TH_TYPE")) {
+                        body.setObjectField("data", retrieveThailandSearch(data, url))
+                    }
                 }
             }
         }
@@ -136,6 +153,54 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             instance.checkBlueClass?.replaceMethod(instance.checkBlue(), Context::class.java) {
                 return@replaceMethod false
             }
+
+        if (sPrefs.getBoolean("hidden", false) && sPrefs.getBoolean("search_th", false)) {
+            "com.bilibili.bangumi.ui.page.search.BangumiSearchResultFragment".findClassOrNull(mClassLoader)?.run {
+                hookBeforeMethod("loadFirstPage") { param ->
+                    param.thisObject.callMethodAs<Bundle>("getArguments").run {
+                        if (getString("from") == "th") {
+                            declaredFields.filter {
+                                it.type == Int::class.javaPrimitiveType
+                            }.forEach {
+                                it.isAccessible = true
+                                if (it.get(param.thisObject) == 7) it.set(param.thisObject, TH_TYPE)
+                            }
+                        }
+                    }
+                }
+            }
+            val pageTypesClass = Class.forName("com.bilibili.search.result.pages.BiliMainSearchResultPage\$PageTypes", true, mClassLoader)
+            val pageArrays = pageTypesClass.getStaticObjectFieldAs<Array<Any>>("\$VALUES")
+            val newPageArray = pageArrays.copyOf(pageArrays.size + 1)
+            newPageArray[pageArrays.size] = pageTypesClass.new("PAGE_BANGUMI", 4, "bilibili://search-result/new-bangumi?from=th", TH_TYPE, "bangumi")
+            pageTypesClass.setStaticObjectField("\$VALUES", newPageArray)
+        }
+    }
+
+    private fun retrieveThailandSearch(data: Any, url: String): Any {
+        if (sPrefs.getBoolean("hidden", false) && sPrefs.getBoolean("search_th", false)) {
+            val content = getThailandSearchBangumi(URL(URLDecoder.decode(url, Charsets.UTF_8.name())).query)
+                    ?: return data
+            val jsonContent = content.toJSONObject()
+            val newData = jsonContent.optJSONObject("data") ?: return data
+            return instance.fastJsonClass?.callStaticMethod(instance.fastJsonParse(), newData.toString(), data.javaClass)
+                    ?: data
+        } else {
+            return data
+        }
+    }
+
+    private fun addThailandTag(body: Any) {
+        if (sPrefs.getBoolean("hidden", false) && sPrefs.getBoolean("search_th", false)) {
+            searchAllResultNavInfoClass?.new()?.run {
+                setObjectField("name", "泰区")
+                setIntField("pages", 0)
+                setIntField("total", 0)
+                setIntField("type", TH_TYPE)
+            }?.also {
+                body.getObjectFieldAs<MutableList<Any>>("nav").add(1, it)
+            }
+        }
     }
 
     private fun fixPlaySearchType(body: Any, url: String) {
@@ -390,17 +455,9 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     private fun getUrl(response: Any): String? {
-        val requestField = instance.requestField()
-        val urlMethod = instance.urlMethod()
-        if (requestField == null || urlMethod == null) {
-            return null
-        }
+        val requestField = instance.requestField() ?: return null
         val request = response.getObjectField(requestField)
-        return try {
-            request?.callMethod(urlMethod)?.toString()
-        } catch (e: Throwable) {
-            null
-        }
+        return instance.stethoInterceptorRequestClass?.new(null, request, null)?.callMethodAs("url")
     }
 
 }

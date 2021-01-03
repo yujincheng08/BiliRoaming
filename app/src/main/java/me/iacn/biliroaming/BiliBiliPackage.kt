@@ -17,6 +17,7 @@ import me.iacn.biliroaming.utils.*
 import java.io.*
 import java.lang.reflect.Modifier
 import java.lang.reflect.ParameterizedType
+import java.net.HttpURLConnection
 
 /**
  * Created by iAcn on 2019/4/5
@@ -65,6 +66,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val commentRpcClass by Weak { "com.bilibili.app.comm.comment2.model.rpc.CommentRpcKt".findClassOrNull(mClassLoader) }
     val checkBlueClass by Weak { mHookInfo["class_check_blue"]?.findClass(mClassLoader) }
     val kotlinJsonClass by Weak { "kotlinx.serialization.json.Json".findClassOrNull(mClassLoader) }
+    val stethoInterceptorRequestClass by Weak{ "com.facebook.stetho.okhttp3.StethoInterceptor\$OkHttpInspectorRequest".findClassOrNull(mClassLoader) }
 
 
     val classesList by lazy { DexFile(AndroidAppHelper.currentApplication().packageCodePath).entries().toList() }
@@ -110,9 +112,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     fun addSetting() = mHookInfo["method_add_setting"]
 
-    fun requestField() = mHookInfo["field_request"]
-
-    fun urlMethod() = mHookInfo["method_url"]
+    fun requestField() = mHookInfo["field_req"]
 
     fun likeMethod() = mHookInfo["method_like"]
 
@@ -196,9 +196,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
         mHookInfo.checkOrPut("class_retrofit_response") {
             findRetrofitResponseClass()
-        }.checkConjunctiveOrPut("field_request", "method_url") {
-            val (fieldName, methodName) = findUrlField()
-            arrayOf(fieldName, methodName)
+        }.checkOrPut("field_req") {
+            findRequestField()
         }.checkConjunctiveOrPut("class_fastjson", "method_fastjson_parse") {
             val fastJsonClass = findFastJsonClass()
             val notObfuscated = "JSON" == fastJsonClass?.simpleName
@@ -450,16 +449,14 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         it.parameterTypes[0]
     }?.firstOrNull()?.name
 
-    private fun findUrlField(): Pair<String?, String?> {
+    private fun findRequestField(): String? {
+        val okHttpRequestClass = stethoInterceptorRequestClass?.getDeclaredField("mRequest")?.type
         for (constructor in retrofitResponseClass?.declaredConstructors.orEmpty()) {
             for (field in constructor.parameterTypes[0].declaredFields) {
-                for (method in field.type.declaredMethods) {
-                    if (method.returnType.name == "okhttp3.HttpUrl")
-                        return field.name to method.name
-                }
+                if(field.type == okHttpRequestClass) return field.name
             }
         }
-        return null to null
+        return null
     }
 
     private fun findFastJsonClass(): Class<*>? = "com.alibaba.fastjson.JSON".findClassOrNull(mClassLoader)

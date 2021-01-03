@@ -177,6 +177,11 @@
             android:key="purify_city"
             android:summary="@string/purify_city_summary"
             android:title="@string/purify_city_title" />
+        <SwitchPreference
+            android:dependency="hidden"
+            android:key="search_th"
+            android:summary="@string/search_th_summary"
+            android:title="@string/search_th_title" />
     </PreferenceCategory>
 
     <PreferenceCategory
