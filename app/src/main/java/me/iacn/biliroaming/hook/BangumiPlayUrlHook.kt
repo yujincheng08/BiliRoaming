@@ -160,7 +160,10 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 val request = param.args[0]
                 val response = param.result
                 if (!response.callMethodAs<Boolean>("hasVideoInfo") ||
-                        (response.callMethodAs("hasViewInfo") && response.callMethod("getViewInfo")?.callMethodAs<Boolean>("hasDialog") == true)) {
+                        (response.callMethodAs("hasViewInfo") &&
+                                response.callMethod("getViewInfo")?.callMethodAs<Boolean>("hasDialog") == true) &&
+                        response.callMethod("getViewInfo")?.callMethod("getDialog")?.callMethodAs<String>("getType") == "area_limit"
+                ) {
                     val content = getPlayUrl(reconstructQuery(request), lastSeasonInfo)
                     content?.let {
                         Log.d("Has replaced play url with proxy server $it")

@@ -37,6 +37,7 @@ object BiliRoamingApi {
     private const val BILI_MEDIA_URL = "bangumi.bilibili.com/view/web_api/media"
     private const val BILI_MODULE_TEMPLATE = "{\"data\": {},\"id\": 0,\"module_style\": {\"hidden\": 0,\"line\": 1},\"more\": \"查看更多\",\"style\": \"positive\",\"title\": \"选集\"}"
     private const val BILI_RIGHT_TEMPLATE = "{\"allow_demand\":0,\"allow_dm\":1,\"allow_download\":0,\"area_limit\":0}"
+    private const val BILI_VIP_BADGE_TEMPLATE = "{\"bg_color\":\"#FB7299\",\"bg_color_night\":\"#BB5B76\",\"text\":\"会员\"}"
 
     private const val PATH_PLAYURL = "/pgc/player/api/playurl"
     private const val THAILAND_PATH_PLAYURL = "/intl/gateway/v2/ogv/playurl"
@@ -111,6 +112,8 @@ object BiliRoamingApi {
             }
             if (episode.optInt("badge_type", -1) == 0)
                 episode.remove("badge_info")
+            if (episode.optString("badge") == "会员")
+                episode.put("badge_info", JSONObject(BILI_VIP_BADGE_TEMPLATE))
         }
         for (section in result.optJSONArray("section").orEmpty()) {
             fixEpisodes(section)
@@ -271,7 +274,7 @@ object BiliRoamingApi {
             val epId = queryString.substring(epIdStartIdx + 6, epIdEndIdx)
             if (epId.isEmpty()) null else "ep$epId"
         }
-        if (sCaches.contains(seasonId)) {
+        if (seasonId != null && sCaches.contains(seasonId)) {
             val cachedArea = sCaches.getString(seasonId, null)
             if (hostList.containsKey(cachedArea)) {
                 Log.d("use cached area $cachedArea for $seasonId")
@@ -299,7 +302,7 @@ object BiliRoamingApi {
             getContent(uri)?.let {
                 Log.d("use server $area $host for playurl")
                 if (it.contains("\"code\":0")) {
-                    if (!sCaches.contains(seasonId) || sCaches.getString(seasonId, null) != area) {
+                    if (seasonId != null && !sCaches.contains(seasonId) || sCaches.getString(seasonId, null) != area) {
                         sCaches.edit().run {
                             putString(seasonId, area)
                             info["ep_ids"]?.split(";")?.forEach { epId -> putString("ep$epId", area) }
