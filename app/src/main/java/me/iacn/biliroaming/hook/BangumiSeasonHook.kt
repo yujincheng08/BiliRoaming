@@ -75,7 +75,6 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             TYPE_EPISODE_ID -> lastSeasonInfo["ep_id"] = paramMap["ep_id"]
             else -> return
         }
-        lastSeasonInfo["access_key"] = paramMap["access_key"]
     }
 
     private val searchAllResultClass by Weak { "com.bilibili.search.api.SearchResultAll".findClassOrNull(mClassLoader) }
@@ -276,9 +275,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             appendQueryParameter("fourk", req.fourk.toString())
             appendQueryParameter("spmid", req.spmid.toString())
             appendQueryParameter("autoplay", req.autoplay.toString())
-            instance.accessKey?.let {
-                appendQueryParameter("access_key", it)
-            }
+            appendQueryParameter("access_key", instance.accessKey)
             build()
         }.query
 
@@ -423,12 +420,6 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val newJsonResult = content.toJSONObject().optJSONObject("v2_app_api") ?: return
         newJsonResult.optJSONObject("season")?.optString("newest_ep_id")?.let {
             lastSeasonInfo["ep_id"] = it
-            val url = URL(urlString)
-            url.query.split("&").filter { it2 ->
-                it2.startsWith("access_key=")
-            }.forEach { it2 ->
-                lastSeasonInfo["access_key"] = it2.substring(it2.indexOf("=") + 1)
-            }
         }
         body.setIntField("code", 0).setObjectField("data", detailClass.fromJson(newJsonResult))
     }

@@ -300,9 +300,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             appendQueryParameter("fnval", req.fnval.toString())
             appendQueryParameter("force_host", req.forceHost.toString())
             appendQueryParameter("fourk", req.fourk.toString())
-            lastSeasonInfo["access_key"]?.let {
-                appendQueryParameter("access_key", it)
-            }
+            appendQueryParameter("access_key", instance.accessKey)
             build()
         }.query
     }

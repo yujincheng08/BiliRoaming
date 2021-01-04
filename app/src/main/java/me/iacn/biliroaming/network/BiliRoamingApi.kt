@@ -8,6 +8,7 @@ import android.os.Handler
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.BuildConfig
 import me.iacn.biliroaming.Constant.HOST_REGEX
 import me.iacn.biliroaming.R
@@ -55,7 +56,7 @@ object BiliRoamingApi {
             fixEpisodes(it)
             reconstructModules(it)
             fixRight(it)
-            if (hidden) getExtraInfo(it, info["access_key"])
+            if (hidden) getExtraInfo(it, instance.accessKey)
         }
         return seasonJson.toString()
     }
