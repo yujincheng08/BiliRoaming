@@ -235,10 +235,11 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 lastSeasonInfo["season_id"] = newJsonResult?.optString("season_id")
                 lastSeasonInfo["watch_platform"] = newJsonResult?.optJSONObject("rights")?.optInt("watch_platform")?.toString()
                 for (episode in newJsonResult?.optJSONArray("episodes").orEmpty()) {
-                    if (episode.has("cid") && episode.has("ep_id")) {
-                        lastSeasonInfo[episode.getString("cid")] = episode.getString("ep_id")
-                        lastSeasonInfo["ep_ids"] = lastSeasonInfo["ep_ids"]?.let { it + ";" + episode.getString("ep_id") }
-                                ?: episode.getString("ep_id")
+                    if (episode.has("cid") && episode.has("id")) {
+                        val cid = episode.optInt("cid").toString()
+                        val epId = episode.optInt("id").toString()
+                        lastSeasonInfo[cid] = epId
+                        lastSeasonInfo["ep_ids"] = lastSeasonInfo["ep_ids"]?.let { "$it;$epId" } ?: epId
                     }
                 }
                 allowDownload(newJsonResult, false)
