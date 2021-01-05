@@ -160,7 +160,7 @@ class SpeedTestDialog(private val pref: ListPreference, activity: Activity) : Al
 
     private suspend fun getTestUrl() = withContext(Dispatchers.Default) {
         val country = fetchJson(infoUrl)?.optJSONObject("data")?.optString("country")
-        val json = if (country == "中国") getPlayUrl(mainlandParams, mapOf("title" to "僅港澳台")) else getPlayUrl(overseaParams, emptyMap())
+        val json = if (country == "中国") getPlayUrl(mainlandParams, arrayOf("hk", "tw")) else getPlayUrl(overseaParams, arrayOf("cn"))
         json?.toJSONObject()?.optJSONObject("dash")?.getJSONArray("audio")?.run {
             (0 until length()).map { idx -> optJSONObject(idx) }
         }?.minWithOrNull { a, b -> a.optInt("bandwidth") - b.optInt("bandwidth") }?.optString("base_url")?.replace("https", "http")

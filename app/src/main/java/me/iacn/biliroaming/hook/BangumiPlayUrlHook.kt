@@ -83,8 +83,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             // As a workaround, the request will fallback to request from proxy server.
             // If biliplus is down, we can still get result from proxy server.
             // However, the speed may not be fast.
-            content = getPlayUrl(queryString.replace("dl=1", "dl_fix=1"),
-                    lastSeasonInfo)
+            content = getPlayUrl(queryString.replace("dl=1", "dl_fix=1"))
             content = content?.let {
                 if (urlString.contains("dl_fix=1") || urlString.contains("dl=1")) {
                     fixDownload(it)
@@ -98,7 +97,6 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 Log.e("Failed to get play url")
                 Log.toast("获播放地址失败")
             }
-            lastSeasonInfo.clear()
         }
 
         "com.bapis.bilibili.pgc.gateway.player.v1.PlayURLMoss".findClassOrNull(mClassLoader)?.run {
@@ -123,7 +121,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 val request = param.args[0]
                 val response = param.result
                 if (!response.callMethodAs<Boolean>("hasVideoInfo")) {
-                    val content = getPlayUrl(reconstructQuery(request), lastSeasonInfo)
+                    val content = getPlayUrl(reconstructQuery(request))
                     content?.let {
                         Log.d("Has replaced play url with proxy server $it")
                         Log.toast("已从代理服务器获取播放地址")
@@ -132,7 +130,6 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         Log.e("Failed to get play url")
                         Log.toast("获取播放地址失败")
                     }
-                    lastSeasonInfo.clear()
                 } else if (isDownload) {
                     param.result = fixDownloadProto(response)
                 }
@@ -164,7 +161,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                 response.callMethod("getViewInfo")?.callMethodAs<Boolean>("hasDialog") == true) &&
                         response.callMethod("getViewInfo")?.callMethod("getDialog")?.callMethodAs<String>("getType") == "area_limit"
                 ) {
-                    val content = getPlayUrl(reconstructQuery(request), lastSeasonInfo)
+                    val content = getPlayUrl(reconstructQuery(request))
                     content?.let {
                         Log.d("Has replaced play url with proxy server $it")
                         Log.toast("已从代理服务器获取播放地址")
@@ -180,7 +177,6 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             }
                         }
                     }
-                    lastSeasonInfo.clear()
                 } else if (isDownload) {
                     param.result = fixDownloadProto(response)
                 }
@@ -189,6 +185,12 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
         "com.bapis.bilibili.community.service.dm.v1.DMMoss".hookAfterMethod(mClassLoader, "dmView", "com.bapis.bilibili.community.service.dm.v1.DmViewReq") { param ->
             val oid = param.args[0].callMethod("getOid").toString()
+            // TODO: For cached bangumi's, we don't know if they need to get subtitles from thailand api.
+            //       Actually, when watch_platform==1, it should use subtitles,
+            //       and if it does not contains any subtitle, it means it's from thailand.
+            //       However, for cached bangumi's, we don't know watch_platform.
+            //       One way is to get the information from entry.json and store that to
+            //       lastSeasonInfo as online bangumi's.
             if (lastSeasonInfo.containsKey("watch_platform") && lastSeasonInfo["watch_platform"] == "1"
                     && lastSeasonInfo.containsKey(oid) && param.result.callMethod("getSubtitle")?.callMethod("getSubtitlesCount") == 0) {
                 val result = getThailandSubtitles(lastSeasonInfo[oid])?.toJSONObject()

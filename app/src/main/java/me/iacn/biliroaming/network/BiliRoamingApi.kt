@@ -13,6 +13,7 @@ import me.iacn.biliroaming.BuildConfig
 import me.iacn.biliroaming.Constant.HOST_REGEX
 import me.iacn.biliroaming.R
 import me.iacn.biliroaming.XposedInit
+import me.iacn.biliroaming.hook.BangumiSeasonHook.Companion.lastSeasonInfo
 import me.iacn.biliroaming.utils.*
 import org.json.JSONArray
 import org.json.JSONException
@@ -233,8 +234,8 @@ object BiliRoamingApi {
     }
 
     @JvmStatic
-    fun getPlayUrl(queryString: String?, info: Map<String, String?>): String? {
-        return getFromCustomUrl(queryString, info)?.let {
+    fun getPlayUrl(queryString: String?, priorityArea: Array<String>? = null): String? {
+        return getFromCustomUrl(queryString, priorityArea)?.let {
             JSONObject(it).optJSONObject("result")?.toString() ?: it
         }?.replace(HOST_REGEX, "://${
             sPrefs.getString("upos_host", null)
@@ -243,8 +244,7 @@ object BiliRoamingApi {
     }
 
     @JvmStatic
-    fun getFromCustomUrl(queryString: String?, info: Map<String, String?>): String? {
-        Log.d("Title: ${info["title"]}")
+    private fun getFromCustomUrl(queryString: String?, priorityArea: Array<String>?): String? {
         queryString ?: return null
         val twUrl = sPrefs.getString("tw_server", null)
         val hkUrl = sPrefs.getString("hk_server", null)
@@ -261,20 +261,27 @@ object BiliRoamingApi {
                 it.value!!
             }
 
-        info["title"]?.run {
+        val epIdStartIdx = queryString.indexOf("ep_id=")
+        val epIdEndIdx = queryString.indexOf("&", epIdStartIdx)
+        val epId = queryString.substring(epIdStartIdx + 6, epIdEndIdx)
+
+        if (!lastSeasonInfo.containsKey("ep_ids") || lastSeasonInfo["ep_ids"]?.contains(epId) != true)
+            lastSeasonInfo.clear()
+
+        lastSeasonInfo["title"]?.run {
             if (contains(Regex("僅.*台")) && twUrl != null) hostList["tw"]
             if (contains(Regex("僅.*港")) && hkUrl != null) hostList["hk"]
             if (contains(Regex("[仅|僅].*[东南亚|其他]")) && thUrl != null) hostList["th"]
         }
 
+        priorityArea?.forEach { area->
+            if(hostList.containsKey(area)) hostList[area]
+        }
+
         if (hostList.isEmpty()) return null
 
-        val seasonId = info["season_id"] ?: run {
-            val epIdStartIdx = queryString.indexOf("ep_id=")
-            val epIdEndIdx = queryString.indexOf("&", epIdStartIdx)
-            val epId = queryString.substring(epIdStartIdx + 6, epIdEndIdx)
-            if (epId.isEmpty()) null else "ep$epId"
-        }
+        val seasonId = lastSeasonInfo["season_id"] ?: if (epId.isEmpty()) null else "ep$epId"
+
         if (seasonId != null && sCaches.contains(seasonId)) {
             val cachedArea = sCaches.getString(seasonId, null)
             if (hostList.containsKey(cachedArea)) {
@@ -306,7 +313,7 @@ object BiliRoamingApi {
                     if (seasonId != null && !sCaches.contains(seasonId) || sCaches.getString(seasonId, null) != area) {
                         sCaches.edit().run {
                             putString(seasonId, area)
-                            info["ep_ids"]?.split(";")?.forEach { epId -> putString("ep$epId", area) }
+                            lastSeasonInfo["ep_ids"]?.split(";")?.forEach { epId -> putString("ep$epId", area) }
                             apply()
                         }
                     }
