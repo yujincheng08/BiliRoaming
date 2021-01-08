@@ -441,6 +441,11 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     episode.optJSONObject("rights")?.put("allow_download", 1)
                 }
             }
+            for (section in result?.optJSONArray("prevueSection").orEmpty()) {
+                for (episode in section.optJSONArray("episodes").orEmpty()) {
+                    episode.optJSONObject("rights")?.put("allow_download", 1)
+                }
+            }
             for (episode in result?.optJSONArray("episodes").orEmpty()) {
                 episode.optJSONObject("rights")?.put("allow_download", 1)
             }
