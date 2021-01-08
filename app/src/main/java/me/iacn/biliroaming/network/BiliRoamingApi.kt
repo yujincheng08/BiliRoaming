@@ -55,6 +55,7 @@ object BiliRoamingApi {
         seasonJson.optJSONObject("result")?.also {
             if (hidden) fixHiddenSeason(it)
             fixEpisodes(it)
+            fixPrevueSection(it)
             reconstructModules(it)
             fixRight(it)
             if (hidden) getExtraInfo(it, instance.accessKey)
@@ -102,6 +103,10 @@ object BiliRoamingApi {
             episode.put("rights", BILI_RIGHT_TEMPLATE.toJSONObject())
             episode.put("status", episode.optInt("episode_status"))
         }
+    }
+    @JvmStatic
+    private fun fixPrevueSection(result: JSONObject) {
+        result.put("prevueSection", result.optJSONObject("section"))
     }
 
     @JvmStatic
@@ -274,8 +279,8 @@ object BiliRoamingApi {
             if (contains(Regex("[仅|僅].*[东南亚|其他]")) && thUrl != null) hostList["th"]
         }
 
-        priorityArea?.forEach { area->
-            if(hostList.containsKey(area)) hostList[area]
+        priorityArea?.forEach { area ->
+            if (hostList.containsKey(area)) hostList[area]
         }
 
         if (hostList.isEmpty()) return null

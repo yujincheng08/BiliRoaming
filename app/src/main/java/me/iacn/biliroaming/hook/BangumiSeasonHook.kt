@@ -251,6 +251,8 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 put("episodes", newJsonResult?.optJSONArray("episodes"))
                 remove("limit")
                 put("modules", newJsonResult?.optJSONArray("modules"))
+                put("section", newJsonResult?.optJSONArray("section"))
+                put("prevueSection", newJsonResult?.optJSONArray("prevueSection"))
                 remove("dialog")
             } ?: newJsonResult
         }?.let {
