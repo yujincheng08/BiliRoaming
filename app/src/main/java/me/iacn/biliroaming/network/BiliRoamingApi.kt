@@ -88,7 +88,8 @@ object BiliRoamingApi {
                         "mobi_app" to "bstar_a",
                         "platform" to "android",
                         "s_locale" to "zh_SG",
-                        "c_locale" to "zh_SG"
+                        "c_locale" to "zh_SG",
+                        "lang" to "hans",
                 )))
                 .toString()
         return getContent(uri)?.replace("bstar://bangumi/season/", "https://bangumi.bilibili.com/anime/")
