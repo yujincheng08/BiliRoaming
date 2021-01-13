@@ -69,7 +69,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val stethoInterceptorRequestClass by Weak{ "com.facebook.stetho.okhttp3.StethoInterceptor\$OkHttpInspectorRequest".findClassOrNull(mClassLoader) }
 
 
-    val classesList by lazy { DexFile(AndroidAppHelper.currentApplication().packageCodePath).entries().toList() }
+    val classesList by lazy { mClassLoader.allClassesList() }
     private val accessKeyInstance by lazy { "com.bilibili.bangumi.ui.page.detail.pay.BangumiPayHelperV2\$accessKey\$2".findClass(mClassLoader)?.getStaticObjectField("INSTANCE") }
 
     @Suppress("UNCHECKED_CAST")

@@ -3,6 +3,7 @@
 package me.iacn.biliroaming.utils
 
 import android.content.res.XResources
+import dalvik.system.BaseDexClassLoader
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XC_MethodHook.MethodHookParam
 import de.robv.android.xposed.XC_MethodReplacement
@@ -11,6 +12,7 @@ import de.robv.android.xposed.XposedHelpers.*
 import de.robv.android.xposed.callbacks.XC_LayoutInflated
 import java.lang.reflect.Field
 import java.lang.reflect.Member
+import java.util.*
 
 typealias MethodHookParam = MethodHookParam
 
@@ -355,4 +357,15 @@ inline fun XResources.hookLayout(pkg: String, type: String, name: String, crossi
     } catch (e: Throwable) {
         Log.e(e)
     }
+}
+
+fun ClassLoader.allClassesList(): List<String> {
+    var classLoader = this
+    while (classLoader !is BaseDexClassLoader) {
+        if (classLoader.parent != null) classLoader = classLoader.parent
+        else return emptyList()
+    }
+    return classLoader.getObjectField("pathList")?.getObjectFieldAs<Array<Any>>("dexElements")?.flatMap {
+        it.getObjectField("dexFile")?.callMethodAs<Enumeration<String>>("entries")?.toList().orEmpty()
+    }.orEmpty()
 }
