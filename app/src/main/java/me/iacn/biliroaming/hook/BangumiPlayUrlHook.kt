@@ -390,7 +390,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     })
 
                 }
-            } else if (type == "FLV") {
+            } else if (type == "FLV" || type == "MP4") {
                 qualityMap?.forEach { quality ->
                     videoInfoBuilder.addStreamList(Stream.newBuilder().run {
                         streamInfo = StreamInfo.newBuilder().run {
