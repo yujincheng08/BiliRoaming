@@ -116,7 +116,8 @@ class CoverHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
         for (i in 0 until group.childCount) {
             val view = group.getChildAt(i)
-            if (view.javaClass.name.startsWith("tv.danmaku.biliplayerv2.widget.gesture")) {
+            if (view.javaClass.name.startsWith("tv.danmaku.biliplayerv2.widget.gesture")
+                    || view.javaClass.name.startsWith("tv.danmaku.biliplayerimpl.gesture")) {
                 view.setOnTouchListener(onTouchListener)
             }
         }
