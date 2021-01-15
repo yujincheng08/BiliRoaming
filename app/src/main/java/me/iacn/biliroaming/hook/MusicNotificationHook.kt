@@ -29,7 +29,7 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private var speed = 1f
     private var duration = 0L
     private var lastState = 0
-    private var lastSeekService: Any? = null
+    private var absMusicService: Any? = null
 
     private val getFlagMethod by lazy {
         instance.absMusicServiceClass?.declaredMethods?.firstOrNull {
@@ -131,8 +131,10 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     private val corePlayerClass by lazy {
         "tv.danmaku.biliplayerv2.service.core.PlayerCoreServiceV2".findClassOrNull(mClassLoader)
+                ?: "tv.danmaku.biliplayerimpl.core.PlayerCoreServiceV2".findClassOrNull(mClassLoader)
                 ?: instance.classesList.filter {
-                    it.startsWith("tv.danmaku.biliplayerv2.service")
+                    it.startsWith("tv.danmaku.biliplayerv2.service") ||
+                            it.startsWith("tv.danmaku.biliplayerimpl")
                 }.firstOrNull { c ->
                     c.findClass(mClassLoader)?.declaredFields?.filter {
                         it.type.name == "tv.danmaku.ijk.media.player.IMediaPlayer\$OnErrorListener"
@@ -250,11 +252,11 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
 
         rxMediaPlayerClass?.hookBeforeMethod("onSeekComplete", mediaPlayerInterface) {
-            lastSeekService?.callMethod(updateStateMethod?.name, lastState)
+            absMusicService?.callMethod(updateStateMethod?.name, lastState)
         }
 
         corePlayerOnSeekListenerClass?.hookBeforeMethod("onSeekComplete", mediaPlayerInterface) {
-            lastSeekService?.callMethod(updateStateMethod?.name, lastState)
+            absMusicService?.callMethod(updateStateMethod?.name, lastState)
         }
 
         mediaSessionCallbackClass?.hookAfterMethod("onSeekTo", Long::class.javaPrimitiveType) { param ->
@@ -275,7 +277,6 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 backgroundHelper ->
                     playerHelper?.getObjectField(backgroundPlayerField?.name)?.callMethod(corePlayerMethod?.name)?.callMethod(seekToMethod, position.toInt())
             }
-            lastSeekService = absMusicService
             absMusicService?.callMethod(updateStateMethod?.name, lastState)
         }
 
@@ -297,15 +298,17 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     }
                 }
             }
-            if (duration == position)
-                lastSeekService = param.thisObject
+        }
+
+        instance.absMusicServiceClass?.hookAfterAllConstructors { param ->
+            absMusicService = param.thisObject
         }
 
         instance.absMusicServiceClass?.hookAfterMethod("onDestroy") {
             duration = 0L
             position = 0L
             speed = 1.0f
-            lastSeekService = null
+            absMusicService = null
         }
 
         getFlagMethod?.hookAfterMethod { param ->
@@ -320,14 +323,16 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
         instance.musicNotificationHelperClass?.replaceMethod(instance.setNotification(), instance.notificationBuilderClass) {}
 
-        val hooker = fun(param: MethodHookParam) {
+        val hooker : Hooker = fun(param: MethodHookParam) {
             val old = param.result as Notification? ?: return
             val iconId = getId("icon")
             val notificationIconId = getId("notification_icon")
             val text1Id = getId("text1")
             val text2Id = getId("text2")
+            val text3Id = getId("text3")
             val notificationText1Id = getId("notification_text1")
             val notificationText2Id = getId("notification_text2")
+            val notificationText3Id = getId("notification_text3")
             val action1Id = getId("action1")
             val action2Id = getId("action2")
             val action3Id = getId("action3")
@@ -378,7 +383,8 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                         when (viewId) {
                                             text1Id, notificationText1Id -> setContentTitle(action.getObjectFieldAs<CharSequence>("value"))
                                             text2Id, notificationText2Id -> setContentText(action.getObjectFieldAs<CharSequence>("value"))
-                                            else -> Log.w("Unknown viewId $viewId")
+                                            text3Id, notificationText3Id -> setSubText(action.getObjectFieldAs<CharSequence>("value"))
+                                            else -> Log.w("Unknown viewId $viewId for setText")
                                         }
                                     "setImageResource" ->
                                         when (viewId) {
@@ -396,7 +402,7 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                                 setLargeIcon(largeIcon)
                                                 originIcon.recycle()
                                             }
-                                            else -> Log.w("Unknown viewId $viewId")
+                                            else -> Log.w("Unknown viewId $viewId for setImageReousrce")
                                         }
                                 }
                             }
@@ -409,7 +415,7 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                     action3Id, notificationAction3Id -> buttons[action3Id]?.intent = pendingIntent
                                     action4Id, notificationAction4Id -> buttons[action4Id]?.intent = pendingIntent
                                     stopId, notificationStopId -> buttons[stopId]?.intent = pendingIntent
-                                    else -> Log.w("Unknown viewId $viewId")
+                                    else -> Log.w("Unknown viewId $viewId for onClick")
                                 }
                             }
                         }
