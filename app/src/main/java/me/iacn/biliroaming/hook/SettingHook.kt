@@ -42,15 +42,16 @@ class SettingHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
         instance.homeUserCenterClass?.hookBeforeMethod(
                 instance.addSetting(), Context::class.java, List::class.java) { param ->
-            val item = instance.menuGroupItemClass?.new()
+            val lastGroup = (param.args[1] as MutableList<*>).lastOrNull()
                     ?: return@hookBeforeMethod
-            item.setIntField("id", 114514)
+            val itemList = lastGroup.getObjectFieldAs<MutableList<Any>?>("itemList")?: return@hookBeforeMethod
+            itemList.forEach { if(it.getIntField("id") == SETTING_ID) return@hookBeforeMethod }
+            val item = instance.menuGroupItemClass?.new() ?: return@hookBeforeMethod
+            item.setIntField("id", SETTING_ID)
                     .setObjectField("title", "哔哩漫游设置")
                     .setObjectField("icon", "https://i0.hdslb.com/bfs/album/276769577d2a5db1d9f914364abad7c5253086f6.png")
                     .setObjectField("uri", SETTING_URI)
-            val lastGroup = (param.args[1] as MutableList<*>).lastOrNull()
-                    ?: return@hookBeforeMethod
-            lastGroup.getObjectFieldAs<MutableList<Any>>("itemList").add(item)
+            itemList.add(item)
         }
 
         instance.settingRouterClass?.hookBeforeAllConstructors { param ->
@@ -78,5 +79,6 @@ class SettingHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     companion object {
         const val START_SETTING_KEY = "biliroaming_start_setting"
         const val SETTING_URI = "bilibili://biliroaming"
+        const val SETTING_ID = 114514
     }
 }
