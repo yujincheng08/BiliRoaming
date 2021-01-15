@@ -86,7 +86,7 @@ class CustomThemeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
         // No reset when not logged in
         instance.themeReset()?.let { its ->
-            val hooker: (MethodHookParam) -> Any? = { param ->
+            val replacer: Replacer = { param ->
                 if (Thread.currentThread().stackTrace.count { s ->
                             s.className == "tv.danmaku.bili.MainActivityV2" && s.methodName == "onPostCreate"
                         } > 0
@@ -94,7 +94,7 @@ class CustomThemeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     invokeOriginalMethod(param.method, param.thisObject, param.args)
             }
             its.split(";").map {
-                instance.themeProcessorClass?.replaceMethod(it, hooker = hooker)
+                instance.themeProcessorClass?.replaceMethod(it, replacer = replacer)
             }
         }
     }

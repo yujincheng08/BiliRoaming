@@ -25,7 +25,7 @@ class CoverHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     @SuppressLint("ClickableViewAccessibility")
-    val hooker = fun(param: MethodHookParam) {
+    val hooker : Hooker = { param ->
         val group = param.args[0] as ViewGroup
         val activity = param.thisObject.callMethodAs<Activity>("getActivity")
 

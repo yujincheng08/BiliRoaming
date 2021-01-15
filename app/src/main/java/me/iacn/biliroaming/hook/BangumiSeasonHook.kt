@@ -141,7 +141,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     param.result = (param.method as Method).returnType.callStaticMethod("parseFrom", serializedReply)
                 }
 
-        val urlHook: (MethodHookParam) -> Unit = fun(param) {
+        val urlHook: Hooker = fun(param) {
             val redirectUrl = param.thisObject.getObjectFieldAs<String?>("redirectUrl")
             if (redirectUrl.isNullOrEmpty()) return
             param.result = param.thisObject.callMethod("getUrl", redirectUrl)

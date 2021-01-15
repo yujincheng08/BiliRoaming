@@ -12,7 +12,7 @@ class WebViewHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private val x5WebViewClass by Weak { "com.tencent.smtt.sdk.WebView".findClassOrNull(mClassLoader) }
 
     private val hookedClient = HashSet<Class<*>>()
-    private val hooker: (MethodHookParam) -> Unit = { param ->
+    private val hooker: Hooker = { param ->
         try {
             param.args[0].callMethod("evaluateJavascript", """(function(){$js})()""".trimMargin(), null)
         } catch (e: Throwable) {

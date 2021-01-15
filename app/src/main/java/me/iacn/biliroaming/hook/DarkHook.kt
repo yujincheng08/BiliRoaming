@@ -13,7 +13,7 @@ class DarkHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
         if (!sPrefs.getBoolean("follow_dark", false)) return
         Log.d("startHook: Dark")
-        val hooker = { param: MethodHookParam ->
+        val hooker : Hooker = { param ->
             val dark = inDark
             val night = isNight
             if (night != null && dark != night) switch(param.thisObject as Activity)
