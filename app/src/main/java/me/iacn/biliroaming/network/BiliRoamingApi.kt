@@ -73,22 +73,28 @@ object BiliRoamingApi {
                 .encodedAuthority(BILI_SECTION_URL)
                 .appendQueryParameter("season_id", seasonId)
                 .toString()
-        val sectionJson = getContent(uri).toJSONObject().optJSONObject("result")
+        val sectionJson = getContent(uri).toJSONObject().optJSONObject("result") ?: return
+        val sections = sectionJson.optJSONArray("section") ?: return
 
-        var episodeId = 0
-        for (section in sectionJson?.optJSONArray("section").orEmpty()) {
-            section.put("episode_id", episodeId)
-            episodeId++
+        val episodeMap = result.optJSONArray("episodes")?.iterator()?.asSequence()?.map { it.optInt("ep_id") to it }?.toMap()
+                ?: return
+        for ((i, section) in sections.iterator().withIndex()) {
+            section.put("episode_id", i)
+            val newEpisodes = JSONArray()
+            for (episode in section.optJSONArray("episodes").orEmpty()) {
+                newEpisodes.put(episodeMap[episode.optInt("id")])
+            }
+            section.put("episodes", newEpisodes)
         }
-        result.put("section", sectionJson?.optJSONArray("section"))
-        result.optJSONObject("newest_ep")?.put("title",  result.optJSONObject("newest_ep")?.optString("index"))
-        result.put("new_ep", result.optJSONObject("newest_ep"))
+        result.put("section", sections)
+        result.optJSONObject("newest_ep")?.run {
+            put("title", optString("index"))
+            result.put("new_ep", this)
+        }
 
         val newEpisodes = JSONArray()
-        for (episode in result.optJSONArray("episodes").orEmpty()) {
-            if (episode.getInt("section_type") == 0 ) {
-                newEpisodes.put(episode)
-            }
+        for (episode in sectionJson.optJSONObject("main_section")?.optJSONArray("episodes").orEmpty()) {
+            newEpisodes.put(episodeMap[episode.optInt("id")])
         }
         result.put("episodes", newEpisodes)
     }
