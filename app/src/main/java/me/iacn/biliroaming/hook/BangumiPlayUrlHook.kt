@@ -427,7 +427,10 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
 
             builder.videoInfo = videoInfoBuilder.build()
-            builder.business = BusinessInfo.newBuilder().build()
+            builder.business = BusinessInfo.newBuilder().run {
+                isPreview = jsonContent.optInt("is_preview", 0) == 1
+                build()
+            }
             val serializedResponse = (if (isDownload) fixDownloadProto(builder) else builder.build()).toByteArray()
             return response.javaClass.callStaticMethod("parseFrom", serializedResponse)!!
         } catch (e: Throwable) {

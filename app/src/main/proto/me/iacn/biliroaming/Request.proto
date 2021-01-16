@@ -132,10 +132,43 @@ message VideoInfo {
     repeated DashItem dash_audio = 0x6;
 }
 
+message Event {
+
+}
+
+message Dialog{
+
+}
+
+message Toast{
+
+}
+
+message CouponInfo {
+    int64 code = 0x1;
+    string msg = 0x2;
+    string type = 0x3;
+}
+
+message EndPage {
+    Dialog dialog = 0x1;
+    bool hide = 0x2;
+}
+
+message ViewInfo {
+    Dialog dialog = 0x1;
+    Toast toast = 0x2;
+    CouponInfo coupon_info = 0x3;
+    repeated int64 demand_no_pay_epids = 0x4;
+    EndPage endpage = 0x5;
+}
+
 message PlayViewReply {
     VideoInfo video_info = 0x1;
     PlayAbilityConf play_conf = 0x2;
     BusinessInfo business = 0x3;
+    Event event = 0x4;
+    ViewInfo view_info = 0x5;
 }
 
 message ViewReq {
