@@ -37,6 +37,7 @@ object BiliRoamingApi {
     private const val BILI_REVIEW_URL = "api.bilibili.com/pgc/review/user"
     private const val BILI_USER_STATUS_URL = "api.bilibili.com/pgc/view/web/season/user/status"
     private const val BILI_MEDIA_URL = "bangumi.bilibili.com/view/web_api/media"
+    private const val BILI_SECTION_URL = "api.bilibili.com/pgc/web/season/section"
     private const val BILI_MODULE_TEMPLATE = "{\"data\": {},\"id\": 0,\"module_style\": {\"hidden\": 0,\"line\": 1},\"more\": \"查看更多\",\"style\": \"positive\",\"title\": \"选集\"}"
     private const val BILI_RIGHT_TEMPLATE = "{\"allow_demand\":0,\"allow_dm\":1,\"allow_download\":0,\"area_limit\":0}"
     private const val BILI_VIP_BADGE_TEMPLATE = "{\"bg_color\":\"#FB7299\",\"bg_color_night\":\"#BB5B76\",\"text\":\"会员\"}"
@@ -55,12 +56,41 @@ object BiliRoamingApi {
         seasonJson.optJSONObject("result")?.also {
             if (hidden) fixHiddenSeason(it)
             fixEpisodes(it)
+            if (hidden) fixSeason(it)
             fixPrevueSection(it)
             reconstructModules(it)
             fixRight(it)
             if (hidden) getExtraInfo(it, instance.accessKey)
         }
         return seasonJson.toString()
+    }
+
+    @JvmStatic
+    private fun fixSeason(result: JSONObject) {
+        val seasonId = result.optString("season_id")
+        val uri = Uri.Builder()
+                .scheme("https")
+                .encodedAuthority(BILI_SECTION_URL)
+                .appendQueryParameter("season_id", seasonId)
+                .toString()
+        val sectionJson = getContent(uri).toJSONObject().optJSONObject("result")
+
+        var episodeId = 0
+        for (section in sectionJson?.optJSONArray("section").orEmpty()) {
+            section.put("episode_id", episodeId)
+            episodeId++
+        }
+        result.put("section", sectionJson?.optJSONArray("section"))
+        result.optJSONObject("newest_ep")?.put("title",  result.optJSONObject("newest_ep")?.optString("index"))
+        result.put("new_ep", result.optJSONObject("newest_ep"))
+
+        val newEpisodes = JSONArray()
+        for (episode in result.optJSONArray("episodes").orEmpty()) {
+            if (episode.getInt("section_type") == 0 ) {
+                newEpisodes.put(episode)
+            }
+        }
+        result.put("episodes", newEpisodes)
     }
 
     @JvmStatic
