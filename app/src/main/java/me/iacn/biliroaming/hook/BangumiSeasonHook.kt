@@ -39,6 +39,16 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         "com.bilibili.bangumi.data.page.detail.entity.BangumiUniformSeason\$\$serializer".findClassOrNull(mClassLoader) != null
     }
 
+    private val isGson by lazy {
+        instance.bangumiUniformSeasonClass?.annotations?.fold(false) { last, it ->
+            last || it.annotationClass.java.name.startsWith("gsonannotator")
+        } ?: false
+    }
+
+    private val gson by lazy {
+        instance.gson()?.let { instance.gsonConverterClass?.getStaticObjectField(it) }
+    }
+
     private val serializerFeatures = lazy {
         val serializerFeatureClass = "com.alibaba.fastjson.serializer.SerializerFeature".findClass(mClassLoader)
                 ?: return@lazy null
@@ -50,15 +60,17 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         serializerFeatures
     }
 
-    private fun Any.toJson() = if (isSerializable)
-        jsonNonStrict.value?.callMethodAs<String>("stringify", javaClass.getStaticObjectField("Companion")?.callMethod("serializer"), this).toJSONObject()
-    else
-        instance.fastJsonClass?.callStaticMethodAs<String>("toJSONString", this, serializerFeatures.value).toJSONObject()
+    private fun Any.toJson() = when {
+        isSerializable -> jsonNonStrict.value?.callMethodAs<String>("stringify", javaClass.getStaticObjectField("Companion")?.callMethod("serializer"), this).toJSONObject()
+        isGson -> gson?.callMethodAs<String>("toJson", this)?.toJSONObject()
+        else -> instance.fastJsonClass?.callStaticMethodAs<String>("toJSONString", this, serializerFeatures.value).toJSONObject()
+    }
 
-    private fun Class<*>.fromJson(json: String) = if (isSerializable)
-        jsonNonStrict.value?.callMethod("parse", getStaticObjectField("Companion")?.callMethod("serializer"), json)
-    else
-        instance.fastJsonClass?.callStaticMethod(instance.fastJsonParse(), json, this)
+    private fun Class<*>.fromJson(json: String) = when {
+        isSerializable -> jsonNonStrict.value?.callMethod("parse", getStaticObjectField("Companion")?.callMethod("serializer"), json)
+        isGson -> gson?.callMethod("fromJson", json, this)
+        else -> instance.fastJsonClass?.callStaticMethod(instance.fastJsonParse(), json, this)
+    }
 
     private fun Class<*>.fromJson(json: JSONObject) = fromJson(json.toString())
 
@@ -215,7 +227,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     private fun fixBangumi(body: Any) {
-        val fieldName = if (isSerializable) "data" else "result"
+        val fieldName = if (isSerializable || isGson) "data" else "result"
         val result = body.getObjectField(fieldName)
         val code = body.getIntField("code")
         if (instance.bangumiUniformSeasonClass?.isInstance(result) != true && code != FAIL_CODE) return
@@ -239,7 +251,8 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         val cid = episode.optInt("cid").toString()
                         val epId = episode.optInt("id").toString()
                         lastSeasonInfo[cid] = epId
-                        lastSeasonInfo["ep_ids"] = lastSeasonInfo["ep_ids"]?.let { "$it;$epId" } ?: epId
+                        lastSeasonInfo["ep_ids"] = lastSeasonInfo["ep_ids"]?.let { "$it;$epId" }
+                                ?: epId
                     }
                 }
                 allowDownload(newJsonResult, false)

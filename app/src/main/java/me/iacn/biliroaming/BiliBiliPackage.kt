@@ -12,12 +12,10 @@ import android.util.SparseArray
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import dalvik.system.DexFile
 import me.iacn.biliroaming.utils.*
 import java.io.*
 import java.lang.reflect.Modifier
 import java.lang.reflect.ParameterizedType
-import java.net.HttpURLConnection
 
 /**
  * Created by iAcn on 2019/4/5
@@ -67,7 +65,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val checkBlueClass by Weak { mHookInfo["class_check_blue"]?.findClass(mClassLoader) }
     val kotlinJsonClass by Weak { "kotlinx.serialization.json.Json".findClassOrNull(mClassLoader) }
     val stethoInterceptorRequestClass by Weak{ "com.facebook.stetho.okhttp3.StethoInterceptor\$OkHttpInspectorRequest".findClassOrNull(mClassLoader) }
-
+    val gsonConverterClass by Weak { mHookInfo["class_gson_converter"]?.findClassOrNull(mClassLoader)}
 
     val classesList by lazy { mClassLoader.allClassesList() }
     private val accessKeyInstance by lazy { "com.bilibili.bangumi.ui.page.detail.pay.BangumiPayHelperV2\$accessKey\$2".findClass(mClassLoader)?.getStaticObjectField("INSTANCE") }
@@ -139,6 +137,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     fun isDrawerOpen() = mHookInfo["method_is_drawer_open"]
 
     fun paramsToMap() = mHookInfo["method_params_to_map"]
+
+    fun gson() = mHookInfo["field_gson"]
 
     private fun readHookInfo(context: Context): MutableMap<String, String?> {
         try {
@@ -274,11 +274,28 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             getMapIds()
         }.checkConjunctiveOrPut("class_bangumi_params_map", "method_params_to_map") {
             findBangumiParamsMap()
+        }.checkConjunctiveOrPut("class_gson_converter", "field_gson") {
+            findGson()
         }
 
         Log.d(mHookInfo.filterKeys { it != "map_ids" })
         Log.d("Check hook info completed: needUpdate = $needUpdate")
         return needUpdate
+    }
+
+    private fun findGson(): Array<String?> {
+        val gsonClass = "com.google.gson.Gson".findClassOrNull(mClassLoader) ?: return arrayOfNulls(2)
+        classesList.filter {
+            it.startsWith("com.bilibili.okretro.converter")
+        }.forEach { c->
+            c.findClassOrNull(mClassLoader)?.run {
+                declaredFields.forEach { f->
+                    if(Modifier.isStatic(f.modifiers) && f.type == gsonClass)
+                        return arrayOf(c, f.name)
+                }
+            }
+        }
+        return arrayOfNulls(2)
     }
 
     private fun findBangumiParamsMap(): Array<String?> {
