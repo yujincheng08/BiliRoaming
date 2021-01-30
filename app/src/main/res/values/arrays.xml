@@ -60,4 +60,9 @@
         <item>activity</item>
         <item>other_tabs</item>
     </string-array>
+    <string-array name="xposed_scope" >
+        <item>tv.danmaku.bili</item>
+        <item>com.bilibili.app.blue</item>
+        <item>com.bilibili.app.in</item>
+    </string-array>
 </resources>
