@@ -147,6 +147,11 @@
             android:title="@string/purify_mall_title" />
         <SwitchPreference
             android:dependency="hidden"
+            android:key="purify_channel"
+            android:summary="@string/purify_channel_summary"
+            android:title="@string/purify_channel_title" />
+        <SwitchPreference
+            android:dependency="hidden"
             android:key="purify_game"
             android:summary="@string/purify_game_summary"
             android:title="@string/purify_game_title" />
