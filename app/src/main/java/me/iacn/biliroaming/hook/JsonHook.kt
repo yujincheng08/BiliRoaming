@@ -38,6 +38,14 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         }
                     }
 
+                    if (sPrefs.getBoolean("purify_channel", false) &&
+                            sPrefs.getBoolean("hidden", false)) {
+                        data?.getObjectFieldAs<MutableList<*>?>("bottom")?.removeAll {
+                            it?.getObjectFieldAs<String?>("uri")?.startsWith("bilibili://pegasus/channel")
+                                    ?: false
+                        }
+                    }
+
                     if (sPrefs.getBoolean("drawer", false)) {
                         data?.getObjectFieldAs<MutableList<*>?>("bottom")?.removeAll {
                             it?.getObjectFieldAs<String?>("uri")?.startsWith("bilibili://user_center/mine")

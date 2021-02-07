@@ -29,6 +29,8 @@
     <string name="hidden_summary">打开后可以使用隐藏功能</string>
     <string name="purify_mall_summary">去除底部会员购</string>
     <string name="purify_mall_title">净化会员购</string>
+    <string name="purify_channel_summary">去除底部频道</string>
+    <string name="purify_channel_title">净化频道</string>
     <string name="purify_game_summary">去除首页右上角游戏中心</string>
     <string name="purify_game_title">净化游戏中心</string>
     <string name="purify_drawer_summary">净化【我的】页面（一刀切）</string>
