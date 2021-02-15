@@ -5,6 +5,10 @@ import me.iacn.biliroaming.utils.*
 import java.lang.reflect.Type
 
 class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
+    companion object {
+        lateinit var bottomItems: MutableList<BottomItem>
+    }
+
     override fun startHook() {
         Log.d("startHook: Json")
 
@@ -30,20 +34,17 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             when (result.javaClass) {
                 tabResponseClass -> {
                     val data = result.getObjectField("tabData")
-                    if (sPrefs.getBoolean("purify_mall", false) &&
-                            sPrefs.getBoolean("hidden", false)) {
-                        data?.getObjectFieldAs<MutableList<*>?>("bottom")?.removeAll {
-                            it?.getObjectFieldAs<String?>("uri")?.startsWith("bilibili://mall/home")
-                                    ?: false
-                        }
-                    }
 
-                    if (sPrefs.getBoolean("purify_channel", false) &&
-                            sPrefs.getBoolean("hidden", false)) {
-                        data?.getObjectFieldAs<MutableList<*>?>("bottom")?.removeAll {
-                            it?.getObjectFieldAs<String?>("uri")?.startsWith("bilibili://pegasus/channel")
-                                    ?: false
-                        }
+                    bottomItems = mutableListOf()
+                    val hideBottomItems = sPrefs.getStringSet("hide_bottom_items", mutableSetOf<String>())!!
+                    data?.getObjectFieldAs<MutableList<*>?>("bottom")?.removeAll {
+                        val uri = it?.getObjectFieldAs<String>("uri")
+                        val showing = uri !in hideBottomItems
+                        bottomItems.add(BottomItem(
+                                it?.getObjectFieldAs("name"),
+                                uri, showing
+                        ))
+                        showing.not()
                     }
 
                     if (sPrefs.getBoolean("drawer", false)) {
@@ -80,7 +81,7 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         val purifytabset = sPrefs.getStringSet("customize_home_tab", emptySet()).orEmpty()
                         tab?.removeAll {
                             it.getObjectFieldAs<String>("uri").run {
-                                when{
+                                when {
                                     this == "bilibili://live/home" -> purifytabset.contains("live")
                                     this == "bilibili://pegasus/promo" -> purifytabset.contains("promo")
                                     this == "bilibili://pegasus/hottopic" -> purifytabset.contains("hottopic")
@@ -195,4 +196,10 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
         }
     }
+
+    data class BottomItem(
+            val name: String?,
+            val uri: String?,
+            var showing: Boolean
+    )
 }
