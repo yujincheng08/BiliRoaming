@@ -22,8 +22,8 @@
         <Preference
             android:dependency="main_func"
             android:key="custom_server"
-            android:summary="@string/custom_server_summary"
-            android:title="@string/custom_server_title" />
+            android:title="@string/custom_server_title"
+            android:summary="@string/custom_server_summary" />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/cdn_category">
@@ -38,7 +38,8 @@
         <Preference
             android:key="test_upos"
             android:summary="@string/test_upos_summary"
-            android:title="@string/test_upos_title"></Preference>
+            android:title="@string/test_upos_title">
+        </Preference>
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/beautify_category">
@@ -139,11 +140,16 @@
             android:key="hidden"
             android:summary="@string/hidden_summary"
             android:title="@string/hidden_title" />
-        <Preference
+        <SwitchPreference
             android:dependency="hidden"
-            android:key="customize_bottom_bar"
-            android:summary="@string/customize_bottom_bar_summary"
-            android:title="@string/customize_bottom_bar_title" />
+            android:key="purify_mall"
+            android:summary="@string/purify_mall_summary"
+            android:title="@string/purify_mall_title" />
+        <SwitchPreference
+            android:dependency="hidden"
+            android:key="purify_channel"
+            android:summary="@string/purify_channel_summary"
+            android:title="@string/purify_channel_title" />
         <SwitchPreference
             android:dependency="hidden"
             android:key="purify_game"
