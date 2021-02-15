@@ -1,7 +1,6 @@
 package me.iacn.biliroaming.hook
 
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
-import me.iacn.biliroaming.model.BottomItem
 import me.iacn.biliroaming.utils.*
 import java.lang.reflect.Type
 
@@ -197,4 +196,10 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
         }
     }
+
+    data class BottomItem(
+            val name: String?,
+            val uri: String?,
+            var showing: Boolean
+    )
 }
