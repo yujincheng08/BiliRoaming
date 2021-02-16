@@ -24,6 +24,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.XposedInit.Companion.moduleRes
+import me.iacn.biliroaming.hook.JsonHook
 import me.iacn.biliroaming.hook.SplashHook
 import me.iacn.biliroaming.utils.*
 import java.io.ByteArrayOutputStream
@@ -56,6 +57,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("save_log").summary = moduleRes.getString(R.string.save_log_summary).format(logFile.absolutePath)
             findPreference("custom_server").onPreferenceClickListener = this
             findPreference("test_upos").onPreferenceClickListener = this
+            findPreference("customize_bottom_bar")?.onPreferenceClickListener = this
             checkCompatibleVersion()
             checkUpdate()
         }
@@ -255,12 +257,39 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             return true
         }
 
+        private fun onCustomizeBottomBarClick(): Boolean {
+            AlertDialog.Builder(activity).apply {
+                val bottomItems = JsonHook.bottomItems
+                setTitle(moduleRes.getString(R.string.customize_bottom_bar_title))
+                setPositiveButton(android.R.string.ok) { _, _ ->
+                    val hideItems = mutableSetOf<String>()
+                    bottomItems.forEach {
+                        if (it.showing.not()) {
+                            hideItems.add(it.uri ?: "")
+                        }
+                    }
+                    sPrefs.edit().putStringSet("hided_bottom_items", hideItems).apply()
+                }
+                setNegativeButton(android.R.string.cancel, null)
+                val names = Array(bottomItems.size) { i ->
+                    "${bottomItems[i].name} (${bottomItems[i].uri})"
+                }
+                val showings = BooleanArray(bottomItems.size) { i ->
+                    bottomItems[i].showing
+                }
+                setMultiChoiceItems(names, showings) { _, which, isChecked ->
+                    bottomItems[which].showing = isChecked
+                }
+            }.show()
+            return true
+        }
 
         override fun onPreferenceClick(preference: Preference) = when (preference.key) {
             "version" -> onVersionClick()
             "update" -> onUpdateClick()
             "custom_server" -> onCustomServerClick()
             "test_upos" -> onTestUposClick()
+            "customize_bottom_bar" -> onCustomizeBottomBarClick()
             else -> false
         }
     }
