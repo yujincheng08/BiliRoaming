@@ -33,7 +33,8 @@ class MiniProgramHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         }.joinToString("") {
                             it.joinToString("")
                         }
-                        bundle.putString("params_content", "https://b23.tv/av${av}/${query}")
+
+                        bundle.putString("params_content", "https://b23.tv/av${av}" + if (!query.isNullOrEmpty()) "/${query}" else "");
                     }
 
                 }
