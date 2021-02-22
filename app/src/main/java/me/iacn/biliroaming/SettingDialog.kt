@@ -122,7 +122,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 supportMusicNotificationHook = false
             val supportSplashHook = instance.brandSplashClass != null
             val supportDrawer = instance.homeUserCenterClass != null
-            val supportcustomplaybackspeed = instance.PlayerCoreServiceV2class != null
+            val supportcustomplaybackspeed = instance.playerCoreServiceV2class != null
             if (!supportcustomplaybackspeed)
                 disablePreference("default_playback_speed", moduleRes.getString(R.string.default_speed_in_speed_list))
             if (!supportDrawer)

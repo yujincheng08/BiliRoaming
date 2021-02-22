@@ -66,9 +66,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val kotlinJsonClass by Weak { "kotlinx.serialization.json.Json".findClassOrNull(mClassLoader) }
     val stethoInterceptorRequestClass by Weak{ "com.facebook.stetho.okhttp3.StethoInterceptor\$OkHttpInspectorRequest".findClassOrNull(mClassLoader) }
     val gsonConverterClass by Weak { mHookInfo["class_gson_converter"]?.findClassOrNull(mClassLoader)}
-    val PlayerOptionsPanelHolderclass by Weak { mHookInfo["class_player_options_panel_holder"]?.findClass(mClassLoader) }
-    val PlayerParamsBundleclass by Weak { mHookInfo["class_playerparams_bundle"]?.findClassOrNull(mClassLoader) }
-    val PlayerCoreServiceV2class by Weak { mHookInfo["class_player_core_service_v2"]?.findClassOrNull(mClassLoader) }
+    val playerOptionsPanelHolderclass by Weak { mHookInfo["class_player_options_panel_holder"]?.findClass(mClassLoader) }
+    val playerParamsBundleclass by Weak { mHookInfo["class_playerparams_bundle"]?.findClassOrNull(mClassLoader) }
+    val playerCoreServiceV2class by Weak { mHookInfo["class_player_core_service_v2"]?.findClassOrNull(mClassLoader) }
 
     val classesList by lazy { mClassLoader.allClassesList() }
     private val accessKeyInstance by lazy { "com.bilibili.bangumi.ui.page.detail.pay.BangumiPayHelperV2\$accessKey\$2".findClass(mClassLoader)?.getStaticObjectField("INSTANCE") }
@@ -299,19 +299,19 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     }
 
     private fun findgetdefaultspeed(): Array<String?> {
-        val PlayerCoreServiceV2class = "tv.danmaku.biliplayerimpl.core.PlayerCoreServiceV2".findClassOrNull(mClassLoader) ?: return arrayOfNulls(2)
-        PlayerCoreServiceV2class.declaredMethods.forEach { m->
+        val playerCoreServiceV2class = "tv.danmaku.biliplayerimpl.core.PlayerCoreServiceV2".findClassOrNull(mClassLoader) ?: return arrayOfNulls(2)
+        playerCoreServiceV2class.declaredMethods.forEach { m->
             if (Modifier.isPublic(m.modifiers) && m.parameterTypes.size == 1 && m.parameterTypes[0] == Boolean::class.java && m.returnType == Float::class.java)
-                return arrayOf(PlayerCoreServiceV2class.name, m.name)
+                return arrayOf(playerCoreServiceV2class.name, m.name)
         }
         return arrayOfNulls(2)
     }
 
     private fun findplayerparamsbundle(): Array<String?> {
-        val PlayerParamsBundleclass = "tv.danmaku.biliplayer.basic.context.c".findClassOrNull(mClassLoader) ?: return arrayOfNulls(2)
-        PlayerParamsBundleclass.declaredMethods.forEach { m->
+        val playerParamsBundleclass = "tv.danmaku.biliplayer.basic.context.c".findClassOrNull(mClassLoader) ?: return arrayOfNulls(2)
+        playerParamsBundleclass.declaredMethods.forEach { m->
             if (Modifier.isPublic(m.modifiers) && Modifier.isFinal(m.modifiers) && m.parameterTypes.size == 2 && m.parameterTypes[0] == String::class.java && m.parameterTypes[1] == Serializable::class.java)
-                return arrayOf(PlayerParamsBundleclass.name, m.name)
+                return arrayOf(playerParamsBundleclass.name, m.name)
         }
         return arrayOfNulls(2)
     }
