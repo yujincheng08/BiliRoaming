@@ -299,9 +299,18 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     }
 
     private fun findgetdefaultspeed(): Array<String?> {
-        val playerCoreServiceV2class = "tv.danmaku.biliplayerimpl.core.PlayerCoreServiceV2".findClassOrNull(mClassLoader) ?: return arrayOfNulls(2)
+        val playerCoreServiceV2class = "tv.danmaku.biliplayerv2.service.core.PlayerCoreServiceV2".findClassOrNull(mClassLoader)
+            ?: "tv.danmaku.biliplayerimpl.core.PlayerCoreServiceV2".findClassOrNull(mClassLoader)
+            ?: instance.classesList.filter {
+                it.startsWith("tv.danmaku.biliplayerv2.service") ||
+                        it.startsWith("tv.danmaku.biliplayerimpl")
+            }.firstOrNull { c ->
+                c.findClass(mClassLoader)?.declaredFields?.filter {
+                    it.type.name == "tv.danmaku.ijk.media.player.IMediaPlayer\$OnErrorListener"
+                }?.count()?.let { it > 0 } ?: false
+            }?.findClassOrNull(mClassLoader) ?: return arrayOfNulls(2)
         playerCoreServiceV2class.declaredMethods.forEach { m->
-            if (Modifier.isPublic(m.modifiers) && m.parameterTypes.size == 1 && m.parameterTypes[0] == Boolean::class.java && m.returnType == Float::class.java)
+            if (Modifier.isPublic(m.modifiers) && m.parameterTypes.size == 1 && m.parameterTypes[0] == Boolean::class.java && m.returnType == Float::class.javaPrimitiveType)
                 return arrayOf(playerCoreServiceV2class.name, m.name)
         }
         return arrayOfNulls(2)

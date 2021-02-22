@@ -129,22 +129,9 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         "tv.danmaku.ijk.media.player.IMediaPlayer".findClass(mClassLoader)
     }
 
-    private val corePlayerClass by lazy {
-        "tv.danmaku.biliplayerv2.service.core.PlayerCoreServiceV2".findClassOrNull(mClassLoader)
-                ?: "tv.danmaku.biliplayerimpl.core.PlayerCoreServiceV2".findClassOrNull(mClassLoader)
-                ?: instance.classesList.filter {
-                    it.startsWith("tv.danmaku.biliplayerv2.service") ||
-                            it.startsWith("tv.danmaku.biliplayerimpl")
-                }.firstOrNull { c ->
-                    c.findClass(mClassLoader)?.declaredFields?.filter {
-                        it.type.name == "tv.danmaku.ijk.media.player.IMediaPlayer\$OnErrorListener"
-                    }?.count()?.let { it > 0 } ?: false
-                }?.findClass(mClassLoader)
-    }
-
     private val corePlayerOnSeekListenerClass by lazy {
         instance.classesList.filter {
-            corePlayerClass?.name?.let { name -> it.startsWith(name) } ?: false
+            instance.playerCoreServiceV2class?.name?.let { name -> it.startsWith(name) } ?: false
         }.firstOrNull { c ->
             c.findClass(mClassLoader)?.interfaces?.map { it.name }
                     ?.contains("tv.danmaku.ijk.media.player.IMediaPlayer\$OnSeekCompleteListener")
@@ -154,19 +141,14 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     private val corePlayerMethod by lazy {
         backgroundPlayerField?.type?.declaredMethods?.firstOrNull {
-            corePlayerClass?.interfaces?.contains(it.returnType) ?: false
+            instance.playerCoreServiceV2class?.interfaces?.contains(it.returnType) ?: false
         }
     }
 
-    private val getSpeedMethod by lazy {
-        corePlayerClass?.declaredMethods?.firstOrNull {
-            it.returnType == Float::class.javaPrimitiveType && it.parameterTypes.size == 1 && it.parameterTypes[0] == Boolean::class.javaPrimitiveType
-        }?.name ?: "o"
-    }
 
     private val getDurationMethod by lazy {
         try {
-            corePlayerClass?.getDeclaredMethod("getDuration")?.name
+            instance.playerCoreServiceV2class?.getDeclaredMethod("getDuration")?.name
         } catch (e: Throwable) {
             "i"
         }
@@ -174,7 +156,7 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     private val getCurrentPositionMethod by lazy {
         try {
-            corePlayerClass?.getDeclaredMethod("getCurrentPosition")?.name
+            instance.playerCoreServiceV2class?.getDeclaredMethod("getCurrentPosition")?.name
         } catch (e: Throwable) {
             "j"
         }
@@ -182,7 +164,7 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     private val seekToMethod by lazy {
         try {
-            corePlayerClass?.getDeclaredMethod("seekTo", Int::class.javaPrimitiveType)?.name
+            instance.playerCoreServiceV2class?.getDeclaredMethod("seekTo", Int::class.javaPrimitiveType)?.name
         } catch (e: Throwable) {
             "a"
         }
@@ -292,9 +274,9 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 backgroundHelper -> playerHelper?.getObjectField(backgroundPlayerField?.name)?.callMethod(corePlayerMethod?.name)?.run {
                     position = callMethodAs<Int>(getCurrentPositionMethod).toLong()
                     speed = try {
-                        callMethodAs(getSpeedMethod, true)
+                        callMethodAs(instance.getdefaultspeed(), true)
                     } catch (e: Throwable) {
-                        callMethodAs(getSpeedMethod)
+                        callMethodAs(instance.getdefaultspeed())
                     }
                 }
             }
