@@ -66,6 +66,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val kotlinJsonClass by Weak { "kotlinx.serialization.json.Json".findClassOrNull(mClassLoader) }
     val stethoInterceptorRequestClass by Weak{ "com.facebook.stetho.okhttp3.StethoInterceptor\$OkHttpInspectorRequest".findClassOrNull(mClassLoader) }
     val gsonConverterClass by Weak { mHookInfo["class_gson_converter"]?.findClassOrNull(mClassLoader)}
+    val playerOptionsPanelHolderclass by Weak { mHookInfo["class_player_options_panel_holder"]?.findClass(mClassLoader) }
+    val playerParamsBundleclass by Weak { mHookInfo["class_playerparams_bundle"]?.findClassOrNull(mClassLoader) }
+    val playerCoreServiceV2class by Weak { mHookInfo["class_player_core_service_v2"]?.findClassOrNull(mClassLoader) }
 
     val classesList by lazy { mClassLoader.allClassesList() }
     private val accessKeyInstance by lazy { "com.bilibili.bangumi.ui.page.detail.pay.BangumiPayHelperV2\$accessKey\$2".findClass(mClassLoader)?.getStaticObjectField("INSTANCE") }
@@ -139,6 +142,12 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     fun paramsToMap() = mHookInfo["method_params_to_map"]
 
     fun gson() = mHookInfo["field_gson"]
+
+    fun playbackspeedlist() = mHookInfo["field_playback_speed_list"]
+
+    fun putSerializabletoPlayerParamsBundle() = mHookInfo["method_put_serializable_to_playerparams_bundle"]
+
+    fun getdefaultspeed() = mHookInfo["method_get_default_speed"]
 
     private fun readHookInfo(context: Context): MutableMap<String, String?> {
         try {
@@ -276,11 +285,59 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             findBangumiParamsMap()
         }.checkConjunctiveOrPut("class_gson_converter", "field_gson") {
             findGson()
+        }.checkConjunctiveOrPut("class_player_options_panel_holder", "field_playback_speed_list") {
+            findplaybackspeedlist()
+        }.checkConjunctiveOrPut("class_playerparams_bundle", "method_put_serializable_to_playerparams_bundle") {
+            findplayerparamsbundle()
+        }.checkConjunctiveOrPut("class_player_core_service_v2", "method_get_default_speed") {
+            findgetdefaultspeed()
         }
 
         Log.d(mHookInfo.filterKeys { it != "map_ids" })
         Log.d("Check hook info completed: needUpdate = $needUpdate")
         return needUpdate
+    }
+
+    private fun findgetdefaultspeed(): Array<String?> {
+        val playerCoreServiceV2class = "tv.danmaku.biliplayerv2.service.core.PlayerCoreServiceV2".findClassOrNull(mClassLoader)
+            ?: "tv.danmaku.biliplayerimpl.core.PlayerCoreServiceV2".findClassOrNull(mClassLoader)
+            ?: instance.classesList.filter {
+                it.startsWith("tv.danmaku.biliplayerv2.service") ||
+                        it.startsWith("tv.danmaku.biliplayerimpl")
+            }.firstOrNull { c ->
+                c.findClass(mClassLoader)?.declaredFields?.filter {
+                    it.type.name == "tv.danmaku.ijk.media.player.IMediaPlayer\$OnErrorListener"
+                }?.count()?.let { it > 0 } ?: false
+            }?.findClassOrNull(mClassLoader) ?: return arrayOfNulls(2)
+        playerCoreServiceV2class.declaredMethods.forEach { m->
+            if (Modifier.isPublic(m.modifiers) && m.parameterTypes.size == 1 && m.parameterTypes[0] == Boolean::class.java && m.returnType == Float::class.javaPrimitiveType)
+                return arrayOf(playerCoreServiceV2class.name, m.name)
+        }
+        return arrayOfNulls(2)
+    }
+
+    private fun findplayerparamsbundle(): Array<String?> {
+        val playerParamsBundleclass = "tv.danmaku.biliplayer.basic.context.c".findClassOrNull(mClassLoader) ?: return arrayOfNulls(2)
+        playerParamsBundleclass.declaredMethods.forEach { m->
+            if (Modifier.isPublic(m.modifiers) && Modifier.isFinal(m.modifiers) && m.parameterTypes.size == 2 && m.parameterTypes[0] == String::class.java && m.parameterTypes[1] == Serializable::class.java)
+                return arrayOf(playerParamsBundleclass.name, m.name)
+        }
+        return arrayOfNulls(2)
+    }
+
+    private fun findplaybackspeedlist(): Array<String?> {
+        classesList.filter {
+            it.startsWith("tv.danmaku.biliplayer.features.options.PlayerOptionsPanelHolder") ||
+                    it.startsWith("com.bilibili.playerbizcommon.widget.function.setting")
+            }.forEach { c->
+                c.findClassOrNull(mClassLoader)?.run {
+                    declaredFields.forEach { f->
+                        if(Modifier.isStatic(f.modifiers) && f.type == FloatArray::class.java)
+                            return arrayOf(c, f.name)
+                    }
+                }
+            }
+        return arrayOfNulls(2)
     }
 
     private fun findGson(): Array<String?> {
