@@ -64,8 +64,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val commentRpcClass by Weak { "com.bilibili.app.comm.comment2.model.rpc.CommentRpcKt".findClassOrNull(mClassLoader) }
     val checkBlueClass by Weak { mHookInfo["class_check_blue"]?.findClass(mClassLoader) }
     val kotlinJsonClass by Weak { "kotlinx.serialization.json.Json".findClassOrNull(mClassLoader) }
-    val stethoInterceptorRequestClass by Weak{ "com.facebook.stetho.okhttp3.StethoInterceptor\$OkHttpInspectorRequest".findClassOrNull(mClassLoader) }
-    val gsonConverterClass by Weak { mHookInfo["class_gson_converter"]?.findClassOrNull(mClassLoader)}
+    val stethoInterceptorRequestClass by Weak { "com.facebook.stetho.okhttp3.StethoInterceptor\$OkHttpInspectorRequest".findClassOrNull(mClassLoader) }
+    val gsonConverterClass by Weak { mHookInfo["class_gson_converter"]?.findClassOrNull(mClassLoader) }
     val playerOptionsPanelHolderclass by Weak { mHookInfo["class_player_options_panel_holder"]?.findClass(mClassLoader) }
     val playerParamsBundleclass by Weak { mHookInfo["class_playerparams_bundle"]?.findClassOrNull(mClassLoader) }
     val playerCoreServiceV2class by Weak { mHookInfo["class_player_core_service_v2"]?.findClassOrNull(mClassLoader) }
@@ -185,7 +185,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             return this
         }
 
-        fun <K, V> MutableMap<K, V>.checkOrPut(vararg keys: K, checkOption: String? = null, checker: (map: MutableMap<K, V>, keys: Array<out K>) -> Boolean, defaultValue: () -> Array<V>): MutableMap<K, V> {
+        fun <K, V> MutableMap<K, V>.checkOrPut(keys: Array<out K>, checkOption: String? = null, checker: (map: MutableMap<K, V>, keys: Array<out K>) -> Boolean, defaultValue: () -> Array<V>): MutableMap<K, V> {
             if (checkOption != null) {
                 if (!sPrefs.getBoolean(checkOption, false)) return this
             }
@@ -197,11 +197,11 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         }
 
         fun <K, V> MutableMap<K, V>.checkConjunctiveOrPut(vararg keys: K, defaultValue: () -> Array<V>) =
-                checkOrPut(keys = keys, checker = { m, ks -> ks.fold(true) { acc, k -> acc && m.containsKey(k) } }, defaultValue = defaultValue)
+                checkOrPut(keys, null, { m, ks -> ks.fold(true) { acc, k -> acc && m.containsKey(k) } }, defaultValue)
 
         @Suppress("unused")
         fun <K, V> MutableMap<K, V>.checkDisjunctiveOrPut(vararg keys: K, defaultValue: () -> Array<V>) =
-                checkOrPut(keys = keys, checker = { m, ks -> ks.fold(false) { acc, k -> acc || m.containsKey(k) } }, defaultValue = defaultValue)
+                checkOrPut(keys, null, { m, ks -> ks.fold(false) { acc, k -> acc || m.containsKey(k) } }, defaultValue)
 
         mHookInfo.checkOrPut("class_retrofit_response") {
             findRetrofitResponseClass()
@@ -286,11 +286,11 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         }.checkConjunctiveOrPut("class_gson_converter", "field_gson") {
             findGson()
         }.checkConjunctiveOrPut("class_player_options_panel_holder", "field_playback_speed_list") {
-            findplaybackspeedlist()
+            findPlaybackSpeedList()
         }.checkConjunctiveOrPut("class_playerparams_bundle", "method_put_serializable_to_playerparams_bundle") {
-            findplayerparamsbundle()
+            findPlayerParamsBundle()
         }.checkConjunctiveOrPut("class_player_core_service_v2", "method_get_default_speed") {
-            findgetdefaultspeed()
+            findGetDefaultSpeed()
         }
 
         Log.d(mHookInfo.filterKeys { it != "map_ids" })
@@ -298,56 +298,58 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         return needUpdate
     }
 
-    private fun findgetdefaultspeed(): Array<String?> {
+    private fun findGetDefaultSpeed(): Array<String?> {
         val playerCoreServiceV2class = "tv.danmaku.biliplayerv2.service.core.PlayerCoreServiceV2".findClassOrNull(mClassLoader)
-            ?: "tv.danmaku.biliplayerimpl.core.PlayerCoreServiceV2".findClassOrNull(mClassLoader)
-            ?: instance.classesList.filter {
-                it.startsWith("tv.danmaku.biliplayerv2.service") ||
-                        it.startsWith("tv.danmaku.biliplayerimpl")
-            }.firstOrNull { c ->
-                c.findClass(mClassLoader)?.declaredFields?.filter {
-                    it.type.name == "tv.danmaku.ijk.media.player.IMediaPlayer\$OnErrorListener"
-                }?.count()?.let { it > 0 } ?: false
-            }?.findClassOrNull(mClassLoader) ?: return arrayOfNulls(2)
-        playerCoreServiceV2class.declaredMethods.forEach { m->
+                ?: "tv.danmaku.biliplayerimpl.core.PlayerCoreServiceV2".findClassOrNull(mClassLoader)
+                ?: instance.classesList.filter {
+                    it.startsWith("tv.danmaku.biliplayerv2.service") ||
+                            it.startsWith("tv.danmaku.biliplayerimpl")
+                }.firstOrNull { c ->
+                    c.findClass(mClassLoader)?.declaredFields?.filter {
+                        it.type.name == "tv.danmaku.ijk.media.player.IMediaPlayer\$OnErrorListener"
+                    }?.count()?.let { it > 0 } ?: false
+                }?.findClassOrNull(mClassLoader) ?: return arrayOfNulls(2)
+        playerCoreServiceV2class.declaredMethods.forEach { m ->
             if (Modifier.isPublic(m.modifiers) && m.parameterTypes.size == 1 && m.parameterTypes[0] == Boolean::class.java && m.returnType == Float::class.javaPrimitiveType)
                 return arrayOf(playerCoreServiceV2class.name, m.name)
         }
         return arrayOfNulls(2)
     }
 
-    private fun findplayerparamsbundle(): Array<String?> {
-        val playerParamsBundleclass = "tv.danmaku.biliplayer.basic.context.c".findClassOrNull(mClassLoader) ?: return arrayOfNulls(2)
-        playerParamsBundleclass.declaredMethods.forEach { m->
+    private fun findPlayerParamsBundle(): Array<String?> {
+        val playerParamsBundleClass = "tv.danmaku.biliplayer.basic.context.c".findClassOrNull(mClassLoader)
+                ?: return arrayOfNulls(2)
+        playerParamsBundleClass.declaredMethods.forEach { m ->
             if (Modifier.isPublic(m.modifiers) && Modifier.isFinal(m.modifiers) && m.parameterTypes.size == 2 && m.parameterTypes[0] == String::class.java && m.parameterTypes[1] == Serializable::class.java)
-                return arrayOf(playerParamsBundleclass.name, m.name)
+                return arrayOf(playerParamsBundleClass.name, m.name)
         }
         return arrayOfNulls(2)
     }
 
-    private fun findplaybackspeedlist(): Array<String?> {
+    private fun findPlaybackSpeedList(): Array<String?> {
         classesList.filter {
             it.startsWith("tv.danmaku.biliplayer.features.options.PlayerOptionsPanelHolder") ||
                     it.startsWith("com.bilibili.playerbizcommon.widget.function.setting")
-            }.forEach { c->
-                c.findClassOrNull(mClassLoader)?.run {
-                    declaredFields.forEach { f->
-                        if(Modifier.isStatic(f.modifiers) && f.type == FloatArray::class.java)
-                            return arrayOf(c, f.name)
-                    }
+        }.forEach { c ->
+            c.findClassOrNull(mClassLoader)?.run {
+                declaredFields.forEach { f ->
+                    if (Modifier.isStatic(f.modifiers) && f.type == FloatArray::class.java)
+                        return arrayOf(c, f.name)
                 }
             }
+        }
         return arrayOfNulls(2)
     }
 
     private fun findGson(): Array<String?> {
-        val gsonClass = "com.google.gson.Gson".findClassOrNull(mClassLoader) ?: return arrayOfNulls(2)
+        val gsonClass = "com.google.gson.Gson".findClassOrNull(mClassLoader)
+                ?: return arrayOfNulls(2)
         classesList.filter {
             it.startsWith("com.bilibili.okretro.converter") || it.startsWith("com.bilibili.api.utils")
-        }.forEach { c->
+        }.forEach { c ->
             c.findClassOrNull(mClassLoader)?.run {
-                declaredFields.forEach { f->
-                    if(Modifier.isStatic(f.modifiers) && f.type == gsonClass)
+                declaredFields.forEach { f ->
+                    if (Modifier.isStatic(f.modifiers) && f.type == gsonClass)
                         return arrayOf(c, f.name)
                 }
             }
@@ -415,7 +417,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         return arrayOfNulls(2)
     }
 
-    private fun findDrawerMethod() = try {
+    private fun findDrawerMethod(): Array<String?> = try {
         arrayOf(drawerLayoutClass?.getMethod("openDrawer", View::class.java, Boolean::class.javaPrimitiveType)?.name,
                 drawerLayoutClass?.getMethod("closeDrawer", View::class.java, Boolean::class.javaPrimitiveType)?.name)
     } catch (e: Throwable) {
@@ -444,7 +446,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         c.findClassOrNull(mClassLoader)?.superclass == Service::class.java
     }
 
-    private fun findSetNotificationMethods() = musicNotificationHelperClass?.declaredMethods?.lastOrNull {
+    private fun findSetNotificationMethods(): Array<String?> = musicNotificationHelperClass?.declaredMethods?.lastOrNull {
         it.parameterTypes.size == 1 && it.parameterTypes[0].name.run {
             startsWith("android.support.v4.app") ||
                     startsWith("androidx.core.app") ||
@@ -527,7 +529,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         val okHttpRequestClass = stethoInterceptorRequestClass?.getDeclaredField("mRequest")?.type
         for (constructor in retrofitResponseClass?.declaredConstructors.orEmpty()) {
             for (field in constructor.parameterTypes[0].declaredFields) {
-                if(field.type == okHttpRequestClass) return field.name
+                if (field.type == okHttpRequestClass) return field.name
             }
         }
         return null
