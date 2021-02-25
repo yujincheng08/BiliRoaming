@@ -343,7 +343,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     private fun findGson(): Array<String?> {
         val gsonClass = "com.google.gson.Gson".findClassOrNull(mClassLoader) ?: return arrayOfNulls(2)
         classesList.filter {
-            it.startsWith("com.bilibili.okretro.converter")
+            it.startsWith("com.bilibili.okretro.converter") || it.startsWith("com.bilibili.api.utils")
         }.forEach { c->
             c.findClassOrNull(mClassLoader)?.run {
                 declaredFields.forEach { f->
