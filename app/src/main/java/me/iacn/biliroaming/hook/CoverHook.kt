@@ -79,10 +79,10 @@ class CoverHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             put(MediaStore.MediaColumns.DISPLAY_NAME, filename)
                             put(MediaStore.MediaColumns.MIME_TYPE, "image/png")
                             put(MediaStore.MediaColumns.TITLE, title)
-                            put(MediaStore.Video.Media.DATE_ADDED, System.currentTimeMillis() / 1000)
-                            put(MediaStore.Video.Media.DATE_MODIFIED, System.currentTimeMillis() / 1000)
+                            put(MediaStore.MediaColumns.DATE_ADDED, System.currentTimeMillis() / 1000)
+                            put(MediaStore.MediaColumns.DATE_MODIFIED, System.currentTimeMillis() / 1000)
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                                put(MediaStore.Video.Media.DATE_TAKEN, System.currentTimeMillis())
+                                put(MediaStore.MediaColumns.DATE_TAKEN, System.currentTimeMillis())
                                 put(MediaStore.MediaColumns.RELATIVE_PATH, relativePath)
                             } else {
                                 val path = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "bilibili")
@@ -91,15 +91,15 @@ class CoverHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             }
                         }
                         val resolver = activity.contentResolver
-                        val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)!!
+                        val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
                         try {
-                            resolver.openOutputStream(uri).use { stream ->
+                            resolver.openOutputStream(uri!!).use { stream ->
                                 it.compress(Bitmap.CompressFormat.PNG, 100, stream)
                             }
                             Log.toast("保存封面成功到\n$relativePath${File.separator}$filename.png", true)
                         } catch (e: Throwable) {
                             Log.e(e)
-                            Log.toast("保存封面失败，请检查权限", true)
+                            Log.toast("保存封面失败，可能已经保存或未授予权限", true)
                         }
                     } ?: run {
                         Log.toast("获取封面失败", true)

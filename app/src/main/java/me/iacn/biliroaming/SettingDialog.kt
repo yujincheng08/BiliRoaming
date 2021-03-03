@@ -24,6 +24,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.XposedInit.Companion.moduleRes
+import me.iacn.biliroaming.hook.JsonHook
 import me.iacn.biliroaming.hook.SplashHook
 import me.iacn.biliroaming.utils.*
 import java.io.ByteArrayOutputStream
@@ -38,6 +39,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
     class PrefsFragment : PreferenceFragment(), Preference.OnPreferenceChangeListener, Preference.OnPreferenceClickListener {
         private val scope = MainScope()
         private lateinit var prefs: SharedPreferences
+        private lateinit var biliprefs: SharedPreferences
         private var counter: Int = 0
 
         override fun onCreate(savedInstanceState: Bundle?) {
@@ -45,6 +47,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             preferenceManager.sharedPreferencesName = "biliroaming"
             addPreferencesFromResource(R.xml.prefs_setting)
             prefs = preferenceManager.sharedPreferences
+            biliprefs = currentContext.getSharedPreferences(packageName+"_preferences", Context.MODE_MULTI_PROCESS)
             if (!prefs.getBoolean("hidden", false)) {
                 val hiddenGroup = findPreference("hidden_group") as PreferenceCategory
                 preferenceScreen.removePreference(hiddenGroup)
@@ -56,6 +59,10 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("save_log").summary = moduleRes.getString(R.string.save_log_summary).format(logFile.absolutePath)
             findPreference("custom_server").onPreferenceClickListener = this
             findPreference("test_upos").onPreferenceClickListener = this
+            findPreference("customize_bottom_bar")?.onPreferenceClickListener = this
+            findPreference("playback_speed_override").onPreferenceChangeListener = this
+            findPreference("default_playback_speed").onPreferenceChangeListener = this
+            findPreference("customize_danmaku_config").onPreferenceClickListener = this
             checkCompatibleVersion()
             checkUpdate()
         }
@@ -115,6 +122,9 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 supportMusicNotificationHook = false
             val supportSplashHook = instance.brandSplashClass != null
             val supportDrawer = instance.homeUserCenterClass != null
+            val supportcustomplaybackspeed = instance.playerCoreServiceV2class != null
+            if (!supportcustomplaybackspeed)
+                disablePreference("default_playback_speed", moduleRes.getString(R.string.default_speed_in_speed_list))
             if (!supportDrawer)
                 disablePreference("drawer")
             if (!supportSplashHook) {
@@ -158,6 +168,16 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 "custom_splash_logo" -> {
                     if (newValue as Boolean)
                         selectImage(LOGO_SELECTION)
+                }
+                "playback_speed_override" -> {
+                    if (newValue == "") {
+                        preference.editor.remove(preference.key).apply()
+                    }
+                }
+                "default_playback_speed"  -> {
+                    if (newValue == "") {
+                        preference.editor.remove(preference.key).apply()
+                    }
                 }
             }
             return true
@@ -255,12 +275,73 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             return true
         }
 
+        private fun onCustomizeBottomBarClick(): Boolean {
+            AlertDialog.Builder(activity).apply {
+                val bottomItems = JsonHook.bottomItems
+                setTitle(moduleRes.getString(R.string.customize_bottom_bar_title))
+                setPositiveButton(android.R.string.ok) { _, _ ->
+                    val hideItems = mutableSetOf<String>()
+                    bottomItems.forEach {
+                        if (it.showing.not()) {
+                            hideItems.add(it.uri ?: "")
+                        }
+                    }
+                    sPrefs.edit().putStringSet("hided_bottom_items", hideItems).apply()
+                }
+                setNegativeButton(android.R.string.cancel, null)
+                val names = Array(bottomItems.size) { i ->
+                    "${bottomItems[i].name} (${bottomItems[i].uri})"
+                }
+                val showings = BooleanArray(bottomItems.size) { i ->
+                    bottomItems[i].showing
+                }
+                setMultiChoiceItems(names, showings) { _, which, isChecked ->
+                    bottomItems[which].showing = isChecked
+                }
+            }.show()
+            return true
+        }
+
+        private fun oncustomizedanmakuconfigclick(): Boolean {
+            AlertDialog.Builder(activity).run {
+                val layout = moduleRes.getLayout(R.layout.cutomize_danmaku_config_dialog)
+                val inflater = LayoutInflater.from(context)
+                val view = inflater.inflate(layout, null)
+                val editTexts = arrayOf(
+                    view.findViewById<EditText>(R.id.danmaku_textsize_scale_factor),
+                    view.findViewById(R.id.danmaku_stroke_width_scaling),
+                    view.findViewById(R.id.danmaku_duration_factor),
+                    view.findViewById(R.id.danmaku_alpha_factor),
+                    view.findViewById(R.id.danmaku_max_on_screen),
+                    view.findViewById(R.id.danmaku_screen_domain))
+                editTexts.filter {
+                    biliprefs.contains(it.tag.toString())
+                }.forEach {
+                    it.setText(biliprefs.getFloat(it.tag.toString(), it.hint.toString().toFloat()).toString())
+                }
+                setTitle(moduleRes.getString(R.string.customize_danmaku_config_title))
+                setView(view)
+                setPositiveButton("确定") { _, _ ->
+                    editTexts.forEach {
+                        val value = it.text.toString()
+                        if (value.isNotEmpty())
+                            biliprefs.edit().putFloat(it.tag.toString(), value.toFloat()).apply()
+                        else
+                            biliprefs.edit().remove(it.tag.toString()).apply()
+                    }
+                }
+                show()
+            }
+            return true
+        }
 
         override fun onPreferenceClick(preference: Preference) = when (preference.key) {
             "version" -> onVersionClick()
             "update" -> onUpdateClick()
             "custom_server" -> onCustomServerClick()
             "test_upos" -> onTestUposClick()
+            "customize_bottom_bar" -> onCustomizeBottomBarClick()
+            "customize_danmaku_config" -> oncustomizedanmakuconfigclick()
             else -> false
         }
     }

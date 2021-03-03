@@ -58,6 +58,7 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                     }")
                     BiliBiliPackage(lpparam.classLoader, param.args[0] as Context)
                     startHook(HintHook(lpparam.classLoader))
+                    startHook(ijkhook(lpparam.classLoader))
                     startHook(BangumiSeasonHook(lpparam.classLoader))
                     startHook(BangumiPlayUrlHook(lpparam.classLoader))
                     startHook(CustomThemeHook(lpparam.classLoader))

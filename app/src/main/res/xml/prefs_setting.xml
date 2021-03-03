@@ -22,8 +22,8 @@
         <Preference
             android:dependency="main_func"
             android:key="custom_server"
-            android:title="@string/custom_server_title"
-            android:summary="@string/custom_server_summary" />
+            android:summary="@string/custom_server_summary"
+            android:title="@string/custom_server_title" />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/cdn_category">
@@ -38,8 +38,7 @@
         <Preference
             android:key="test_upos"
             android:summary="@string/test_upos_summary"
-            android:title="@string/test_upos_title">
-        </Preference>
+            android:title="@string/test_upos_title"></Preference>
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/beautify_category">
@@ -118,6 +117,26 @@
             android:key="get_cover"
             android:summary="@string/get_cover_summary"
             android:title="@string/get_cover_title" />
+
+        <EditTextPreference
+            android:key="playback_speed_override"
+            android:summary="@string/playback_speed_override_summary"
+            android:title="@string/playback_speed_override_title" />
+
+        <EditTextPreference
+            android:key="default_playback_speed"
+            android:summary="@string/default_playback_speed_summary"
+            android:title="@string/default_playback_speed_title" />
+
+        <SwitchPreference
+            android:key="standalone_danmaku_speed"
+            android:summary="@string/standalone_danmaku_speed_summary"
+            android:title="@string/standalone_danmaku_speed_title"/>
+
+        <Preference
+            android:key="customize_danmaku_config"
+            android:summary="@string/customize_danmaku_config_summary"
+            android:title="@string/customize_danmaku_config_title" />
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/setting_category">
         <SwitchPreference
@@ -140,11 +159,11 @@
             android:key="hidden"
             android:summary="@string/hidden_summary"
             android:title="@string/hidden_title" />
-        <SwitchPreference
+        <Preference
             android:dependency="hidden"
-            android:key="purify_mall"
-            android:summary="@string/purify_mall_summary"
-            android:title="@string/purify_mall_title" />
+            android:key="customize_bottom_bar"
+            android:summary="@string/customize_bottom_bar_summary"
+            android:title="@string/customize_bottom_bar_title" />
         <SwitchPreference
             android:dependency="hidden"
             android:key="purify_game"

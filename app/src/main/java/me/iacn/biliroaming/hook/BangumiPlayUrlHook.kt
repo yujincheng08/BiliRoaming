@@ -183,7 +183,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
         }
 
-        "com.bapis.bilibili.community.service.dm.v1.DMMoss".hookAfterMethod(mClassLoader, "dmView", "com.bapis.bilibili.community.service.dm.v1.DmViewReq") { param ->
+        "com.bapis.bilibili.community.service.dm.v1.DMMoss".findClassOrNull(mClassLoader)?.hookAfterMethod("dmView", "com.bapis.bilibili.community.service.dm.v1.DmViewReq") { param ->
             val oid = param.args[0].callMethod("getOid").toString()
             // TODO: For cached bangumi's, we don't know if they need to get subtitles from thailand api.
             //       Actually, when watch_platform==1, it should use subtitles,
@@ -427,7 +427,10 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
 
             builder.videoInfo = videoInfoBuilder.build()
-            builder.business = BusinessInfo.newBuilder().build()
+            builder.business = BusinessInfo.newBuilder().run {
+                isPreview = jsonContent.optInt("is_preview", 0) == 1
+                build()
+            }
             val serializedResponse = (if (isDownload) fixDownloadProto(builder) else builder.build()).toByteArray()
             return response.javaClass.callStaticMethod("parseFrom", serializedResponse)!!
         } catch (e: Throwable) {

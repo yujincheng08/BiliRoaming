@@ -40,7 +40,7 @@ object BiliRoamingApi {
     private const val BILI_SECTION_URL = "api.bilibili.com/pgc/web/season/section"
     private const val BILI_MODULE_TEMPLATE = "{\"data\": {},\"id\": 0,\"module_style\": {\"hidden\": 0,\"line\": 1},\"more\": \"查看更多\",\"style\": \"positive\",\"title\": \"选集\"}"
     private const val BILI_RIGHT_TEMPLATE = "{\"allow_demand\":0,\"allow_dm\":1,\"allow_download\":0,\"area_limit\":0}"
-    private const val BILI_VIP_BADGE_TEMPLATE = "{\"bg_color\":\"#FB7299\",\"bg_color_night\":\"#BB5B76\",\"text\":\"会员\"}"
+    private const val BILI_VIP_BADGE_TEMPLATE = "{\"bg_color\":\"#FB7299\",\"bg_color_night\":\"#BB5B76\",\"text\":\"%s\"}"
 
     private const val PATH_PLAYURL = "/pgc/player/api/playurl"
     private const val THAILAND_PATH_PLAYURL = "/intl/gateway/v2/ogv/playurl"
@@ -56,7 +56,7 @@ object BiliRoamingApi {
         seasonJson.optJSONObject("result")?.also {
             if (hidden) fixHiddenSeason(it)
             fixEpisodes(it)
-            if (hidden) fixSeason(it)
+            if (hidden) fixSection(it)
             fixPrevueSection(it)
             reconstructModules(it)
             fixRight(it)
@@ -66,29 +66,35 @@ object BiliRoamingApi {
     }
 
     @JvmStatic
-    private fun fixSeason(result: JSONObject) {
+    private fun fixSection(result: JSONObject) {
         val seasonId = result.optString("season_id")
         val uri = Uri.Builder()
                 .scheme("https")
                 .encodedAuthority(BILI_SECTION_URL)
                 .appendQueryParameter("season_id", seasonId)
                 .toString()
-        val sectionJson = getContent(uri).toJSONObject().optJSONObject("result")
+        val sectionJson = getContent(uri).toJSONObject().optJSONObject("result") ?: return
+        val sections = sectionJson.optJSONArray("section") ?: return
 
-        var episodeId = 0
-        for (section in sectionJson?.optJSONArray("section").orEmpty()) {
-            section.put("episode_id", episodeId)
-            episodeId++
+        val episodeMap = result.optJSONArray("episodes")?.iterator()?.asSequence()?.map { it.optInt("ep_id") to it }?.toMap()
+                ?: return
+        for ((i, section) in sections.iterator().withIndex()) {
+            section.put("episode_id", i)
+            val newEpisodes = JSONArray()
+            for (episode in section.optJSONArray("episodes").orEmpty()) {
+                newEpisodes.put(episodeMap[episode.optInt("id")])
+            }
+            section.put("episodes", newEpisodes)
         }
-        result.put("section", sectionJson?.optJSONArray("section"))
-        result.optJSONObject("newest_ep")?.put("title",  result.optJSONObject("newest_ep")?.optString("index"))
-        result.put("new_ep", result.optJSONObject("newest_ep"))
+        result.put("section", sections)
+        result.optJSONObject("newest_ep")?.run {
+            put("title", optString("index"))
+            result.put("new_ep", this)
+        }
 
         val newEpisodes = JSONArray()
-        for (episode in result.optJSONArray("episodes").orEmpty()) {
-            if (episode.getInt("section_type") == 0 ) {
-                newEpisodes.put(episode)
-            }
+        for (episode in sectionJson.optJSONObject("main_section")?.optJSONArray("episodes").orEmpty()) {
+            newEpisodes.put(episodeMap[episode.optInt("id")])
         }
         result.put("episodes", newEpisodes)
     }
@@ -135,6 +141,7 @@ object BiliRoamingApi {
             episode.put("status", episode.optInt("episode_status"))
         }
     }
+
     @JvmStatic
     private fun fixPrevueSection(result: JSONObject) {
         result.put("prevueSection", result.optJSONObject("section"))
@@ -150,8 +157,8 @@ object BiliRoamingApi {
             }
             if (episode.optInt("badge_type", -1) == 0)
                 episode.remove("badge_info")
-            if (episode.optString("badge") == "会员")
-                episode.put("badge_info", JSONObject(BILI_VIP_BADGE_TEMPLATE))
+            if (episode.optString("badge") != "受限")
+                episode.put("badge_info", JSONObject(BILI_VIP_BADGE_TEMPLATE.format(episode.optString("badge"))))
         }
         for (section in result.optJSONArray("section").orEmpty()) {
             fixEpisodes(section)
