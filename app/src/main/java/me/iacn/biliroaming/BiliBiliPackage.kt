@@ -301,7 +301,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     private fun findGetDefaultSpeed(): Array<String?> {
         val playerCoreServiceV2class = "tv.danmaku.biliplayerv2.service.core.PlayerCoreServiceV2".findClassOrNull(mClassLoader)
                 ?: "tv.danmaku.biliplayerimpl.core.PlayerCoreServiceV2".findClassOrNull(mClassLoader)
-                ?: instance.classesList.filter {
+                ?: classesList.filter {
                     it.startsWith("tv.danmaku.biliplayerv2.service") ||
                             it.startsWith("tv.danmaku.biliplayerimpl")
                 }.firstOrNull { c ->
@@ -465,7 +465,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     }
 
     private fun findGarbHelper(): Array<String?> {
-        val garbClass = "com.bilibili.lib.ui.garb.Garb".findClass(mClassLoader)
+        val garbClass = "com.bilibili.lib.ui.garb.Garb".findClassOrNull(mClassLoader)
+            ?: return arrayOfNulls(2)
         classesList.filter {
             it.startsWith("com.bilibili.lib.ui.garb")
         }.forEach { c ->
