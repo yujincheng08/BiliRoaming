@@ -46,13 +46,15 @@ object BiliRoamingApi {
     private const val THAILAND_PATH_PLAYURL = "/intl/gateway/v2/ogv/playurl"
     private const val THAILAND_PATH_SUBTITLES = "/intl/gateway/v2/app/subtitle"
     private const val THAILAND_PATH_SEARCH = "/intl/gateway/v2/app/search/type"
+    private const val THAILAND_PATH_SEASON = "/intl/gateway/v2/ogv/view/app/season"
 
     @JvmStatic
     fun getSeason(info: Map<String, String?>, hidden: Boolean): String? {
         val builder = Uri.Builder()
         builder.scheme("https").encodedAuthority(if (hidden) BILI_HIDDEN_SEASON_URL else BILI_SEASON_URL)
         info.filter { !it.value.isNullOrEmpty() }.forEach { builder.appendQueryParameter(it.key, it.value) }
-        val seasonJson = getContent(builder.toString())?.toJSONObject() ?: return null
+        var seasonJson = getContent(builder.toString())?.toJSONObject() ?: return null
+        var fixThailandSeasonFlag = false
         seasonJson.optJSONObject("result")?.also {
             if (hidden) fixHiddenSeason(it)
             fixEpisodes(it)
@@ -61,6 +63,18 @@ object BiliRoamingApi {
             reconstructModules(it)
             fixRight(it)
             if (hidden) getExtraInfo(it, instance.accessKey)
+            if (it.optJSONArray("episodes")?.length() == 0 || it.optInt("total_ep") == -1) {
+                fixThailandSeasonFlag = true
+            }
+        }
+        val thUrl = sPrefs.getString("th_server", null)
+        if (thUrl != null && (seasonJson.optInt("code") == -404 || fixThailandSeasonFlag )) {
+            builder.scheme("https").encodedAuthority(thUrl + THAILAND_PATH_SEASON)
+            builder.appendQueryParameter("s_locale", "zh_SG")
+            seasonJson = getContent(builder.toString())?.toJSONObject() ?: return null
+            seasonJson.optJSONObject("result")?.also {
+                fixThailandSeason(it, info["season_id"]?: "0")
+            }
         }
         return seasonJson.toString()
     }
@@ -428,6 +442,38 @@ object BiliRoamingApi {
         output.put("dash", dash)
 
         return output.toString()
+    }
+
+    @JvmStatic
+    fun fixThailandSeason(result: JSONObject, season_id: String) {
+        val input_episodes = result.optJSONArray("modules")?.optJSONObject(0)?.optJSONObject("data")?.optJSONArray("episodes")
+        result.apply {
+            put("actors", result.optJSONObject("actor")?.optString("info"))
+            put("is_paster_ads", 0)
+            put("jp_title", result.optJSONObject("origin_name"))
+            put("newest_ep", result.optJSONObject("new_ep"))
+            put("season_status", result.optInt("status"))
+            put("season_title", result.optString("title"))
+            put("total_ep", input_episodes?.length())
+            put("season_id", season_id.toInt())
+        }
+        result.optJSONObject("rights")?.put("watch_platform", 1)
+
+        val episodes = JSONArray()
+        for (ep in input_episodes.orEmpty()) {
+            ep.put("episode_status", ep.optInt("status"))
+            ep.put("ep_id", ep.optInt("id"))
+            ep.put("index", ep.optString("title"))
+            ep.put("index_title", ep.optString("long_title"))
+            episodes.put(ep)
+        }
+        result.put("episodes",episodes)
+
+        val style = JSONArray()
+        for (i in result.optJSONArray("styles").orEmpty()) {
+            style.put(i.optJSONObject("name"))
+        }
+        result.put("style", style)
     }
 
     @JvmStatic
