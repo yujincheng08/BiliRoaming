@@ -73,7 +73,7 @@ object BiliRoamingApi {
             builder.appendQueryParameter("s_locale", "zh_SG")
             seasonJson = getContent(builder.toString())?.toJSONObject() ?: return null
             seasonJson.optJSONObject("result")?.also {
-                fixThailandSeason(it, info["season_id"]?: "0")
+                fixThailandSeason(it)
             }
         }
         return seasonJson.toString()
@@ -445,17 +445,16 @@ object BiliRoamingApi {
     }
 
     @JvmStatic
-    fun fixThailandSeason(result: JSONObject, season_id: String) {
+    fun fixThailandSeason(result: JSONObject) {
         val input_episodes = result.optJSONArray("modules")?.optJSONObject(0)?.optJSONObject("data")?.optJSONArray("episodes")
         result.apply {
             put("actors", result.optJSONObject("actor")?.optString("info"))
             put("is_paster_ads", 0)
-            put("jp_title", result.optJSONObject("origin_name"))
+            put("jp_title", result.optString("origin_name"))
             put("newest_ep", result.optJSONObject("new_ep"))
             put("season_status", result.optInt("status"))
             put("season_title", result.optString("title"))
             put("total_ep", input_episodes?.length())
-            put("season_id", season_id.toInt())
         }
         result.optJSONObject("rights")?.put("watch_platform", 1)
 
@@ -471,7 +470,7 @@ object BiliRoamingApi {
 
         val style = JSONArray()
         for (i in result.optJSONArray("styles").orEmpty()) {
-            style.put(i.optJSONObject("name"))
+            style.put(i.optString("name"))
         }
         result.put("style", style)
     }
