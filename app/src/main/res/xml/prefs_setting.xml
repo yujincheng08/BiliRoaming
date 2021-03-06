@@ -38,7 +38,7 @@
         <Preference
             android:key="test_upos"
             android:summary="@string/test_upos_summary"
-            android:title="@string/test_upos_title"></Preference>
+            android:title="@string/test_upos_title" />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/beautify_category">
@@ -131,12 +131,20 @@
         <SwitchPreference
             android:key="standalone_danmaku_speed"
             android:summary="@string/standalone_danmaku_speed_summary"
-            android:title="@string/standalone_danmaku_speed_title"/>
+            android:title="@string/standalone_danmaku_speed_title" />
 
         <Preference
             android:key="customize_danmaku_config"
             android:summary="@string/customize_danmaku_config_summary"
             android:title="@string/customize_danmaku_config_title" />
+    </PreferenceCategory>
+    <PreferenceCategory android:title="备份和还原">
+        <Preference
+            android:key="pref_export"
+            android:title="导出配置" />
+        <Preference
+            android:key="pref_import"
+            android:title="导入配置" />
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/setting_category">
         <SwitchPreference

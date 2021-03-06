@@ -63,6 +63,8 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("playback_speed_override").onPreferenceChangeListener = this
             findPreference("default_playback_speed").onPreferenceChangeListener = this
             findPreference("customize_danmaku_config").onPreferenceClickListener = this
+            findPreference("pref_export").onPreferenceClickListener = this
+            findPreference("pref_import").onPreferenceClickListener = this
             checkCompatibleVersion()
             checkUpdate()
         }
@@ -197,23 +199,56 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         }
 
         override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-            val destFile = when (requestCode) {
-                SPLASH_SELECTION ->
-                    File(currentContext.filesDir, SplashHook.SPLASH_IMAGE)
-                LOGO_SELECTION ->
-                    File(currentContext.filesDir, SplashHook.LOGO_IMAGE)
-                else -> null
-            } ?: return
-            val uri = data?.data
-            if (resultCode == RESULT_CANCELED || uri == null) {
-                destFile.delete()
-                return
+            when (requestCode) {
+                SPLASH_SELECTION, LOGO_SELECTION -> {
+                    val destFile = when (requestCode) {
+                        SPLASH_SELECTION ->
+                            File(currentContext.filesDir, SplashHook.SPLASH_IMAGE)
+                        LOGO_SELECTION ->
+                            File(currentContext.filesDir, SplashHook.LOGO_IMAGE)
+                        else -> null
+                    } ?: return
+                    val uri = data?.data
+                    if (resultCode == RESULT_CANCELED || uri == null) {
+                        destFile.delete()
+                        return
+                    }
+                    val stream = ByteArrayOutputStream()
+                    stream.flush()
+                    MediaStore.Images.Media.getBitmap(activity.contentResolver, uri).compress(Bitmap.CompressFormat.PNG, 100, stream)
+                    val dest = FileOutputStream(destFile)
+                    stream.writeTo(dest)
+                }
+                PREF_EXPORT, PREF_IMPORT -> {
+                    val file = File(currentContext.filesDir, "../shared_prefs/biliroaming.xml")
+                    val uri = data?.data
+                    if (resultCode == RESULT_CANCELED || uri == null) return
+                    when (requestCode) {
+                        PREF_IMPORT -> {
+                            try {
+                                file.outputStream().use { out ->
+                                    activity.contentResolver.openInputStream(uri)?.copyTo(out)
+                                }
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                                Log.toast(e.message ?: "未知错误", true)
+                            }
+                            Log.toast("请至少重新打开哔哩漫游设置", true)
+                        }
+                        PREF_EXPORT -> {
+                            try {
+                                file.inputStream().use { `in` ->
+                                    activity.contentResolver.openOutputStream(uri)?.let { `in`.copyTo(it) }
+                                }
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                                Log.toast(e.message ?: "未知错误", true)
+                            }
+                        }
+                    }
+                }
             }
-            val stream = ByteArrayOutputStream()
-            stream.flush()
-            MediaStore.Images.Media.getBitmap(activity.contentResolver, uri).compress(Bitmap.CompressFormat.PNG, 100, stream)
-            val dest = FileOutputStream(destFile)
-            stream.writeTo(dest)
+
             super.onActivityResult(requestCode, resultCode, data)
         }
 
@@ -335,6 +370,31 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             return true
         }
 
+        private fun onPrefExportClick(): Boolean {
+            val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
+            intent.type = "text/xml"
+            intent.putExtra(Intent.EXTRA_TITLE, "biliroaming.xml")
+            intent.addCategory(Intent.CATEGORY_OPENABLE)
+            try {
+                startActivityForResult(Intent.createChooser(intent, "保存配置文件"), PREF_EXPORT)
+            } catch (ex: ActivityNotFoundException) {
+                Log.toast("请安装文件管理器")
+            }
+            return true
+        }
+
+        private fun onPrefImportClick(): Boolean {
+            val intent = Intent(Intent.ACTION_GET_CONTENT)
+            intent.type = "text/xml"
+            intent.addCategory(Intent.CATEGORY_OPENABLE)
+            try {
+                startActivityForResult(Intent.createChooser(intent, "选择配置文件"), PREF_IMPORT)
+            } catch (ex: ActivityNotFoundException) {
+                Log.toast("请安装文件管理器")
+            }
+            return true
+        }
+
         override fun onPreferenceClick(preference: Preference) = when (preference.key) {
             "version" -> onVersionClick()
             "update" -> onUpdateClick()
@@ -342,6 +402,8 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             "test_upos" -> onTestUposClick()
             "customize_bottom_bar" -> onCustomizeBottomBarClick()
             "customize_danmaku_config" -> oncustomizedanmakuconfigclick()
+            "pref_export" -> onPrefExportClick()
+            "pref_import" -> onPrefImportClick()
             else -> false
         }
     }
@@ -419,6 +481,8 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
 
         const val SPLASH_SELECTION = 0
         const val LOGO_SELECTION = 1
+        const val PREF_IMPORT = 2
+        const val PREF_EXPORT = 3
     }
 
 }
