@@ -2,6 +2,7 @@
 
 package me.iacn.biliroaming
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Activity.RESULT_CANCELED
 import android.app.AlertDialog
@@ -17,8 +18,7 @@ import android.provider.MediaStore
 import android.view.ContextThemeWrapper
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import android.widget.EditText
-import android.widget.TextView
+import android.widget.*
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
@@ -47,7 +47,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             preferenceManager.sharedPreferencesName = "biliroaming"
             addPreferencesFromResource(R.xml.prefs_setting)
             prefs = preferenceManager.sharedPreferences
-            biliprefs = currentContext.getSharedPreferences(packageName+"_preferences", Context.MODE_MULTI_PROCESS)
+            biliprefs = currentContext.getSharedPreferences(packageName + "_preferences", Context.MODE_MULTI_PROCESS)
             if (!prefs.getBoolean("hidden", false)) {
                 val hiddenGroup = findPreference("hidden_group") as PreferenceCategory
                 preferenceScreen.removePreference(hiddenGroup)
@@ -174,7 +174,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                         preference.editor.remove(preference.key).apply()
                     }
                 }
-                "default_playback_speed"  -> {
+                "default_playback_speed" -> {
                     if (newValue == "") {
                         preference.editor.remove(preference.key).apply()
                     }
@@ -243,12 +243,61 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 val layout = moduleRes.getLayout(R.layout.cutomize_backup_dialog)
                 val inflater = LayoutInflater.from(context)
                 val view = inflater.inflate(layout, null)
+                val llSaved = view.findViewById<LinearLayout>(R.id.ll_saved)
                 val editTexts = arrayOf(
                         view.findViewById<EditText>(R.id.cn_server),
                         view.findViewById(R.id.hk_server),
                         view.findViewById(R.id.tw_server),
                         view.findViewById(R.id.th_server))
                 editTexts.forEach { it.setText(prefs.getString(it.tag.toString(), "")) }
+                fun setSavedServers() {
+                    val savedServers = prefs.getStringSet("saved_servers", mutableSetOf())!!
+                    llSaved.removeAllViews()
+                    llSaved.addView(Button(activity).apply {
+                        text = "+"
+                        setOnClickListener {
+                            AlertDialog.Builder(activity).apply {
+                                val et = EditText(activity)
+                                et.hint = "配置名"
+                                setTitle("保存服务器配置")
+                                setView(et)
+                                setPositiveButton("确定") {_, _ ->
+                                    val sb = StringBuilder(et.text)
+                                    editTexts.forEach {
+                                        sb.append("`")
+                                        sb.append(it.text)
+                                    }
+                                    savedServers.add(sb.toString())
+                                    prefs.edit().putStringSet("saved_servers", savedServers).apply()
+                                    setSavedServers()
+                                }
+                                setNegativeButton("取消", null)
+                            }.show()
+                        }
+                    })
+                    savedServers.forEach { savedServer ->
+                        val strings = savedServer.split("`")
+                        if (strings.size != editTexts.size + 1) return@forEach
+                        llSaved.addView(Button(activity).apply {
+                            text = strings[0]
+                            setOnClickListener {
+                                PopupMenu(activity, this).apply {
+                                    menu.add(0, 0, 0, "应用").setOnMenuItemClickListener {
+                                        editTexts.forEachIndexed { i, et -> et.setText(strings[i + 1]) }
+                                        true
+                                    }
+                                    menu.add(0, 1, 1, "删除").setOnMenuItemClickListener {
+                                        savedServers.remove(savedServer)
+                                        prefs.edit().putStringSet("saved_servers", savedServers).apply()
+                                        setSavedServers()
+                                        true
+                                    }
+                                }.show()
+                            }
+                        })
+                    }
+                }
+                setSavedServers()
                 setTitle("设置解析服务器")
                 setView(view)
                 setPositiveButton("确定") { _, _ ->
@@ -308,12 +357,12 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 val inflater = LayoutInflater.from(context)
                 val view = inflater.inflate(layout, null)
                 val editTexts = arrayOf(
-                    view.findViewById<EditText>(R.id.danmaku_textsize_scale_factor),
-                    view.findViewById(R.id.danmaku_stroke_width_scaling),
-                    view.findViewById(R.id.danmaku_duration_factor),
-                    view.findViewById(R.id.danmaku_alpha_factor),
-                    view.findViewById(R.id.danmaku_max_on_screen),
-                    view.findViewById(R.id.danmaku_screen_domain))
+                        view.findViewById<EditText>(R.id.danmaku_textsize_scale_factor),
+                        view.findViewById(R.id.danmaku_stroke_width_scaling),
+                        view.findViewById(R.id.danmaku_duration_factor),
+                        view.findViewById(R.id.danmaku_alpha_factor),
+                        view.findViewById(R.id.danmaku_max_on_screen),
+                        view.findViewById(R.id.danmaku_screen_domain))
                 editTexts.filter {
                     biliprefs.contains(it.tag.toString())
                 }.forEach {

@@ -1,85 +1,114 @@
 <?xml version="1.0" encoding="utf-8"?>
-<GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:rowCount="4"
-    android:columnCount="2"
     android:orientation="horizontal"
     android:paddingStart="25dp"
     android:paddingEnd="20dp">
 
-
     <TextView
-        android:layout_width="0dp"
+        android:id="@+id/tv_cn"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_columnWeight="1"
-        android:text="中国大陆"
+        android:layout_alignBaseline="@id/cn_server"
         android:singleLine="true"
+        android:text="中国大陆"
         tools:ignore="HardcodedText" />
 
     <EditText
         android:id="@+id/cn_server"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_columnWeight="4"
-        android:hint="cn.biliroaming.example.com"
-        android:tag="cn_server"
-        android:inputType="textUri"
+        android:layout_marginStart="5dp"
+        android:layout_toEndOf="@id/tv_th"
         android:autofillHints="no"
+        android:hint="cn.biliroaming.example.com"
+        android:inputType="textUri"
+        android:tag="cn_server"
         tools:ignore="HardcodedText" />
 
     <TextView
-        android:layout_width="0dp"
+        android:id="@+id/tv_hk"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_columnWeight="1"
+        android:layout_alignBaseline="@id/hk_server"
+        android:layout_alignStart="@id/tv_cn"
         android:text="香港"
         tools:ignore="HardcodedText" />
 
     <EditText
         android:id="@+id/hk_server"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_columnWeight="4"
-        android:hint="hk.biliroaming.example.com"
-        android:tag="hk_server"
-        android:inputType="textUri"
+        android:layout_below="@id/cn_server"
+        android:layout_alignStart="@id/cn_server"
         android:autofillHints="no"
+        android:hint="hk.biliroaming.example.com"
+        android:inputType="textUri"
+        android:tag="hk_server"
         tools:ignore="HardcodedText" />
 
     <TextView
-        android:layout_width="0dp"
+        android:id="@+id/tv_tw"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_columnWeight="1"
+        android:layout_alignBaseline="@id/tw_server"
+        android:layout_alignStart="@id/tv_cn"
         android:text="台湾"
         tools:ignore="HardcodedText" />
 
     <EditText
         android:id="@+id/tw_server"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_columnWeight="4"
-        android:hint="tw.biliroaming.example.com"
-        android:tag="tw_server"
-        android:inputType="textUri"
+        android:layout_below="@id/hk_server"
+        android:layout_alignStart="@id/cn_server"
         android:autofillHints="no"
+        android:hint="tw.biliroaming.example.com"
+        android:inputType="textUri"
+        android:tag="tw_server"
         tools:ignore="HardcodedText" />
 
     <TextView
-        android:layout_width="0dp"
+        android:id="@+id/tv_th"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_columnWeight="1"
+        android:layout_alignBaseline="@id/th_server"
+        android:layout_alignStart="@id/tv_cn"
         android:text="泰国/东南亚"
         tools:ignore="HardcodedText" />
 
     <EditText
         android:id="@+id/th_server"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_columnWeight="4"
-        android:hint="th.biliroaming.example.com"
-        android:tag="th_server"
-        android:inputType="textUri"
+        android:layout_below="@id/tw_server"
+        android:layout_alignStart="@id/cn_server"
         android:autofillHints="no"
+        android:hint="th.biliroaming.example.com"
+        android:inputType="textUri"
+        android:tag="th_server"
         tools:ignore="HardcodedText" />
-</GridLayout>
+
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/th_server"
+        android:layout_marginTop="5dp">
+
+        <LinearLayout
+            android:id="@+id/ll_saved"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal" />
+    </HorizontalScrollView>
+</RelativeLayout>
