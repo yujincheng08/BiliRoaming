@@ -70,7 +70,8 @@ object BiliRoamingApi {
         val thUrl = sPrefs.getString("th_server", null)
         if (thUrl != null && (seasonJson.optInt("code") == -404 || fixThailandSeasonFlag )) {
             builder.scheme("https").encodedAuthority(thUrl + THAILAND_PATH_SEASON)
-            builder.appendQueryParameter("s_locale", "zh_SG")
+                    .appendQueryParameter("s_locale", "zh_SG")
+                    .appendQueryParameter("access_key", instance.accessKey)
             seasonJson = getContent(builder.toString())?.toJSONObject() ?: return null
             seasonJson.optJSONObject("result")?.also {
                 fixThailandSeason(it)
