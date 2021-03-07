@@ -15,7 +15,6 @@ import android.preference.Preference.OnPreferenceChangeListener
 import android.preference.Preference.OnPreferenceClickListener
 import android.preference.PreferenceCategory
 import android.preference.PreferenceFragment
-import android.support.annotation.Keep
 import android.util.Log
 import android.view.View
 import android.widget.Toast
@@ -170,7 +169,6 @@ class MainActivity : Activity() {
     }
 
     companion object {
-        @Keep
         fun isModuleActive(): Boolean {
             Log.i("大不自多", "海纳江河")
             return false

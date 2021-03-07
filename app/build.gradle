@@ -17,8 +17,9 @@ android {
     buildTypes {
         release {
             minifyEnabled true
-            zipAlignEnabled true
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            shrinkResources true
+            proguardFiles 'proguard-rules.pro'
+            signingConfig signingConfigs.debug
         }
     }
 
@@ -42,6 +43,25 @@ android {
                 include '**/*.proto'
             }
         }
+    }
+
+    packagingOptions {
+        exclude 'META-INF/**'
+        exclude 'kotlin/**'
+        exclude 'google/**'
+        exclude '**.bin'
+    }
+
+    aaptOptions {
+        additionalParameters "--preferred-density", "xxxhdpi"
+    }
+
+    lintOptions {
+        checkReleaseBuilds false
+    }
+
+    dependenciesInfo {
+        includeInApk false
     }
 }
 
@@ -68,24 +88,21 @@ protobuf {
 
 
 dependencies {
-    implementation fileTree(include: ['*.jar'], dir: 'libs')
     compileOnly 'de.robv.android.xposed:api:82'
     compileOnly 'de.robv.android.xposed:api:82:sources'
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:${kotlin_version}"
-    compileOnly 'com.android.support:support-annotations:28.0.0'
-    implementation 'com.google.protobuf:protobuf-javalite:3.14.0'
-    compileOnly 'com.google.protobuf:protoc:3.14.0'
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.2'
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.4.2'
+    implementation 'com.google.protobuf:protobuf-javalite:3.15.5'
+    compileOnly 'com.google.protobuf:protoc:3.15.5'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.3'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.4.3'
 }
 
 afterEvaluate {
     installDebug.doLast {
         restartBiliBili()
     }
-}
-repositories {
-    mavenCentral()
+    shrinkReleaseRes.doLast {
+        optimizeReleaseRes()
+    }
 }
 
 def restartBiliBili() {
@@ -94,5 +111,24 @@ def restartBiliBili() {
     }
    exec {
         commandLine android.adbExecutable, 'shell', 'monkey', '-p', 'tv.danmaku.bili', '1'
+    }
+}
+
+import java.nio.file.Paths
+
+def optimizeReleaseRes() {
+    def aapt2 = Paths.get(project.android.sdkDirectory.path,
+            "build-tools", project.android.buildToolsVersion, "aapt2")
+    def zip = Paths.get(project.buildDir.path, "intermediates",
+            "shrunk_processed_res", "release", "resources-release-stripped.ap_")
+    def optimized = new File("${zip}.opt")
+    def cmd = exec {
+        commandLine(aapt2, "optimize", "--collapse-resource-names",
+                "--shorten-resource-paths", "-o", optimized, zip)
+        setIgnoreExitValue true
+    }
+    if (cmd.exitValue == 0) {
+        zip.toFile().delete()
+        optimized.renameTo(zip.toFile())
     }
 }
