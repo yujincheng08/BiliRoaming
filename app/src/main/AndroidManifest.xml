@@ -23,6 +23,7 @@
 
         <activity-alias
             android:name=".MainActivityAlias"
+            android:exported="true"
             android:targetActivity=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -32,6 +33,7 @@
 
         <activity
             android:name=".MainActivity"
+            android:exported="true"
             android:launchMode="singleInstance">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
