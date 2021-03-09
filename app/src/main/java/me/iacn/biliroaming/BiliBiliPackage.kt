@@ -71,7 +71,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val playerCoreServiceV2class by Weak { mHookInfo["class_player_core_service_v2"]?.findClassOrNull(mClassLoader) }
 
     val classesList by lazy { mClassLoader.allClassesList() }
-    private val accessKeyInstance by lazy { "com.bilibili.bangumi.ui.page.detail.pay.BangumiPayHelperV2\$accessKey\$2".findClass(mClassLoader)?.getStaticObjectField("INSTANCE") }
+    private val accessKeyInstance by lazy {
+        ("com.bilibili.cheese.ui.detail.pay.v2.CheesePayHelperV2\$accessKey\$2".findClass(mClassLoader)
+                ?: "com.bilibili.bangumi.ui.page.detail.pay.BangumiPayHelperV2\$accessKey\$2".findClass(mClassLoader))?.getStaticObjectField("INSTANCE")
+    }
 
     @Suppress("UNCHECKED_CAST")
     val ids by lazy {
@@ -466,7 +469,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     private fun findGarbHelper(): Array<String?> {
         val garbClass = "com.bilibili.lib.ui.garb.Garb".findClassOrNull(mClassLoader)
-            ?: return arrayOfNulls(2)
+                ?: return arrayOfNulls(2)
         classesList.filter {
             it.startsWith("com.bilibili.lib.ui.garb")
         }.forEach { c ->
