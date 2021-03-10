@@ -57,7 +57,7 @@ class ijkhook(classLoader: ClassLoader) : BaseHook(classLoader) {
         if (playback_speed_override != null || default_playback_speed != null) {
             instance.playerParamsBundleClass?.hookBeforeMethod(instance.putSerializabletoPlayerParamsBundle(), String::class.java, Serializable::class.java) {
                 if (it.args[0] == "bundle_key_playback_speed") {
-                    if(Exception().stackTrace[4].className.startsWith("tv.danmaku.bili.ui.video.creator"))
+                    if(Exception().stackTrace.map { it.className }.intersect(instance.classesList).first().startsWith("tv.danmaku.bili.ui.video.creator"))
                         it.result = null
                 }
             }
