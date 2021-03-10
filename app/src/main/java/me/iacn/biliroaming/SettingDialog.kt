@@ -100,6 +100,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             var supportAdd4K = false
             var supportMusicNotificationHook = true
             var supportDark = true
+            var supportCommentFloor = false
             val supportFullSplash = try {
                 instance.splashInfoClass?.getMethod("getMode") != null
             } catch (e: Throwable) {
@@ -118,6 +119,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 }
                 "android" -> {
                     if (versionCode !in 6000000 until 6120000) supportDark = false
+                    if (versionCode < 6180000) supportCommentFloor = false
                 }
             }
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
@@ -150,6 +152,9 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             }
             if (!supportDark) {
                 disablePreference("follow_dark")
+            }
+            if (!supportCommentFloor) {
+                disablePreference("comment_floor")
             }
         }
 
