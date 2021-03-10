@@ -131,7 +131,7 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     private val corePlayerOnSeekListenerClass by lazy {
         instance.classesList.filter {
-            instance.playerCoreServiceV2class?.name?.let { name -> it.startsWith(name) } ?: false
+            instance.playerCoreServiceV2Class?.name?.let { name -> it.startsWith(name) } ?: false
         }.firstOrNull { c ->
             c.findClass(mClassLoader)?.interfaces?.map { it.name }
                     ?.contains("tv.danmaku.ijk.media.player.IMediaPlayer\$OnSeekCompleteListener")
@@ -141,14 +141,14 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     private val corePlayerMethod by lazy {
         backgroundPlayerField?.type?.declaredMethods?.firstOrNull {
-            instance.playerCoreServiceV2class?.interfaces?.contains(it.returnType) ?: false
+            instance.playerCoreServiceV2Class?.interfaces?.contains(it.returnType) ?: false
         }
     }
 
 
     private val getDurationMethod by lazy {
         try {
-            instance.playerCoreServiceV2class?.getDeclaredMethod("getDuration")?.name
+            instance.playerCoreServiceV2Class?.getDeclaredMethod("getDuration")?.name
         } catch (e: Throwable) {
             "i"
         }
@@ -156,7 +156,7 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     private val getCurrentPositionMethod by lazy {
         try {
-            instance.playerCoreServiceV2class?.getDeclaredMethod("getCurrentPosition")?.name
+            instance.playerCoreServiceV2Class?.getDeclaredMethod("getCurrentPosition")?.name
         } catch (e: Throwable) {
             "j"
         }
@@ -164,7 +164,7 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     private val seekToMethod by lazy {
         try {
-            instance.playerCoreServiceV2class?.getDeclaredMethod("seekTo", Int::class.javaPrimitiveType)?.name
+            instance.playerCoreServiceV2Class?.getDeclaredMethod("seekTo", Int::class.javaPrimitiveType)?.name
         } catch (e: Throwable) {
             "a"
         }

@@ -121,14 +121,17 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         // for new blue 6.3.7
                         instance.rxGeneralResponseClass?.isInstance(body) == true) {
                     fixBangumi(body)
-                } else if (url != null && (url.startsWith("https://app.bilibili.com/x/v2/view") ||
+                }
+                if (url != null && (url.startsWith("https://app.bilibili.com/x/v2/view") ||
                                 url.startsWith("https://app.bilibili.com/x/intl/view") ||
                                 url.startsWith("https://appintl.biliapi.net/intl/gateway/app/view")) &&
                         body.getIntField("code") == FAIL_CODE) {
                     fixView(body, url)
-                } else if (url != null && url.startsWith("https://appintl.biliapi.net/intl/gateway/app/search/type") && !url.contains("type=$TH_TYPE")) {
+                }
+                if (url != null && url.startsWith("https://appintl.biliapi.net/intl/gateway/app/search/type") && !url.contains("type=$TH_TYPE")) {
                     fixPlaySearchType(body, url)
-                } else if (instance.generalResponseClass?.isInstance(body) == true) {
+                }
+                if (instance.generalResponseClass?.isInstance(body) == true || instance.rxGeneralResponseClass?.isInstance(body) == true) {
                     val data = body.getObjectField("data") ?: return@hookBeforeAllConstructors
                     if (data.javaClass == searchAllResultClass) {
                         addThailandTag(data)
@@ -471,8 +474,9 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     private fun getUrl(response: Any): String? {
         val requestField = instance.requestField() ?: return null
+        val urlField = instance.urlField() ?: return null
         val request = response.getObjectField(requestField)
-        return instance.stethoInterceptorRequestClass?.new(null, request, null)?.callMethodAs("url")
+        return request?.getObjectField(urlField)?.toString()
     }
 
 }

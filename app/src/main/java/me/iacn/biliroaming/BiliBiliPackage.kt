@@ -16,6 +16,7 @@ import me.iacn.biliroaming.utils.*
 import java.io.*
 import java.lang.reflect.Modifier
 import java.lang.reflect.ParameterizedType
+import java.net.URL
 
 /**
  * Created by iAcn on 2019/4/5
@@ -64,11 +65,11 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val commentRpcClass by Weak { "com.bilibili.app.comm.comment2.model.rpc.CommentRpcKt".findClassOrNull(mClassLoader) }
     val checkBlueClass by Weak { mHookInfo["class_check_blue"]?.findClass(mClassLoader) }
     val kotlinJsonClass by Weak { "kotlinx.serialization.json.Json".findClassOrNull(mClassLoader) }
-    val stethoInterceptorRequestClass by Weak { "com.facebook.stetho.okhttp3.StethoInterceptor\$OkHttpInspectorRequest".findClassOrNull(mClassLoader) }
     val gsonConverterClass by Weak { mHookInfo["class_gson_converter"]?.findClassOrNull(mClassLoader) }
-    val playerOptionsPanelHolderclass by Weak { mHookInfo["class_player_options_panel_holder"]?.findClass(mClassLoader) }
-    val playerParamsBundleclass by Weak { mHookInfo["class_playerparams_bundle"]?.findClassOrNull(mClassLoader) }
-    val playerCoreServiceV2class by Weak { mHookInfo["class_player_core_service_v2"]?.findClassOrNull(mClassLoader) }
+    val playerOptionsPanelHolderClass by Weak { mHookInfo["class_player_options_panel_holder"]?.findClass(mClassLoader) }
+    val playerParamsBundleClass by Weak { mHookInfo["class_playerparams_bundle"]?.findClassOrNull(mClassLoader) }
+    val playerCoreServiceV2Class by Weak { mHookInfo["class_player_core_service_v2"]?.findClassOrNull(mClassLoader) }
+    val hostRequestInterceptorClass by Weak { "com.bililive.bililive.infra.hybrid.interceptor.HostRequestInterceptor".findClass(mClassLoader) }
 
     val classesList by lazy { mClassLoader.allClassesList() }
     private val accessKeyInstance by lazy {
@@ -152,6 +153,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     fun getdefaultspeed() = mHookInfo["method_get_default_speed"]
 
+    fun urlField() = mHookInfo["field_url"]
+
     private fun readHookInfo(context: Context): MutableMap<String, String?> {
         try {
             val hookInfoFile = File(context.cacheDir, Constant.HOOK_INFO_FILE_NAME)
@@ -208,8 +211,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
         mHookInfo.checkOrPut("class_retrofit_response") {
             findRetrofitResponseClass()
-        }.checkOrPut("field_req") {
-            findRequestField()
+        }.checkConjunctiveOrPut("field_req", "field_url") {
+            findOkHttp()
         }.checkConjunctiveOrPut("class_fastjson", "method_fastjson_parse") {
             val fastJsonClass = findFastJsonClass()
             val notObfuscated = "JSON" == fastJsonClass?.simpleName
@@ -529,14 +532,24 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         it.parameterTypes[0]
     }?.firstOrNull()?.name
 
-    private fun findRequestField(): String? {
-        val okHttpRequestClass = stethoInterceptorRequestClass?.getDeclaredField("mRequest")?.type
-        for (constructor in retrofitResponseClass?.declaredConstructors.orEmpty()) {
-            for (field in constructor.parameterTypes[0].declaredFields) {
-                if (field.type == okHttpRequestClass) return field.name
+    private fun findOkHttp(): Array<String?> {
+        val okHttpRequestClass = hostRequestInterceptorClass?.declaredMethods?.firstOrNull {
+            it.parameterTypes.size == 1 && it.parameterTypes[0] == it.returnType
+        }?.returnType
+        retrofitResponseClass?.declaredConstructors?.forEach { c ->
+            c.parameterTypes[0].declaredFields.forEach { f1 ->
+                if (f1.type == okHttpRequestClass) {
+                    okHttpRequestClass?.declaredFields?.forEach { f2 ->
+                        f2.type.declaredMethods.forEach { m ->
+                            if (m.parameterTypes.isEmpty() && m.returnType == URL::class.java) {
+                                return arrayOf(f1.name, f2.name)
+                            }
+                        }
+                    }
+                }
             }
         }
-        return null
+        return arrayOfNulls(2)
     }
 
     private fun findFastJsonClass(): Class<*>? = "com.alibaba.fastjson.JSON".findClassOrNull(mClassLoader)
