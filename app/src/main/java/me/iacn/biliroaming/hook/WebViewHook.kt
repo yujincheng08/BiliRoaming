@@ -53,7 +53,7 @@ class WebViewHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
             if (hookedClient.contains(clazz)) return@hookBeforeMethod
             try {
-                clazz.getDeclaredMethod("onPageFinished", WebView::class.java, String::class.java).hookBeforeMethod(hooker)
+                clazz.getDeclaredMethod("onPageFinished", WebView::class.java, String::class.java).hookAfterMethod(hooker)
                 hookedClient.add(clazz)
                 Log.d("hook webview $clazz")
             } catch (e: NoSuchMethodException) {
@@ -64,7 +64,7 @@ class WebViewHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             param.thisObject.callMethod("addJavascriptInterface", jsHooker, "hooker")
             if (hookedClient.contains(clazz)) return@hookBeforeMethod
             try {
-                clazz.getDeclaredMethod("onPageFinished", x5WebViewClass, String::class.java).hookBeforeMethod(hooker)
+                clazz.getDeclaredMethod("onPageFinished", x5WebViewClass, String::class.java).hookAfterMethod(hooker)
                 hookedClient.add(clazz)
                 Log.d("hook webview $clazz")
             } catch (e: NoSuchMethodException) {
