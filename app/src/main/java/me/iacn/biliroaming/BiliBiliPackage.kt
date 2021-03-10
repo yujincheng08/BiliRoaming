@@ -83,8 +83,12 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     }
 
 
-    val accessKey
-        get() = accessKeyInstance?.callMethodAs<String>("invoke")
+    val accessKey: String?
+        get() {
+            var key = sPrefs.getString("customize_accessKey", null)
+            if (key.isNullOrBlank()) key = accessKeyInstance?.callMethodAs<String>("invoke")
+            return key
+        }
 
     init {
         try {

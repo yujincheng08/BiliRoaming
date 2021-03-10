@@ -27,7 +27,7 @@ object Log {
         if (str.length > maxLength) {
             val chunkCount: Int = str.length / maxLength
             for (i in 0..chunkCount) {
-                val max: Int = 4000 * (i + 1)
+                val max: Int = maxLength * (i + 1)
                 if (max >= str.length) {
                     doLog(f, str.substring(maxLength * i))
                 } else {
@@ -66,6 +66,6 @@ object Log {
         doLog(ALog::w, obj)
     }
 
-    private const val maxLength = 4000
+    private const val maxLength = 3000
 }
 

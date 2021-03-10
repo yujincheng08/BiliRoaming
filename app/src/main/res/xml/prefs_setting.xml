@@ -209,6 +209,11 @@
             android:key="search_th"
             android:summary="@string/search_th_summary"
             android:title="@string/search_th_title" />
+        <EditTextPreference
+            android:dependency="hidden"
+            android:key="customize_accessKey"
+            android:summary="@string/customize_accessKey_summary"
+            android:title="@string/customize_accessKey_title" />
     </PreferenceCategory>
 
     <PreferenceCategory

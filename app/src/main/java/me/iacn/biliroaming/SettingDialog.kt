@@ -186,6 +186,11 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                         preference.editor.remove(preference.key).apply()
                     }
                 }
+                "customize_accessKey" -> {
+                    if (newValue == "") {
+                        preference.editor.remove(preference.key).apply()
+                    }
+                }
             }
             return true
         }
