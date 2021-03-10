@@ -120,7 +120,9 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     "com.bapis.bilibili.pgc.gateway.player.v1.PlayViewReq") { param ->
                 val request = param.args[0]
                 val response = param.result
-                if (!response.callMethodAs<Boolean>("hasVideoInfo")) {
+                if (!response.callMethodAs<Boolean>("hasVideoInfo")
+                    || needForceProxy(response)
+                ) {
                     val content = getPlayUrl(reconstructQuery(request))
                     content?.let {
                         Log.d("Has replaced play url with proxy server $it")
@@ -288,6 +290,12 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     } catch (e: JSONException) {
         Log.e(e)
         false
+    }
+
+    private fun needForceProxy(response: Any): Boolean {
+        if (sPrefs.getString("customize_accessKey", "").isNullOrBlank()) return false
+        val serializedRequest = response.callMethodAs<ByteArray>("toByteArray")
+        return PlayViewReply.parseFrom(serializedRequest).business.isPreview
     }
 
     private fun reconstructQuery(request: Any): String? {

@@ -14,10 +14,10 @@ import me.iacn.biliroaming.network.BiliRoamingApi.getSeason
 import me.iacn.biliroaming.network.BiliRoamingApi.getThailandSearchBangumi
 import me.iacn.biliroaming.utils.*
 import org.json.JSONObject
-import java.lang.reflect.Array as RArray
 import java.lang.reflect.Method
 import java.net.URL
 import java.net.URLDecoder
+import java.lang.reflect.Array as RArray
 
 /**
  * Created by iAcn on 2019/3/27
@@ -237,7 +237,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val jsonResult = result?.toJson()
         // Filter normal bangumi and other responses
         if (isBangumiWithWatchPermission(jsonResult, code)) {
-            jsonResult?.also { allowDownload(it) }
+            jsonResult?.also { allowDownload(it); fixEpisodesStatus(it) }
         } else {
             Log.toast("发现版权番剧，尝试解锁……")
             Log.d("Info: $lastSeasonInfo")
@@ -259,6 +259,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     }
                 }
                 allowDownload(newJsonResult, false)
+                fixEpisodesStatus(newJsonResult)
             }
             jsonResult?.apply {
                 // Replace only episodes and rights
@@ -451,7 +452,8 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private fun allowDownload(result: JSONObject?, toast: Boolean = true) {
         if (sPrefs.getBoolean("allow_download", false)) {
             val rights = result?.optJSONObject("rights")
-            rights?.put("allow_download", 1)
+            rights?.put("allow_download", true)
+            rights?.put("only_vip_download", false)
             for (module in result?.optJSONArray("modules").orEmpty()) {
                 val data = module.optJSONObject("data")
                 val moduleEpisodes = data?.optJSONArray("episodes")
@@ -469,6 +471,26 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
             Log.d("Download allowed")
             if (toast) Log.toast("已允许下载")
+        }
+    }
+
+    private fun fixEpisodesStatus(result: JSONObject?) {
+        if (sPrefs.getString("customize_accessKey", "").isNullOrBlank()) return
+        if (result?.optInt("status") == 13) result.put("status", 2)
+        for (module in result?.optJSONArray("modules").orEmpty()) {
+            val data = module.optJSONObject("data")
+            val moduleEpisodes = data?.optJSONArray("episodes")
+            for (episode in moduleEpisodes.orEmpty()) {
+                if (episode.optInt("status") == 13) episode.put("status", 2)
+            }
+        }
+        for (section in result?.optJSONArray("prevueSection").orEmpty()) {
+            for (episode in section.optJSONArray("episodes").orEmpty()) {
+                if (episode.optInt("status") == 13) episode.put("status", 2)
+            }
+        }
+        for (episode in result?.optJSONArray("episodes").orEmpty()) {
+            if (episode.optInt("status") == 13) episode.put("status", 2)
         }
     }
 
