@@ -12,6 +12,8 @@
   <fields>;
 }
 
+-keepattributes RuntimeVisible*Annotations
+
 -keepclassmembers class * {
     @android.webkit.JavascriptInterface <methods>;
 }
