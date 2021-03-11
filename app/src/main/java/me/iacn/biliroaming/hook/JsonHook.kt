@@ -122,7 +122,7 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             }
                         }
                     }
-                    result.setObjectField("vipSectionRight", null)
+                    accountMineClass.findFieldOrNull("vipSectionRight")?.set(result, null)
                 }
                 splashClass -> if (sPrefs.getBoolean("purify_splash", false) &&
                         sPrefs.getBoolean("hidden", false)) {

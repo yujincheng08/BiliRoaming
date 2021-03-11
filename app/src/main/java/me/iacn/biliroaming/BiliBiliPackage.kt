@@ -70,6 +70,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val playerParamsBundleClass by Weak { mHookInfo["class_playerparams_bundle"]?.findClassOrNull(mClassLoader) }
     val playerCoreServiceV2Class by Weak { mHookInfo["class_player_core_service_v2"]?.findClassOrNull(mClassLoader) }
     val hostRequestInterceptorClass by Weak { "com.bililive.bililive.infra.hybrid.interceptor.HostRequestInterceptor".findClassOrNull(mClassLoader) }
+    val teenagersModeDialogActivityClass by Weak { "com.bilibili.teenagersmode.ui.TeenagersModeDialogActivity".findClassOrNull(mClassLoader) }
 
     val classesList by lazy { mClassLoader.allClassesList() }
     private val accessKeyInstance by lazy {

@@ -127,6 +127,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             val supportSplashHook = instance.brandSplashClass != null
             val supportDrawer = instance.homeUserCenterClass != null
             val supportcustomplaybackspeed = instance.playerCoreServiceV2Class != null
+            val supportTeenagersMode = instance.teenagersModeDialogActivityClass != null
             if (!supportcustomplaybackspeed)
                 disablePreference("default_playback_speed", moduleRes.getString(R.string.default_speed_in_speed_list))
             if (!supportDrawer)
@@ -155,6 +156,9 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             }
             if (!supportCommentFloor) {
                 disablePreference("comment_floor")
+            }
+            if (!supportTeenagersMode){
+                disablePreference("teenagers_mode_dialog")
             }
         }
 
