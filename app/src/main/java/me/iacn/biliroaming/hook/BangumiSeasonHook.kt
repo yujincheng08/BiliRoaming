@@ -452,8 +452,8 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private fun allowDownload(result: JSONObject?, toast: Boolean = true) {
         if (sPrefs.getBoolean("allow_download", false)) {
             val rights = result?.optJSONObject("rights")
-            rights?.put("allow_download", true)
-            rights?.put("only_vip_download", false)
+            rights?.put("allow_download", 1)
+            rights?.put("only_vip_download", 0)
             for (module in result?.optJSONArray("modules").orEmpty()) {
                 val data = module.optJSONObject("data")
                 val moduleEpisodes = data?.optJSONArray("episodes")
