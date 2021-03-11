@@ -156,6 +156,6 @@
     <string name="standalone_danmaku_speed_summary">阻止弹幕速度随播放速度变化</string>
     <string name="customize_danmaku_config_title">弹幕设置</string>
     <string name="customize_danmaku_config_summary">更精细的设置</string>
-    <string name="customize_accessKey_title">被永封的大会员</string>
-    <string name="customize_accessKey_summary">如果有被永封的大会员帐号，可以通过输入它的accessKey替换发往解析服务器的请求，继续观看会员视频（需要中国大陆解析服务器）</string>
+    <string name="customize_accessKey_title">自定义访问密钥</string>
+    <string name="customize_accessKey_summary">自定义发往解析服务器的访问密钥（调试功能，除非明白自己在做什么，否则保持空白）</string>
 </resources>
