@@ -140,6 +140,7 @@ object BiliRoamingApi {
                         "platform" to "android",
                         "s_locale" to "zh_SG",
                         "c_locale" to "zh_SG",
+                        "sim_code" to "52004",
                         "lang" to "hans",
                 )))
                 .toString()

@@ -68,7 +68,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     private fun Class<*>.fromJson(json: String) = when {
         isSerializable -> jsonNonStrict.value?.callMethod("parse", getStaticObjectField("Companion")?.callMethod("serializer"), json)
-        isGson -> gson?.callMethod(instance?.gsonFromjson(), json, this)
+        isGson -> gson?.callMethod(instance.gsonFromjson(), json, this)
         else -> instance.fastJsonClass?.callStaticMethod(instance.fastJsonParse(), json, this)
     }
 
