@@ -23,7 +23,7 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val cursorListClass = "com.bilibili.app.comm.comment2.model.BiliCommentCursorList".findClassOrNull(mClassLoader)
         val searchRanksClass = "com.bilibili.search.api.SearchRanks".findClass(mClassLoader)
         val searchReferralClass = "com.bilibili.search.api.SearchReferral".findClass(mClassLoader)
-        val followingcardSearchRanksClass = "com.bilibili.bplus.followingcard.net.entity.b".findClass(mClassLoader)
+        val followingcardSearchRanksClass = "com.bilibili.bplus.followingcard.net.entity.b".findClassOrNull(mClassLoader)
 
         instance.fastJsonClass?.hookAfterMethod(instance.fastJsonParse(), String::class.java, Type::class.java, Int::class.javaPrimitiveType, "com.alibaba.fastjson.parser.Feature[]") { param ->
             var result = param.result ?: return@hookAfterMethod

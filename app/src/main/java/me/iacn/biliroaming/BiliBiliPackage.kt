@@ -74,6 +74,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 ?: "com.bililive.bililive.liveweb.interceptor.a".findClass(mClassLoader)
     }
     val teenagersModeDialogActivityClass by Weak { "com.bilibili.teenagersmode.ui.TeenagersModeDialogActivity".findClassOrNull(mClassLoader) }
+    val gsonClass by Weak { "com.google.gson.Gson".findClassOrNull(mClassLoader) }
 
     val classesList by lazy { mClassLoader.allClassesList() }
     private val accessKeyInstance by lazy {
@@ -162,6 +163,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     fun getdefaultspeed() = mHookInfo["method_get_default_speed"]
 
     fun urlField() = mHookInfo["field_url"]
+
+    fun gsonTojson() = mHookInfo["method_gson_tojson"]
+    fun gsonFromjson() = mHookInfo["method_gson_fromjson"]
 
     private fun readHookInfo(context: Context): MutableMap<String, String?> {
         try {
@@ -305,12 +309,22 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             findPlayerParamsBundle()
         }.checkConjunctiveOrPut("class_player_core_service_v2", "method_get_default_speed") {
             findGetDefaultSpeed()
+        }.checkConjunctiveOrPut("method_gson_tojson", "method_gson_fromjson") {
+            arrayOf(findGsonToJsonMethod(), findGsonFromJsonMethod())
         }
 
         Log.d(mHookInfo.filterKeys { it != "map_ids" })
         Log.d("Check hook info completed: needUpdate = $needUpdate")
         return needUpdate
     }
+
+    private fun findGsonToJsonMethod() = gsonClass?.declaredMethods?.firstOrNull{ m ->
+        m.returnType == String::class.java && m.parameterTypes.size == 1 && m.parameterTypes[0] == Object::class.java
+    }?.name
+
+    private fun findGsonFromJsonMethod() = gsonClass?.declaredMethods?.firstOrNull{ m ->
+        m.returnType == Object::class.java && m.parameterTypes.size == 2 && m.parameterTypes[0] == String::class.java && m.parameterTypes[1] == Class::class.java
+    }?.name
 
     private fun findGetDefaultSpeed(): Array<String?> {
         val playerCoreServiceV2class = "tv.danmaku.biliplayerv2.service.core.PlayerCoreServiceV2".findClassOrNull(mClassLoader)
