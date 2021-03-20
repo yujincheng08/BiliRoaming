@@ -123,6 +123,8 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         }
                     }
                     accountMineClass.findFieldOrNull("vipSectionRight")?.set(result, null)
+                } else if(sPrefs.getBoolean("custom_theme", false)) {
+                    result.setObjectField("garbEntrance", null)
                 }
                 splashClass -> if (sPrefs.getBoolean("purify_splash", false) &&
                         sPrefs.getBoolean("hidden", false)) {
