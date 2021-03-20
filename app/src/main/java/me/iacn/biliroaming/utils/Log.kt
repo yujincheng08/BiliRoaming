@@ -18,8 +18,10 @@ object Log {
         if (!force && !sPrefs.getBoolean("show_info", true)) return
         handler.post {
             toast?.cancel()
-            toast = Toast.makeText(currentContext, "哔哩漫游：$msg", Toast.LENGTH_SHORT)
-            toast!!.show()
+            toast = Toast.makeText(currentContext, "", Toast.LENGTH_SHORT).apply {
+                setText("哔哩漫游：$msg")
+                show()
+            }
         }
     }
 
