@@ -259,14 +259,16 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private fun fixDownloadProto(builder: PlayViewReply.Builder) = builder.run {
         videoInfo = VideoInfo.newBuilder(builder.videoInfo).run {
             var audioId = 0
+            var setted = false
             val streams = streamListList.map {
-                if (it.streamInfo.quality != quality && it.dashVideo.codecid == videoCodecid) {
+                if (it.streamInfo.quality != quality || setted) {
                     Stream.newBuilder(it).run {
                         clearContent()
                         build()
                     }
                 } else {
                     audioId = it.dashVideo.audioId
+                    setted = true
                     it
                 }
             }
