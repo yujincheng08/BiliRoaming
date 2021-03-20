@@ -12,13 +12,14 @@ import android.util.Log as ALog
 object Log {
 
     private val handler by lazy { Handler(Looper.getMainLooper()) }
-    private val toast by lazy { Toast.makeText(currentContext, "", Toast.LENGTH_SHORT) }
+    private var toast: Toast? = null
 
     fun toast(msg: String, force: Boolean = false) {
         if (!force && !sPrefs.getBoolean("show_info", true)) return
         handler.post {
-            toast.setText("哔哩漫游：$msg")
-            toast.show()
+            toast?.cancel()
+            toast = Toast.makeText(currentContext, "哔哩漫游：$msg", Toast.LENGTH_SHORT)
+            toast!!.show()
         }
     }
 
