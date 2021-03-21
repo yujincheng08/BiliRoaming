@@ -137,6 +137,10 @@
             android:key="customize_danmaku_config"
             android:summary="@string/customize_danmaku_config_summary"
             android:title="@string/customize_danmaku_config_title" />
+        <Preference
+            android:key="export_video"
+            android:summary="只支持默认下载位置"
+            android:title="导出视频" />
     </PreferenceCategory>
     <PreferenceCategory android:title="备份和还原">
         <Preference
