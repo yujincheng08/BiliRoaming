@@ -19,6 +19,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.TextView
+import androidx.documentfile.provider.DocumentFile
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
@@ -47,7 +48,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             preferenceManager.sharedPreferencesName = "biliroaming"
             addPreferencesFromResource(R.xml.prefs_setting)
             prefs = preferenceManager.sharedPreferences
-            biliprefs = currentContext.getSharedPreferences(packageName+"_preferences", Context.MODE_MULTI_PROCESS)
+            biliprefs = currentContext.getSharedPreferences(packageName + "_preferences", Context.MODE_MULTI_PROCESS)
             if (!prefs.getBoolean("hidden", false)) {
                 val hiddenGroup = findPreference("hidden_group") as PreferenceCategory
                 preferenceScreen.removePreference(hiddenGroup)
@@ -65,6 +66,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("customize_danmaku_config").onPreferenceClickListener = this
             findPreference("pref_export").onPreferenceClickListener = this
             findPreference("pref_import").onPreferenceClickListener = this
+            findPreference("export_video")?.onPreferenceClickListener = this
             checkCompatibleVersion()
             checkUpdate()
         }
@@ -157,7 +159,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             if (!supportCommentFloor) {
                 disablePreference("comment_floor")
             }
-            if (!supportTeenagersMode){
+            if (!supportTeenagersMode) {
                 disablePreference("teenagers_mode_dialog")
             }
         }
@@ -185,7 +187,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                         preference.editor.remove(preference.key).apply()
                     }
                 }
-                "default_playback_speed"  -> {
+                "default_playback_speed" -> {
                     if (newValue == "") {
                         preference.editor.remove(preference.key).apply()
                     }
@@ -259,6 +261,22 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                                 Log.toast(e.message ?: "未知错误", true)
                             }
                         }
+                    }
+                }
+                VIDEO_EXPORT -> {
+                    val videosToExport = VideoExportDialog.videosToExport
+                    VideoExportDialog.videosToExport = emptySet()
+                    val uri = data?.data
+                    if (resultCode == RESULT_CANCELED || uri == null) return
+                    val targetDir = DocumentFile.fromTreeUri(activity, uri) ?: return
+                    try {
+                        videosToExport.forEach { video ->
+                            targetDir.findOrCreateDir(video.parentFile!!.name)?.let { DocumentFile.fromFile(video).copyTo(activity, it) }
+                        }
+                        Log.toast("导出成功", true)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        Log.toast("${e.message}")
                     }
                 }
             }
@@ -357,12 +375,12 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 val inflater = LayoutInflater.from(context)
                 val view = inflater.inflate(layout, null)
                 val editTexts = arrayOf(
-                    view.findViewById<EditText>(R.id.danmaku_textsize_scale_factor),
-                    view.findViewById(R.id.danmaku_stroke_width_scaling),
-                    view.findViewById(R.id.danmaku_duration_factor),
-                    view.findViewById(R.id.danmaku_alpha_factor),
-                    view.findViewById(R.id.danmaku_max_on_screen),
-                    view.findViewById(R.id.danmaku_screen_domain))
+                        view.findViewById<EditText>(R.id.danmaku_textsize_scale_factor),
+                        view.findViewById(R.id.danmaku_stroke_width_scaling),
+                        view.findViewById(R.id.danmaku_duration_factor),
+                        view.findViewById(R.id.danmaku_alpha_factor),
+                        view.findViewById(R.id.danmaku_max_on_screen),
+                        view.findViewById(R.id.danmaku_screen_domain))
                 editTexts.filter {
                     biliprefs.contains(it.tag.toString())
                 }.forEach {
@@ -409,6 +427,11 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             return true
         }
 
+        private fun onExportVideoClick(): Boolean {
+            VideoExportDialog(activity, this).show()
+            return true
+        }
+
         override fun onPreferenceClick(preference: Preference) = when (preference.key) {
             "version" -> onVersionClick()
             "update" -> onUpdateClick()
@@ -418,6 +441,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             "customize_danmaku_config" -> oncustomizedanmakuconfigclick()
             "pref_export" -> onPrefExportClick()
             "pref_import" -> onPrefImportClick()
+            "export_video" -> onExportVideoClick()
             else -> false
         }
     }
@@ -497,6 +521,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         const val LOGO_SELECTION = 1
         const val PREF_IMPORT = 2
         const val PREF_EXPORT = 3
+        const val VIDEO_EXPORT = 4
     }
 
 }

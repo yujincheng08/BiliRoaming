@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <CheckBox
+        android:id="@+id/cb"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <TextView
+        android:id="@+id/tv_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toEndOf="@id/cb"
+        android:textSize="14sp" />
+
+    <TextView
+        android:id="@+id/tv_pageTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/tv_title"
+        android:layout_alignStart="@id/tv_title"
+        android:textSize="13sp" />
+
+    <TextView
+        android:id="@+id/tv_bvid"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/tv_pageTitle"
+        android:layout_alignStart="@id/tv_pageTitle"
+        android:textSize="12sp" />
+
+    <TextView
+        android:id="@+id/tv_aid"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/tv_pageTitle"
+        android:layout_marginStart="5dp"
+        android:layout_toEndOf="@id/tv_bvid"
+        android:textSize="12sp" />
+</RelativeLayout>

@@ -214,6 +214,10 @@
             android:key="customize_accessKey"
             android:summary="@string/customize_accessKey_summary"
             android:title="@string/customize_accessKey_title" />
+        <Preference
+            android:key="export_video"
+            android:summary="只支持默认下载位置"
+            android:title="导出视频" />
     </PreferenceCategory>
 
     <PreferenceCategory
