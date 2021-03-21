@@ -113,6 +113,11 @@
             android:summary="@string/custom_download_thread_summary"
             android:title="@string/custom_download_thread_title" />
 
+        <SwitchPreference
+            android:key="get_cover"
+            android:summary="@string/get_cover_summary"
+            android:title="@string/get_cover_title" />
+
         <EditTextPreference
             android:key="playback_speed_override"
             android:summary="@string/playback_speed_override_summary"
@@ -209,10 +214,6 @@
             android:key="customize_accessKey"
             android:summary="@string/customize_accessKey_summary"
             android:title="@string/customize_accessKey_title" />
-        <SwitchPreference
-            android:key="get_cover"
-            android:summary="@string/get_cover_summary"
-            android:title="@string/get_cover_title" />
         <Preference
             android:key="export_video"
             android:summary="只支持默认下载位置"
