@@ -97,7 +97,6 @@ class VideoExportDialog(activity: Activity, fragment: Fragment) : AlertDialog.Bu
                 val indexTitle: String
         )
 
-
         val aBvid
             get() = ep?.bvid ?: bvid
         val aid get() = ep?.avid ?: avid

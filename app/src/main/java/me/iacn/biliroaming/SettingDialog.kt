@@ -66,7 +66,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("customize_danmaku_config").onPreferenceClickListener = this
             findPreference("pref_export").onPreferenceClickListener = this
             findPreference("pref_import").onPreferenceClickListener = this
-            findPreference("export_video").onPreferenceClickListener = this
+            findPreference("export_video")?.onPreferenceClickListener = this
             checkCompatibleVersion()
             checkUpdate()
         }
