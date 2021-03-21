@@ -33,15 +33,3 @@
 
 -allowaccessmodification
 -overloadaggressively
-
--keep class me.iacn.biliroaming.VideoExportDialog$VideoEntry {
-    <fields>;
-}
-
--keep class me.iacn.biliroaming.VideoExportDialog$VideoEntry$PageData {
-    <fields>;
-}
-
--keep class me.iacn.biliroaming.VideoExportDialog$VideoEntry$Ep {
-    <fields>;
-}

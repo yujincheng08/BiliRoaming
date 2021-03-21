@@ -13,8 +13,7 @@ import android.view.ViewGroup
 import android.widget.*
 import me.iacn.biliroaming.XposedInit.Companion.moduleRes
 import me.iacn.biliroaming.utils.Log
-import me.iacn.biliroaming.utils.callMethodAs
-import me.iacn.biliroaming.utils.gson
+import me.iacn.biliroaming.utils.toJSONObject
 import java.io.File
 
 class VideoExportDialog(activity: Activity, fragment: Fragment) : AlertDialog.Builder(activity) {
@@ -29,48 +28,61 @@ class VideoExportDialog(activity: Activity, fragment: Fragment) : AlertDialog.Bu
     private val selectedVideos = mutableSetOf<File>()
 
     init {
-        if (gson == null) {
-            setMessage("无Gson 不支持")
-            setPositiveButton("确定", null)
-        } else {
-            val allVideos = mutableListOf<VideoEntry>()
-            File(activity.externalCacheDir, "../download").listFiles()?.forEach { video ->
-
-                video.listFiles()?.forEach { page ->
-                    try {
-                        val videoEntry = gson!!.callMethodAs<VideoEntry>("fromJson", File(page, "entry.json").inputStream().reader(), VideoEntry::class.java)
-                        videoEntry.path = page
-                        allVideos.add(videoEntry)
-                    } catch (e: Throwable) {
-                        e.printStackTrace()
-                        Log.toast("${e.message}", true)
-                    }
-                }
-            }
-            view.adapter = VideoExportAdapter(activity, allVideos, selectedVideos)
-            view.setPadding(50, 20, 50, 20)
-
-            setNegativeButton("取消", null)
-
-            setPositiveButton("导出") { _, _ ->
-                videosToExport = selectedVideos
-                val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+        val allVideos = mutableListOf<VideoEntry>()
+        File(activity.externalCacheDir, "../download").listFiles()?.forEach { video ->
+            video.listFiles()?.forEach { page ->
                 try {
-                    fragment.startActivityForResult(Intent.createChooser(intent, "导出视频"), SettingDialog.VIDEO_EXPORT)
-                } catch (ex: ActivityNotFoundException) {
-                    Log.toast("请安装文件管理器")
+                    val jsonObj = File(page, "entry.json").readText().toJSONObject()
+                    val pageData = jsonObj.optJSONObject("page_data")?.let {
+                        VideoEntry.PageData(
+                                it.optString("part")
+                        )
+                    }
+                    val ep = jsonObj.optJSONObject("ep")?.let {
+                        VideoEntry.Ep(
+                                it.optLong("av_id"),
+                                it.optString("bvid"),
+                                it.optString("index"),
+                                it.optString("index_title")
+                        )
+                    }
+                    val videoEntry = VideoEntry(
+                            jsonObj.optString("title"),
+                            jsonObj.optLong("avid"),
+                            jsonObj.optString("bvid"),
+                            pageData, ep
+                    )
+                    videoEntry.path = page
+                    allVideos.add(videoEntry)
+                } catch (e: Throwable) {
+                    e.printStackTrace()
+                    Log.toast("${e.message}", true)
                 }
             }
-
-            setView(view)
         }
+        view.adapter = VideoExportAdapter(activity, allVideos, selectedVideos)
+        view.setPadding(50, 20, 50, 20)
+
+        setNegativeButton("取消", null)
+
+        setPositiveButton("导出") { _, _ ->
+            videosToExport = selectedVideos
+            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+            try {
+                fragment.startActivityForResult(Intent.createChooser(intent, "导出视频"), SettingDialog.VIDEO_EXPORT)
+            } catch (ex: ActivityNotFoundException) {
+                Log.toast("请安装文件管理器")
+            }
+        }
+
+        setView(view)
     }
 
     class VideoEntry(
             val title: String,
             val avid: Long,
-            val bvid: String?,
-            val page_data: PageData?,
+            val bvid: String,
+            val pageData: PageData?,
             val ep: Ep?,
             var path: File? = null
     ) {
@@ -79,17 +91,17 @@ class VideoExportDialog(activity: Activity, fragment: Fragment) : AlertDialog.Bu
         )
 
         class Ep(
-                val av_id: Long,
-                val bvid: String?,
+                val avid: Long,
+                val bvid: String,
                 val index: String,
-                val index_title: String
+                val indexTitle: String
         )
 
 
         val aBvid
-            get() = bvid ?: ep?.bvid
-        val aid get() = ep?.av_id ?: avid
-        val pageTitle get() = page_data?.part ?: ep?.let { "${it.index} ${it.index_title}" }
+            get() = ep?.bvid ?: bvid
+        val aid get() = ep?.avid ?: avid
+        val pageTitle get() = pageData?.part ?: ep?.let { "${it.index} ${it.indexTitle}" }
     }
 
     class VideoExportAdapter(context: Context, private val allVideos: List<VideoEntry>, private val selectedVideos: MutableSet<File>) : ArrayAdapter<VideoEntry>(context, 0) {

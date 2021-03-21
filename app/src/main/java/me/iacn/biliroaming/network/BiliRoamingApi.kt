@@ -150,7 +150,7 @@ object BiliRoamingApi {
     @JvmStatic
     private fun fixHiddenSeason(result: JSONObject) {
         for (episode in result.optJSONArray("episodes").orEmpty()) {
-            episode.put("long_title", episode.optString("index_title"))
+            episode.put("long_title", episode.optString("indexTitle"))
             episode.put("id", episode.optString("ep_id"))
             episode.put("title", episode.optString("index"))
             episode.put("rights", BILI_RIGHT_TEMPLATE.toJSONObject())
@@ -465,7 +465,7 @@ object BiliRoamingApi {
             ep.put("episode_status", ep.optInt("status"))
             ep.put("ep_id", ep.optInt("id"))
             ep.put("index", ep.optString("title"))
-            ep.put("index_title", ep.optString("long_title"))
+            ep.put("indexTitle", ep.optString("long_title"))
             episodes.put(ep)
         }
         result.put("episodes",episodes)
