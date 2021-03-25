@@ -17,6 +17,7 @@ import java.io.*
 import java.lang.reflect.Modifier
 import java.lang.reflect.ParameterizedType
 import java.net.URL
+import kotlin.math.max
 
 /**
  * Created by iAcn on 2019/4/5
@@ -174,9 +175,16 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             val startTime = System.currentTimeMillis()
             if (hookInfoFile.isFile && hookInfoFile.canRead()) {
                 val lastUpdateTime = context.packageManager.getPackageInfo(AndroidAppHelper.currentPackageName(), 0).lastUpdateTime
+                val lastModuleUpdateTime = try {
+                    context.packageManager.getPackageInfo(BuildConfig.APPLICATION_ID, 0)
+                } catch (e: Throwable) {
+                    null
+                }?.lastUpdateTime ?: 0
                 val stream = ObjectInputStream(FileInputStream(hookInfoFile))
+                val lastHookInfoUpdateTime = stream.readLong()
                 @Suppress("UNCHECKED_CAST")
-                if (stream.readLong() == lastUpdateTime) return stream.readObject() as MutableMap<String, String?>
+                if (lastHookInfoUpdateTime >= lastUpdateTime && lastHookInfoUpdateTime >= lastModuleUpdateTime )
+                    return stream.readObject() as MutableMap<String, String?>
             }
             val endTime = System.currentTimeMillis()
             Log.d("Read hook info completed: take ${endTime - startTime} ms")
@@ -318,11 +326,11 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         return needUpdate
     }
 
-    private fun findGsonToJsonMethod() = gsonClass?.declaredMethods?.firstOrNull{ m ->
+    private fun findGsonToJsonMethod() = gsonClass?.declaredMethods?.firstOrNull { m ->
         m.returnType == String::class.java && m.parameterTypes.size == 1 && m.parameterTypes[0] == Object::class.java
     }?.name
 
-    private fun findGsonFromJsonMethod() = gsonClass?.declaredMethods?.firstOrNull{ m ->
+    private fun findGsonFromJsonMethod() = gsonClass?.declaredMethods?.firstOrNull { m ->
         m.returnType == Object::class.java && m.parameterTypes.size == 2 && m.parameterTypes[0] == String::class.java && m.parameterTypes[1] == Class::class.java
     }?.name
 
@@ -537,9 +545,14 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         try {
             val hookInfoFile = File(context.cacheDir, Constant.HOOK_INFO_FILE_NAME)
             val lastUpdateTime = context.packageManager.getPackageInfo(AndroidAppHelper.currentPackageName(), 0).lastUpdateTime
+            val lastModuleUpdateTime = try {
+                context.packageManager.getPackageInfo(BuildConfig.APPLICATION_ID, 0)
+            } catch (e: Throwable) {
+                null
+            }?.lastUpdateTime ?: 0
             if (hookInfoFile.exists()) hookInfoFile.delete()
             ObjectOutputStream(FileOutputStream(hookInfoFile)).use { stream ->
-                stream.writeLong(lastUpdateTime)
+                stream.writeLong(max(lastModuleUpdateTime, lastUpdateTime))
                 stream.writeObject(mHookInfo)
             }
         } catch (e: Exception) {
@@ -552,7 +565,13 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         "extractResult" == it.name
     }?.map {
         it.parameterTypes[0]
-    }?.firstOrNull()?.name
+    }?.firstOrNull()?.name ?: "retrofit2.HttpException".findClass(mClassLoader)?.run {
+        try {
+            getDeclaredField("response").type.name
+        } catch (e: NoSuchFieldException) {
+            null
+        }
+    }
 
     private fun findOkHttp(): Array<String?> {
         val okHttpRequestClass = hostRequestInterceptorClass?.declaredMethods?.firstOrNull {
