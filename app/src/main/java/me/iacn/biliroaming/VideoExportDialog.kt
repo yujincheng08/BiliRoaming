@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package me.iacn.biliroaming
 
 import android.annotation.SuppressLint

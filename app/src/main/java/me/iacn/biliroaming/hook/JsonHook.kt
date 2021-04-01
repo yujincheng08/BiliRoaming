@@ -102,29 +102,32 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     }
 
                 }
-                accountMineClass -> if (sPrefs.getBoolean("purify_drawer", false) &&
-                        sPrefs.getBoolean("hidden", false)) {
-                    arrayOf(result.getObjectFieldAs<MutableList<*>?>("sectionList"),
-                            result.getObjectFieldAs<MutableList<*>>("sectionListV2")).forEach { sections ->
-                        var button: Any? = null
-                        sections?.removeAll { item ->
-                            item?.getObjectField("button")?.run {
-                                if (!getObjectFieldAs<String?>("text").isNullOrEmpty())
-                                    button = this
-                            }
-                            when {
-                                item?.getObjectFieldAs<String?>("title").isNullOrEmpty() -> false
-                                item?.getIntField("style") == 2 -> {
-                                    item.setObjectField("button", button)
-                                    false
+                accountMineClass -> {
+                    if (sPrefs.getBoolean("purify_drawer", false) &&
+                            sPrefs.getBoolean("hidden", false)) {
+                        arrayOf(result.getObjectFieldAs<MutableList<*>?>("sectionList"),
+                                result.getObjectFieldAs<MutableList<*>>("sectionListV2")).forEach { sections ->
+                            var button: Any? = null
+                            sections?.removeAll { item ->
+                                item?.getObjectField("button")?.run {
+                                    if (!getObjectFieldAs<String?>("text").isNullOrEmpty())
+                                        button = this
                                 }
-                                else -> true
+                                when {
+                                    item?.getObjectFieldAs<String?>("title").isNullOrEmpty() -> false
+                                    item?.getIntField("style") == 2 -> {
+                                        item.setObjectField("button", button)
+                                        false
+                                    }
+                                    else -> true
+                                }
                             }
                         }
+                        accountMineClass.findFieldOrNull("vipSectionRight")?.set(result, null)
                     }
-                    accountMineClass.findFieldOrNull("vipSectionRight")?.set(result, null)
-                } else if(sPrefs.getBoolean("custom_theme", false)) {
-                    result.setObjectField("garbEntrance", null)
+                    if (sPrefs.getBoolean("custom_theme", false)) {
+                        result.setObjectField("garbEntrance", null)
+                    }
                 }
                 splashClass -> if (sPrefs.getBoolean("purify_splash", false) &&
                         sPrefs.getBoolean("hidden", false)) {
