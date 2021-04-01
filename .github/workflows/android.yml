@@ -18,8 +18,20 @@ jobs:
       - name: Retrieve version
         run: |
           echo VERSION=$(echo ${{ github.event.head_commit.id }} | head -c 10) >> $GITHUB_ENV
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: gradle-
       - name: Build with Gradle
-        run: bash ./gradlew -PappVerName=${{ env.VERSION }} assembleRelease
+        run: |
+          echo 'org.gradle.caching=true' >> gradle.properties
+          echo 'org.gradle.parallel=true' >> gradle.properties
+          echo 'org.gradle.vfs.watch=true' >> gradle.properties
+          echo 'org.gradle.jvmargs=-Xmx2048m' >> gradle.properties
+          bash ./gradlew -PappVerName=${{ env.VERSION }} assembleRelease
       - name: Upload built apk
         if: success()
         uses: actions/upload-artifact@v2

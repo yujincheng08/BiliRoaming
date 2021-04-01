@@ -1,1 +1,2 @@
 include ':app'
+buildCache { local { removeUnusedEntriesAfterDays = 30 } }
