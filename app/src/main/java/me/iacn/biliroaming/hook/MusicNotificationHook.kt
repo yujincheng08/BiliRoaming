@@ -305,7 +305,7 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
         instance.musicNotificationHelperClass?.replaceMethod(instance.setNotification(), instance.notificationBuilderClass) {}
 
-        val hooker : Hooker = fun(param: MethodHookParam) {
+        val hooker: Hooker = fun(param: MethodHookParam) {
             val old = param.result as Notification? ?: return
             val iconId = getId("icon")
             val notificationIconId = getId("notification_icon")
@@ -430,6 +430,7 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         1 -> intArrayOf(0)
                         2 -> intArrayOf(0, 1)
                         3 -> intArrayOf(0, 1, 2)
+                        4 -> intArrayOf(1, 2, 3)
                         else -> intArrayOf(2, 3, 4)
                     })
                     instance.absMusicService()?.let { f ->
