@@ -63,12 +63,13 @@ object BiliRoamingApi {
             reconstructModules(it)
             fixRight(it)
             if (hidden) getExtraInfo(it, instance.accessKey)
-            if (it.optJSONArray("episodes")?.length() == 0 || it.optInt("total_ep") == -1) {
+            if (it.optJSONArray("episodes")?.length() == 0 || it.optInt("total_ep") == -1
+                    || (it.has("total_ep") && it.optInt("total_ep").toString() != it.optJSONObject("newest_ep")?.optString("index"))) {
                 fixThailandSeasonFlag = true
             }
         }
         val thUrl = sPrefs.getString("th_server", null)
-        if (thUrl != null && (seasonJson.optInt("code") == -404 || fixThailandSeasonFlag )) {
+        if (thUrl != null && (seasonJson.optInt("code") == -404 || fixThailandSeasonFlag)) {
             builder.scheme("https").encodedAuthority(thUrl + THAILAND_PATH_SEASON)
                     .appendQueryParameter("s_locale", "zh_SG")
                     .appendQueryParameter("access_key", instance.accessKey)
@@ -468,7 +469,7 @@ object BiliRoamingApi {
             ep.put("indexTitle", ep.optString("long_title"))
             episodes.put(ep)
         }
-        result.put("episodes",episodes)
+        result.put("episodes", episodes)
 
         val style = JSONArray()
         for (i in result.optJSONArray("styles").orEmpty()) {
