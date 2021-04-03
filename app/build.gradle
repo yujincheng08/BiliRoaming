@@ -90,8 +90,8 @@ protobuf {
 dependencies {
     compileOnly 'de.robv.android.xposed:api:82'
     compileOnly 'de.robv.android.xposed:api:82:sources'
-    implementation 'com.google.protobuf:protobuf-javalite:3.15.5'
-    compileOnly 'com.google.protobuf:protoc:3.15.5'
+    implementation 'com.google.protobuf:protobuf-javalite:3.15.6'
+    compileOnly 'com.google.protobuf:protoc:3.15.6'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.3'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.4.3'
     implementation 'androidx.documentfile:documentfile:1.0.1'
