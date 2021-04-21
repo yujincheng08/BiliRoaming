@@ -205,6 +205,9 @@ object BiliRoamingApi {
         }
         if (result.has("seasons")) {
             val seasons = result.optJSONArray("seasons")
+            for (season in seasons.orEmpty()) {
+                season.put("title", season.optString("season_title"))
+            }
             val seasonModule = BILI_MODULE_TEMPLATE.toJSONObject()
             seasonModule.put("data", JSONObject().put("seasons", seasons))
                     .put("style", "season")
