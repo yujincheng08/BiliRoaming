@@ -169,9 +169,8 @@ object BiliRoamingApi {
     private fun fixEpisodes(result: JSONObject) {
         val episodes = result.optJSONArray("episodes")
         for (episode in episodes.orEmpty()) {
-            episode.optJSONObject("rights")?.run {
-                put("area_limit", 0)
-                put("allow_dm", 1)
+            episode.optJSONObject("rights")?.let {
+                fixRight(it)
             }
             if (episode.optInt("badge_type", -1) == 0)
                 episode.remove("badge_info")
@@ -226,7 +225,7 @@ object BiliRoamingApi {
         result.optJSONObject("rights")?.run {
             put("area_limit", 0)
             put("allow_dm", 1)
-        }
+        } ?: run { result.put("rights", BILI_RIGHT_TEMPLATE.toJSONObject()) }
     }
 
     @JvmStatic
@@ -453,7 +452,7 @@ object BiliRoamingApi {
 
     @JvmStatic
     fun fixThailandSeason(result: JSONObject) {
-        val input_episodes = result.optJSONArray("modules")?.optJSONObject(0)?.optJSONObject("data")?.optJSONArray("episodes")
+        val inputEpisodes = result.optJSONArray("modules")?.optJSONObject(0)?.optJSONObject("data")?.optJSONArray("episodes")
         result.apply {
             put("actors", result.optJSONObject("actor")?.optString("info"))
             put("is_paster_ads", 0)
@@ -461,16 +460,17 @@ object BiliRoamingApi {
             put("newest_ep", result.optJSONObject("new_ep"))
             put("season_status", result.optInt("status"))
             put("season_title", result.optString("title"))
-            put("total_ep", input_episodes?.length())
+            put("total_ep", inputEpisodes?.length())
         }
         result.optJSONObject("rights")?.put("watch_platform", 1)
 
         val episodes = JSONArray()
-        for (ep in input_episodes.orEmpty()) {
+        for (ep in inputEpisodes.orEmpty()) {
             ep.put("episode_status", ep.optInt("status"))
             ep.put("ep_id", ep.optInt("id"))
             ep.put("index", ep.optString("title"))
             ep.put("indexTitle", ep.optString("long_title"))
+            fixRight(ep)
             episodes.put(ep)
         }
         result.put("episodes", episodes)
