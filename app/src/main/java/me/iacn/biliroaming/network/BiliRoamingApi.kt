@@ -170,9 +170,7 @@ object BiliRoamingApi {
     private fun fixEpisodes(result: JSONObject) {
         val episodes = result.optJSONArray("episodes")
         for (episode in episodes.orEmpty()) {
-            episode.optJSONObject("rights")?.let {
-                fixRight(it)
-            }
+            fixRight(episode)
             if (episode.optInt("badge_type", -1) == 0)
                 episode.remove("badge_info")
             if (episode.optString("badge") != "受限")
