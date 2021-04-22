@@ -13,12 +13,19 @@ import org.json.JSONObject
 import java.io.ByteArrayInputStream
 import java.io.InputStream
 import java.net.HttpURLConnection
+import java.util.*
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 
 /**
  * Created by iAcn on 2019/3/29
  * Email i@iacn.me
  */
 class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
+    var countDownLatch: CountDownLatch? = null
+
     override fun startHook() {
         if (!sPrefs.getBoolean("main_func", false)) return
         Log.d("startHook: BangumiPlayUrl")
@@ -84,6 +91,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             // If biliplus is down, we can still get result from proxy server.
             // However, the speed may not be fast.
             content = getPlayUrl(queryString.replace("dl=1", "dl_fix=1"))
+            countDownLatch?.countDown()
             content = content?.let {
                 if (urlString.contains("dl_fix=1") || urlString.contains("dl=1")) {
                     fixDownload(it)
@@ -121,9 +129,10 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 val request = param.args[0]
                 val response = param.result
                 if (!response.callMethodAs<Boolean>("hasVideoInfo")
-                    || needForceProxy(response)
+                        || needForceProxy(response)
                 ) {
                     val content = getPlayUrl(reconstructQuery(request))
+                    countDownLatch?.countDown()
                     content?.let {
                         Log.d("Has replaced play url with proxy server $it")
                         Log.toast("已从代理服务器获取播放地址")
@@ -157,13 +166,15 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             hookAfterMethod("playView",
                     "com.bapis.bilibili.pgc.gateway.player.v2.PlayViewReq") { param ->
                 val request = param.args[0]
-                val response = param.result ?: "com.bapis.bilibili.pgc.gateway.player.v2.PlayViewReply".findClass(mClassLoader)?.new()!!
+                val response = param.result
+                        ?: "com.bapis.bilibili.pgc.gateway.player.v2.PlayViewReply".findClass(mClassLoader)?.new()!!
                 if (!response.callMethodAs<Boolean>("hasVideoInfo") ||
                         (response.callMethodAs("hasViewInfo") &&
                                 response.callMethod("getViewInfo")?.callMethodAs<Boolean>("hasDialog") == true) &&
                         response.callMethod("getViewInfo")?.callMethod("getDialog")?.callMethodAs<String>("getType") == "area_limit"
                 ) {
                     val content = getPlayUrl(reconstructQuery(request))
+                    countDownLatch?.countDown()
                     content?.let {
                         Log.d("Has replaced play url with proxy server $it")
                         Log.toast("已从代理服务器获取播放地址")
@@ -193,9 +204,19 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             //       However, for cached bangumi's, we don't know watch_platform.
             //       One way is to get the information from entry.json and store that to
             //       lastSeasonInfo as online bangumi's.
-            if (lastSeasonInfo.containsKey("watch_platform") && lastSeasonInfo["watch_platform"] == "1"
-                    && lastSeasonInfo.containsKey(oid) && param.result.callMethod("getSubtitle")?.callMethod("getSubtitlesCount") == 0) {
-                val result = getThailandSubtitles(lastSeasonInfo[oid])?.toJSONObject()
+            var tryThailand = lastSeasonInfo.containsKey("watch_platform") && lastSeasonInfo["watch_platform"] == "1"
+                    && lastSeasonInfo.containsKey(oid) && param.result.callMethod("getSubtitle")?.callMethod("getSubtitlesCount") == 0
+            if (!tryThailand && !lastSeasonInfo.containsKey("area")) {
+                countDownLatch = CountDownLatch(1)
+                try {
+                    countDownLatch?.await(5, TimeUnit.SECONDS)
+                } catch (ignored: Throwable) {
+                }
+                tryThailand = lastSeasonInfo.containsKey("area") && lastSeasonInfo["area"] == "th"
+            }
+            if (tryThailand) {
+                Log.d("Getting thailand subtitles")
+                val result = getThailandSubtitles(lastSeasonInfo[oid] ?: lastSeasonInfo["epid"])?.toJSONObject()
                         ?: return@hookAfterMethod
                 if (result.optInt("code") != 0) return@hookAfterMethod
                 val data = result.optJSONObject("data") ?: return@hookAfterMethod

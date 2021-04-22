@@ -118,6 +118,7 @@ object BiliRoamingApi {
 
     @JvmStatic
     fun getThailandSubtitles(epId: String?): String? {
+        Log.d("Getting subtitle $epId form thailand")
         epId ?: return null
         val thUrl = sPrefs.getString("th_server", null) ?: return null
         val uri = Uri.Builder()
@@ -373,6 +374,8 @@ object BiliRoamingApi {
             getContent(uri)?.let {
                 Log.d("use server $area $host for playurl")
                 if (it.contains("\"code\":0")) {
+                    lastSeasonInfo["area"] = area
+                    lastSeasonInfo["epid"] = epId
                     if (seasonId != null && !sCaches.contains(seasonId) || sCaches.getString(seasonId, null) != area) {
                         sCaches.edit().run {
                             putString(seasonId, area)
