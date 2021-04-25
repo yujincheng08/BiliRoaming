@@ -113,11 +113,13 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 "android_i" -> {
                     if (versionCode in 2050410..2080109) supportLiveHook = true
                     if (versionCode < 2050410) supportDark = false
+                    if (versionCode < 3000500) supportCommentFloor = true
                     supportAdd4K = true
                 }
                 "android_b" -> {
                     if (versionCode < 6080000) supportAdd4K = true
                     if (versionCode < 6000000) supportDark = false
+                    if (versionCode < 6180000) supportCommentFloor = true
                 }
                 "android" -> {
                     if (versionCode !in 6000000 until 6120000) supportDark = false
