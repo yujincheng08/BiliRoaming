@@ -25,7 +25,7 @@ class CoverHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     @SuppressLint("ClickableViewAccessibility")
-    val hooker : Hooker = { param ->
+    val hooker: Hooker = { param ->
         val group = param.args[0] as ViewGroup
         val activity = param.thisObject.callMethodAs<Activity>("getActivity")
 
@@ -52,9 +52,18 @@ class CoverHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             }
                         }
                         else -> if (liveClass?.isInstance(param.thisObject) == true) {
-                            val viewModelField = activity.javaClass.declaredFields.firstOrNull { it.type.name == "com.bilibili.bililive.videoliveplayer.ui.roomv3.base.viewmodel.LiveRoomRootViewModel" }
-                            val roomFeedField = viewModelField?.type?.declaredFields?.firstOrNull { it.type.name == "com.bilibili.bililive.videoliveplayer.ui.roomv3.vertical.roomfeed.LiveRoomFeedViewModel" }
-                            val currentFeedField = roomFeedField?.type?.declaredFields?.firstOrNull { it.type.name.startsWith("com.bilibili.bililive.videoliveplayer.ui.roomv3.vertical.roomfeed") }
+                            val viewModelField = activity.javaClass.declaredFields.firstOrNull {
+                                it.type.name == "com.bilibili.bililive.videoliveplayer.ui.roomv3.base.viewmodel.LiveRoomRootViewModel" ||
+                                        it.type.name == "com.bilibili.bililive.room.ui.roomv3.base.viewmodel.LiveRoomRootViewModel"
+                            }
+                            val roomFeedField = viewModelField?.type?.declaredFields?.firstOrNull {
+                                it.type.name == "com.bilibili.bililive.videoliveplayer.ui.roomv3.vertical.roomfeed.LiveRoomFeedViewModel" ||
+                                        it.type.name == "com.bilibili.bililive.room.ui.roomv3.vertical.roomfeed.LiveRoomFeedViewModel"
+                            }
+                            val currentFeedField = roomFeedField?.type?.declaredFields?.firstOrNull {
+                                it.type.name.startsWith("com.bilibili.bililive.videoliveplayer.ui.roomv3.vertical.roomfeed") ||
+                                        it.type.name.startsWith("com.bilibili.bililive.room.ui.roomv3.vertical.roomfeed")
+                            }
                             val roomIdField = currentFeedField?.type?.declaredFields?.firstOrNull { it.type == Long::class.java }
                             val coverField = currentFeedField?.type?.declaredFields?.firstOrNull { it.type == String::class.java }
                             val titleField = currentFeedField?.type?.declaredFields?.lastOrNull { it.type == String::class.java }
