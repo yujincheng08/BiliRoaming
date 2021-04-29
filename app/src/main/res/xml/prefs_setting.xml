@@ -218,6 +218,10 @@
             android:key="export_video"
             android:summary="只支持默认下载位置"
             android:title="导出视频" />
+        <SwitchPreference
+            android:key="remove_index_ads"
+            android:summary="某些旧版可能无效"
+            android:title="移除首页广告" />
     </PreferenceCategory>
 
     <PreferenceCategory
