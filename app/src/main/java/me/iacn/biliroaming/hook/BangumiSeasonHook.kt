@@ -131,7 +131,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 if (url != null && url.startsWith("https://appintl.biliapi.net/intl/gateway/app/search/type") && !url.contains("type=$TH_TYPE")) {
                     fixPlaySearchType(body, url)
                 }
-                if (url != null && url.startsWith("https://app.bilibili.com/x/v2/feed/index") && sPrefs.getBoolean("remove_index_ads", false) && !url.contains("idx=0") && !url.contains("/converge") && !url.contains("/tab") && !url.contains("/story")) {
+                if (url != null && url.startsWith("https://app.bilibili.com/x/v2/feed/index") && sPrefs.getBoolean("remove_index_ads", false) && !url.contains("/converge") && !url.contains("/tab") && !url.contains("/story")) {
                     removeIndexAds(body)
                 }
                 if (instance.generalResponseClass?.isInstance(body) == true || instance.rxGeneralResponseClass?.isInstance(body) == true) {
