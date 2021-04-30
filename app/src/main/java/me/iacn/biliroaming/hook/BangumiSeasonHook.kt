@@ -232,6 +232,16 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         body.setObjectField("data", newResult)
     }
 
+    /**
+     * 只能这么改
+     * 因为即使是
+     * ```kotlin
+     * val dataClass = body.getObjectField("data").javaClass
+     * val dataJson = body.getObjectField("data").toJson()
+     * body.setObjectField("data", dataClass.fromJson(dataJson)
+     * ```
+     * 也会导致崩溃
+     */
     private fun removeIndexAds(body: Any) {
         body.getObjectField("data")?.getObjectFieldAs<ArrayList<Any>>("items")?.apply {
             val old = size
