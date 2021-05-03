@@ -248,7 +248,9 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             removeAll {
                 "ad" in (it.getObjectFieldAs("cardGoto") ?: "")
             }
-            Log.toast("移除广告 x${old - size}")
+            if (old - size > 0){
+                Log.toast("移除广告 x${old - size}")
+            }
         }
         body.getObjectField("data")?.getObjectFieldAs<ArrayList<Any>>("items")?.apply {
             removeAll {
