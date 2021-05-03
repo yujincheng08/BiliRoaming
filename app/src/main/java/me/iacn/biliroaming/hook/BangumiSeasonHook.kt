@@ -252,11 +252,9 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             Log.toast("移除广告 x${old - size}")
         }
         body.getObjectField("data")?.getObjectFieldAs<ArrayList<Any>>("items")?.apply {
-            val old = size
             removeAll {
                 "large_cover_v9" in (it.getObjectFieldAs("cardType") ?: "")
             }
-            Log.toast("移除宽推荐 x${old - size}")
         }
     }
 
