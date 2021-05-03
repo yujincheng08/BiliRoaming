@@ -131,7 +131,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 if (url != null && url.startsWith("https://appintl.biliapi.net/intl/gateway/app/search/type") && !url.contains("type=$TH_TYPE")) {
                     fixPlaySearchType(body, url)
                 }
-                if (url != null && url.startsWith("https://app.bilibili.com/x/v2/feed/index") && sPrefs.getBoolean("remove_index_ads", false) && !url.contains("/converge") && !url.contains("/tab") && !url.contains("/story")) {
+                if (url != null && url.startsWith("https://app.bilibili.com/x/v2/feed/index") && sPrefs.getBoolean("purify_home_recommend", false) && !url.contains("/converge") && !url.contains("/tab") && !url.contains("/story")) {
                     removeIndexAds(body)
                 }
                 if (instance.generalResponseClass?.isInstance(body) == true || instance.rxGeneralResponseClass?.isInstance(body) == true) {
@@ -248,7 +248,14 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             removeAll {
                 "ad" in (it.getObjectFieldAs("cardGoto") ?: "")
             }
-            Log.toast("移除广告 x${old - size}")
+            if (old - size > 0){
+                Log.toast("移除广告 x${old - size}")
+            }
+        }
+        body.getObjectField("data")?.getObjectFieldAs<ArrayList<Any>>("items")?.apply {
+            removeAll {
+                "large_cover_v9" in (it.getObjectFieldAs("cardType") ?: "")
+            }
         }
     }
 
