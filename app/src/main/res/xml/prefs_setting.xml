@@ -138,13 +138,13 @@
             android:summary="@string/customize_danmaku_config_summary"
             android:title="@string/customize_danmaku_config_title" />
     </PreferenceCategory>
-    <PreferenceCategory android:title="备份和还原">
+    <PreferenceCategory android:title="@string/pref_backup">
         <Preference
             android:key="pref_export"
-            android:title="导出配置" />
+            android:title="@string/pref_export_title" />
         <Preference
             android:key="pref_import"
-            android:title="导入配置" />
+            android:title="@string/pref_import_title" />
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/setting_category">
         <SwitchPreference
@@ -200,6 +200,10 @@
             android:summary="@string/customize_home_tab_summary"
             android:title="@string/customize_home_tab_title" />
         <SwitchPreference
+            android:key="purify_home_recommend"
+            android:summary="@string/purify_home_recommend_summary"
+            android:title="@string/purify_home_recommend_title" />
+        <SwitchPreference
             android:dependency="hidden"
             android:key="purify_city"
             android:summary="@string/purify_city_summary"
@@ -216,12 +220,8 @@
             android:title="@string/customize_accessKey_title" />
         <Preference
             android:key="export_video"
-            android:summary="只支持默认下载位置"
-            android:title="导出视频" />
-        <SwitchPreference
-            android:key="remove_index_ads"
-            android:summary="某些旧版可能无效"
-            android:title="移除首页广告" />
+            android:summary="@string/export_video_summary"
+            android:title="@string/export_video_title" />
     </PreferenceCategory>
 
     <PreferenceCategory
