@@ -131,6 +131,10 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 if (url != null && url.startsWith("https://appintl.biliapi.net/intl/gateway/app/search/type") && !url.contains("type=$TH_TYPE")) {
                     fixPlaySearchType(body, url)
                 }
+                if (url != null && url.startsWith("https://app.bilibili.com/x/v2/feed/index") && sPrefs.getBoolean("remove_index_ads", false) && !url.contains("/converge") && !url.contains("/tab") && !url.contains("/story")) {
+                    Log.d("startHook: RemoveIndexAds: url= "+url)
+                    removeIndexAds(body)
+                }
                 if (instance.generalResponseClass?.isInstance(body) == true || instance.rxGeneralResponseClass?.isInstance(body) == true) {
                     val data = body.getObjectField("data") ?: return@hookBeforeAllConstructors
                     if (data.javaClass == searchAllResultClass) {
@@ -227,6 +231,26 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val content = getContent(newUrl)?.toJSONObject()?.optJSONObject("data") ?: return
         val newResult = resultClass.fromJson(content) ?: return
         body.setObjectField("data", newResult)
+    }
+
+    /**
+     * 只能这么改
+     * 因为即使是
+     * ```kotlin
+     * val dataClass = body.getObjectField("data").javaClass
+     * val dataJson = body.getObjectField("data").toJson()
+     * body.setObjectField("data", dataClass.fromJson(dataJson)
+     * ```
+     * 也会导致崩溃
+     */
+    private fun removeIndexAds(body: Any) {
+        body.getObjectField("data")?.getObjectFieldAs<ArrayList<Any>>("items")?.apply {
+            val old = size
+            removeAll {
+                "ad" in (it.getObjectFieldAs("cardGoto") ?: "")
+            }
+            Log.toast("移除广告 x${old - size}")
+        }
     }
 
     private fun fixBangumi(body: Any) {
