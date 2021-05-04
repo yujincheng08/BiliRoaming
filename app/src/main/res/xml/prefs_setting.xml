@@ -201,8 +201,8 @@
             android:title="@string/customize_home_tab_title" />
         <SwitchPreference
             android:key="purify_home_recommend"
-            android:summary="@string/purify_home_recommend_summary"
-            android:title="@string/purify_home_recommend_title" />
+            android:summary="@string/purify_home_rcmd_summary"
+            android:title="@string/purify_home_rcmd_title" />
         <SwitchPreference
             android:dependency="hidden"
             android:key="purify_city"
