@@ -19,7 +19,7 @@ import java.lang.reflect.Array as RArray
  * Email i@iacn.me
  */
 
-class HomeRcmdHook(classLoader: ClassLoader) : BaseHook(classLoader) {
+class HomeRecommendHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     companion object {
         val lastSeasonInfo: MutableMap<String, String?> = HashMap()
 
@@ -69,8 +69,8 @@ class HomeRcmdHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private fun Class<*>.fromJson(json: JSONObject) = fromJson(json.toString())
 
     override fun startHook() {
-        if (!sPrefs.getBoolean("purify_home_rcmd", false)) return
-        Log.d("startHook: IndexRcmd")
+        if (!sPrefs.getBoolean("purify_home_recommend", false)) return
+        Log.d("startHook: HomeRecommend")
 
         if (isBuiltIn && is64 && Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
             Log.e("Not support")
@@ -80,7 +80,7 @@ class HomeRcmdHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 val url = getUrl(param.args[0])
                 val body = param.args[1] ?: return@hookBeforeAllConstructors
                 if (url != null && url.startsWith("https://app.bilibili.com/x/v2/feed/index") && !url.contains("/converge") && !url.contains("/tab") && !url.contains("/story")) {
-                    removeIndexAds(body)
+                    removeHomeRecommendAds(body)
                 }
             }
         }
@@ -96,7 +96,7 @@ class HomeRcmdHook(classLoader: ClassLoader) : BaseHook(classLoader) {
      * ```
      * 也会导致崩溃
      */
-    private fun removeIndexAds(body: Any) {
+    private fun removeHomeRecommendAds(body: Any) {
         body.getObjectField("data")?.getObjectFieldAs<ArrayList<Any>>("items")?.apply {
             val old = size
             removeAll {
