@@ -3,15 +3,10 @@ package me.iacn.biliroaming.hook
 import android.content.Context
 import android.net.Uri
 import android.os.Build
-import android.os.Bundle
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
-import me.iacn.biliroaming.network.BiliRoamingApi
-import me.iacn.biliroaming.network.BiliRoamingApi.getContent
 import me.iacn.biliroaming.utils.*
 import org.json.JSONObject
-import java.lang.reflect.Method
 import java.net.URL
-import java.net.URLDecoder
 import java.lang.reflect.Array as RArray
 
 /**
@@ -20,54 +15,6 @@ import java.lang.reflect.Array as RArray
  */
 
 class HomeRecommendHook(classLoader: ClassLoader) : BaseHook(classLoader) {
-    companion object {
-        val lastSeasonInfo: MutableMap<String, String?> = HashMap()
-
-        private val jsonNonStrict = lazy {
-            instance.kotlinJsonClass?.getStaticObjectField("Companion")?.callMethod("getNonstrict")
-        }
-        const val FAIL_CODE = -404
-    }
-
-    private val isSerializable by lazy {
-        "com.bilibili.bangumi.data.page.detail.entity.BangumiUniformSeason\$\$serializer".findClassOrNull(mClassLoader) != null
-    }
-
-    private val isGson by lazy {
-        instance.bangumiUniformSeasonClass?.annotations?.fold(false) { last, it ->
-            last || it.annotationClass.java.name.startsWith("gsonannotator")
-        } ?: false && instance.gsonFromjson() != null && instance.gsonTojson() != null
-    }
-
-    private val gson by lazy {
-        instance.gson()?.let { instance.gsonConverterClass?.getStaticObjectField(it) }
-    }
-
-    private val serializerFeatures = lazy {
-        val serializerFeatureClass = "com.alibaba.fastjson.serializer.SerializerFeature".findClass(mClassLoader)
-                ?: return@lazy null
-        val keyAsString = serializerFeatureClass.getStaticObjectField("WriteNonStringKeyAsString")
-        val noDefault = serializerFeatureClass.getStaticObjectField("NotWriteDefaultValue")
-        val serializerFeatures = RArray.newInstance(serializerFeatureClass, 2)
-        RArray.set(serializerFeatures, 0, keyAsString)
-        RArray.set(serializerFeatures, 1, noDefault)
-        serializerFeatures
-    }
-
-    private fun Any.toJson() = when {
-        isSerializable -> jsonNonStrict.value?.callMethodAs<String>("stringify", javaClass.getStaticObjectField("Companion")?.callMethod("serializer"), this).toJSONObject()
-        isGson -> gson?.callMethodAs<String>(instance.gsonTojson(), this)?.toJSONObject()
-        else -> instance.fastJsonClass?.callStaticMethodAs<String>("toJSONString", this, serializerFeatures.value).toJSONObject()
-    }
-
-    private fun Class<*>.fromJson(json: String) = when {
-        isSerializable -> jsonNonStrict.value?.callMethod("parse", getStaticObjectField("Companion")?.callMethod("serializer"), json)
-        isGson -> gson?.callMethod(instance.gsonFromjson(), json, this)
-        else -> instance.fastJsonClass?.callStaticMethod(instance.fastJsonParse(), json, this)
-    }
-
-    private fun Class<*>.fromJson(json: JSONObject) = fromJson(json.toString())
-
     override fun startHook() {
         if (!sPrefs.getBoolean("purify_home_recommend", false)) return
         Log.d("startHook: HomeRecommend")
@@ -120,5 +67,4 @@ class HomeRecommendHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val request = response.getObjectField(requestField)
         return request?.getObjectField(urlField)?.toString()
     }
-
 }
