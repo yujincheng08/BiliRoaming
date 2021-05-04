@@ -252,9 +252,16 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 Log.toast("移除广告 x${old - size}")
             }
         }
+        // For ver 6.23.5
         body.getObjectField("data")?.getObjectFieldAs<ArrayList<Any>>("items")?.apply {
             removeAll {
                 "large_cover_v9" in (it.getObjectFieldAs("cardType") ?: "")
+            }
+        }
+        // For ver 6.19.0
+        body.getObjectField("data")?.getObjectFieldAs<ArrayList<Any>>("items")?.apply {
+            removeAll {
+                "large_cover_v6" in (it.getObjectFieldAs("cardType") ?: "")
             }
         }
     }
