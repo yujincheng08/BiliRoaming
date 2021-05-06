@@ -16,7 +16,8 @@ import java.lang.reflect.Array as RArray
 
 class HomeRecommendHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
-        if (!sPrefs.getBoolean("purify_home_recommend", false)) return
+        val customize_rcmd_switch = sPrefs.getStringSet("customize_home_recommend", emptySet()).orEmpty()
+        if (!customize_rcmd_switch.contains("switch")) return
         Log.d("startHook: HomeRecommend")
 
         if (isBuiltIn && is64 && Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
@@ -27,7 +28,7 @@ class HomeRecommendHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 val url = getUrl(param.args[0])
                 val body = param.args[1] ?: return@hookBeforeAllConstructors
                 if (url != null && url.startsWith("https://app.bilibili.com/x/v2/feed/index") && !url.contains("/converge") && !url.contains("/tab") && !url.contains("/story")) {
-                    removeHomeRecommendAds(body)
+                    removeHomeRecommendItems(body)
                 }
             }
         }
@@ -43,20 +44,44 @@ class HomeRecommendHook(classLoader: ClassLoader) : BaseHook(classLoader) {
      * ```
      * 也会导致崩溃
      */
-    private fun removeHomeRecommendAds(body: Any) {
-        body.getObjectField("data")?.getObjectFieldAs<ArrayList<Any>>("items")?.apply {
-            val old = size
-            removeAll {
-                "ad" in (it.getObjectFieldAs("cardGoto") ?: "")
-            }
-            if (old - size > 0){
-                Log.toast("移除广告 x${old - size}")
+    private fun removeHomeRecommendItems(body: Any) {
+        val customize_rcmd_set = sPrefs.getStringSet("customize_home_recommend", emptySet()).orEmpty()
+        if (customize_rcmd_set.contains("advertisement")){
+            body.getObjectField("data")?.getObjectFieldAs<ArrayList<Any>>("items")?.apply {
+                removeAll {
+                    "ad" in (it.getObjectFieldAs("cardGoto") ?: "") || 
+                    "large_cover_v6" in (it.getObjectFieldAs("cardType") ?: "") || 
+                    "large_cover_v9" in (it.getObjectFieldAs("cardType") ?: "")
+                }
             }
         }
-        body.getObjectField("data")?.getObjectFieldAs<ArrayList<Any>>("items")?.apply {
-            removeAll {
-                "large_cover_v6" in (it.getObjectFieldAs("cardType") ?: "") || 
-                "large_cover_v9" in (it.getObjectFieldAs("cardType") ?: "")
+        if (customize_rcmd_set.contains("article")){
+            body.getObjectField("data")?.getObjectFieldAs<ArrayList<Any>>("items")?.apply {
+                removeAll {
+                    "article" in (it.getObjectFieldAs("cardGoto") ?: "")
+                }
+            }
+        }
+        if (customize_rcmd_set.contains("bangumi")){
+            body.getObjectField("data")?.getObjectFieldAs<ArrayList<Any>>("items")?.apply {
+                removeAll {
+                    "bangumi" in (it.getObjectFieldAs("cardGoto") ?: "") || 
+                    "special" in (it.getObjectFieldAs("cardGoto") ?: "")
+                }
+            }
+        }
+        if (customize_rcmd_set.contains("picture")){
+            body.getObjectField("data")?.getObjectFieldAs<ArrayList<Any>>("items")?.apply {
+                removeAll {
+                    "picture" in (it.getObjectFieldAs("cardGoto") ?: "")
+                }
+            }
+        }
+        if (customize_rcmd_set.contains("banner")){
+            body.getObjectField("data")?.getObjectFieldAs<ArrayList<Any>>("items")?.apply {
+                removeAll {
+                    "banner" in (it.getObjectFieldAs("cardGoto") ?: "")
+                }
             }
         }
     }
