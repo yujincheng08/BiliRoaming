@@ -61,7 +61,6 @@
         <item>other_tabs</item>
     </string-array>
     <string-array name="home_recommend_entries">
-        <item>净化开关</item>
         <item>广告</item>
         <item>横幅</item>
         <item>文章</item>
@@ -69,7 +68,6 @@
         <item>番剧、电影、电视剧、纪录片……</item>
     </string-array>
     <string-array name="home_recommend_values">
-        <item>switch</item>
         <item>advertisement</item>
         <item>banner</item>
         <item>article</item>

@@ -6,7 +6,7 @@ import me.iacn.biliroaming.utils.*
 class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
         val switch = sPrefs.getStringSet("customize_home_recommend", emptySet()).orEmpty()
-        if (!switch.contains("switch")) return
+        if (switch.isEmpty()) return
         Log.d("startHook: Pegasus")
 
         instance.pegasusFeedClass?.hookAfterMethod(instance.pegasusFeed(), instance.okhttpResponseClass) { param ->
