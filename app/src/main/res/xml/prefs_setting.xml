@@ -199,10 +199,13 @@
             android:key="customize_home_tab"
             android:summary="@string/customize_home_tab_summary"
             android:title="@string/customize_home_tab_title" />
-        <SwitchPreference
-            android:key="purify_home_recommend"
-            android:summary="@string/purify_home_recommend_summary"
-            android:title="@string/purify_home_recommend_title" />
+        <MultiSelectListPreference
+            android:dependency="hidden"
+            android:entries="@array/home_recommend_entries"
+            android:entryValues="@array/home_recommend_values"
+            android:key="customize_home_recommend"
+            android:summary="@string/customize_home_recommend_summary"
+            android:title="@string/customize_home_recommend_title" />
         <SwitchPreference
             android:dependency="hidden"
             android:key="purify_city"
