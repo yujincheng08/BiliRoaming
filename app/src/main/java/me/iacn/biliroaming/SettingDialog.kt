@@ -361,6 +361,9 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 val names = Array(bottomItems.size) { i ->
                     "${bottomItems[i].name} (${bottomItems[i].uri})"
                 }
+                setNeutralButton("重置") { _, _ ->
+                    sPrefs.edit().remove("hided_bottom_items").apply()
+                }
                 val showings = BooleanArray(bottomItems.size) { i ->
                     bottomItems[i].showing
                 }
