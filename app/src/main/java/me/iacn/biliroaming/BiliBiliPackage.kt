@@ -76,6 +76,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     }
     val teenagersModeDialogActivityClass by Weak { "com.bilibili.teenagersmode.ui.TeenagersModeDialogActivity".findClassOrNull(mClassLoader) }
     val gsonClass by Weak { "com.google.gson.Gson".findClassOrNull(mClassLoader) }
+    val pegasusFeedClass by Weak { mHookInfo["class_pegasus_feed"]?.findClassOrNull(mClassLoader) }
+    val okhttpResponseClass by Weak { mHookInfo["class_okhttp_response"]?.findClassOrNull(mClassLoader) }
 
     val classesList by lazy { mClassLoader.allClassesList() }
     private val accessKeyInstance by lazy {
@@ -157,16 +159,19 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     fun gson() = mHookInfo["field_gson"]
 
-    fun playbackspeedlist() = mHookInfo["field_playback_speed_list"]
+    fun playbackSpeedList() = mHookInfo["field_playback_speed_list"]
 
-    fun putSerializabletoPlayerParamsBundle() = mHookInfo["method_put_serializable_to_playerparams_bundle"]
+    fun putSerializableToPlayerParamsBundle() = mHookInfo["method_put_serializable_to_playerparams_bundle"]
 
-    fun getdefaultspeed() = mHookInfo["method_get_default_speed"]
+    fun defaultSpeed() = mHookInfo["method_get_default_speed"]
 
     fun urlField() = mHookInfo["field_url"]
 
-    fun gsonTojson() = mHookInfo["method_gson_tojson"]
-    fun gsonFromjson() = mHookInfo["method_gson_fromjson"]
+    fun gsonToJson() = mHookInfo["method_gson_tojson"]
+
+    fun gsonFromJson() = mHookInfo["method_gson_fromjson"]
+
+    fun pegasusFeed() = mHookInfo["method_pegasus_feed"]
 
     private fun readHookInfo(context: Context): MutableMap<String, String?> {
         try {
@@ -183,7 +188,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 val stream = ObjectInputStream(FileInputStream(hookInfoFile))
                 val lastHookInfoUpdateTime = stream.readLong()
                 @Suppress("UNCHECKED_CAST")
-                if (lastHookInfoUpdateTime >= lastUpdateTime && lastHookInfoUpdateTime >= lastModuleUpdateTime )
+                if (lastHookInfoUpdateTime >= lastUpdateTime && lastHookInfoUpdateTime >= lastModuleUpdateTime)
                     return stream.readObject() as MutableMap<String, String?>
             }
             val endTime = System.currentTimeMillis()
@@ -319,11 +324,32 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             findGetDefaultSpeed()
         }.checkConjunctiveOrPut("method_gson_tojson", "method_gson_fromjson") {
             arrayOf(findGsonToJsonMethod(), findGsonFromJsonMethod())
+        }.checkConjunctiveOrPut("class_pegasus_feed", "class_okhttp_response", "method_pegasus_feed") {
+            findPegasusFeed()
         }
 
         Log.d(mHookInfo.filterKeys { it != "map_ids" })
         Log.d("Check hook info completed: needUpdate = $needUpdate")
         return needUpdate
+    }
+
+    private fun findPegasusFeed(): Array<String?> {
+        val itemClass = "com.bilibili.pegasus.api.model.BasicIndexItem".findClassOrNull(mClassLoader)
+        classesList.filter {
+            it.startsWith("com.bilibili.pegasus.api")
+        }.map { c ->
+            c.findClassOrNull(mClassLoader)
+        }.filter { c ->
+            c?.declaredMethods?.firstOrNull {
+                it.returnType == itemClass
+            } != null
+        }.forEach { c ->
+            c?.declaredMethods?.forEach {
+                if (it.parameterTypes.size == 1 && it.returnType == generalResponseClass)
+                    return arrayOf(c.name, it.parameterTypes[0].name, it.name)
+            }
+        }
+        return arrayOfNulls(2)
     }
 
     private fun findGsonToJsonMethod() = gsonClass?.declaredMethods?.firstOrNull { m ->

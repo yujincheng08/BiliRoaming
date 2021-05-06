@@ -52,10 +52,10 @@ class ijkhook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
 
         if (playback_speed_override != null)
-            instance.playerOptionsPanelHolderClass?.setStaticObjectField(instance.playbackspeedlist(), playback_speed_override)
+            instance.playerOptionsPanelHolderClass?.setStaticObjectField(instance.playbackSpeedList(), playback_speed_override)
 
         if (playback_speed_override != null || default_playback_speed != null) {
-            instance.playerParamsBundleClass?.hookBeforeMethod(instance.putSerializabletoPlayerParamsBundle(), String::class.java, Serializable::class.java) {
+            instance.playerParamsBundleClass?.hookBeforeMethod(instance.putSerializableToPlayerParamsBundle(), String::class.java, Serializable::class.java) {
                 if (it.args[0] == "bundle_key_playback_speed") {
                     if(Exception().stackTrace.map { it.className }.intersect(instance.classesList).first().startsWith("tv.danmaku.bili.ui.video.creator"))
                         it.result = null
@@ -64,7 +64,7 @@ class ijkhook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
 
         if (default_playback_speed != null) {
-            instance.playerCoreServiceV2Class?.hookBeforeMethod(instance.getdefaultspeed(), Boolean::class.java) {
+            instance.playerCoreServiceV2Class?.hookBeforeMethod(instance.defaultSpeed(), Boolean::class.java) {
                 it.result = default_playback_speed
             }
         }

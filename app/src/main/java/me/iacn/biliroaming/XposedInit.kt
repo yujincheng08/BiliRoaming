@@ -11,7 +11,6 @@ import android.os.Build
 import de.robv.android.xposed.IXposedHookLoadPackage
 import de.robv.android.xposed.IXposedHookZygoteInit
 import de.robv.android.xposed.XC_MethodHook
-import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam
 import me.iacn.biliroaming.hook.*
 import me.iacn.biliroaming.utils.*
@@ -61,7 +60,7 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                     startHook(ijkhook(lpparam.classLoader))
                     startHook(BangumiSeasonHook(lpparam.classLoader))
                     startHook(BangumiPlayUrlHook(lpparam.classLoader))
-                    startHook(HomeRecommendHook(lpparam.classLoader))
+                    startHook(PegasusHook(lpparam.classLoader))
                     startHook(CustomThemeHook(lpparam.classLoader))
                     startHook(TeenagersModeHook(lpparam.classLoader))
                     startHook(CommentHook(lpparam.classLoader))
