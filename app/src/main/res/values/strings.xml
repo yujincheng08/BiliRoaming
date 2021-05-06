@@ -158,4 +158,11 @@
     <string name="customize_danmaku_config_summary">更精细的设置</string>
     <string name="customize_accessKey_title">自定义访问密钥</string>
     <string name="customize_accessKey_summary">自定义发往解析服务器的访问密钥（调试功能，除非明白自己在做什么，否则保持空白）</string>
+    <string name="export_video_title">导出视频</string>
+    <string name="export_video_summary">只支持默认下载位置</string>
+    <string name="customize_home_recommend_title">净化首页推荐内容</string>
+    <string name="customize_home_recommend_summary">去除首页推荐页面的指定内容（某些旧版可能无效）</string>
+    <string name="pref_backup">备份和还原</string>
+    <string name="pref_export_title">导出配置</string>
+    <string name="pref_import_title">导入配置</string>
 </resources>

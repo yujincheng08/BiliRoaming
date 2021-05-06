@@ -274,9 +274,9 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 backgroundHelper -> playerHelper?.getObjectField(backgroundPlayerField?.name)?.callMethod(corePlayerMethod?.name)?.run {
                     position = callMethodAs<Int>(getCurrentPositionMethod).toLong()
                     speed = try {
-                        callMethodAs(instance.getdefaultspeed(), true)
+                        callMethodAs(instance.defaultSpeed(), true)
                     } catch (e: Throwable) {
-                        callMethodAs(instance.getdefaultspeed())
+                        callMethodAs(instance.defaultSpeed())
                     }
                 }
             }
