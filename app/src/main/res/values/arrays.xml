@@ -65,6 +65,7 @@
         <item>横幅</item>
         <item>文章</item>
         <item>动态</item>
+        <item>竖屏视频</item>
         <item>番剧、电影、电视剧、纪录片……</item>
     </string-array>
     <string-array name="home_recommend_values">
@@ -72,6 +73,7 @@
         <item>banner</item>
         <item>article</item>
         <item>picture</item>
+        <item>vertical</item>
         <item>bangumi</item>
     </string-array>
     <string-array name="xposed_scope" >
