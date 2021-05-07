@@ -54,6 +54,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val homeUserCenterClass by Weak { "tv.danmaku.bili.ui.main2.mine.HomeUserCenterFragment".findClassOrNull(mClassLoader) }
     val garbHelperClass by Weak { mHookInfo["class_garb_helper"]?.findClass(mClassLoader) }
     val musicNotificationHelperClass by Weak { mHookInfo["class_music_notification_helper"]?.findClass(mClassLoader) }
+    val liveNotificationHelperClass by Weak { mHookInfo["class_live_notification_helper"]?.findClass(mClassLoader) }
     val notificationBuilderClass by Weak { mHookInfo["class_notification_builder"]?.findClass(mClassLoader) }
     val absMusicServiceClass by Weak { mHookInfo["class_abs_music_service"]?.findClass(mClassLoader) }
     val menuGroupItemClass by Weak { "com.bilibili.lib.homepage.mine.MenuGroup\$Item".findClassOrNull(mClassLoader) }
@@ -144,10 +145,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     fun garb() = mHookInfo["method_garb"]
 
     fun setNotification() = mHookInfo["methods_set_notification"]
-
-    fun mediaSessionToken() = mHookInfo["method_media_session_token"]
-
-    fun absMusicService() = mHookInfo["field_abs_music_service"]
 
     fun openDrawer() = mHookInfo["method_open_drawer"]
 
@@ -294,14 +291,12 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             findGarbHelper()
         }.checkOrPut("class_music_notification_helper") {
             findMusicNotificationHelper()
+        }.checkOrPut("class_live_notification_helper") {
+            findLiveNotificationHelper()
         }.checkConjunctiveOrPut("methods_set_notification", "class_notification_builder") {
             findSetNotificationMethods()
         }.checkOrPut("class_abs_music_service") {
             findAbsMusicService()
-        }.checkOrPut("method_media_session_token") {
-            findMediaSessionTokenMethod()
-        }.checkOrPut("field_abs_music_service") {
-            findAbsMusicServiceField()
         }.checkOrPut("class_drawer_layout_params") {
             findDrawerLayoutParams()
         }.checkConjunctiveOrPut("method_open_drawer", "method_close_drawer") {
@@ -494,14 +489,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         it.superclass == ViewGroup.MarginLayoutParams::class.java
     }?.name
 
-    private fun findAbsMusicServiceField() = musicNotificationHelperClass?.declaredFields?.firstOrNull {
-        it.type == absMusicServiceClass
-    }?.name
-
-    private fun findMediaSessionTokenMethod() = absMusicServiceClass?.declaredMethods?.firstOrNull {
-        it.returnType.name.endsWith("Token")
-    }?.name
-
     private fun findAbsMusicService() = classesList.filter {
         it.startsWith("tv.danmaku.bili.ui.player.notification")
     }.firstOrNull { c ->
@@ -520,6 +507,14 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     private fun findMusicNotificationHelper() = classesList.filter {
         it.startsWith("tv.danmaku.bili.ui.player.notification")
+    }.firstOrNull { c ->
+        c.findClassOrNull(mClassLoader)?.declaredFields?.filter {
+            it.type == PendingIntent::class.java
+        }?.count()?.let { it > 0 } ?: false
+    }
+
+    private fun findLiveNotificationHelper() = classesList.filter {
+        it.startsWith("com.bilibili.bililive.room.ui.liveplayer.background")
     }.firstOrNull { c ->
         c.findClassOrNull(mClassLoader)?.declaredFields?.filter {
             it.type == PendingIntent::class.java
