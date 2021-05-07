@@ -27,7 +27,7 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         instance.pegasusFeedClass?.hookAfterMethod(instance.pegasusFeed(), instance.okhttpResponseClass) { param ->
             param.result.getObjectField("data")?.getObjectFieldAs<ArrayList<Any>>("items")?.removeAll {
                 filter.fold(false) { acc, item ->
-                    acc || item in it.getObjectFieldAs<String?>("cardGoto").orEmpty()
+                    acc || item in it.getObjectFieldAs<String?>("cardGoto").orEmpty() || item in it.getObjectFieldAs<String?>("goTo").orEmpty()
                 }
             }
         }
