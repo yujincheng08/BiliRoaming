@@ -50,6 +50,11 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 "picture" in (it.getObjectFieldAs("cardGoto") ?: "")
             }
         }
+        if ("vertical" in filterSet) {
+            items.removeAll {
+                "vertical" in (it.getObjectFieldAs("goTo") ?: "")
+            }
+        }
         if ("banner" in filterSet) {
             items.removeAll {
                 "banner" in (it.getObjectFieldAs("cardGoto") ?: "")
