@@ -14,7 +14,11 @@ class WebViewHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private val hookedClient = HashSet<Class<*>>()
     private val hooker: Hooker = { param ->
         try {
-            param.args[0].callMethod("evaluateJavascript", """(function(){$js})()""".trimMargin(), null)
+            param.args[0].callMethod(
+                "evaluateJavascript",
+                """(function(){$js})()""".trimMargin(),
+                null
+            )
         } catch (e: Throwable) {
             Log.e(e)
         }
@@ -30,14 +34,14 @@ class WebViewHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private val js by lazy {
         val sb = StringBuilder()
         try {
-            WebViewHook::class.java.classLoader?.getResourceAsStream("assets/xhook.js").use { `is` ->
-                val isr = InputStreamReader(`is`)
-                val br = BufferedReader(isr)
-                var line: String
-                while (br.readLine().also { line = it } != null) {
-                    sb.appendLine(line)
+            WebViewHook::class.java.classLoader?.getResourceAsStream("assets/xhook.js")
+                .use { `is` ->
+                    val isr = InputStreamReader(`is`)
+                    val br = BufferedReader(isr)
+                    while (true) {
+                        br.readLine()?.also { sb.appendLine(it) } ?: break
+                    }
                 }
-            }
         } catch (e: Exception) {
         }
         sb.appendLine()
@@ -46,25 +50,33 @@ class WebViewHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     override fun startHook() {
         Log.d("startHook: WebView")
-        WebView::class.java.hookBeforeMethod("setWebViewClient", WebViewClient::class.java) { param ->
+        WebView::class.java.hookBeforeMethod(
+            "setWebViewClient",
+            WebViewClient::class.java
+        ) { param ->
             val clazz = param.args[0].javaClass
             (param.thisObject as WebView).run {
                 addJavascriptInterface(jsHooker, "hooker")
             }
             if (hookedClient.contains(clazz)) return@hookBeforeMethod
             try {
-                clazz.getDeclaredMethod("onPageFinished", WebView::class.java, String::class.java).hookBeforeMethod(hooker)
+                clazz.getDeclaredMethod("onPageFinished", WebView::class.java, String::class.java)
+                    .hookBeforeMethod(hooker)
                 hookedClient.add(clazz)
                 Log.d("hook webview $clazz")
             } catch (e: NoSuchMethodException) {
             }
         }
-        x5WebViewClass?.hookBeforeMethod("setWebViewClient", "com.tencent.smtt.sdk.WebViewClient") { param ->
+        x5WebViewClass?.hookBeforeMethod(
+            "setWebViewClient",
+            "com.tencent.smtt.sdk.WebViewClient"
+        ) { param ->
             val clazz = param.args[0].javaClass
             param.thisObject.callMethod("addJavascriptInterface", jsHooker, "hooker")
             if (hookedClient.contains(clazz)) return@hookBeforeMethod
             try {
-                clazz.getDeclaredMethod("onPageFinished", x5WebViewClass, String::class.java).hookBeforeMethod(hooker)
+                clazz.getDeclaredMethod("onPageFinished", x5WebViewClass, String::class.java)
+                    .hookBeforeMethod(hooker)
                 hookedClient.add(clazz)
                 Log.d("hook webview $clazz")
             } catch (e: NoSuchMethodException) {

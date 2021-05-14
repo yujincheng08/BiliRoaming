@@ -70,7 +70,7 @@ class CustomThemeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     biliSkin.setIntField("mId", newId)
                     customColor = color
                     Log.d("Update new color: mId = $newId, " +
-                            "color = 0x${Integer.toHexString(color).toUpperCase(Locale.getDefault())}")
+                            "color = 0x${Integer.toHexString(color).uppercase(Locale.getDefault())}")
                     try {
                         invokeOriginalMethod(param.method, param.thisObject, param.args)
                     } catch (e: Exception) {
