@@ -56,6 +56,9 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                         else "。但未启用番剧解锁功能，请检查哔哩漫游设置。"
                     }")
                     BiliBiliPackage(lpparam.classLoader, param.args[0] as Context)
+                    if (BuildConfig.DEBUG) {
+                        startHook(SSLHook(lpparam.classLoader))
+                    }
                     startHook(HintHook(lpparam.classLoader))
                     startHook(ijkhook(lpparam.classLoader))
                     startHook(BangumiSeasonHook(lpparam.classLoader))
