@@ -110,7 +110,7 @@ def restartBiliBili() {
     exec {
         commandLine android.adbExecutable, 'shell', 'am', 'force-stop', 'tv.danmaku.bili'
     }
-   exec {
+    exec {
         commandLine android.adbExecutable, 'shell', 'monkey', '-p', 'tv.danmaku.bili', '1'
     }
 }
