@@ -6,6 +6,13 @@ import me.iacn.biliroaming.utils.*
 class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private val filterSet = sPrefs.getStringSet("customize_home_recommend", emptySet()).orEmpty()
 
+    private val hideLowPlayCountEnabled by lazy {
+        sPrefs.getBoolean("hide_low_play_count_recommend", false)
+    }
+    private val hideLowPlayCountLimit by lazy {
+        sPrefs.getLong("hide_low_play_count_recommend_limit", 100)
+    }
+
     private val filterMap = mapOf(
         "advertisement" to arrayListOf("ad", "large_cover_v6", "large_cover_v9"),
         "article" to arrayListOf("article"),
@@ -42,19 +49,14 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     private fun isLowCountVideo(obj: Any): Boolean {
-        if (!sPrefs.getBoolean("hide_low_play_count_recommend",false)) return false
-        return try {
-            val v = toLong(obj.getObjectField("coverLeftText1").toString())
-            if (v == -1L) {
-                false
-            } else {
-                v < sPrefs.getLong(
-                    "hide_low_play_count_recommend_limit",
-                    100
-                )
+        if (!hideLowPlayCountEnabled) return false
+        try {
+            toLong(obj.getObjectField("coverLeftText1").toString()).let {
+                return if (it == -1L) false
+                else it < hideLowPlayCountLimit
             }
         } catch (e: NoSuchFieldError) {
-            false
+            return false
         }
     }
 
