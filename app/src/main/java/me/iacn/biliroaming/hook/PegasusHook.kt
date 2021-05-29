@@ -15,7 +15,6 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         "banner" to arrayListOf("banner"),
         "live" to arrayListOf("live"),
         "inline" to arrayListOf("inline"),
-        "low_pc_video" to arrayListOf("low_pc_video")
     )
 
     private val filter = filterSet.flatMap {
