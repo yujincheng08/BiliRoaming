@@ -31,19 +31,26 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
     @Throws(Throwable::class)
     override fun handleLoadPackage(lpparam: LoadPackageParam) {
         if (BuildConfig.APPLICATION_ID == lpparam.packageName) {
-            MainActivity.Companion::class.java.name.replaceMethod(lpparam.classLoader,
-                    "isModuleActive") { true }
+            MainActivity.Companion::class.java.name.replaceMethod(
+                lpparam.classLoader,
+                "isModuleActive"
+            ) { true }
             return
         }
         if (!Constant.BILIBILI_PACKAGE_NAME.containsValue(lpparam.packageName) &&
-                "tv.danmaku.bili.MainActivityV2".findClassOrNull(lpparam.classLoader) == null) return
-        Instrumentation::class.java.hookBeforeMethod("callApplicationOnCreate", Application::class.java) { param ->
+            "tv.danmaku.bili.MainActivityV2".findClassOrNull(lpparam.classLoader) == null
+        ) return
+        Instrumentation::class.java.hookBeforeMethod(
+            "callApplicationOnCreate",
+            Application::class.java
+        ) { param ->
             // Hook main process and download process
             @Suppress("DEPRECATION")
             when {
                 !lpparam.processName.contains(":") -> {
                     if (sPrefs.getBoolean("save_log", false) ||
-                            sPrefs.getBoolean("show_hint", true)) {
+                        sPrefs.getBoolean("show_hint", true)
+                    ) {
                         startLog()
                     }
                     Log.d("BiliBili process launched ...")
@@ -51,10 +58,12 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                     Log.d("Bilibili version: ${getPackageVersion(lpparam.packageName)} (${if (is64) "64" else "32"}bit)")
                     Log.d("SDK: ${Build.VERSION.RELEASE}(${Build.VERSION.SDK_INT}); Phone: ${Build.BRAND} ${Build.MODEL}")
                     Log.d("Config: ${sPrefs.all}")
-                    Log.toast("哔哩漫游已激活${
-                        if (sPrefs.getBoolean("main_func", false)) ""
-                        else "。但未启用番剧解锁功能，请检查哔哩漫游设置。"
-                    }")
+                    Log.toast(
+                        "哔哩漫游已激活${
+                            if (sPrefs.getBoolean("main_func", false)) ""
+                            else "。但未启用番剧解锁功能，请检查哔哩漫游设置。"
+                        }"
+                    )
                     BiliBiliPackage(lpparam.classLoader, param.args[0] as Context)
                     if (BuildConfig.DEBUG) {
                         startHook(SSLHook(lpparam.classLoader))
@@ -78,6 +87,7 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                     startHook(MusicNotificationHook(lpparam.classLoader))
                     startHook(DrawerHook(lpparam.classLoader))
                     startHook(CoverHook(lpparam.classLoader))
+                    startHook(LowPlayCountRecommendHook(lpparam.classLoader))
                 }
                 lpparam.processName.endsWith(":web") -> {
                     BiliBiliPackage(lpparam.classLoader, param.args[0] as Context)
@@ -120,7 +130,13 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
     private fun startLog() = try {
         logFile.delete()
         logFile.createNewFile()
-        val cmd = arrayOf("logcat", "-T", SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault()).format(Date()), "-f", logFile.absolutePath)
+        val cmd = arrayOf(
+            "logcat",
+            "-T",
+            SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault()).format(Date()),
+            "-f",
+            logFile.absolutePath
+        )
         Runtime.getRuntime().exec(cmd)
     } catch (e: Throwable) {
         Log.e(e)
@@ -140,7 +156,8 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
         @JvmStatic
         fun getModuleRes(path: String): Resources {
             val assetManager = AssetManager::class.java.newInstance()
-            val addAssetPath = AssetManager::class.java.getDeclaredMethod("addAssetPath", String::class.java)
+            val addAssetPath =
+                AssetManager::class.java.getDeclaredMethod("addAssetPath", String::class.java)
             addAssetPath.invoke(assetManager, path)
             return Resources(assetManager, null, null)
         }

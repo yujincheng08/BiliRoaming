@@ -165,4 +165,6 @@
     <string name="pref_backup">备份和还原</string>
     <string name="pref_export_title">导出配置</string>
     <string name="pref_import_title">导入配置</string>
+    <string name="hide_low_play_count_recommend_title">隐藏低播放量视频</string>
+    <string name="hide_low_play_count_recommend_summary">隐藏低于指定播放量的视频(默认值:100)</string>
 </resources>
