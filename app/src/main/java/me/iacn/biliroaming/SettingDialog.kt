@@ -14,6 +14,7 @@ import android.os.Build
 import android.os.Bundle
 import android.preference.*
 import android.provider.MediaStore
+import android.text.InputType
 import android.view.ContextThemeWrapper
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -37,7 +38,8 @@ import kotlin.system.exitProcess
 
 class SettingDialog(context: Context) : AlertDialog.Builder(context) {
 
-    class PrefsFragment : PreferenceFragment(), Preference.OnPreferenceChangeListener, Preference.OnPreferenceClickListener {
+    class PrefsFragment : PreferenceFragment(), Preference.OnPreferenceChangeListener,
+        Preference.OnPreferenceClickListener {
         private val scope = MainScope()
         private lateinit var prefs: SharedPreferences
         private lateinit var biliprefs: SharedPreferences
@@ -48,7 +50,10 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             preferenceManager.sharedPreferencesName = "biliroaming"
             addPreferencesFromResource(R.xml.prefs_setting)
             prefs = preferenceManager.sharedPreferences
-            biliprefs = currentContext.getSharedPreferences(packageName + "_preferences", Context.MODE_MULTI_PROCESS)
+            biliprefs = currentContext.getSharedPreferences(
+                packageName + "_preferences",
+                Context.MODE_MULTI_PROCESS
+            )
             if (!prefs.getBoolean("hidden", false)) {
                 val hiddenGroup = findPreference("hidden_group") as PreferenceCategory
                 preferenceScreen.removePreference(hiddenGroup)
@@ -57,7 +62,8 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("version").onPreferenceClickListener = this
             findPreference("custom_splash").onPreferenceChangeListener = this
             findPreference("custom_splash_logo").onPreferenceChangeListener = this
-            findPreference("save_log").summary = moduleRes.getString(R.string.save_log_summary).format(logFile.absolutePath)
+            findPreference("save_log").summary =
+                moduleRes.getString(R.string.save_log_summary).format(logFile.absolutePath)
             findPreference("custom_server").onPreferenceClickListener = this
             findPreference("test_upos").onPreferenceClickListener = this
             findPreference("customize_bottom_bar")?.onPreferenceClickListener = this
@@ -67,6 +73,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("pref_export").onPreferenceClickListener = this
             findPreference("pref_import").onPreferenceClickListener = this
             findPreference("export_video")?.onPreferenceClickListener = this
+            findPreference("hide_low_play_count_recommend")?.onPreferenceClickListener = this
             checkCompatibleVersion()
             checkUpdate()
         }
@@ -83,15 +90,18 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 val newestVer = result.optString("name")
                 if (newestVer.isNotEmpty() && BuildConfig.VERSION_NAME != newestVer) {
                     findPreference("version").summary = "${BuildConfig.VERSION_NAME}（最新版$newestVer）"
-                    (findPreference("about") as PreferenceCategory).addPreference(Preference(activity).apply {
-                        key = "update"
-                        title = moduleRes.getString(R.string.update_title)
-                        summary = result.optString("body").substringAfterLast("更新日志\r\n").run {
-                            if (isNotEmpty()) this else moduleRes.getString(R.string.update_summary)
-                        }
-                        onPreferenceClickListener = this@PrefsFragment
-                        order = 1
-                    })
+                    (findPreference("about") as PreferenceCategory).addPreference(
+                        Preference(
+                            activity
+                        ).apply {
+                            key = "update"
+                            title = moduleRes.getString(R.string.update_title)
+                            summary = result.optString("body").substringAfterLast("更新日志\r\n").run {
+                                if (isNotEmpty()) this else moduleRes.getString(R.string.update_summary)
+                            }
+                            onPreferenceClickListener = this@PrefsFragment
+                            order = 1
+                        })
                 }
             }
         }
@@ -133,7 +143,10 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             val supportcustomplaybackspeed = instance.playerCoreServiceV2Class != null
             val supportTeenagersMode = instance.teenagersModeDialogActivityClass != null
             if (!supportcustomplaybackspeed)
-                disablePreference("default_playback_speed", moduleRes.getString(R.string.default_speed_in_speed_list))
+                disablePreference(
+                    "default_playback_speed",
+                    moduleRes.getString(R.string.default_speed_in_speed_list)
+                )
             if (!supportDrawer)
                 disablePreference("drawer")
             if (!supportSplashHook) {
@@ -150,7 +163,10 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 disablePreference("add_4k")
             }
             if (!supportMusicNotificationHook) {
-                disablePreference("music_notification", moduleRes.getString(R.string.os_not_support))
+                disablePreference(
+                    "music_notification",
+                    moduleRes.getString(R.string.os_not_support)
+                )
             }
             if (!supportMain) {
                 disablePreference("main_func", "Android O以下系统不支持64位Xpatch版，请使用32位版")
@@ -166,7 +182,10 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             }
         }
 
-        private fun disablePreference(name: String, message: String = moduleRes.getString(R.string.not_support)) {
+        private fun disablePreference(
+            name: String,
+            message: String = moduleRes.getString(R.string.not_support)
+        ) {
             findPreference(name).run {
                 isEnabled = false
                 summary = message
@@ -233,7 +252,8 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     }
                     val stream = ByteArrayOutputStream()
                     stream.flush()
-                    MediaStore.Images.Media.getBitmap(activity.contentResolver, uri).compress(Bitmap.CompressFormat.PNG, 100, stream)
+                    MediaStore.Images.Media.getBitmap(activity.contentResolver, uri)
+                        .compress(Bitmap.CompressFormat.PNG, 100, stream)
                     val dest = FileOutputStream(destFile)
                     stream.writeTo(dest)
                 }
@@ -256,7 +276,8 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                         PREF_EXPORT -> {
                             try {
                                 file.inputStream().use { `in` ->
-                                    activity.contentResolver.openOutputStream(uri)?.let { `in`.copyTo(it) }
+                                    activity.contentResolver.openOutputStream(uri)
+                                        ?.let { `in`.copyTo(it) }
                                 }
                             } catch (e: Exception) {
                                 e.printStackTrace()
@@ -273,7 +294,8 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     val targetDir = DocumentFile.fromTreeUri(activity, uri) ?: return
                     try {
                         videosToExport.forEach { video ->
-                            targetDir.findOrCreateDir(video.parentFile!!.name)?.let { DocumentFile.fromFile(video).copyTo(activity, it) }
+                            targetDir.findOrCreateDir(video.parentFile!!.name)
+                                ?.let { DocumentFile.fromFile(video).copyTo(activity, it) }
                         }
                         Log.toast("导出成功", true)
                     } catch (e: Exception) {
@@ -313,10 +335,11 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 val inflater = LayoutInflater.from(context)
                 val view = inflater.inflate(layout, null)
                 val editTexts = arrayOf(
-                        view.findViewById<EditText>(R.id.cn_server),
-                        view.findViewById(R.id.hk_server),
-                        view.findViewById(R.id.tw_server),
-                        view.findViewById(R.id.th_server))
+                    view.findViewById<EditText>(R.id.cn_server),
+                    view.findViewById(R.id.hk_server),
+                    view.findViewById(R.id.tw_server),
+                    view.findViewById(R.id.th_server)
+                )
                 editTexts.forEach { it.setText(prefs.getString(it.tag.toString(), "")) }
                 setTitle("设置解析服务器")
                 setView(view)
@@ -380,16 +403,20 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 val inflater = LayoutInflater.from(context)
                 val view = inflater.inflate(layout, null)
                 val editTexts = arrayOf(
-                        view.findViewById<EditText>(R.id.danmaku_textsize_scale_factor),
-                        view.findViewById(R.id.danmaku_stroke_width_scaling),
-                        view.findViewById(R.id.danmaku_duration_factor),
-                        view.findViewById(R.id.danmaku_alpha_factor),
-                        view.findViewById(R.id.danmaku_max_on_screen),
-                        view.findViewById(R.id.danmaku_screen_domain))
+                    view.findViewById<EditText>(R.id.danmaku_textsize_scale_factor),
+                    view.findViewById(R.id.danmaku_stroke_width_scaling),
+                    view.findViewById(R.id.danmaku_duration_factor),
+                    view.findViewById(R.id.danmaku_alpha_factor),
+                    view.findViewById(R.id.danmaku_max_on_screen),
+                    view.findViewById(R.id.danmaku_screen_domain)
+                )
                 editTexts.filter {
                     biliprefs.contains(it.tag.toString())
                 }.forEach {
-                    it.setText(biliprefs.getFloat(it.tag.toString(), it.hint.toString().toFloat()).toString())
+                    it.setText(
+                        biliprefs.getFloat(it.tag.toString(), it.hint.toString().toFloat())
+                            .toString()
+                    )
                 }
                 setTitle(moduleRes.getString(R.string.customize_danmaku_config_title))
                 setView(view)
@@ -437,6 +464,26 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             return true
         }
 
+        private fun onHideLowPlayCountRecommendClick(isChecked: Boolean): Boolean {
+            if (!isChecked) return true
+            val tv = EditText(activity)
+            tv.inputType = InputType.TYPE_CLASS_NUMBER
+            tv.setText(sPrefs.getLong("hide_low_play_count_recommend_limit", 100).toString())
+            AlertDialog.Builder(activity).run {
+                setTitle("设置隐藏播放量")
+                setView(tv)
+                setPositiveButton("确定") { _, _ ->
+                    sPrefs.edit()
+                        .putLong("hide_low_play_count_recommend_limit", tv.text.toString().toLong())
+                        .apply()
+                }
+                setNegativeButton("取消", null)
+                setCancelable(false)
+                show()
+            }
+            return true
+        }
+
         override fun onPreferenceClick(preference: Preference) = when (preference.key) {
             "version" -> onVersionClick()
             "update" -> onUpdateClick()
@@ -447,6 +494,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             "pref_export" -> onPrefExportClick()
             "pref_import" -> onPrefImportClick()
             "export_video" -> onExportVideoClick()
+            "hide_low_play_count_recommend" -> onHideLowPlayCountRecommendClick((preference as SwitchPreference).isChecked)
             else -> false
         }
     }
@@ -460,13 +508,17 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
 
         prefsFragment.onActivityCreated(null)
 
-        val unhook = Preference::class.java.hookAfterMethod("onCreateView", ViewGroup::class.java) { param ->
-            if (PreferenceCategory::class.java.isInstance(param.thisObject) && TextView::class.java.isInstance(param.result)) {
-                val textView = param.result as TextView
-                if (textView.textColors.defaultColor == -13816531)
-                    textView.setTextColor(Color.GRAY)
+        val unhook =
+            Preference::class.java.hookAfterMethod("onCreateView", ViewGroup::class.java) { param ->
+                if (PreferenceCategory::class.java.isInstance(param.thisObject) && TextView::class.java.isInstance(
+                        param.result
+                    )
+                ) {
+                    val textView = param.result as TextView
+                    if (textView.textColors.defaultColor == -13816531)
+                        textView.setTextColor(Color.GRAY)
+                }
             }
-        }
 
         setView(prefsFragment.view)
         setTitle("哔哩漫游设置")
