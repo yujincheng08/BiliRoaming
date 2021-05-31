@@ -14,6 +14,7 @@ import android.os.Build
 import android.os.Bundle
 import android.preference.*
 import android.provider.MediaStore
+import android.text.InputFilter
 import android.text.InputType
 import android.view.ContextThemeWrapper
 import android.view.LayoutInflater
@@ -468,18 +469,29 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             if (!isChecked) return true
             val tv = EditText(activity)
             tv.inputType = InputType.TYPE_CLASS_NUMBER
+            tv.filters = arrayOf(InputFilter.LengthFilter(7))
             tv.setText(sPrefs.getLong("hide_low_play_count_recommend_limit", 100).toString())
             AlertDialog.Builder(activity).run {
                 setTitle("设置隐藏播放量")
                 setView(tv)
-                setPositiveButton("确定") { _, _ ->
-                    sPrefs.edit()
-                        .putLong("hide_low_play_count_recommend_limit", tv.text.toString().toLong())
-                        .apply()
-                }
+                setPositiveButton("确定", null)
                 setNegativeButton("取消", null)
                 setCancelable(false)
                 show()
+            }.let {
+                it.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener { _ ->
+                    tv.text.toString().toLong().let { count ->
+                        if (count > 1_000_000) {
+                            Log.toast("你输入的数字太大惹 伦家会坏掉的> <")
+                        } else {
+                            sPrefs.edit()
+                                .putLong("hide_low_play_count_recommend_limit", count)
+                                .apply()
+                            Log.toast("保存成功 重启后生效")
+                            it.dismiss()
+                        }
+                    }
+                }
             }
             return true
         }
