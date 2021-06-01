@@ -179,7 +179,7 @@ inline fun Class<*>.replaceAfterAllConstructors(crossinline hooker: Hooker) =
     })
 
 fun String.hookMethod(classLoader: ClassLoader, method: String?, vararg args: Any?) = try {
-    findClass(classLoader)?.hookMethod(method, *args)
+    findClass(classLoader).hookMethod(method, *args)
 } catch (e: ClassNotFoundError) {
     Log.e(e)
     null
@@ -194,7 +194,7 @@ inline fun String.hookBeforeMethod(
     vararg args: Any?,
     crossinline hooker: Hooker
 ) = try {
-    findClass(classLoader)?.hookBeforeMethod(method, *args, hooker = hooker)
+    findClass(classLoader).hookBeforeMethod(method, *args, hooker = hooker)
 } catch (e: ClassNotFoundError) {
     Log.e(e)
     null
@@ -209,7 +209,7 @@ inline fun String.hookAfterMethod(
     vararg args: Any?,
     crossinline hooker: Hooker
 ) = try {
-    findClass(classLoader)?.hookAfterMethod(method, *args, hooker = hooker)
+    findClass(classLoader).hookAfterMethod(method, *args, hooker = hooker)
 } catch (e: ClassNotFoundError) {
     Log.e(e)
     null
@@ -224,7 +224,7 @@ inline fun String.replaceMethod(
     vararg args: Any?,
     crossinline replacer: Replacer
 ) = try {
-    findClass(classLoader)?.replaceMethod(method, *args, replacer = replacer)
+    findClass(classLoader).replaceMethod(method, *args, replacer = replacer)
 } catch (e: ClassNotFoundError) {
     Log.e(e)
     null
@@ -237,56 +237,140 @@ fun MethodHookParam.invokeOriginalMethod(): Any? = invokeOriginalMethod(method, 
 
 fun Any.getObjectField(field: String?): Any? = getObjectField(this, field)
 
+fun Any.getObjectFieldOrNull(field: String?): Any? = try {
+    getObjectField(this, field)
+} catch (e: Throwable) {
+    null
+}
+
 @Suppress("UNCHECKED_CAST")
 fun <T> Any.getObjectFieldAs(field: String?) = getObjectField(this, field) as T
 
+@Suppress("UNCHECKED_CAST")
+fun <T> Any.getObjectFieldOrNullAs(field: String?) = try {
+    getObjectField(this, field) as T
+} catch (e: Throwable) {
+    null
+}
+
 fun Any.getIntField(field: String?) = getIntField(this, field)
+
+fun Any.getIntFieldOrNull(field: String?) = try {
+    getIntField(this, field)
+} catch (e: Throwable) {
+    null
+}
 
 fun Any.getLongField(field: String?) = getLongField(this, field)
 
-fun Any.getBooleanField(field: String?) = getBooleanField(this, field)
+fun Any.getLongFieldOrNull(field: String?) = try {
+    getLongField(this, field)
+} catch (e: Throwable) {
+    null
+}
+
+fun Any.getBooleanFieldOrNull(field: String?) = try {
+    getBooleanField(this, field)
+} catch (e: Throwable) {
+    null
+}
 
 fun Any.callMethod(methodName: String?, vararg args: Any?): Any? =
     callMethod(this, methodName, *args)
 
+fun Any.callMethodOrNull(methodName: String?, vararg args: Any?): Any? = try {
+    callMethod(this, methodName, *args)
+} catch (e: Throwable) {
+    null
+}
+
 fun Class<*>.callStaticMethod(methodName: String?, vararg args: Any?): Any? =
     callStaticMethod(this, methodName, *args)
+
+fun Class<*>.callStaticMethodOrNull(methodName: String?, vararg args: Any?): Any? = try {
+    callStaticMethod(this, methodName, *args)
+} catch (e: Throwable) {
+    null
+}
 
 @Suppress("UNCHECKED_CAST")
 fun <T> Class<*>.callStaticMethodAs(methodName: String?, vararg args: Any?) =
     callStaticMethod(this, methodName, *args) as T
 
 @Suppress("UNCHECKED_CAST")
+fun <T> Class<*>.callStaticMethodOrNullAs(methodName: String?, vararg args: Any?) = try {
+    callStaticMethod(this, methodName, *args) as T
+} catch (e: Throwable) {
+    null
+}
+
+@Suppress("UNCHECKED_CAST")
 fun <T> Class<*>.getStaticObjectFieldAs(field: String?) = getStaticObjectField(this, field) as T
+
+@Suppress("UNCHECKED_CAST")
+fun <T> Class<*>.getStaticObjectFieldOrNullAs(field: String?) = try {
+    getStaticObjectField(this, field) as T
+} catch (e: Throwable) {
+    null
+}
 
 fun Class<*>.getStaticObjectField(field: String?): Any? = getStaticObjectField(this, field)
 
-fun Class<*>.setStaticObjectField(field: String?, obj: Any?) = apply {
+fun Class<*>.getStaticObjectFieldOrNull(field: String?): Any? = try {
+    getStaticObjectField(this, field)
+} catch (e: Throwable) {
+    null
+}
+
+fun Class<*>.setStaticObjectField(field: String?, obj: Any?) =
     setStaticObjectField(this, field, obj)
+
+fun Class<*>.setStaticObjectFieldIfExist(field: String?, obj: Any?) = try {
+    setStaticObjectField(this, field, obj)
+} catch (ignored: Throwable) {
 }
 
 @Suppress("UNCHECKED_CAST")
 fun <T> Any.callMethodAs(methodName: String?, vararg args: Any?) =
     callMethod(this, methodName, *args) as T
 
-fun Any.callMethod(methodName: String?, parameterTypes: Array<Class<*>>, vararg args: Any?): Any =
+@Suppress("UNCHECKED_CAST")
+fun <T> Any.callMethodOrNullAs(methodName: String?, vararg args: Any?) = try {
+    callMethod(this, methodName, *args) as T
+} catch (e: Throwable) {
+    null
+}
+
+fun Any.callMethod(methodName: String?, parameterTypes: Array<Class<*>>, vararg args: Any?): Any? =
     callMethod(this, methodName, parameterTypes, *args)
+
+fun Any.callMethodOrNull(
+    methodName: String?,
+    parameterTypes: Array<Class<*>>,
+    vararg args: Any?
+): Any? = try {
+    callMethod(this, methodName, parameterTypes, *args)
+} catch (e: Throwable) {
+    null
+}
 
 fun Class<*>.callStaticMethod(
     methodName: String?,
     parameterTypes: Array<Class<*>>,
     vararg args: Any?
-): Any = callStaticMethod(this, methodName, parameterTypes, *args)
+): Any? = callStaticMethod(this, methodName, parameterTypes, *args)
 
-fun String.findClass(classLoader: ClassLoader?) = try {
-    findClass(this, classLoader)
-} catch (e: ClassNotFoundError) {
-    Log.e(e)
-    null
-} catch (e: ClassNotFoundException) {
-    Log.e(e)
+fun Class<*>.callStaticMethodOrNull(
+    methodName: String?,
+    parameterTypes: Array<Class<*>>,
+    vararg args: Any?
+): Any? = try {
+    callStaticMethod(this, methodName, parameterTypes, *args)
+} catch (e: Throwable) {
     null
 }
+
+fun String.findClass(classLoader: ClassLoader?): Class<*> = findClass(this, classLoader)
 
 fun String.findClassOrNull(classLoader: ClassLoader?): Class<*>? =
     findClassIfExists(this, classLoader)
@@ -296,23 +380,17 @@ fun Class<*>.new(vararg args: Any?): Any = newInstance(this, *args)
 fun Class<*>.new(parameterTypes: Array<Class<*>>, vararg args: Any?): Any =
     newInstance(this, parameterTypes, *args)
 
+fun Class<*>.findField(field: String?): Field = findField(this, field)
+
 fun Class<*>.findFieldOrNull(field: String?): Field? = findFieldIfExists(this, field)
 
-fun <T> T.setIntField(field: String?, value: Int) = apply {
-    setIntField(this, field, value)
-}
+fun <T> T.setIntField(field: String?, value: Int) = setIntField(this, field, value)
 
-fun <T> T.setLongField(field: String?, value: Long) = apply {
-    setLongField(this, field, value)
-}
+fun <T> T.setLongField(field: String?, value: Long) = setLongField(this, field, value)
 
-fun <T> T.setObjectField(field: String?, value: Any?) = apply {
-    setObjectField(this, field, value)
-}
+fun <T> T.setObjectField(field: String?, value: Any?) = setObjectField(this, field, value)
 
-fun <T> T.setBooleanField(field: String?, value: Boolean) = apply {
-    setBooleanField(this, field, value)
-}
+fun <T> T.setBooleanField(field: String?, value: Boolean) = setBooleanField(this, field, value)
 
 inline fun XResources.hookLayout(
     id: Int,
