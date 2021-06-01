@@ -516,7 +516,17 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 show()
             }.let {
                 it.getButton(AlertDialog.BUTTON_NEUTRAL).setOnClickListener {
-                    tv.text.append('|')
+                    when {
+                        tv.text.isEmpty() -> {
+                            Log.toast("你好像还没有插入内容> <")
+                        }
+                        tv.text.endsWith('|') -> {
+                            Log.toast("啊嘞 上一个分隔符后面好像还没有东西> <")
+                        }
+                        else -> {
+                            tv.text.append('|')
+                        }
+                    }
                 }
             }
             return true
