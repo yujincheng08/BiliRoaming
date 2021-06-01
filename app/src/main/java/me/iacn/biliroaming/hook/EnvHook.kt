@@ -64,7 +64,7 @@ class EnvHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun lateInitHook() {
         Log.d("lateHook: Env")
         if (sPrefs.getBoolean("enable_av", false)) {
-            val compatClass = "com.bilibili.droid.BVCompat".findClass(mClassLoader)
+            val compatClass = "com.bilibili.droid.BVCompat".findClassOrNull(mClassLoader)
             compatClass?.declaredFields?.forEach {
                 val field = compatClass.getStaticObjectField(it.name)
                 if (field is Pattern && field.pattern() == "av[1-9]\\d*")

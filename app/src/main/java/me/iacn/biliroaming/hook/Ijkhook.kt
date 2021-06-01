@@ -5,30 +5,30 @@ import me.iacn.biliroaming.utils.*
 import java.io.Serializable
 import java.lang.reflect.Modifier
 
-class ijkhook(classLoader: ClassLoader) : BaseHook(classLoader) {
+class Ijkhook(classLoader: ClassLoader) : BaseHook(classLoader) {
     companion object {
-        val playback_speed_override = sPrefs.getString("playback_speed_override", null)?.split(" ")
+        val playbackSpeedOverride = sPrefs.getString("playback_speed_override", null)?.split(" ")
             ?.map { it.toFloatOrNull() }?.mapNotNull { it }
             .run { if (this.isNullOrEmpty()) return@run null else this }?.toFloatArray()
-        val default_playback_speed =
+        val defaultPlaybackSpeed =
             sPrefs.getString("default_playback_speed", null)?.toFloatOrNull()
-        val standalone_danmaku_speed = sPrefs.getBoolean("standalone_danmaku_speed", false)
-        val danmakuonEventlist: MutableList<String> = emptyList<String>().toMutableList()
-        val danmakuonPreparedlist: MutableList<String> = emptyList<String>().toMutableList()
+        val standaloneDanmakuSpeed = sPrefs.getBoolean("standalone_danmaku_speed", false)
+        val danmakuOnEventList: MutableList<String> = emptyList<String>().toMutableList()
+        val danmakuOnPreparedList: MutableList<String> = emptyList<String>().toMutableList()
     }
 
     override fun startHook() {
         Log.d("startHook: ijk")
 
-        val notDanmakuOptionsPlayerAdapterV2onPreparedhooker: Hooker = fun(it: MethodHookParam) {
+        val notDanmakuOptionsPlayerAdapterV2onPreparedHooker: Hooker = fun(it: MethodHookParam) {
             it.thisObject.callMethod(
                 "onEvent",
                 "DemandPlayerEventRequestPlaybackSpeed",
-                arrayOf(default_playback_speed ?: playback_speed_override!![2])
+                arrayOf(defaultPlaybackSpeed ?: playbackSpeedOverride!![2])
             )
         }
 
-        val notDanmakuOptionsPlayerAdapterV2onEventhooker: Hooker = fun(it: MethodHookParam) {
+        val notDanmakuOptionsPlayerAdapterV2onEventHooker: Hooker = fun(it: MethodHookParam) {
             if (it.args[0] == "DemandPlayerEventRequestPlaybackSpeed") {
                 it.result = null
             }
@@ -40,45 +40,45 @@ class ijkhook(classLoader: ClassLoader) : BaseHook(classLoader) {
             c.findClassOrNull(mClassLoader)?.run {
                 declaredMethods.forEach { m ->
                     if (m.name == "onEvent" && Modifier.isPublic(m.modifiers) && m.parameterTypes.size == 2 && m.parameterTypes[0] == String::class.java && m.parameterTypes[1] == Array::class.java) {
-                        danmakuonEventlist.add(c)
+                        danmakuOnEventList.add(c)
                     }
                     if (m.name == "onPrepared" && Modifier.isPublic(m.modifiers) && m.parameterTypes.size == 1 && m.parameterTypes[0].name == "tv.danmaku.ijk.media.player.IMediaPlayer") {
-                        danmakuonPreparedlist.add(c)
+                        danmakuOnPreparedList.add(c)
                     }
                 }
             }
         }
 
-        if (standalone_danmaku_speed) {
-            danmakuonEventlist.forEach {
+        if (standaloneDanmakuSpeed) {
+            danmakuOnEventList.forEach {
                 it.hookBeforeMethod(
                     mClassLoader,
                     "onEvent",
                     String::class.java,
                     Array::class.java,
-                    hooker = notDanmakuOptionsPlayerAdapterV2onEventhooker
+                    hooker = notDanmakuOptionsPlayerAdapterV2onEventHooker
                 )
             }
         }
 
-        if (!standalone_danmaku_speed && (playback_speed_override != null || default_playback_speed != null)) {
-            danmakuonPreparedlist.intersect(danmakuonEventlist).forEach {
+        if (!standaloneDanmakuSpeed && (playbackSpeedOverride != null || defaultPlaybackSpeed != null)) {
+            danmakuOnPreparedList.intersect(danmakuOnEventList).forEach {
                 it.hookAfterMethod(
                     mClassLoader,
                     "onPrepared",
                     "tv.danmaku.ijk.media.player.IMediaPlayer",
-                    hooker = notDanmakuOptionsPlayerAdapterV2onPreparedhooker
+                    hooker = notDanmakuOptionsPlayerAdapterV2onPreparedHooker
                 )
             }
         }
 
-        if (playback_speed_override != null)
+        if (playbackSpeedOverride != null)
             instance.playerOptionsPanelHolderClass?.setStaticObjectField(
                 instance.playbackSpeedList(),
-                playback_speed_override
+                playbackSpeedOverride
             )
 
-        if (playback_speed_override != null || default_playback_speed != null) {
+        if (playbackSpeedOverride != null || defaultPlaybackSpeed != null) {
             instance.playerParamsBundleClass?.hookBeforeMethod(
                 instance.putSerializableToPlayerParamsBundle(),
                 String::class.java,
@@ -93,12 +93,12 @@ class ijkhook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
         }
 
-        if (default_playback_speed != null) {
+        if (defaultPlaybackSpeed != null) {
             instance.playerCoreServiceV2Class?.hookBeforeMethod(
                 instance.defaultSpeed(),
                 Boolean::class.java
             ) {
-                it.result = default_playback_speed
+                it.result = defaultPlaybackSpeed
             }
         }
     }

@@ -194,7 +194,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 val response = param.result
                     ?: "com.bapis.bilibili.pgc.gateway.player.v2.PlayViewReply".findClass(
                         mClassLoader
-                    )?.new()!!
+                    ).new()
                 if (!response.callMethodAs<Boolean>("hasVideoInfo") ||
                     (response.callMethodAs("hasViewInfo") &&
                             response.callMethod("getViewInfo")

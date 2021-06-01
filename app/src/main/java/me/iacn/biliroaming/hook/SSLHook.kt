@@ -62,7 +62,7 @@ class SSLHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             "setSSLSocketFactory",
             javax.net.ssl.SSLSocketFactory::class.java
         ) { param ->
-            param.args[0] = "javax.net.ssl.SSLSocketFactory".findClass(mClassLoader)!!.new()
+            param.args[0] = "javax.net.ssl.SSLSocketFactory".findClass(mClassLoader).new()
         }
 
         "org.apache.http.conn.scheme.SchemeRegistry".findClassOrNull(mClassLoader)
@@ -93,7 +93,7 @@ class SSLHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             param.result = SSLSocketFactory::class.java.new()
         }
 
-        "org.apache.http.conn.ssl.SSLSocketFactory".findClass(mClassLoader)?.hookAfterConstructor(
+        "org.apache.http.conn.ssl.SSLSocketFactory".findClassOrNull(mClassLoader)?.hookAfterConstructor(
             String::class.java,
             KeyStore::class.java,
             String::class.java,
@@ -140,7 +140,7 @@ class SSLHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 param.args[0] = ""
             }
 
-        "android.webkit.WebViewClient".findClass(mClassLoader)?.run {
+        "android.webkit.WebViewClient".findClassOrNull(mClassLoader)?.run {
             replaceMethod(
                 "onReceivedSslError",
                 WebView::class.java,

@@ -13,16 +13,16 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         Log.d("startHook: Json")
 
         val tabResponseClass =
-            "tv.danmaku.bili.ui.main2.resource.MainResourceManager\$TabResponse".findClass(
+            "tv.danmaku.bili.ui.main2.resource.MainResourceManager\$TabResponse".findClassOrNull(
                 mClassLoader
             )
-        val accountMineClass = "tv.danmaku.bili.ui.main2.api.AccountMine".findClass(mClassLoader)
-        val splashClass = "tv.danmaku.bili.ui.splash.SplashData".findClass(mClassLoader)
+        val accountMineClass = "tv.danmaku.bili.ui.main2.api.AccountMine".findClassOrNull(mClassLoader)
+        val splashClass = "tv.danmaku.bili.ui.splash.SplashData".findClassOrNull(mClassLoader)
         val tabClass =
-            "tv.danmaku.bili.ui.main2.resource.MainResourceManager\$Tab".findClass(mClassLoader)
+            "tv.danmaku.bili.ui.main2.resource.MainResourceManager\$Tab".findClassOrNull(mClassLoader)
         val defaultWordClass =
             "tv.danmaku.bili.ui.main2.api.SearchDefaultWord".findClassOrNull(mClassLoader)
-        val defaultKeywordClass = "com.bilibili.search.api.DefaultKeyword".findClass(mClassLoader)
+        val defaultKeywordClass = "com.bilibili.search.api.DefaultKeyword".findClassOrNull(mClassLoader)
         val brandSplashDataClass =
             "tv.danmaku.bili.ui.splash.brand.BrandSplashData".findClassOrNull(mClassLoader)
         val eventEntranceClass =
@@ -31,8 +31,8 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             "com.bilibili.app.comm.comment2.model.BiliCommentCursorList".findClassOrNull(
                 mClassLoader
             )
-        val searchRanksClass = "com.bilibili.search.api.SearchRanks".findClass(mClassLoader)
-        val searchReferralClass = "com.bilibili.search.api.SearchReferral".findClass(mClassLoader)
+        val searchRanksClass = "com.bilibili.search.api.SearchRanks".findClassOrNull(mClassLoader)
+        val searchReferralClass = "com.bilibili.search.api.SearchReferral".findClassOrNull(mClassLoader)
         val followingcardSearchRanksClass =
             "com.bilibili.bplus.followingcard.net.entity.b".findClassOrNull(mClassLoader)
 

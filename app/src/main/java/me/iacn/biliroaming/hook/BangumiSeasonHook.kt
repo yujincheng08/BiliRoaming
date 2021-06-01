@@ -53,7 +53,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     private val serializerFeatures = lazy {
         val serializerFeatureClass =
-            "com.alibaba.fastjson.serializer.SerializerFeature".findClass(mClassLoader)
+            "com.alibaba.fastjson.serializer.SerializerFeature".findClassOrNull(mClassLoader)
                 ?: return@lazy null
         val keyAsString = serializerFeatureClass.getStaticObjectField("WriteNonStringKeyAsString")
         val noDefault = serializerFeatureClass.getStaticObjectField("NotWriteDefaultValue")
@@ -201,7 +201,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             if (redirectUrl.isNullOrEmpty()) return
             param.result = param.thisObject.callMethod("getUrl", redirectUrl)
         }
-        "com.bilibili.bplus.followingcard.api.entity.cardBean.VideoCard".findClass(mClassLoader)
+        "com.bilibili.bplus.followingcard.api.entity.cardBean.VideoCard".findClassOrNull(mClassLoader)
             ?.run {
                 hookAfterMethod("getJumpUrl", hooker = urlHook)
                 hookAfterMethod("getCommentJumpUrl", hooker = urlHook)
@@ -499,7 +499,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         queryString = queryString.replace("aid=", "id=")
         val content = BiliRoamingApi.getView(queryString) ?: return
         Log.d("Got view information from proxy server: $content")
-        val detailClass = "tv.danmaku.bili.ui.video.api.BiliVideoDetail".findClass(mClassLoader)
+        val detailClass = "tv.danmaku.bili.ui.video.api.BiliVideoDetail".findClassOrNull(mClassLoader)
             ?: return
         val newJsonResult = content.toJSONObject().optJSONObject("v2_app_api") ?: return
         newJsonResult.optJSONObject("season")?.optString("newest_ep_id")?.let {

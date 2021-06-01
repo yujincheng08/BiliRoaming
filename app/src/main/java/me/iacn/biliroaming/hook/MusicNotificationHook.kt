@@ -110,7 +110,7 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         instance.classesList.filter {
             it.startsWith("tv.danmaku.biliplayerv2.service.business.background")
         }.firstOrNull { c ->
-            c.findClass(mClassLoader)?.interfaces?.contains(playerHelperField?.type) ?: false
+            c.findClass(mClassLoader).interfaces.contains(playerHelperField?.type)
         }
     }
 
@@ -118,9 +118,9 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         instance.classesList.filter {
             it.startsWith("com.bilibili.music.app.base.mediaplayer")
         }.firstOrNull { c ->
-            c.findClass(mClassLoader)?.interfaces?.filter {
+            c.findClass(mClassLoader).interfaces.filter {
                 it == playerHelperField?.type
-            }?.count()?.let { it > 0 } ?: false
+            }.count().let { it > 0 }
         }
     }
 
@@ -140,9 +140,9 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         instance.classesList.filter {
             it.startsWith("android.support.v4.media.session")
         }.firstOrNull { c ->
-            c.findClass(mClassLoader)?.declaredMethods?.filter {
+            c.findClass(mClassLoader).declaredMethods.filter {
                 it.name == "onSeekTo"
-            }?.count()?.let { it > 0 } ?: false
+            }.count().let { it > 0 }
         }?.findClass(mClassLoader)
     }
 
@@ -179,9 +179,8 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         instance.classesList.filter {
             instance.playerCoreServiceV2Class?.name?.let { name -> it.startsWith(name) } ?: false
         }.firstOrNull { c ->
-            c.findClass(mClassLoader)?.interfaces?.map { it.name }
-                ?.contains("tv.danmaku.ijk.media.player.IMediaPlayer\$OnSeekCompleteListener")
-                ?: false
+            c.findClass(mClassLoader).interfaces.map { it.name }
+                .contains("tv.danmaku.ijk.media.player.IMediaPlayer\$OnSeekCompleteListener")
         }?.findClass(mClassLoader)
     }
 
@@ -233,7 +232,7 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         instance.classesList.filter {
             it.startsWith("com.bilibili.opd.app.bizcommon.mediaplayer.rx")
         }.firstOrNull { c ->
-            c.findClass(mClassLoader)?.interfaces?.contains(rxMediaPlayerInterface) ?: false
+            c.findClass(mClassLoader).interfaces.contains(rxMediaPlayerInterface)
         }?.findClass(mClassLoader)
     }
 
