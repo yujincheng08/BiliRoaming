@@ -68,11 +68,10 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     private fun isContainsBlockKwd(obj: Any): Boolean {
         if (!kwdFilterTitleEnabled || kwdFilterTitleList.isEmpty()) return false
+        val title = obj.getObjectField("title").toString()
         try {
             kwdFilterTitleList.forEach {
-                if (it.isNotEmpty() && obj.getObjectField("title").toString()
-                        .contains(it)
-                ) return true
+                if (it.isNotEmpty() && title.contains(it)) return true
             }
         } catch (e: NoSuchFieldError) {
             return false
