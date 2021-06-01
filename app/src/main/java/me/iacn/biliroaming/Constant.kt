@@ -9,9 +9,9 @@ object Constant {
     const val BLUE_PACKAGE_NAME = "com.bilibili.app.blue"
     const val PLAY_PACKAGE_NAME = "com.bilibili.app.in"
     val BILIBILI_PACKAGE_NAME = hashMapOf(
-            "原版" to PINK_PACKAGE_NAME,
-            "概念版" to BLUE_PACKAGE_NAME,
-            "play版" to PLAY_PACKAGE_NAME
+        "原版" to PINK_PACKAGE_NAME,
+        "概念版" to BLUE_PACKAGE_NAME,
+        "play版" to PLAY_PACKAGE_NAME
     )
     const val TAG = "BiliRoaming"
     const val HOOK_INFO_FILE_NAME = "hookinfo.dat"

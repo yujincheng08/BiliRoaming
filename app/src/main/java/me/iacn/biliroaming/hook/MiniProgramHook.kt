@@ -10,7 +10,11 @@ class MiniProgramHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
         if (!sPrefs.getBoolean("mini_program", false)) return
         Log.d("startHook: MiniProgram")
-        instance.shareWrapperClass?.hookBeforeMethod(instance.shareWrapper(), String::class.java, Bundle::class.java) { param ->
+        instance.shareWrapperClass?.hookBeforeMethod(
+            instance.shareWrapper(),
+            String::class.java,
+            Bundle::class.java
+        ) { param ->
             val platform = param.args[0] as String
             val bundle = param.args[1] as Bundle
             if (platform == "COPY") {
@@ -21,7 +25,8 @@ class MiniProgramHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     conn.connect()
                     if (conn.responseCode == HttpURLConnection.HTTP_MOVED_TEMP) {
                         val target = URL(conn.getHeaderField("Location"))
-                        val bv = target.path.split("/").first { it.startsWith("BV") && it.length == 12 }
+                        val bv =
+                            target.path.split("/").first { it.startsWith("BV") && it.length == 12 }
                         if (bv.isEmpty()) return@hookBeforeMethod
                         val av = bv2av(bv)
                         val query = target.query.split("&").map {

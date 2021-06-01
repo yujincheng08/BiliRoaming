@@ -10,11 +10,18 @@ import java.io.File
 
 class SplashHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
-        if (!sPrefs.getBoolean("custom_splash", false) && !sPrefs.getBoolean("custom_splash_logo", false)
-                && !sPrefs.getBoolean("full_splash", false)) return
+        if (!sPrefs.getBoolean("custom_splash", false) && !sPrefs.getBoolean(
+                "custom_splash_logo",
+                false
+            )
+            && !sPrefs.getBoolean("full_splash", false)
+        ) return
         Log.d("startHook: Splash")
 
-        "tv.danmaku.bili.ui.splash.brand.BrandShowInfo".hookAfterMethod(mClassLoader, "getMode") { param ->
+        "tv.danmaku.bili.ui.splash.brand.BrandShowInfo".hookAfterMethod(
+            mClassLoader,
+            "getMode"
+        ) { param ->
             param.result = if (sPrefs.getBoolean("full_splash", false)) {
                 "full"
             } else {
@@ -22,7 +29,11 @@ class SplashHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
         }
 
-        instance.brandSplashClass?.hookAfterMethod("onViewCreated", View::class.java, Bundle::class.java) { param ->
+        instance.brandSplashClass?.hookAfterMethod(
+            "onViewCreated",
+            View::class.java,
+            Bundle::class.java
+        ) { param ->
             val view = param.args[0] as View
             if (sPrefs.getBoolean("custom_splash", false)) {
                 val brandId = getId("brand_splash")
