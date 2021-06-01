@@ -235,7 +235,7 @@ inline fun String.replaceMethod(
 
 fun MethodHookParam.invokeOriginalMethod(): Any? = invokeOriginalMethod(method, thisObject, args)
 
-fun Any.getObjectField(field: String?): Any? = getObjectField(this, field)
+fun Any.getObjectField(field: String?): Any = getObjectField(this, field)
 
 fun Any.getObjectFieldOrNull(field: String?): Any? = try {
     getObjectField(this, field)
@@ -246,6 +246,13 @@ fun Any.getObjectFieldOrNull(field: String?): Any? = try {
 
 @Suppress("UNCHECKED_CAST")
 fun <T> Any.getObjectFieldAs(field: String?) = getObjectField(this, field) as T
+
+@Suppress("UNCHECKED_CAST")
+fun <T> Any.getObjectOrNullFieldAs(field: String?) = try {
+    getObjectField(this, field) as T
+} catch (thr: Throwable) {
+    null
+}
 
 fun Any.getIntField(field: String?) = getIntField(this, field)
 
@@ -360,9 +367,9 @@ fun ClassLoader.allClassesList(): List<String> {
         if (classLoader.parent != null) classLoader = classLoader.parent
         else return emptyList()
     }
-    return classLoader.getObjectField("pathList")?.getObjectFieldAs<Array<Any>>("dexElements")
+    return classLoader.getObjectField("pathList").getObjectOrNullFieldAs<Array<Any>>("dexElements")
         ?.flatMap {
-            it.getObjectField("dexFile")?.callMethodAs<Enumeration<String>>("entries")?.toList()
+            it.getObjectFieldOrNull("dexFile")?.callMethodAs<Enumeration<String>>("entries")?.toList()
                 .orEmpty()
         }.orEmpty()
 }
