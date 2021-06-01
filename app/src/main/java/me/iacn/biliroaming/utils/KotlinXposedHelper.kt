@@ -322,12 +322,15 @@ fun Class<*>.getStaticObjectFieldOrNull(field: String?): Any? = try {
     null
 }
 
-fun Class<*>.setStaticObjectField(field: String?, obj: Any?) =
+fun Class<*>.setStaticObjectField(field: String?, obj: Any?) = apply {
     setStaticObjectField(this, field, obj)
+}
 
-fun Class<*>.setStaticObjectFieldIfExist(field: String?, obj: Any?) = try {
-    setStaticObjectField(this, field, obj)
-} catch (ignored: Throwable) {
+fun Class<*>.setStaticObjectFieldIfExist(field: String?, obj: Any?) = apply {
+    try {
+        setStaticObjectField(this, field, obj)
+    } catch (ignored: Throwable) {
+    }
 }
 
 @Suppress("UNCHECKED_CAST")
@@ -384,13 +387,21 @@ fun Class<*>.findField(field: String?): Field = findField(this, field)
 
 fun Class<*>.findFieldOrNull(field: String?): Field? = findFieldIfExists(this, field)
 
-fun <T> T.setIntField(field: String?, value: Int) = setIntField(this, field, value)
+fun <T> T.setIntField(field: String?, value: Int) = apply {
+    setIntField(this, field, value)
+}
 
-fun <T> T.setLongField(field: String?, value: Long) = setLongField(this, field, value)
+fun <T> T.setLongField(field: String?, value: Long) = apply {
+    setLongField(this, field, value)
+}
 
-fun <T> T.setObjectField(field: String?, value: Any?) = setObjectField(this, field, value)
+fun <T> T.setObjectField(field: String?, value: Any?) = apply {
+    setObjectField(this, field, value)
+}
 
-fun <T> T.setBooleanField(field: String?, value: Boolean) = setBooleanField(this, field, value)
+fun <T> T.setBooleanField(field: String?, value: Boolean) = apply {
+    setBooleanField(this, field, value)
+}
 
 inline fun XResources.hookLayout(
     id: Int,
