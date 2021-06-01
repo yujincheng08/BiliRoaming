@@ -75,6 +75,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("pref_import").onPreferenceClickListener = this
             findPreference("export_video")?.onPreferenceClickListener = this
             findPreference("hide_low_play_count_recommend")?.onPreferenceClickListener = this
+            findPreference("keywords_filter_title_recommend")?.onPreferenceClickListener = this
             checkCompatibleVersion()
             checkUpdate()
         }
@@ -496,6 +497,31 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             return true
         }
 
+        private fun onKeywordsFilterTitleRecommendClick(isChecked: Boolean): Boolean {
+            if (!isChecked) return true
+            val tv = EditText(activity)
+            tv.setText(sPrefs.getString("keywords_filter_title_recommend_list", ""))
+            AlertDialog.Builder(activity).run {
+                setTitle("设置标题过滤关键词")
+                setView(tv)
+                setPositiveButton("确定") { _, _ ->
+                    sPrefs.edit()
+                        .putString("keywords_filter_title_recommend_list", tv.text.toString())
+                        .apply()
+                    Log.toast("保存成功 重启后生效")
+                }
+                setNegativeButton("取消", null)
+                setNeutralButton("添加分隔符", null)
+                setCancelable(false)
+                show()
+            }.let {
+                it.getButton(AlertDialog.BUTTON_NEUTRAL).setOnClickListener {
+                    tv.text.append('|')
+                }
+            }
+            return true
+        }
+
         override fun onPreferenceClick(preference: Preference) = when (preference.key) {
             "version" -> onVersionClick()
             "update" -> onUpdateClick()
@@ -507,6 +533,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             "pref_import" -> onPrefImportClick()
             "export_video" -> onExportVideoClick()
             "hide_low_play_count_recommend" -> onHideLowPlayCountRecommendClick((preference as SwitchPreference).isChecked)
+            "keywords_filter_title_recommend" -> onKeywordsFilterTitleRecommendClick((preference as SwitchPreference).isChecked)
             else -> false
         }
     }
