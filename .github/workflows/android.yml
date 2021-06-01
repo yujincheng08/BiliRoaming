@@ -23,8 +23,15 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: gradle-
+            !~/.gradle/caches/build-cache-*
+          key: gradle-deps-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: gradle-deps
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.gradle/caches/build-cache-*
+          key: gradle-builds-${{ github.sha }}
+          restore-keys: gradle-builds
       - name: Build with Gradle
         run: |
           echo 'org.gradle.caching=true' >> gradle.properties
