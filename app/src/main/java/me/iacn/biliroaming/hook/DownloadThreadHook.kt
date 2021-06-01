@@ -41,8 +41,9 @@ class DownloadThreadHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             minValue = 1
                             maxValue = 64
                             wrapSelectorWheel = false
-                            value = param.thisObject.getObjectField(activityField)?.getIntField(instance.downloadingThread())
-                                    ?: 1
+                            value = param.thisObject.getObjectField(activityField)
+                                ?.getIntField(instance.downloadingThread())
+                                ?: 1
                         }
                         setView(numberPicker, 50, 0, 50, 0)
                         setButton(AlertDialog.BUTTON_POSITIVE, "OK") { _, _ ->
@@ -56,6 +57,10 @@ class DownloadThreadHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
             }
         }
-        instance.reportDownloadThreadClass?.replaceMethod(instance.reportDownloadThread(), Context::class.java, Int::class.javaPrimitiveType) {}
+        instance.reportDownloadThreadClass?.replaceMethod(
+            instance.reportDownloadThread(),
+            Context::class.java,
+            Int::class.javaPrimitiveType
+        ) {}
     }
 }

@@ -80,7 +80,7 @@
         <item>inline</item>
         <item>bangumi</item>
     </string-array>
-    <string-array name="xposed_scope" >
+    <string-array name="xposed_scope">
         <item>tv.danmaku.bili</item>
         <item>com.bilibili.app.blue</item>
         <item>com.bilibili.app.in</item>

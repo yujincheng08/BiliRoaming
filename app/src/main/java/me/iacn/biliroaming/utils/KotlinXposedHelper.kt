@@ -369,7 +369,8 @@ fun ClassLoader.allClassesList(): List<String> {
     }
     return classLoader.getObjectField("pathList").getObjectOrNullFieldAs<Array<Any>>("dexElements")
         ?.flatMap {
-            it.getObjectFieldOrNull("dexFile")?.callMethodAs<Enumeration<String>>("entries")?.toList()
+            it.getObjectFieldOrNull("dexFile")?.callMethodAs<Enumeration<String>>("entries")
+                ?.toList()
                 .orEmpty()
         }.orEmpty()
 }

@@ -27,7 +27,8 @@ class DrawerHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
             val homeFragment = instance.homeUserCenterClass?.new()
             val fragmentManager = self.callMethod("getSupportFragmentManager")
-            fragmentManager?.callMethod("beginTransaction")?.callMethod("add", homeFragment, "home")?.callMethod("commit")
+            fragmentManager?.callMethod("beginTransaction")?.callMethod("add", homeFragment, "home")
+                ?.callMethod("commit")
             fragmentManager?.callMethod("executePendingTransactions")
 
             self.setContentView(drawerLayout as View)
@@ -36,11 +37,14 @@ class DrawerHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         instance.mainActivityClass?.hookAfterMethod("onPostCreate", Bundle::class.java) { param ->
             val self = param.thisObject as Activity
             val fragmentManager = self.callMethod("getSupportFragmentManager")
-            navView = fragmentManager?.callMethod("findFragmentByTag", "home")?.callMethodAs<View>("getView")
+            navView = fragmentManager?.callMethod("findFragmentByTag", "home")
+                ?.callMethodAs<View>("getView")
 
             val layoutParams = instance.drawerLayoutParamsClass?.new(
-                    ViewGroup.MarginLayoutParams(ViewGroup.MarginLayoutParams.MATCH_PARENT,
-                            ViewGroup.MarginLayoutParams.MATCH_PARENT)
+                ViewGroup.MarginLayoutParams(
+                    ViewGroup.MarginLayoutParams.MATCH_PARENT,
+                    ViewGroup.MarginLayoutParams.MATCH_PARENT
+                )
             )
             layoutParams?.javaClass?.fields?.get(0)?.set(layoutParams, Gravity.START)
             drawerLayout?.callMethod("addView", navView, 1, layoutParams)
@@ -58,7 +62,12 @@ class DrawerHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
         }
 
-        "tv.danmaku.bili.ui.main2.basic.BaseMainFrameFragment".hookAfterMethod(mClassLoader, "onViewCreated", View::class.java, Bundle::class.java) { param ->
+        "tv.danmaku.bili.ui.main2.basic.BaseMainFrameFragment".hookAfterMethod(
+            mClassLoader,
+            "onViewCreated",
+            View::class.java,
+            Bundle::class.java
+        ) { param ->
             val id = getId("avatar_layout")
             (param.args[0] as View).findViewById<View>(id)?.setOnClickListener {
                 try {

@@ -11,7 +11,10 @@ class CommentHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
         if (!sPrefs.getBoolean("comment_floor", false)) return
         Log.d("startHook: Comment")
-        "com.bilibili.app.comm.comment2.model.BiliCommentConfig".replaceMethod(mClassLoader, "isShowFloor") {
+        "com.bilibili.app.comm.comment2.model.BiliCommentConfig".replaceMethod(
+            mClassLoader,
+            "isShowFloor"
+        ) {
             return@replaceMethod true
         }
     }

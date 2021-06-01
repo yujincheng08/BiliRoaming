@@ -38,7 +38,8 @@ class MainActivity : Activity() {
         fragmentManager.beginTransaction().replace(android.R.id.content, PrefsFragment()).commit()
     }
 
-    class PrefsFragment : PreferenceFragment(), OnPreferenceChangeListener, OnPreferenceClickListener {
+    class PrefsFragment : PreferenceFragment(), OnPreferenceChangeListener,
+        OnPreferenceClickListener {
         private lateinit var runningStatusPref: Preference
         private val scope = MainScope()
 
@@ -64,9 +65,14 @@ class MainActivity : Activity() {
                     val isShow = newValue as Boolean
                     val aliasName = ComponentName(activity, MainActivity::class.java.name + "Alias")
                     val packageManager = activity.packageManager
-                    val status = if (isShow) PackageManager.COMPONENT_ENABLED_STATE_DISABLED else PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+                    val status =
+                        if (isShow) PackageManager.COMPONENT_ENABLED_STATE_DISABLED else PackageManager.COMPONENT_ENABLED_STATE_ENABLED
                     if (packageManager.getComponentEnabledSetting(aliasName) != status) {
-                        packageManager.setComponentEnabledSetting(aliasName, status, PackageManager.DONT_KILL_APP)
+                        packageManager.setComponentEnabledSetting(
+                            aliasName,
+                            status,
+                            PackageManager.DONT_KILL_APP
+                        )
                     }
                 }
             }
@@ -132,7 +138,8 @@ class MainActivity : Activity() {
             val packages = Constant.BILIBILI_PACKAGE_NAME.filter { isPackageInstalled(it.value) }
             when {
                 packages.size == 1 -> startSetting(packages.values.first())
-                packages.isEmpty() -> Toast.makeText(activity, "未检测到已安装的客户端", Toast.LENGTH_LONG).show()
+                packages.isEmpty() -> Toast.makeText(activity, "未检测到已安装的客户端", Toast.LENGTH_LONG)
+                    .show()
                 else -> {
                     AlertDialog.Builder(activity).run {
                         val keys = packages.keys.toTypedArray()
@@ -187,13 +194,21 @@ class MainActivity : Activity() {
 
         private fun isAppFuckActive(context: Context): Boolean {
             try {
-                val appContext = context.createPackageContext("com.bug.xposed", Context.CONTEXT_IGNORE_SECURITY or Context.CONTEXT_INCLUDE_CODE)
+                val appContext = context.createPackageContext(
+                    "com.bug.xposed",
+                    Context.CONTEXT_IGNORE_SECURITY or Context.CONTEXT_INCLUDE_CODE
+                )
                 val mods = appContext.getFileStreamPath("mods")
-                val bugSerializeClass = appContext.classLoader.loadClass("com.bug.utils.BugSerialize")
+                val bugSerializeClass =
+                    appContext.classLoader.loadClass("com.bug.utils.BugSerialize")
                 val modClass = appContext.classLoader.loadClass("com.bug.xposed.ModConfig\$Mod")
-                val list = bugSerializeClass.getDeclaredMethod("deserialize", InputStream::class.java).invoke(null, mods.inputStream()) as ArrayList<*>
+                val list =
+                    bugSerializeClass.getDeclaredMethod("deserialize", InputStream::class.java)
+                        .invoke(null, mods.inputStream()) as ArrayList<*>
                 for (mod in list) {
-                    if (modClass.getMethod("getPkg").invoke(mod) == BuildConfig.APPLICATION_ID) return true
+                    if (modClass.getMethod("getPkg")
+                            .invoke(mod) == BuildConfig.APPLICATION_ID
+                    ) return true
                 }
             } catch (e: Throwable) {
             }

@@ -12,7 +12,10 @@ import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.*
+import android.widget.ArrayAdapter
+import android.widget.CheckBox
+import android.widget.ListView
+import android.widget.TextView
 import me.iacn.biliroaming.XposedInit.Companion.moduleRes
 import me.iacn.biliroaming.utils.Log
 import me.iacn.biliroaming.utils.toJSONObject
@@ -37,22 +40,22 @@ class VideoExportDialog(activity: Activity, fragment: Fragment) : AlertDialog.Bu
                     val jsonObj = File(page, "entry.json").readText().toJSONObject()
                     val pageData = jsonObj.optJSONObject("page_data")?.let {
                         VideoEntry.PageData(
-                                it.optString("part")
+                            it.optString("part")
                         )
                     }
                     val ep = jsonObj.optJSONObject("ep")?.let {
                         VideoEntry.Ep(
-                                it.optLong("av_id"),
-                                it.optString("bvid"),
-                                it.optString("index"),
-                                it.optString("index_title")
+                            it.optLong("av_id"),
+                            it.optString("bvid"),
+                            it.optString("index"),
+                            it.optString("index_title")
                         )
                     }
                     val videoEntry = VideoEntry(
-                            jsonObj.optString("title"),
-                            jsonObj.optLong("avid"),
-                            jsonObj.optString("bvid"),
-                            pageData, ep
+                        jsonObj.optString("title"),
+                        jsonObj.optLong("avid"),
+                        jsonObj.optString("bvid"),
+                        pageData, ep
                     )
                     videoEntry.path = page
                     allVideos.add(videoEntry)
@@ -71,7 +74,10 @@ class VideoExportDialog(activity: Activity, fragment: Fragment) : AlertDialog.Bu
             videosToExport = selectedVideos
             val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
             try {
-                fragment.startActivityForResult(Intent.createChooser(intent, "导出视频"), SettingDialog.VIDEO_EXPORT)
+                fragment.startActivityForResult(
+                    Intent.createChooser(intent, "导出视频"),
+                    SettingDialog.VIDEO_EXPORT
+                )
             } catch (ex: ActivityNotFoundException) {
                 Log.toast("请安装文件管理器")
             }
@@ -81,22 +87,22 @@ class VideoExportDialog(activity: Activity, fragment: Fragment) : AlertDialog.Bu
     }
 
     class VideoEntry(
-            val title: String,
-            val avid: Long,
-            val bvid: String,
-            val pageData: PageData?,
-            val ep: Ep?,
-            var path: File? = null
+        val title: String,
+        val avid: Long,
+        val bvid: String,
+        val pageData: PageData?,
+        val ep: Ep?,
+        var path: File? = null
     ) {
         class PageData(
-                val part: String
+            val part: String
         )
 
         class Ep(
-                val avid: Long,
-                val bvid: String,
-                val index: String,
-                val indexTitle: String
+            val avid: Long,
+            val bvid: String,
+            val index: String,
+            val indexTitle: String
         )
 
         val aBvid
@@ -105,7 +111,11 @@ class VideoExportDialog(activity: Activity, fragment: Fragment) : AlertDialog.Bu
         val pageTitle get() = pageData?.part ?: ep?.let { "${it.index} ${it.indexTitle}" }
     }
 
-    class VideoExportAdapter(context: Context, private val allVideos: List<VideoEntry>, private val selectedVideos: MutableSet<File>) : ArrayAdapter<VideoEntry>(context, 0) {
+    class VideoExportAdapter(
+        context: Context,
+        private val allVideos: List<VideoEntry>,
+        private val selectedVideos: MutableSet<File>
+    ) : ArrayAdapter<VideoEntry>(context, 0) {
         @SuppressLint("SetTextI18n")
         override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
             val layout = moduleRes.getLayout(R.layout.video_choose)

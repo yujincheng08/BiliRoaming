@@ -25,70 +25,195 @@ import kotlin.math.max
  */
 class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContext: Context) {
     private val mHookInfo: MutableMap<String, String?> = readHookInfo(mContext)
-    val bangumiApiResponseClass by Weak { "com.bilibili.bangumi.data.common.api.BangumiApiResponse".findClass(mClassLoader) }
-    val rxGeneralResponseClass by Weak { "com.bilibili.okretro.call.rxjava.RxGeneralResponse".findClassOrNull(mClassLoader) }
+    val bangumiApiResponseClass by Weak {
+        "com.bilibili.bangumi.data.common.api.BangumiApiResponse".findClass(
+            mClassLoader
+        )
+    }
+    val rxGeneralResponseClass by Weak {
+        "com.bilibili.okretro.call.rxjava.RxGeneralResponse".findClassOrNull(
+            mClassLoader
+        )
+    }
     val fastJsonClass by Weak { mHookInfo["class_fastjson"]?.findClassOrNull(mClassLoader) }
-    val bangumiUniformSeasonClass by Weak { "com.bilibili.bangumi.data.page.detail.entity.BangumiUniformSeason".findClass(mClassLoader) }
+    val bangumiUniformSeasonClass by Weak {
+        "com.bilibili.bangumi.data.page.detail.entity.BangumiUniformSeason".findClass(
+            mClassLoader
+        )
+    }
     val sectionClass by Weak { mHookInfo["class_section"]?.findClassOrNull(mClassLoader) }
-    val retrofitResponseClass by Weak { mHookInfo["class_retrofit_response"]?.findClassOrNull(mClassLoader) }
+    val retrofitResponseClass by Weak {
+        mHookInfo["class_retrofit_response"]?.findClassOrNull(
+            mClassLoader
+        )
+    }
     val themeHelperClass by Weak { mHookInfo["class_theme_helper"]?.findClassOrNull(mClassLoader) }
-    val themeIdHelperClass by Weak { mHookInfo["class_theme_id_helper"]?.findClassOrNull(mClassLoader) }
+    val themeIdHelperClass by Weak {
+        mHookInfo["class_theme_id_helper"]?.findClassOrNull(
+            mClassLoader
+        )
+    }
     val columnHelperClass by Weak { mHookInfo["class_column_helper"]?.findClassOrNull(mClassLoader) }
     val settingRouterClass by Weak { mHookInfo["class_setting_router"]?.findClassOrNull(mClassLoader) }
-    val themeListClickClass by Weak { mHookInfo["class_theme_list_click"]?.findClassOrNull(mClassLoader) }
+    val themeListClickClass by Weak {
+        mHookInfo["class_theme_list_click"]?.findClassOrNull(
+            mClassLoader
+        )
+    }
     val shareWrapperClass by Weak { mHookInfo["class_share_wrapper"]?.findClassOrNull(mClassLoader) }
     val themeNameClass by Weak { mHookInfo["class_theme_name"]?.findClassOrNull(mClassLoader) }
-    val themeProcessorClass by Weak { mHookInfo["class_theme_processor"]?.findClassOrNull(mClassLoader) }
+    val themeProcessorClass by Weak {
+        mHookInfo["class_theme_processor"]?.findClassOrNull(
+            mClassLoader
+        )
+    }
     val drawerClass by Weak { mHookInfo["class_drawer"]?.findClassOrNull(mClassLoader) }
     val generalResponseClass by Weak { "com.bilibili.okretro.GeneralResponse".findClass(mClassLoader) }
-    val seasonParamsMapClass by Weak { "com.bilibili.bangumi.data.page.detail.BangumiDetailApiService\$UniformSeasonParamsMap".findClassOrNull(mClassLoader) }
-    val seasonParamsClass by Weak { mHookInfo["class_bangumi_params_map"]?.findClassOrNull(mClassLoader) }
-    val brandSplashClass by Weak { "tv.danmaku.bili.ui.splash.brand.ui.BaseBrandSplashFragment".findClassOrNull(mClassLoader) }
-    val urlConnectionClass by Weak { "com.bilibili.lib.okhttp.huc.OkHttpURLConnection".findClass(mClassLoader) }
-    val downloadThreadListenerClass by Weak { mHookInfo["class_download_thread_listener"]?.findClass(mClassLoader) }
-    val downloadingActivityClass by Weak { "tv.danmaku.bili.ui.offline.DownloadingActivity".findClassOrNull(mClassLoader) }
-    val reportDownloadThreadClass by Weak { mHookInfo["class_report_download_thread"]?.findClass(mClassLoader) }
+    val seasonParamsMapClass by Weak {
+        "com.bilibili.bangumi.data.page.detail.BangumiDetailApiService\$UniformSeasonParamsMap".findClassOrNull(
+            mClassLoader
+        )
+    }
+    val seasonParamsClass by Weak {
+        mHookInfo["class_bangumi_params_map"]?.findClassOrNull(
+            mClassLoader
+        )
+    }
+    val brandSplashClass by Weak {
+        "tv.danmaku.bili.ui.splash.brand.ui.BaseBrandSplashFragment".findClassOrNull(
+            mClassLoader
+        )
+    }
+    val urlConnectionClass by Weak {
+        "com.bilibili.lib.okhttp.huc.OkHttpURLConnection".findClass(
+            mClassLoader
+        )
+    }
+    val downloadThreadListenerClass by Weak {
+        mHookInfo["class_download_thread_listener"]?.findClass(
+            mClassLoader
+        )
+    }
+    val downloadingActivityClass by Weak {
+        "tv.danmaku.bili.ui.offline.DownloadingActivity".findClassOrNull(
+            mClassLoader
+        )
+    }
+    val reportDownloadThreadClass by Weak {
+        mHookInfo["class_report_download_thread"]?.findClass(
+            mClassLoader
+        )
+    }
     val libBiliClass by Weak { "com.bilibili.nativelibrary.LibBili".findClass(mClassLoader) }
-    val splashActivityClass by Weak { "tv.danmaku.bili.ui.splash.SplashActivity".findClass(mClassLoader) }
+    val splashActivityClass by Weak {
+        "tv.danmaku.bili.ui.splash.SplashActivity".findClass(
+            mClassLoader
+        )
+    }
     val mainActivityClass by Weak { "tv.danmaku.bili.MainActivityV2".findClass(mClassLoader) }
-    val homeUserCenterClass by Weak { "tv.danmaku.bili.ui.main2.mine.HomeUserCenterFragment".findClassOrNull(mClassLoader) }
+    val homeUserCenterClass by Weak {
+        "tv.danmaku.bili.ui.main2.mine.HomeUserCenterFragment".findClassOrNull(
+            mClassLoader
+        )
+    }
     val garbHelperClass by Weak { mHookInfo["class_garb_helper"]?.findClass(mClassLoader) }
-    val musicNotificationHelperClass by Weak { mHookInfo["class_music_notification_helper"]?.findClass(mClassLoader) }
-    val liveNotificationHelperClass by Weak { mHookInfo["class_live_notification_helper"]?.findClass(mClassLoader) }
-    val notificationBuilderClass by Weak { mHookInfo["class_notification_builder"]?.findClass(mClassLoader) }
+    val musicNotificationHelperClass by Weak {
+        mHookInfo["class_music_notification_helper"]?.findClass(
+            mClassLoader
+        )
+    }
+    val liveNotificationHelperClass by Weak {
+        mHookInfo["class_live_notification_helper"]?.findClass(
+            mClassLoader
+        )
+    }
+    val notificationBuilderClass by Weak {
+        mHookInfo["class_notification_builder"]?.findClass(
+            mClassLoader
+        )
+    }
     val absMusicServiceClass by Weak { mHookInfo["class_abs_music_service"]?.findClass(mClassLoader) }
-    val menuGroupItemClass by Weak { "com.bilibili.lib.homepage.mine.MenuGroup\$Item".findClassOrNull(mClassLoader) }
+    val menuGroupItemClass by Weak {
+        "com.bilibili.lib.homepage.mine.MenuGroup\$Item".findClassOrNull(
+            mClassLoader
+        )
+    }
     val drawerLayoutClass by Weak {
         "androidx.drawerlayout.widget.DrawerLayout".findClassOrNull(mClassLoader)
-                ?: "android.support.v4.widget.DrawerLayout".findClass(mClassLoader)
+            ?: "android.support.v4.widget.DrawerLayout".findClass(mClassLoader)
     }
-    val drawerLayoutParamsClass by Weak { mHookInfo["class_drawer_layout_params"]?.findClass(mClassLoader) }
-    val splashInfoClass by Weak { "tv.danmaku.bili.ui.splash.brand.BrandShowInfo".findClassOrNull(mClassLoader) }
-    val commentRpcClass by Weak { "com.bilibili.app.comm.comment2.model.rpc.CommentRpcKt".findClassOrNull(mClassLoader) }
+    val drawerLayoutParamsClass by Weak {
+        mHookInfo["class_drawer_layout_params"]?.findClass(
+            mClassLoader
+        )
+    }
+    val splashInfoClass by Weak {
+        "tv.danmaku.bili.ui.splash.brand.BrandShowInfo".findClassOrNull(
+            mClassLoader
+        )
+    }
+    val commentRpcClass by Weak {
+        "com.bilibili.app.comm.comment2.model.rpc.CommentRpcKt".findClassOrNull(
+            mClassLoader
+        )
+    }
     val checkBlueClass by Weak { mHookInfo["class_check_blue"]?.findClass(mClassLoader) }
     val kotlinJsonClass by Weak { "kotlinx.serialization.json.Json".findClassOrNull(mClassLoader) }
     val gsonConverterClass by Weak { mHookInfo["class_gson_converter"]?.findClassOrNull(mClassLoader) }
-    val playerOptionsPanelHolderClass by Weak { mHookInfo["class_player_options_panel_holder"]?.findClass(mClassLoader) }
-    val playerParamsBundleClass by Weak { mHookInfo["class_playerparams_bundle"]?.findClassOrNull(mClassLoader) }
-    val playerCoreServiceV2Class by Weak { mHookInfo["class_player_core_service_v2"]?.findClassOrNull(mClassLoader) }
-    val hostRequestInterceptorClass by Weak {
-        "com.bililive.bililive.infra.hybrid.interceptor.HostRequestInterceptor".findClassOrNull(mClassLoader)
-                ?: "com.bililive.bililive.liveweb.interceptor.a".findClass(mClassLoader)
+    val playerOptionsPanelHolderClass by Weak {
+        mHookInfo["class_player_options_panel_holder"]?.findClass(
+            mClassLoader
+        )
     }
-    val teenagersModeDialogActivityClass by Weak { "com.bilibili.teenagersmode.ui.TeenagersModeDialogActivity".findClassOrNull(mClassLoader) }
+    val playerParamsBundleClass by Weak {
+        mHookInfo["class_playerparams_bundle"]?.findClassOrNull(
+            mClassLoader
+        )
+    }
+    val playerCoreServiceV2Class by Weak {
+        mHookInfo["class_player_core_service_v2"]?.findClassOrNull(
+            mClassLoader
+        )
+    }
+    val hostRequestInterceptorClass by Weak {
+        "com.bililive.bililive.infra.hybrid.interceptor.HostRequestInterceptor".findClassOrNull(
+            mClassLoader
+        )
+            ?: "com.bililive.bililive.liveweb.interceptor.a".findClass(mClassLoader)
+    }
+    val teenagersModeDialogActivityClass by Weak {
+        "com.bilibili.teenagersmode.ui.TeenagersModeDialogActivity".findClassOrNull(
+            mClassLoader
+        )
+    }
     val gsonClass by Weak { "com.google.gson.Gson".findClassOrNull(mClassLoader) }
     val pegasusFeedClass by Weak { mHookInfo["class_pegasus_feed"]?.findClassOrNull(mClassLoader) }
-    val okhttpResponseClass by Weak { mHookInfo["class_okhttp_response"]?.findClassOrNull(mClassLoader) }
+    val okhttpResponseClass by Weak {
+        mHookInfo["class_okhttp_response"]?.findClassOrNull(
+            mClassLoader
+        )
+    }
 
     val classesList by lazy { mClassLoader.allClassesList() }
     private val accessKeyInstance by lazy {
-        ("com.bilibili.cheese.ui.detail.pay.v2.CheesePayHelperV2\$accessKey\$2".findClass(mClassLoader)
-                ?: "com.bilibili.bangumi.ui.page.detail.pay.BangumiPayHelperV2\$accessKey\$2".findClass(mClassLoader))?.getStaticObjectField("INSTANCE")
+        ("com.bilibili.cheese.ui.detail.pay.v2.CheesePayHelperV2\$accessKey\$2".findClass(
+            mClassLoader
+        )
+            ?: "com.bilibili.bangumi.ui.page.detail.pay.BangumiPayHelperV2\$accessKey\$2".findClass(
+                mClassLoader
+            ))?.getStaticObjectField("INSTANCE")
     }
 
     @Suppress("UNCHECKED_CAST")
     val ids by lazy {
-        ObjectInputStream(ByteArrayInputStream(Base64.decode(mHookInfo["map_ids"], Base64.DEFAULT))).readObject() as Map<String, Int>
+        ObjectInputStream(
+            ByteArrayInputStream(
+                Base64.decode(
+                    mHookInfo["map_ids"],
+                    Base64.DEFAULT
+                )
+            )
+        ).readObject() as Map<String, Int>
     }
 
 
@@ -158,7 +283,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     fun playbackSpeedList() = mHookInfo["field_playback_speed_list"]
 
-    fun putSerializableToPlayerParamsBundle() = mHookInfo["method_put_serializable_to_playerparams_bundle"]
+    fun putSerializableToPlayerParamsBundle() =
+        mHookInfo["method_put_serializable_to_playerparams_bundle"]
 
     fun defaultSpeed() = mHookInfo["method_get_default_speed"]
 
@@ -176,7 +302,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             Log.d("Reading hook info: $hookInfoFile")
             val startTime = System.currentTimeMillis()
             if (hookInfoFile.isFile && hookInfoFile.canRead()) {
-                val lastUpdateTime = context.packageManager.getPackageInfo(AndroidAppHelper.currentPackageName(), 0).lastUpdateTime
+                val lastUpdateTime = context.packageManager.getPackageInfo(
+                    AndroidAppHelper.currentPackageName(),
+                    0
+                ).lastUpdateTime
                 val lastModuleUpdateTime = try {
                     context.packageManager.getPackageInfo(BuildConfig.APPLICATION_ID, 0)
                 } catch (e: Throwable) {
@@ -202,7 +331,11 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     private fun checkHookInfo(): Boolean {
         var needUpdate = false
 
-        fun <K, V> MutableMap<K, V>.checkOrPut(key: K, checkOption: String? = null, defaultValue: () -> V): MutableMap<K, V> {
+        fun <K, V> MutableMap<K, V>.checkOrPut(
+            key: K,
+            checkOption: String? = null,
+            defaultValue: () -> V
+        ): MutableMap<K, V> {
             if (checkOption != null) {
                 if (!sPrefs.getBoolean(checkOption, false)) return this
             }
@@ -213,7 +346,12 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             return this
         }
 
-        fun <K, V> MutableMap<K, V>.checkOrPut(keys: Array<out K>, checkOption: String? = null, checker: (map: MutableMap<K, V>, keys: Array<out K>) -> Boolean, defaultValue: () -> Array<V>): MutableMap<K, V> {
+        fun <K, V> MutableMap<K, V>.checkOrPut(
+            keys: Array<out K>,
+            checkOption: String? = null,
+            checker: (map: MutableMap<K, V>, keys: Array<out K>) -> Boolean,
+            defaultValue: () -> Array<V>
+        ): MutableMap<K, V> {
             if (checkOption != null) {
                 if (!sPrefs.getBoolean(checkOption, false)) return this
             }
@@ -224,12 +362,28 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             return this
         }
 
-        fun <K, V> MutableMap<K, V>.checkConjunctiveOrPut(vararg keys: K, defaultValue: () -> Array<V>) =
-                checkOrPut(keys, null, { m, ks -> ks.fold(true) { acc, k -> acc && m.containsKey(k) } }, defaultValue)
+        fun <K, V> MutableMap<K, V>.checkConjunctiveOrPut(
+            vararg keys: K,
+            defaultValue: () -> Array<V>
+        ) =
+            checkOrPut(
+                keys,
+                null,
+                { m, ks -> ks.fold(true) { acc, k -> acc && m.containsKey(k) } },
+                defaultValue
+            )
 
         @Suppress("unused")
-        fun <K, V> MutableMap<K, V>.checkDisjunctiveOrPut(vararg keys: K, defaultValue: () -> Array<V>) =
-                checkOrPut(keys, null, { m, ks -> ks.fold(false) { acc, k -> acc || m.containsKey(k) } }, defaultValue)
+        fun <K, V> MutableMap<K, V>.checkDisjunctiveOrPut(
+            vararg keys: K,
+            defaultValue: () -> Array<V>
+        ) =
+            checkOrPut(
+                keys,
+                null,
+                { m, ks -> ks.fold(false) { acc, k -> acc || m.containsKey(k) } },
+                defaultValue
+            )
 
         mHookInfo.checkOrPut("class_retrofit_response") {
             findRetrofitResponseClass()
@@ -313,13 +467,20 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             findGson()
         }.checkConjunctiveOrPut("class_player_options_panel_holder", "field_playback_speed_list") {
             findPlaybackSpeedList()
-        }.checkConjunctiveOrPut("class_playerparams_bundle", "method_put_serializable_to_playerparams_bundle") {
+        }.checkConjunctiveOrPut(
+            "class_playerparams_bundle",
+            "method_put_serializable_to_playerparams_bundle"
+        ) {
             findPlayerParamsBundle()
         }.checkConjunctiveOrPut("class_player_core_service_v2", "method_get_default_speed") {
             findGetDefaultSpeed()
         }.checkConjunctiveOrPut("method_gson_tojson", "method_gson_fromjson") {
             arrayOf(findGsonToJsonMethod(), findGsonFromJsonMethod())
-        }.checkConjunctiveOrPut("class_pegasus_feed", "class_okhttp_response", "method_pegasus_feed") {
+        }.checkConjunctiveOrPut(
+            "class_pegasus_feed",
+            "class_okhttp_response",
+            "method_pegasus_feed"
+        ) {
             findPegasusFeed()
         }
 
@@ -329,7 +490,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     }
 
     private fun findPegasusFeed(): Array<String?> {
-        val itemClass = "com.bilibili.pegasus.api.model.BasicIndexItem".findClassOrNull(mClassLoader)
+        val itemClass =
+            "com.bilibili.pegasus.api.model.BasicIndexItem".findClassOrNull(mClassLoader)
         classesList.filter {
             it.startsWith("com.bilibili.pegasus.api")
         }.map { c ->
@@ -356,7 +518,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     }?.name
 
     private fun findGetDefaultSpeed(): Array<String?> {
-        val playerCoreServiceV2class = "tv.danmaku.biliplayerv2.service.core.PlayerCoreServiceV2".findClassOrNull(mClassLoader)
+        val playerCoreServiceV2class =
+            "tv.danmaku.biliplayerv2.service.core.PlayerCoreServiceV2".findClassOrNull(mClassLoader)
                 ?: "tv.danmaku.biliplayerimpl.core.PlayerCoreServiceV2".findClassOrNull(mClassLoader)
                 ?: classesList.filter {
                     it.startsWith("tv.danmaku.biliplayerv2.service") ||
@@ -374,7 +537,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     }
 
     private fun findPlayerParamsBundle(): Array<String?> {
-        val playerParamsBundleClass = "tv.danmaku.biliplayer.basic.context.c".findClassOrNull(mClassLoader)
+        val playerParamsBundleClass =
+            "tv.danmaku.biliplayer.basic.context.c".findClassOrNull(mClassLoader)
                 ?: return arrayOfNulls(2)
         playerParamsBundleClass.declaredMethods.forEach { m ->
             if (Modifier.isPublic(m.modifiers) && Modifier.isFinal(m.modifiers) && m.parameterTypes.size == 2 && m.parameterTypes[0] == String::class.java && m.parameterTypes[1] == Serializable::class.java)
@@ -400,7 +564,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     private fun findGson(): Array<String?> {
         val gsonClass = "com.google.gson.Gson".findClassOrNull(mClassLoader)
-                ?: return arrayOfNulls(2)
+            ?: return arrayOfNulls(2)
         classesList.filter {
             it.startsWith("com.bilibili.okretro.converter") || it.startsWith("com.bilibili.api.utils")
         }.forEach { c ->
@@ -466,8 +630,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         }.forEach { c ->
             c.findClassOrNull(mClassLoader)?.declaredMethods?.forEach {
                 if (!Modifier.isStatic(it.modifiers) && it.parameterTypes.size == 1 &&
-                        it.parameterTypes[0] == Context::class.java &&
-                        it.returnType == Boolean::class.javaPrimitiveType)
+                    it.parameterTypes[0] == Context::class.java &&
+                    it.returnType == Boolean::class.javaPrimitiveType
+                )
                     return arrayOf(c, it.name)
             }
         }
@@ -475,8 +640,18 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     }
 
     private fun findDrawerMethod(): Array<String?> = try {
-        arrayOf(drawerLayoutClass?.getMethod("openDrawer", View::class.java, Boolean::class.javaPrimitiveType)?.name,
-                drawerLayoutClass?.getMethod("closeDrawer", View::class.java, Boolean::class.javaPrimitiveType)?.name)
+        arrayOf(
+            drawerLayoutClass?.getMethod(
+                "openDrawer",
+                View::class.java,
+                Boolean::class.javaPrimitiveType
+            )?.name,
+            drawerLayoutClass?.getMethod(
+                "closeDrawer",
+                View::class.java,
+                Boolean::class.javaPrimitiveType
+            )?.name
+        )
     } catch (e: Throwable) {
         drawerLayoutClass?.declaredMethods?.filter {
             Modifier.isPublic(it.modifiers) &&
@@ -495,15 +670,16 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         c.findClassOrNull(mClassLoader)?.superclass == Service::class.java
     }
 
-    private fun findSetNotificationMethods(): Array<String?> = musicNotificationHelperClass?.declaredMethods?.lastOrNull {
-        it.parameterTypes.size == 1 && it.parameterTypes[0].name.run {
-            startsWith("android.support.v4.app") ||
-                    startsWith("androidx.core.app") ||
-                    startsWith("androidx.core.app.NotificationCompat\$Builder")
-        }
-    }?.run {
-        arrayOf(name, parameterTypes[0].name)
-    } ?: arrayOfNulls(2)
+    private fun findSetNotificationMethods(): Array<String?> =
+        musicNotificationHelperClass?.declaredMethods?.lastOrNull {
+            it.parameterTypes.size == 1 && it.parameterTypes[0].name.run {
+                startsWith("android.support.v4.app") ||
+                        startsWith("androidx.core.app") ||
+                        startsWith("androidx.core.app.NotificationCompat\$Builder")
+            }
+        }?.run {
+            arrayOf(name, parameterTypes[0].name)
+        } ?: arrayOfNulls(2)
 
     private fun findMusicNotificationHelper() = classesList.filter {
         it.startsWith("tv.danmaku.bili.ui.player.notification")
@@ -523,7 +699,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     private fun findGarbHelper(): Array<String?> {
         val garbClass = "com.bilibili.lib.ui.garb.Garb".findClassOrNull(mClassLoader)
-                ?: return arrayOfNulls(2)
+            ?: return arrayOfNulls(2)
         classesList.filter {
             it.startsWith("com.bilibili.lib.ui.garb")
         }.forEach { c ->
@@ -565,7 +741,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     private fun writeHookInfo(context: Context) {
         try {
             val hookInfoFile = File(context.cacheDir, Constant.HOOK_INFO_FILE_NAME)
-            val lastUpdateTime = context.packageManager.getPackageInfo(AndroidAppHelper.currentPackageName(), 0).lastUpdateTime
+            val lastUpdateTime = context.packageManager.getPackageInfo(
+                AndroidAppHelper.currentPackageName(),
+                0
+            ).lastUpdateTime
             val lastModuleUpdateTime = try {
                 context.packageManager.getPackageInfo(BuildConfig.APPLICATION_ID, 0)
             } catch (e: Throwable) {
@@ -614,7 +793,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         return arrayOfNulls(2)
     }
 
-    private fun findFastJsonClass(): Class<*>? = "com.alibaba.fastjson.JSON".findClassOrNull(mClassLoader)
+    private fun findFastJsonClass(): Class<*>? =
+        "com.alibaba.fastjson.JSON".findClassOrNull(mClassLoader)
             ?: "com.alibaba.fastjson.a".findClass(mClassLoader)
 
     private fun findColorArrayField() = themeHelperClass?.declaredFields?.firstOrNull {
@@ -633,16 +813,17 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     private fun findSkinListMethod(): String? {
         val biliSkinListClass = "tv.danmaku.bili.ui.theme.api.BiliSkinList".findClass(mClassLoader)
-                ?: return null
+            ?: return null
         return "tv.danmaku.bili.ui.theme.ThemeStoreActivity".findClass(mClassLoader)?.declaredMethods?.firstOrNull {
             it.parameterTypes.size == 2 && it.parameterTypes[0] == biliSkinListClass &&
                     it.parameterTypes[1] == Boolean::class.javaPrimitiveType
         }?.name
     }
 
-    private fun findThemeListClickClass() = "tv.danmaku.bili.ui.theme.ThemeStoreActivity".findClassOrNull(mClassLoader)?.declaredClasses?.firstOrNull {
-        it.interfaces.contains(View.OnClickListener::class.java)
-    }?.name
+    private fun findThemeListClickClass() =
+        "tv.danmaku.bili.ui.theme.ThemeStoreActivity".findClassOrNull(mClassLoader)?.declaredClasses?.firstOrNull {
+            it.interfaces.contains(View.OnClickListener::class.java)
+        }?.name
 
     private fun findThemeNameClass() = classesList.filter {
         it.startsWith("tv.danmaku.bili.ui.garb")
@@ -659,7 +840,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     private fun findVideoDetailField(): String? {
         val detailClass = "tv.danmaku.bili.ui.video.api.BiliVideoDetail".findClass(mClassLoader)
-                ?: return null
+            ?: return null
         return sectionClass?.declaredFields?.firstOrNull {
             it.type == detailClass
         }?.name
@@ -667,7 +848,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     private fun findSignQueryMethod(): String? {
         val signedQueryClass = "com.bilibili.nativelibrary.SignedQuery".findClass(mClassLoader)
-                ?: return null
+            ?: return null
         return libBiliClass?.declaredMethods?.firstOrNull {
             it.parameterTypes.size == 1 && it.parameterTypes[0] == Map::class.java &&
                     it.returnType == signedQueryClass
@@ -705,7 +886,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     }
 
     private fun findThemeProcessor(): String? {
-        val biliSkinListClass = "tv.danmaku.bili.ui.theme.api.BiliSkinList".findClassOrNull(mClassLoader)
+        val biliSkinListClass =
+            "tv.danmaku.bili.ui.theme.api.BiliSkinList".findClassOrNull(mClassLoader)
         return classesList.filter {
             it.startsWith("tv.danmaku.bili.ui.theme")
         }.firstOrNull { c ->
@@ -749,7 +931,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     }?.name
 
     private fun findDrawerClass(): String? {
-        val navigationViewClass = "android.support.design.widget.NavigationView".findClassOrNull(mClassLoader)
+        val navigationViewClass =
+            "android.support.design.widget.NavigationView".findClassOrNull(mClassLoader)
                 ?: return null
         val regex = Regex("^tv\\.danmaku\\.bili\\.ui\\.main2\\.[^.]*$")
         return classesList.filter {
