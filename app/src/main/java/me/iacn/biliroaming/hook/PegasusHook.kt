@@ -16,7 +16,7 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         sPrefs.getLong("hide_low_play_count_recommend_limit", 100)
     }
     private val kwdFilterTitleList by lazy {
-        sPrefs.getString("keywords_filter_title_recommend_list", "")?.split("|") ?: listOf()
+        sPrefs.getString("keywords_filter_title_recommend_list", "")?.split("|") ?: emptyList()
     }
 
     private val filterMap = mapOf(
