@@ -19,35 +19,41 @@ import kotlinx.coroutines.flow.toList
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.Constant.HOST_REGEX
 import me.iacn.biliroaming.XposedInit.Companion.moduleRes
+import me.iacn.biliroaming.network.BiliRoamingApi.getPlayUrl
 import me.iacn.biliroaming.utils.Log
 import me.iacn.biliroaming.utils.fetchJson
 import me.iacn.biliroaming.utils.sPrefs
+import me.iacn.biliroaming.utils.toJSONObject
 import java.net.URL
 import java.util.concurrent.Executors
-import me.iacn.biliroaming.network.BiliRoamingApi.getPlayUrl
-import me.iacn.biliroaming.utils.toJSONObject
 
 class SpeedTestResult(val name: String, val value: String?, var speed: String)
 
 class SpeedTestAdapter(context: Context) : ArrayAdapter<SpeedTestResult>(context, 0) {
-    class ViewHolder(var name: String?, var value: String?, val nameView: TextView, val speedView: TextView)
+    class ViewHolder(
+        var name: String?,
+        var value: String?,
+        val nameView: TextView,
+        val speedView: TextView
+    )
 
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
         val layout = moduleRes.getLayout(R.layout.cdn_speedtest_item)
         val inflater = LayoutInflater.from(context)
         val view = convertView ?: inflater.inflate(layout, null).apply {
             tag = ViewHolder(
-                    getItem(position)?.name,
-                    getItem(position)?.value,
-                    findViewById(R.id.upos_name),
-                    findViewById(R.id.upos_speed)
+                getItem(position)?.name,
+                getItem(position)?.value,
+                findViewById(R.id.upos_name),
+                findViewById(R.id.upos_speed)
             )
         }
         val holder = view.tag as ViewHolder
         holder.name = getItem(position)?.name
         holder.value = getItem(position)?.value
         holder.nameView.text = holder.name
-        holder.speedView.text = moduleRes.getString(R.string.speed_formatter).format(getItem(position)?.speed)
+        holder.speedView.text =
+            moduleRes.getString(R.string.speed_formatter).format(getItem(position)?.speed)
         return view
     }
 
@@ -65,13 +71,16 @@ class SpeedTestAdapter(context: Context) : ArrayAdapter<SpeedTestResult>(context
     }
 }
 
-class SpeedTestDialog(private val pref: ListPreference, activity: Activity) : AlertDialog.Builder(activity) {
+class SpeedTestDialog(private val pref: ListPreference, activity: Activity) :
+    AlertDialog.Builder(activity) {
     private val scope = MainScope()
     private val speedTestDispatcher = Executors.newFixedThreadPool(1).asCoroutineDispatcher()
 
     companion object {
-        const val mainlandParams = "cid=120453316&ep_id=285145&otype=json&fnval=16&module=pgc&platform=android"
-        const val overseaParams = "cid=13073143&&ep_id=100615otype=json&fnval=16&module=pgc&platform=android"
+        const val mainlandParams =
+            "cid=120453316&ep_id=285145&otype=json&fnval=16&module=pgc&platform=android"
+        const val overseaParams =
+            "cid=13073143&&ep_id=100615otype=json&fnval=16&module=pgc&platform=android"
         const val infoUrl = "https://api.bilibili.com/client_info"
     }
 
@@ -117,7 +126,8 @@ class SpeedTestDialog(private val pref: ListPreference, activity: Activity) : Al
                 dialog.setTitle("测速失败")
                 return@launch
             }
-            moduleRes.getStringArray(R.array.upos_entries).zip(moduleRes.getStringArray(R.array.upos_values)).asFlow().map {
+            moduleRes.getStringArray(R.array.upos_entries)
+                .zip(moduleRes.getStringArray(R.array.upos_values)).asFlow().map {
                 scope.launch {
                     val item = SpeedTestResult(it.first, it.second, "...")
                     adapter.add(item)
@@ -161,10 +171,14 @@ class SpeedTestDialog(private val pref: ListPreference, activity: Activity) : Al
 
     private suspend fun getTestUrl() = withContext(Dispatchers.Default) {
         val country = fetchJson(infoUrl)?.optJSONObject("data")?.optString("country")
-        val json = if (country == "中国") getPlayUrl("$mainlandParams&access_key=${instance.accessKey}", arrayOf("hk", "tw")) else
+        val json = if (country == "中国") getPlayUrl(
+            "$mainlandParams&access_key=${instance.accessKey}",
+            arrayOf("hk", "tw")
+        ) else
             getPlayUrl("$overseaParams&access_key=${instance.accessKey}", arrayOf("cn"))
         json?.toJSONObject()?.optJSONObject("dash")?.getJSONArray("audio")?.run {
             (0 until length()).map { idx -> optJSONObject(idx) }
-        }?.minWithOrNull { a, b -> a.optInt("bandwidth") - b.optInt("bandwidth") }?.optString("base_url")?.replace("https", "http")
+        }?.minWithOrNull { a, b -> a.optInt("bandwidth") - b.optInt("bandwidth") }
+            ?.optString("base_url")?.replace("https", "http")
     }
 }

@@ -80,11 +80,11 @@ class ColorChooseDialog(context: Context, defColor: Int) : AlertDialog.Builder(c
     }
 
     private fun handleUnknownColor(color: String) =
-            try {
-                Color.parseColor("#$color")
-            } catch (e: IllegalArgumentException) {
-                Color.BLACK
-            }
+        try {
+            Color.parseColor("#$color")
+        } catch (e: IllegalArgumentException) {
+            Color.BLACK
+        }
 
     init {
         setView(view)

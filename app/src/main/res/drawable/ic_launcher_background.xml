@@ -4,9 +4,10 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-  <group android:scaleX="0"
-      android:scaleY="0"
-      android:translateX="54"
-      android:translateY="54">
-  </group>
+    <group
+        android:scaleX="0"
+        android:scaleY="0"
+        android:translateX="54"
+        android:translateY="54">
+    </group>
 </vector>

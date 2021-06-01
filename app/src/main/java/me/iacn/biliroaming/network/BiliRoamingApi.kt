@@ -23,7 +23,6 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
-import kotlin.collections.LinkedHashMap
 
 
 /**
@@ -38,9 +37,12 @@ object BiliRoamingApi {
     private const val BILI_USER_STATUS_URL = "api.bilibili.com/pgc/view/web/season/user/status"
     private const val BILI_MEDIA_URL = "bangumi.bilibili.com/view/web_api/media"
     private const val BILI_SECTION_URL = "api.bilibili.com/pgc/web/season/section"
-    private const val BILI_MODULE_TEMPLATE = "{\"data\": {},\"id\": 0,\"module_style\": {\"hidden\": 0,\"line\": 1},\"more\": \"查看更多\",\"style\": \"positive\",\"title\": \"选集\"}"
-    private const val BILI_RIGHT_TEMPLATE = "{\"allow_demand\":0,\"allow_dm\":1,\"allow_download\":0,\"area_limit\":0}"
-    private const val BILI_VIP_BADGE_TEMPLATE = "{\"bg_color\":\"#FB7299\",\"bg_color_night\":\"#BB5B76\",\"text\":\"%s\"}"
+    private const val BILI_MODULE_TEMPLATE =
+        "{\"data\": {},\"id\": 0,\"module_style\": {\"hidden\": 0,\"line\": 1},\"more\": \"查看更多\",\"style\": \"positive\",\"title\": \"选集\"}"
+    private const val BILI_RIGHT_TEMPLATE =
+        "{\"allow_demand\":0,\"allow_dm\":1,\"allow_download\":0,\"area_limit\":0}"
+    private const val BILI_VIP_BADGE_TEMPLATE =
+        "{\"bg_color\":\"#FB7299\",\"bg_color_night\":\"#BB5B76\",\"text\":\"%s\"}"
 
     private const val PATH_PLAYURL = "/pgc/player/api/playurl"
     private const val THAILAND_PATH_PLAYURL = "/intl/gateway/v2/ogv/playurl"
@@ -51,8 +53,10 @@ object BiliRoamingApi {
     @JvmStatic
     fun getSeason(info: Map<String, String?>, hidden: Boolean): String? {
         val builder = Uri.Builder()
-        builder.scheme("https").encodedAuthority(if (hidden) BILI_HIDDEN_SEASON_URL else BILI_SEASON_URL)
-        info.filter { !it.value.isNullOrEmpty() }.forEach { builder.appendQueryParameter(it.key, it.value) }
+        builder.scheme("https")
+            .encodedAuthority(if (hidden) BILI_HIDDEN_SEASON_URL else BILI_SEASON_URL)
+        info.filter { !it.value.isNullOrEmpty() }
+            .forEach { builder.appendQueryParameter(it.key, it.value) }
         var seasonJson = getContent(builder.toString())?.toJSONObject() ?: return null
         var fixThailandSeasonFlag = false
         seasonJson.optJSONObject("result")?.also {
@@ -64,16 +68,18 @@ object BiliRoamingApi {
             fixRight(it)
             if (hidden) getExtraInfo(it, instance.accessKey)
             if (it.optJSONArray("episodes")?.length() == 0 || it.optInt("total_ep") == -1
-                    || (it.has("total_ep") && it.optInt("total_ep").toString() != it.optJSONObject("newest_ep")?.optString("index"))) {
+                || (it.has("total_ep") && it.optInt("total_ep")
+                    .toString() != it.optJSONObject("newest_ep")?.optString("index"))
+            ) {
                 fixThailandSeasonFlag = true
             }
         }
         val thUrl = sPrefs.getString("th_server", null)
         if (thUrl != null && (seasonJson.optInt("code") == -404 || fixThailandSeasonFlag)) {
             builder.scheme("https").encodedAuthority(thUrl + THAILAND_PATH_SEASON)
-                    .appendQueryParameter("s_locale", "zh_SG")
-                    .appendQueryParameter("access_key", instance.accessKey)
-                    .appendQueryParameter("mobi_app", "bstar_a")
+                .appendQueryParameter("s_locale", "zh_SG")
+                .appendQueryParameter("access_key", instance.accessKey)
+                .appendQueryParameter("mobi_app", "bstar_a")
             seasonJson = getContent(builder.toString())?.toJSONObject() ?: return null
             seasonJson.optJSONObject("result")?.also {
                 fixThailandSeason(it)
@@ -86,15 +92,16 @@ object BiliRoamingApi {
     private fun fixSection(result: JSONObject) {
         val seasonId = result.optString("season_id")
         val uri = Uri.Builder()
-                .scheme("https")
-                .encodedAuthority(BILI_SECTION_URL)
-                .appendQueryParameter("season_id", seasonId)
-                .toString()
+            .scheme("https")
+            .encodedAuthority(BILI_SECTION_URL)
+            .appendQueryParameter("season_id", seasonId)
+            .toString()
         val sectionJson = getContent(uri).toJSONObject().optJSONObject("result") ?: return
         val sections = sectionJson.optJSONArray("section") ?: return
 
-        val episodeMap = result.optJSONArray("episodes")?.iterator()?.asSequence()?.map { it.optInt("ep_id") to it }?.toMap()
-                ?: return
+        val episodeMap = result.optJSONArray("episodes")?.iterator()?.asSequence()
+            ?.map { it.optInt("ep_id") to it }?.toMap()
+            ?: return
         for ((i, section) in sections.iterator().withIndex()) {
             section.put("episode_id", i)
             val newEpisodes = JSONArray()
@@ -110,7 +117,8 @@ object BiliRoamingApi {
         }
 
         val newEpisodes = JSONArray()
-        for (episode in sectionJson.optJSONObject("main_section")?.optJSONArray("episodes").orEmpty()) {
+        for (episode in sectionJson.optJSONObject("main_section")?.optJSONArray("episodes")
+            .orEmpty()) {
             newEpisodes.put(episodeMap[episode.optInt("id")])
         }
         result.put("episodes", newEpisodes)
@@ -122,10 +130,10 @@ object BiliRoamingApi {
         epId ?: return null
         val thUrl = sPrefs.getString("th_server", null) ?: return null
         val uri = Uri.Builder()
-                .scheme("https")
-                .encodedAuthority(thUrl + THAILAND_PATH_SUBTITLES)
-                .appendQueryParameter("ep_id", epId)
-                .toString()
+            .scheme("https")
+            .encodedAuthority(thUrl + THAILAND_PATH_SUBTITLES)
+            .appendQueryParameter("ep_id", epId)
+            .toString()
         return getContent(uri)
     }
 
@@ -133,9 +141,11 @@ object BiliRoamingApi {
     fun getThailandSearchBangumi(queryString: String): String? {
         val thUrl = sPrefs.getString("th_server", null) ?: return null
         val uri = Uri.Builder()
-                .scheme("https")
-                .encodedAuthority(thUrl + THAILAND_PATH_SEARCH)
-                .encodedQuery(signQuery(queryString, mapOf(
+            .scheme("https")
+            .encodedAuthority(thUrl + THAILAND_PATH_SEARCH)
+            .encodedQuery(
+                signQuery(
+                    queryString, mapOf(
                         "type" to "7",
                         "appkey" to "7d089525d3611b1c",
                         "build" to "1001310",
@@ -145,9 +155,14 @@ object BiliRoamingApi {
                         "c_locale" to "zh_SG",
                         "sim_code" to "52004",
                         "lang" to "hans",
-                )))
-                .toString()
-        return getContent(uri)?.replace("bstar://bangumi/season/", "https://bangumi.bilibili.com/anime/")
+                    )
+                )
+            )
+            .toString()
+        return getContent(uri)?.replace(
+            "bstar://bangumi/season/",
+            "https://bangumi.bilibili.com/anime/"
+        )
     }
 
     @JvmStatic
@@ -174,7 +189,10 @@ object BiliRoamingApi {
             if (episode.optInt("badge_type", -1) == 0)
                 episode.remove("badge_info")
             if (episode.optString("badge") != "受限")
-                episode.put("badge_info", JSONObject(BILI_VIP_BADGE_TEMPLATE.format(episode.optString("badge"))))
+                episode.put(
+                    "badge_info",
+                    JSONObject(BILI_VIP_BADGE_TEMPLATE.format(episode.optString("badge")))
+                )
         }
         for (section in result.optJSONArray("section").orEmpty()) {
             fixEpisodes(section)
@@ -194,10 +212,10 @@ object BiliRoamingApi {
             val sections = result.optJSONArray("section")
             for (section in sections.orEmpty()) {
                 val sectionModule = BILI_MODULE_TEMPLATE.toJSONObject()
-                        .put("data", section)
-                        .put("style", "section")
-                        .put("title", section.optString("title"))
-                        .put("id", ++id)
+                    .put("data", section)
+                    .put("style", "section")
+                    .put("title", section.optString("title"))
+                    .put("id", ++id)
                 modules.add(sectionModule)
             }
         }
@@ -208,10 +226,10 @@ object BiliRoamingApi {
             }
             val seasonModule = BILI_MODULE_TEMPLATE.toJSONObject()
             seasonModule.put("data", JSONObject().put("seasons", seasons))
-                    .put("style", "season")
-                    .put("title", "")
-                    .put("id", ++id)
-                    .put("module_style", JSONObject("{\"line\": 1}"))
+                .put("style", "season")
+                .put("title", "")
+                .put("id", ++id)
+                .put("module_style", JSONObject("{\"line\": 1}"))
             modules.add(seasonModule)
 
         }
@@ -239,11 +257,11 @@ object BiliRoamingApi {
     @JvmStatic
     private fun getMediaInfo(result: JSONObject, mediaId: String, accessKey: String?) {
         val uri = Uri.Builder()
-                .scheme("https")
-                .encodedAuthority(BILI_MEDIA_URL)
-                .appendQueryParameter("media_id", mediaId)
-                .appendQueryParameter("access_key", accessKey)
-                .toString()
+            .scheme("https")
+            .encodedAuthority(BILI_MEDIA_URL)
+            .appendQueryParameter("media_id", mediaId)
+            .appendQueryParameter("access_key", accessKey)
+            .toString()
         val mediaJson = getContent(uri)?.toJSONObject()
         val mediaResult = mediaJson?.optJSONObject("result")
         val actors = mediaResult?.optString("actors")
@@ -258,31 +276,46 @@ object BiliRoamingApi {
     @JvmStatic
     private fun getReviewInfo(userStatus: JSONObject, mediaId: String, accessKey: String?) {
         val uri = Uri.Builder()
-                .scheme("https")
-                .encodedAuthority(BILI_REVIEW_URL)
-                .appendQueryParameter("media_id", mediaId)
-                .appendQueryParameter("access_key", accessKey)
-                .toString()
+            .scheme("https")
+            .encodedAuthority(BILI_REVIEW_URL)
+            .appendQueryParameter("media_id", mediaId)
+            .appendQueryParameter("access_key", accessKey)
+            .toString()
         val reviewJson = getContent(uri)?.toJSONObject()
         val reviewResult = reviewJson?.optJSONObject("result")
         val review = reviewResult?.optJSONObject("review")
-        review?.put("article_url", "https://member.bilibili.com/article-text/mobile?media_id=$mediaId")
+        review?.put(
+            "article_url",
+            "https://member.bilibili.com/article-text/mobile?media_id=$mediaId"
+        )
         userStatus.put("review", review)
     }
 
     @JvmStatic
-    private fun getUserStatus(result: JSONObject, seasonId: String, mediaId: String, accessKey: String?) {
+    private fun getUserStatus(
+        result: JSONObject,
+        seasonId: String,
+        mediaId: String,
+        accessKey: String?
+    ) {
         try {
             val uri = Uri.Builder()
-                    .scheme("https")
-                    .encodedAuthority(BILI_USER_STATUS_URL)
-                    .appendQueryParameter("season_id", seasonId)
-                    .appendQueryParameter("access_key", accessKey)
-                    .toString()
+                .scheme("https")
+                .encodedAuthority(BILI_USER_STATUS_URL)
+                .appendQueryParameter("season_id", seasonId)
+                .appendQueryParameter("access_key", accessKey)
+                .toString()
             val statusJson = getContent(uri)?.toJSONObject()
             val statusResult = statusJson?.optJSONObject("result")
             val userStatus = JSONObject()
-            for (field in listOf("follow", "follow_status", "pay", "progress", "sponsor", "paster")) {
+            for (field in listOf(
+                "follow",
+                "follow_status",
+                "pay",
+                "progress",
+                "sponsor",
+                "paster"
+            )) {
                 userStatus.put(field, statusResult?.opt(field))
             }
             if (statusResult?.optJSONObject("vip_info")?.optInt("status") == 1) {
@@ -299,10 +332,12 @@ object BiliRoamingApi {
     fun getPlayUrl(queryString: String?, priorityArea: Array<String>? = null): String? {
         return getFromCustomUrl(queryString, priorityArea)?.let {
             JSONObject(it).optJSONObject("result")?.toString() ?: it
-        }?.replace(HOST_REGEX, "://${
-            sPrefs.getString("upos_host", null)
+        }?.replace(
+            HOST_REGEX, "://${
+                sPrefs.getString("upos_host", null)
                     ?: XposedInit.moduleRes.getString(R.string.wcs_host)
-        }/")
+            }/"
+        )
     }
 
     @JvmStatic
@@ -354,30 +389,35 @@ object BiliRoamingApi {
 
         for ((area, host) in hostList.toList().asReversed()) {
             val extraMap = if (area == "th") mapOf(
-                    "area" to area,
-                    "appkey" to "7d089525d3611b1c",
-                    "build" to "1001310",
-                    "mobi_app" to "bstar_a",
-                    "platform" to "android",
+                "area" to area,
+                "appkey" to "7d089525d3611b1c",
+                "build" to "1001310",
+                "mobi_app" to "bstar_a",
+                "platform" to "android",
             )
             else mapOf(
-                    "area" to area
+                "area" to area
             )
             val path = if (area == "th") THAILAND_PATH_PLAYURL else PATH_PLAYURL
             val uri = Uri.Builder()
-                    .scheme("https")
-                    .encodedAuthority(host + path)
-                    .encodedQuery(signQuery(queryString, extraMap))
-                    .toString()
+                .scheme("https")
+                .encodedAuthority(host + path)
+                .encodedQuery(signQuery(queryString, extraMap))
+                .toString()
             getContent(uri)?.let {
                 Log.d("use server $area $host for playurl")
                 if (it.contains("\"code\":0")) {
                     lastSeasonInfo["area"] = area
                     lastSeasonInfo["epid"] = epId
-                    if (seasonId != null && !sCaches.contains(seasonId) || sCaches.getString(seasonId, null) != area) {
+                    if (seasonId != null && !sCaches.contains(seasonId) || sCaches.getString(
+                            seasonId,
+                            null
+                        ) != area
+                    ) {
                         sCaches.edit().run {
                             putString(seasonId, area)
-                            lastSeasonInfo["ep_ids"]?.split(";")?.forEach { epId -> putString("ep$epId", area) }
+                            lastSeasonInfo["ep_ids"]?.split(";")
+                                ?.forEach { epId -> putString("ep$epId", area) }
                             apply()
                         }
                     }
@@ -453,7 +493,8 @@ object BiliRoamingApi {
 
     @JvmStatic
     fun fixThailandSeason(result: JSONObject) {
-        val inputEpisodes = result.optJSONArray("modules")?.optJSONObject(0)?.optJSONObject("data")?.optJSONArray("episodes")
+        val inputEpisodes = result.optJSONArray("modules")?.optJSONObject(0)?.optJSONObject("data")
+            ?.optJSONArray("episodes")
         result.apply {
             put("actors", result.optJSONObject("actor")?.optString("info"))
             put("is_paster_ads", 0)
@@ -500,8 +541,9 @@ object BiliRoamingApi {
         return try {
             // Work around for android 7
             if (Build.VERSION.SDK_INT == Build.VERSION_CODES.N &&
-                    urlString.startsWith("https") &&
-                    !urlString.contains("bilibili.com")) {
+                urlString.startsWith("https") &&
+                !urlString.contains("bilibili.com")
+            ) {
                 Log.d("Found Android 7, try to bypass ssl issue")
                 val handler = Handler(AndroidAppHelper.currentApplication().mainLooper)
                 val listener = object : Any() {
@@ -523,10 +565,12 @@ object BiliRoamingApi {
                             view?.loadUrl("javascript:listener.callback(document.documentElement.innerText)")
                         }
                     }
-                    webView.loadUrl(urlString, mapOf(
+                    webView.loadUrl(
+                        urlString, mapOf(
                             "x-from-biliroaming" to BuildConfig.VERSION_NAME,
                             "Build" to BuildConfig.VERSION_CODE.toString()
-                    ))
+                        )
+                    )
                 }
                 try {
                     if (!listener.latch.await((timeout * 2).toLong(), TimeUnit.MILLISECONDS)) {

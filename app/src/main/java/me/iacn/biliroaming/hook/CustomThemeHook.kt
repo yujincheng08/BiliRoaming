@@ -24,29 +24,37 @@ class CustomThemeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         if (!sPrefs.getBoolean("custom_theme", false)) return
         Log.d("startHook: CustomTheme")
 
-        instance.themeNameClass?.getStaticObjectFieldAs<MutableMap<String, Int>>(instance.themeName())?.run {
-            put("custom1", CUSTOM_THEME_ID1)
-            put("custom2", CUSTOM_THEME_ID2)
-        }
+        instance.themeNameClass?.getStaticObjectFieldAs<MutableMap<String, Int>>(instance.themeName())
+            ?.run {
+                put("custom1", CUSTOM_THEME_ID1)
+                put("custom2", CUSTOM_THEME_ID2)
+            }
 
         @Suppress("UNCHECKED_CAST")
-        val colorArray = instance.themeHelperClass?.getStaticObjectFieldAs<SparseArray<IntArray>>(instance.colorArray())
+        val colorArray =
+            instance.themeHelperClass?.getStaticObjectFieldAs<SparseArray<IntArray>>(instance.colorArray())
         val primaryColor = customColor
         colorArray?.put(CUSTOM_THEME_ID1, generateColorArray(primaryColor))
         colorArray?.put(CUSTOM_THEME_ID2, generateColorArray(primaryColor))
 
         instance.skinList()?.let {
-            "tv.danmaku.bili.ui.theme.ThemeStoreActivity".hookBeforeMethod(mClassLoader, it,
-                    "tv.danmaku.bili.ui.theme.api.BiliSkinList", Boolean::class.javaPrimitiveType) { param ->
+            "tv.danmaku.bili.ui.theme.ThemeStoreActivity".hookBeforeMethod(
+                mClassLoader, it,
+                "tv.danmaku.bili.ui.theme.api.BiliSkinList", Boolean::class.javaPrimitiveType
+            ) { param ->
                 val biliSkinList = param.args[0]
 
                 @Suppress("UNCHECKED_CAST")
                 val mList = biliSkinList.getObjectFieldAs<MutableList<Any>>("mList")
-                val biliSkin = "tv.danmaku.bili.ui.theme.api.BiliSkin".findClass(mClassLoader)?.new()
+                val biliSkin =
+                    "tv.danmaku.bili.ui.theme.api.BiliSkin".findClass(mClassLoader)?.new()
                         ?: return@hookBeforeMethod
-                biliSkin.setIntField("mId", if (currentKey == CUSTOM_THEME_ID2) CUSTOM_THEME_ID2 else CUSTOM_THEME_ID1)
-                        .setObjectField("mName", "自选颜色")
-                        .setBooleanField("mIsFree", true)
+                biliSkin.setIntField(
+                    "mId",
+                    if (currentKey == CUSTOM_THEME_ID2) CUSTOM_THEME_ID2 else CUSTOM_THEME_ID1
+                )
+                    .setObjectField("mName", "自选颜色")
+                    .setBooleanField("mIsFree", true)
                 // Under the night mode item
                 mList.add(3, biliSkin)
                 Log.d("Add a theme item: size = " + mList.size)
@@ -69,8 +77,12 @@ class CustomThemeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     val newId = if (mId == CUSTOM_THEME_ID1) CUSTOM_THEME_ID2 else CUSTOM_THEME_ID1
                     biliSkin.setIntField("mId", newId)
                     customColor = color
-                    Log.d("Update new color: mId = $newId, " +
-                            "color = 0x${Integer.toHexString(color).uppercase(Locale.getDefault())}")
+                    Log.d(
+                        "Update new color: mId = $newId, " +
+                                "color = 0x${
+                                    Integer.toHexString(color).uppercase(Locale.getDefault())
+                                }"
+                    )
                     try {
                         invokeOriginalMethod(param.method, param.thisObject, param.args)
                     } catch (e: Exception) {
@@ -88,8 +100,8 @@ class CustomThemeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         instance.themeReset()?.let { its ->
             val replacer: Replacer = { param ->
                 if (Thread.currentThread().stackTrace.count { s ->
-                            s.className == "tv.danmaku.bili.MainActivityV2" && s.methodName == "onPostCreate"
-                        } > 0
+                        s.className == "tv.danmaku.bili.MainActivityV2" && s.methodName == "onPostCreate"
+                    } > 0
                 ) null else
                     invokeOriginalMethod(param.method, param.thisObject, param.args)
             }
@@ -105,24 +117,32 @@ class CustomThemeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         try {
             var cacheColor = customColor
             var generatedColorArray = generateColorArray(cacheColor)
-            instance.themeNameClass?.getStaticObjectFieldAs<MutableMap<String, Int>>(instance.themeName())?.run {
-                put("custom1", CUSTOM_THEME_ID1)
-                put("custom2", CUSTOM_THEME_ID2)
-            }
-            instance.columnHelperClass?.getStaticObjectFieldAs<SparseArray<IntArray>>(instance.columnColorArray())?.run {
-                put(CUSTOM_THEME_ID1, generatedColorArray)
-                put(CUSTOM_THEME_ID2, generatedColorArray)
-            }
-            instance.themeHelperClass?.getStaticObjectFieldAs<SparseArray<IntArray>>(instance.colorArray())?.run {
-                put(CUSTOM_THEME_ID1, generatedColorArray)
-                put(CUSTOM_THEME_ID2, generatedColorArray)
-            }
-            instance.themeIdHelperClass?.getStaticObjectFieldAs<SparseArray<Int>>(instance.colorId())?.run {
-                put(CUSTOM_THEME_ID1, CUSTOM_THEME_ID1)
-                put(CUSTOM_THEME_ID2, CUSTOM_THEME_ID2)
-            }
+            instance.themeNameClass?.getStaticObjectFieldAs<MutableMap<String, Int>>(instance.themeName())
+                ?.run {
+                    put("custom1", CUSTOM_THEME_ID1)
+                    put("custom2", CUSTOM_THEME_ID2)
+                }
+            instance.columnHelperClass?.getStaticObjectFieldAs<SparseArray<IntArray>>(instance.columnColorArray())
+                ?.run {
+                    put(CUSTOM_THEME_ID1, generatedColorArray)
+                    put(CUSTOM_THEME_ID2, generatedColorArray)
+                }
+            instance.themeHelperClass?.getStaticObjectFieldAs<SparseArray<IntArray>>(instance.colorArray())
+                ?.run {
+                    put(CUSTOM_THEME_ID1, generatedColorArray)
+                    put(CUSTOM_THEME_ID2, generatedColorArray)
+                }
+            instance.themeIdHelperClass?.getStaticObjectFieldAs<SparseArray<Int>>(instance.colorId())
+                ?.run {
+                    put(CUSTOM_THEME_ID1, CUSTOM_THEME_ID1)
+                    put(CUSTOM_THEME_ID2, CUSTOM_THEME_ID2)
+                }
 
-            SparseArray::class.java.hookAfterMethod("get", Int::class.javaPrimitiveType, Object::class.java) { param ->
+            SparseArray::class.java.hookAfterMethod(
+                "get",
+                Int::class.javaPrimitiveType,
+                Object::class.java
+            ) { param ->
                 if (param.args[0] != CUSTOM_THEME_ID1 || param.args[0] != CUSTOM_THEME_ID2) return@hookAfterMethod
                 if (param.result?.javaClass == generatedColorArray.javaClass && param.result == generatedColorArray) {
                     val newColor = customColor
@@ -149,7 +169,8 @@ class CustomThemeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
         @Suppress("DEPRECATION")
         private val biliPrefs: SharedPreferences
-            get() = AndroidAppHelper.currentApplication().getSharedPreferences("bili_preference", Context.MODE_MULTI_PROCESS)
+            get() = AndroidAppHelper.currentApplication()
+                .getSharedPreferences("bili_preference", Context.MODE_MULTI_PROCESS)
 
         private var customColor: Int
             get() = biliPrefs.getInt(CUSTOM_COLOR_KEY, DEFAULT_CUSTOM_COLOR)

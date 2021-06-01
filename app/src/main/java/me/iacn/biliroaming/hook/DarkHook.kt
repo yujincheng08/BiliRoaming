@@ -13,7 +13,7 @@ class DarkHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
         if (!sPrefs.getBoolean("follow_dark", false)) return
         Log.d("startHook: Dark")
-        val hooker : Hooker = { param ->
+        val hooker: Hooker = { param ->
             val dark = inDark
             val night = isNight
             if (night != null && dark != night) switch(param.thisObject as Activity)
@@ -21,7 +21,11 @@ class DarkHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         Activity::class.java.hookBeforeMethod("onCreate", Bundle::class.java, hooker = hooker)
         Activity::class.java.hookAfterMethod("onPostResume", hooker = hooker)
 
-        instance.brandSplashClass?.hookBeforeMethod("onViewCreated", View::class.java, Bundle::class.java) { param ->
+        instance.brandSplashClass?.hookBeforeMethod(
+            "onViewCreated",
+            View::class.java,
+            Bundle::class.java
+        ) { param ->
             if (inDark) {
                 (param.args[0] as View).setBackgroundColor(Color.BLACK)
             }
@@ -42,11 +46,13 @@ class DarkHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     private val fragmentClass by Weak {
         "androidx.fragment.app.Fragment".findClassOrNull(mClassLoader)
-                ?: "android.support.v4.app.Fragment".findClassOrNull(mClassLoader)
+            ?: "android.support.v4.app.Fragment".findClassOrNull(mClassLoader)
     }
 
     private val isNight
-        get() = instance.garb()?.let { instance.garbHelperClass?.callStaticMethod(it)?.callMethodAs<Boolean?>("isNight") }
+        get() = instance.garb()?.let {
+            instance.garbHelperClass?.callStaticMethod(it)?.callMethodAs<Boolean?>("isNight")
+        }
 
     private val inDark
         get() = Resources.getSystem().configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
