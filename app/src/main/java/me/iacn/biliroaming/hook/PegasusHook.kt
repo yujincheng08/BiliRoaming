@@ -56,25 +56,20 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     private fun isLowCountVideo(obj: Any): Boolean {
         if (!hideLowPlayCountEnabled) return false
-        try {
-            toLong(obj.getObjectField("coverLeftText1").toString()).let {
+        obj.getObjectFieldOrNull("coverLeftText1").toString().let { s ->
+            toLong(s).let {
                 return if (it == -1L) false
                 else it < hideLowPlayCountLimit
             }
-        } catch (e: NoSuchFieldError) {
-            return false
         }
     }
 
     private fun isContainsBlockKwd(obj: Any): Boolean {
         if (!kwdFilterTitleEnabled || kwdFilterTitleList.isEmpty()) return false
-        val title = obj.getObjectField("title").toString()
-        try {
+        obj.getObjectField("title").toString().let { title ->
             kwdFilterTitleList.forEach {
                 if (it.isNotEmpty() && title.contains(it)) return true
             }
-        } catch (e: NoSuchFieldError) {
-            return false
         }
         return false
     }
