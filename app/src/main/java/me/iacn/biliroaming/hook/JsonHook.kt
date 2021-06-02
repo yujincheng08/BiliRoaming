@@ -96,6 +96,32 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         }
                     }
 
+                        val tab = data?.getObjectFieldAs<MutableList<Any>>("tab")
+                        val hasBangumiCN = tab?.fold(false) { acc, it ->
+                            val uri = it.getObjectFieldAs<String>("uri")
+                            acc || uri.startsWith("bilibili://pgc/home")
+                        }
+                        val hasBangumiTW = tab?.fold(false) { acc, it ->
+                            val uri = it.getObjectFieldAs<String>("uri")
+                            acc || uri.startsWith("bilibili://following/home_activity_tab/6544")
+                        }
+                        if (hasBangumiCN != null && !hasBangumiCN) {
+                            val bangumiTW = tabClass?.new()
+                                ?.setObjectField("tabId", "20")
+                                ?.setObjectField("name", "动画（港澳台）")
+                                ?.setObjectField("uri", "bilibili://pgc/home")
+                                ?.setObjectField("reportId", "港澳台tab")
+                                ?.setIntField("pos", 98)
+                        }
+                        if (hasBangumiTW != null && !hasBangumiTW) {
+                            val bangumiCN = tabClass?.new()
+                                ?.setObjectField("tabId", "20")
+                                ?.setObjectField("name", "動畫（大陸）")
+                                ?.setObjectField("uri", "bilibili://pgc/home")
+                                ?.setObjectField("reportId", "动画tab")
+                                ?.setIntField("pos", 99)
+                        }
+
                     if (sPrefs.getStringSet("customize_home_tab", emptySet())
                             ?.isNotEmpty() == true
                     ) {
@@ -108,7 +134,7 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                     this == "bilibili://live/home" -> purifytabset.contains("live")
                                     this == "bilibili://pegasus/promo" -> purifytabset.contains("promo")
                                     this == "bilibili://pegasus/hottopic" -> purifytabset.contains("hottopic")
-                                    this == "bilibili://pgc/home" -> purifytabset.contains("bangumi")
+                                    this == "bilibili://pgc/home" || this == "bilibili://following/home_activity_tab/6544" -> purifytabset.contains("bangumi")
                                     this == "bilibili://pgc/home?home_flow_type=2" || this == "bilibili://pegasus/op/70465?name=影視" -> purifytabset.contains(
                                         "movie"
                                     )
