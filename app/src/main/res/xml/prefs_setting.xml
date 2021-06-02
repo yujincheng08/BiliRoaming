@@ -235,6 +235,10 @@
             android:key="export_video"
             android:summary="@string/export_video_summary"
             android:title="@string/export_video_title" />
+        <SwitchPreference
+            android:dependency="hidden"
+            android:key="purify_endpage"
+            android:title="@string/purify_endpage_title" />
     </PreferenceCategory>
 
     <PreferenceCategory
