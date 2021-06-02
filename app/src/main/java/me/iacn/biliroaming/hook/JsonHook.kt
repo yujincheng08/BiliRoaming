@@ -96,6 +96,7 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         }
                     }
 
+                    if (sPrefs.getBoolean("add_bangumi", true)) {
                         val tab = data?.getObjectFieldAs<MutableList<Any>>("tab")
                         val hasBangumiCN = tab?.fold(false) { acc, it ->
                             val uri = it.getObjectFieldAs<String>("uri")
@@ -133,6 +134,7 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                 tab.add(0, l)
                             }
                         }
+                    }
 
                     if (sPrefs.getStringSet("customize_home_tab", emptySet())
                             ?.isNotEmpty() == true
