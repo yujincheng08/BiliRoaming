@@ -111,7 +111,7 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                 ?.setObjectField("tabId", "20")
                                 ?.setObjectField("name", "動畫（大陸）")
                                 ?.setObjectField("uri", "bilibili://pgc/home")
-                                ?.setObjectField("reportId", "动画tab")
+                                ?.setObjectField("reportId", "追番tab")
                                 ?.setIntField("pos", 99)
                             bangumiCN?.let { l ->
                                 tab.forEach {
@@ -123,7 +123,7 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         if (hasBangumiTW != null && !hasBangumiTW) {
                             val bangumiTW = tabClass?.new()
                                 ?.setObjectField("tabId", "20")
-                                ?.setObjectField("name", "动画（港澳台）")
+                                ?.setObjectField("name", "追番（港澳台）")
                                 ?.setObjectField("uri", "bilibili://following/home_activity_tab/6544")
                                 ?.setObjectField("reportId", "港澳台tab")
                                 ?.setIntField("pos", 98)
