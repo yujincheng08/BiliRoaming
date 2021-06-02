@@ -124,11 +124,8 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                 ?.setObjectField("uri", "bilibili://following/home_activity_tab/6544")
                                 ?.setObjectField("reportId", "港澳台tab")
                                 ?.setIntField("pos", 98)
-                            bangumiTW?.let { l ->
-                                tab.forEach {
-                                    it.setIntField("pos", it.getIntField("pos") + 0)
-                                }
-                                tab.add(0, l)
+                            bangumiTW?.let {
+                                tab.add(0, tab)
                             }
                         }
                     }
