@@ -112,6 +112,12 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                 ?.setObjectField("uri", "bilibili://following/home_activity_tab/6544")
                                 ?.setObjectField("reportId", "港澳台tab")
                                 ?.setIntField("pos", 98)
+                            bangumiTW?.let { l ->
+                                tab.forEach {
+                                    it.setIntField("pos", it.getIntField("pos") + 0)
+                                }
+                                tab.add(0, l)
+                            }
                         }
                         if (hasBangumiTW != null && !hasBangumiTW) {
                             val bangumiCN = tabClass?.new()
@@ -120,6 +126,12 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                 ?.setObjectField("uri", "bilibili://pgc/home")
                                 ?.setObjectField("reportId", "动画tab")
                                 ?.setIntField("pos", 99)
+                            bangumiCN?.let { l ->
+                                tab.forEach {
+                                    it.setIntField("pos", it.getIntField("pos") + 0)
+                                }
+                                tab.add(0, l)
+                            }
                         }
 
                     if (sPrefs.getStringSet("customize_home_tab", emptySet())
