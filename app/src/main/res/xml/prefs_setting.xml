@@ -199,6 +199,11 @@
             android:key="customize_home_tab"
             android:summary="@string/customize_home_tab_summary"
             android:title="@string/customize_home_tab_title" />
+        <SwitchPreference
+            android:dependency="hidden"
+            android:key="add_bangumi"
+            android:summary="@string/add_bangumi_summary"
+            android:title="@string/add_bangumi_title" />
         <MultiSelectListPreference
             android:dependency="hidden"
             android:entries="@array/home_recommend_entries"
