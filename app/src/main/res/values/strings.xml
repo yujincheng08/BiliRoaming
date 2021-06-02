@@ -167,4 +167,6 @@
     <string name="pref_import_title">导入配置</string>
     <string name="hide_low_play_count_recommend_title">隐藏首页低播放量视频</string>
     <string name="hide_low_play_count_recommend_summary">隐藏首页推送低于指定播放量的视频(默认值:100 最大值:1百万)</string>
+    <string name="add_bangumi_title">添加其他地区番剧</string>
+    <string name="add_bangumi_summary">在首页添加大陆/港澳台番剧分页</string>
 </resources>
