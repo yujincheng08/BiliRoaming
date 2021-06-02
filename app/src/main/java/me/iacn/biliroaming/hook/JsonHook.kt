@@ -99,11 +99,11 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         val tab = data?.getObjectFieldAs<MutableList<Any>>("tab")
                         val hasBangumiCN = tab?.fold(false) { acc, it ->
                             val uri = it.getObjectFieldAs<String>("uri")
-                            acc || uri = "bilibili://pgc/home"
+                            acc || uri.startsWith("bilibili://pgc/home")
                         }
                         val hasBangumiTW = tab?.fold(false) { acc, it ->
                             val uri = it.getObjectFieldAs<String>("uri")
-                            acc || uri = "bilibili://following/home_activity_tab/6544"
+                            acc || uri.startsWith("bilibili://following/home_activity_tab/6544")
                         }
                         if (hasBangumiCN != null && !hasBangumiCN) {
                             val bangumiTW = tabClass?.new()
