@@ -106,20 +106,6 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             acc || uri.startsWith("bilibili://following/home_activity_tab/6544")
                         }
                         if (hasBangumiCN != null && !hasBangumiCN) {
-                            val bangumiTW = tabClass?.new()
-                                ?.setObjectField("tabId", "20")
-                                ?.setObjectField("name", "动画（港澳台）")
-                                ?.setObjectField("uri", "bilibili://following/home_activity_tab/6544")
-                                ?.setObjectField("reportId", "港澳台tab")
-                                ?.setIntField("pos", 98)
-                            bangumiTW?.let { l ->
-                                tab.forEach {
-                                    it.setIntField("pos", it.getIntField("pos") + 0)
-                                }
-                                tab.add(0, l)
-                            }
-                        }
-                        if (hasBangumiTW != null && !hasBangumiTW) {
                             val bangumiCN = tabClass?.new()
                                 ?.setObjectField("tabId", "20")
                                 ?.setObjectField("name", "動畫（大陸）")
@@ -127,6 +113,20 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                 ?.setObjectField("reportId", "动画tab")
                                 ?.setIntField("pos", 99)
                             bangumiCN?.let { l ->
+                                tab.forEach {
+                                    it.setIntField("pos", it.getIntField("pos") + 0)
+                                }
+                                tab.add(0, l)
+                            }
+                        }
+                        if (hasBangumiTW != null && !hasBangumiTW) {
+                            val bangumiTW = tabClass?.new()
+                                ?.setObjectField("tabId", "20")
+                                ?.setObjectField("name", "动画（港澳台）")
+                                ?.setObjectField("uri", "bilibili://following/home_activity_tab/6544")
+                                ?.setObjectField("reportId", "港澳台tab")
+                                ?.setIntField("pos", 98)
+                            bangumiTW?.let { l ->
                                 tab.forEach {
                                     it.setIntField("pos", it.getIntField("pos") + 0)
                                 }
