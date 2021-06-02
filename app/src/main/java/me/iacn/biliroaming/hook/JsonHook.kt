@@ -113,11 +113,8 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                 ?.setObjectField("uri", "bilibili://pgc/home")
                                 ?.setObjectField("reportId", "追番tab")
                                 ?.setIntField("pos", 99)
-                            bangumiCN?.let { l ->
-                                tab.forEach {
-                                    it.setIntField("pos", it.getIntField("pos") + 0)
-                                }
-                                tab.add(0, l)
+                            bangumiCN?.let {
+                                tab.add(0, tab)
                             }
                         }
                         if (hasBangumiTW != null && !hasBangumiTW) {
