@@ -98,35 +98,23 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
                     if (sPrefs.getBoolean("add_bangumi", true)) {
                         val tab = data?.getObjectFieldAs<MutableList<Any>>("tab")
-                        val hasBangumiCN = tab?.fold(false) { acc, it ->
-                            val uri = it.getObjectFieldAs<String>("uri")
-                            acc || uri.startsWith("bilibili://pgc/home")
+                        val bangumiCN = tabClass?.new()
+                            ?.setObjectField("tabId", "20")
+                            ?.setObjectField("name", "動畫（大陸）")
+                            ?.setObjectField("uri", "bilibili://pgc/home")
+                            ?.setObjectField("reportId", "追番tab")
+                            ?.setIntField("pos", 99)
+                        bangumiCN?.let {
+                            tab.add(0, tab)
                         }
-                        val hasBangumiTW = tab?.fold(false) { acc, it ->
-                            val uri = it.getObjectFieldAs<String>("uri")
-                            acc || uri.startsWith("bilibili://following/home_activity_tab/6544")
-                        }
-                        if (hasBangumiCN != null && !hasBangumiCN) {
-                            val bangumiCN = tabClass?.new()
-                                ?.setObjectField("tabId", "20")
-                                ?.setObjectField("name", "動畫（大陸）")
-                                ?.setObjectField("uri", "bilibili://pgc/home")
-                                ?.setObjectField("reportId", "追番tab")
-                                ?.setIntField("pos", 99)
-                            bangumiCN?.let {
-                                tab.add(0, tab)
-                            }
-                        }
-                        if (hasBangumiTW != null && !hasBangumiTW) {
-                            val bangumiTW = tabClass?.new()
-                                ?.setObjectField("tabId", "20")
-                                ?.setObjectField("name", "追番（港澳台）")
-                                ?.setObjectField("uri", "bilibili://following/home_activity_tab/6544")
-                                ?.setObjectField("reportId", "港澳台tab")
-                                ?.setIntField("pos", 98)
-                            bangumiTW?.let {
-                                tab.add(0, tab)
-                            }
+                        val bangumiTW = tabClass?.new()
+                            ?.setObjectField("tabId", "20")
+                            ?.setObjectField("name", "追番（港澳台）")
+                            ?.setObjectField("uri", "bilibili://following/home_activity_tab/6544")
+                            ?.setObjectField("reportId", "港澳台tab")
+                            ?.setIntField("pos", 98)
+                        bangumiTW?.let {
+                            tab.add(0, tab)
                         }
                     }
 
