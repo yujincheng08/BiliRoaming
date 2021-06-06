@@ -100,11 +100,11 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         val tab = data?.getObjectFieldAs<MutableList<Any>>("tab")
                         val hasHome = tab?.fold(false) { acc, it ->
                             val uri = it.getObjectFieldAs<String>("uri")
-                            acc || uri.startsWith("bilibili://pegasus/promo")
+                            acc || uri.startsWith("bilibili://pegasus")
                         }
                         if (hasHome != null && !hasHome) {
                             val bangumiCN = tabClass?.new()
-                                ?.setObjectField("tabId", "20")
+                                ?.setObjectField("tabId", "21")
                                 ?.setObjectField("name", "追番（大陸）")
                                 ?.setObjectField("uri", "bilibili://pgc/home")
                                 ?.setObjectField("reportId", "追番tab")
@@ -113,7 +113,7 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                 tab.add(0, tab)
                             }
                             val bangumiTW = tabClass?.new()
-                                ?.setObjectField("tabId", "20")
+                                ?.setObjectField("tabId", "22")
                                 ?.setObjectField("name", "追番（港澳台）")
                                 ?.setObjectField("uri", "bilibili://following/home_activity_tab/6544")
                                 ?.setObjectField("reportId", "港澳台tab")
