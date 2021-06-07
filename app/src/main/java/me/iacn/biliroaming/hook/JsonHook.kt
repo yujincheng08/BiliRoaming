@@ -108,7 +108,7 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                     this == "bilibili://live/home" -> purifytabset.contains("live")
                                     this == "bilibili://pegasus/promo" -> purifytabset.contains("promo")
                                     this == "bilibili://pegasus/hottopic" -> purifytabset.contains("hottopic")
-                                    this == "bilibili://pgc/home" -> purifytabset.contains("bangumi")
+                                    this == "bilibili://pgc/home" || this == "bilibili://following/home_activity_tab/6544" -> purifytabset.contains("bangumi")
                                     this == "bilibili://pgc/home?home_flow_type=2" || this == "bilibili://pegasus/op/70465?name=影視" -> purifytabset.contains(
                                         "movie"
                                     )
