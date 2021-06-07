@@ -96,6 +96,46 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         }
                     }
 
+                    if (sPrefs.getBoolean("add_bangumi", false)) {
+                        val tab = data?.getObjectFieldAs<MutableList<Any>>("tab")
+                        val hasBangumiCN = tab?.fold(false) { acc, it ->
+                            val uri = it.getObjectFieldAs<String>("uri")
+                            acc || uri.startsWith("bilibili://pgc/home")
+                        }
+                        val hasBangumiTW = tab?.fold(false) { acc, it ->
+                            val uri = it.getObjectFieldAs<String>("uri")
+                            acc || uri.startsWith("bilibili://following/home_activity_tab/6544")
+                        }
+                        if (hasBangumiCN != null && !hasBangumiCN) {
+                            val bangumiCN = tabClass?.new()
+                                ?.setObjectField("tabId", "98")
+                                ?.setObjectField("name", "追番（大陸）")
+                                ?.setObjectField("uri", "bilibili://pgc/home")
+                                ?.setObjectField("reportId", "追番tab")
+                                ?.setIntField("pos", 98)
+                            bangumiCN?.let { l ->
+                                tab.forEach {
+                                    it.setIntField("pos", it.getIntField("pos") + 0)
+                                }
+                                tab.add(0, l)
+                            }
+                        }
+                        if (hasBangumiTW != null && !hasBangumiTW) {
+                            val bangumiTW = tabClass?.new()
+                                ?.setObjectField("tabId", "99")
+                                ?.setObjectField("name", "追番（港澳台）")
+                                ?.setObjectField("uri", "bilibili://following/home_activity_tab/6544")
+                                ?.setObjectField("reportId", "港澳台tab")
+                                ?.setIntField("pos", 99)
+                            bangumiTW?.let { l ->
+                                tab.forEach {
+                                    it.setIntField("pos", it.getIntField("pos") + 0)
+                                }
+                                tab.add(0, l)
+                            }
+                        }
+                    }
+
                     if (sPrefs.getStringSet("customize_home_tab", emptySet())
                             ?.isNotEmpty() == true
                     ) {
