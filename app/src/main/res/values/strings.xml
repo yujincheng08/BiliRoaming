@@ -169,4 +169,6 @@
     <string name="hide_low_play_count_recommend_summary">隐藏首页推送低于指定播放量的视频(默认值:100 最大值:1百万)</string>
     <string name="add_bangumi_title">添加其他地区番剧</string>
     <string name="add_bangumi_summary">在首页标签添加大陆/港澳台番剧分页</string>
+    <string name="add_movie_title">添加其他地区影视</string>
+    <string name="add_movie_summary">在首页标签添加大陆/港澳台影视分页</string>
 </resources>
