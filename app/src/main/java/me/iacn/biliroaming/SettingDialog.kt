@@ -26,6 +26,7 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
+import me.iacn.biliroaming.XposedInit.Companion.modulePath
 import me.iacn.biliroaming.XposedInit.Companion.moduleRes
 import me.iacn.biliroaming.hook.JsonHook
 import me.iacn.biliroaming.hook.SplashHook
@@ -513,7 +514,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
 
     init {
         val activity = context as Activity
-        val backupRes = replaceResource(activity, moduleRes)
+        addModulePath(context)
         val prefsFragment = PrefsFragment()
         activity.fragmentManager.beginTransaction().add(prefsFragment, "Setting").commit()
         activity.fragmentManager.executePendingTransactions()
@@ -534,7 +535,6 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
 
         setView(prefsFragment.view)
         setTitle("哔哩漫游设置")
-        restoreResource(activity, backupRes)
         setNegativeButton("返回") { _, _ ->
             unhook?.unhook()
         }
@@ -557,33 +557,13 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             exitProcess(0)
         }
 
-
         @JvmStatic
-        fun replaceResource(context: Activity?, res: Resources?): BackupRes? {
-            context ?: return null
-            res ?: return null
-            val resField = ContextThemeWrapper::class.java.getDeclaredField("mResources")
-            resField.isAccessible = true
-            val oldRes = resField.get(context) as Resources
-            val themeField = ContextThemeWrapper::class.java.getDeclaredField("mTheme")
-            themeField.isAccessible = true
-            val oldTheme = themeField.get(context) as Resources.Theme
-            val newTheme = res.newTheme()
-            newTheme.applyStyle(R.style.MainTheme, true)
-            resField.set(context, res)
-            themeField.set(context, newTheme)
-            return BackupRes(oldRes, oldTheme)
-        }
-
-        @JvmStatic
-        fun restoreResource(context: Activity?, backupRes: BackupRes?) {
-            backupRes ?: return
-            val resField = ContextThemeWrapper::class.java.getDeclaredField("mResources")
-            resField.isAccessible = true
-            resField.set(context, backupRes.res)
-            val themeField = ContextThemeWrapper::class.java.getDeclaredField("mTheme")
-            themeField.isAccessible = true
-            themeField.set(context, backupRes.theme)
+        fun addModulePath(context: Context) {
+            val assets = context.resources.assets
+            assets.callMethod(
+                "addAssetPath",
+                modulePath
+            )
         }
 
         const val SPLASH_SELECTION = 0
