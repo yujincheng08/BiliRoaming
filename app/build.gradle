@@ -54,6 +54,7 @@ android {
 
     aaptOptions {
         additionalParameters "--preferred-density", "xxxhdpi"
+        additionalParameters '--allow-reserved-package-id', '--package-id', '0x23'
     }
 
     lintOptions {
