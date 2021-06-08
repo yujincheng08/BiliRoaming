@@ -1,12 +1,11 @@
 package me.iacn.biliroaming
 
-import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Application
 import android.app.Instrumentation
 import android.content.Context
-import android.content.res.AssetManager
 import android.content.res.Resources
+import android.content.res.XModuleResources
 import android.os.Build
 import de.robv.android.xposed.IXposedHookLoadPackage
 import de.robv.android.xposed.IXposedHookZygoteInit
@@ -150,15 +149,9 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
         private var lateInitHook: XC_MethodHook.Unhook? = null
 
 
-        @Suppress("DEPRECATION")
-        @SuppressLint("DiscouragedPrivateApi")
         @JvmStatic
         fun getModuleRes(path: String): Resources {
-            val assetManager = AssetManager::class.java.newInstance()
-            val addAssetPath =
-                AssetManager::class.java.getDeclaredMethod("addAssetPath", String::class.java)
-            addAssetPath.invoke(assetManager, path)
-            return Resources(assetManager, null, null)
+            return XModuleResources.createInstance(path, null)
         }
     }
 }
