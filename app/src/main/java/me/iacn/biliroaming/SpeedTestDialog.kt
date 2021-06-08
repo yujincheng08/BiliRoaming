@@ -80,7 +80,7 @@ class SpeedTestDialog(private val pref: ListPreference, activity: Activity) :
         const val mainlandParams =
             "cid=120453316&ep_id=285145&otype=json&fnval=16&module=pgc&platform=android"
         const val overseaParams =
-            "cid=13073143&&ep_id=100615otype=json&fnval=16&module=pgc&platform=android"
+            "cid=13073143&ep_id=100615&otype=json&fnval=16&module=pgc&platform=android"
         const val infoUrl = "https://api.bilibili.com/client_info"
     }
 
