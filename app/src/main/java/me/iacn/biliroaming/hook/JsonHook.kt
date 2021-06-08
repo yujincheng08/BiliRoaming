@@ -100,7 +100,7 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         val tab = data?.getObjectFieldAs<MutableList<Any>>("tab")
                         val hasBangumiCN = tab?.fold(false) { acc, it ->
                             val uri = it.getObjectFieldAs<String>("uri")
-                            acc || uri.startsWith("bilibili://pgc/home")
+                            acc || uri.toString() == "bilibili://pgc/home"
                         }
                         val hasBangumiTW = tab?.fold(false) { acc, it ->
                             val uri = it.getObjectFieldAs<String>("uri")
@@ -108,11 +108,11 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         }
                         if (hasBangumiCN != null && !hasBangumiCN) {
                             val bangumiCN = tabClass?.new()
-                                ?.setObjectField("tabId", "98")
+                                ?.setObjectField("tabId", "50")
                                 ?.setObjectField("name", "追番（大陸）")
                                 ?.setObjectField("uri", "bilibili://pgc/home")
                                 ?.setObjectField("reportId", "追番tab")
-                                ?.setIntField("pos", 98)
+                                ?.setIntField("pos", 50)
                             bangumiCN?.let { l ->
                                 tab.forEach {
                                     it.setIntField("pos", it.getIntField("pos") + 0)
@@ -122,16 +122,71 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         }
                         if (hasBangumiTW != null && !hasBangumiTW) {
                             val bangumiTW = tabClass?.new()
-                                ?.setObjectField("tabId", "99")
+                                ?.setObjectField("tabId", "60")
                                 ?.setObjectField("name", "追番（港澳台）")
                                 ?.setObjectField("uri", "bilibili://following/home_activity_tab/6544")
                                 ?.setObjectField("reportId", "港澳台tab")
-                                ?.setIntField("pos", 99)
+                                ?.setIntField("pos", 60)
                             bangumiTW?.let { l ->
                                 tab.forEach {
                                     it.setIntField("pos", it.getIntField("pos") + 0)
                                 }
                                 tab.add(0, l)
+                            }
+                        }
+                    }
+
+                    if (sPrefs.getBoolean("add_movie", false)) {
+                        val tab = data?.getObjectFieldAs<MutableList<Any>>("tab")
+                        val hasMovieCN = tab?.fold(false) { acc, it ->
+                            val uri = it.getObjectFieldAs<String>("uri")
+                            acc || uri.toString() == "bilibili://pgc/home?home_flow_type=2"
+                        }
+                        val hasMovieTW = tab?.fold(false) { acc, it ->
+                            val uri = it.getObjectFieldAs<String>("uri")
+                            acc || uri.startsWith("bilibili://pegasus/op/70465")
+                        }
+                        if (hasMovieCN != null && !hasMovieCN) {
+                            val movieCN = tabClass?.new()
+                                ?.setObjectField("tabId", "70")
+                                ?.setObjectField("name", "影視（大陸）")
+                                ?.setObjectField("uri", "bilibili://pgc/home?home_flow_type=2")
+                                ?.setObjectField("reportId", "影視tab")
+                                ?.setIntField("pos", 70)
+                            movieCN?.let { l ->
+                                tab.forEach {
+                                    it.setIntField("pos", it.getIntField("pos") + 0)
+                                }
+                                tab.add(0, l)
+                            }
+                        }
+                        if (hasMovieTW != null && !hasMovieTW) {
+                            if (hasMovieCN != null && !hasMovieCN) {
+                                val movieTW = tabClass?.new()
+                                    ?.setObjectField("tabId", "40")
+                                    ?.setObjectField("name", "影視")
+                                    ?.setObjectField("uri", "bilibili://pegasus/op/70465?name=影視")
+                                    ?.setObjectField("reportId", "港澳台tab")
+                                    ?.setIntField("pos", 40)
+                                movieTW?.let { l ->
+                                    tab.forEach {
+                                        it.setIntField("pos", it.getIntField("pos") + 0)
+                                    }
+                                    tab.add(0, l)
+                                }
+                            } else {
+                                val movieTW = tabClass?.new()
+                                    ?.setObjectField("tabId", "80")
+                                    ?.setObjectField("name", "影视（港澳台）")
+                                    ?.setObjectField("uri", "bilibili://pegasus/op/70465?name=影視")
+                                    ?.setObjectField("reportId", "港澳台tab")
+                                    ?.setIntField("pos", 80)
+                                movieTW?.let { l ->
+                                    tab.forEach {
+                                        it.setIntField("pos", it.getIntField("pos") + 0)
+                                    }
+                                    tab.add(0, l)
+                                }
                             }
                         }
                     }
