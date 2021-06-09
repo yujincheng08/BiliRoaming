@@ -16,7 +16,6 @@ import android.preference.*
 import android.provider.MediaStore
 import android.text.InputFilter
 import android.text.InputType
-import android.view.ContextThemeWrapper
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.EditText
@@ -482,15 +481,19 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 show()
             }.let {
                 it.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener { _ ->
-                    tv.text.toString().toLong().let { count ->
-                        if (count > 1_000_000) {
-                            Log.toast("你输入的数字太大惹 伦家会坏掉的> <")
-                        } else {
-                            sPrefs.edit()
-                                .putLong("hide_low_play_count_recommend_limit", count)
-                                .apply()
-                            Log.toast("保存成功 重启后生效")
-                            it.dismiss()
+                    if (tv.text.isEmpty()) {
+                        Log.toast("你好像还没有输入内容> <")
+                    } else {
+                        tv.text.toString().toLong().let { count ->
+                            if (count > 1_000_000) {
+                                Log.toast("你输入的数字太大惹 伦家会坏掉的> <")
+                            } else {
+                                sPrefs.edit()
+                                    .putLong("hide_low_play_count_recommend_limit", count)
+                                    .apply()
+                                Log.toast("保存成功 重启后生效")
+                                it.dismiss()
+                            }
                         }
                     }
                 }
@@ -519,7 +522,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 it.getButton(AlertDialog.BUTTON_NEUTRAL).setOnClickListener {
                     when {
                         tv.text.isEmpty() -> {
-                            Log.toast("你好像还没有插入内容> <")
+                            Log.toast("你好像还没有输入内容> <")
                         }
                         tv.text.endsWith('|') -> {
                             Log.toast("啊嘞 上一个分隔符后面好像还没有东西> <")
