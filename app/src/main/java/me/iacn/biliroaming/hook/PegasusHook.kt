@@ -9,8 +9,14 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private val hideLowPlayCountEnabled by lazy {
         sPrefs.getBoolean("hide_low_play_count_recommend", false)
     }
+    private val kwdFilterTitleEnabled by lazy {
+        sPrefs.getBoolean("keywords_filter_title_recommend", false)
+    }
     private val hideLowPlayCountLimit by lazy {
         sPrefs.getLong("hide_low_play_count_recommend_limit", 100)
+    }
+    private val kwdFilterTitleList by lazy {
+        sPrefs.getString("keywords_filter_title_recommend_list", "")?.split("|") ?: emptyList()
     }
 
     private val filterMap = mapOf(
@@ -50,14 +56,29 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     private fun isLowCountVideo(obj: Any): Boolean {
         if (!hideLowPlayCountEnabled) return false
-        try {
-            toLong(obj.getObjectField("coverLeftText1").toString()).let {
-                return if (it == -1L) false
-                else it < hideLowPlayCountLimit
-            }
-        } catch (e: NoSuchFieldError) {
+        val text = try {
+            obj.getObjectField("coverLeftText1")
+        } catch (thr: Throwable) {
             return false
         }
+        toLong(text.toString()).let {
+            return if (it == -1L) false
+            else it < hideLowPlayCountLimit
+        }
+    }
+
+
+    private fun isContainsBlockKwd(obj: Any): Boolean {
+        if (!kwdFilterTitleEnabled || kwdFilterTitleList.isEmpty()) return false
+        val title = try {
+            obj.getObjectField("title").toString()
+        } catch (thr: Throwable) {
+            return false
+        }
+        kwdFilterTitleList.forEach {
+            if (it.isNotEmpty() && title.contains(it)) return true
+        }
+        return false
     }
 
     override fun startHook() {
@@ -73,7 +94,7 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         filter.fold(false) { acc, item ->
                             acc || item in it.getObjectFieldAs<String?>("cardGoto")
                                 .orEmpty() || item in it.getObjectFieldAs<String?>("goTo")
-                                .orEmpty() || isLowCountVideo(it)
+                                .orEmpty() || isLowCountVideo(it) || isContainsBlockKwd(it)
                         }
                     }
                 }

@@ -75,6 +75,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("pref_import").onPreferenceClickListener = this
             findPreference("export_video")?.onPreferenceClickListener = this
             findPreference("hide_low_play_count_recommend")?.onPreferenceClickListener = this
+            findPreference("keywords_filter_title_recommend")?.onPreferenceClickListener = this
             checkCompatibleVersion()
             checkUpdate()
         }
@@ -483,15 +484,54 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 show()
             }.let {
                 it.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener { _ ->
-                    tv.text.toString().toLong().let { count ->
-                        if (count > 1_000_000) {
-                            Log.toast("你输入的数字太大惹 伦家会坏掉的> <")
-                        } else {
-                            sPrefs.edit()
-                                .putLong("hide_low_play_count_recommend_limit", count)
-                                .apply()
-                            Log.toast("保存成功 重启后生效")
-                            it.dismiss()
+                    if (tv.text.isEmpty()) {
+                        Log.toast("你好像还没有输入内容> <")
+                    } else {
+                        tv.text.toString().toLong().let { count ->
+                            if (count > 1_000_000) {
+                                Log.toast("你输入的数字太大惹 伦家会坏掉的> <")
+                            } else {
+                                sPrefs.edit()
+                                    .putLong("hide_low_play_count_recommend_limit", count)
+                                    .apply()
+                                Log.toast("保存成功 重启后生效")
+                                it.dismiss()
+                            }
+                        }
+                    }
+                }
+            }
+            return true
+        }
+
+        private fun onKeywordsFilterTitleRecommendClick(isChecked: Boolean): Boolean {
+            if (!isChecked) return true
+            val tv = EditText(activity)
+            tv.setText(sPrefs.getString("keywords_filter_title_recommend_list", ""))
+            AlertDialog.Builder(activity).run {
+                setTitle("设置标题过滤关键词")
+                setView(tv)
+                setPositiveButton("确定") { _, _ ->
+                    sPrefs.edit()
+                        .putString("keywords_filter_title_recommend_list", tv.text.toString())
+                        .apply()
+                    Log.toast("保存成功 重启后生效")
+                }
+                setNegativeButton("取消", null)
+                setNeutralButton("添加分隔符", null)
+                setCancelable(false)
+                show()
+            }.let {
+                it.getButton(AlertDialog.BUTTON_NEUTRAL).setOnClickListener {
+                    when {
+                        tv.text.isEmpty() -> {
+                            Log.toast("你好像还没有输入内容> <")
+                        }
+                        tv.text.endsWith('|') -> {
+                            Log.toast("啊嘞 上一个分隔符后面好像还没有东西> <")
+                        }
+                        else -> {
+                            tv.text.append('|')
                         }
                     }
                 }
@@ -510,6 +550,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             "pref_import" -> onPrefImportClick()
             "export_video" -> onExportVideoClick()
             "hide_low_play_count_recommend" -> onHideLowPlayCountRecommendClick((preference as SwitchPreference).isChecked)
+            "keywords_filter_title_recommend" -> onKeywordsFilterTitleRecommendClick((preference as SwitchPreference).isChecked)
             else -> false
         }
     }
