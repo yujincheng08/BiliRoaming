@@ -56,11 +56,12 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     val hides = sPrefs.getStringSet("hided_bottom_items", mutableSetOf())!!
                     data?.getObjectFieldAs<MutableList<*>?>("bottom")?.removeAll {
                         val uri = it?.getObjectFieldAs<String>("uri")
-                        val showing = uri !in hides
+                        val id = it?.getObjectFieldAs<String>("tabId")
+                        val showing = id !in hides
                         bottomItems.add(
                             BottomItem(
                                 it?.getObjectFieldAs("name"),
-                                uri, showing
+                                uri, id, showing
                             )
                         )
                         showing.not()
@@ -161,7 +162,7 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             }
                         }
                         if (hasMovieTW != null && !hasMovieTW) {
-                            if (hasMovieCN != null && !hasMovieCN) {
+                            if (hasMovieCN != null && !hasMovieCN && platform != "android_b") {
                                 val movieTW = tabClass?.new()
                                     ?.setObjectField("tabId", "40")
                                     ?.setObjectField("name", "影視")
@@ -359,6 +360,7 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     data class BottomItem(
         val name: String?,
         val uri: String?,
+        val id: String?,
         var showing: Boolean
     )
 }

@@ -380,14 +380,14 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     val hideItems = mutableSetOf<String>()
                     bottomItems.forEach {
                         if (it.showing.not()) {
-                            hideItems.add(it.uri ?: "")
+                            hideItems.add(it.id ?: "")
                         }
                     }
                     sPrefs.edit().putStringSet("hided_bottom_items", hideItems).apply()
                 }
                 setNegativeButton(android.R.string.cancel, null)
                 val names = Array(bottomItems.size) { i ->
-                    "${bottomItems[i].name} (${bottomItems[i].uri})"
+                    "${bottomItems[i].name} (${bottomItems[i].id}) (${bottomItems[i].uri})"
                 }
                 setNeutralButton("重置") { _, _ ->
                     sPrefs.edit().remove("hided_bottom_items").apply()
