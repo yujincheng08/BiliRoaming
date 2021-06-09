@@ -16,7 +16,6 @@ import android.preference.*
 import android.provider.MediaStore
 import android.text.InputFilter
 import android.text.InputType
-import android.view.ContextThemeWrapper
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.EditText
@@ -144,6 +143,9 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             val supportDrawer = instance.homeUserCenterClass != null
             val supportcustomplaybackspeed = instance.playerCoreServiceV2Class != null
             val supportTeenagersMode = instance.teenagersModeDialogActivityClass != null
+            val suppportPurifyEndpage = "tv.danmaku.biliplayer.context.config.Feature" in instance.classesList
+            if (!suppportPurifyEndpage)
+                disablePreference("purify_endpage")
             if (!supportcustomplaybackspeed)
                 disablePreference(
                     "default_playback_speed",

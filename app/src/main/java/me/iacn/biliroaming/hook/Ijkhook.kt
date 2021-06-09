@@ -15,10 +15,21 @@ class Ijkhook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val standaloneDanmakuSpeed = sPrefs.getBoolean("standalone_danmaku_speed", false)
         val danmakuOnEventList: MutableList<String> = emptyList<String>().toMutableList()
         val danmakuOnPreparedList: MutableList<String> = emptyList<String>().toMutableList()
+        val purifyEndpage = sPrefs.getBoolean("purify_endpage", false)
     }
 
     override fun startHook() {
         Log.d("startHook: ijk")
+
+        if (purifyEndpage) {
+            "tv.danmaku.bili.ui.video.creator.AvPlayerConfiguration".hookAfterMethod(mClassLoader, "getCustomFeatures") {
+                it.result = (it.result as ArrayList<*>).filterNot { feature -> feature.getObjectFieldAs<String>("mName") == "EndPageAdapter" || feature.getObjectFieldAs<Class<*>>("mClass").name.startsWith("tv.danmaku.biliplayer.features.endpage") }
+            }
+
+            "com.bilibili.bangumi.player.BangumiPlayerConfiguration".hookAfterMethod(mClassLoader, "getCustomFeatures") {
+                it.result = (it.result as ArrayList<*>).filterNot { feature -> feature.getObjectFieldAs<String>("mName") == "EndPageBangumiAdapter" || feature.getObjectFieldAs<Class<*>>("mClass").name.startsWith("com.bilibili.bangumi.player.endpage") }
+            }
+        }
 
         val notDanmakuOptionsPlayerAdapterV2onPreparedHooker: Hooker = fun(it: MethodHookParam) {
             it.thisObject.callMethod(
