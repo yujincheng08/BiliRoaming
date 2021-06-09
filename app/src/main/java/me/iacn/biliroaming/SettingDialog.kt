@@ -54,11 +54,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             biliprefs = currentContext.getSharedPreferences(
                 packageName + "_preferences",
                 Context.MODE_MULTI_PROCESS
-            )
-            if (!prefs.getBoolean("hidden", false)) {
-                val hiddenGroup = findPreference("hidden_group") as PreferenceCategory
-                preferenceScreen.removePreference(hiddenGroup)
-            }
+            ) 
             findPreference("version").summary = BuildConfig.VERSION_NAME
             findPreference("version").onPreferenceClickListener = this
             findPreference("custom_splash").onPreferenceChangeListener = this
@@ -78,6 +74,10 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("keywords_filter_title_recommend")?.onPreferenceClickListener = this
             checkCompatibleVersion()
             checkUpdate()
+	    if (!prefs.getBoolean("hidden", false)) {
+                val hiddenGroup = findPreference("hidden_group") as PreferenceCategory
+                preferenceScreen.removePreference(hiddenGroup)
+            }
         }
 
         override fun onDestroy() {
