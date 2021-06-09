@@ -55,7 +55,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 packageName + "_preferences",
                 Context.MODE_MULTI_PROCESS
             )
-            if (!prefs.getBoolean("hidden", false)) {
+	    if (!prefs.getBoolean("hidden", false)) {
                 val hiddenGroup = findPreference("hidden_group") as PreferenceCategory
                 preferenceScreen.removePreference(hiddenGroup)
             }
@@ -191,7 +191,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             name: String,
             message: String = moduleRes.getString(R.string.not_support)
         ) {
-            findPreference(name).run {
+            findPreference(name)?.run {
                 isEnabled = false
                 summary = message
                 if (this is SwitchPreference) this.isChecked = false
