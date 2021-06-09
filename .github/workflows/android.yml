@@ -57,7 +57,8 @@ jobs:
             See commit detail [here](${{ github.event.head_commit.url }})
             Snapshot apk is attached (unsupported by TAICHI)
         run: |
-          ESCAPED=`python3 -c 'import json,os,urllib.parse; print(urllib.parse.quote(json.dumps(os.environ["COMMIT_MESSAGE"])))'`
+          python3 -m pip install --user python-telegram-bot
+          ESCAPED=`python3 -c 'import json,os,urllib.parse,telegram.utils.helpers; print(urllib.parse.quote(json.dumps(telegram.utils.helpers.escape_markdown(os.environ["COMMIT_MESSAGE"], 2))))'`
           curl -v "https://api.telegram.org/bot${BOT_TOKEN}/sendMediaGroup?chat_id=${CHANNEL_ID}&media=%5B%7B%22type%22:%22document%22,%20%22media%22:%22attach://release%22,%22parse_mode%22:%22MarkdownV2%22,%22caption%22:${ESCAPED}%7D%5D"  -F release="@$FILE"
 
   skipped:
