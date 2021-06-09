@@ -170,4 +170,6 @@
     <string name="add_bangumi_title">添加其他地区番剧</string>
     <string name="add_bangumi_summary">在首页标签添加大陆/港澳台番剧分页</string>
     <string name="purify_endpage_title">去除播放完成的推荐页</string>
+    <string name="add_movie_title">添加其他地区影视</string>
+    <string name="add_movie_summary">在首页标签添加大陆/港澳台影视分页</string>
 </resources>
