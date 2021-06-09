@@ -162,7 +162,7 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             }
                         }
                         if (hasMovieTW != null && !hasMovieTW) {
-                            if (hasMovieCN != null && !hasMovieCN) {
+                            if (hasMovieCN != null && !hasMovieCN && platform != "android_b") {
                                 val movieTW = tabClass?.new()
                                     ?.setObjectField("tabId", "40")
                                     ?.setObjectField("name", "影視")
