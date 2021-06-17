@@ -42,6 +42,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         )
     }
     val sectionClass by Weak { mHookInfo["class_section"]?.findClassOrNull(mClassLoader) }
+    val partySectionClass by Weak { mHookInfo["class_party_section"]?.findClassOrNull(mClassLoader) }
     val retrofitResponseClass by Weak {
         mHookInfo["class_retrofit_response"]?.findClassOrNull(
             mClassLoader
@@ -253,8 +254,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     fun columnColorArray() = mHookInfo["field_column_color_array"]
 
-    fun videoDetailName() = mHookInfo["field_video_detail"]
-
     fun signQueryName() = mHookInfo["method_sign_query"]
 
     fun skinList() = mHookInfo["method_skin_list"]
@@ -266,6 +265,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     fun requestField() = mHookInfo["field_req"]
 
     fun likeMethod() = mHookInfo["method_like"]
+
+    fun partyLikeMethod() = mHookInfo["method_party_like"]
 
     fun themeName() = mHookInfo["field_theme_name"]
 
@@ -431,8 +432,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             findThemeNameField()
         }.checkOrPut("class_section") {
             findSectionClass()
-        }.checkOrPut("field_video_detail") {
-            findVideoDetailField()
+        }.checkOrPut("class_party_section"){
+            findPartySectionClass()
         }.checkOrPut("method_sign_query") {
             findSignQueryMethod()
         }.checkOrPut("class_setting_router") {
@@ -443,6 +444,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             findDrawerClass()
         }.checkOrPut("method_like") {
             findLikeMethod()
+        }.checkOrPut("method_party_like") {
+            findPartyLikeMethod()
         }.checkOrPut("class_download_thread_listener") {
             findDownloadThreadListener()
         }.checkOrPut("field_download_thread") {
@@ -838,15 +841,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 && Modifier.isStatic(it.modifiers)
     }?.name
 
-    private fun findVideoDetailField(): String? {
-        val detailClass =
-            "tv.danmaku.bili.ui.video.api.BiliVideoDetail".findClassOrNull(mClassLoader)
-                ?: return null
-        return sectionClass?.declaredFields?.firstOrNull {
-            it.type == detailClass
-        }?.name
-    }
-
     private fun findSignQueryMethod(): String? {
         val signedQueryClass =
             "com.bilibili.nativelibrary.SignedQuery".findClassOrNull(mClassLoader)
@@ -915,6 +909,17 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         }.count() > 0
     }
 
+    private fun findPartySectionClass(): String? {
+        val progressBarClass = "tv.danmaku.biliplayer.view.RingProgressBar".findClass(mClassLoader)
+        return classesList.filter {
+            it.startsWith("tv.danmaku.bili.ui.video.party.section")
+        }.firstOrNull { c ->
+            c.findClass(mClassLoader).declaredFields.filter {
+                it.type == progressBarClass
+            }.count().let { it > 0 }
+        }
+    }
+
     private fun findSectionClass(): String? {
         val progressBarClass = "tv.danmaku.biliplayer.view.RingProgressBar".findClass(mClassLoader)
         return classesList.filter {
@@ -927,6 +932,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     }
 
     private fun findLikeMethod() = sectionClass?.declaredMethods?.firstOrNull {
+        it.parameterTypes.size == 1 && it.parameterTypes[0] == Object::class.java
+    }?.name
+
+    private fun findPartyLikeMethod() = partySectionClass?.declaredMethods?.firstOrNull {
         it.parameterTypes.size == 1 && it.parameterTypes[0] == Object::class.java
     }?.name
 

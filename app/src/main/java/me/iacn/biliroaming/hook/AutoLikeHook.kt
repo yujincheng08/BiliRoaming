@@ -13,12 +13,14 @@ class AutoLikeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         Log.d("startHook: AutoLike")
 
         val likeId = getId("frame1")
+        val detailClass =
+            "tv.danmaku.bili.ui.video.api.BiliVideoDetail".findClassOrNull(mClassLoader) ?: return
 
-        instance.sectionClass?.hookAfterMethod(instance.likeMethod(), Object::class.java) { param ->
-            val sec = param.thisObject ?: return@hookAfterMethod
-            val detail = sec.getObjectField(instance.videoDetailName())
-            val avid = detail?.getLongField("mAvid") ?: return@hookAfterMethod
-            if (likedVideos.contains(avid)) return@hookAfterMethod
+        val hooker: Hooker = fun(param) {
+            val sec = param.thisObject ?: return
+            val detail = sec.javaClass.findFieldByExactType(detailClass)?.get(sec)
+            val avid = detail?.getLongField("mAvid") ?: return
+            if (likedVideos.contains(avid)) return
             likedVideos.add(avid)
             val requestUser = detail.getObjectField("mRequestUser")
             val like = requestUser?.getIntField("mLike")
@@ -35,5 +37,16 @@ class AutoLikeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 sec.callMethod("onClick", likeView)
             }
         }
+        instance.partySectionClass?.hookAfterMethod(
+            instance.partyLikeMethod(),
+            Object::class.java,
+            hooker = hooker
+        )
+
+        instance.sectionClass?.hookAfterMethod(
+            instance.likeMethod(),
+            Object::class.java,
+            hooker = hooker
+        )
     }
 }

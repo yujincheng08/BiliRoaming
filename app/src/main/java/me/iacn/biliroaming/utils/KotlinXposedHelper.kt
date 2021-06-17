@@ -333,6 +333,12 @@ fun Class<*>.setStaticObjectFieldIfExist(field: String?, obj: Any?) = apply {
     }
 }
 
+inline fun <reified T> Class<*>.findFieldByExactType(): Field? =
+    findFirstFieldByExactType(this, T::class.java)
+
+fun Class<*>.findFieldByExactType(type: Class<*>): Field? =
+    findFirstFieldByExactType(this, type)
+
 @Suppress("UNCHECKED_CAST")
 fun <T> Any.callMethodAs(methodName: String?, vararg args: Any?) =
     callMethod(this, methodName, *args) as T
