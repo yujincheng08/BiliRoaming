@@ -12,6 +12,7 @@ import org.json.JSONException
 import org.json.JSONObject
 import java.io.ByteArrayInputStream
 import java.io.InputStream
+import java.lang.reflect.Method
 import java.net.HttpURLConnection
 import java.util.*
 import java.util.concurrent.CountDownLatch
@@ -284,7 +285,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         }
                         build()
                     }
-                    param.result = param.result.javaClass.callStaticMethod(
+                    param.result = (param.method as Method).returnType.callStaticMethod(
                         "parseFrom",
                         newResBuilder.build().toByteArray()
                     )
