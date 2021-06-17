@@ -246,8 +246,9 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 //       lastSeasonInfo as online bangumi's.
                 var tryThailand =
                     lastSeasonInfo.containsKey("watch_platform") && lastSeasonInfo["watch_platform"] == "1"
-                            && lastSeasonInfo.containsKey(oid) && param.result.callMethod("getSubtitle")
-                        ?.callMethod("getSubtitlesCount") == 0
+                            && lastSeasonInfo.containsKey(oid) &&
+                            (param.result == null || param.result.callMethod("getSubtitle")
+                                ?.callMethod("getSubtitlesCount") == 0)
                 if (!tryThailand && !lastSeasonInfo.containsKey("area")) {
                     countDownLatch = CountDownLatch(1)
                     try {
@@ -267,11 +268,15 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     val data = result.optJSONObject("data") ?: return@hookAfterMethod
                     val subtitles = data.optJSONArray("subtitles").orEmpty()
                     if (subtitles.length() == 0) return@hookAfterMethod
-                    val newResBuilder = DmViewReply.newBuilder(
-                        DmViewReply.parseFrom(
-                            param.result.callMethodAs<ByteArray>("toByteArray")
+                    val newResBuilder = param.result?.let {
+                        DmViewReply.newBuilder(
+                            DmViewReply.parseFrom(
+                                param.result.callMethodAs<ByteArray>("toByteArray")
+                            )
                         )
-                    )
+                    } ?: run {
+                        DmViewReply.newBuilder()
+                    }
                     newResBuilder.subtitle = VideoSubtitle.newBuilder().run {
                         for (subtitle in subtitles) {
                             addSubtitles(SubtitleItem.newBuilder().run {
