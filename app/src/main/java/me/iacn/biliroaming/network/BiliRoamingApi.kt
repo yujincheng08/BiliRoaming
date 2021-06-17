@@ -80,6 +80,7 @@ object BiliRoamingApi {
                 .appendQueryParameter("s_locale", "zh_SG")
                 .appendQueryParameter("access_key", instance.accessKey)
                 .appendQueryParameter("mobi_app", "bstar_a")
+                .appendQueryParameter("build", "1080003")
             seasonJson = getContent(builder.toString())?.toJSONObject() ?: return null
             seasonJson.optJSONObject("result")?.also {
                 fixThailandSeason(it)
