@@ -260,13 +260,18 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
                 if (tryThailand) {
                     Log.d("Getting thailand subtitles")
-                    val result = getThailandSubtitles(
-                        lastSeasonInfo[oid] ?: lastSeasonInfo["epid"]
-                    )?.toJSONObject()
-                        ?: return@hookAfterMethod
-                    if (result.optInt("code") != 0) return@hookAfterMethod
-                    val data = result.optJSONObject("data") ?: return@hookAfterMethod
-                    val subtitles = data.optJSONArray("subtitles").orEmpty()
+                    val subtitles = if (lastSeasonInfo.containsKey("sb$oid")) {
+                        Log.d("Got from season")
+                        JSONArray(lastSeasonInfo["sb$oid"])
+                    } else {
+                        val result = getThailandSubtitles(
+                            lastSeasonInfo[oid] ?: lastSeasonInfo["epid"]
+                        )?.toJSONObject() ?: return@hookAfterMethod
+                        if (result.optInt("code") != 0) return@hookAfterMethod
+                        val data = result.optJSONObject("data") ?: return@hookAfterMethod
+                        Log.d("Got from subtitle api")
+                        data.optJSONArray("subtitles").orEmpty()
+                    }
                     if (subtitles.length() == 0) return@hookAfterMethod
                     val newResBuilder = param.result?.let {
                         DmViewReply.newBuilder(
