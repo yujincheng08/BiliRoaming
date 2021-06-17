@@ -513,6 +513,10 @@ object BiliRoamingApi {
             ep.put("ep_id", ep.optInt("id"))
             ep.put("index", ep.optString("title"))
             ep.put("indexTitle", ep.optString("long_title"))
+            if (ep.optInt("cid", 0) == 0)
+                ep.put("cid", ep.optInt("id"))
+            if (ep.optInt("aid", 0) == 0)
+                ep.put("aid", result.optInt("season_id"))
             fixRight(ep)
             episodes.put(ep)
         }
