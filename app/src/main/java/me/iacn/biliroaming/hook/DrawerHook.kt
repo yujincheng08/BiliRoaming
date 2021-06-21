@@ -34,7 +34,7 @@ class DrawerHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             self.setContentView(drawerLayout as View)
         }
 
-        instance.mainActivityClass?.hookAfterMethod("onPostCreate", Bundle::class.java) { param ->
+        instance.mainActivityClass?.hookAfterMethod("onStart") { param ->
             val self = param.thisObject as Activity
             val fragmentManager = self.callMethod("getSupportFragmentManager")
             navView = fragmentManager?.callMethod("findFragmentByTag", "home")

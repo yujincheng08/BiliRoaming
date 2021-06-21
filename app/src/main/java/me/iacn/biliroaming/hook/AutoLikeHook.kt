@@ -24,12 +24,10 @@ class AutoLikeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             likedVideos.add(avid)
             val requestUser = detail.getObjectField("mRequestUser")
             val like = requestUser?.getIntField("mLike")
-            val likeView = sec.javaClass.declaredFields.map {
-                sec.getObjectField(it.name)
-            }.filter {
-                View::class.java.isInstance(it)
+            val likeView = sec.javaClass.declaredFields.filter {
+                View::class == it.type
             }.map {
-                it as View
+                sec.getObjectField(it.name) as View
             }.first {
                 it.id == likeId
             }
