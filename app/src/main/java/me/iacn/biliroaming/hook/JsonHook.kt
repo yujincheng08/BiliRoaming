@@ -96,6 +96,11 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                 }
                                 bottom.add(0, l)
                             }
+                            data?.getObjectFieldAs<MutableList<*>>("moreCategory")?.removeAll {
+                                it?.getObjectFieldAs<String?>("uri")
+                                    ?.startsWith("bilibili://main/top_category")
+                                    ?: false
+                            }
                         }
                     }
 
@@ -125,7 +130,7 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         val tab = data?.getObjectFieldAs<MutableList<Any>>("tab")
                         val hasBangumiCN = tab?.fold(false) { acc, it ->
                             val uri = it.getObjectFieldAs<String>("uri")
-                            acc || uri.toString() == "bilibili://pgc/home"
+                            acc || uri.endsWith("bilibili://pgc/home")
                         }
                         val hasBangumiTW = tab?.fold(false) { acc, it ->
                             val uri = it.getObjectFieldAs<String>("uri")
@@ -165,7 +170,7 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         val tab = data?.getObjectFieldAs<MutableList<Any>>("tab")
                         val hasMovieCN = tab?.fold(false) { acc, it ->
                             val uri = it.getObjectFieldAs<String>("uri")
-                            acc || uri.toString() == "bilibili://pgc/home?home_flow_type=2"
+                            acc || uri.startsWith("bilibili://pgc/home?home_flow_type=2")
                         }
                         val hasMovieTW = tab?.fold(false) { acc, it ->
                             val uri = it.getObjectFieldAs<String>("uri")
