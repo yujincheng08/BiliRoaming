@@ -75,6 +75,30 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         }
                     }
 
+                    if (sPrefs.getBoolean("add_channel", false)) {
+                        val bottom = data?.getObjectFieldAs<MutableList<Any>>("bottom")
+                        val hasChannel = bottom?.fold(false) { acc, it ->
+                            val uri = it.getObjectFieldAs<String>("uri")
+                            acc || uri.startsWith("bilibili://pegasus/channel")
+                        }
+                        if (hasChannel != null && !hasChannel) {
+                            val channelJson = tabClass?.new()
+                                ?.setObjectField("tabId", "123")
+                                ?.setObjectField("name", "频道")
+                                ?.setObjectField("icon", "http://i0.hdslb.com/bfs/archive/e16c9303e9edbf23031f545fcafc44d1f60cd07b.png")
+                                ?.setObjectField("iconSelected", "http://i0.hdslb.com/bfs/archive/f6739d905dee57d2c0429d9b66acb3f39b294aff.png")
+                                ?.setObjectField("uri", "bilibili://pegasus/channel/")
+                                ?.setObjectField("reportId", "频道Bottom")
+                                ?.setIntField("pos", 2)
+                            channelJson?.let { l ->
+                                bottom.forEach {
+                                    it.setIntField("pos", it.getIntField("pos") + 0)
+                                }
+                                bottom.add(0, l)
+                            }
+                        }
+                    }
+
                     if (sPrefs.getBoolean("add_live", false)) {
                         val tab = data?.getObjectFieldAs<MutableList<Any>>("tab")
                         val hasLive = tab?.fold(false) { acc, it ->
