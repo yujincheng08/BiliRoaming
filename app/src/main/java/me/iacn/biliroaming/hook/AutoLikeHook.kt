@@ -25,14 +25,14 @@ class AutoLikeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             val requestUser = detail.getObjectField("mRequestUser")
             val like = requestUser?.getIntField("mLike")
             val likeView = sec.javaClass.declaredFields.filter {
-                View::class == it.type
+                View::class.java.isAssignableFrom(it.type)
             }.map {
                 sec.getObjectField(it.name) as View
-            }.first {
+            }.firstOrNull {
                 it.id == likeId
             }
             if (like == 0) {
-                sec.callMethod("onClick", likeView)
+                likeView?.callOnClick()
             }
         }
         instance.partySectionClass?.hookAfterMethod(

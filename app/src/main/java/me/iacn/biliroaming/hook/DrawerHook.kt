@@ -47,7 +47,7 @@ class DrawerHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 )
             )
             layoutParams?.javaClass?.fields?.get(0)?.set(layoutParams, Gravity.START)
-            drawerLayout?.callMethod("addView", navView, 1, layoutParams)
+            navView?.parent ?: drawerLayout?.callMethod("addView", navView, 1, layoutParams)
         }
 
         instance.mainActivityClass?.replaceMethod("onBackPressed") { param ->
