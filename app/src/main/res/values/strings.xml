@@ -175,5 +175,5 @@
     <string name="keywords_filter_title_recommend_summary">过滤首页推送标题中包含指定关键词的内容</string>
     <string name="keywords_filter_title_recommend_title">关键词过滤首页推送</string>
     <string name="add_channel_title">添加频道按钮</string>
-    <string name="add_channel_summary">在底栏添加频道按钮（底栏最多5个，请自定义底栏少于5个）</string>
+    <string name="add_channel_summary">在底栏添加频道按钮（请在自定义底栏中把发布关掉）</string>
 </resources>
