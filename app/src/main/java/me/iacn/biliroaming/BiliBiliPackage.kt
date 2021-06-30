@@ -305,6 +305,22 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     fun pegasusFeed() = mHookInfo["method_pegasus_feed"]
 
+    fun responseDataField() = lazy {
+        try {
+            rxGeneralResponseClass?.getDeclaredField("data")?.name
+        } catch (e: NoSuchFieldException) {
+            "_data"
+        }
+    }
+
+    fun responseResultField() = lazy {
+        try {
+            rxGeneralResponseClass?.getDeclaredField("result")?.name
+        } catch (e: NoSuchFieldException) {
+            "_result"
+        }
+    }
+
     private fun readHookInfo(context: Context): MutableMap<String, String?> {
         try {
             val hookInfoFile = File(context.cacheDir, Constant.HOOK_INFO_FILE_NAME)

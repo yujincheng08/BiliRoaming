@@ -96,7 +96,7 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                 }
                                 bottom.add(0, l)
                             }
-                            data?.getObjectFieldAs<MutableList<*>>("moreCategory")?.removeAll {
+                            data.getObjectFieldAs<MutableList<*>>("moreCategory").removeAll {
                                 it?.getObjectFieldAs<String?>("uri")
                                     ?.startsWith("bilibili://main/top_category")
                                     ?: false

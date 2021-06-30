@@ -168,7 +168,10 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         body
                     ) == true
                 ) {
-                    val data = body.getObjectField("data") ?: return@hookBeforeAllConstructors
+                    val dataField =
+                        if (instance.generalResponseClass?.isInstance(body) == true) "data" else instance.responseDataField().value
+                    val data = body.getObjectField(dataField)
+                        ?: return@hookBeforeAllConstructors
                     if (data.javaClass == searchAllResultClass) {
                         addThailandTag(data)
                     }
@@ -177,7 +180,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                 url.startsWith("https://appintl.biliapi.net/intl/gateway/app/search/type"))
                         && url.contains("type=$TH_TYPE")
                     ) {
-                        body.setObjectField("data", retrieveThailandSearch(data, url))
+                        body.setObjectField(dataField, retrieveThailandSearch(data, url))
                     }
                 }
             }
@@ -201,7 +204,9 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             if (redirectUrl.isNullOrEmpty()) return
             param.result = param.thisObject.callMethod("getUrl", redirectUrl)
         }
-        "com.bilibili.bplus.followingcard.api.entity.cardBean.VideoCard".findClassOrNull(mClassLoader)
+        "com.bilibili.bplus.followingcard.api.entity.cardBean.VideoCard".findClassOrNull(
+            mClassLoader
+        )
             ?.run {
                 hookAfterMethod("getJumpUrl", hooker = urlHook)
                 hookAfterMethod("getCommentJumpUrl", hooker = urlHook)
@@ -282,16 +287,19 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     private fun fixPlaySearchType(body: Any, url: String) {
-        val resultClass = body.getObjectField("data")?.javaClass ?: return
+        val dataField =
+            if (instance.generalResponseClass?.isInstance(body) == true) "data" else instance.responseDataField().value
+        val resultClass = body.getObjectField(dataField)?.javaClass ?: return
         if (!url.contains("type=7") && !url.contains("type=8")) return
         val newUrl = url.replace("appintl.biliapi.net/intl/gateway/app/", "app.bilibili.com/x/v2/")
         val content = getContent(newUrl)?.toJSONObject()?.optJSONObject("data") ?: return
         val newResult = resultClass.fromJson(content) ?: return
-        body.setObjectField("data", newResult)
+        body.setObjectField(dataField, newResult)
     }
 
     private fun fixBangumi(body: Any) {
-        val fieldName = if (isSerializable || isGson) "data" else "result"
+        val fieldName =
+            if (isSerializable || isGson) instance.responseDataField().value else instance.responseDataField().value
         val result = body.getObjectField(fieldName)
         val code = body.getIntField("code")
         if (instance.bangumiUniformSeasonClass?.isInstance(result) != true && code != FAIL_CODE) return
@@ -502,13 +510,18 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         queryString = queryString.replace("aid=", "id=")
         val content = BiliRoamingApi.getView(queryString) ?: return
         Log.d("Got view information from proxy server: $content")
-        val detailClass = "tv.danmaku.bili.ui.video.api.BiliVideoDetail".findClassOrNull(mClassLoader)
-            ?: return
+        val detailClass =
+            "tv.danmaku.bili.ui.video.api.BiliVideoDetail".findClassOrNull(mClassLoader)
+                ?: return
         val newJsonResult = content.toJSONObject().optJSONObject("v2_app_api") ?: return
         newJsonResult.optJSONObject("season")?.optString("newest_ep_id")?.let {
             lastSeasonInfo["ep_id"] = it
         }
-        body.setIntField("code", 0).setObjectField("data", detailClass.fromJson(newJsonResult))
+        body.setIntField("code", 0)
+            .setObjectField(
+                if (instance.generalResponseClass?.isInstance(body) == true) "data" else instance.responseDataField().value,
+                detailClass.fromJson(newJsonResult)
+            )
     }
 
     private fun isBangumiWithWatchPermission(result: JSONObject?, code: Int) = result?.let {
