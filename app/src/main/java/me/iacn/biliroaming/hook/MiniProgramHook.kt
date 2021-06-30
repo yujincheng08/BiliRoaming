@@ -7,6 +7,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 class MiniProgramHook(classLoader: ClassLoader) : BaseHook(classLoader) {
+    val extractUrl = Regex("""(.*)(http\S*)(.*)""")
     override fun startHook() {
         if (!sPrefs.getBoolean("mini_program", false)) return
         Log.d("startHook: MiniProgram")
@@ -18,7 +19,11 @@ class MiniProgramHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             val platform = param.args[0] as String
             val bundle = param.args[1] as Bundle
             if (platform == "COPY") {
-                bundle.getString("params_content")?.let { url ->
+                bundle.getString("params_content")?.let { content ->
+                    extractUrl.matchEntire(content)
+                }?.let {
+                    listOf(it.groups[1]?.value, it.groups[2]?.value, it.groups[3]?.value)
+                }?.let { (prefix, url, postfix) ->
                     val conn = URL(url).openConnection() as HttpURLConnection
                     conn.requestMethod = "GET"
                     conn.instanceFollowRedirects = false
@@ -38,7 +43,7 @@ class MiniProgramHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         }.joinToString("") {
                             it.joinToString("")
                         }
-                        bundle.putString("params_content", "https://b23.tv/av${av}/${query}")
+                        bundle.putString("params_content", "${prefix}https://b23.tv/av${av}/${query}$postfix")
                     }
 
                 }
