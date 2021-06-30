@@ -67,7 +67,8 @@ object BiliRoamingApi {
             reconstructModules(it)
             fixRight(it)
             if (hidden) getExtraInfo(it, instance.accessKey)
-            if (it.optJSONArray("episodes")?.length() == 0 || it.optInt("total_ep") == -1
+            if ((it.optJSONArray("episodes")?.length() == 0 && it.optJSONObject("publish")
+                    ?.optInt("is_started", -1) != 0) || it.optInt("total_ep", 0) == -1
                 || (it.has("total_ep") && it.optInt("total_ep")
                     .toString() != it.optJSONObject("newest_ep")?.optString("index"))
             ) {
