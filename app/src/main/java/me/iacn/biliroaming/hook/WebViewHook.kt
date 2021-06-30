@@ -1,8 +1,10 @@
 package me.iacn.biliroaming.hook
 
+import android.graphics.Bitmap
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import me.iacn.biliroaming.BuildConfig
 import me.iacn.biliroaming.utils.*
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -50,6 +52,8 @@ class WebViewHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     override fun startHook() {
         Log.d("startHook: WebView")
+        if (BuildConfig.DEBUG)
+            WebView.setWebContentsDebuggingEnabled(true)
         WebView::class.java.hookBeforeMethod(
             "setWebViewClient",
             WebViewClient::class.java
@@ -60,13 +64,19 @@ class WebViewHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
             if (hookedClient.contains(clazz)) return@hookBeforeMethod
             try {
-                clazz.getDeclaredMethod("onPageFinished", WebView::class.java, String::class.java)
-                    .hookBeforeMethod(hooker)
+                clazz.getDeclaredMethod(
+                    "onPageStarted",
+                    WebView::class.java,
+                    String::class.java,
+                    Bitmap::class.java
+                ).hookBeforeMethod(hooker)
                 hookedClient.add(clazz)
                 Log.d("hook webview $clazz")
             } catch (e: NoSuchMethodException) {
             }
         }
+        if (BuildConfig.DEBUG)
+            x5WebViewClass?.callStaticMethod("setWebContentsDebuggingEnabled", true)
         x5WebViewClass?.hookBeforeMethod(
             "setWebViewClient",
             "com.tencent.smtt.sdk.WebViewClient"
@@ -75,8 +85,12 @@ class WebViewHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             param.thisObject.callMethod("addJavascriptInterface", jsHooker, "hooker")
             if (hookedClient.contains(clazz)) return@hookBeforeMethod
             try {
-                clazz.getDeclaredMethod("onPageFinished", x5WebViewClass, String::class.java)
-                    .hookBeforeMethod(hooker)
+                clazz.getDeclaredMethod(
+                    "onPageStarted",
+                    x5WebViewClass,
+                    String::class.java,
+                    Bitmap::class.java
+                ).hookBeforeMethod(hooker)
                 hookedClient.add(clazz)
                 Log.d("hook webview $clazz")
             } catch (e: NoSuchMethodException) {
