@@ -7,6 +7,7 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.os.Bundle
+import android.text.style.LineBackgroundSpan
 import android.util.Base64
 import android.util.SparseArray
 import android.view.View
@@ -202,6 +203,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             mClassLoader
         )
     }
+    val subtitleSpanClass by Weak { mHookInfo["class_subtitle_span"]?.findClassOrNull(mClassLoader) }
+    val chronosSwitchClass by Weak { mHookInfo["class_chronos_switch"]?.findClassOrNull(mClassLoader) }
 
     val classesList by lazy { mClassLoader.allClassesList() }
     private val accessKeyInstance by lazy {
@@ -448,7 +451,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             findThemeNameField()
         }.checkOrPut("class_section") {
             findSectionClass()
-        }.checkOrPut("class_party_section"){
+        }.checkOrPut("class_party_section") {
             findPartySectionClass()
         }.checkOrPut("method_sign_query") {
             findSignQueryMethod()
@@ -509,11 +512,33 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             "method_pegasus_feed"
         ) {
             findPegasusFeed()
+        }.checkOrPut("class_chronos_switch") {
+            findChronosSwitch()
+        }.checkOrPut("class_subtitle_span") {
+            findSubtitleSpan()
         }
 
         Log.d(mHookInfo.filterKeys { it != "map_ids" })
         Log.d("Check hook info completed: needUpdate = $needUpdate")
         return needUpdate
+    }
+
+    private fun findSubtitleSpan() = classesList.filter {
+        it.startsWith("tv.danmaku.danmaku.subititle") ||
+                it.startsWith("tv.danmaku.danmaku.subtitle")
+    }.firstOrNull { c ->
+        c.findClass(mClassLoader).interfaces.contains(LineBackgroundSpan::class.java)
+    }
+
+    private fun findChronosSwitch(): String? {
+        val regex = Regex("""^tv\.danmaku\.chronos\.wrapper\.[^.]*$""")
+        return classesList.filter {
+            it.matches(regex)
+        }.firstOrNull { c ->
+            c.findClass(mClassLoader).declaredFields.count {
+                it.type == Boolean::class.javaObjectType
+            } >= 5
+        }
     }
 
     private fun findPegasusFeed(): Array<String?> {

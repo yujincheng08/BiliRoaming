@@ -70,6 +70,10 @@
             android:key="drawer"
             android:summary="@string/drawer_summary"
             android:title="@string/drawer_title" />
+        <SwitchPreference
+            android:key="custom_subtitle"
+            android:summary="@string/custom_subtitle_summary"
+            android:title="@string/custom_subtitle_title" />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/miscellaneous_category">

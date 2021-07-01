@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:rowCount="4"
+    android:columnCount="2"
+    android:orientation="horizontal"
+    android:paddingStart="25dp"
+    android:paddingEnd="20dp">
+
+
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="1"
+        android:text="字体颜色"
+        android:singleLine="true"
+        tools:ignore="HardcodedText" />
+
+    <EditText
+        android:id="@+id/font_color"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="4"
+        android:hint="00000000"
+        android:tag="subtitle_font_color"
+        android:inputType="number"
+        android:autofillHints="no"
+        tools:ignore="HardcodedText" />
+</GridLayout>

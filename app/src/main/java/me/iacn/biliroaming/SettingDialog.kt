@@ -55,7 +55,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 packageName + "_preferences",
                 Context.MODE_MULTI_PROCESS
             )
-	    if (!prefs.getBoolean("hidden", false)) {
+            if (!prefs.getBoolean("hidden", false)) {
                 val hiddenGroup = findPreference("hidden_group") as PreferenceCategory
                 preferenceScreen.removePreference(hiddenGroup)
             }
@@ -76,6 +76,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("export_video")?.onPreferenceClickListener = this
             findPreference("hide_low_play_count_recommend")?.onPreferenceClickListener = this
             findPreference("keywords_filter_title_recommend")?.onPreferenceClickListener = this
+            findPreference("custom_subtitle")?.onPreferenceChangeListener = this
             checkCompatibleVersion()
             checkUpdate()
         }
@@ -146,7 +147,8 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             val supportDrawer = instance.homeUserCenterClass != null
             val supportcustomplaybackspeed = instance.playerCoreServiceV2Class != null
             val supportTeenagersMode = instance.teenagersModeDialogActivityClass != null
-            val suppportPurifyEndpage = "tv.danmaku.biliplayer.context.config.Feature" in instance.classesList
+            val suppportPurifyEndpage =
+                "tv.danmaku.biliplayer.context.config.Feature" in instance.classesList
             if (!suppportPurifyEndpage)
                 disablePreference("purify_endpage")
             if (!supportcustomplaybackspeed)
@@ -203,6 +205,24 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             }
         }
 
+        private fun showCustomSubtitle() {
+            AlertDialog.Builder(activity).run {
+                val layout = moduleRes.getLayout(R.layout.custom_subtitle)
+                val inflater = LayoutInflater.from(context)
+                val view = inflater.inflate(layout, null)
+                val fontColor = view.findViewById<EditText>(R.id.font_color)
+                fontColor.setText(prefs.getInt(fontColor.tag.toString(), 0x7fffffff).toString(16))
+
+                setTitle("自定义字幕样式")
+                setView(view)
+
+                setPositiveButton(android.R.string.ok) { _, _ ->
+                    val color = fontColor.text.toString().toInt(16)
+                    prefs.edit().putInt(fontColor.tag.toString(), color).apply()
+                }
+            }.show()
+        }
+
         override fun onPreferenceChange(preference: Preference, newValue: Any): Boolean {
             when (preference.key) {
                 "custom_splash" -> {
@@ -226,6 +246,11 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 "customize_accessKey" -> {
                     if (newValue == "") {
                         preference.editor.remove(preference.key).apply()
+                    }
+                }
+                "custom_subtitle" -> {
+                    if (newValue as Boolean) {
+                        showCustomSubtitle()
                     }
                 }
             }
@@ -407,7 +432,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             return true
         }
 
-        private fun oncustomizedanmakuconfigclick(): Boolean {
+        private fun onCustomizeDanmakuConfigClick(): Boolean {
             AlertDialog.Builder(activity).run {
                 val layout = moduleRes.getLayout(R.layout.cutomize_danmaku_config_dialog)
                 val inflater = LayoutInflater.from(context)
@@ -550,7 +575,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             "custom_server" -> onCustomServerClick()
             "test_upos" -> onTestUposClick()
             "customize_bottom_bar" -> onCustomizeBottomBarClick()
-            "customize_danmaku_config" -> oncustomizedanmakuconfigclick()
+            "customize_danmaku_config" -> onCustomizeDanmakuConfigClick()
             "pref_export" -> onPrefExportClick()
             "pref_import" -> onPrefImportClick()
             "export_video" -> onExportVideoClick()
