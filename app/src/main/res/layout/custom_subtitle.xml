@@ -26,7 +26,8 @@
         android:layout_columnWeight="4"
         android:hint="00000000"
         android:tag="subtitle_font_color"
-        android:inputType="number"
+        android:digits="0123456789ABCDEFabcdef"
+        android:inputType="text|textCapCharacters"
         android:autofillHints="no"
         tools:ignore="HardcodedText" />
 </GridLayout>
