@@ -56,7 +56,7 @@ An Xposed module that unblocks bangumi area limit of BILIBILI, and miscellaneous
 # download/下载
 https://github.com/yujincheng08/BiliRoaming/releases/latest
 
-https://repo.xposed.info/module/me.iacn.biliroaming
+https://modules.lsposed.org/module/me.iacn.biliroaming
 
 # 使用方法
 https://github.com/yujincheng08/BiliRoaming/wiki#%E4%BD%BF%E7%94%A8%E6%96%B9%E6%B3%95
