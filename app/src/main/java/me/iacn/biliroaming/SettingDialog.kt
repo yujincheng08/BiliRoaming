@@ -213,7 +213,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 val fontColor = view.findViewById<EditText>(R.id.font_color)
                 fontColor.setText(prefs.getInt(fontColor.tag.toString(), 0x7fffffff).toString(16))
                 val fontSize = view.findViewById<EditText>(R.id.font_size)
-                fontSize.setText(prefs.getString(fontSize.tag.toString(), "1"))
+                fontSize.setText(prefs.getInt(fontSize.tag.toString(), 12))
 
                 setTitle("自定义字幕样式")
                 setView(view)
@@ -221,7 +221,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 setPositiveButton(android.R.string.ok) { _, _ ->
                     val color = fontColor.text.toString().toInt(16)
                     prefs.edit().putInt(fontColor.tag.toString(), color).apply()
-                    prefs.edit().putString(fontSize.tag.toString(), fontSize.text.toString()).apply()
+                    prefs.edit().putInt(fontSize.tag.toString(), fontSize.text.toInt()).apply()
                 }
             }.show()
         }
