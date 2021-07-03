@@ -35,7 +35,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_columnWeight="1"
-        android:text="缩放大小"
+        android:text="字体大小"
         android:singleLine="true"
         tools:ignore="HardcodedText" />
 
@@ -44,9 +44,9 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_columnWeight="4"
-        android:hint="1"
+        android:hint="12"
         android:tag="subtitle_font_size"
-        android:digits="0123456789."
+        android:digits="0123456789"
         android:inputType="text|textCapCharacters"
         android:autofillHints="yes"
         tools:ignore="HardcodedText" />
