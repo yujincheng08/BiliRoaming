@@ -2,9 +2,9 @@ package me.iacn.biliroaming.hook
 
 import android.graphics.Rect
 import android.text.SpannableString
+import android.text.style.AbsoluteSizeSpan
 import android.text.style.ForegroundColorSpan
 import android.text.style.LineBackgroundSpan
-import android.text.style.RelativeSizeSpan
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.utils.*
 import kotlin.math.roundToInt
@@ -50,7 +50,6 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 param.args[2] as Int,
                 param.args[3] as Int
             )
-            val subtitle_font_size = sPrefs.getString("subtitle_font_size", "1") + "f"
             (param.thisObject as SpannableString).run {
                 setSpan(
                     ForegroundColorSpan(sPrefs.getInt("subtitle_font_color", 0x7fffffff)),
@@ -59,7 +58,7 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     flags
                 )
                 setSpan(
-                    RelativeSizeSpan(subtitle_font_size.toFloat()),
+                    AbsoluteSizeSpan(sPrefs.getInt("subtitle_font_size", 30), true),
                     start,
                     end,
                     flags
