@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:rowCount="4"
+    android:rowCount="10"
     android:columnCount="2"
     android:orientation="horizontal"
     android:paddingStart="25dp"
@@ -24,10 +24,71 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_columnWeight="4"
-        android:hint="00000000"
-        android:tag="subtitle_font_color"
+        android:hint="FFFFFFFF"
+        android:tag="subtitle_font_color2"
         android:digits="0123456789ABCDEFabcdef"
         android:inputType="text|textCapCharacters"
-        android:autofillHints="no"
+        android:autofillHints="yes"
         tools:ignore="HardcodedText" />
+
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="1"
+        android:text="背景颜色"
+        android:singleLine="true"
+        tools:ignore="HardcodedText" />
+
+    <EditText
+        android:id="@+id/background_color"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="4"
+        android:hint="20000000"
+        android:tag="subtitle_background_color"
+        android:digits="0123456789ABCDEFabcdef"
+        android:inputType="text|textCapCharacters"
+        android:autofillHints="yes"
+        tools:ignore="HardcodedText" />
+
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="1"
+        android:text="字体大小"
+        android:singleLine="true"
+        tools:ignore="HardcodedText" />
+
+    <EditText
+        android:id="@+id/font_size"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="4"
+        android:hint="30"
+        android:tag="subtitle_font_size"
+        android:digits="0123456789"
+        android:inputType="text|textCapCharacters"
+        android:autofillHints="yes"
+        tools:ignore="HardcodedText,TextFields" />
+
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="1"
+        android:text="字体阴影"
+        android:singleLine="true"
+        tools:ignore="HardcodedText" />
+
+    <EditText
+        android:id="@+id/font_blur_solid"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="4"
+        android:hint="1"
+        android:tag="subtitle_blur_solid"
+        android:digits="0123456789"
+        android:inputType="text|textCapCharacters"
+        android:autofillHints="yes"
+        tools:ignore="HardcodedText" />
+
 </GridLayout>
