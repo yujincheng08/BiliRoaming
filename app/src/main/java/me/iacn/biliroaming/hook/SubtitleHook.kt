@@ -1,9 +1,10 @@
 package me.iacn.biliroaming.hook
 
+import android.graphics.BlurMaskFilter
+import android.graphics.Color
 import android.graphics.Rect
 import android.text.SpannableString
-import android.text.style.ForegroundColorSpan
-import android.text.style.LineBackgroundSpan
+import android.text.style.*
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.utils.*
 import kotlin.math.roundToInt
@@ -49,9 +50,34 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 param.args[2] as Int,
                 param.args[3] as Int
             )
+            val subtitle_blur_solid = sPrefs.getInt("subtitle_blur_solid", 1).toString() + "f"
             (param.thisObject as SpannableString).run {
                 setSpan(
-                    ForegroundColorSpan(sPrefs.getInt("subtitle_font_color", 0x7fffffff)),
+                    ForegroundColorSpan(Color.parseColor("#" + sPrefs.getString("subtitle_font_color2", "FFFFFFFF"))),
+                    start,
+                    end,
+                    flags
+                )
+                setSpan(
+                    BackgroundColorSpan(Color.parseColor("#" + sPrefs.getString("subtitle_background_color", "20000000"))),
+                    start,
+                    end,
+                    flags
+                )
+                setSpan(
+                    AbsoluteSizeSpan(sPrefs.getInt("subtitle_font_size", 30), true),
+                    start,
+                    end,
+                    flags
+                )
+                setSpan(
+                    StyleSpan(android.graphics.Typeface.BOLD),
+                    start,
+                    end,
+                    flags
+                )
+                setSpan(
+                    MaskFilterSpan(BlurMaskFilter(subtitle_blur_solid.toFloat(), BlurMaskFilter.Blur.SOLID)),
                     start,
                     end,
                     flags
