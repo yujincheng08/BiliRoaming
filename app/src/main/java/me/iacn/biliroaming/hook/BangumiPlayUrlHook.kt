@@ -53,38 +53,6 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             // Found from "b.ecy" in version 5.39.1
             val connection = param.thisObject as HttpURLConnection
             val urlString = connection.url.toString()
-            if (sPrefs.getBoolean(
-                    "add_4k",
-                    false
-                ) && (urlString.startsWith("https://app.bilibili.com/x/v2/param")
-                        || urlString.startsWith("https://appintl.biliapi.net/intl/gateway/app/param"))
-            ) {
-                val content = getStreamContent(param.result as InputStream)?.toJSONObject()?.let {
-                    val newContent =
-                        "{\"code\":0,\"data\":{\"player_pgc_vip_qn\":\"74,112,116,120,125\",\"player_ugc_vip_qn\":\"74,112,116,120,125\"},\"message\":\"0\"}".toJSONObject()
-                    when {
-                        it.optInt("code") == -304 -> {
-                            newContent.put("ver", it.optLong("ver"))
-                            newContent.toString()
-                        }
-                        it.optInt("code", -1) == 0 -> {
-                            it.optJSONObject("data")?.run {
-                                put(
-                                    "player_pgc_vip_qn",
-                                    newContent.optJSONObject("data")?.optString("player_pgc_vip_qn")
-                                )
-                                put(
-                                    "player_ugc_vip_qn",
-                                    newContent.optJSONObject("data")?.optString("player_ugc_vip_qn")
-                                )
-                            }
-                            it.toString()
-                        }
-                        else -> null
-                    }
-                }
-                param.result = ByteArrayInputStream(content?.toByteArray())
-            }
             if (!urlString.startsWith("https://api.bilibili.com/pgc/player/api/playurl") &&
                 !urlString.startsWith("https://apiintl.biliapi.net/intl/gateway/ogv/player/api/playurl")
             )
