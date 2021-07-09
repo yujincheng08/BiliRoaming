@@ -167,7 +167,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             mClassLoader
         )
     }
-    val checkBlueClass by Weak { mHookInfo["class_check_blue"]?.findClassOrNull(mClassLoader) }
     val kotlinJsonClass by Weak { "kotlinx.serialization.json.Json".findClassOrNull(mClassLoader) }
     val gsonConverterClass by Weak { mHookInfo["class_gson_converter"]?.findClassOrNull(mClassLoader) }
     val playerOptionsPanelHolderClass by Weak {
@@ -205,6 +204,11 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     }
     val subtitleSpanClass by Weak { mHookInfo["class_subtitle_span"]?.findClassOrNull(mClassLoader) }
     val chronosSwitchClass by Weak { mHookInfo["class_chronos_switch"]?.findClassOrNull(mClassLoader) }
+    val biliSpaceClass by Weak {
+        "com.bilibili.app.authorspace.api.BiliSpace".findClassOrNull(
+            mClassLoader
+        )
+    }
 
     val classesList by lazy { mClassLoader.allClassesList() }
     private val accessKeyInstance by lazy {
@@ -247,7 +251,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         instance = this
     }
 
-    fun checkBlue() = mHookInfo["method_check_blue"]
 
     fun fastJsonParse() = mHookInfo["method_fastjson_parse"]
 
@@ -487,8 +490,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             findDrawerMethod()
         }.checkOrPut("method_is_drawer_open") {
             findIsDrawerOpenMethod()
-        }.checkConjunctiveOrPut("class_check_blue", "method_check_blue") {
-            findCheckBlue()
         }.checkOrPut("map_ids") {
             getMapIds()
         }.checkConjunctiveOrPut("class_bangumi_params_map", "method_params_to_map") {
@@ -669,22 +670,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     it.parameterTypes.size == 1 && it.parameterTypes[0] == View::class.java &&
                     it.returnType == Boolean::class.javaPrimitiveType
         }?.name
-    }
-
-    private fun findCheckBlue(): Array<String?> {
-        if (platform != "android_b") return arrayOfNulls(2)
-        classesList.filter {
-            it.startsWith("tv.danmaku.android.util")
-        }.forEach { c ->
-            c.findClass(mClassLoader).declaredMethods.forEach {
-                if (!Modifier.isStatic(it.modifiers) && it.parameterTypes.size == 1 &&
-                    it.parameterTypes[0] == Context::class.java &&
-                    it.returnType == Boolean::class.javaPrimitiveType
-                )
-                    return arrayOf(c, it.name)
-            }
-        }
-        return arrayOfNulls(2)
     }
 
     private fun findDrawerMethod(): Array<String?> = try {

@@ -1,6 +1,5 @@
 package me.iacn.biliroaming.hook
 
-import android.content.Context
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -151,36 +150,40 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 ) {
                     fixBangumi(body)
                 }
-                if (url != null && (url.startsWith("https://app.bilibili.com/x/v2/view") ||
-                            url.startsWith("https://app.bilibili.com/x/intl/view") ||
-                            url.startsWith("https://appintl.biliapi.net/intl/gateway/app/view")) &&
-                    body.getIntField("code") == FAIL_CODE
-                ) {
-                    fixView(body, url)
-                }
-                if (url != null && url.startsWith("https://appintl.biliapi.net/intl/gateway/app/search/type") && !url.contains(
-                        "type=$TH_TYPE"
-                    )
+                if (url != null && url.startsWith("https://appintl.biliapi.net/intl/gateway/app/search/type") &&
+                    !url.contains("type=$TH_TYPE")
                 ) {
                     fixPlaySearchType(body, url)
                 }
-                if (instance.generalResponseClass?.isInstance(body) == true || instance.rxGeneralResponseClass?.isInstance(
-                        body
-                    ) == true
+                if (instance.generalResponseClass?.isInstance(body) == true ||
+                    instance.rxGeneralResponseClass?.isInstance(body) == true
                 ) {
                     val dataField =
                         if (instance.generalResponseClass?.isInstance(body) == true) "data" else instance.responseDataField().value
                     val data = body.getObjectField(dataField)
-                        ?: return@hookBeforeAllConstructors
-                    if (data.javaClass == searchAllResultClass) {
+                    if (data?.javaClass == searchAllResultClass) {
                         addThailandTag(data)
                     }
-                    if (url != null && data.javaClass == bangumiSearchPageClass &&
+                    url ?: return@hookBeforeAllConstructors
+                    if (data?.javaClass == bangumiSearchPageClass &&
                         (url.startsWith("https://app.bilibili.com/x/v2/search/type") ||
                                 url.startsWith("https://appintl.biliapi.net/intl/gateway/app/search/type"))
                         && url.contains("type=$TH_TYPE")
                     ) {
                         body.setObjectField(dataField, retrieveThailandSearch(data, url))
+                    } else if (url.startsWith("https://app.bilibili.com/x/v2/view") ||
+                        url.startsWith("https://app.bilibili.com/x/intl/view") ||
+                        url.startsWith("https://appintl.biliapi.net/intl/gateway/app/view") &&
+                        body.getIntField("code") == FAIL_CODE
+                    ) {
+                        body.setObjectField(dataField, fixView(data, url))
+                        body.setIntField("code", 0)
+                    } else if (url.startsWith("https://app.bilibili.com/x/v2/space?") && url.contains(
+                            "vmid=11783021"
+                        )
+                    ) {
+                        body.setObjectField(dataField, fixTripSpace(data))
+                        body.setIntField("code", 0)
                     }
                 }
             }
@@ -210,11 +213,6 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             ?.run {
                 hookAfterMethod("getJumpUrl", hooker = urlHook)
                 hookAfterMethod("getCommentJumpUrl", hooker = urlHook)
-            }
-
-        if (sPrefs.getBoolean("allow_download", false))
-            instance.checkBlueClass?.replaceMethod(instance.checkBlue(), Context::class.java) {
-                return@replaceMethod false
             }
 
         if (sPrefs.getBoolean("hidden", false) && sPrefs.getBoolean("search_th", false)) {
@@ -255,7 +253,17 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
     }
 
-    private fun retrieveThailandSearch(data: Any, url: String): Any {
+    private fun fixTripSpace(data: Any?): Any? {
+        instance.biliSpaceClass ?: return data
+        return instance.fastJsonClass?.callStaticMethod(
+            instance.fastJsonParse(),
+            """{"relation":-999,"guest_relation":-999,"default_tab":"video","is_params":true,"setting":{"fav_video":0,"coins_video":0,"likes_video":0,"bangumi":0,"played_game":0,"groups":0,"comic":0,"bbq":0,"dress_up":0,"disable_following":0,"live_playback":1,"close_space_medal":0,"only_show_wearing":0},"tab":{"archive":true,"article":false,"clip":false,"album":false,"favorite":false,"bangumi":false,"coin":false,"like":false,"community":false,"dynamic":true,"audios":false,"shop":false,"mall":false,"ugc_season":false,"comic":false,"cheese":false,"sub_comic":false,"activity":false,"series":false},"card":{"mid":"11783021","name":"哔哩漫游","approve":false,"sex":"保密","rank":"","face":"https://i0.hdslb.com/bfs/album/887ff772ba48558c82e21772f8a8d81cbf94ea1e.png","DisplayRank":"","regtime":0,"spacesta":0,"birthday":"","place":"","description":"该页面由哔哩漫游修复","article":0,"attentions":null,"fans":114,"friend":0,"attention":514,"sign":"该页面由哔哩漫游修复","level_info":{"current_level":6,"current_min":28800,"current_exp":28801,"next_exp":"--"},"pendant":{"pid":0,"name":"","image":"","expire":0,"image_enhance":"","image_enhance_frame":""},"nameplate":{"nid":0,"name":"","image":"","image_small":"","level":"","condition":""},"official_verify":{"type":1,"desc":"原 哔哩哔哩番剧出差 官方账号","role":3,"title":"哔哩哔哩番剧出差 官方账号"},"vip":{"vipType":0,"vipDueDate":0,"dueRemark":"","accessStatus":0,"vipStatus":0,"vipStatusWarn":"","themeType":0,"label":{"path":"","text":"","label_theme":"","text_color":"","bg_style":0,"bg_color":"","border_color":""}},"silence":0,"end_time":0,"silence_url":"","likes":{"like_num":233,"skr_tip":"视频、专栏、动态累计获赞"},"pr_info":{},"relation":{"status":1},"is_deleted":0,"honours":{"colour":{"dark":"#CE8620","normal":"#F0900B"},"tags":null},"profession":{}},"images":{"imgUrl":"https://i0.hdslb.com/bfs/album/16b6731618d911060e26f8fc95684c26bddc897c.jpg","night_imgurl":"https://i0.hdslb.com/bfs/album/ca79ebb2ebeee86c5634234c688b410661ea9623.png","has_garb":true,"goods_available":true},"live":{"roomStatus":0,"roundStatus":0,"liveStatus":0,"url":"","title":"","cover":"","online":0,"roomid":0,"broadcast_type":0,"online_hidden":0,"link":""},"archive":{"order":[{"title":"最新发布","value":"pubdate"},{"title":"最多播放","value":"click"}],"count":9999,"item":[]},"series":{"item":[]},"play_game":{"count":0,"item":[]},"article":{"count":0,"item":[],"lists_count":0,"lists":[]},"season":{"count":0,"item":[]},"coin_archive":{"count":0,"item":[]},"like_archive":{"count":0,"item":[]},"audios":{"count":0,"item":[]},"favourite2":{"count":0,"item":[]},"comic":{"count":0,"item":[]},"ugc_season":{"count":0,"item":[]},"cheese":{"count":0,"item":[]},"fans_effect":{},"tab2":[{"title":"动态","param":"dynamic"},{"title":"投稿","param":"contribute","items":[{"title":"视频","param":"video"}]}]}""",
+            instance.biliSpaceClass
+        ) ?: data
+    }
+
+    private fun retrieveThailandSearch(data: Any?, url: String): Any? {
+        data ?: return data
         if (sPrefs.getBoolean("hidden", false) && sPrefs.getBoolean("search_th", false)) {
             val content =
                 getThailandSearchBangumi(URL(URLDecoder.decode(url, Charsets.UTF_8.name())).query)
@@ -266,14 +274,14 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 instance.fastJsonParse(),
                 newData.toString(),
                 data.javaClass
-            )
-                ?: data
+            ) ?: data
         } else {
             return data
         }
     }
 
-    private fun addThailandTag(body: Any) {
+    private fun addThailandTag(body: Any?) {
+        body ?: return
         if (sPrefs.getBoolean("hidden", false) && sPrefs.getBoolean("search_th", false)) {
             searchAllResultNavInfoClass?.new()?.run {
                 setObjectField("name", "泰区")
@@ -505,23 +513,19 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
     }
 
-    private fun fixView(body: Any, urlString: String) {
+    private fun fixView(data: Any?, urlString: String): Any? {
         var queryString = urlString.substring(urlString.indexOf("?") + 1)
         queryString = queryString.replace("aid=", "id=")
-        val content = BiliRoamingApi.getView(queryString) ?: return
+        val content = BiliRoamingApi.getView(queryString) ?: return data
         Log.d("Got view information from proxy server: $content")
         val detailClass =
             "tv.danmaku.bili.ui.video.api.BiliVideoDetail".findClassOrNull(mClassLoader)
-                ?: return
-        val newJsonResult = content.toJSONObject().optJSONObject("v2_app_api") ?: return
+                ?: return data
+        val newJsonResult = content.toJSONObject().optJSONObject("v2_app_api") ?: return data
         newJsonResult.optJSONObject("season")?.optString("newest_ep_id")?.let {
             lastSeasonInfo["ep_id"] = it
         }
-        body.setIntField("code", 0)
-            .setObjectField(
-                if (instance.generalResponseClass?.isInstance(body) == true) "data" else instance.responseDataField().value,
-                detailClass.fromJson(newJsonResult)
-            )
+        return detailClass.fromJson(newJsonResult)
     }
 
     private fun isBangumiWithWatchPermission(result: JSONObject?, code: Int) = result?.let {
