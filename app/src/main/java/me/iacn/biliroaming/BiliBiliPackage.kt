@@ -209,6 +209,11 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             mClassLoader
         )
     }
+    val biliVideoDetailClass by Weak {
+        "tv.danmaku.bili.ui.video.api.BiliVideoDetail".findClassOrNull(
+            mClassLoader
+        )
+    }
 
     val classesList by lazy { mClassLoader.allClassesList() }
     private val accessKeyInstance by lazy {
@@ -316,14 +321,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             rxGeneralResponseClass?.getDeclaredField("data")?.name
         } catch (e: NoSuchFieldException) {
             "_data"
-        }
-    }
-
-    fun responseResultField() = lazy {
-        try {
-            rxGeneralResponseClass?.getDeclaredField("result")?.name
-        } catch (e: NoSuchFieldException) {
-            "_result"
         }
     }
 

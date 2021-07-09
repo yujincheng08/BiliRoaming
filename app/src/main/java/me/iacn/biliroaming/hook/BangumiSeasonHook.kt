@@ -519,9 +519,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         queryString = queryString.replace("aid=", "id=")
         val content = BiliRoamingApi.getView(queryString) ?: return data
         Log.d("Got view information from proxy server: $content")
-        val detailClass =
-            "tv.danmaku.bili.ui.video.api.BiliVideoDetail".findClassOrNull(mClassLoader)
-                ?: return data
+        val detailClass = instance.biliVideoDetailClass ?: return data
         val newJsonResult = content.toJSONObject().optJSONObject("v2_app_api") ?: return data
         newJsonResult.optJSONObject("season")?.optString("newest_ep_id")?.let {
             lastSeasonInfo["ep_id"] = it

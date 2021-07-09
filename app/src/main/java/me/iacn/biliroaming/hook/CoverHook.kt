@@ -12,6 +12,7 @@ import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.utils.*
 import java.io.File
 
@@ -54,7 +55,7 @@ class CoverHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                 title = episode?.getObjectFieldAs("longTitle") ?: ""
                             }
                             ugcClass -> activity.run {
-                                javaClass.declaredFields.firstOrNull { it.type.name == "tv.danmaku.bili.ui.video.api.BiliVideoDetail" }
+                                javaClass.declaredFields.firstOrNull { it.type == instance.biliVideoDetailClass }
                                     ?.let {
                                         url = getObjectField(it.name)?.getObjectFieldAs("mCover")
                                         filename = "av${

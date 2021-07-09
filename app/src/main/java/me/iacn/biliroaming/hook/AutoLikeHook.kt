@@ -13,8 +13,7 @@ class AutoLikeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         Log.d("startHook: AutoLike")
 
         val likeId = getId("frame1")
-        val detailClass =
-            "tv.danmaku.bili.ui.video.api.BiliVideoDetail".findClassOrNull(mClassLoader) ?: return
+        val detailClass = instance.biliVideoDetailClass ?: return
 
         val hooker: Hooker = fun(param) {
             val sec = param.thisObject ?: return
