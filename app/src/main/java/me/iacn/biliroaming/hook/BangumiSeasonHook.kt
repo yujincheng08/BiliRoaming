@@ -171,9 +171,9 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         && url.contains("type=$TH_TYPE")
                     ) {
                         body.setObjectField(dataField, retrieveThailandSearch(data, url))
-                    } else if (url.startsWith("https://app.bilibili.com/x/v2/view") ||
-                        url.startsWith("https://app.bilibili.com/x/intl/view") ||
-                        url.startsWith("https://appintl.biliapi.net/intl/gateway/app/view") &&
+                    } else if (url.startsWith("https://app.bilibili.com/x/v2/view?") ||
+                        url.startsWith("https://app.bilibili.com/x/intl/view?") ||
+                        url.startsWith("https://appintl.biliapi.net/intl/gateway/app/view?") &&
                         body.getIntField("code") == FAIL_CODE
                     ) {
                         body.setObjectField(dataField, fixView(data, url))
