@@ -146,7 +146,7 @@
     <string name="search_th_title">开启泰区番剧搜索</string>
     <string name="search_th_summary">在搜索页面添加泰区番剧搜索结果，需要解析服务器支持</string>
     <string name="customize_bottom_bar_title">自定义底栏</string>
-    <string name="customize_bottom_bar_summary">至少保留一个元素</string>
+    <string name="customize_bottom_bar_summary">至少保留一个元素（重启两次生效）</string>
     <string name="playback_speed_override_title">自定义播放速度列表</string>
     <string name="playback_speed_override_summary">空格分隔，数量不可少于原有速度列表</string>
     <string name="default_playback_speed_title">默认播放速度</string>
@@ -175,7 +175,7 @@
     <string name="keywords_filter_title_recommend_summary">过滤首页推送标题中包含指定关键词的内容</string>
     <string name="keywords_filter_title_recommend_title">关键词过滤首页推送</string>
     <string name="add_channel_title">添加频道按钮</string>
-    <string name="add_channel_summary">在底栏添加频道按钮</string>
+    <string name="add_channel_summary">在底栏添加频道按钮（重启两次生效）</string>
     <string name="custom_subtitle_title">自定义字幕样式</string>
     <string name="custom_subtitle_summary">开启后能自定义CC字幕样式，但透明度跟随弹幕透明度</string>
 </resources>
