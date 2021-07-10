@@ -17,6 +17,11 @@ import me.iacn.biliroaming.utils.*
 import java.io.File
 
 class CoverHook(classLoader: ClassLoader) : BaseHook(classLoader) {
+
+    private val gson by lazy {
+        instance.gson()?.let { instance.gsonConverterClass?.getStaticObjectField(it) }
+    }
+
     override fun startHook() {
         if (!sPrefs.getBoolean("get_cover", false)) return
         Log.d("startHook: GetCover")
@@ -50,9 +55,19 @@ class CoverHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                     viewModelField?.type?.declaredMethods?.lastOrNull { it.returnType.name == "com.bilibili.bangumi.data.page.detail.entity.BangumiUniformEpisode" }
                                 val episode =
                                     getObjectField(viewModelField?.name)?.callMethod(episodeMethod?.name)
-                                url = episode?.getObjectFieldAs("cover")
-                                filename = "ep${episode?.getLongField("epid").toString()}"
-                                title = episode?.getObjectFieldAs("longTitle") ?: ""
+                                val hasGson = episode?.javaClass?.annotations?.fold(false) { last, it ->
+                                    last || it.annotationClass.java.name.startsWith("gsonannotator")
+                                } ?: false && instance.gsonFromJson() != null && instance.gsonToJson() != null
+                                if (hasGson) {
+                                    val json = gson?.callMethodAs<String>(instance.gsonToJson(), episode)?.toJSONObject()
+                                    url = json?.optString("cover")
+                                    filename = "ep${json?.optInt("id")}"
+                                    title = json?.optString("share_copy")
+                                } else {
+                                    url = episode?.getObjectFieldAs("cover")
+                                    filename = "ep${episode?.getLongField("epid").toString()}"
+                                    title = episode?.getObjectFieldAs("longTitle") ?: ""
+                                }
                             }
                             ugcClass -> activity.run {
                                 javaClass.declaredFields.firstOrNull { it.type == instance.biliVideoDetailClass }
