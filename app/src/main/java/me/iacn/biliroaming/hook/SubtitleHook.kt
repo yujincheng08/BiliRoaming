@@ -25,8 +25,7 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
         val rect = Rect()
         val margin = 3
-        val backgroundColor = 0x7f000000
-        val backgroundSpan =
+        val backgroundSpan = fun(backgroundColor: Int) {
             LineBackgroundSpan { canvas, paint, left, right, top, _, bottom, text, start, end, _ ->
                 val width = paint.measureText(text, start, end).roundToInt()
                 val textLeft = (right - left - width) / 2
@@ -36,6 +35,7 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 canvas.drawRect(rect, paint)
                 paint.color = color
             }
+        }
 
         android.text.SpannableString::class.java.hookBeforeMethod(
             "setSpan",
@@ -50,16 +50,30 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 param.args[2] as Int,
                 param.args[3] as Int
             )
-            val subtitle_blur_solid = sPrefs.getInt("subtitle_blur_solid", 1).toString() + "f"
+            val subtitleBlurSolid = sPrefs.getInt("subtitle_blur_solid", 1).toString() + "f"
             (param.thisObject as SpannableString).run {
                 setSpan(
-                    ForegroundColorSpan(Color.parseColor("#" + sPrefs.getString("subtitle_font_color2", "FFFFFFFF"))),
+                    ForegroundColorSpan(
+                        Color.parseColor(
+                            "#" + sPrefs.getString(
+                                "subtitle_font_color2",
+                                "FFFFFFFF"
+                            )
+                        )
+                    ),
                     start,
                     end,
                     flags
                 )
                 setSpan(
-                    BackgroundColorSpan(Color.parseColor("#" + sPrefs.getString("subtitle_background_color", "20000000"))),
+                    backgroundSpan(
+                        Color.parseColor(
+                            "#" + sPrefs.getString(
+                                "subtitle_background_color",
+                                "20000000"
+                            )
+                        )
+                    ),
                     start,
                     end,
                     flags
@@ -77,7 +91,12 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     flags
                 )
                 setSpan(
-                    MaskFilterSpan(BlurMaskFilter(subtitle_blur_solid.toFloat(), BlurMaskFilter.Blur.SOLID)),
+                    MaskFilterSpan(
+                        BlurMaskFilter(
+                            subtitleBlurSolid.toFloat(),
+                            BlurMaskFilter.Blur.SOLID
+                        )
+                    ),
                     start,
                     end,
                     flags
