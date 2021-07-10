@@ -78,7 +78,8 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     if (sPrefs.getBoolean("add_channel", false)) {
                         val bottom = data?.getObjectFieldAs<MutableList<Any>>("bottom")
                         val hasChannel = bottom?.fold(false) { acc, it ->
-                            val uri = it.getObjectFieldAs<String>("uri")
+                            var uri = it.getObjectFieldAs<String>("uri")
+                            if (uri == null) uri = ""
                             acc || uri.startsWith("bilibili://pegasus/channel")
                         }
                         if (hasChannel != null && !hasChannel) {
