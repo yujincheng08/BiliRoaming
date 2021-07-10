@@ -79,7 +79,7 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         val bottom = data?.getObjectFieldAs<MutableList<Any>>("bottom")
                         val hasChannel = bottom?.fold(false) { acc, it ->
                             val uri = it.getObjectFieldAs<String>("uri")
-                            acc || uri.startsWith("bilibili://pegasus/channel")
+                            acc || uri?.startsWith("bilibili://pegasus/channel") == true
                         }
                         if (hasChannel != null && !hasChannel) {
                             val channelJson = tabClass?.new()
