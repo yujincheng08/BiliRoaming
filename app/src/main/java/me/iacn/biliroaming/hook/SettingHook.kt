@@ -67,6 +67,25 @@ class SettingHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             itemList.add(item)
         }
 
+        instance.hdHomeUserCenterClass?.hookBeforeMethod(
+            instance.addSetting(), Context::class.java, List::class.java
+        ) { param ->
+            val lastGroup = (param.args[1] as MutableList<*>).lastOrNull()
+                ?: return@hookBeforeMethod
+            val itemList =
+                lastGroup.getObjectFieldAs<MutableList<Any>?>("itemList") ?: return@hookBeforeMethod
+            itemList.forEach { if (it.getIntField("id") == SETTING_ID) return@hookBeforeMethod }
+            val item = instance.menuGroupItemClass?.new() ?: return@hookBeforeMethod
+            item.setIntField("id", SETTING_ID)
+                .setObjectField("title", "哔哩漫游设置")
+                .setObjectField(
+                    "icon",
+                    "https://i0.hdslb.com/bfs/album/276769577d2a5db1d9f914364abad7c5253086f6.png"
+                )
+                .setObjectField("uri", SETTING_URI)
+            itemList.add(item)
+        }
+
         instance.settingRouterClass?.hookBeforeAllConstructors { param ->
             if (param.args[1] != SETTING_URI) return@hookBeforeAllConstructors
             val routerType = (param.method as Constructor<*>).parameterTypes[3]
