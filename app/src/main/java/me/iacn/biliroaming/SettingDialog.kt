@@ -117,7 +117,8 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             var supportMusicNotificationHook = true
             var supportDark = true
             var supportCommentFloor = false
-            var supportAddChannel = true
+            var supportAddChannel = false
+            var supportCustomizeTab = true
             val supportFullSplash = try {
                 instance.splashInfoClass?.getMethod("getMode") != null
             } catch (e: Throwable) {
@@ -135,11 +136,16 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     if (versionCode < 6080000) supportAdd4K = true
                     if (versionCode < 6000000) supportDark = false
                     if (versionCode < 6180000) supportCommentFloor = true
+                    if (versionCode >= 6270000) supportAddChannel = true
                 }
                 "android" -> {
                     if (versionCode !in 6000000 until 6120000) supportDark = false
                     if (versionCode < 6180000) supportCommentFloor = true
-                    if (versionCode < 6270000) supportAddChannel = false
+                    if (versionCode >= 6270000) supportAddChannel = true
+                }
+                "android_hd" -> {
+                    supportDark = false
+                    supportCustomizeTab = false
                 }
             }
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
@@ -192,6 +198,10 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             }
             if (!supportAddChannel) {
                 disablePreference("add_channel")
+            }
+            if (!supportCustomizeTab) {
+                disablePreference("customize_home_tab_title")
+                disablePreference("customize_bottom_bar_title")
             }
         }
 

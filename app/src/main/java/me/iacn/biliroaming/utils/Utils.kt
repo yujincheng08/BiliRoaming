@@ -76,6 +76,7 @@ val appKey = mapOf(
     "tv.danmaku.bili" to "1d8b6e7d45233436",
     "com.bilibili.app.blue" to "07da50c9a0bf829f",
     "com.bilibili.app.in" to "bb3101000e232e27",
+    "tv.danmaku.bilibilihd" to "dfca71928277209b",
 )
 
 val currentContext by lazy { AndroidAppHelper.currentApplication() as Context }
@@ -95,6 +96,7 @@ val platform by lazy {
         ?: when (packageName) {
             Constant.BLUE_PACKAGE_NAME -> "android_b"
             Constant.PLAY_PACKAGE_NAME -> "android_i"
+            Constant.HD_PACKAGE_NAME -> "android_hd"
             else -> "android"
         }
 }
