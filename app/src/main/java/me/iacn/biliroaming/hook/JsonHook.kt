@@ -287,6 +287,16 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     if (sPrefs.getBoolean("custom_theme", false)) {
                         result.setObjectField("garbEntrance", null)
                     }
+                    if (platform == "android_hd") {
+                        val data = result.getObjectFieldAs<MutableList<Any>>("padSectionList")
+                        data?.forEach {
+                            if (it?.getObjectFieldAs<String?>("uri") == "bilibili://user_center/teenagersmode"){
+                                it.setObjectField("title", "哔哩漫游设置")
+                                    .setObjectField("uri", "bilibili://biliroaming")
+                                    .setObjectField("icon", "https://i0.hdslb.com/bfs/album/276769577d2a5db1d9f914364abad7c5253086f6.png")
+                            }
+                        }
+                    }
                 }
                 splashClass -> if (sPrefs.getBoolean("purify_splash", false) &&
                     sPrefs.getBoolean("hidden", false)
