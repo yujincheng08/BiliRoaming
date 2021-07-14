@@ -122,6 +122,11 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             mClassLoader
         )
     }
+    val HDhomeUserCenterClass by Weak {
+        "tv.danmaku.bilibilihd.ui.main.mine.HdHomeUserCenterFragment".findClassOrNull(
+            mClassLoader
+        )
+    }
     val garbHelperClass by Weak { mHookInfo["class_garb_helper"]?.findClassOrNull(mClassLoader) }
     val musicNotificationHelperClass by Weak {
         mHookInfo["class_music_notification_helper"]?.findClassOrNull(
