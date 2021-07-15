@@ -88,8 +88,8 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             it.parameterTypes.size == 1 &&
                     it.parameterTypes[0] == Int::class.javaPrimitiveType &&
                     it.returnType == Void::class.javaPrimitiveType &&
-                    Modifier.isProtected(it.modifiers)
-        }
+                    (Modifier.isProtected(it.modifiers) || Modifier.isPrivate(it.modifiers))
+        }?.apply { isAccessible = true }
     }
 
     private val updateMetadataMethod by lazy {
@@ -287,11 +287,11 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
 
         rxMediaPlayerClass?.hookBeforeMethod("onSeekComplete", mediaPlayerInterface) {
-            absMusicService?.callMethod(updateStateMethod?.name, lastState)
+            absMusicService?.let { s -> updateStateMethod?.let { m -> m(s, lastState) } }
         }
 
         corePlayerOnSeekListenerClass?.hookBeforeMethod("onSeekComplete", mediaPlayerInterface) {
-            absMusicService?.callMethod(updateStateMethod?.name, lastState)
+            absMusicService?.let { s -> updateStateMethod?.let { m -> m(s, lastState) } }
         }
 
         mediaSessionCallbackClass?.hookAfterMethod(
@@ -319,7 +319,7 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         ?.callMethod(corePlayerMethod?.name)
                         ?.callMethod(seekToMethod, position.toInt())
             }
-            absMusicService?.callMethod(updateStateMethod?.name, lastState)
+            absMusicService?.let { s -> updateStateMethod?.let { m -> m(s, lastState) } }
         }
 
         updateStateMethod?.hookBeforeMethod { param ->
@@ -330,18 +330,18 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     playerHelper?.getObjectField(rxMediaPlayerField?.name)
                         ?.getObjectField(rxMediaPlayerImplField?.name)
                         ?.getObjectField(mediaPlayerField?.name)?.run {
-                        position = callMethodAs("getCurrentPosition")
-                        speed = callMethodAs("getSpeed", 0.0f)
-                    }
+                            position = callMethodAs("getCurrentPosition")
+                            speed = callMethodAs("getSpeed", 0.0f)
+                        }
                 backgroundHelper -> playerHelper?.getObjectField(backgroundPlayerField?.name)
                     ?.callMethod(corePlayerMethod?.name)?.run {
-                    position = callMethodAs<Int>(getCurrentPositionMethod).toLong()
-                    speed = try {
-                        callMethodAs(instance.defaultSpeed(), true)
-                    } catch (e: Throwable) {
-                        callMethodAs(instance.defaultSpeed())
+                        position = callMethodAs<Int>(getCurrentPositionMethod).toLong()
+                        speed = try {
+                            callMethodAs(instance.defaultSpeed(), true)
+                        } catch (e: Throwable) {
+                            callMethodAs(instance.defaultSpeed())
+                        }
                     }
-                }
             }
         }
 
