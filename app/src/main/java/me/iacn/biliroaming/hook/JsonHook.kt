@@ -16,13 +16,17 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             "tv.danmaku.bili.ui.main2.resource.MainResourceManager\$TabResponse".findClassOrNull(
                 mClassLoader
             )
-        val accountMineClass = "tv.danmaku.bili.ui.main2.api.AccountMine".findClassOrNull(mClassLoader)
+        val accountMineClass =
+            "tv.danmaku.bili.ui.main2.api.AccountMine".findClassOrNull(mClassLoader)
         val splashClass = "tv.danmaku.bili.ui.splash.SplashData".findClassOrNull(mClassLoader)
         val tabClass =
-            "tv.danmaku.bili.ui.main2.resource.MainResourceManager\$Tab".findClassOrNull(mClassLoader)
+            "tv.danmaku.bili.ui.main2.resource.MainResourceManager\$Tab".findClassOrNull(
+                mClassLoader
+            )
         val defaultWordClass =
             "tv.danmaku.bili.ui.main2.api.SearchDefaultWord".findClassOrNull(mClassLoader)
-        val defaultKeywordClass = "com.bilibili.search.api.DefaultKeyword".findClassOrNull(mClassLoader)
+        val defaultKeywordClass =
+            "com.bilibili.search.api.DefaultKeyword".findClassOrNull(mClassLoader)
         val brandSplashDataClass =
             "tv.danmaku.bili.ui.splash.brand.BrandSplashData".findClassOrNull(mClassLoader)
         val eventEntranceClass =
@@ -32,7 +36,8 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 mClassLoader
             )
         val searchRanksClass = "com.bilibili.search.api.SearchRanks".findClassOrNull(mClassLoader)
-        val searchReferralClass = "com.bilibili.search.api.SearchReferral".findClassOrNull(mClassLoader)
+        val searchReferralClass =
+            "com.bilibili.search.api.SearchReferral".findClassOrNull(mClassLoader)
         val followingcardSearchRanksClass =
             "com.bilibili.bplus.followingcard.net.entity.b".findClassOrNull(mClassLoader)
 
@@ -85,8 +90,14 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             val channelJson = tabClass?.new()
                                 ?.setObjectField("tabId", "123")
                                 ?.setObjectField("name", "频道")
-                                ?.setObjectField("icon", "http://i0.hdslb.com/bfs/archive/e16c9303e9edbf23031f545fcafc44d1f60cd07b.png")
-                                ?.setObjectField("iconSelected", "http://i0.hdslb.com/bfs/archive/f6739d905dee57d2c0429d9b66acb3f39b294aff.png")
+                                ?.setObjectField(
+                                    "icon",
+                                    "http://i0.hdslb.com/bfs/archive/e16c9303e9edbf23031f545fcafc44d1f60cd07b.png"
+                                )
+                                ?.setObjectField(
+                                    "iconSelected",
+                                    "http://i0.hdslb.com/bfs/archive/f6739d905dee57d2c0429d9b66acb3f39b294aff.png"
+                                )
                                 ?.setObjectField("uri", "bilibili://pegasus/channel/")
                                 ?.setObjectField("reportId", "频道Bottom")
                                 ?.setIntField("pos", 2)
@@ -154,7 +165,10 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             val bangumiTW = tabClass?.new()
                                 ?.setObjectField("tabId", "60")
                                 ?.setObjectField("name", "追番（港澳台）")
-                                ?.setObjectField("uri", "bilibili://following/home_activity_tab/6544")
+                                ?.setObjectField(
+                                    "uri",
+                                    "bilibili://following/home_activity_tab/6544"
+                                )
                                 ?.setObjectField("reportId", "港澳台tab")
                                 ?.setIntField("pos", 60)
                             bangumiTW?.let { l ->
@@ -233,7 +247,9 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                     this == "bilibili://live/home" -> purifytabset.contains("live")
                                     this == "bilibili://pegasus/promo" -> purifytabset.contains("promo")
                                     this == "bilibili://pegasus/hottopic" -> purifytabset.contains("hottopic")
-                                    this == "bilibili://pgc/home" || this == "bilibili://following/home_activity_tab/6544" -> purifytabset.contains("bangumi")
+                                    this == "bilibili://pgc/home" || this == "bilibili://following/home_activity_tab/6544" -> purifytabset.contains(
+                                        "bangumi"
+                                    )
                                     this == "bilibili://pgc/home?home_flow_type=2" || this == "bilibili://pegasus/op/70465?name=影視" -> purifytabset.contains(
                                         "movie"
                                     )
@@ -263,14 +279,23 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     ) {
                         arrayOf(
                             result.getObjectFieldAs<MutableList<*>?>("sectionList"),
-                            result.getObjectFieldAs<MutableList<*>>("sectionListV2")
+                            result.getObjectFieldAs<MutableList<*>?>("sectionListV2"),
+                            result.getObjectFieldAs<MutableList<Any>?>("padSectionList")
                         ).forEach { sections ->
                             var button: Any? = null
                             sections?.removeAll { item ->
+                                if (platform == "andoid_hd") {
+                                    when (item?.getObjectFieldAs<String?>("uri")) {
+                                        "bilibili://user_center/teenagersmode" -> return@removeAll true
+                                        "bilibili://user_center/feedback" -> return@removeAll true
+                                    }
+                                }
+
                                 item?.getObjectField("button")?.run {
                                     if (!getObjectFieldAs<String?>("text").isNullOrEmpty())
                                         button = this
                                 }
+
                                 when {
                                     item?.getObjectFieldAs<String?>("title")
                                         .isNullOrEmpty() -> false
@@ -283,18 +308,6 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             }
                         }
                         accountMineClass.findFieldOrNull("vipSectionRight")?.set(result, null)
-                        if (platform == "android_hd") {
-                            result.getObjectFieldAs<MutableList<Any>>("padSectionList")
-                            ?.removeAll {
-                                it.getObjectFieldAs<String>("uri").run {
-                                    when {
-                                        this == "bilibili://user_center/teenagersmode" -> true
-                                        this == "bilibili://user_center/feedback" -> true
-                                        else -> false
-                                    }
-                                }
-                            }
-                        }
                     }
                     if (sPrefs.getBoolean("custom_theme", false)) {
                         result.setObjectField("garbEntrance", null)
