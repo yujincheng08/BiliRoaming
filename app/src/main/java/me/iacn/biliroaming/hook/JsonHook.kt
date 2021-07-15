@@ -283,6 +283,18 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             }
                         }
                         accountMineClass.findFieldOrNull("vipSectionRight")?.set(result, null)
+                        if (platform == "android_hd") {
+                            result.getObjectFieldAs<MutableList<Any>>("padSectionList")
+                            ?.removeAll {
+                                it.getObjectFieldAs<String>("uri").run {
+                                    when {
+                                        this == "bilibili://user_center/teenagersmode" -> true
+                                        this == "bilibili://user_center/feedback" -> true
+                                        else -> false
+                                    }
+                                }
+                            }
+                        }
                     }
                     if (sPrefs.getBoolean("custom_theme", false)) {
                         result.setObjectField("garbEntrance", null)
