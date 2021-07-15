@@ -263,7 +263,8 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     ) {
                         arrayOf(
                             result.getObjectFieldAs<MutableList<*>?>("sectionList"),
-                            result.getObjectFieldAs<MutableList<*>>("sectionListV2")
+                            result.getObjectFieldAs<MutableList<*>?>("sectionListV2"),
+                            result.getObjectFieldAs<MutableList<*>?>("padSectionList")
                         ).forEach { sections ->
                             var button: Any? = null
                             sections?.removeAll { item ->
