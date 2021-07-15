@@ -284,10 +284,11 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         ).forEach { sections ->
                             var button: Any? = null
                             sections?.removeAll { item ->
-                                if (platform == "andoid_hd") {
+                                if (platform == "android_hd") {
                                     when (item?.getObjectFieldAs<String?>("uri")) {
                                         "bilibili://user_center/teenagersmode" -> return@removeAll true
                                         "bilibili://user_center/feedback" -> return@removeAll true
+                                        else -> return@removeAll false
                                     }
                                 }
 
