@@ -287,6 +287,22 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     if (sPrefs.getBoolean("custom_theme", false)) {
                         result.setObjectField("garbEntrance", null)
                     }
+                    if (platform == "android_hd") {
+                        if (sPrefs.getBoolean("purify_drawer", false) &&
+                            sPrefs.getBoolean("hidden", false)
+                        ) {
+                            val data = result.getObjectFieldAs<MutableList<Any>>("padSectionList")
+                            data?.removeAll {
+                                it.getObjectFieldAs<String>("uri").run {
+                                    when {
+                                        this == "bilibili://user_center/teenagersmode" -> true
+                                        this == "bilibili://user_center/feedback" -> true
+                                        else -> false
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
                 splashClass -> if (sPrefs.getBoolean("purify_splash", false) &&
                     sPrefs.getBoolean("hidden", false)
