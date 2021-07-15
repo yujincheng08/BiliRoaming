@@ -30,6 +30,7 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 val width = paint.measureText(text, start, end).roundToInt()
                 val textLeft = (right - left - width) / 2
                 val color = paint.color
+                val backgroundColor = 0xFF000000.toInt()
                 rect.set(textLeft - margin, top, textLeft + width + margin, bottom)
                 paint.color = backgroundColor
                 canvas.drawRect(rect, paint)
