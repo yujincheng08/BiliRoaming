@@ -53,9 +53,12 @@ class SettingHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         ) { param ->
             val lastGroup = (param.args[1] as MutableList<*>).lastOrNull()
                 ?: return@hookBeforeMethod
+
             val itemList =
-                lastGroup.getObjectFieldAs<MutableList<Any>?>("itemList") ?: return@hookBeforeMethod
-            itemList.forEach { if (it.getIntField("id") == SETTING_ID) return@hookBeforeMethod }
+                if (lastGroup.javaClass != instance.menuGroupItemClass) lastGroup.getObjectFieldAs<MutableList<Any>?>(
+                    "itemList"
+                ) else param.args[1] as MutableList<Any>
+
             val item = instance.menuGroupItemClass?.new() ?: return@hookBeforeMethod
             item.setIntField("id", SETTING_ID)
                 .setObjectField("title", "哔哩漫游设置")
@@ -64,7 +67,9 @@ class SettingHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     "https://i0.hdslb.com/bfs/album/276769577d2a5db1d9f914364abad7c5253086f6.png"
                 )
                 .setObjectField("uri", SETTING_URI)
-            itemList.add(item)
+
+            itemList?.forEach { if (it.getIntField("id") == SETTING_ID) return@hookBeforeMethod }
+            itemList?.add(item)
         }
 
         instance.settingRouterClass?.hookBeforeAllConstructors { param ->

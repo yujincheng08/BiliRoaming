@@ -120,6 +120,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val homeUserCenterClass by Weak {
         "tv.danmaku.bili.ui.main2.mine.HomeUserCenterFragment".findClassOrNull(
             mClassLoader
+        )?: "tv.danmaku.bilibilihd.ui.main.mine.HdHomeUserCenterFragment".findClassOrNull(
+            mClassLoader
         )
     }
     val garbHelperClass by Weak { mHookInfo["class_garb_helper"]?.findClassOrNull(mClassLoader) }
@@ -925,7 +927,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     }?.name
 
     private fun findSettingRouterClass() = classesList.filter {
-        it.startsWith("tv.danmaku.bili.ui.main2.mine")
+        it.startsWith("tv.danmaku.bili.ui.main2")
     }.firstOrNull { c ->
         c.findClass(mClassLoader).declaredFields.filter {
             it.type == menuGroupItemClass && Modifier.isPublic(it.modifiers)
