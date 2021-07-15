@@ -23,14 +23,13 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
         }
 
-        val rect = Rect()
-        val margin = 3
-        val backgroundSpan = fun(backgroundColor: Int) {
+        val backgroundSpan = { backgroundColor: Int ->
             LineBackgroundSpan { canvas, paint, left, right, top, _, bottom, text, start, end, _ ->
                 val width = paint.measureText(text, start, end).roundToInt()
-                val textLeft = (right - left - width) / 2
+                val textLeft = (right + left - width) / 2
                 val color = paint.color
-                rect.set(textLeft - margin, top, textLeft + width + margin, bottom)
+                val rect = Rect()
+                rect.set(textLeft, top, textLeft + width, bottom)
                 paint.color = backgroundColor
                 canvas.drawRect(rect, paint)
                 paint.color = color
@@ -66,19 +65,6 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     flags
                 )
                 setSpan(
-                    backgroundSpan(
-                        Color.parseColor(
-                            "#" + sPrefs.getString(
-                                "subtitle_background_color",
-                                "20000000"
-                            )
-                        )
-                    ),
-                    start,
-                    end,
-                    flags
-                )
-                setSpan(
                     AbsoluteSizeSpan(sPrefs.getInt("subtitle_font_size", 30), true),
                     start,
                     end,
@@ -95,6 +81,20 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         BlurMaskFilter(
                             subtitleBlurSolid.toFloat(),
                             BlurMaskFilter.Blur.SOLID
+                        )
+                    ),
+                    start,
+                    end,
+                    flags
+                )
+                // should be drawn the last
+                setSpan(
+                    backgroundSpan(
+                        Color.parseColor(
+                            "#" + sPrefs.getString(
+                                "subtitle_background_color",
+                                "20000000"
+                            )
                         )
                     ),
                     start,
