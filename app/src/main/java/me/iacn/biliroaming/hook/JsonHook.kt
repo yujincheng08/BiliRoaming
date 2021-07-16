@@ -278,9 +278,9 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         sPrefs.getBoolean("hidden", false)
                     ) {
                         arrayOf(
-                            result.getObjectFieldAs<MutableList<*>?>("sectionList"),
-                            result.getObjectFieldAs<MutableList<*>?>("sectionListV2"),
-                            result.getObjectFieldAs<MutableList<Any>?>("padSectionList")
+                            result.getObjectFieldOrNullAs<MutableList<*>?>("sectionList"),
+                            result.getObjectFieldOrNullAs<MutableList<*>?>("sectionListV2"),
+                            result.getObjectFieldOrNullAs<MutableList<Any>?>("padSectionList")
                         ).forEach { sections ->
                             var button: Any? = null
                             sections?.removeAll { item ->
