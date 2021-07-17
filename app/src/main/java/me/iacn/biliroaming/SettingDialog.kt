@@ -24,7 +24,6 @@ import androidx.documentfile.provider.DocumentFile
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
-import me.iacn.biliroaming.ARGBColorChooseDialog
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.XposedInit.Companion.modulePath
 import me.iacn.biliroaming.XposedInit.Companion.moduleRes
@@ -217,33 +216,34 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         }
 
         private fun showCustomSubtitle() {
-            AlertDialog.Builder(activity).run {
-                val layout = moduleRes.getLayout(R.layout.custom_subtitle)
-                val inflater = LayoutInflater.from(context)
-                val view = inflater.inflate(layout, null)
-                val fontColor = view.findViewById<EditText>(R.id.font_color)
-                fontColor.setText(prefs.getString(fontColor.tag.toString(), "FFFFFFFF"))
-                val backgroundColor = view.findViewById<EditText>(R.id.background_color)
-                backgroundColor.setText(prefs.getString(backgroundColor.tag.toString(), "20000000"))
-                val fontSize = view.findViewById<EditText>(R.id.font_size)
-                fontSize.setText(prefs.getInt(fontSize.tag.toString(), 30).toString())
-                val fontBlurSolid = view.findViewById<EditText>(R.id.font_blur_solid)
-                fontBlurSolid.setText(prefs.getInt(fontBlurSolid.tag.toString(), 1).toString())
-
-                setTitle("自定义字幕样式")
-                setView(view)
-
-                setPositiveButton(android.R.string.ok) { _, _ ->
-                    prefs.edit().putString(fontColor.tag.toString(), fontColor.text.toString()).apply()
-                    prefs.edit().putString(backgroundColor.tag.toString(), backgroundColor.text.toString()).apply()
-                    prefs.edit().putInt(fontSize.tag.toString(), fontSize.text.toString().toInt()).apply()
-                    prefs.edit().putInt(fontBlurSolid.tag.toString(), fontBlurSolid.text.toString().toInt()).apply()
-                }
-                setNegativeButton("拾色器") { _, _ ->
-                    val colorDialog = ARGBColorChooseDialog(view.context, 0xfffb7299.toInt())
-                    colorDialog.show()
-                }
-            }.show()
+//            AlertDialog.Builder(activity).run {
+//                val layout = moduleRes.getLayout(R.layout.custom_subtitle)
+//                val inflater = LayoutInflater.from(context)
+//                val view = inflater.inflate(layout, null)
+//                val fontColor = view.findViewById<EditText>(R.id.font_color)
+//                fontColor.setText(prefs.getString(fontColor.tag.toString(), "FFFFFFFF"))
+//                val backgroundColor = view.findViewById<EditText>(R.id.background_color)
+//                backgroundColor.setText(prefs.getString(backgroundColor.tag.toString(), "20000000"))
+//                val fontSize = view.findViewById<EditText>(R.id.font_size)
+//                fontSize.setText(prefs.getInt(fontSize.tag.toString(), 30).toString())
+//                val fontBlurSolid = view.findViewById<EditText>(R.id.font_blur_solid)
+//                fontBlurSolid.setText(prefs.getInt(fontBlurSolid.tag.toString(), 1).toString())
+//
+//                setTitle("自定义字幕样式")
+//                setView(view)
+//
+//                setPositiveButton(android.R.string.ok) { _, _ ->
+//                    prefs.edit().putString(fontColor.tag.toString(), fontColor.text.toString()).apply()
+//                    prefs.edit().putString(backgroundColor.tag.toString(), backgroundColor.text.toString()).apply()
+//                    prefs.edit().putInt(fontSize.tag.toString(), fontSize.text.toString().toInt()).apply()
+//                    prefs.edit().putInt(fontBlurSolid.tag.toString(), fontBlurSolid.text.toString().toInt()).apply()
+//                }
+//                setNegativeButton("拾色器") { _, _ ->
+//                    val colorDialog = ARGBColorChooseDialog(view.context, 0xfffb7299.toInt())
+//                    colorDialog.show()
+//                }
+//            }.show()
+            CustomSubtitleDialog(activity, prefs).show()
         }
 
         override fun onPreferenceChange(preference: Preference, newValue: Any): Boolean {

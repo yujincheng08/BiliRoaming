@@ -11,18 +11,7 @@ import kotlin.math.roundToInt
 
 
 class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
-    override fun startHook() {
-        if (!sPrefs.getBoolean("custom_subtitle", false)) return
-        Log.d("startHook: Subtitle")
-
-        instance.chronosSwitchClass?.hookAfterConstructor { param ->
-            param.thisObject.javaClass.declaredFields.forEach {
-                if (it.type == Boolean::class.javaObjectType) {
-                    param.thisObject.setObjectField(it.name, false)
-                }
-            }
-        }
-
+    companion object {
         val backgroundSpan = { backgroundColor: Int ->
             LineBackgroundSpan { canvas, paint, left, right, top, _, bottom, text, start, end, _ ->
                 val width = paint.measureText(text, start, end).roundToInt()
@@ -33,6 +22,60 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 paint.color = backgroundColor
                 canvas.drawRect(rect, paint)
                 paint.color = color
+            }
+        }
+
+        fun subtitleStylizeRunner(
+            subtitle: SpannableString,
+            start: Int,
+            end: Int,
+            flags: Int,
+            blurSolid: Int,
+            fontColor: String,
+            fontSize: Int,
+            bgColor: String
+        ) {
+            val subtitleBlurSolid = blurSolid.toString() + "f"
+            subtitle.setSpan(
+                ForegroundColorSpan(Color.parseColor("#$fontColor")), start, end, flags
+            )
+            subtitle.setSpan(
+                AbsoluteSizeSpan(fontSize, true),
+                start,
+                end,
+                flags
+            )
+            subtitle.setSpan(
+                StyleSpan(android.graphics.Typeface.BOLD),
+                start,
+                end,
+                flags
+            )
+            subtitle.setSpan(
+                MaskFilterSpan(
+                    BlurMaskFilter(
+                        subtitleBlurSolid.toFloat(),
+                        BlurMaskFilter.Blur.SOLID
+                    )
+                ),
+                start,
+                end,
+                flags
+            )
+            // should be drawn the last
+            subtitle.setSpan(backgroundSpan(Color.parseColor("#$bgColor")), start, end, flags)
+        }
+    }
+
+    override fun startHook() {
+        if (!sPrefs.getBoolean("custom_subtitle", false)) return
+        Log.d("startHook: Subtitle")
+
+        instance.chronosSwitchClass?.hookAfterConstructor { param ->
+            param.thisObject.javaClass.declaredFields.forEach {
+                if (it.type == Boolean::class.javaObjectType) {
+                    param.thisObject.setObjectField(it.name, false)
+                }
             }
         }
 
@@ -49,62 +92,21 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 param.args[2] as Int,
                 param.args[3] as Int
             )
-            val subtitleBlurSolid = sPrefs.getInt("subtitle_blur_solid", 1).toString() + "f"
             (param.thisObject as SpannableString).run {
-                setSpan(
-                    ForegroundColorSpan(
-                        Color.parseColor(
-                            "#" + sPrefs.getString(
-                                "subtitle_font_color2",
-                                "FFFFFFFF"
-                            )
-                        )
-                    ),
-                    start,
-                    end,
-                    flags
-                )
-                setSpan(
-                    AbsoluteSizeSpan(sPrefs.getInt("subtitle_font_size", 30), true),
-                    start,
-                    end,
-                    flags
-                )
-                setSpan(
-                    StyleSpan(android.graphics.Typeface.BOLD),
-                    start,
-                    end,
-                    flags
-                )
-                setSpan(
-                    MaskFilterSpan(
-                        BlurMaskFilter(
-                            subtitleBlurSolid.toFloat(),
-                            BlurMaskFilter.Blur.SOLID
-                        )
-                    ),
-                    start,
-                    end,
-                    flags
-                )
-                // should be drawn the last
-                setSpan(
-                    backgroundSpan(
-                        Color.parseColor(
-                            "#" + sPrefs.getString(
-                                "subtitle_background_color",
-                                "20000000"
-                            )
-                        )
-                    ),
-                    start,
-                    end,
-                    flags
+                subtitleStylizeRunner(
+                    this, start, end, flags,
+                    sPrefs.getInt("subtitle_blur_solid", 1),
+                    sPrefs.getString(
+                            "subtitle_font_color2",
+                            "FFFFFFFF"
+                    )!!, sPrefs.getInt("subtitle_font_size", 30),
+                     sPrefs.getString(
+                            "subtitle_background_color",
+                            "20000000"
+                    )!!
                 )
                 param.result = null
             }
         }
-
-
     }
 }
