@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignBottom="@id/tv_pvBlack"
+            android:layout_marginBottom="-5dp"
+            android:background="#000" />
+
+        <TextView
+            android:id="@+id/tv_pvBlack"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:layout_margin="5dp" />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignBottom="@id/tv_pvWhite"
+            android:layout_marginBottom="-5dp"
+            android:background="#FFF" />
+
+        <TextView
+            android:id="@+id/tv_pvWhite"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:layout_margin="5dp" />
+    </RelativeLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="1"
+            android:singleLine="true"
+            android:text="字体颜色"
+            tools:ignore="HardcodedText" />
+
+        <EditText
+            android:id="@+id/font_color"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="4"
+            android:layout_weight="1"
+            android:autofillHints="yes"
+            android:digits="0123456789ABCDEFabcdef"
+            android:hint="FFFFFFFF"
+            android:inputType="text|textCapCharacters"
+            android:tag="subtitle_font_color2"
+            tools:ignore="HardcodedText" />
+
+        <Button
+            android:id="@+id/btn_chooseColorFc"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="取色"
+            tools:ignore="HardcodedText" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="1"
+            android:singleLine="true"
+            android:text="背景颜色"
+            tools:ignore="HardcodedText" />
+
+        <EditText
+            android:id="@+id/background_color"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="4"
+            android:layout_weight="1"
+            android:autofillHints="yes"
+            android:digits="0123456789ABCDEFabcdef"
+            android:hint="20000000"
+            android:inputType="text|textCapCharacters"
+            android:tag="subtitle_background_color"
+            tools:ignore="HardcodedText" />
+
+        <Button
+            android:id="@+id/btn_chooseColorBc"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="取色"
+            tools:ignore="HardcodedText" />
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="1"
+            android:singleLine="true"
+            android:text="字体大小"
+            tools:ignore="HardcodedText" />
+
+        <EditText
+            android:id="@+id/font_size"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="4"
+            android:autofillHints="yes"
+            android:digits="0123456789"
+            android:hint="30"
+            android:inputType="text|textCapCharacters"
+            android:tag="subtitle_font_size"
+            tools:ignore="HardcodedText,TextFields" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="1"
+            android:singleLine="true"
+            android:text="字体阴影"
+            tools:ignore="HardcodedText" />
+
+        <EditText
+            android:id="@+id/font_blur_solid"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="4"
+            android:autofillHints="yes"
+            android:digits="0123456789"
+            android:hint="1"
+            android:inputType="text|textCapCharacters"
+            android:tag="subtitle_blur_solid"
+            tools:ignore="HardcodedText" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="1"
+            android:singleLine="true"
+            android:text="测试内容"
+            tools:ignore="HardcodedText" />
+
+        <EditText
+            android:id="@+id/et_testText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:importantForAutofill="no"
+            android:inputType="text"
+            android:text="字幕样式预览"
+            tools:ignore="HardcodedText,LabelFor" />
+
+        <Button
+            android:id="@+id/btn_pv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="预览"
+            tools:ignore="HardcodedText" />
+    </LinearLayout>
+
+
+</LinearLayout>

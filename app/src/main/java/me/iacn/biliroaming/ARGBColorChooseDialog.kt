@@ -54,7 +54,7 @@ class ARGBColorChooseDialog(context: Context, defColor: Int) : AlertDialog.Build
         val listener: OnSeekBarChangeListener = object : OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
                 if (fromUser) {
-                    val color = Color.argb(sbColorA.progress, sbColorR.progress, sbColorG.progress, sbColorB.progress).toInt()
+                    val color = Color.argb(sbColorA.progress, sbColorR.progress, sbColorG.progress, sbColorB.progress)
                     etColor.setText(String.format("%08X", 0xFFFFFFFF.toInt() and color))
                 }
                 tvColorA.text = sbColorA.progress.toString()
@@ -99,8 +99,8 @@ class ARGBColorChooseDialog(context: Context, defColor: Int) : AlertDialog.Build
         setView(view)
         setEditTextListener()
         setSeekBarListener()
-        updateValue(defColor.toInt())
-        etColor.setText(String.format("%08X", 0xFFFFFFFF.toInt() and defColor.toInt()))
+        updateValue(defColor)
+        etColor.setText(String.format("%08X", 0xFFFFFFFF.toInt() and defColor))
         setTitle("拾色器")
         setNegativeButton("取消", null)
     }
