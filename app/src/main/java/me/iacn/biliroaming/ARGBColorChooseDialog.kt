@@ -100,7 +100,7 @@ class ARGBColorChooseDialog(context: Context, defColor: Int) : AlertDialog.Build
         setEditTextListener()
         setSeekBarListener()
         updateValue(defColor)
-        etColor.setText(String.format("%08X", 0xFFFFFFFF.toInt() and defColor.toInt()))
+        etColor.setText(String.format("%08X", 0xFFFFFFFF.toInt() and defColor))
         setTitle("拾色器")
         setNegativeButton("取消", null)
     }

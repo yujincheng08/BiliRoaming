@@ -3,6 +3,7 @@ package me.iacn.biliroaming.hook
 import android.graphics.BlurMaskFilter
 import android.graphics.Color
 import android.graphics.Rect
+import android.graphics.Typeface
 import android.text.SpannableString
 import android.text.style.*
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
@@ -46,7 +47,7 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 flags
             )
             subtitle.setSpan(
-                StyleSpan(android.graphics.Typeface.BOLD),
+                StyleSpan(Typeface.BOLD),
                 start,
                 end,
                 flags
