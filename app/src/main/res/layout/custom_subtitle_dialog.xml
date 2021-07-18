@@ -5,19 +5,43 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <TextView
-        android:id="@+id/tv_pvBlack"
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="#000"
-        android:gravity="center" />
+        android:layout_height="wrap_content">
 
-    <TextView
-        android:id="@+id/tv_pvWhite"
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignBottom="@id/tv_pvBlack"
+            android:layout_marginBottom="-5dp"
+            android:background="#000" />
+
+        <TextView
+            android:id="@+id/tv_pvBlack"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:layout_margin="5dp" />
+    </RelativeLayout>
+
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="#FFF"
-        android:gravity="center" />
+        android:layout_height="wrap_content">
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignBottom="@id/tv_pvWhite"
+            android:layout_marginBottom="-5dp"
+            android:background="#FFF" />
+
+        <TextView
+            android:id="@+id/tv_pvWhite"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:layout_margin="5dp" />
+    </RelativeLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -46,7 +70,7 @@
             tools:ignore="HardcodedText" />
 
         <Button
-            android:id="@+id/choose_colorFc"
+            android:id="@+id/btn_chooseColorFc"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="取色"
@@ -80,7 +104,7 @@
             tools:ignore="HardcodedText" />
 
         <Button
-            android:id="@+id/choose_colorBc"
+            android:id="@+id/btn_chooseColorBc"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="取色"
@@ -155,16 +179,19 @@
 
         <EditText
             android:id="@+id/et_testText"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:text="字幕样式预览"
+            tools:ignore="HardcodedText" />
+
+        <Button
+            android:id="@+id/btn_pv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="预览"
             tools:ignore="HardcodedText" />
     </LinearLayout>
 
-    <Button
-        android:id="@+id/btn_pv"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="预览"
-        tools:ignore="HardcodedText" />
+
 </LinearLayout>

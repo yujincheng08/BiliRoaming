@@ -3,6 +3,7 @@ package me.iacn.biliroaming
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.SharedPreferences
+import android.graphics.Color
 import android.text.SpannableString
 import android.text.Spanned
 import android.view.LayoutInflater
@@ -12,7 +13,7 @@ import android.widget.TextView
 import me.iacn.biliroaming.XposedInit.Companion.moduleRes
 import me.iacn.biliroaming.hook.SubtitleHook
 
-class CustomSubtitleDialog(activity: Activity,prefs: SharedPreferences) : AlertDialog.Builder(activity)  {
+class CustomSubtitleDialog(val activity: Activity,prefs: SharedPreferences) : AlertDialog.Builder(activity)  {
     init {
         val layout = moduleRes.getLayout(R.layout.custom_subtitle_dialog)
         val inflater = LayoutInflater.from(context)
@@ -33,9 +34,30 @@ class CustomSubtitleDialog(activity: Activity,prefs: SharedPreferences) : AlertD
             val bc = backgroundColor.text.toString()
             val fs = fontSize.text.toString().toInt()
             val fbs = fontBlurSolid.text.toString().toInt()
-            SubtitleHook.subtitleStylizeRunner(spannableString, 0, spannableString.length, Spanned.SPAN_INCLUSIVE_EXCLUSIVE, fbs, fc, fs, bc)
-            view.findViewById<TextView>(R.id.tv_pvBlack).text = spannableString
-            view.findViewById<TextView>(R.id.tv_pvWhite).text = spannableString
+            SubtitleHook.subtitleStylizeRunner(spannableString, 0, spannableString.length, Spanned.SPAN_INCLUSIVE_EXCLUSIVE, fbs, fc, fs, "00000000")
+            view.findViewById<TextView>(R.id.tv_pvBlack).apply {
+                text = spannableString
+                setBackgroundColor(Color.parseColor("#$bc"))
+            }
+            view.findViewById<TextView>(R.id.tv_pvWhite).apply {
+                text = spannableString
+                setBackgroundColor(Color.parseColor("#$bc"))
+            }
+        }
+
+        view.findViewById<Button>(R.id.btn_chooseColorBc).setOnClickListener {
+            ARGBColorChooseDialog(activity, Color.parseColor("#${backgroundColor.text}")).apply {
+                setPositiveButton(android.R.string.ok) {_, _ ->
+                    backgroundColor.setText(String.format("%08X", 0xFFFFFFFF.toInt() and color))
+                }
+            }.show()
+        }
+        view.findViewById<Button>(R.id.btn_chooseColorFc).setOnClickListener {
+            ARGBColorChooseDialog(activity, Color.parseColor("#${fontColor.text}")).apply {
+                setPositiveButton(android.R.string.ok) {_, _ ->
+                    fontColor.setText(String.format("%08X", 0xFFFFFFFF.toInt() and color))
+                }
+            }.show()
         }
 
         setPositiveButton(android.R.string.ok) { _, _ ->
