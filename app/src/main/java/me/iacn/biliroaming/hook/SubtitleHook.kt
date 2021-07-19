@@ -13,8 +13,10 @@ import kotlin.math.roundToInt
 
 class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     companion object {
-        val backgroundSpan = { backgroundColor: Int ->
+        val backgroundSpan = { backgroundColor: Int, textSize: Int ->
             LineBackgroundSpan { canvas, paint, left, right, top, _, bottom, text, start, end, _ ->
+                val ts = paint.textSize
+                paint.textSize = textSize.toFloat()
                 val width = paint.measureText(text, start, end).roundToInt()
                 val textLeft = (right + left - width) / 2
                 val color = paint.color
@@ -22,6 +24,7 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 rect.set(textLeft, top, textLeft + width, bottom)
                 paint.color = backgroundColor
                 canvas.drawRect(rect, paint)
+                paint.textSize = ts
                 paint.color = color
             }
         }
@@ -41,7 +44,7 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 ForegroundColorSpan(Color.parseColor("#$fontColor")), start, end, flags
             )
             subtitle.setSpan(
-                AbsoluteSizeSpan(fontSize, true),
+                AbsoluteSizeSpan(fontSize, false),
                 start,
                 end,
                 flags
@@ -52,19 +55,21 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 end,
                 flags
             )
-            subtitle.setSpan(
-                MaskFilterSpan(
-                    BlurMaskFilter(
-                        subtitleBlurSolid.toFloat(),
-                        BlurMaskFilter.Blur.SOLID
-                    )
-                ),
-                start,
-                end,
-                flags
-            )
+            if (blurSolid != 0) {
+                subtitle.setSpan(
+                    MaskFilterSpan(
+                        BlurMaskFilter(
+                            subtitleBlurSolid.toFloat(),
+                            BlurMaskFilter.Blur.SOLID
+                        )
+                    ),
+                    start,
+                    end,
+                    flags
+                )
+            }
             // should be drawn the last
-            subtitle.setSpan(backgroundSpan(Color.parseColor("#$bgColor")), start, end, flags)
+            subtitle.setSpan(backgroundSpan(Color.parseColor("#$bgColor"), fontSize), start, end, flags)
         }
     }
 

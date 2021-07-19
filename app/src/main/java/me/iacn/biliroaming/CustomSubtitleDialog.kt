@@ -34,17 +34,10 @@ class CustomSubtitleDialog(val activity: Activity,prefs: SharedPreferences) : Al
             val bc = backgroundColor.text.toString()
             val fs = fontSize.text.toString().toInt()
             val fbs = fontBlurSolid.text.toString().toInt()
-            SubtitleHook.subtitleStylizeRunner(spannableString, 0, spannableString.length, Spanned.SPAN_INCLUSIVE_EXCLUSIVE, fbs, fc, fs, "00000000")
-            view.findViewById<TextView>(R.id.tv_pvBlack).apply {
-                text = spannableString
-                setBackgroundColor(Color.parseColor("#$bc"))
-            }
-            view.findViewById<TextView>(R.id.tv_pvWhite).apply {
-                text = spannableString
-                setBackgroundColor(Color.parseColor("#$bc"))
-            }
+            SubtitleHook.subtitleStylizeRunner(spannableString, 0, spannableString.length, Spanned.SPAN_INCLUSIVE_EXCLUSIVE, fbs, fc, fs, bc)
+            view.findViewById<TextView>(R.id.tv_pvBlack).text = spannableString
+            view.findViewById<TextView>(R.id.tv_pvWhite).text = spannableString
         }
-
         view.findViewById<Button>(R.id.btn_chooseColorBc).setOnClickListener {
             ARGBColorChooseDialog(activity, Color.parseColor("#${backgroundColor.text}")).apply {
                 setPositiveButton(android.R.string.ok) {_, _ ->
