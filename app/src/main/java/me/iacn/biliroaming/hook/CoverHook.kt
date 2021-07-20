@@ -23,16 +23,16 @@ class CoverHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     override fun startHook() {
-        if (!sPrefs.getBoolean("get_cover", false)) return
-        Log.d("startHook: GetCover")
-        arrayOf(bgmClass, ugcClass, liveClass).forEach {
-            it?.hookAfterMethod(
-                "onViewCreated",
-                View::class.java,
-                Bundle::class.java,
-                hooker = hooker
-            )
-        }
+//        if (!sPrefs.getBoolean("get_cover", false)) return
+//        Log.d("startHook: GetCover")
+//        arrayOf(bgmClass, ugcClass, liveClass).forEach {
+//            it?.hookAfterMethod(
+//                "onViewCreated",
+//                View::class.java,
+//                Bundle::class.java,
+//                hooker = hooker
+//            )
+//        }
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -199,9 +199,9 @@ class CoverHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         )
     }
     val ugcClass by Weak {
-        "tv.danmaku.bili.ui.video.playerv2.UgcPlayerFragment".findClass(
+        "tv.danmaku.bili.ui.video.playerv2.UgcPlayerFragment".findClassOrNull(
             mClassLoader
-        )
+        ) ?: "tv.danmaku.bili.videopage.player.UgcPlayerFragment".findClassOrNull(mClassLoader)
     }
     val liveClass by Weak {
         "com.bilibili.bililive.blps.core.business.player.container.AbsLivePlayerFragment".findClass(

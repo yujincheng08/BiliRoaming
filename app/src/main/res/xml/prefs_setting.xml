@@ -117,10 +117,10 @@
             android:summary="@string/custom_download_thread_summary"
             android:title="@string/custom_download_thread_title" />
 
-        <SwitchPreference
-            android:key="get_cover"
-            android:summary="@string/get_cover_summary"
-            android:title="@string/get_cover_title" />
+<!--        <SwitchPreference-->
+<!--            android:key="get_cover"-->
+<!--            android:summary="@string/get_cover_summary"-->
+<!--            android:title="@string/get_cover_title" />-->
 
         <EditTextPreference
             android:key="playback_speed_override"

@@ -1,5 +1,6 @@
 package me.iacn.biliroaming.hook
 
+import android.os.Environment
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.utils.*
 import java.lang.reflect.Type
@@ -280,7 +281,7 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         arrayOf(
                             result.getObjectFieldOrNullAs<MutableList<*>?>("sectionList"),
                             result.getObjectFieldOrNullAs<MutableList<*>?>("sectionListV2"),
-                            result.getObjectFieldOrNullAs<MutableList<Any>?>("padSectionList")
+                            result.getObjectFieldOrNullAs<MutableList<*>?>("padSectionList")
                         ).forEach { sections ->
                             var button: Any? = null
                             sections?.removeAll { item ->
