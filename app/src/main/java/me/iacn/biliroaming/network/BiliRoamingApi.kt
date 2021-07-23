@@ -62,7 +62,7 @@ object BiliRoamingApi {
         seasonJson.optJSONObject("result")?.also {
             if (hidden) fixHiddenSeason(it)
             fixEpisodes(it)
-            if (hidden) fixSection(it)
+            if (hidden || it.has("section_bottom_desc")) fixSection(it)
             fixPrevueSection(it)
             reconstructModules(it)
             fixRight(it)
@@ -110,7 +110,7 @@ object BiliRoamingApi {
             section.put("episode_id", i)
             val newEpisodes = JSONArray()
             for (episode in section.optJSONArray("episodes").orEmpty()) {
-                newEpisodes.put(episodeMap[episode.optInt("id")])
+                newEpisodes.put(episodeMap[episode.optInt("id")] ?: episode)
             }
             section.put("episodes", newEpisodes)
         }
@@ -123,7 +123,7 @@ object BiliRoamingApi {
         val newEpisodes = JSONArray()
         for (episode in sectionJson.optJSONObject("main_section")?.optJSONArray("episodes")
             .orEmpty()) {
-            newEpisodes.put(episodeMap[episode.optInt("id")])
+            newEpisodes.put(episodeMap[episode.optInt("id")] ?: episode)
         }
         result.put("episodes", newEpisodes)
     }
