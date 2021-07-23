@@ -60,9 +60,9 @@ object BiliRoamingApi {
         var seasonJson = getContent(builder.toString())?.toJSONObject() ?: return null
         var fixThailandSeasonFlag = false
         seasonJson.optJSONObject("result")?.also {
-            if (hidden) fixHiddenSeason(it)
+            if (hidden || it.has("section_bottom_desc")) fixHiddenSeason(it)
             fixEpisodes(it)
-            if (hidden) fixSection(it)
+            if (hidden || it.has("section_bottom_desc")) fixSection(it)
             fixPrevueSection(it)
             reconstructModules(it)
             fixRight(it)
