@@ -178,4 +178,6 @@
     <string name="add_channel_summary">在底栏添加频道按钮（重启两次生效）</string>
     <string name="custom_subtitle_title">自定义字幕样式</string>
     <string name="custom_subtitle_summary">开启后能自定义CC字幕样式，但透明度跟随弹幕透明度</string>
+    <string name="purify_space_title">净化用户空间</string>
+    <string name="purify_space_summary">空间里的推广橱窗及商品标签页</string>
 </resources>

@@ -41,6 +41,8 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             "com.bilibili.search.api.SearchReferral".findClassOrNull(mClassLoader)
         val followingcardSearchRanksClass =
             "com.bilibili.bplus.followingcard.net.entity.b".findClassOrNull(mClassLoader)
+        val spaceClass =
+            "com.bilibili.app.authorspace.api.BiliSpace".findClassOrNull(mClassLoader)
 
         instance.fastJsonClass?.hookAfterMethod(
             instance.fastJsonParse(),
@@ -349,6 +351,17 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 cursorListClass -> if (sPrefs.getBoolean("comment_floor", false)) {
                     result.getObjectField("cursor")
                         ?.setObjectField("supportMode", intArrayOf(1, 2, 3))
+                }
+                spaceClass -> if (sPrefs.getBoolean("purify_space", false)) {
+                    // Delete field "ad_source_content_v2"
+                    result.setObjectField("adV2", null)
+
+                    // Delete field "tab2" when "param == shop"
+                    val tab = result?.getObjectFieldAs<MutableList<*>?>("tab")
+                    tab?.removeAll {
+                        val uri = it?.getObjectFieldAs<String?>("param")
+                        uri?.startsWith("shop") ?: false
+                    }
                 }
             }
         }
