@@ -353,11 +353,9 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         ?.setObjectField("supportMode", intArrayOf(1, 2, 3))
                 }
                 spaceClass -> {
-                    if (sPrefs.getStringSet("customize_space", emptySet())
-                            ?.isNotEmpty() == true
-                    ) {
-                        val purifySpaceSet =
-                            sPrefs.getStringSet("customize_space", emptySet()).orEmpty()
+                    var purifySpaceSet = sPrefs.getStringSet("customize_space", emptySet())
+                    if (purifySpaceSet?.isNotEmpty() == true) {
+                        purifySpaceSet = purifySpaceSet.orEmpty()
                         var purifySpaceList = listOf<String>("liveEntry","chargeResult","guard","archiveVideo","article",
                             "audio","season","coinVideo","recommendVideo","followComicList","spaceGame","adV2",
                             "cheeseVideo","fansDress","favoriteBox","comicList","ugcSeasonList")
