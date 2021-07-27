@@ -356,23 +356,24 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     var purifySpaceSet = sPrefs.getStringSet("customize_space", emptySet())
                     if (purifySpaceSet?.isNotEmpty() == true) {
                         purifySpaceSet = purifySpaceSet.orEmpty()
-                        var purifySpaceList = listOf<String>("liveEntry","chargeResult","guard","archiveVideo","article",
-                            "audio","season","coinVideo","recommendVideo","followComicList","spaceGame","adV2",
-                            "cheeseVideo","fansDress","favoriteBox","comicList","ugcSeasonList")
+                        var purifySpaceList = listOf<String>("liveEntry","chargeResult","guard","archiveVideo",
+                            "article","audio","season","coinVideo","recommendVideo","followComicList","spaceGame",
+                            "adV2","cheeseVideo","fansDress","favoriteBox","comicList","ugcSeasonList")
                         purifySpaceList.forEach {
                             if (purifySpaceSet.contains(it)) result?.setObjectField(it, null)
                         }
                         // Exceptions (adV2 -> ad + adV2)
                         if (purifySpaceSet.contains("adV2")) result?.setObjectField("ad", null)
+                        
                         val tab = result?.getObjectFieldAs<MutableList<*>?>("tab")
                         tab?.removeAll {
                             it?.getObjectFieldAs<String>("param").run {
-                                when {
-                                    this == "home" -> purifySpaceSet.contains("pageHome")
-                                    this == "dynamic" -> purifySpaceSet.contains("pageDynamic")
-                                    this == "contribute" -> purifySpaceSet.contains("pageContribute")
-                                    this == "shop" -> purifySpaceSet.contains("pageShop")
-                                    this == "bangumi" -> purifySpaceSet.contains("pageBangumi")
+                                when(this) {
+                                    "home" -> purifySpaceSet.contains("pageHome")
+                                    "dynamic" -> purifySpaceSet.contains("pageDynamic")
+                                    "contribute" -> purifySpaceSet.contains("pageContribute")
+                                    "shop" -> purifySpaceSet.contains("pageShop")
+                                    "bangumi" -> purifySpaceSet.contains("pageBangumi")
                                     else -> false
                                 }
                             }
