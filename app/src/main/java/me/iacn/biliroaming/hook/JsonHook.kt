@@ -352,15 +352,33 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     result.getObjectField("cursor")
                         ?.setObjectField("supportMode", intArrayOf(1, 2, 3))
                 }
-                spaceClass -> if (sPrefs.getBoolean("purify_space", false)) {
-                    // Delete field "ad_source_content_v2"
-                    result.setObjectField("adV2", null)
-
-                    // Delete field "tab2" when "param == shop"
-                    val tab = result?.getObjectFieldAs<MutableList<*>?>("tab")
-                    tab?.removeAll {
-                        val uri = it?.getObjectFieldAs<String?>("param")
-                        uri?.startsWith("shop") ?: false
+                spaceClass -> {
+                    if (sPrefs.getStringSet("customize_space", emptySet())
+                            ?.isNotEmpty() == true
+                    ) {
+                        val purifySpaceSet =
+                            sPrefs.getStringSet("customize_space", emptySet()).orEmpty()
+                        var purifySpaceList = listOf<String>("liveEntry","chargeResult","guard","archiveVideo","article",
+                            "audio","season","coinVideo","recommendVideo","followComicList","spaceGame","adV2",
+                            "cheeseVideo","fansDress","favoriteBox","comicList","ugcSeasonList")
+                        purifySpaceList.forEach {
+                            if (purifySpaceSet.contains(it)) result?.setObjectField(it, null)
+                        }
+                        // Exceptions (adV2 -> ad + adV2)
+                        if (purifySpaceSet.contains("adV2")) result?.setObjectField("ad", null)
+                        val tab = result?.getObjectFieldAs<MutableList<*>?>("tab")
+                        tab?.removeAll {
+                            it?.getObjectFieldAs<String>("param").run {
+                                when {
+                                    this == "home" -> purifySpaceSet.contains("pageHome")
+                                    this == "dynamic" -> purifySpaceSet.contains("pageDynamic")
+                                    this == "contribute" -> purifySpaceSet.contains("pageContribute")
+                                    this == "shop" -> purifySpaceSet.contains("pageShop")
+                                    this == "bangumi" -> purifySpaceSet.contains("pageBangumi")
+                                    else -> false
+                                }
+                            }
+                        }
                     }
                 }
             }
