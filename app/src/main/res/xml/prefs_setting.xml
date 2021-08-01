@@ -258,11 +258,13 @@
             android:dependency="hidden"
             android:key="purify_endpage"
             android:title="@string/purify_endpage_title" />
-        <SwitchPreference
+        <MultiSelectListPreference
             android:dependency="hidden"
-            android:key="purify_space"
-            android:summary="@string/purify_space_summary"
-            android:title="@string/purify_space_title" />
+            android:entries="@array/space_entries"
+            android:entryValues="@array/space_values"
+            android:key="customize_space"
+            android:summary="@string/customize_space_summary"
+            android:title="@string/customize_space_title" />
     </PreferenceCategory>
 
     <PreferenceCategory
