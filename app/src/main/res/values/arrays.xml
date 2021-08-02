@@ -105,11 +105,11 @@
         <item>ugc season list</item>
     </string-array>
     <string-array name="space_values">
-        <item>pageHome</item>
-        <item>pageDynamic</item>
-        <item>pageContribute</item>
-        <item>pageShop</item>
-        <item>pageBangumi</item>
+        <item>tab.home</item>
+        <item>tab.dynamic</item>
+        <item>tab.contribute</item>
+        <item>tab.shop</item>
+        <item>tab.bangumi</item>
         <item>liveEntry</item>
         <item>chargeResult</item>
         <item>guard</item>

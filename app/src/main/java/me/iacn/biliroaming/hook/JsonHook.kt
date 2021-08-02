@@ -1,6 +1,5 @@
 package me.iacn.biliroaming.hook
 
-import android.os.Environment
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.utils.*
 import java.lang.reflect.Type
@@ -353,29 +352,26 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         ?.setObjectField("supportMode", intArrayOf(1, 2, 3))
                 }
                 spaceClass -> {
-                    var purifySpaceSet = sPrefs.getStringSet("customize_space", emptySet())
-                    if (purifySpaceSet?.isNotEmpty() == true) {
-                        purifySpaceSet = purifySpaceSet.orEmpty()
-                        var purifySpaceList = listOf<String>("liveEntry","chargeResult","guard","archiveVideo",
-                            "article","audio","season","coinVideo","recommendVideo","followComicList","spaceGame",
-                            "adV2","cheeseVideo","fansDress","favoriteBox","comicList","ugcSeasonList")
-                        purifySpaceList.forEach {
-                            if (purifySpaceSet.contains(it)) result?.setObjectField(it, null)
+                    val purifySpaceSet =
+                        sPrefs.getStringSet("customize_space", emptySet()).orEmpty()
+                    if (purifySpaceSet.isNotEmpty()) {
+                        purifySpaceSet.forEach {
+                            if (!it.contains(".")) result.setObjectField(
+                                it,
+                                null
+                            )
                         }
                         // Exceptions (adV2 -> ad + adV2)
-                        if (purifySpaceSet.contains("adV2")) result?.setObjectField("ad", null)
-                        
-                        val tab = result?.getObjectFieldAs<MutableList<*>?>("tab")
-                        tab?.removeAll {
-                            it?.getObjectFieldAs<String>("param").run {
-                                when(this) {
-                                    "home" -> purifySpaceSet.contains("pageHome")
-                                    "dynamic" -> purifySpaceSet.contains("pageDynamic")
-                                    "contribute" -> purifySpaceSet.contains("pageContribute")
-                                    "shop" -> purifySpaceSet.contains("pageShop")
-                                    "bangumi" -> purifySpaceSet.contains("pageBangumi")
-                                    else -> false
-                                }
+                        if (purifySpaceSet.contains("adV2")) result.setObjectField("ad", null)
+
+                        result.getObjectFieldAs<MutableList<*>?>("tab")?.removeAll {
+                            when (it?.getObjectFieldAs<String?>("param")) {
+                                "home" -> purifySpaceSet.contains("tab.home")
+                                "dynamic" -> purifySpaceSet.contains("tab.dynamic")
+                                "contribute" -> purifySpaceSet.contains("tab.contribute")
+                                "shop" -> purifySpaceSet.contains("tab.shop")
+                                "bangumi" -> purifySpaceSet.contains("tab.bangumi")
+                                else -> false
                             }
                         }
                     }
