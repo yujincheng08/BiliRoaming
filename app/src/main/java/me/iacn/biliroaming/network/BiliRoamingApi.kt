@@ -79,7 +79,7 @@ object BiliRoamingApi {
         if (thUrl != null && (seasonJson.optInt("code") == -404 || fixThailandSeasonFlag)) {
             builder.scheme("https").encodedAuthority(thUrl + THAILAND_PATH_SEASON)
                 .appendQueryParameter("s_locale", "zh_SG")
-                .appendQueryParameter("access_key", instance.accessKey)
+                .appendQueryParameter("access_key", instance.getCustomizeAccessKey("th_server"))
                 .appendQueryParameter("mobi_app", "bstar_a")
                 .appendQueryParameter("build", "1080003")
             getContent(builder.toString())?.toJSONObject()?.also {
@@ -392,15 +392,18 @@ object BiliRoamingApi {
         }
 
         for ((area, host) in hostList.toList().asReversed()) {
+            val accessKey = instance.getCustomizeAccessKey("${area}_server") ?: ""
             val extraMap = if (area == "th") mapOf(
                 "area" to area,
                 "appkey" to "7d089525d3611b1c",
                 "build" to "1001310",
                 "mobi_app" to "bstar_a",
                 "platform" to "android",
+                "access_key" to accessKey,
             )
             else mapOf(
-                "area" to area
+                "area" to area,
+                "access_key" to accessKey,
             )
             val path = if (area == "th") THAILAND_PATH_PLAYURL else PATH_PLAYURL
             val uri = Uri.Builder()
@@ -612,4 +615,3 @@ object BiliRoamingApi {
     }
 
 }
-
