@@ -16,7 +16,6 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
-import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.Constant.HOST_REGEX
 import me.iacn.biliroaming.XposedInit.Companion.moduleRes
 import me.iacn.biliroaming.network.BiliRoamingApi.getPlayUrl
@@ -171,11 +170,8 @@ class SpeedTestDialog(private val pref: ListPreference, activity: Activity) :
 
     private suspend fun getTestUrl() = withContext(Dispatchers.Default) {
         val country = fetchJson(infoUrl)?.optJSONObject("data")?.optString("country")
-        val json = if (country == "中国") getPlayUrl(
-            "$mainlandParams&access_key=${instance.accessKey}",
-            arrayOf("hk", "tw")
-        ) else
-            getPlayUrl("$overseaParams&access_key=${instance.accessKey}", arrayOf("cn"))
+        val json = if (country == "中国") getPlayUrl(mainlandParams, arrayOf("hk", "tw"))
+        else getPlayUrl(overseaParams, arrayOf("cn"))
         json?.toJSONObject()?.optJSONObject("dash")?.getJSONArray("audio")?.run {
             (0 until length()).map { idx -> optJSONObject(idx) }
         }?.minWithOrNull { a, b -> a.optInt("bandwidth") - b.optInt("bandwidth") }

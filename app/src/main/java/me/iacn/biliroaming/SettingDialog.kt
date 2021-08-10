@@ -5,7 +5,10 @@ package me.iacn.biliroaming
 import android.app.Activity
 import android.app.Activity.RESULT_CANCELED
 import android.app.AlertDialog
-import android.content.*
+import android.content.ActivityNotFoundException
+import android.content.Context
+import android.content.Intent
+import android.content.SharedPreferences
 import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.Color
@@ -77,6 +80,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("hide_low_play_count_recommend")?.onPreferenceClickListener = this
             findPreference("keywords_filter_title_recommend")?.onPreferenceClickListener = this
             findPreference("custom_subtitle")?.onPreferenceChangeListener = this
+            findPreference("customize_accessKey").onPreferenceClickListener = this
             checkCompatibleVersion()
             checkUpdate()
         }
@@ -239,11 +243,6 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                         preference.editor.remove(preference.key).apply()
                     }
                 }
-                "customize_accessKey" -> {
-                    if (newValue == "") {
-                        preference.editor.remove(preference.key).apply()
-                    }
-                }
                 "custom_subtitle" -> {
                     if (newValue as Boolean) {
                         showCustomSubtitle()
@@ -374,7 +373,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 editTexts.forEach { it.setText(prefs.getString(it.tag.toString(), "")) }
                 setTitle("设置解析服务器")
                 setView(view)
-                setPositiveButton("确定") { _, _ ->
+                setPositiveButton(android.R.string.ok) { _, _ ->
                     editTexts.forEach {
                         val host = it.text.toString()
                         if (host.isNotEmpty())
@@ -451,7 +450,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 }
                 setTitle(moduleRes.getString(R.string.customize_danmaku_config_title))
                 setView(view)
-                setPositiveButton("确定") { _, _ ->
+                setPositiveButton(android.R.string.ok) { _, _ ->
                     editTexts.forEach {
                         val value = it.text.toString()
                         if (value.isNotEmpty())
@@ -495,6 +494,36 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             return true
         }
 
+        private fun onCustomizeAccessKeyClick(): Boolean {
+            AlertDialog.Builder(activity).run {
+                val layout = moduleRes.getLayout(R.layout.cutomize_backup_dialog)
+                val inflater = LayoutInflater.from(context)
+                val view = inflater.inflate(layout, null)
+                val editTexts = arrayOf(
+                    view.findViewById<EditText>(R.id.cn_server),
+                    view.findViewById(R.id.hk_server),
+                    view.findViewById(R.id.tw_server),
+                    view.findViewById(R.id.th_server)
+                )
+                editTexts.forEach {
+                    it.setText(prefs.getString("${it.tag}_accessKey", ""))
+                    it.hint = ""
+                }
+                setTitle(R.string.customize_accessKey_title)
+                setView(view)
+                setPositiveButton(android.R.string.ok) { _, _ ->
+                    editTexts.forEach {
+                        val accessKey = it.text.toString()
+                        val key = "${it.tag}_accessKey"
+                        if (accessKey.isNotEmpty()) prefs.edit().putString(key, accessKey).apply()
+                        else prefs.edit().remove(key).apply()
+                    }
+                }
+                show()
+            }
+            return true
+        }
+
         private fun onHideLowPlayCountRecommendClick(isChecked: Boolean): Boolean {
             if (!isChecked) return true
             val tv = EditText(activity)
@@ -504,8 +533,8 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             AlertDialog.Builder(activity).run {
                 setTitle("设置隐藏播放量")
                 setView(tv)
-                setPositiveButton("确定", null)
-                setNegativeButton("取消", null)
+                setPositiveButton(android.R.string.ok, null)
+                setNegativeButton(android.R.string.cancel, null)
                 setCancelable(false)
                 show()
             }.let {
@@ -537,13 +566,13 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             AlertDialog.Builder(activity).run {
                 setTitle("设置标题过滤关键词")
                 setView(tv)
-                setPositiveButton("确定") { _, _ ->
+                setPositiveButton(android.R.string.ok) { _, _ ->
                     sPrefs.edit()
                         .putString("keywords_filter_title_recommend_list", tv.text.toString())
                         .apply()
                     Log.toast("保存成功 重启后生效")
                 }
-                setNegativeButton("取消", null)
+                setNegativeButton(android.R.string.cancel, null)
                 setNeutralButton("添加分隔符", null)
                 setCancelable(false)
                 show()
@@ -575,6 +604,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             "pref_export" -> onPrefExportClick()
             "pref_import" -> onPrefImportClick()
             "export_video" -> onExportVideoClick()
+            "customize_accessKey" -> onCustomizeAccessKeyClick()
             "hide_low_play_count_recommend" -> onHideLowPlayCountRecommendClick((preference as SwitchPreference).isChecked)
             "keywords_filter_title_recommend" -> onKeywordsFilterTitleRecommendClick((preference as SwitchPreference).isChecked)
             else -> false

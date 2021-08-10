@@ -120,7 +120,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val homeUserCenterClass by Weak {
         "tv.danmaku.bili.ui.main2.mine.HomeUserCenterFragment".findClassOrNull(
             mClassLoader
-        )?: "tv.danmaku.bilibilihd.ui.main.mine.HdHomeUserCenterFragment".findClassOrNull(
+        ) ?: "tv.danmaku.bilibilihd.ui.main.mine.HdHomeUserCenterFragment".findClassOrNull(
             mClassLoader
         )
     }
@@ -240,12 +240,14 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     }
 
 
-    val accessKey: String?
-        get() {
-            var key = sPrefs.getString("customize_accessKey", null)
-            if (key.isNullOrBlank()) key = accessKeyInstance?.callMethodAs<String>("invoke")
-            return key
-        }
+    fun getCustomizeAccessKey(area: String): String? {
+        var key = sPrefs.getString("${area}_accessKey", null)
+        if (key.isNullOrBlank()) key = accessKey
+        return key
+    }
+
+    val accessKey
+        get() = accessKeyInstance?.callMethodAs<String>("invoke")
 
     init {
         try {

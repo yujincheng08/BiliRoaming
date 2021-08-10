@@ -379,7 +379,6 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             appendQueryParameter("fourk", req.fourk.toString())
             appendQueryParameter("spmid", req.spmid.toString())
             appendQueryParameter("autoplay", req.autoplay.toString())
-            appendQueryParameter("access_key", instance.accessKey)
             build()
         }.query
 

@@ -365,7 +365,6 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             appendQueryParameter("fnval", req.fnval.toString())
             appendQueryParameter("force_host", req.forceHost.toString())
             appendQueryParameter("fourk", req.fourk.toString())
-            appendQueryParameter("access_key", instance.accessKey)
             build()
         }.query
     }
