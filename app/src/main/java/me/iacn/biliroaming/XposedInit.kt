@@ -68,7 +68,6 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                         startHook(SSLHook(lpparam.classLoader))
                     }
                     startHook(HintHook(lpparam.classLoader))
-                    startHook(Ijkhook(lpparam.classLoader))
                     startHook(BangumiSeasonHook(lpparam.classLoader))
                     startHook(BangumiPlayUrlHook(lpparam.classLoader))
                     startHook(PegasusHook(lpparam.classLoader))

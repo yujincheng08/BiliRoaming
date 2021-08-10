@@ -68,9 +68,6 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("custom_server").onPreferenceClickListener = this
             findPreference("test_upos").onPreferenceClickListener = this
             findPreference("customize_bottom_bar")?.onPreferenceClickListener = this
-            findPreference("playback_speed_override").onPreferenceChangeListener = this
-            findPreference("default_playback_speed").onPreferenceChangeListener = this
-            findPreference("customize_danmaku_config").onPreferenceClickListener = this
             findPreference("pref_export").onPreferenceClickListener = this
             findPreference("pref_import").onPreferenceClickListener = this
             findPreference("export_video")?.onPreferenceClickListener = this
@@ -151,17 +148,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 supportMusicNotificationHook = false
             val supportSplashHook = instance.brandSplashClass != null
             val supportDrawer = instance.homeUserCenterClass != null
-            val supportcustomplaybackspeed = instance.playerCoreServiceV2Class != null
             val supportTeenagersMode = instance.teenagersModeDialogActivityClass != null
-            val suppportPurifyEndpage =
-                "tv.danmaku.biliplayer.context.config.Feature" in instance.classesList
-            if (!suppportPurifyEndpage)
-                disablePreference("purify_endpage")
-            if (!supportcustomplaybackspeed)
-                disablePreference(
-                    "default_playback_speed",
-                    moduleRes.getString(R.string.default_speed_in_speed_list)
-                )
             if (!supportDrawer)
                 disablePreference("drawer")
             if (!supportSplashHook) {
@@ -228,16 +215,6 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 "custom_splash_logo" -> {
                     if (newValue as Boolean)
                         selectImage(LOGO_SELECTION)
-                }
-                "playback_speed_override" -> {
-                    if (newValue == "") {
-                        preference.editor.remove(preference.key).apply()
-                    }
-                }
-                "default_playback_speed" -> {
-                    if (newValue == "") {
-                        preference.editor.remove(preference.key).apply()
-                    }
                 }
                 "customize_accessKey" -> {
                     if (newValue == "") {
@@ -428,43 +405,6 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             return true
         }
 
-        private fun onCustomizeDanmakuConfigClick(): Boolean {
-            AlertDialog.Builder(activity).run {
-                val layout = moduleRes.getLayout(R.layout.cutomize_danmaku_config_dialog)
-                val inflater = LayoutInflater.from(context)
-                val view = inflater.inflate(layout, null)
-                val editTexts = arrayOf(
-                    view.findViewById<EditText>(R.id.danmaku_textsize_scale_factor),
-                    view.findViewById(R.id.danmaku_stroke_width_scaling),
-                    view.findViewById(R.id.danmaku_duration_factor),
-                    view.findViewById(R.id.danmaku_alpha_factor),
-                    view.findViewById(R.id.danmaku_max_on_screen),
-                    view.findViewById(R.id.danmaku_screen_domain)
-                )
-                editTexts.filter {
-                    biliprefs.contains(it.tag.toString())
-                }.forEach {
-                    it.setText(
-                        biliprefs.getFloat(it.tag.toString(), it.hint.toString().toFloat())
-                            .toString()
-                    )
-                }
-                setTitle(moduleRes.getString(R.string.customize_danmaku_config_title))
-                setView(view)
-                setPositiveButton("确定") { _, _ ->
-                    editTexts.forEach {
-                        val value = it.text.toString()
-                        if (value.isNotEmpty())
-                            biliprefs.edit().putFloat(it.tag.toString(), value.toFloat()).apply()
-                        else
-                            biliprefs.edit().remove(it.tag.toString()).apply()
-                    }
-                }
-                show()
-            }
-            return true
-        }
-
         private fun onPrefExportClick(): Boolean {
             val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
             intent.type = "text/xml"
@@ -571,7 +511,6 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             "custom_server" -> onCustomServerClick()
             "test_upos" -> onTestUposClick()
             "customize_bottom_bar" -> onCustomizeBottomBarClick()
-            "customize_danmaku_config" -> onCustomizeDanmakuConfigClick()
             "pref_export" -> onPrefExportClick()
             "pref_import" -> onPrefImportClick()
             "export_video" -> onExportVideoClick()
@@ -612,8 +551,6 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             restartApplication(activity)
         }
     }
-
-    class BackupRes(val res: Resources, val theme: Resources.Theme)
 
     companion object {
         @JvmStatic
