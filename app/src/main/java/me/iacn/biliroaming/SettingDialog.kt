@@ -71,9 +71,6 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("custom_server").onPreferenceClickListener = this
             findPreference("test_upos").onPreferenceClickListener = this
             findPreference("customize_bottom_bar")?.onPreferenceClickListener = this
-            findPreference("playback_speed_override").onPreferenceChangeListener = this
-            findPreference("default_playback_speed").onPreferenceChangeListener = this
-            findPreference("customize_danmaku_config").onPreferenceClickListener = this
             findPreference("pref_export").onPreferenceClickListener = this
             findPreference("pref_import").onPreferenceClickListener = this
             findPreference("export_video")?.onPreferenceClickListener = this
@@ -155,17 +152,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 supportMusicNotificationHook = false
             val supportSplashHook = instance.brandSplashClass != null
             val supportDrawer = instance.homeUserCenterClass != null
-            val supportcustomplaybackspeed = instance.playerCoreServiceV2Class != null
             val supportTeenagersMode = instance.teenagersModeDialogActivityClass != null
-            val suppportPurifyEndpage =
-                "tv.danmaku.biliplayer.context.config.Feature" in instance.classesList
-            if (!suppportPurifyEndpage)
-                disablePreference("purify_endpage")
-            if (!supportcustomplaybackspeed)
-                disablePreference(
-                    "default_playback_speed",
-                    moduleRes.getString(R.string.default_speed_in_speed_list)
-                )
             if (!supportDrawer)
                 disablePreference("drawer")
             if (!supportSplashHook) {
@@ -232,16 +219,6 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 "custom_splash_logo" -> {
                     if (newValue as Boolean)
                         selectImage(LOGO_SELECTION)
-                }
-                "playback_speed_override" -> {
-                    if (newValue == "") {
-                        preference.editor.remove(preference.key).apply()
-                    }
-                }
-                "default_playback_speed" -> {
-                    if (newValue == "") {
-                        preference.editor.remove(preference.key).apply()
-                    }
                 }
                 "custom_subtitle" -> {
                     if (newValue as Boolean) {
@@ -600,7 +577,6 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             "custom_server" -> onCustomServerClick()
             "test_upos" -> onTestUposClick()
             "customize_bottom_bar" -> onCustomizeBottomBarClick()
-            "customize_danmaku_config" -> onCustomizeDanmakuConfigClick()
             "pref_export" -> onPrefExportClick()
             "pref_import" -> onPrefImportClick()
             "export_video" -> onExportVideoClick()
@@ -642,8 +618,6 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             restartApplication(activity)
         }
     }
-
-    class BackupRes(val res: Resources, val theme: Resources.Theme)
 
     companion object {
         @JvmStatic

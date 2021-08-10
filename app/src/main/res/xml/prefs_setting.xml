@@ -117,30 +117,6 @@
             android:summary="@string/custom_download_thread_summary"
             android:title="@string/custom_download_thread_title" />
 
-<!--        <SwitchPreference-->
-<!--            android:key="get_cover"-->
-<!--            android:summary="@string/get_cover_summary"-->
-<!--            android:title="@string/get_cover_title" />-->
-
-        <EditTextPreference
-            android:key="playback_speed_override"
-            android:summary="@string/playback_speed_override_summary"
-            android:title="@string/playback_speed_override_title" />
-
-        <EditTextPreference
-            android:key="default_playback_speed"
-            android:summary="@string/default_playback_speed_summary"
-            android:title="@string/default_playback_speed_title" />
-
-        <SwitchPreference
-            android:key="standalone_danmaku_speed"
-            android:summary="@string/standalone_danmaku_speed_summary"
-            android:title="@string/standalone_danmaku_speed_title" />
-
-        <Preference
-            android:key="customize_danmaku_config"
-            android:summary="@string/customize_danmaku_config_summary"
-            android:title="@string/customize_danmaku_config_title" />
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/pref_backup">
         <Preference
@@ -254,10 +230,6 @@
             android:key="export_video"
             android:summary="@string/export_video_summary"
             android:title="@string/export_video_title" />
-        <SwitchPreference
-            android:dependency="hidden"
-            android:key="purify_endpage"
-            android:title="@string/purify_endpage_title" />
         <MultiSelectListPreference
             android:dependency="hidden"
             android:entries="@array/space_entries"
