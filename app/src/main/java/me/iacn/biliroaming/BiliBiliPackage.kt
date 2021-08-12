@@ -214,6 +214,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val biliVideoDetailClass by Weak {
         "tv.danmaku.bili.ui.video.api.BiliVideoDetail".findClassOrNull(
             mClassLoader
+        ) ?: "tv.danmaku.bili.videopage.data.view.model.BiliVideoDetail".findClassOrNull(
+            mClassLoader
         )
     }
 
