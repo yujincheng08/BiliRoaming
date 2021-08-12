@@ -320,9 +320,9 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             counter++
             if (counter == 7) {
                 prefs.edit()?.putBoolean("hidden", true)?.apply()
-                Log.toast("已开启隐藏功能，重启应用生效")
+                Log.toast("已开启隐藏功能，重启应用生效", true)
             } else if (counter >= 4) {
-                Log.toast("再按${7 - counter}次开启隐藏功能")
+                Log.toast("再按${7 - counter}次开启隐藏功能", true)
             }
 
             return true
