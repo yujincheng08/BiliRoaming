@@ -61,22 +61,22 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 val hiddenGroup = findPreference("hidden_group") as PreferenceCategory
                 preferenceScreen.removePreference(hiddenGroup)
             }
-            findPreference("version").summary = BuildConfig.VERSION_NAME
-            findPreference("version").onPreferenceClickListener = this
-            findPreference("custom_splash").onPreferenceChangeListener = this
-            findPreference("custom_splash_logo").onPreferenceChangeListener = this
-            findPreference("save_log").summary =
+            findPreference("version")?.summary = BuildConfig.VERSION_NAME
+            findPreference("version")?.onPreferenceClickListener = this
+            findPreference("custom_splash")?.onPreferenceChangeListener = this
+            findPreference("custom_splash_logo")?.onPreferenceChangeListener = this
+            findPreference("save_log")?.summary =
                 moduleRes.getString(R.string.save_log_summary).format(logFile.absolutePath)
-            findPreference("custom_server").onPreferenceClickListener = this
-            findPreference("test_upos").onPreferenceClickListener = this
+            findPreference("custom_server")?.onPreferenceClickListener = this
+            findPreference("test_upos")?.onPreferenceClickListener = this
             findPreference("customize_bottom_bar")?.onPreferenceClickListener = this
-            findPreference("pref_export").onPreferenceClickListener = this
-            findPreference("pref_import").onPreferenceClickListener = this
+            findPreference("pref_export")?.onPreferenceClickListener = this
+            findPreference("pref_import")?.onPreferenceClickListener = this
             findPreference("export_video")?.onPreferenceClickListener = this
             findPreference("hide_low_play_count_recommend")?.onPreferenceClickListener = this
             findPreference("keywords_filter_title_recommend")?.onPreferenceClickListener = this
             findPreference("custom_subtitle")?.onPreferenceChangeListener = this
-            findPreference("customize_accessKey").onPreferenceClickListener = this
+            findPreference("customize_accessKey")?.onPreferenceClickListener = this
             checkCompatibleVersion()
             checkUpdate()
         }
