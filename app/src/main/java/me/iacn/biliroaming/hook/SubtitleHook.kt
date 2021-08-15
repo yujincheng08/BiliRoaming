@@ -37,12 +37,12 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             blurSolid: Int,
             fontColor: String,
             fontSize: Int,
-            bgColor: String
+            bgColor: String,
+            strokeColor: String,
+            strokeWidth: Float
         ) {
             val subtitleBlurSolid = blurSolid.toString() + "f"
-            subtitle.setSpan(
-                ForegroundColorSpan(Color.parseColor("#$fontColor")), start, end, flags
-            )
+            subtitle.setSpan(StrokeSpan(Color.parseColor("#$fontColor"), Color.parseColor("#$strokeColor"), strokeWidth), start, end, flags)
             subtitle.setSpan(
                 AbsoluteSizeSpan(fontSize, false),
                 start,
@@ -105,11 +105,14 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     sPrefs.getString(
                             "subtitle_font_color2",
                             "FFFFFFFF"
-                    )!!, sPrefs.getInt("subtitle_font_size", 30),
-                     sPrefs.getString(
+                    )!!,
+                    sPrefs.getInt("subtitle_font_size", 30),
+                    sPrefs.getString(
                             "subtitle_background_color",
                             "20000000"
-                    )!!
+                    )!!,
+                    sPrefs.getString("subtitle_stroke_color", "00000000")!!,
+                    sPrefs.getFloat("subtitle_stroke_width", 1F)
                 )
                 param.result = null
             }
