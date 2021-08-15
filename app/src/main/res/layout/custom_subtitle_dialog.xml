@@ -218,7 +218,7 @@
             android:layout_columnWeight="4"
             android:layout_weight="1"
             android:autofillHints="yes"
-            android:hint="1"
+            android:hint="0"
             android:inputType="numberDecimal"
             android:tag="subtitle_stroke_width"
             tools:ignore="HardcodedText" />

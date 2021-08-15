@@ -112,7 +112,7 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             "20000000"
                     )!!,
                     sPrefs.getString("subtitle_stroke_color", "00000000")!!,
-                    sPrefs.getFloat("subtitle_stroke_width", 1F)
+                    sPrefs.getFloat("subtitle_stroke_width", 0F)
                 )
                 param.result = null
             }

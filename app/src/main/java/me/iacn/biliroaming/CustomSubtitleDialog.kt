@@ -29,7 +29,7 @@ class CustomSubtitleDialog(val activity: Activity,prefs: SharedPreferences) : Al
         val strokeColor = view.findViewById<EditText>(R.id.strok_color)
         strokeColor.setText(prefs.getString(strokeColor.tag.toString(), "00000000"))
         val strokeWidth = view.findViewById<EditText>(R.id.stroke_width)
-        strokeWidth.setText(prefs.getFloat(strokeWidth.tag.toString(), 1F).toString())
+        strokeWidth.setText(prefs.getFloat(strokeWidth.tag.toString(), 0F).toString())
         val btnPv = view.findViewById<Button>(R.id.btn_pv)
         btnPv.setOnClickListener {
             val testText = view.findViewById<EditText>(R.id.et_testText).text.toString()

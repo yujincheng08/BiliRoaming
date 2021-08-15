@@ -41,6 +41,7 @@ class StrokeSpan(private val fillColor: Int, private val strokeColor: Int, priva
     ) {
         text ?: return
         canvas.drawText(text, start, end, x, y.toFloat(), fillPaint(paint))
-        canvas.drawText(text, start, end, x, y.toFloat(), stokePaint(paint))
+        if (strokeWidth > 0)
+            canvas.drawText(text, start, end, x, y.toFloat(), stokePaint(paint))
     }
 }
