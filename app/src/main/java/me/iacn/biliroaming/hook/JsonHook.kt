@@ -371,6 +371,7 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                 "contribute" -> purifySpaceSet.contains("tab.contribute")
                                 "shop" -> purifySpaceSet.contains("tab.shop")
                                 "bangumi" -> purifySpaceSet.contains("tab.bangumi")
+                                "cheese" -> purifySpaceSet.contains("tab.cheese")
                                 else -> false
                             }
                         }
