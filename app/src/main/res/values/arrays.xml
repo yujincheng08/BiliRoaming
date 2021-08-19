@@ -86,6 +86,7 @@
         <item>分页：投稿</item>
         <item>分页：商品</item>
         <item>分页：追番</item>
+        <item>分页：课堂</item>
         <item>直播</item>
         <item>充电</item>
         <item>大航海</item>
@@ -110,6 +111,7 @@
         <item>tab.contribute</item>
         <item>tab.shop</item>
         <item>tab.bangumi</item>
+        <item>tab.cheese</item>
         <item>liveEntry</item>
         <item>chargeResult</item>
         <item>guard</item>
