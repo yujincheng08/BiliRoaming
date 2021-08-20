@@ -14,8 +14,9 @@ object Log {
     private val handler by lazy { Handler(Looper.getMainLooper()) }
     private var toast: Toast? = null
 
-    fun toast(msg: String, force: Boolean = false) {
+    fun toast(msg: String, force: Boolean = false, excessive: Boolean = false) {
         if (!force && !sPrefs.getBoolean("show_info", true)) return
+        if (!force && excessive && !sPrefs.getBoolean("show_excessive_info", false)) return
         handler.post {
             toast?.cancel()
             toast = Toast.makeText(currentContext, "", Toast.LENGTH_SHORT).apply {

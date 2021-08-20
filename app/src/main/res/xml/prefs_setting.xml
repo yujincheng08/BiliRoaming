@@ -132,6 +132,12 @@
             android:key="show_info"
             android:summary="@string/show_info_summary"
             android:title="@string/show_info_title" />
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="show_excessive_info"
+            android:dependency="show_info"
+            android:summary="@string/show_excessive_info_summary"
+            android:title="@string/show_excessive_info_title" />
 
         <SwitchPreference
             android:key="save_log"

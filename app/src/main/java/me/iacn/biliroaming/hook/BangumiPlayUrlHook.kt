@@ -81,11 +81,11 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
             content?.let {
                 Log.d("Has replaced play url with proxy server $it")
-                Log.toast("已从代理服务器获取播放地址")
+                Log.toast("已从代理服务器获取播放地址", excessive = true)
                 param.result = ByteArrayInputStream(it.toByteArray())
             } ?: run {
                 Log.e("Failed to get play url")
-                Log.toast("获播放地址失败")
+                Log.toast("获取播放地址失败")
             }
         }
 
@@ -123,7 +123,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     countDownLatch?.countDown()
                     content?.let {
                         Log.d("Has replaced play url with proxy server $it")
-                        Log.toast("已从代理服务器获取播放地址")
+                        Log.toast("已从代理服务器获取播放地址", excessive = true)
                         param.result = reconstructResponse(response, it, isDownload)
                     } ?: run {
                         Log.e("Failed to get play url")
@@ -175,7 +175,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     countDownLatch?.countDown()
                     content?.let {
                         Log.d("Has replaced play url with proxy server $it")
-                        Log.toast("已从代理服务器获取播放地址")
+                        Log.toast("已从代理服务器获取播放地址", excessive = true)
                         param.result = reconstructResponse(response, it, isDownload)
                     } ?: run {
                         Log.e("Failed to get play url")

@@ -38,6 +38,8 @@
     <string name="hidden_group">隐藏功能</string>
     <string name="show_info_summary">显示解锁版权、允许下载等状态信息</string>
     <string name="show_info_title">提示模块运行信息</string>
+    <string name="show_excessive_info_summary">可能会扰民的提示，例如播放过程中可能弹出不止一次的“已成功获取播放地址”</string>
+    <string name="show_excessive_info_title">弹出额外的信息提示</string>
     <string name="main_category">解锁番剧限制</string>
     <string name="miscellaneous_category">杂项</string>
     <string name="setting_category">设置</string>
