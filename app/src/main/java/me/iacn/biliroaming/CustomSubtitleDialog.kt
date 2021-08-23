@@ -43,6 +43,7 @@ class CustomSubtitleDialog(val activity: Activity,prefs: SharedPreferences) : Al
             SubtitleHook.subtitleStylizeRunner(spannableString, 0, spannableString.length, Spanned.SPAN_INCLUSIVE_EXCLUSIVE, fbs, fc, fs, bc, sc, sw)
             view.findViewById<TextView>(R.id.tv_pvBlack).text = spannableString
             view.findViewById<TextView>(R.id.tv_pvWhite).text = spannableString
+            view.findViewById<TextView>(R.id.tv_pvTp).text = spannableString
         }
         view.findViewById<Button>(R.id.btn_chooseColorBc).setOnClickListener {
             ARGBColorChooseDialog(activity, Color.parseColor("#${backgroundColor.text}")).apply {
