@@ -68,7 +68,9 @@ class SettingHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 )
                 .setObjectField("uri", SETTING_URI)
 
-            itemList?.forEach { if (it.getIntField("id") == SETTING_ID) return@hookBeforeMethod }
+            itemList?.forEach {
+                if (try { it.getIntField("id") == SETTING_ID } catch (t: Throwable) { it.getLongField("id") == SETTING_ID.toLong() }) return@hookBeforeMethod
+            }
             itemList?.add(item)
         }
 
