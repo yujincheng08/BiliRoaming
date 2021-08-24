@@ -5,11 +5,23 @@
     android:layout_height="wrap_content"
     android:orientation="vertical">
 
-    <View
-        android:id="@+id/view_sample2"
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="120dp"
-        android:layout_marginTop="14dp" />
+        android:layout_marginTop="14dp">
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="120dp"
+            android:scaleType="center"
+            android:src="@drawable/tp"
+            tools:ignore="ContentDescription" />
+
+        <View
+            android:id="@+id/view_sample2"
+            android:layout_width="match_parent"
+            android:layout_height="120dp" />
+    </RelativeLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
