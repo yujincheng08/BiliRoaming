@@ -8,6 +8,7 @@ import android.text.SpannableString
 import android.text.Spanned
 import android.view.LayoutInflater
 import android.widget.Button
+import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.TextView
 import me.iacn.biliroaming.XposedInit.Companion.moduleRes
@@ -30,6 +31,8 @@ class CustomSubtitleDialog(val activity: Activity,prefs: SharedPreferences) : Al
         strokeColor.setText(prefs.getString(strokeColor.tag.toString(), "00000000"))
         val strokeWidth = view.findViewById<EditText>(R.id.stroke_width)
         strokeWidth.setText(prefs.getFloat(strokeWidth.tag.toString(), 0F).toString())
+        val fixBreak = view.findViewById<CheckBox>(R.id.cb_fixBreak)
+        fixBreak.isChecked = prefs.getBoolean(fixBreak.tag.toString(), false)
         val btnPv = view.findViewById<Button>(R.id.btn_pv)
         btnPv.setOnClickListener {
             val testText = view.findViewById<EditText>(R.id.et_testText).text.toString()
@@ -40,7 +43,7 @@ class CustomSubtitleDialog(val activity: Activity,prefs: SharedPreferences) : Al
             val fbs = fontBlurSolid.text.toString().toInt()
             val sc = strokeColor.text.toString()
             val sw = strokeWidth.text.toString().toFloat()
-            SubtitleHook.subtitleStylizeRunner(spannableString, 0, spannableString.length, Spanned.SPAN_INCLUSIVE_EXCLUSIVE, fbs, fc, fs, bc, sc, sw)
+            SubtitleHook.subtitleStylizeRunner(spannableString, 0, spannableString.length, Spanned.SPAN_INCLUSIVE_EXCLUSIVE, fbs, fc, fs, bc, sc, sw, fixBreak.isChecked)
             view.findViewById<TextView>(R.id.tv_pvBlack).text = spannableString
             view.findViewById<TextView>(R.id.tv_pvWhite).text = spannableString
             view.findViewById<TextView>(R.id.tv_pvTp).text = spannableString
@@ -75,6 +78,7 @@ class CustomSubtitleDialog(val activity: Activity,prefs: SharedPreferences) : Al
                 putInt(fontBlurSolid.tag.toString(), fontBlurSolid.text.toString().toInt())
                 putString(strokeColor.tag.toString(), strokeColor.text.toString())
                 putFloat(strokeWidth.tag.toString(), strokeWidth.text.toString().toFloat())
+                putBoolean(fixBreak.tag.toString(), fixBreak.isChecked)
             }.apply()
         }
 
