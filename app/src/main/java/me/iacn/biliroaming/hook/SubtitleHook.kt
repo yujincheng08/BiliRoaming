@@ -39,10 +39,16 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             fontSize: Int,
             bgColor: String,
             strokeColor: String,
-            strokeWidth: Float
+            strokeWidth: Float,
+            fixBreak: Boolean
         ) {
             val subtitleBlurSolid = blurSolid.toString() + "f"
-            subtitle.setSpan(StrokeSpan(Color.parseColor("#$fontColor"), Color.parseColor("#$strokeColor"), strokeWidth), start, end, flags)
+            val fc = Color.parseColor("#$fontColor")
+            val sc = Color.parseColor("#$strokeColor")
+            if (fixBreak)
+                (start until end).forEach { i -> subtitle.setSpan(StrokeSpan(fc, sc, strokeWidth), i, i + 1, flags) }
+            else
+                subtitle.setSpan(StrokeSpan(fc, sc, strokeWidth), start, end, flags)
             subtitle.setSpan(
                 AbsoluteSizeSpan(fontSize, false),
                 start,
@@ -112,7 +118,8 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             "20000000"
                     )!!,
                     sPrefs.getString("subtitle_stroke_color", "00000000")!!,
-                    sPrefs.getFloat("subtitle_stroke_width", 0F)
+                    sPrefs.getFloat("subtitle_stroke_width", 0F),
+                    sPrefs.getBoolean("subtitle_fix_break", false)
                 )
                 param.result = null
             }

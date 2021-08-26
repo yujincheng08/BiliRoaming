@@ -21,7 +21,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
-            android:layout_margin="5dp" />
+            android:layout_margin="5dp"
+            android:gravity="center" />
     </RelativeLayout>
 
     <RelativeLayout
@@ -40,7 +41,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
-            android:layout_margin="5dp" />
+            android:layout_margin="5dp"
+            android:gravity="center" />
     </RelativeLayout>
 
     <RelativeLayout
@@ -61,7 +63,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
-            android:layout_margin="5dp" />
+            android:layout_margin="5dp"
+            android:gravity="center" />
     </RelativeLayout>
 
     <LinearLayout
@@ -277,5 +280,13 @@
             tools:ignore="HardcodedText" />
     </LinearLayout>
 
+    <CheckBox
+        android:id="@+id/cb_fixBreak"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:checked="false"
+        android:tag="subtitle_fix_break"
+        android:text="修复换行 (除非想解决字幕换行问题, 否则不要开启)"
+        tools:ignore="HardcodedText" />
 
 </LinearLayout>
