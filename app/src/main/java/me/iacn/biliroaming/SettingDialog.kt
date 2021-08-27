@@ -100,7 +100,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                             key = "update"
                             title = moduleRes.getString(R.string.update_title)
                             summary = result.optString("body").substringAfterLast("更新日志\r\n").run {
-                                if (isNotEmpty()) this else moduleRes.getString(R.string.update_summary)
+                                ifEmpty { moduleRes.getString(R.string.update_summary) }
                             }
                             onPreferenceClickListener = this@PrefsFragment
                             order = 1
@@ -115,7 +115,6 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             var supportAdd4K = false
             var supportMusicNotificationHook = true
             var supportDark = true
-            var supportCommentFloor = false
             var supportAddChannel = false
             var supportCustomizeTab = true
             val supportFullSplash = try {
@@ -128,19 +127,16 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 "android_i" -> {
                     if (versionCode in 2050410..2080109) supportLiveHook = true
                     if (versionCode < 2050410) supportDark = false
-                    if (versionCode < 3000500) supportCommentFloor = true
                     if (versionCode >= 3000000) supportAddChannel = true
                     supportAdd4K = true
                 }
                 "android_b" -> {
                     if (versionCode < 6080000) supportAdd4K = true
                     if (versionCode < 6000000) supportDark = false
-                    if (versionCode < 6180000) supportCommentFloor = true
                     if (versionCode >= 6270000) supportAddChannel = true
                 }
                 "android" -> {
                     if (versionCode !in 6000000 until 6120000) supportDark = false
-                    if (versionCode < 6180000) supportCommentFloor = true
                     if (versionCode >= 6270000) supportAddChannel = true
                 }
                 "android_hd" -> {
@@ -179,9 +175,6 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             }
             if (!supportDark) {
                 disablePreference("follow_dark")
-            }
-            if (!supportCommentFloor) {
-                disablePreference("comment_floor")
             }
             if (!supportTeenagersMode) {
                 disablePreference("teenagers_mode_dialog")

@@ -97,8 +97,6 @@ class EnvHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 encryptedValueMap["0"],
                 encryptedValueMap["1"]
             ),
-            ConfigTuple("comment.rpc_enable", "comment_floor", encryptedValueMap["0"], null),
-            ConfigTuple("comment.rpc_enable_ff", "comment_floor", encryptedValueMap["0"], null)
         )
     }
 }

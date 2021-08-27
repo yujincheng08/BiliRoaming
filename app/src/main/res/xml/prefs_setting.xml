@@ -83,11 +83,6 @@
             android:title="@string/teenagers_mode_dialog_title" />
 
         <SwitchPreference
-            android:key="comment_floor"
-            android:summary="@string/comment_floor_summary"
-            android:title="@string/comment_floor_title" />
-
-        <SwitchPreference
             android:key="add_live"
             android:summary="@string/add_live_summary"
             android:title="@string/add_live_title" />

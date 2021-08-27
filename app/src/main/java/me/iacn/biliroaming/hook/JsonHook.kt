@@ -31,10 +31,6 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             "tv.danmaku.bili.ui.splash.brand.BrandSplashData".findClassOrNull(mClassLoader)
         val eventEntranceClass =
             "tv.danmaku.bili.ui.main.event.model.EventEntranceModel".findClassOrNull(mClassLoader)
-        val cursorListClass =
-            "com.bilibili.app.comm.comment2.model.BiliCommentCursorList".findClassOrNull(
-                mClassLoader
-            )
         val searchRanksClass = "com.bilibili.search.api.SearchRanks".findClassOrNull(mClassLoader)
         val searchReferralClass =
             "com.bilibili.search.api.SearchReferral".findClassOrNull(mClassLoader)
@@ -346,10 +342,6 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 ) {
                     result.setObjectField("online", null)
                     result.setObjectField("hash", "")
-                }
-                cursorListClass -> if (sPrefs.getBoolean("comment_floor", false)) {
-                    result.getObjectField("cursor")
-                        ?.setObjectField("supportMode", intArrayOf(1, 2, 3))
                 }
                 spaceClass -> {
                     val purifySpaceSet =

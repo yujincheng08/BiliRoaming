@@ -99,10 +99,6 @@ class WebViewHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     fun hook(url: String, text: String): String {
-        if (sPrefs.getBoolean("comment_floor", false)) {
-            if (url.contains("api.bilibili.com/x/v2/reply/main"))
-                return text.replace("\"showfloor\":0", "\"showfloor\":1")
-        }
         return text
     }
 }
