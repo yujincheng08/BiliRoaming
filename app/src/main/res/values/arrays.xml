@@ -63,6 +63,7 @@
     <string-array name="home_recommend_entries">
         <item>广告</item>
         <item>横幅</item>
+        <item>通知</item>
         <item>文章</item>
         <item>动态</item>
         <item>竖屏视频</item>
@@ -73,6 +74,7 @@
     <string-array name="home_recommend_values">
         <item>advertisement</item>
         <item>banner</item>
+        <item>notify</item>
         <item>article</item>
         <item>picture</item>
         <item>vertical</item>

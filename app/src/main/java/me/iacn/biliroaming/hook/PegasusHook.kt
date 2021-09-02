@@ -28,6 +28,7 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         "banner" to arrayListOf("banner"),
         "live" to arrayListOf("live"),
         "inline" to arrayListOf("inline"),
+        "notify" to arrayListOf("notify_tunnel_v1"),
     )
 
     private val filter = filterSet.flatMap {
@@ -93,6 +94,7 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     arr.removeAll {
                         filter.fold(false) { acc, item ->
                             acc || item in it.getObjectFieldAs<String?>("cardGoto")
+                                .orEmpty() || item in it.getObjectFieldAs<String?>("cardType")
                                 .orEmpty() || item in it.getObjectFieldAs<String?>("goTo")
                                 .orEmpty() || isLowCountVideo(it) || isContainsBlockKwd(it)
                         }
