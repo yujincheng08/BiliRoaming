@@ -194,6 +194,7 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         val hasMovieTW = tab?.fold(false) { acc, it ->
                             val uri = it.getObjectFieldAs<String>("uri")
                             acc || uri.startsWith("bilibili://pegasus/op/70465")
+                                || uri.startsWith("bilibili://following/home_activity_tab/165373")
                         }
                         // 添加大陆影视分页
                         if (hasMovieCN != null && !hasMovieCN) {
