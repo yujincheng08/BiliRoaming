@@ -219,6 +219,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             mClassLoader
         )
     }
+    val videoDetailsActivityClass by Weak { "tv.danmaku.bili.ui.video.VideoDetailsActivity".findClassOrNull(mClassLoader) }
 
     val classesList by lazy { mClassLoader.allClassesList() }
     private val accessKeyInstance by lazy {
@@ -530,6 +531,16 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         Log.d(mHookInfo.filterKeys { it != "map_ids" })
         Log.d("Check hook info completed: needUpdate = $needUpdate")
         return needUpdate
+    }
+
+    private fun findCommentLongClick() = classesList.filter {
+        it.startsWith("com.bilibili.app.comm.comment2")
+    }.firstOrNull { c ->
+        c.findClass(mClassLoader).run {
+            declaredMethods.filter {
+                it.name == "onLongClick"
+            }.count() == 1
+        }
     }
 
     private fun findSubtitleSpan() = classesList.filter {
@@ -1003,15 +1014,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         it.type == Int::class.javaPrimitiveType
     }?.name
 
-    private fun findCommentLongClick() = classesList.filter {
-        it.startsWith("com.bilibili.app.comm.comment2")
-    }.firstOrNull { c ->
-        c.findClass(mClassLoader).run {
-            declaredMethods.filter {
-                it.name == "onLongClick"
-            }.count() == 1
-        }
-    }
 
     companion object {
         @Volatile
