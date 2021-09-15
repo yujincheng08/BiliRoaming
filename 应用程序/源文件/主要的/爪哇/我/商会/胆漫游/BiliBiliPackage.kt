@@ -169,7 +169,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             mClassLoader
         )
     }
-    val commentCopyClass by Weak { "com.bilibili.app.comm.comment2.comments.a.t1\$s".findClassOrNull(mClassLoader) }
+    val commentCopyClass by Weak { mHookInfo["class_comment_long_click"]?.findClassOrNull(mClassLoader) }
     val kotlinJsonClass by Weak { "kotlinx.serialization.json.Json".findClassOrNull(mClassLoader) }
     val gsonConverterClass by Weak { mHookInfo["class_gson_converter"]?.findClassOrNull(mClassLoader) }
     val playerOptionsPanelHolderClass by Weak {
@@ -322,6 +322,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     fun gsonFromJson() = mHookInfo["method_gson_fromjson"]
 
     fun pegasusFeed() = mHookInfo["method_pegasus_feed"]
+
+    fun commentCopy() = mHookInfo["class_comment_long_click"]
 
     fun responseDataField() = lazy {
         try {
@@ -521,6 +523,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             findChronosSwitch()
         }.checkOrPut("class_subtitle_span") {
             findSubtitleSpan()
+        }.checkOrPut("class_comment_long_click"){
+            findCommentLongClick()
         }
 
         Log.d(mHookInfo.filterKeys { it != "map_ids" })
@@ -999,6 +1003,15 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         it.type == Int::class.javaPrimitiveType
     }?.name
 
+    private fun findCommentLongClick() = classesList.filter {
+        it.startsWith("com.bilibili.app.comm.comment2")
+    }.firstOrNull { c ->
+        c.findClass(mClassLoader).run {
+            declaredMethods.filter {
+                it.name == "onLongClick"
+            }.count() == 1
+        }
+    }
 
     companion object {
         @Volatile
