@@ -169,6 +169,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             mClassLoader
         )
     }
+    val commentCopyClass by Weak { "com.bilibili.app.comm.comment2.comments.a.t1\$s".findClassOrNull(mClassLoader) }
     val kotlinJsonClass by Weak { "kotlinx.serialization.json.Json".findClassOrNull(mClassLoader) }
     val gsonConverterClass by Weak { mHookInfo["class_gson_converter"]?.findClassOrNull(mClassLoader) }
     val playerOptionsPanelHolderClass by Weak {
