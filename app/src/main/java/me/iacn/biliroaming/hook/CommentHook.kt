@@ -8,7 +8,7 @@ import me.iacn.biliroaming.utils.sPrefs
 class CommentHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
         if (!sPrefs.getBoolean("comment_copy", false)) return
-        instance.commentCopyClass?.replaceMethod( "onLongClick", View::class.java){
+        instance.commentCopyClass?.replaceMethod("onLongClick", View::class.java) {
             true
         }
     }
