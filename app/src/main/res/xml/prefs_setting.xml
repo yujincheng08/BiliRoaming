@@ -93,6 +93,11 @@
             android:title="@string/add_4k_title" />
 
         <SwitchPreference
+            android:key="comment_copy"
+            android:summary="@string/comment_copy_summary"
+            android:title="@string/comment_copy_title" />
+
+        <SwitchPreference
             android:key="mini_program"
             android:summary="@string/mini_program_summary"
             android:title="@string/mini_program_title" />

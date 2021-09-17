@@ -168,4 +168,6 @@
     <string name="custom_subtitle_summary">开启后能自定义CC字幕样式，但透明度跟随弹幕透明度</string>
     <string name="customize_space_title">净化用户空间</string>
     <string name="customize_space_summary">选择要屏蔽的元素(全选会让你什么也看不到)</string>
+    <string name="comment_copy_summary">禁用长按评论复制到剪切板（减少误触）</string>
+    <string name="comment_copy_title">去除长按评论复制</string>
 </resources>
