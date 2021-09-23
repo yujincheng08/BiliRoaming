@@ -52,10 +52,6 @@ android {
         exclude '**.bin'
     }
 
-    aaptOptions {
-        additionalParameters "--preferred-density", "xxxhdpi"
-        additionalParameters '--allow-reserved-package-id', '--package-id', '0x23'
-    }
 
     lintOptions {
         checkReleaseBuilds false
@@ -63,6 +59,9 @@ android {
 
     dependenciesInfo {
         includeInApk false
+    }
+    androidResources {
+        additionalParameters '--allow-reserved-package-id', '--package-id', '0x23'
     }
 }
 
@@ -112,7 +111,7 @@ def restartBiliBili() {
         commandLine android.adbExecutable, 'shell', 'am', 'force-stop', 'tv.danmaku.bili'
     }
     exec {
-        commandLine android.adbExecutable, 'shell', 'monkey', '-p', 'tv.danmaku.bili', '1'
+        commandLine android.adbExecutable, 'shell', 'am', 'start', '--user', '0', 'tv.danmaku.bili'
     }
 }
 

@@ -13,6 +13,7 @@ import me.iacn.biliroaming.network.BiliRoamingApi.getSeason
 import me.iacn.biliroaming.network.BiliRoamingApi.getThailandSearchBangumi
 import me.iacn.biliroaming.utils.*
 import org.json.JSONObject
+import java.io.InputStream
 import java.lang.reflect.Method
 import java.net.URL
 import java.net.URLDecoder
@@ -142,6 +143,28 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             instance.retrofitResponseClass?.hookBeforeAllConstructors { param ->
                 val url = getUrl(param.args[0])
                 val body = param.args[1] ?: return@hookBeforeAllConstructors
+                if (url?.startsWith("https://api.bilibili.com/pgc/view/v2/app/season") == true &&
+                    body.javaClass.name == instance.okioWrapperClass?.name
+                ) {
+                    val okioBuffer = body.getObjectField(instance.okio())
+                    val json =
+                        okioBuffer?.callMethodAs<InputStream?>(instance.okioInputStream())?.use {
+                            it.readBytes().toString(Charsets.UTF_8).toJSONObject()
+                        }?.apply {
+                            put(
+                                "data",
+                                fixBangumi(optJSONObject("data"), optInt("code", FAIL_CODE))
+                            )
+                            put("code", 0)
+                        }
+                    val newStream = json?.toString()?.byteInputStream()
+                    body.setObjectField(
+                        instance.okio(),
+                        okioBuffer?.javaClass?.newInstance()?.apply {
+                            callMethod(instance.okioReadFrom(), newStream)
+                        })
+                    body.setLongField(instance.okioLength(), newStream?.available()?.toLong() ?: 0L)
+                }
                 // Filter non-bangumi responses
                 // If it isn't bangumi, the type variable will not exist in this map
                 if (instance.bangumiApiResponseClass?.isInstance(body) == true ||
@@ -306,20 +329,16 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         body.setObjectField(dataField, newResult)
     }
 
-    private fun fixBangumi(body: Any) {
-        val fieldName =
-            if (isSerializable || isGson) instance.responseDataField().value else "result"
-        val result = body.getObjectField(fieldName)
-        val code = body.getIntField("code")
-        if (instance.bangumiUniformSeasonClass?.isInstance(result) != true && code != FAIL_CODE) return
-        val jsonResult = result?.toJson()
-        // Filter normal bangumi and other responses
+    private fun fixBangumi(jsonResult: JSONObject?, code: Int) =
         if (isBangumiWithWatchPermission(jsonResult, code)) {
             jsonResult?.also { allowDownload(it); fixEpisodesStatus(it) }
         } else {
             Log.toast("发现版权番剧，尝试解锁……")
             Log.d("Info: $lastSeasonInfo")
-            val (newCode, newJsonResult) = getSeason(lastSeasonInfo, result == null)?.toJSONObject()
+            val (newCode, newJsonResult) = getSeason(
+                lastSeasonInfo,
+                jsonResult == null
+            )?.toJSONObject()
                 ?.let {
                     it.optInt("code", FAIL_CODE) to it.optJSONObject("result")
                 } ?: FAIL_CODE to null
@@ -355,7 +374,17 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 put("prevueSection", newJsonResult?.optJSONArray("prevueSection"))
                 remove("dialog")
             } ?: newJsonResult
-        }?.let {
+        }
+
+    private fun fixBangumi(body: Any) {
+        val fieldName =
+            if (isSerializable || isGson) instance.responseDataField().value else "result"
+        val result = body.getObjectField(fieldName)
+        val code = body.getIntField("code")
+        if (instance.bangumiUniformSeasonClass?.isInstance(result) != true && code != FAIL_CODE) return
+        val jsonResult = result?.toJson()
+        // Filter normal bangumi and other responses
+        fixBangumi(jsonResult, code)?.let {
             body.setIntField("code", 0)
                 .setObjectField(fieldName, instance.bangumiUniformSeasonClass?.fromJson(it))
         } ?: run {

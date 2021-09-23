@@ -18,6 +18,7 @@ import java.io.*
 import java.lang.reflect.Modifier
 import java.lang.reflect.ParameterizedType
 import java.net.URL
+import java.nio.channels.ByteChannel
 import kotlin.math.max
 
 /**
@@ -164,24 +165,13 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             mClassLoader
         )
     }
-    val commentRpcClass by Weak {
-        "com.bilibili.app.comm.comment2.model.rpc.CommentRpcKt".findClassOrNull(
+    val commentCopyClass by Weak {
+        mHookInfo["class_comment_long_click"]?.findClassOrNull(
             mClassLoader
         )
     }
-    val commentCopyClass by Weak { mHookInfo["class_comment_long_click"]?.findClassOrNull(mClassLoader) }
     val kotlinJsonClass by Weak { "kotlinx.serialization.json.Json".findClassOrNull(mClassLoader) }
     val gsonConverterClass by Weak { mHookInfo["class_gson_converter"]?.findClassOrNull(mClassLoader) }
-    val playerOptionsPanelHolderClass by Weak {
-        mHookInfo["class_player_options_panel_holder"]?.findClassOrNull(
-            mClassLoader
-        )
-    }
-    val playerParamsBundleClass by Weak {
-        mHookInfo["class_playerparams_bundle"]?.findClassOrNull(
-            mClassLoader
-        )
-    }
     val playerCoreServiceV2Class by Weak {
         mHookInfo["class_player_core_service_v2"]?.findClassOrNull(
             mClassLoader
@@ -219,7 +209,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             mClassLoader
         )
     }
-    val videoDetailsActivityClass by Weak { "tv.danmaku.bili.ui.video.VideoDetailsActivity".findClassOrNull(mClassLoader) }
+
+    val okioWrapperClass by Weak { mHookInfo["class_okio_wrapper"]?.findClassOrNull(mClassLoader) }
 
     val classesList by lazy { mClassLoader.allClassesList() }
     private val accessKeyInstance by lazy {
@@ -309,11 +300,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     fun gson() = mHookInfo["field_gson"]
 
-    fun playbackSpeedList() = mHookInfo["field_playback_speed_list"]
-
-    fun putSerializableToPlayerParamsBundle() =
-        mHookInfo["method_put_serializable_to_playerparams_bundle"]
-
     fun defaultSpeed() = mHookInfo["method_get_default_speed"]
 
     fun urlField() = mHookInfo["field_url"]
@@ -333,6 +319,11 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             "_data"
         }
     }
+
+    fun okioLength() = mHookInfo["field_okio_length"]
+    fun okio() = mHookInfo["field_okio"]
+    fun okioInputStream() = mHookInfo["method_okio_buffer_input_stream"]
+    fun okioReadFrom() = mHookInfo["method_okio_buffer_read_from"]
 
     private fun readHookInfo(context: Context): MutableMap<String, String?> {
         try {
@@ -524,13 +515,64 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             findChronosSwitch()
         }.checkOrPut("class_subtitle_span") {
             findSubtitleSpan()
-        }.checkOrPut("class_comment_long_click"){
+        }.checkOrPut("class_comment_long_click") {
             findCommentLongClick()
+        }.checkConjunctiveOrPut(
+            "class_okio_wrapper",
+            "field_okio",
+            "field_okio_length"
+        ) {
+            findOkioWrapper()
+        }.checkConjunctiveOrPut(
+            "class_okio_buffer",
+            "method_okio_buffer_input_stream",
+            "method_okio_buffer_read_from"
+        ) {
+            findOkioBuffer()
         }
 
         Log.d(mHookInfo.filterKeys { it != "map_ids" })
         Log.d("Check hook info completed: needUpdate = $needUpdate")
         return needUpdate
+    }
+
+    private fun findOkioBuffer(): Array<String?> {
+        val okioBufferClass = classesList.filter {
+            it.startsWith("okio")
+        }.map { c ->
+            c.findClass(mClassLoader)
+        }.firstOrNull { c ->
+            c.interfaces.contains(ByteChannel::class.java)
+        } ?: return arrayOfNulls(3)
+        val okioInputStreamMethod = okioBufferClass.declaredMethods.firstOrNull {
+            it.parameterTypes.isEmpty() && it.returnType == InputStream::class.java
+        } ?: return arrayOfNulls(3)
+        val okioReadFromMethod = okioBufferClass.declaredMethods.firstOrNull {
+            it.parameterTypes.size == 1 && it.parameterTypes[0] == InputStream::class.java
+        } ?: return arrayOfNulls(3)
+        return arrayOf(okioBufferClass.name, okioInputStreamMethod.name, okioReadFromMethod.name)
+    }
+
+    private fun findOkioWrapper(): Array<String?> {
+        val responseClass = okhttpResponseClass ?: return arrayOfNulls(3)
+        val wrapperClass = classesList.filter {
+            it.startsWith(responseClass.name)
+        }.map { c ->
+            c.findClass(mClassLoader)
+        }.firstOrNull { c ->
+            c.superclass == responseClass
+        } ?: return arrayOfNulls(3)
+        val okioField = wrapperClass.declaredFields.firstOrNull { f ->
+            f.type.name.startsWith("okio")
+        } ?: return arrayOfNulls(3)
+        val okioLenField = wrapperClass.declaredFields.firstOrNull { f ->
+            f.type == Long::class.javaPrimitiveType
+        } ?: return arrayOfNulls(3)
+        return arrayOf(
+            wrapperClass.name,
+            okioField.name,
+            okioLenField.name
+        )
     }
 
     private fun findCommentLongClick() = classesList.filter {
