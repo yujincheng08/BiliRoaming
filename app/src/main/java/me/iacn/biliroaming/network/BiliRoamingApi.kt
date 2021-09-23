@@ -188,6 +188,7 @@ object BiliRoamingApi {
     @JvmStatic
     private fun fixEpisodes(result: JSONObject) {
         val episodes = result.optJSONArray("episodes")
+        var i = 0;
         for (episode in episodes.orEmpty()) {
             fixRight(episode)
             if (episode.optInt("badge_type", -1) == 0)
@@ -197,6 +198,7 @@ object BiliRoamingApi {
                     "badge_info",
                     JSONObject(BILI_VIP_BADGE_TEMPLATE.format(episode.optString("badge")))
                 )
+            episode.put("ep_index", ++i)
         }
         for (section in result.optJSONArray("section").orEmpty()) {
             fixEpisodes(section)
