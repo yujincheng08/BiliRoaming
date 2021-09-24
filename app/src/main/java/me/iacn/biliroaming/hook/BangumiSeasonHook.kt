@@ -144,7 +144,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 val url = getUrl(param.args[0])
                 val body = param.args[1] ?: return@hookBeforeAllConstructors
                 if (url?.startsWith("https://api.bilibili.com/pgc/view/v2/app/season") == true &&
-                    body.javaClass.name == instance.okioWrapperClass?.name
+                    body.javaClass == instance.okioWrapperClass
                 ) {
                     val okioBuffer = body.getObjectField(instance.okio())
                     val json =
