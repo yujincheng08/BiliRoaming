@@ -32,6 +32,7 @@ import java.util.concurrent.TimeUnit
 object BiliRoamingApi {
     private const val BILI_SEASON_URL = "api.bilibili.com/pgc/view/web/season"
     private const val BILI_HIDDEN_SEASON_URL = "bangumi.bilibili.com/view/web_api/season"
+    private const val BILI_SEARCH_URL = "/x/v2/search/type"
     private const val BILIPLUS_VIEW_URL = "www.biliplus.com/api/view"
     private const val BILI_REVIEW_URL = "api.bilibili.com/pgc/review/user"
     private const val BILI_USER_STATUS_URL = "api.bilibili.com/pgc/view/web/season/user/status"
@@ -167,6 +168,28 @@ object BiliRoamingApi {
             "bstar://bangumi/season/",
             "https://bangumi.bilibili.com/anime/"
         )
+    }
+
+    @JvmStatic
+    fun getOverseaSearchBangumi(queryString: String, area:String): String? {
+        val hostUrl = sPrefs.getString(area + "_server", null) ?: return null
+        val uri = Uri.Builder()
+            .scheme("https")
+            .encodedAuthority(hostUrl + BILI_SEARCH_URL)
+            .encodedQuery(
+                signQuery(
+                    queryString, mapOf(
+                        "type" to "7",
+                        "appkey" to "1d8b6e7d45233436",
+                        "build" to "6400000",
+                        "mobi_app" to "android",
+                        "platform" to "android",
+                        "area" to area,
+                    )
+                )
+            )
+            .toString()
+        return getContent(uri)
     }
 
     @JvmStatic
