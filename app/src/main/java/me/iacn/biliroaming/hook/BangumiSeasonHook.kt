@@ -10,6 +10,7 @@ import me.iacn.biliroaming.Protos
 import me.iacn.biliroaming.network.BiliRoamingApi
 import me.iacn.biliroaming.network.BiliRoamingApi.getContent
 import me.iacn.biliroaming.network.BiliRoamingApi.getSeason
+import me.iacn.biliroaming.network.BiliRoamingApi.getOverseaSearchBangumi
 import me.iacn.biliroaming.network.BiliRoamingApi.getThailandSearchBangumi
 import me.iacn.biliroaming.utils.*
 import org.json.JSONObject
@@ -32,7 +33,10 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             instance.kotlinJsonClass?.getStaticObjectField("Companion")?.callMethod("getNonstrict")
         }
         const val FAIL_CODE = -404
-        private const val TH_TYPE = 114514
+        private const val CN_TYPE = 114
+        private const val HK_TYPE = 514
+        private const val TW_TYPE = 1919
+        private const val TH_TYPE = 810
     }
 
     private val isSerializable by lazy {
@@ -185,7 +189,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         if (instance.generalResponseClass?.isInstance(body) == true) "data" else instance.responseDataField().value
                     val data = body.getObjectField(dataField)
                     if (data?.javaClass == searchAllResultClass) {
-                        addThailandTag(data)
+                        addOverseaTag(data)
                     }
                     url ?: return@hookBeforeAllConstructors
                     if (data?.javaClass == bangumiSearchPageClass &&
@@ -194,6 +198,18 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         && url.contains("type=$TH_TYPE")
                     ) {
                         body.setObjectField(dataField, retrieveThailandSearch(data, url))
+                    } else if (data?.javaClass == bangumiSearchPageClass
+                        && url.startsWith("https://app.bilibili.com/x/v2/search/type")
+                    ) {
+                        if (url.contains("type=$CN_TYPE")){
+                            body.setObjectField(dataField, retrieveOverseaSearch(data, url, "cn"))
+                        }else if (url.contains("type=$HK_TYPE")){
+                            body.setObjectField(dataField, retrieveOverseaSearch(data, url, "hk"))
+                        }else if (url.contains("type=$TW_TYPE")){
+                            body.setObjectField(dataField, retrieveOverseaSearch(data, url, "tw"))
+                        }else if (url.contains("type=$TH_TYPE")){
+                            body.setObjectField(dataField, retrieveThailandSearch(data, url))
+                        }
                     } else if (url.startsWith("https://app.bilibili.com/x/v2/view?") ||
                         url.startsWith("https://app.bilibili.com/x/intl/view?") ||
                         url.startsWith("https://appintl.biliapi.net/intl/gateway/app/view?") &&
@@ -238,7 +254,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 hookAfterMethod("getCommentJumpUrl", hooker = urlHook)
             }
 
-        if (sPrefs.getBoolean("hidden", false) && sPrefs.getBoolean("search_th", false)) {
+        if (sPrefs.getBoolean("hidden", false) && sPrefs.getBoolean("search_oversea", false)) {
             "com.bilibili.bangumi.ui.page.search.BangumiSearchResultFragment".findClassOrNull(
                 mClassLoader
             )?.run {
@@ -247,7 +263,28 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     Boolean::class.javaPrimitiveType
                 ) { param ->
                     param.thisObject.callMethodAs<Bundle>("getArguments").run {
-                        if (getString("from") == "th") {
+                        if (getString("from") == "cn") {
+                            declaredFields.filter {
+                                it.type == Int::class.javaPrimitiveType
+                            }.forEach {
+                                it.isAccessible = true
+                                if (it.get(param.thisObject) == 7) it.set(param.thisObject, CN_TYPE)
+                            }
+                        }else if (getString("from") == "hk") {
+                            declaredFields.filter {
+                                it.type == Int::class.javaPrimitiveType
+                            }.forEach {
+                                it.isAccessible = true
+                                if (it.get(param.thisObject) == 7) it.set(param.thisObject, HK_TYPE)
+                            }
+                        }else if (getString("from") == "tw") {
+                            declaredFields.filter {
+                                it.type == Int::class.javaPrimitiveType
+                            }.forEach {
+                                it.isAccessible = true
+                                if (it.get(param.thisObject) == 7) it.set(param.thisObject, TW_TYPE)
+                            }
+                        }else if (getString("from") == "th") {
                             declaredFields.filter {
                                 it.type == Int::class.javaPrimitiveType
                             }.forEach {
@@ -264,14 +301,61 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 mClassLoader
             )
             val pageArrays = pageTypesClass.getStaticObjectFieldAs<Array<Any>>("\$VALUES")
-            val newPageArray = pageArrays.copyOf(pageArrays.size + 1)
-            newPageArray[pageArrays.size] = pageTypesClass.new(
-                "PAGE_BANGUMI",
-                4,
-                "bilibili://search-result/new-bangumi?from=th",
-                TH_TYPE,
-                "bangumi"
-            )
+            var countShowItems = 0
+            if (!sPrefs.getString("cn_server", null).isNullOrBlank()) {
+                countShowItems = countShowItems + 1
+            }
+            if (!sPrefs.getString("hk_server", null).isNullOrBlank()) {
+                countShowItems = countShowItems + 1
+            }
+            if (!sPrefs.getString("tw_server", null).isNullOrBlank()) {
+                countShowItems = countShowItems + 1
+            }
+            if (!sPrefs.getString("th_server", null).isNullOrBlank()) {
+                countShowItems = countShowItems + 1
+            }
+            val newPageArray = pageArrays.copyOf(pageArrays.size + countShowItems)
+            var arrayIndex = -1
+            if (!sPrefs.getString("cn_server", null).isNullOrBlank()) {
+                arrayIndex = arrayIndex + 1
+                newPageArray[pageArrays.size + arrayIndex] = pageTypesClass.new(
+                    "PAGE_BANGUMI",
+                    4,
+                    "bilibili://search-result/new-bangumi?from=cn",
+                    CN_TYPE,
+                    "bangumi"
+                )
+            }
+            if (!sPrefs.getString("hk_server", null).isNullOrBlank()) {
+                arrayIndex = arrayIndex + 1
+                newPageArray[pageArrays.size + arrayIndex] = pageTypesClass.new(
+                    "PAGE_BANGUMI",
+                    4,
+                    "bilibili://search-result/new-bangumi?from=hk",
+                    HK_TYPE,
+                    "bangumi"
+                )
+            }
+            if (!sPrefs.getString("tw_server", null).isNullOrBlank()) {
+                arrayIndex = arrayIndex + 1
+                newPageArray[pageArrays.size + arrayIndex] = pageTypesClass.new(
+                    "PAGE_BANGUMI",
+                    4,
+                    "bilibili://search-result/new-bangumi?from=tw",
+                    TW_TYPE,
+                    "bangumi"
+                )
+            }
+            if (!sPrefs.getString("th_server", null).isNullOrBlank()) {
+                arrayIndex = arrayIndex + 1
+                newPageArray[pageArrays.size + arrayIndex] = pageTypesClass.new(
+                    "PAGE_BANGUMI",
+                    4,
+                    "bilibili://search-result/new-bangumi?from=th",
+                    TH_TYPE,
+                    "bangumi"
+                )
+            }
             pageTypesClass.setStaticObjectField("\$VALUES", newPageArray)
         }
     }
@@ -288,7 +372,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     private fun retrieveThailandSearch(data: Any?, url: String): Any? {
         data ?: return data
-        if (sPrefs.getBoolean("hidden", false) && sPrefs.getBoolean("search_th", false)) {
+        if (sPrefs.getBoolean("hidden", false) && sPrefs.getBoolean("search_oversea", false)) {
             val content =
                 getThailandSearchBangumi(URL(URLDecoder.decode(url, Charsets.UTF_8.name())).query)
                     ?: return data
@@ -304,16 +388,73 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
     }
 
-    private fun addThailandTag(body: Any?) {
+    private fun retrieveOverseaSearch(data: Any?, url: String, area: String): Any? {
+        data ?: return data
+        if (sPrefs.getBoolean("hidden", false) && sPrefs.getBoolean("search_oversea", false)) {
+            val content =
+                getOverseaSearchBangumi(
+                    URL(URLDecoder.decode(url, Charsets.UTF_8.name())).query,
+                    area)
+                    ?: return data
+            val jsonContent = content.toJSONObject()
+            val newData = jsonContent.optJSONObject("data") ?: return data
+            return instance.fastJsonClass?.callStaticMethod(
+                instance.fastJsonParse(),
+                newData.toString(),
+                data.javaClass
+            ) ?: data
+        } else {
+            return data
+        }
+    }
+
+    private fun addOverseaTag(body: Any?) {
         body ?: return
-        if (sPrefs.getBoolean("hidden", false) && sPrefs.getBoolean("search_th", false)) {
-            searchAllResultNavInfoClass?.new()?.run {
-                setObjectField("name", "泰区")
-                setIntField("pages", 0)
-                setIntField("total", 0)
-                setIntField("type", TH_TYPE)
-            }?.also {
-                body.getObjectFieldAs<MutableList<Any>>("nav").add(1, it)
+        if (sPrefs.getBoolean("hidden", false) && sPrefs.getBoolean("search_oversea", false)){
+            var itemIndex = 0
+            if (!sPrefs.getString("cn_server", null).isNullOrBlank()) {
+                itemIndex = itemIndex + 1
+                searchAllResultNavInfoClass?.new()?.run {
+                    setObjectField("name", "陸")
+                    setIntField("pages", 0)
+                    setIntField("total", 0)
+                    setIntField("type", CN_TYPE)
+                }?.also {
+                    body.getObjectFieldAs<MutableList<Any>>("nav").add(itemIndex, it)
+                }
+            }
+            if (!sPrefs.getString("hk_server", null).isNullOrBlank()) {
+                itemIndex = itemIndex + 1
+                searchAllResultNavInfoClass?.new()?.run {
+                    setObjectField("name", "港")
+                    setIntField("pages", 0)
+                    setIntField("total", 0)
+                    setIntField("type", HK_TYPE)
+                }?.also {
+                    body.getObjectFieldAs<MutableList<Any>>("nav").add(itemIndex, it)
+                }
+            }
+            if (!sPrefs.getString("tw_server", null).isNullOrBlank()) {
+                itemIndex = itemIndex + 1
+                searchAllResultNavInfoClass?.new()?.run {
+                    setObjectField("name", "台")
+                    setIntField("pages", 0)
+                    setIntField("total", 0)
+                    setIntField("type", TW_TYPE)
+                }?.also {
+                    body.getObjectFieldAs<MutableList<Any>>("nav").add(itemIndex, it)
+                }
+            }
+            if (!sPrefs.getString("th_server", null).isNullOrBlank()) {
+                itemIndex = itemIndex + 1
+                searchAllResultNavInfoClass?.new()?.run {
+                    setObjectField("name", "泰")
+                    setIntField("pages", 0)
+                    setIntField("total", 0)
+                    setIntField("type", TH_TYPE)
+                }?.also {
+                    body.getObjectFieldAs<MutableList<Any>>("nav").add(itemIndex, it)
+                }
             }
         }
     }
