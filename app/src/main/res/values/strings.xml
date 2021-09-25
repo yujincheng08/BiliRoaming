@@ -141,8 +141,8 @@
     <string name="movie_title">影视</string>
     <string name="activity_title">热点</string>
     <string name="other_tabs_title">其它</string>
-    <string name="search_th_title">开启泰区番剧搜索</string>
-    <string name="search_th_summary">在搜索页面添加泰区番剧搜索结果，需要解析服务器支持</string>
+    <string name="search_oversea_title">开启其他地区番剧搜索</string>
+    <string name="search_oversea_summary">在搜索页面添加其他地区番剧搜索结果，需要解析服务器支持</string>
     <string name="customize_bottom_bar_title">自定义底栏</string>
     <string name="customize_bottom_bar_summary">至少保留一个元素（重启两次生效）</string>
     <string name="customize_accessKey_title">自定义访问密钥</string>
