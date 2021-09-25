@@ -203,12 +203,10 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     ) {
                         if (url.contains("type=$CN_TYPE")){
                             body.setObjectField(dataField, retrieveOverseaSearch(data, url, "cn"))
-                        }else if (url.contains("type=$HK_TYPE")){
+                        } else if (url.contains("type=$HK_TYPE")){
                             body.setObjectField(dataField, retrieveOverseaSearch(data, url, "hk"))
-                        }else if (url.contains("type=$TW_TYPE")){
+                        } else if (url.contains("type=$TW_TYPE")){
                             body.setObjectField(dataField, retrieveOverseaSearch(data, url, "tw"))
-                        }else if (url.contains("type=$TH_TYPE")){
-                            body.setObjectField(dataField, retrieveThailandSearch(data, url))
                         }
                     } else if (url.startsWith("https://app.bilibili.com/x/v2/view?") ||
                         url.startsWith("https://app.bilibili.com/x/intl/view?") ||
@@ -270,21 +268,21 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                 it.isAccessible = true
                                 if (it.get(param.thisObject) == 7) it.set(param.thisObject, CN_TYPE)
                             }
-                        }else if (getString("from") == "hk") {
+                        } else if (getString("from") == "hk") {
                             declaredFields.filter {
                                 it.type == Int::class.javaPrimitiveType
                             }.forEach {
                                 it.isAccessible = true
                                 if (it.get(param.thisObject) == 7) it.set(param.thisObject, HK_TYPE)
                             }
-                        }else if (getString("from") == "tw") {
+                        } else if (getString("from") == "tw") {
                             declaredFields.filter {
                                 it.type == Int::class.javaPrimitiveType
                             }.forEach {
                                 it.isAccessible = true
                                 if (it.get(param.thisObject) == 7) it.set(param.thisObject, TW_TYPE)
                             }
-                        }else if (getString("from") == "th") {
+                        } else if (getString("from") == "th") {
                             declaredFields.filter {
                                 it.type == Int::class.javaPrimitiveType
                             }.forEach {
