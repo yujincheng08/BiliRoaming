@@ -218,9 +218,9 @@
             android:title="@string/add_movie_title" />
         <SwitchPreference
             android:dependency="hidden"
-            android:key="search_th"
-            android:summary="@string/search_th_summary"
-            android:title="@string/search_th_title" />
+            android:key="search_oversea"
+            android:summary="@string/search_oversea_summary"
+            android:title="@string/search_oversea_title" />
         <Preference
             android:dependency="hidden"
             android:key="customize_accessKey"
