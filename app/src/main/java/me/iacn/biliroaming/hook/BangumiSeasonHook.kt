@@ -187,9 +187,8 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
                 if (url != null && url.startsWith("https://appintl.biliapi.net/intl/gateway/app/search/type")
                 ) {
-                    val regex = Regex("type=(\\d+)")
-                    val (area) = regex.find(url)!!.destructured
-                    if (!AREA_TYPES.containsKey(area.toInt())) {
+                    val area = Uri.parse(url).getQueryParameter("type")?.toInt()
+                    if (!AREA_TYPES.containsKey(area)) {
                         fixPlaySearchType(body, url)
                     }
                 }
@@ -207,11 +206,10 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         (url.startsWith("https://app.bilibili.com/x/v2/search/type") ||
                                 url.startsWith("https://appintl.biliapi.net/intl/gateway/app/search/type"))
                     ) {
-                        val regex = Regex("type=(\\d+)")
-                        val (area) = regex.find(url)!!.destructured
-                        if (AREA_TYPES.containsKey(area.toInt())) {
+                        val area = Uri.parse(url).getQueryParameter("type")?.toInt()
+                        if (AREA_TYPES.containsKey(area)) {
                             body.setObjectField(dataField,
-                                AREA_TYPES[area.toInt()]?.let {
+                                AREA_TYPES[area]?.let {
                                     retrieveAreaSearch(
                                         data,
                                         url,
