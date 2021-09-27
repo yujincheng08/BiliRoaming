@@ -293,16 +293,24 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 mClassLoader
             )
             val pageArrays = pageTypesClass.getStaticObjectFieldAs<Array<Any>>("\$VALUES")
-            val newPageArray = pageArrays.copyOf(pageArrays.size + 4)
             var counter = 0
             for (area in AREA_TYPES) {
-                newPageArray[pageArrays.size + counter++] = pageTypesClass.new(
-                    "PAGE_BANGUMI",
-                    4,
-                    "bilibili://search-result/new-bangumi?from=" + area.value.type,
-                    area.key,
-                    "bangumi"
-                )
+                if (!sPrefs.getString(area.value.type + "_server", null).isNullOrBlank()) {
+                    counter++
+                }
+            }
+            val newPageArray = pageArrays.copyOf(pageArrays.size + counter)
+            counter = 0
+            for (area in AREA_TYPES) {
+                if (!sPrefs.getString(area.value.type + "_server", null).isNullOrBlank()) {
+                    newPageArray[pageArrays.size + counter++] = pageTypesClass.new(
+                        "PAGE_BANGUMI",
+                        4,
+                        "bilibili://search-result/new-bangumi?from=" + area.value.type,
+                        area.key,
+                        "bangumi"
+                    )
+                }
             }
             pageTypesClass.setStaticObjectField("\$VALUES", newPageArray)
         }
@@ -340,13 +348,15 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         body ?: return
         if (sPrefs.getBoolean("hidden", false) && sPrefs.getBoolean("search_area", false)) {
             for (area in AREA_TYPES) {
-                searchAllResultNavInfoClass?.new()?.run {
-                    setObjectField("name", area.value.text)
-                    setIntField("pages", 0)
-                    setIntField("total", 0)
-                    setIntField("type", area.key)
-                }?.also {
-                    body.getObjectFieldAs<MutableList<Any>>("nav").add(1, it)
+                if (!sPrefs.getString(area.value.type + "_server", null).isNullOrBlank()) {
+                    searchAllResultNavInfoClass?.new()?.run {
+                        setObjectField("name", area.value.text)
+                        setIntField("pages", 0)
+                        setIntField("total", 0)
+                        setIntField("type", area.key)
+                    }?.also {
+                        body.getObjectFieldAs<MutableList<Any>>("nav").add(1, it)
+                    }
                 }
             }
         }
