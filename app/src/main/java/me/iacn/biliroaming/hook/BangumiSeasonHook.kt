@@ -17,7 +17,6 @@ import java.io.InputStream
 import java.lang.reflect.Method
 import java.net.URL
 import java.net.URLDecoder
-import kotlin.Array
 import kotlin.Boolean
 import kotlin.Int
 import java.lang.reflect.Array as RArray
@@ -183,7 +182,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     // for new blue 6.3.7
                     instance.rxGeneralResponseClass?.isInstance(body) == true
                 ) {
-                    fixBangumi(body)
+                    fixBangumi(body, url)
                 }
                 if (url != null && url.startsWith("https://appintl.biliapi.net/intl/gateway/app/search/type")
                 ) {
@@ -382,10 +381,9 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             val (newCode, newJsonResult) = getSeason(
                 lastSeasonInfo,
                 jsonResult == null
-            )?.toJSONObject()
-                ?.let {
-                    it.optInt("code", FAIL_CODE) to it.optJSONObject("result")
-                } ?: FAIL_CODE to null
+            )?.toJSONObject()?.let {
+                it.optInt("code", FAIL_CODE) to it.optJSONObject("result")
+            } ?: FAIL_CODE to null
             if (isBangumiWithWatchPermission(newJsonResult, newCode)) {
                 Log.d("Got new season information from proxy server: $newJsonResult")
                 lastSeasonInfo["title"] = newJsonResult?.optString("title")
@@ -420,12 +418,13 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             } ?: newJsonResult
         }
 
-    private fun fixBangumi(body: Any) {
+    private fun fixBangumi(body: Any, url: String?) {
         val fieldName =
             if (isSerializable || isGson) instance.responseDataField().value else "result"
         val result = body.getObjectField(fieldName)
         val code = body.getIntField("code")
         if (instance.bangumiUniformSeasonClass?.isInstance(result) != true && code != FAIL_CODE) return
+        if (url?.contains("cards?") == true) return
         val jsonResult = result?.toJson()
         // Filter normal bangumi and other responses
         fixBangumi(jsonResult, code)?.let {

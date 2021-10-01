@@ -541,7 +541,7 @@ object BiliRoamingApi {
         result.optJSONObject("rights")?.put("watch_platform", 1)
 
         val episodes = JSONArray()
-        for (ep in inputEpisodes.orEmpty()) {
+        for ((idx, ep) in inputEpisodes.orEmpty().iterator().withIndex()) {
             ep.put("episode_status", ep.optInt("status"))
             ep.put("ep_id", ep.optInt("id"))
             ep.put("index", ep.optString("title"))
@@ -550,6 +550,7 @@ object BiliRoamingApi {
                 ep.put("cid", ep.optInt("id"))
             if (ep.optInt("aid", 0) == 0)
                 ep.put("aid", result.optInt("season_id"))
+            ep.put("ep_index", ep.optString("index").toIntOrNull() ?: idx + 1)
             fixRight(ep)
             episodes.put(ep)
         }
