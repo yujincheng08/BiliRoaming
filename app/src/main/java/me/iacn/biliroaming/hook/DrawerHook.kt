@@ -34,7 +34,7 @@ class DrawerHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             self.setContentView(drawerLayout as View)
         }
 
-        instance.mainActivityClass?.hookAfterMethod("onStart") { param ->
+        val createHooker: Hooker = { param ->
             val self = param.thisObject as Activity
             val fragmentManager = self.callMethod("getSupportFragmentManager")
             navView = fragmentManager?.callMethod("findFragmentByTag", "home")
@@ -49,6 +49,16 @@ class DrawerHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             layoutParams?.javaClass?.fields?.get(0)?.set(layoutParams, Gravity.START)
             navView?.parent ?: drawerLayout?.callMethod("addView", navView, 1, layoutParams)
         }
+
+        instance.mainActivityClass?.runCatching {
+            getDeclaredMethod(
+                "onPostCreate",
+                Bundle::class.java
+            )
+        }?.onSuccess { it.hookAfterMethod(createHooker) }
+
+        instance.mainActivityClass?.runCatching { getDeclaredMethod("onStart") }
+            ?.onSuccess { it.hookAfterMethod(createHooker) }
 
         instance.mainActivityClass?.replaceMethod("onBackPressed") { param ->
             try {
