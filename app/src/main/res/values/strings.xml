@@ -170,4 +170,6 @@
     <string name="customize_space_summary">选择要屏蔽的元素(全选会让你什么也看不到)</string>
     <string name="comment_copy_summary">禁用长按评论复制到剪切板（减少误触）</string>
     <string name="comment_copy_title">去除长按评论复制</string>
+    <string name="comment_copy_enhance_title">长按评论弹出评论内容对话框</string>
+    <string name="comment_copy_enhance_summary">长按评论时弹出一个对话框显示评论内容以便选择复制，需要开启“去除长按评论复制”</string>
 </resources>
