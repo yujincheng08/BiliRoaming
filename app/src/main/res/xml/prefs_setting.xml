@@ -98,6 +98,12 @@
             android:title="@string/comment_copy_title" />
 
         <SwitchPreference
+            android:dependency="comment_copy"
+            android:key="comment_copy_enhance"
+            android:summary="@string/comment_copy_enhance_summary"
+            android:title="@string/comment_copy_enhance_title" />
+
+        <SwitchPreference
             android:key="mini_program"
             android:summary="@string/mini_program_summary"
             android:title="@string/mini_program_title" />
