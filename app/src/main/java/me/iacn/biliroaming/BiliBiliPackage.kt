@@ -212,6 +212,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val commentExpandableTextViewClass by Weak {
         "com.bilibili.app.comm.comment2.widget.CommentExpandableTextView".findClassOrNull(mClassLoader)
     }
+    val liveRoomActivityClass by Weak {
+        "com.bilibili.bililive.room.ui.roomv3.LiveRoomActivityV3".findClassOrNull(mClassLoader)
+    }
 
     val okioWrapperClass by Weak { mHookInfo["class_okio_wrapper"]?.findClassOrNull(mClassLoader) }
 
