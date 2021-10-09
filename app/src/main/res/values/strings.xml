@@ -172,4 +172,6 @@
     <string name="comment_copy_title">去除长按评论复制</string>
     <string name="comment_copy_enhance_title">长按评论弹出评论内容对话框</string>
     <string name="comment_copy_enhance_summary">长按评论时弹出一个对话框显示评论内容以便选择复制，需要开启“去除长按评论复制”</string>
+    <string name="anti_live_room_feed_title">强制旧版直播间样式</string>
+    <string name="anti_live_room_feed_summary">强制直播间使用旧版样式</string>
 </resources>
