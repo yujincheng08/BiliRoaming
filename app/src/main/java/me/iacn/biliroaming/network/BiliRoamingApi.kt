@@ -212,9 +212,9 @@ object BiliRoamingApi {
     }
 
     @JvmStatic
-    private fun fixEpisodes(result: JSONObject) {
+    private fun fixEpisodes(result: JSONObject, sid: Int = 0) {
         val episodes = result.optJSONArray("episodes")
-        for ((idx, episode) in episodes.orEmpty().iterator().withIndex()) {
+        for ((eid, episode) in episodes.orEmpty().iterator().withIndex()) {
             fixRight(episode)
             if (episode.optInt("badge_type", -1) == 0)
                 episode.remove("badge_info")
@@ -223,10 +223,11 @@ object BiliRoamingApi {
                     "badge_info",
                     JSONObject(BILI_VIP_BADGE_TEMPLATE.format(episode.optString("badge")))
                 )
-            episode.put("ep_index", idx + 1)
+            episode.put("ep_index", eid + 1)
+            episode.put("section_index", sid + 1)
         }
-        for (section in result.optJSONArray("section").orEmpty()) {
-            fixEpisodes(section)
+        for ((off, section) in result.optJSONArray("section").orEmpty().iterator().withIndex()) {
+            fixEpisodes(section, sid + off + 1)
         }
     }
 
@@ -527,8 +528,32 @@ object BiliRoamingApi {
 
     @JvmStatic
     fun fixThailandSeason(result: JSONObject) {
-        val inputEpisodes = result.optJSONArray("modules")?.optJSONObject(0)?.optJSONObject("data")
-            ?.optJSONArray("episodes")
+        val episodes = JSONArray()
+        for ((sid, module) in result.optJSONArray("modules").orEmpty().iterator().withIndex()) {
+            for ((eid, ep) in module.optJSONObject("data")?.optJSONArray("episodes").orEmpty()
+                .iterator().withIndex()) {
+                ep.put("episode_status", ep.optInt("status"))
+                ep.put("ep_id", ep.optInt("id"))
+                ep.put("index", ep.optString("title"))
+                ep.put("indexTitle", ep.optString("long_title"))
+                if (ep.optInt("cid", 0) == 0)
+                    ep.put("cid", ep.optInt("id"))
+                if (ep.optInt("aid", 0) == 0)
+                    ep.put("aid", result.optInt("season_id"))
+                ep.put("ep_index", eid + 1)
+                ep.put("section_index", sid + 1)
+                fixRight(ep)
+                episodes.put(ep)
+            }
+        }
+
+        result.put("episodes", episodes)
+        val style = JSONArray()
+        for (i in result.optJSONArray("styles").orEmpty()) {
+            style.put(i.optString("name"))
+        }
+        result.put("style", style)
+        result.optJSONObject("rights")?.put("watch_platform", 1)
         result.apply {
             put("actors", result.optJSONObject("actor")?.optString("info"))
             put("is_paster_ads", 0)
@@ -536,31 +561,8 @@ object BiliRoamingApi {
             put("newest_ep", result.optJSONObject("new_ep"))
             put("season_status", result.optInt("status"))
             put("season_title", result.optString("title"))
-            put("total_ep", inputEpisodes?.length())
+            put("total_ep", episodes.length())
         }
-        result.optJSONObject("rights")?.put("watch_platform", 1)
-
-        val episodes = JSONArray()
-        for ((idx, ep) in inputEpisodes.orEmpty().iterator().withIndex()) {
-            ep.put("episode_status", ep.optInt("status"))
-            ep.put("ep_id", ep.optInt("id"))
-            ep.put("index", ep.optString("title"))
-            ep.put("indexTitle", ep.optString("long_title"))
-            if (ep.optInt("cid", 0) == 0)
-                ep.put("cid", ep.optInt("id"))
-            if (ep.optInt("aid", 0) == 0)
-                ep.put("aid", result.optInt("season_id"))
-            ep.put("ep_index", idx + 1)
-            fixRight(ep)
-            episodes.put(ep)
-        }
-        result.put("episodes", episodes)
-
-        val style = JSONArray()
-        for (i in result.optJSONArray("styles").orEmpty()) {
-            style.put(i.optString("name"))
-        }
-        result.put("style", style)
     }
 
     @JvmStatic
