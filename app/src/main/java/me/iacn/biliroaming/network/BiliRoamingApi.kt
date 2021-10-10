@@ -529,8 +529,10 @@ object BiliRoamingApi {
     @JvmStatic
     fun fixThailandSeason(result: JSONObject) {
         val episodes = JSONArray()
-        for ((sid, module) in result.optJSONArray("modules").orEmpty().iterator().withIndex()) {
-            for ((eid, ep) in module.optJSONObject("data")?.optJSONArray("episodes").orEmpty()
+        for ((mid, module) in result.optJSONArray("modules").orEmpty().iterator().withIndex()) {
+            val data = module.optJSONObject("data") ?: continue
+            val sid = module.optInt("id", mid + 1)
+            for ((eid, ep) in data.optJSONArray("episodes").orEmpty()
                 .iterator().withIndex()) {
                 ep.put("episode_status", ep.optInt("status"))
                 ep.put("ep_id", ep.optInt("id"))
@@ -545,6 +547,7 @@ object BiliRoamingApi {
                 fixRight(ep)
                 episodes.put(ep)
             }
+            data.put("id", sid)
         }
 
         result.put("episodes", episodes)
