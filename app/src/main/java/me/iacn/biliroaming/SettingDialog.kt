@@ -370,6 +370,11 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         private fun onCustomizeBottomBarClick(): Boolean {
             AlertDialog.Builder(activity).apply {
                 val bottomItems = JsonHook.bottomItems
+                val ids = bottomItems.map { it.id }.toHashSet()
+                sPrefs.getStringSet("hided_bottom_items", null)?.forEach {
+                    if (it.isEmpty() || ids.contains(it)) return@forEach
+                    bottomItems.add(JsonHook.BottomItem("未知", null, it, false))
+                }
                 setTitle(moduleRes.getString(R.string.customize_bottom_bar_title))
                 setPositiveButton(android.R.string.ok) { _, _ ->
                     val hideItems = mutableSetOf<String>()
