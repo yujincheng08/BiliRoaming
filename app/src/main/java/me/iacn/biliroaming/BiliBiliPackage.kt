@@ -13,6 +13,7 @@ import android.util.SparseArray
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import dalvik.system.BaseDexClassLoader
 import me.iacn.biliroaming.utils.*
 import java.io.*
 import java.lang.reflect.Modifier
@@ -210,7 +211,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         )
     }
     val commentExpandableTextViewClass by Weak {
-        "com.bilibili.app.comm.comment2.widget.CommentExpandableTextView".findClassOrNull(mClassLoader)
+        "com.bilibili.app.comm.comment2.widget.CommentExpandableTextView".findClassOrNull(
+            mClassLoader
+        )
     }
     val liveRoomActivityClass by Weak {
         "com.bilibili.bililive.room.ui.roomv3.LiveRoomActivityV3".findClassOrNull(mClassLoader)
@@ -218,7 +221,27 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     val okioWrapperClass by Weak { mHookInfo["class_okio_wrapper"]?.findClassOrNull(mClassLoader) }
 
-    val classesList by lazy { mClassLoader.allClassesList() }
+    val classesList by lazy {
+        mClassLoader.allClassesList {
+            val tribeClass =
+                kotlin.runCatching { mClassLoader.loadClass("com.bilibili.lib.tribe.core.internal.loader.TribePathClassLoader") }
+                    .getOrNull() ?: return@allClassesList it
+            val delegateClass =
+                kotlin.runCatching { mClassLoader.loadClass("com.bilibili.lib.tribe.core.internal.loader.TribeLoaderDelegate") }
+                    .getOrNull() ?: return@allClassesList it
+            val delegateField =
+                kotlin.runCatching { tribeClass.findFirstFieldByExactType(delegateClass) }
+                    .getOrNull()
+            val loaderField =
+                kotlin.runCatching { delegateClass.findFirstFieldByExactType(ClassLoader::class.java) }
+                    .getOrNull()
+            if (tribeClass.isInstance(it)) {
+                val out = it.getObjectFieldOrNull(delegateField?.name)
+                    ?.getObjectFieldOrNull(loaderField?.name)
+                if (BaseDexClassLoader::class.java.isInstance(out)) out as BaseDexClassLoader else it
+            } else it
+        }
+    }
     private val accessKeyInstance by lazy {
         ("com.bilibili.cheese.ui.detail.pay.v2.CheesePayHelperV2\$accessKey\$2".findClassOrNull(
             mClassLoader

@@ -442,13 +442,17 @@ inline fun XResources.hookLayout(
     }
 }
 
-fun ClassLoader.allClassesList(): List<String> {
+fun Class<*>.findFirstFieldByExactType(type: Class<*>): Field =
+    findFirstFieldByExactType(this, type)
+
+fun ClassLoader.allClassesList(delegator: (BaseDexClassLoader) -> BaseDexClassLoader = { x -> x }): List<String> {
     var classLoader = this
     while (classLoader !is BaseDexClassLoader) {
         if (classLoader.parent != null) classLoader = classLoader.parent
         else return emptyList()
     }
-    return classLoader.getObjectField("pathList")?.getObjectFieldAs<Array<Any>>("dexElements")
+    return delegator(classLoader).getObjectField("pathList")
+        ?.getObjectFieldAs<Array<Any>>("dexElements")
         ?.flatMap {
             it.getObjectField("dexFile")?.callMethodAs<Enumeration<String>>("entries")?.toList()
                 .orEmpty()
