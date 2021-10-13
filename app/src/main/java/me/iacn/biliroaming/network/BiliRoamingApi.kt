@@ -62,8 +62,8 @@ object BiliRoamingApi {
         var fixThailandSeasonFlag = false
         seasonJson.optJSONObject("result")?.also {
             if (hidden) fixHiddenSeason(it)
-            fixEpisodes(it)
             if (hidden || it.has("section_bottom_desc")) fixSection(it)
+            fixEpisodes(it)
             fixPrevueSection(it)
             reconstructModules(it)
             fixRight(it)
