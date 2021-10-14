@@ -111,7 +111,7 @@ def restartBiliBili() {
         commandLine android.adbExecutable, 'shell', 'am', 'force-stop', 'tv.danmaku.bili'
     }
     exec {
-        commandLine android.adbExecutable, 'shell', 'am', 'start', '--user', '0', 'tv.danmaku.bili'
+        commandLine android.adbExecutable, 'shell', 'am', 'start', '--user', '0', '$(pm resolve-activity --components tv.danmaku.bili)'
     }
 }
 
