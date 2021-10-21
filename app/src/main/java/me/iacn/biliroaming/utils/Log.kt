@@ -11,7 +11,7 @@ import android.util.Log as ALog
 
 object Log {
 
-    private val handler by lazy { Handler(Looper.getMainLooper()) }
+    val handler by lazy { Handler(Looper.getMainLooper()) }
     private var toast: Toast? = null
 
     fun toast(msg: String, force: Boolean = false) {

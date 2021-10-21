@@ -1,8 +1,15 @@
 package me.iacn.biliroaming.hook
 
+import android.app.Activity
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.view.View
+import android.view.ViewGroup
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.Constant.TYPE_EPISODE_ID
 import me.iacn.biliroaming.Constant.TYPE_SEASON_ID
@@ -315,6 +322,42 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
             pageTypesClass.setStaticObjectField("\$VALUES", newPageArray)
         }
+
+        // TODO: 2021/10/22 在其他版本上可能有不同
+        // 很明显应该确认ssid避免关错 但是 管他呢
+        "com.bilibili.bangumi.ui.page.detail.BangumiDetailActivityV3".findClass(
+            mClassLoader
+        )
+            .hookAfterMethod("onCreate", Bundle::class.java) { param ->
+                val self = param.thisObject as Activity
+                var br: BroadcastReceiver? = null
+                br = object: BroadcastReceiver() {
+                    override fun onReceive(context: Context?, intent: Intent?) {
+                        try {
+                            self.findViewById<View>(getId("detail_comment_layout"))?.apply {
+                                visibility = View.GONE
+                            } ?: run {
+                                (self.findViewById<View>(getId("tabs")) as? ViewGroup)?.getChildAt(1)?.visibility =
+                                    View.GONE
+                            }
+                            Log.toast("已禁用泰区评论")
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                            Log.toast("${e.message}")
+                        }
+                        br?.let { self.unregisterReceiver(it) }
+                        br = null
+                    }
+                }
+                val filter = IntentFilter().apply {
+                    addAction("me.iacn.biliroaming.SEASON_LOCAL_TH_GOT")
+                }
+                self.registerReceiver(br, filter)
+                Log.handler.postDelayed({
+                    br?.let { self.unregisterReceiver(it) }
+                    br = null
+                }, 60_000)
+            }
     }
 
     private fun fixTripSpace(data: Any?): Any? {

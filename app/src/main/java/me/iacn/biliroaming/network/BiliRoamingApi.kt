@@ -2,6 +2,7 @@ package me.iacn.biliroaming.network
 
 import android.annotation.SuppressLint
 import android.app.AndroidAppHelper
+import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Handler
@@ -88,6 +89,11 @@ object BiliRoamingApi {
                     fixThailandSeason(result)
                     seasonJson = it
                 }
+            }
+            Log.handler.post {
+                currentContext.sendBroadcast(Intent().apply {
+                    action = "me.iacn.biliroaming.SEASON_LOCAL_TH_GOT"
+                })
             }
         }
         return seasonJson.toString()
