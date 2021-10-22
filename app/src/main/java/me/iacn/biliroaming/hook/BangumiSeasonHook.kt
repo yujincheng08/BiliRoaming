@@ -333,18 +333,21 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 var br: BroadcastReceiver? = null
                 br = object: BroadcastReceiver() {
                     override fun onReceive(context: Context?, intent: Intent?) {
-                        try {
-                            self.findViewById<View>(getId("detail_comment_layout"))?.apply {
-                                visibility = View.GONE
-                            } ?: run {
-                                (self.findViewById<View>(getId("tabs")) as? ViewGroup)?.getChildAt(1)?.visibility =
-                                    View.GONE
+                        Log.handler.postDelayed({
+                            try {
+                                self.findViewById<View>(getId("detail_comment_layout"))?.apply {
+                                    visibility = View.GONE
+                                } ?: run {
+                                    self.findViewById<ViewGroup>(getId("pager"))?.getChildAt(1)?.visibility =
+                                        View.GONE
+                                    (self.findViewById<ViewGroup>(getId("tabs"))?.getChildAt(0) as? ViewGroup)?.getChildAt(1)?.visibility = View.GONE
+                                }
+                                Log.toast("已禁用泰区评论")
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                                Log.toast("${e.message}")
                             }
-                            Log.toast("已禁用泰区评论")
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                            Log.toast("${e.message}")
-                        }
+                        }, 3_000)
                         br?.let { self.unregisterReceiver(it) }
                         br = null
                     }
