@@ -1026,7 +1026,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     }
 
     private fun findPartySectionClass(): String? {
-        val progressBarClass = "tv.danmaku.biliplayer.view.RingProgressBar".findClass(mClassLoader)
+        val progressBarClass = "tv.danmaku.biliplayer.view.RingProgressBar".findClassOrNull(mClassLoader)
         return classesList.filter {
             it.startsWith("tv.danmaku.bili.ui.video.party.section")
         }.firstOrNull { c ->
@@ -1037,7 +1037,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     }
 
     private fun findSectionClass(): String? {
-        val progressBarClass = "tv.danmaku.biliplayer.view.RingProgressBar".findClass(mClassLoader)
+        val progressBarClass = "tv.danmaku.biliplayer.view.RingProgressBar".findClassOrNull(mClassLoader)
         return classesList.filter {
             it.startsWith("tv.danmaku.bili.ui.video.section")
         }.firstOrNull { c ->
