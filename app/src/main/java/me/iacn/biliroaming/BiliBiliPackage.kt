@@ -223,24 +223,32 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     val classesList by lazy {
         mClassLoader.allClassesList {
-            val tribeClass =
-                kotlin.runCatching { mClassLoader.loadClass("com.bilibili.lib.tribe.core.internal.loader.TribePathClassLoader") }
-                    .getOrNull() ?: return@allClassesList it
-            val delegateClass =
-                kotlin.runCatching { mClassLoader.loadClass("com.bilibili.lib.tribe.core.internal.loader.TribeLoaderDelegate") }
-                    .getOrNull() ?: return@allClassesList it
-            val delegateField =
-                kotlin.runCatching { tribeClass.findFirstFieldByExactType(delegateClass) }
-                    .getOrNull()
-            val loaderField =
-                kotlin.runCatching { delegateClass.findFirstFieldByExactType(ClassLoader::class.java) }
-                    .getOrNull()
-            if (tribeClass.isInstance(it)) {
-                val out = it.getObjectFieldOrNull(delegateField?.name)
+            val serviceField = it.javaClass.findFirstFieldByExactTypeOrNull(
+                "com.bilibili.lib.tribe.core.internal.loader.DefaultClassLoaderService".findClassOrNull(
+                    mClassLoader
+                )
+            )
+            val delegateField = it.javaClass.findFirstFieldByExactTypeOrNull(
+                "com.bilibili.lib.tribe.core.internal.loader.TribeLoaderDelegate".findClassOrNull(
+                    mClassLoader
+                )
+            )
+            if (serviceField != null) {
+                serviceField.type.declaredFields.filter { f ->
+                    f.type == ClassLoader::class.java
+                }.map { f->
+                    it.getObjectFieldOrNull(serviceField.name)?.getObjectFieldOrNull(f.name)
+                }.firstOrNull { o ->
+                    o?.javaClass?.name?.startsWith("com.bilibili") == false
+                } as BaseDexClassLoader? ?: it
+            } else if (delegateField != null) {
+                val loaderField =
+                    delegateField.type.findFirstFieldByExactTypeOrNull(ClassLoader::class.java)
+                val out = it.getObjectFieldOrNull(delegateField.name)
                     ?.getObjectFieldOrNull(loaderField?.name)
                 if (BaseDexClassLoader::class.java.isInstance(out)) out as BaseDexClassLoader else it
             } else it
-        }
+        }.also { Log.d("classlist size: ${it.size}") }
     }
     private val accessKeyInstance by lazy {
         ("com.bilibili.cheese.ui.detail.pay.v2.CheesePayHelperV2\$accessKey\$2".findClassOrNull(
@@ -1026,7 +1034,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     }
 
     private fun findPartySectionClass(): String? {
-        val progressBarClass = "tv.danmaku.biliplayer.view.RingProgressBar".findClassOrNull(mClassLoader)
+        val progressBarClass =
+            "tv.danmaku.biliplayer.view.RingProgressBar".findClassOrNull(mClassLoader)
         return classesList.filter {
             it.startsWith("tv.danmaku.bili.ui.video.party.section")
         }.firstOrNull { c ->
@@ -1037,7 +1046,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     }
 
     private fun findSectionClass(): String? {
-        val progressBarClass = "tv.danmaku.biliplayer.view.RingProgressBar".findClassOrNull(mClassLoader)
+        val progressBarClass =
+            "tv.danmaku.biliplayer.view.RingProgressBar".findClassOrNull(mClassLoader)
         return classesList.filter {
             it.startsWith("tv.danmaku.bili.ui.video.section")
         }.firstOrNull { c ->
