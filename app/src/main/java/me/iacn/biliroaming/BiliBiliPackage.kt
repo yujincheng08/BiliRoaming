@@ -220,27 +220,36 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     }
 
     val okioWrapperClass by Weak { mHookInfo["class_okio_wrapper"]?.findClassOrNull(mClassLoader) }
+    val progressBarClass by Weak { "tv.danmaku.biliplayer.view.RingProgressBar".findClassOrNull(mClassLoader) ?: "com.bilibili.playerbizcommon.view.RingProgressBar".findClassOrNull(mClassLoader) }
 
     val classesList by lazy {
         mClassLoader.allClassesList {
-            val tribeClass =
-                kotlin.runCatching { mClassLoader.loadClass("com.bilibili.lib.tribe.core.internal.loader.TribePathClassLoader") }
-                    .getOrNull() ?: return@allClassesList it
-            val delegateClass =
-                kotlin.runCatching { mClassLoader.loadClass("com.bilibili.lib.tribe.core.internal.loader.TribeLoaderDelegate") }
-                    .getOrNull() ?: return@allClassesList it
-            val delegateField =
-                kotlin.runCatching { tribeClass.findFirstFieldByExactType(delegateClass) }
-                    .getOrNull()
-            val loaderField =
-                kotlin.runCatching { delegateClass.findFirstFieldByExactType(ClassLoader::class.java) }
-                    .getOrNull()
-            if (tribeClass.isInstance(it)) {
-                val out = it.getObjectFieldOrNull(delegateField?.name)
+            val serviceField = it.javaClass.findFirstFieldByExactTypeOrNull(
+                "com.bilibili.lib.tribe.core.internal.loader.DefaultClassLoaderService".findClassOrNull(
+                    mClassLoader
+                )
+            )
+            val delegateField = it.javaClass.findFirstFieldByExactTypeOrNull(
+                "com.bilibili.lib.tribe.core.internal.loader.TribeLoaderDelegate".findClassOrNull(
+                    mClassLoader
+                )
+            )
+            if (serviceField != null) {
+                serviceField.type.declaredFields.filter { f ->
+                    f.type == ClassLoader::class.java
+                }.map { f->
+                    it.getObjectFieldOrNull(serviceField.name)?.getObjectFieldOrNull(f.name)
+                }.firstOrNull { o ->
+                    o?.javaClass?.name?.startsWith("com.bilibili") == false
+                } as BaseDexClassLoader? ?: it
+            } else if (delegateField != null) {
+                val loaderField =
+                    delegateField.type.findFirstFieldByExactTypeOrNull(ClassLoader::class.java)
+                val out = it.getObjectFieldOrNull(delegateField.name)
                     ?.getObjectFieldOrNull(loaderField?.name)
                 if (BaseDexClassLoader::class.java.isInstance(out)) out as BaseDexClassLoader else it
             } else it
-        }
+        }.also { Log.d("classlist size: ${it.size}") }
     }
     private val accessKeyInstance by lazy {
         ("com.bilibili.cheese.ui.detail.pay.v2.CheesePayHelperV2\$accessKey\$2".findClassOrNull(
@@ -525,11 +534,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             findGson()
         }.checkConjunctiveOrPut("class_player_options_panel_holder", "field_playback_speed_list") {
             findPlaybackSpeedList()
-        }.checkConjunctiveOrPut(
-            "class_playerparams_bundle",
-            "method_put_serializable_to_playerparams_bundle"
-        ) {
-            findPlayerParamsBundle()
         }.checkConjunctiveOrPut("class_player_core_service_v2", "method_get_default_speed") {
             findGetDefaultSpeed()
         }.checkConjunctiveOrPut("method_gson_tojson", "method_gson_fromjson") {
@@ -675,17 +679,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         playerCoreServiceV2class.declaredMethods.forEach { m ->
             if (Modifier.isPublic(m.modifiers) && m.parameterTypes.size == 1 && m.parameterTypes[0] == Boolean::class.java && m.returnType == Float::class.javaPrimitiveType)
                 return arrayOf(playerCoreServiceV2class.name, m.name)
-        }
-        return arrayOfNulls(2)
-    }
-
-    private fun findPlayerParamsBundle(): Array<String?> {
-        val playerParamsBundleClass =
-            "tv.danmaku.biliplayer.basic.context.c".findClassOrNull(mClassLoader)
-                ?: return arrayOfNulls(2)
-        playerParamsBundleClass.declaredMethods.forEach { m ->
-            if (Modifier.isPublic(m.modifiers) && Modifier.isFinal(m.modifiers) && m.parameterTypes.size == 2 && m.parameterTypes[0] == String::class.java && m.parameterTypes[1] == Serializable::class.java)
-                return arrayOf(playerParamsBundleClass.name, m.name)
         }
         return arrayOfNulls(2)
     }
@@ -1026,7 +1019,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     }
 
     private fun findPartySectionClass(): String? {
-        val progressBarClass = "tv.danmaku.biliplayer.view.RingProgressBar".findClass(mClassLoader)
         return classesList.filter {
             it.startsWith("tv.danmaku.bili.ui.video.party.section")
         }.firstOrNull { c ->
@@ -1037,7 +1029,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     }
 
     private fun findSectionClass(): String? {
-        val progressBarClass = "tv.danmaku.biliplayer.view.RingProgressBar".findClass(mClassLoader)
         return classesList.filter {
             it.startsWith("tv.danmaku.bili.ui.video.section")
         }.firstOrNull { c ->

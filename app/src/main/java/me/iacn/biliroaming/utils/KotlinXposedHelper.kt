@@ -235,62 +235,54 @@ inline fun String.replaceMethod(
 
 fun MethodHookParam.invokeOriginalMethod(): Any? = invokeOriginalMethod(method, thisObject, args)
 
-fun Any.getObjectField(field: String?): Any? = getObjectField(this, field)
-
-fun Any.getObjectFieldOrNull(field: String?): Any? = try {
-    getObjectField(this, field)
+inline fun <T, R> T.runCatchingOrNull(func: T.() -> R?) = try {
+    func()
 } catch (e: Throwable) {
     null
+}
+
+fun Any.getObjectField(field: String?): Any? = getObjectField(this, field)
+
+fun Any.getObjectFieldOrNull(field: String?): Any? = runCatchingOrNull {
+    getObjectField(this, field)
 }
 
 @Suppress("UNCHECKED_CAST")
 fun <T> Any.getObjectFieldAs(field: String?) = getObjectField(this, field) as T
 
 @Suppress("UNCHECKED_CAST")
-fun <T> Any.getObjectFieldOrNullAs(field: String?) = try {
+fun <T> Any.getObjectFieldOrNullAs(field: String?) = runCatchingOrNull {
     getObjectField(this, field) as T
-} catch (e: Throwable) {
-    null
 }
 
 fun Any.getIntField(field: String?) = getIntField(this, field)
 
-fun Any.getIntFieldOrNull(field: String?) = try {
+fun Any.getIntFieldOrNull(field: String?) = runCatchingOrNull {
     getIntField(this, field)
-} catch (e: Throwable) {
-    null
 }
 
 fun Any.getLongField(field: String?) = getLongField(this, field)
 
-fun Any.getLongFieldOrNull(field: String?) = try {
+fun Any.getLongFieldOrNull(field: String?) = runCatchingOrNull {
     getLongField(this, field)
-} catch (e: Throwable) {
-    null
 }
 
-fun Any.getBooleanFieldOrNull(field: String?) = try {
+fun Any.getBooleanFieldOrNull(field: String?) = runCatchingOrNull {
     getBooleanField(this, field)
-} catch (e: Throwable) {
-    null
 }
 
 fun Any.callMethod(methodName: String?, vararg args: Any?): Any? =
     callMethod(this, methodName, *args)
 
-fun Any.callMethodOrNull(methodName: String?, vararg args: Any?): Any? = try {
+fun Any.callMethodOrNull(methodName: String?, vararg args: Any?): Any? = runCatchingOrNull {
     callMethod(this, methodName, *args)
-} catch (e: Throwable) {
-    null
 }
 
 fun Class<*>.callStaticMethod(methodName: String?, vararg args: Any?): Any? =
     callStaticMethod(this, methodName, *args)
 
-fun Class<*>.callStaticMethodOrNull(methodName: String?, vararg args: Any?): Any? = try {
+fun Class<*>.callStaticMethodOrNull(methodName: String?, vararg args: Any?): Any? = runCatchingOrNull {
     callStaticMethod(this, methodName, *args)
-} catch (e: Throwable) {
-    null
 }
 
 @Suppress("UNCHECKED_CAST")
@@ -298,28 +290,22 @@ fun <T> Class<*>.callStaticMethodAs(methodName: String?, vararg args: Any?) =
     callStaticMethod(this, methodName, *args) as T
 
 @Suppress("UNCHECKED_CAST")
-fun <T> Class<*>.callStaticMethodOrNullAs(methodName: String?, vararg args: Any?) = try {
+fun <T> Class<*>.callStaticMethodOrNullAs(methodName: String?, vararg args: Any?) = runCatchingOrNull {
     callStaticMethod(this, methodName, *args) as T
-} catch (e: Throwable) {
-    null
 }
 
 @Suppress("UNCHECKED_CAST")
 fun <T> Class<*>.getStaticObjectFieldAs(field: String?) = getStaticObjectField(this, field) as T
 
 @Suppress("UNCHECKED_CAST")
-fun <T> Class<*>.getStaticObjectFieldOrNullAs(field: String?) = try {
+fun <T> Class<*>.getStaticObjectFieldOrNullAs(field: String?) = runCatchingOrNull {
     getStaticObjectField(this, field) as T
-} catch (e: Throwable) {
-    null
 }
 
 fun Class<*>.getStaticObjectField(field: String?): Any? = getStaticObjectField(this, field)
 
-fun Class<*>.getStaticObjectFieldOrNull(field: String?): Any? = try {
+fun Class<*>.getStaticObjectFieldOrNull(field: String?): Any? = runCatchingOrNull {
     getStaticObjectField(this, field)
-} catch (e: Throwable) {
-    null
 }
 
 fun Class<*>.setStaticObjectField(field: String?, obj: Any?) = apply {
@@ -344,10 +330,8 @@ fun <T> Any.callMethodAs(methodName: String?, vararg args: Any?) =
     callMethod(this, methodName, *args) as T
 
 @Suppress("UNCHECKED_CAST")
-fun <T> Any.callMethodOrNullAs(methodName: String?, vararg args: Any?) = try {
+fun <T> Any.callMethodOrNullAs(methodName: String?, vararg args: Any?) = runCatchingOrNull {
     callMethod(this, methodName, *args) as T
-} catch (e: Throwable) {
-    null
 }
 
 fun Any.callMethod(methodName: String?, parameterTypes: Array<Class<*>>, vararg args: Any?): Any? =
@@ -357,10 +341,8 @@ fun Any.callMethodOrNull(
     methodName: String?,
     parameterTypes: Array<Class<*>>,
     vararg args: Any?
-): Any? = try {
+): Any? = runCatchingOrNull {
     callMethod(this, methodName, parameterTypes, *args)
-} catch (e: Throwable) {
-    null
 }
 
 fun Class<*>.callStaticMethod(
@@ -373,10 +355,8 @@ fun Class<*>.callStaticMethodOrNull(
     methodName: String?,
     parameterTypes: Array<Class<*>>,
     vararg args: Any?
-): Any? = try {
+): Any? = runCatchingOrNull {
     callStaticMethod(this, methodName, parameterTypes, *args)
-} catch (e: Throwable) {
-    null
 }
 
 fun String.findClass(classLoader: ClassLoader?): Class<*> = findClass(this, classLoader)
@@ -444,6 +424,10 @@ inline fun XResources.hookLayout(
 
 fun Class<*>.findFirstFieldByExactType(type: Class<*>): Field =
     findFirstFieldByExactType(this, type)
+
+fun Class<*>.findFirstFieldByExactTypeOrNull(type: Class<*>?): Field? = runCatchingOrNull {
+    findFirstFieldByExactType(this, type)
+}
 
 fun ClassLoader.allClassesList(delegator: (BaseDexClassLoader) -> BaseDexClassLoader = { x -> x }): List<String> {
     var classLoader = this
