@@ -5,10 +5,8 @@ package me.iacn.biliroaming
 import android.app.Activity
 import android.app.Activity.RESULT_CANCELED
 import android.app.AlertDialog
-import android.content.ActivityNotFoundException
-import android.content.Context
-import android.content.Intent
-import android.content.SharedPreferences
+import android.content.*
+import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.net.Uri
@@ -61,22 +59,23 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 val hiddenGroup = findPreference("hidden_group") as PreferenceCategory
                 preferenceScreen.removePreference(hiddenGroup)
             }
-            findPreference("version")?.summary = BuildConfig.VERSION_NAME
-            findPreference("version")?.onPreferenceClickListener = this
-            findPreference("custom_splash")?.onPreferenceChangeListener = this
-            findPreference("custom_splash_logo")?.onPreferenceChangeListener = this
-            findPreference("save_log")?.summary =
+            findPreference("version").summary = BuildConfig.VERSION_NAME
+            findPreference("version").onPreferenceClickListener = this
+            findPreference("custom_splash").onPreferenceChangeListener = this
+            findPreference("custom_splash_logo").onPreferenceChangeListener = this
+            findPreference("save_log").summary =
                 moduleRes.getString(R.string.save_log_summary).format(logFile.absolutePath)
-            findPreference("custom_server")?.onPreferenceClickListener = this
-            findPreference("test_upos")?.onPreferenceClickListener = this
+            findPreference("custom_server").onPreferenceClickListener = this
+            findPreference("test_upos").onPreferenceClickListener = this
             findPreference("customize_bottom_bar")?.onPreferenceClickListener = this
-            findPreference("pref_export")?.onPreferenceClickListener = this
-            findPreference("pref_import")?.onPreferenceClickListener = this
+            findPreference("playback_speed_override").onPreferenceChangeListener = this
+            findPreference("default_playback_speed").onPreferenceChangeListener = this
+            findPreference("customize_danmaku_config").onPreferenceClickListener = this
+            findPreference("pref_export").onPreferenceClickListener = this
+            findPreference("pref_import").onPreferenceClickListener = this
             findPreference("export_video")?.onPreferenceClickListener = this
             findPreference("hide_low_play_count_recommend")?.onPreferenceClickListener = this
             findPreference("keywords_filter_title_recommend")?.onPreferenceClickListener = this
-            findPreference("custom_subtitle")?.onPreferenceChangeListener = this
-            findPreference("customize_accessKey")?.onPreferenceClickListener = this
             checkCompatibleVersion()
             checkUpdate()
         }
@@ -100,7 +99,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                             key = "update"
                             title = moduleRes.getString(R.string.update_title)
                             summary = result.optString("body").substringAfterLast("更新日志\r\n").run {
-                                ifEmpty { moduleRes.getString(R.string.update_summary) }
+                                if (isNotEmpty()) this else moduleRes.getString(R.string.update_summary)
                             }
                             onPreferenceClickListener = this@PrefsFragment
                             order = 1
@@ -115,8 +114,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             var supportAdd4K = false
             var supportMusicNotificationHook = true
             var supportDark = true
-            var supportAddChannel = false
-            var supportCustomizeTab = true
+            var supportCommentFloor = false
             val supportFullSplash = try {
                 instance.splashInfoClass?.getMethod("getMode") != null
             } catch (e: Throwable) {
@@ -127,28 +125,30 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 "android_i" -> {
                     if (versionCode in 2050410..2080109) supportLiveHook = true
                     if (versionCode < 2050410) supportDark = false
-                    if (versionCode >= 3000000) supportAddChannel = true
+                    if (versionCode < 3000500) supportCommentFloor = true
                     supportAdd4K = true
                 }
                 "android_b" -> {
                     if (versionCode < 6080000) supportAdd4K = true
                     if (versionCode < 6000000) supportDark = false
-                    if (versionCode >= 6270000) supportAddChannel = true
+                    if (versionCode < 6180000) supportCommentFloor = true
                 }
                 "android" -> {
                     if (versionCode !in 6000000 until 6120000) supportDark = false
-                    if (versionCode >= 6270000) supportAddChannel = true
-                }
-                "android_hd" -> {
-                    supportDark = false
-                    supportCustomizeTab = false
+                    if (versionCode < 6180000) supportCommentFloor = true
                 }
             }
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
                 supportMusicNotificationHook = false
             val supportSplashHook = instance.brandSplashClass != null
             val supportDrawer = instance.homeUserCenterClass != null
+            val supportcustomplaybackspeed = instance.playerCoreServiceV2Class != null
             val supportTeenagersMode = instance.teenagersModeDialogActivityClass != null
+            if (!supportcustomplaybackspeed)
+                disablePreference(
+                    "default_playback_speed",
+                    moduleRes.getString(R.string.default_speed_in_speed_list)
+                )
             if (!supportDrawer)
                 disablePreference("drawer")
             if (!supportSplashHook) {
@@ -176,15 +176,11 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             if (!supportDark) {
                 disablePreference("follow_dark")
             }
+            if (!supportCommentFloor) {
+                disablePreference("comment_floor")
+            }
             if (!supportTeenagersMode) {
                 disablePreference("teenagers_mode_dialog")
-            }
-            if (!supportAddChannel) {
-                disablePreference("add_channel")
-            }
-            if (!supportCustomizeTab) {
-                disablePreference("customize_home_tab_title")
-                disablePreference("customize_bottom_bar_title")
             }
         }
 
@@ -192,15 +188,11 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             name: String,
             message: String = moduleRes.getString(R.string.not_support)
         ) {
-            findPreference(name)?.run {
+            findPreference(name).run {
                 isEnabled = false
                 summary = message
                 if (this is SwitchPreference) this.isChecked = false
             }
-        }
-
-        private fun showCustomSubtitle() {
-            CustomSubtitleDialog(activity, prefs).show()
         }
 
         override fun onPreferenceChange(preference: Preference, newValue: Any): Boolean {
@@ -213,9 +205,19 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     if (newValue as Boolean)
                         selectImage(LOGO_SELECTION)
                 }
-                "custom_subtitle" -> {
-                    if (newValue as Boolean) {
-                        showCustomSubtitle()
+                "playback_speed_override" -> {
+                    if (newValue == "") {
+                        preference.editor.remove(preference.key).apply()
+                    }
+                }
+                "default_playback_speed" -> {
+                    if (newValue == "") {
+                        preference.editor.remove(preference.key).apply()
+                    }
+                }
+                "customize_accessKey" -> {
+                    if (newValue == "") {
+                        preference.editor.remove(preference.key).apply()
                     }
                 }
             }
@@ -314,9 +316,9 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             counter++
             if (counter == 7) {
                 prefs.edit()?.putBoolean("hidden", true)?.apply()
-                Log.toast("已开启隐藏功能，重启应用生效", true)
+                Log.toast("已开启隐藏功能，重启应用生效")
             } else if (counter >= 4) {
-                Log.toast("再按${7 - counter}次开启隐藏功能", true)
+                Log.toast("再按${7 - counter}次开启隐藏功能")
             }
 
             return true
@@ -343,7 +345,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 editTexts.forEach { it.setText(prefs.getString(it.tag.toString(), "")) }
                 setTitle("设置解析服务器")
                 setView(view)
-                setPositiveButton(android.R.string.ok) { _, _ ->
+                setPositiveButton("确定") { _, _ ->
                     editTexts.forEach {
                         val host = it.text.toString()
                         if (host.isNotEmpty())
@@ -370,24 +372,19 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         private fun onCustomizeBottomBarClick(): Boolean {
             AlertDialog.Builder(activity).apply {
                 val bottomItems = JsonHook.bottomItems
-                val ids = bottomItems.map { it.id }.toHashSet()
-                sPrefs.getStringSet("hided_bottom_items", null)?.forEach {
-                    if (it.isEmpty() || ids.contains(it)) return@forEach
-                    bottomItems.add(JsonHook.BottomItem("未知", null, it, false))
-                }
                 setTitle(moduleRes.getString(R.string.customize_bottom_bar_title))
                 setPositiveButton(android.R.string.ok) { _, _ ->
                     val hideItems = mutableSetOf<String>()
                     bottomItems.forEach {
                         if (it.showing.not()) {
-                            hideItems.add(it.id ?: "")
+                            hideItems.add(it.uri ?: "")
                         }
                     }
                     sPrefs.edit().putStringSet("hided_bottom_items", hideItems).apply()
                 }
                 setNegativeButton(android.R.string.cancel, null)
                 val names = Array(bottomItems.size) { i ->
-                    "${bottomItems[i].name} (${bottomItems[i].id}) (${bottomItems[i].uri})"
+                    "${bottomItems[i].name} (${bottomItems[i].uri})"
                 }
                 setNeutralButton("重置") { _, _ ->
                     sPrefs.edit().remove("hided_bottom_items").apply()
@@ -399,6 +396,43 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     bottomItems[which].showing = isChecked
                 }
             }.show()
+            return true
+        }
+
+        private fun oncustomizedanmakuconfigclick(): Boolean {
+            AlertDialog.Builder(activity).run {
+                val layout = moduleRes.getLayout(R.layout.cutomize_danmaku_config_dialog)
+                val inflater = LayoutInflater.from(context)
+                val view = inflater.inflate(layout, null)
+                val editTexts = arrayOf(
+                    view.findViewById<EditText>(R.id.danmaku_textsize_scale_factor),
+                    view.findViewById(R.id.danmaku_stroke_width_scaling),
+                    view.findViewById(R.id.danmaku_duration_factor),
+                    view.findViewById(R.id.danmaku_alpha_factor),
+                    view.findViewById(R.id.danmaku_max_on_screen),
+                    view.findViewById(R.id.danmaku_screen_domain)
+                )
+                editTexts.filter {
+                    biliprefs.contains(it.tag.toString())
+                }.forEach {
+                    it.setText(
+                        biliprefs.getFloat(it.tag.toString(), it.hint.toString().toFloat())
+                            .toString()
+                    )
+                }
+                setTitle(moduleRes.getString(R.string.customize_danmaku_config_title))
+                setView(view)
+                setPositiveButton("确定") { _, _ ->
+                    editTexts.forEach {
+                        val value = it.text.toString()
+                        if (value.isNotEmpty())
+                            biliprefs.edit().putFloat(it.tag.toString(), value.toFloat()).apply()
+                        else
+                            biliprefs.edit().remove(it.tag.toString()).apply()
+                    }
+                }
+                show()
+            }
             return true
         }
 
@@ -432,36 +466,6 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             return true
         }
 
-        private fun onCustomizeAccessKeyClick(): Boolean {
-            AlertDialog.Builder(activity).run {
-                val layout = moduleRes.getLayout(R.layout.cutomize_backup_dialog)
-                val inflater = LayoutInflater.from(context)
-                val view = inflater.inflate(layout, null)
-                val editTexts = arrayOf(
-                    view.findViewById<EditText>(R.id.cn_server),
-                    view.findViewById(R.id.hk_server),
-                    view.findViewById(R.id.tw_server),
-                    view.findViewById(R.id.th_server)
-                )
-                editTexts.forEach {
-                    it.setText(prefs.getString("${it.tag}_accessKey", ""))
-                    it.hint = ""
-                }
-                setTitle(R.string.customize_accessKey_title)
-                setView(view)
-                setPositiveButton(android.R.string.ok) { _, _ ->
-                    editTexts.forEach {
-                        val accessKey = it.text.toString()
-                        val key = "${it.tag}_accessKey"
-                        if (accessKey.isNotEmpty()) prefs.edit().putString(key, accessKey).apply()
-                        else prefs.edit().remove(key).apply()
-                    }
-                }
-                show()
-            }
-            return true
-        }
-
         private fun onHideLowPlayCountRecommendClick(isChecked: Boolean): Boolean {
             if (!isChecked) return true
             val tv = EditText(activity)
@@ -471,8 +475,8 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             AlertDialog.Builder(activity).run {
                 setTitle("设置隐藏播放量")
                 setView(tv)
-                setPositiveButton(android.R.string.ok, null)
-                setNegativeButton(android.R.string.cancel, null)
+                setPositiveButton("确定", null)
+                setNegativeButton("取消", null)
                 setCancelable(false)
                 show()
             }.let {
@@ -504,13 +508,13 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             AlertDialog.Builder(activity).run {
                 setTitle("设置标题过滤关键词")
                 setView(tv)
-                setPositiveButton(android.R.string.ok) { _, _ ->
+                setPositiveButton("确定") { _, _ ->
                     sPrefs.edit()
                         .putString("keywords_filter_title_recommend_list", tv.text.toString())
                         .apply()
                     Log.toast("保存成功 重启后生效")
                 }
-                setNegativeButton(android.R.string.cancel, null)
+                setNegativeButton("取消", null)
                 setNeutralButton("添加分隔符", null)
                 setCancelable(false)
                 show()
@@ -538,10 +542,10 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             "custom_server" -> onCustomServerClick()
             "test_upos" -> onTestUposClick()
             "customize_bottom_bar" -> onCustomizeBottomBarClick()
+            "customize_danmaku_config" -> oncustomizedanmakuconfigclick()
             "pref_export" -> onPrefExportClick()
             "pref_import" -> onPrefImportClick()
             "export_video" -> onExportVideoClick()
-            "customize_accessKey" -> onCustomizeAccessKeyClick()
             "hide_low_play_count_recommend" -> onHideLowPlayCountRecommendClick((preference as SwitchPreference).isChecked)
             "keywords_filter_title_recommend" -> onKeywordsFilterTitleRecommendClick((preference as SwitchPreference).isChecked)
             else -> false
@@ -579,6 +583,8 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             restartApplication(activity)
         }
     }
+
+    class BackupRes(val res: Resources, val theme: Resources.Theme)
 
     companion object {
         @JvmStatic
