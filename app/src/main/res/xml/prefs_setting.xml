@@ -254,7 +254,7 @@
             android:entryValues="@array/block_video_ad_values"
             android:key="block_video_ad"
             android:summary="@string/block_video_ad_summary"
-            android:title="@string/block_video_ad" />
+            android:title="@string/block_video_ad_title" />
     </PreferenceCategory>
 
     <PreferenceCategory

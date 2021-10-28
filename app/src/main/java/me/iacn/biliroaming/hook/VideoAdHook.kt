@@ -8,19 +8,15 @@ import me.iacn.biliroaming.utils.sPrefs
 
 class VideoAdHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     companion object {
-        class VideoAdType {
-            companion object {
-                const val UPRecommend = 1L shl 1
-                const val Game = 1L shl 2
-            }
-        }
+        private const val UPRecommend = 1L shl 1
+        private const val Game = 1L shl 2
 
         @JvmStatic
         fun parse(set: Set<String>): Long {
             return set.fold(0L) { stack, str ->
                 when (str) {
-                    "up_recommend" -> stack or VideoAdType.UPRecommend
-                    "game" -> stack or VideoAdType.Game
+                    "up_recommend" -> stack or UPRecommend
+                    "game" -> stack or Game
                     else -> stack
                 }
             }
@@ -29,7 +25,7 @@ class VideoAdHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         @JvmStatic
         fun onPrefChanged(stack: Long) {
             val set = mutableSetOf<String>()
-            if (stack and VideoAdType.UPRecommend != 0L) {
+            if (stack and UPRecommend != 0L) {
                 set += setOf(
                     "MallHolderSmall",
                     "MallHolderLarge",
@@ -39,7 +35,7 @@ class VideoAdHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 )
             }
 
-            if (stack and VideoAdType.Game != 0L) {
+            if (stack and Game != 0L) {
                 set += setOf(
                     "GameHolderSmall",
                     "GameHolderLarge",
@@ -57,26 +53,26 @@ class VideoAdHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     private val bannerMap = mapOf(
-//        "UpperHolderNone" to 105,     //Default None
-        "CommonHolderSmall" to 106,
-        "CommonHolderLarge" to 107,
-        "MallHolderSmall" to 108,
-        "MallHolderLarge" to 109,
-        "GameHolderSmall" to 110,
-        "GameHolderLarge" to 111,
-        "MallHolderSmallV2" to 112,
-        "CommonHolderSmallNew" to 113,
-        "CommonHolderLargeNew" to 114,
-        "MallHolderSmallNew" to 115,
-        "MallHolderLargeNew" to 116,
-        "GameHolderSmallNew" to 117,
-        "GameHolderLargeNew" to 118,
+        105 to "UpperHolderNone",     //Default None
+        106 to "CommonHolderSmall",
+        107 to "CommonHolderLarge",
+        108 to "MallHolderSmall",
+        109 to "MallHolderLarge",
+        110 to "GameHolderSmall",
+        111 to "GameHolderLarge",
+        112 to "MallHolderSmallV2",
+        113 to "CommonHolderSmallNew",
+        114 to "CommonHolderLargeNew",
+        115 to "MallHolderSmallNew",
+        116 to "MallHolderLargeNew",
+        117 to "GameHolderSmallNew",
+        118 to "GameHolderLargeNew",
     )
 
 
     private fun enableFor(id: Int): Boolean {
         for (k in sets) {
-            if (bannerMap[k] == id) return true
+            if (bannerMap[id] == k) return true
         }
         return false
     }
@@ -93,7 +89,7 @@ class VideoAdHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         ) { param ->
             val id = param.args[1] as Int
             if (enableFor(id)) {
-                param.args[1] = 105
+                param.args[1] = bannerMap.keys.first()
                 Log.toast("已干掉推荐广告")
             }
         }

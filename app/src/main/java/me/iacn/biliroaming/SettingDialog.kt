@@ -29,9 +29,9 @@ import kotlinx.coroutines.launch
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.XposedInit.Companion.modulePath
 import me.iacn.biliroaming.XposedInit.Companion.moduleRes
-import me.iacn.biliroaming.hook.VideoAdHook
 import me.iacn.biliroaming.hook.JsonHook
 import me.iacn.biliroaming.hook.SplashHook
+import me.iacn.biliroaming.hook.VideoAdHook
 import me.iacn.biliroaming.utils.*
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -220,7 +220,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                         showCustomSubtitle()
                     }
                 }
-                "block_video_ad" ->{
+                "block_video_ad" -> {
                     @Suppress("UNCHECKED_CAST")
                     onBlockVideoAdChanged(newValue as Set<String>)
                 }
@@ -538,9 +538,8 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             return true
         }
 
-        private fun onBlockVideoAdChanged(newValue: Set<String>): Boolean {
+        private fun onBlockVideoAdChanged(newValue: Set<String>) {
             VideoAdHook.onPrefChanged(VideoAdHook.parse(newValue))
-            return true
         }
 
         override fun onPreferenceClick(preference: Preference) = when (preference.key) {
