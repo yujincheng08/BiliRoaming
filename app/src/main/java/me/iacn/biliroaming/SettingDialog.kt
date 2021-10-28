@@ -222,7 +222,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 }
                 "block_video_ad" -> {
                     @Suppress("UNCHECKED_CAST")
-                    onBlockVideoAdChanged(newValue as Set<String>)
+                    VideoAdHook.onPrefChanged(VideoAdHook.parse(newValue as Set<String>))
                 }
             }
             return true
@@ -536,10 +536,6 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 }
             }
             return true
-        }
-
-        private fun onBlockVideoAdChanged(newValue: Set<String>) {
-            VideoAdHook.onPrefChanged(VideoAdHook.parse(newValue))
         }
 
         override fun onPreferenceClick(preference: Preference) = when (preference.key) {

@@ -8,24 +8,25 @@ import me.iacn.biliroaming.utils.sPrefs
 
 class VideoAdHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     companion object {
-        private const val UPRecommend = 1L shl 1
-        private const val Game = 1L shl 2
+        private const val UP_RECOMMEND = "up_recommend"
+        private const val GAME = "game"
+
+        private val keyMap = mapOf(
+            UP_RECOMMEND to (1L shl 1),
+            GAME to (1L shl 2)
+        )
 
         @JvmStatic
         fun parse(set: Set<String>): Long {
             return set.fold(0L) { stack, str ->
-                when (str) {
-                    "up_recommend" -> stack or UPRecommend
-                    "game" -> stack or Game
-                    else -> stack
-                }
+                stack or (keyMap[str] ?: stack)
             }
         }
 
         @JvmStatic
         fun onPrefChanged(stack: Long) {
             val set = mutableSetOf<String>()
-            if (stack and UPRecommend != 0L) {
+            if (stack and (keyMap[UP_RECOMMEND] ?: 0) != 0L) {
                 set += setOf(
                     "MallHolderSmall",
                     "MallHolderLarge",
@@ -35,7 +36,7 @@ class VideoAdHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 )
             }
 
-            if (stack and Game != 0L) {
+            if (stack and (keyMap[GAME] ?: 0) != 0L) {
                 set += setOf(
                     "GameHolderSmall",
                     "GameHolderLarge",
@@ -48,7 +49,7 @@ class VideoAdHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
 
-    private val sets by lazy {
+    private val configSet by lazy {
         sPrefs.getStringSet("enable_banner_lists", emptySet()) ?: emptySet()
     }
 
@@ -69,16 +70,12 @@ class VideoAdHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         118 to "GameHolderLargeNew",
     )
 
-
     private fun enableFor(id: Int): Boolean {
-        for (k in sets) {
-            if (bannerMap[id] == k) return true
-        }
-        return false
+        return configSet.contains(bannerMap[id])
     }
 
     override fun startHook() {
-        if (sets.isEmpty()) return
+        if (configSet.isEmpty()) return
         Log.d("Start hook: AdHook")
         "com.bilibili.ad.adview.videodetail.upper.b".hookBeforeMethod(
             mClassLoader,
