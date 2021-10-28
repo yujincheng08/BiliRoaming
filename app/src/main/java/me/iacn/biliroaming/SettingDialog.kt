@@ -221,6 +221,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     }
                 }
                 "block_video_ad" ->{
+                    @Suppress("UNCHECKED_CAST")
                     onBlockVideoAdChanged(newValue as Set<String>)
                 }
             }

@@ -8,22 +8,10 @@ import me.iacn.biliroaming.utils.sPrefs
 
 class VideoAdHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     companion object {
-        enum class BannerType {
-            UPRecommend,
-            Game,
-        }
-
-        fun BannerType.bits(): Long {
-            return when (this) {
-                BannerType.UPRecommend -> 1L shl 1
-                BannerType.Game -> 1L shl 2
-            }
-        }
-
-        fun BannerType.str(): String {
-            return when (this) {
-                BannerType.UPRecommend -> "up_recommend"
-                BannerType.Game -> "game"
+        class VideoAdType {
+            companion object {
+                const val UPRecommend = 1L shl 1
+                const val Game = 1L shl 2
             }
         }
 
@@ -31,8 +19,8 @@ class VideoAdHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         fun parse(set: Set<String>): Long {
             return set.fold(0L) { stack, str ->
                 when (str) {
-                    BannerType.UPRecommend.str() -> stack or BannerType.UPRecommend.bits()
-                    BannerType.Game.str() -> stack or BannerType.Game.bits()
+                    "up_recommend" -> stack or VideoAdType.UPRecommend
+                    "game" -> stack or VideoAdType.Game
                     else -> stack
                 }
             }
@@ -41,26 +29,22 @@ class VideoAdHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         @JvmStatic
         fun onPrefChanged(stack: Long) {
             val set = mutableSetOf<String>()
-            if (stack and BannerType.UPRecommend.bits() > 0) {
-                set.addAll(
-                    setOf(
-                        "MallHolderSmall",
-                        "MallHolderLarge",
-                        "MallHolderSmallV2",
-                        "MallHolderSmallNew",
-                        "MallHolderLargeNew"
-                    )
+            if (stack and VideoAdType.UPRecommend != 0L) {
+                set += setOf(
+                    "MallHolderSmall",
+                    "MallHolderLarge",
+                    "MallHolderSmallV2",
+                    "MallHolderSmallNew",
+                    "MallHolderLargeNew"
                 )
             }
 
-            if (stack and BannerType.Game.bits() > 0) {
-                set.addAll(
-                    setOf(
-                        "GameHolderSmall",
-                        "GameHolderLarge",
-                        "GameHolderSmallNew",
-                        "GameHolderLargeNew",
-                    )
+            if (stack and VideoAdType.Game != 0L) {
+                set += setOf(
+                    "GameHolderSmall",
+                    "GameHolderLarge",
+                    "GameHolderSmallNew",
+                    "GameHolderLargeNew",
                 )
             }
             sPrefs.edit().putStringSet("enable_banner_lists", set).apply()
@@ -98,6 +82,7 @@ class VideoAdHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     override fun startHook() {
+        if (sets.isEmpty()) return
         Log.d("Start hook: AdHook")
         "com.bilibili.ad.adview.videodetail.upper.b".hookBeforeMethod(
             mClassLoader,
