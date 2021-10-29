@@ -48,11 +48,6 @@ class VideoAdHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
     }
 
-
-    private val configSet by lazy {
-        sPrefs.getStringSet("enable_banner_lists", emptySet()) ?: emptySet()
-    }
-
     private val bannerMap = mapOf(
         105 to "UpperHolderNone",     //Default None
         106 to "CommonHolderSmall",
@@ -70,8 +65,12 @@ class VideoAdHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         118 to "GameHolderLargeNew",
     )
 
-    private fun enableFor(id: Int): Boolean {
-        return configSet.contains(bannerMap[id])
+    private val configSet by lazy {
+        sPrefs.getStringSet("enable_banner_lists", emptySet()).orEmpty().let { set ->
+            bannerMap.filterValues {
+                set.contains(it)
+            }.keys
+        }
     }
 
     override fun startHook() {
@@ -85,7 +84,7 @@ class VideoAdHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             Bundle::class.java
         ) { param ->
             val id = param.args[1] as Int
-            if (enableFor(id)) {
+            if (configSet.contains(id)) {
                 param.args[1] = bannerMap.keys.first()
                 Log.toast("已干掉推荐广告")
             }
