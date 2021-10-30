@@ -220,7 +220,12 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     }
 
     val okioWrapperClass by Weak { mHookInfo["class_okio_wrapper"]?.findClassOrNull(mClassLoader) }
-    val progressBarClass by Weak { "tv.danmaku.biliplayer.view.RingProgressBar".findClassOrNull(mClassLoader) ?: "com.bilibili.playerbizcommon.view.RingProgressBar".findClassOrNull(mClassLoader) }
+    val progressBarClass by Weak {
+        "tv.danmaku.biliplayer.view.RingProgressBar".findClassOrNull(
+            mClassLoader
+        ) ?: "com.bilibili.playerbizcommon.view.RingProgressBar".findClassOrNull(mClassLoader)
+    }
+    val videoUpperAdClass by Weak { mHookInfo["class_video_upper_ad"]?.findClassOrNull(mClassLoader) }
 
     val classesList by lazy {
         mClassLoader.allClassesList {
@@ -237,7 +242,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             if (serviceField != null) {
                 serviceField.type.declaredFields.filter { f ->
                     f.type == ClassLoader::class.java
-                }.map { f->
+                }.map { f ->
                     it.getObjectFieldOrNull(serviceField.name)?.getObjectFieldOrNull(f.name)
                 }.firstOrNull { o ->
                     o?.javaClass?.name?.startsWith("com.bilibili") == false
@@ -359,9 +364,14 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     }
 
     fun okioLength() = mHookInfo["field_okio_length"]
+
     fun okio() = mHookInfo["field_okio"]
+
     fun okioInputStream() = mHookInfo["method_okio_buffer_input_stream"]
+
     fun okioReadFrom() = mHookInfo["method_okio_buffer_read_from"]
+
+    fun videoUpperAd() = mHookInfo["method_video_upper_ad"]
 
     private fun readHookInfo(context: Context): MutableMap<String, String?> {
         try {
@@ -562,11 +572,37 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             "method_okio_buffer_read_from"
         ) {
             findOkioBuffer()
+        }.checkConjunctiveOrPut(
+            "class_video_upper_ad",
+            "method_video_upper_ad"
+        ) {
+            findVideoUpperAd()
         }
 
         Log.d(mHookInfo.filterKeys { it != "map_ids" })
         Log.d("Check hook info completed: needUpdate = $needUpdate")
         return needUpdate
+    }
+
+    private fun findVideoUpperAd(): Array<String?> {
+        val adHolderClass =
+            "com.bilibili.ad.adview.videodetail.upper.VideoUpperAdSectionViewHolder".findClassOrNull(
+                mClassLoader
+            ) ?: return arrayOfNulls(2)
+        classesList.filter {
+            it.startsWith("com.bilibili.ad.adview.videodetail.upper")
+        }.map { c ->
+            c.findClass(mClassLoader)
+        }.forEach { c ->
+            c.declaredMethods.forEach { m ->
+                if (Modifier.isPublic(m.modifiers) && m.parameterTypes.size >= 2 &&
+                    m.parameterTypes[0] == ViewGroup::class.java &&
+                    m.parameterTypes[1] == Int::class.javaPrimitiveType &&
+                    m.returnType == adHolderClass
+                ) return arrayOf(c.name, m.name)
+            }
+        }
+        return arrayOfNulls(2)
     }
 
     private fun findOkioBuffer(): Array<String?> {

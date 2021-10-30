@@ -132,6 +132,16 @@
         <item>comicList</item>
         <item>ugcSeasonList</item>
     </string-array>
+
+    <string-array name="block_video_ad">
+        <item>UP主推荐广告</item>
+        <item>相关游戏</item>
+    </string-array>
+    <string-array name="block_video_ad_values">
+        <item>up_recommend</item>
+        <item>game</item>
+    </string-array>
+
     <string-array name="xposed_scope" >
         <item>tv.danmaku.bili</item>
         <item>com.bilibili.app.blue</item>
