@@ -51,7 +51,8 @@ class UpperAdHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 param.args[1] = UPPER_HOLDER_NONE
                 Log.toast("已清除视频下方推荐")
             }
-            Log.d("not filtered $id")
+            if (id != UPPER_HOLDER_NONE)
+                Log.d("not filtered $id")
         }
     }
 }
