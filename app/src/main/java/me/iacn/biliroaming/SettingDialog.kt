@@ -78,7 +78,6 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("keywords_filter_title_recommend")?.onPreferenceClickListener = this
             findPreference("custom_subtitle")?.onPreferenceChangeListener = this
             findPreference("customize_accessKey")?.onPreferenceClickListener = this
-            findPreference("block_video_ad")?.onPreferenceChangeListener = this
             checkCompatibleVersion()
             checkUpdate()
         }
@@ -219,10 +218,6 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     if (newValue as Boolean) {
                         showCustomSubtitle()
                     }
-                }
-                "block_video_ad" -> {
-                    @Suppress("UNCHECKED_CAST")
-                    VideoAdHook.onPrefChanged(VideoAdHook.parse(newValue as Set<String>))
                 }
             }
             return true

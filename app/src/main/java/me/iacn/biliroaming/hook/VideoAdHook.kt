@@ -11,66 +11,36 @@ class VideoAdHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         private const val UP_RECOMMEND = "up_recommend"
         private const val GAME = "game"
 
-        private val keyMap = mapOf(
-            UP_RECOMMEND to (1L shl 1),
-            GAME to (1L shl 2)
+        private const val UPPER_HOLDER_NONE = 105
+
+        private val ID_MAP = mapOf(
+            UP_RECOMMEND to setOf(
+                108, // MallHolderSmall
+                109, // MallHolderLarge
+                112, // MallHolderSmallV2
+                115, // MallHolderSmallNew
+                116, // MallHolderLargeNew
+            ),
+            GAME to setOf(
+                110, // GameHolderSmall
+                111, // GameHolderLarge
+                117, // GameHolderSmallNew
+                118, // GameHolderLargeNew
+            ),
+//             None: 105
+//             COMMON to setof(
+//                106, // CommonHolderSmall
+//                107, // CommonHolderLarge
+//                113, // CommonHolderSmallNew
+//                114, // CommonHolderLargeNew
+//            )
         )
-
-        @JvmStatic
-        fun parse(set: Set<String>): Long {
-            return set.fold(0L) { stack, str ->
-                stack or (keyMap[str] ?: stack)
-            }
-        }
-
-        @JvmStatic
-        fun onPrefChanged(stack: Long) {
-            val set = mutableSetOf<String>()
-            if (stack and (keyMap[UP_RECOMMEND] ?: 0) != 0L) {
-                set += setOf(
-                    "MallHolderSmall",
-                    "MallHolderLarge",
-                    "MallHolderSmallV2",
-                    "MallHolderSmallNew",
-                    "MallHolderLargeNew"
-                )
-            }
-
-            if (stack and (keyMap[GAME] ?: 0) != 0L) {
-                set += setOf(
-                    "GameHolderSmall",
-                    "GameHolderLarge",
-                    "GameHolderSmallNew",
-                    "GameHolderLargeNew",
-                )
-            }
-            sPrefs.edit().putStringSet("enable_banner_lists", set).apply()
-        }
     }
 
-    private val bannerMap = mapOf(
-        105 to "UpperHolderNone",     //Default None
-        106 to "CommonHolderSmall",
-        107 to "CommonHolderLarge",
-        108 to "MallHolderSmall",
-        109 to "MallHolderLarge",
-        110 to "GameHolderSmall",
-        111 to "GameHolderLarge",
-        112 to "MallHolderSmallV2",
-        113 to "CommonHolderSmallNew",
-        114 to "CommonHolderLargeNew",
-        115 to "MallHolderSmallNew",
-        116 to "MallHolderLargeNew",
-        117 to "GameHolderSmallNew",
-        118 to "GameHolderLargeNew",
-    )
-
     private val configSet by lazy {
-        sPrefs.getStringSet("enable_banner_lists", emptySet()).orEmpty().let { set ->
-            bannerMap.filterValues {
-                set.contains(it)
-            }.keys
-        }
+        sPrefs.getStringSet("enable_banner_lists", emptySet()).orEmpty().flatMap {
+            ID_MAP[it].orEmpty()
+        }.toSet()
     }
 
     override fun startHook() {
@@ -85,7 +55,7 @@ class VideoAdHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         ) { param ->
             val id = param.args[1] as Int
             if (configSet.contains(id)) {
-                param.args[1] = bannerMap.keys.first()
+                param.args[1] = UPPER_HOLDER_NONE
                 Log.toast("已干掉推荐广告")
             }
         }
