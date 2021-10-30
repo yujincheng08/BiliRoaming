@@ -1056,7 +1056,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     private fun findPartySectionClass(): String? {
         return classesList.filter {
-            it.startsWith("tv.danmaku.bili.ui.video.party.section")
+            it.startsWith("tv.danmaku.bili.ui.video.party.section") ||
+                    it.startsWith("com.bilibili.video.videodetail.party.section")
         }.firstOrNull { c ->
             c.findClass(mClassLoader).declaredFields.filter {
                 it.type == progressBarClass
