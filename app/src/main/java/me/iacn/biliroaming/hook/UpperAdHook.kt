@@ -19,6 +19,10 @@ class UpperAdHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 112, // MallHolderSmallV2
                 115, // MallHolderSmallNew
                 116, // MallHolderLargeNew
+                106, // CommonHolderSmall
+                107, // CommonHolderLarge
+                113, // CommonHolderSmallNew
+                114, // CommonHolderLargeNew
             ),
             GAME to setOf(
                 110, // GameHolderSmall
@@ -27,12 +31,6 @@ class UpperAdHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 118, // GameHolderLargeNew
             ),
 //             None: 105
-//             COMMON to setof(
-//                106, // CommonHolderSmall
-//                107, // CommonHolderLarge
-//                113, // CommonHolderSmallNew
-//                114, // CommonHolderLargeNew
-//            )
         )
     }
 
@@ -53,6 +51,7 @@ class UpperAdHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 param.args[1] = UPPER_HOLDER_NONE
                 Log.toast("已清除视频下方推荐")
             }
+            Log.d("not filtered $id")
         }
     }
 }
