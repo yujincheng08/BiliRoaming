@@ -87,29 +87,29 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         }
                         // 不存在频道按钮时才添加
                         if (hasChannel != null && !hasChannel) {
-                            val channelJson = tabClass?.new()
-                                ?.setObjectField("tabId", "123")
-                                ?.setObjectField("name", "频道")
-                                ?.setObjectField(
+                            tabClass?.new()?.run {
+                                setObjectField("tabId", "123")
+                                setObjectField("name", "频道")
+                                setObjectField(
                                     "icon",
                                     "http://i0.hdslb.com/bfs/archive/e16c9303e9edbf23031f545fcafc44d1f60cd07b.png"
                                 )
-                                ?.setObjectField(
+                                setObjectField(
                                     "iconSelected",
                                     "http://i0.hdslb.com/bfs/archive/f6739d905dee57d2c0429d9b66acb3f39b294aff.png"
                                 )
-                                ?.setObjectField("uri", "bilibili://pegasus/channel/")
-                                ?.setObjectField("reportId", "频道Bottom")
-                                ?.setIntField("pos", 2)
-                            channelJson?.let { l ->
+                                setObjectField("uri", "bilibili://main/top_category")
+                                setObjectField("reportId", "频道Bottom")
+                                val pos = 2
+                                setIntField("pos", pos)
                                 bottom.forEach {
-                                    it.setIntField("pos", it.getIntField("pos") + 0)
+                                    it.setIntField("pos", it.getIntField("pos").let { p -> p + if (p >= pos) 1 else 0 } )
                                 }
-                                bottom.add(0, l)
+                                bottom.add(0, this)
                             }
                             // 同时移除 首页的右上角的频道按钮
                             data.getObjectFieldAs<MutableList<*>>("moreCategory").removeAll {
-                                it?.getObjectFieldAs<String?>("uri")
+                                it?.getObjectFieldAs<String?>("uri")?.also { uri -> Log.e(uri) }
                                     ?.startsWith("bilibili://main/top_category")
                                     ?: false
                             }
