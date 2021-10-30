@@ -31,7 +31,6 @@ import me.iacn.biliroaming.XposedInit.Companion.modulePath
 import me.iacn.biliroaming.XposedInit.Companion.moduleRes
 import me.iacn.biliroaming.hook.JsonHook
 import me.iacn.biliroaming.hook.SplashHook
-import me.iacn.biliroaming.hook.VideoAdHook
 import me.iacn.biliroaming.utils.*
 import java.io.ByteArrayOutputStream
 import java.io.File

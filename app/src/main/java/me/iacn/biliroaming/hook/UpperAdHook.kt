@@ -1,12 +1,11 @@
 package me.iacn.biliroaming.hook
 
-import android.os.Bundle
-import android.view.ViewGroup
+import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.utils.Log
-import me.iacn.biliroaming.utils.hookBeforeMethod
+import me.iacn.biliroaming.utils.hookBeforeAllMethods
 import me.iacn.biliroaming.utils.sPrefs
 
-class VideoAdHook(classLoader: ClassLoader) : BaseHook(classLoader) {
+class UpperAdHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     companion object {
         private const val UP_RECOMMEND = "up_recommend"
         private const val GAME = "game"
@@ -38,25 +37,21 @@ class VideoAdHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     private val configSet by lazy {
-        sPrefs.getStringSet("enable_banner_lists", emptySet()).orEmpty().flatMap {
+        sPrefs.getStringSet("block_upper_ad", emptySet()).orEmpty().flatMap {
             ID_MAP[it].orEmpty()
         }.toSet()
     }
 
     override fun startHook() {
         if (configSet.isEmpty()) return
-        Log.d("Start hook: AdHook")
-        "com.bilibili.ad.adview.videodetail.upper.b".hookBeforeMethod(
-            mClassLoader,
-            "a",
-            ViewGroup::class.java,
-            Int::class.java,
-            Bundle::class.java
+        Log.d("Start hook: UpperAdHook")
+        instance.videoUpperAdClass?.hookBeforeAllMethods(
+            instance.videoUpperAd()
         ) { param ->
             val id = param.args[1] as Int
             if (configSet.contains(id)) {
                 param.args[1] = UPPER_HOLDER_NONE
-                Log.toast("已干掉推荐广告")
+                Log.toast("已清除视频下方推荐")
             }
         }
     }
