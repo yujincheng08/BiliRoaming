@@ -137,6 +137,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 }
                 "android" -> {
                     if (versionCode !in 6000000 until 6120000) supportDark = false
+                    if (versionCode >= 6270000) supportAddChannel = true
                 }
                 "android_hd" -> {
                     supportDark = false
