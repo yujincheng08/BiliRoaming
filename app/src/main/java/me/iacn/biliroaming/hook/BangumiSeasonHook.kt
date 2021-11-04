@@ -44,6 +44,13 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 1919 to Area("hk", "港"),
                 810 to Area("tw", "台")
             )
+
+        private val USER_SPACES =
+            mapOf(
+                "11783021" to "哔哩哔哩番剧出差",
+                "1988098633" to "b站_戲劇咖",
+                "2042149112" to "b站_綜藝咖"
+            )
     }
 
     private val isSerializable by lazy {
@@ -224,15 +231,12 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         body.setObjectField(dataField, fixView(data, url))
                         body.setIntField("code", 0)
                     } else if (url.startsWith("https://app.bilibili.com/x/v2/space?")) {
-                        if (url.contains("vmid=11783021")) {
-                            body.setObjectField(dataField, fixSpace(data, "11783021", "哔哩哔哩番剧出差"))
-                            body.setIntField("code", 0)
-                        } else if (url.contains("vmid=1988098633")) {
-                            body.setObjectField(dataField, fixSpace(data, "1988098633", "b站_DM組"))
-                            body.setIntField("code", 0)
-                        } else if (url.contains("vmid=2042149112")) {
-                            body.setObjectField(dataField, fixSpace(data, "2042149112", "b站_EN組"))
-                            body.setIntField("code", 0)
+                        val mid = Uri.parse(url).getQueryParameter("vmid")
+                        mid?.let {
+                            USER_SPACES[it]?.run {
+                                body.setObjectField(dataField, fixSpace(data, mid, this))
+                                body.setIntField("code", 0)
+                            }
                         }
                     }
                 }
