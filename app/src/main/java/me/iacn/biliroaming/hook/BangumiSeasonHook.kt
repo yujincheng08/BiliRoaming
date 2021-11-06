@@ -407,7 +407,9 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         lastSeasonInfo["ep_ids"] = lastSeasonInfo["ep_ids"]?.let { "$it;$epId" }
                             ?: epId
                         episode.optJSONArray("subtitles")?.let {
-                            lastSeasonInfo["sb$cid"] = it.toString()
+                            if (it.length() > 0) {
+                                lastSeasonInfo["sb$cid"] = it.toString()
+                            }
                         }
                     }
                 }
