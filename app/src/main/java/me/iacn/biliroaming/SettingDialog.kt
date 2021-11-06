@@ -127,14 +127,17 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 "android_i" -> {
                     if (versionCode in 2050410..2080109) supportLiveHook = true
                     if (versionCode < 2050410) supportDark = false
+                    if (versionCode >= 3000000) supportAddChannel = true
                     supportAdd4K = true
                 }
                 "android_b" -> {
                     if (versionCode < 6080000) supportAdd4K = true
                     if (versionCode < 6000000) supportDark = false
+                    if (versionCode in 6270000..6460400) supportAddChannel = true
                 }
                 "android" -> {
                     if (versionCode !in 6000000 until 6120000) supportDark = false
+                    if (versionCode in 6270000..6460400) supportAddChannel = true
                 }
                 "android_hd" -> {
                     supportDark = false
@@ -175,6 +178,9 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             }
             if (!supportTeenagersMode) {
                 disablePreference("teenagers_mode_dialog")
+            }
+            if (!supportAddChannel) {
+                disablePreference("add_channel")
             }
             if (!supportCustomizeTab) {
                 disablePreference("customize_home_tab_title")
