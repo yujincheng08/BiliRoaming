@@ -47,10 +47,10 @@
     <string name="update_url">https://github.com/yujincheng08/BiliRoaming/releases/latest</string>
     <string name="server_url">https://github.com/yujincheng08/BiliRoaming/wiki/%E5%85%AC%E5%85%B1%E8%A7%A3%E6%9E%90%E6%9C%8D%E5%8A%A1%E5%99%A8</string>
     <string name="github_url">https://github.com/yujincheng08/BiliRoaming</string>
-    <string name="group_title">QQ群</string>
-    <string name="group_summary">点击加入QQ群（长期禁言满员的通知群）</string>
-    <string name="tg_title">TG群</string>
-    <string name="tg_summary">点击加入TG群（不禁言但需要翻墙）</string>
+    <string name="group_title">QQ频道</string>
+    <string name="group_summary">点击加入QQ频道</string>
+    <string name="tg_title">TG频道</string>
+    <string name="tg_summary">点击加入TG频道</string>
     <string name="tg_url">https://t.me/biliroaming</string>
     <string name="upos_summary">设置解锁番剧的服务器，可加快视频加载速度</string>
     <string name="upos_title">UPOS服务器设置</string>
@@ -81,7 +81,7 @@
     <string name="os_not_support">当前系统版本不支持此功能</string>
     <string name="enable_av_title">显示AV号</string>
     <string name="enable_av_summary">视频详情页显示为AV号</string>
-    <string name="group_url">http://qm.qq.com/cgi-bin/qm/qr?from=app&amp;p=android&amp;k=Qk8NsOfgC-afK4Vqhnqg9FBF2l1oL0sp</string>
+    <string name="group_url">mqqapi://forward/url?src_type=web&amp;style=default&amp;plg_auth=1&amp;version=1&amp;url_prefix=aHR0cHM6Ly9xdW4ucXEuY29tL3F1bnByby9wYXNzY2hlY2svc2hhcmU/X3d2PTMmX3d3dj0xMjgmcGFzc0NvZGU9MTE0NTE1JnNlbmRlclVpbj0xOTE5ODEwJmd1aWxkSWQ9ODM1NTc5NTE2MzY0MTg0NTUmZ3VpbGROYW1lPeWTlOWTqea8q+a4uCZzb3VyY2VUeXBlPTEmcXFHcm91cFVpbj0wJnNoYXJlVHlwZT0x</string>
     <string name="setting_title">打开模块设置</string>
     <string name="setting_summary">启动客户端并打开模块设置</string>
     <string name="add_4k_title">添加4K支持</string>
