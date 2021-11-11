@@ -81,7 +81,7 @@
     <string name="os_not_support">当前系统版本不支持此功能</string>
     <string name="enable_av_title">显示AV号</string>
     <string name="enable_av_summary">视频详情页显示为AV号</string>
-    <string name="group_url">mqqapi://forward/url?src_type=web&amp;style=default&amp;plg_auth=1&amp;version=1&amp;url_prefix=aHR0cHM6Ly9xdW4ucXEuY29tL3F1bnByby9wYXNzY2hlY2svc2hhcmU/X3d2PTMmX3d3dj0xMjgmcGFzc0NvZGU9MTE0NTE1JnNlbmRlclVpbj0xOTE5ODEwJmd1aWxkSWQ9ODM1NTc5NTE2MzY0MTg0NTUmZ3VpbGROYW1lPeWTlOWTqea8q+a4uCZzb3VyY2VUeXBlPTEmcXFHcm91cFVpbj0wJnNoYXJlVHlwZT0x</string>
+    <string name="group_url">mqqapi://forward/url?src_type=web&amp;style=default&amp;plg_auth=1&amp;version=1&amp;url_prefix=aHR0cHM6Ly9xdW4ucXEuY29tL3Fxd2ViL3F1bnByby9zaGFyZT9fd3Y9MyZfd3d2PTEyOCZpbnZpdGVDb2RlPW5EaVd0JmZyb209MTE0NTE0JmJpej1rYQ==</string>
     <string name="setting_title">打开模块设置</string>
     <string name="setting_summary">启动客户端并打开模块设置</string>
     <string name="add_4k_title">添加4K支持</string>
