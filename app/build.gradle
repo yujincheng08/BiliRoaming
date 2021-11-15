@@ -14,12 +14,30 @@ android {
         versionName appVerName
     }
 
+    if (project.hasProperty('releaseStoreFile')) {
+        signingConfigs {
+            config {
+                storeFile = file(project.properties['releaseStoreFile'])
+                storePassword = project.properties['releaseStorePassword']
+                keyAlias = project.properties['releaseKeyAlias']
+                keyPassword = project.properties['releaseKeyPassword']
+            }
+        }
+    }
+
     buildTypes {
+        all {
+            if (project.hasProperty('releaseStoreFile')) {
+                signingConfig signingConfigs.config
+            } else {
+                println("using debug sign")
+                signingConfig signingConfigs.debug
+            }
+        }
         release {
             minifyEnabled true
             shrinkResources true
             proguardFiles 'proguard-rules.pro'
-            signingConfig signingConfigs.debug
         }
     }
 

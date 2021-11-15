@@ -115,7 +115,6 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             var supportAdd4K = false
             var supportMusicNotificationHook = true
             var supportDark = true
-            var supportAddChannel = false
             var supportCustomizeTab = true
             val supportFullSplash = try {
                 instance.splashInfoClass?.getMethod("getMode") != null
