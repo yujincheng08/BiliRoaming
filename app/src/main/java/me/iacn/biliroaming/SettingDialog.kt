@@ -325,7 +325,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
 
         private fun onCustomServerClick(): Boolean {
             AlertDialog.Builder(activity).run {
-                val layout = moduleRes.getLayout(R.layout.cutomize_backup_dialog)
+                val layout = moduleRes.getLayout(R.layout.customize_backup_dialog)
                 val inflater = LayoutInflater.from(context)
                 val view = inflater.inflate(layout, null)
                 val editTexts = arrayOf(
@@ -428,7 +428,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
 
         private fun onCustomizeAccessKeyClick(): Boolean {
             AlertDialog.Builder(activity).run {
-                val layout = moduleRes.getLayout(R.layout.cutomize_backup_dialog)
+                val layout = moduleRes.getLayout(R.layout.customize_backup_dialog)
                 val inflater = LayoutInflater.from(context)
                 val view = inflater.inflate(layout, null)
                 val editTexts = arrayOf(

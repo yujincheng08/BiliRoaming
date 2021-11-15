@@ -25,7 +25,7 @@ import kotlin.collections.HashMap
  * Email i@iacn.me
  */
 class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
-    var countDownLatch: CountDownLatch? = null
+    private var countDownLatch: CountDownLatch? = null
 
     override fun startHook() {
         if (!sPrefs.getBoolean("main_func", false)) return

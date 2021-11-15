@@ -4,6 +4,7 @@
         <item>不替换</item>
         <item>cos（腾讯）</item>
         <item>cosb（腾讯）</item>
+        <item>bos（腾讯）</item>
         <item>ks3（金山）</item>
         <item>ks3b（金山）</item>
         <item>ks3c（金山）</item>
@@ -25,6 +26,7 @@
         <item>$1</item>
         <item>@string/cos_host</item>
         <item>@string/cosb_host</item>
+        <item>@string/bos_host</item>
         <item>@string/ks3_host</item>
         <item>@string/ks3b_host</item>
         <item>@string/ks3c_host</item>

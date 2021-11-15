@@ -166,8 +166,6 @@ fun getStreamContent(input: InputStream) = try {
     null
 }
 
-val gson by lazy { instance.gsonClass?.newInstance() }
-
 /**
  * @param targetDir 目标文件夹
  */

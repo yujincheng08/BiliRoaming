@@ -7,7 +7,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 class MiniProgramHook(classLoader: ClassLoader) : BaseHook(classLoader) {
-    val extractUrl = Regex("""(.*)(http\S*)(.*)""")
+    private val extractUrl = Regex("""(.*)(http\S*)(.*)""")
     override fun startHook() {
         if (!sPrefs.getBoolean("mini_program", false)) return
         Log.d("startHook: MiniProgram")
