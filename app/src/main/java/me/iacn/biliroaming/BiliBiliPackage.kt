@@ -1054,25 +1054,22 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         }.count() > 0
     }
 
-    private fun findPartySectionClass(): String? {
-        return classesList.filter {
-            it.startsWith("tv.danmaku.bili.ui.video.party.section") ||
-                    it.startsWith("com.bilibili.video.videodetail.party.section")
-        }.firstOrNull { c ->
-            c.findClass(mClassLoader).declaredFields.filter {
-                it.type == progressBarClass
-            }.count().let { it > 0 }
-        }
+    private fun findPartySectionClass() = classesList.filter {
+        it.startsWith("tv.danmaku.bili.ui.video.party.section") ||
+                it.startsWith("com.bilibili.video.videodetail.party.section") ||
+                it.startsWith("tv.danmaku.bili.ui.video.profile.action")
+    }.firstOrNull { c ->
+        c.findClass(mClassLoader).declaredFields.filter {
+            it.type == progressBarClass
+        }.count().let { it > 0 }
     }
 
-    private fun findSectionClass(): String? {
-        return classesList.filter {
-            it.startsWith("tv.danmaku.bili.ui.video.section")
-        }.firstOrNull { c ->
-            c.findClass(mClassLoader).declaredFields.filter {
-                it.type == progressBarClass
-            }.count().let { it > 0 }
-        }
+    private fun findSectionClass() = classesList.filter {
+        it.startsWith("tv.danmaku.bili.ui.video.section")
+    }.firstOrNull { c ->
+        c.findClass(mClassLoader).declaredFields.filter {
+            it.type == progressBarClass
+        }.count().let { it > 0 }
     }
 
     private fun findLikeMethod() = sectionClass?.declaredMethods?.firstOrNull {
