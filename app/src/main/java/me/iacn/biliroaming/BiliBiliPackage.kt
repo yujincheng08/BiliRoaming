@@ -210,8 +210,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             mClassLoader
         )
     }
-    val commentExpandableTextViewClass by Weak {
-        "com.bilibili.app.comm.comment2.widget.CommentExpandableTextView".findClassOrNull(
+    val commentSpanTextViewClass by Weak {
+        "com.bilibili.app.comm.comment2.widget.CommentSpanTextView".findClassOrNull(
             mClassLoader
         )
     }

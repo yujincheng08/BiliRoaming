@@ -281,18 +281,20 @@ fun Any.callMethodOrNull(methodName: String?, vararg args: Any?): Any? = runCatc
 fun Class<*>.callStaticMethod(methodName: String?, vararg args: Any?): Any? =
     callStaticMethod(this, methodName, *args)
 
-fun Class<*>.callStaticMethodOrNull(methodName: String?, vararg args: Any?): Any? = runCatchingOrNull {
-    callStaticMethod(this, methodName, *args)
-}
+fun Class<*>.callStaticMethodOrNull(methodName: String?, vararg args: Any?): Any? =
+    runCatchingOrNull {
+        callStaticMethod(this, methodName, *args)
+    }
 
 @Suppress("UNCHECKED_CAST")
 fun <T> Class<*>.callStaticMethodAs(methodName: String?, vararg args: Any?) =
     callStaticMethod(this, methodName, *args) as T
 
 @Suppress("UNCHECKED_CAST")
-fun <T> Class<*>.callStaticMethodOrNullAs(methodName: String?, vararg args: Any?) = runCatchingOrNull {
-    callStaticMethod(this, methodName, *args) as T
-}
+fun <T> Class<*>.callStaticMethodOrNullAs(methodName: String?, vararg args: Any?) =
+    runCatchingOrNull {
+        callStaticMethod(this, methodName, *args) as T
+    }
 
 @Suppress("UNCHECKED_CAST")
 fun <T> Class<*>.getStaticObjectFieldAs(field: String?) = getStaticObjectField(this, field) as T
@@ -428,6 +430,27 @@ fun Class<*>.findFirstFieldByExactType(type: Class<*>): Field =
 fun Class<*>.findFirstFieldByExactTypeOrNull(type: Class<*>?): Field? = runCatchingOrNull {
     findFirstFieldByExactType(this, type)
 }
+
+fun Any.getFirstFieldByExactType(type: Class<*>): Any? =
+    javaClass.findFirstFieldByExactType(type).get(this)
+
+@Suppress("UNCHECKED_CAST")
+fun <T> Any.getFirstFieldByExactTypeAs(type: Class<*>) =
+    javaClass.findFirstFieldByExactType(type).get(this) as T?
+
+inline fun <reified T:Any> Any.getFirstFieldByExactType() =
+    javaClass.findFirstFieldByExactType(T::class.java).get(this) as T?
+
+fun Any.getFirstFieldByExactTypeOrNull(type: Class<*>?): Any? = runCatchingOrNull {
+    javaClass.findFirstFieldByExactTypeOrNull(type)?.get(this)
+}
+
+@Suppress("UNCHECKED_CAST")
+fun <T> Any.getFirstFieldByExactTypeOrNullAs(type: Class<*>?) =
+    getFirstFieldByExactTypeOrNull(type) as T?
+
+inline fun <reified T> Any.getFirstFieldByExactTypeOrNull() =
+    getFirstFieldByExactTypeOrNull(T::class.java) as T?
 
 fun ClassLoader.allClassesList(delegator: (BaseDexClassLoader) -> BaseDexClassLoader = { x -> x }): List<String> {
     var classLoader = this
