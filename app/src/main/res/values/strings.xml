@@ -46,7 +46,7 @@
     <string name="server_url">https://github.com/yujincheng08/BiliRoaming/wiki/%E5%85%AC%E5%85%B1%E8%A7%A3%E6%9E%90%E6%9C%8D%E5%8A%A1%E5%99%A8</string>
     <string name="github_url">https://github.com/yujincheng08/BiliRoaming</string>
     <string name="group_title">QQ频道</string>
-    <string name="group_summary">点击加入QQ频道</string>
+    <string name="group_summary">点击加入QQ频道（需有QQ频道内测资格）</string>
     <string name="tg_title">TG频道</string>
     <string name="tg_summary">点击加入TG频道</string>
     <string name="tg_url">https://t.me/biliroaming</string>
