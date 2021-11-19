@@ -3,19 +3,19 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:rowCount="4"
     android:columnCount="2"
     android:orientation="horizontal"
     android:paddingStart="25dp"
-    android:paddingEnd="20dp">
+    android:paddingEnd="20dp"
+    android:rowCount="5">
 
 
     <TextView
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_columnWeight="1"
-        android:text="中国大陆"
         android:singleLine="true"
+        android:text="中国大陆"
         tools:ignore="HardcodedText" />
 
     <EditText
@@ -23,10 +23,10 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_columnWeight="4"
-        android:hint="cn.biliroaming.example.com"
-        android:tag="cn_server"
-        android:inputType="textUri"
         android:autofillHints="no"
+        android:hint="cn.biliroaming.example.com"
+        android:inputType="textUri"
+        android:tag="cn_server"
         tools:ignore="HardcodedText" />
 
     <TextView
@@ -41,10 +41,10 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_columnWeight="4"
-        android:hint="hk.biliroaming.example.com"
-        android:tag="hk_server"
-        android:inputType="textUri"
         android:autofillHints="no"
+        android:hint="hk.biliroaming.example.com"
+        android:inputType="textUri"
+        android:tag="hk_server"
         tools:ignore="HardcodedText" />
 
     <TextView
@@ -59,10 +59,10 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_columnWeight="4"
-        android:hint="tw.biliroaming.example.com"
-        android:tag="tw_server"
-        android:inputType="textUri"
         android:autofillHints="no"
+        android:hint="tw.biliroaming.example.com"
+        android:inputType="textUri"
+        android:tag="tw_server"
         tools:ignore="HardcodedText" />
 
     <TextView
@@ -77,9 +77,25 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_columnWeight="4"
-        android:hint="th.biliroaming.example.com"
-        android:tag="th_server"
-        android:inputType="textUri"
         android:autofillHints="no"
+        android:hint="th.biliroaming.example.com"
+        android:inputType="textUri"
+        android:tag="th_server"
         tools:ignore="HardcodedText" />
+
+    <TextView
+        android:id="@+id/quality_verify_title"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="1"
+        android:text="去除本地效验"
+        android:visibility="gone"
+        tools:ignore="HardcodedText" />
+
+    <Switch
+        android:id="@+id/quality_verify_switch"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="4"
+        android:visibility="gone" />
 </GridLayout>

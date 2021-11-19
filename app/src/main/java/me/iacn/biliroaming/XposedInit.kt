@@ -88,6 +88,7 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                     startHook(CommentHook(lpparam.classLoader))
                     startHook(LiveRoomHook(lpparam.classLoader))
                     startHook(UpperAdHook(lpparam.classLoader))
+                    startHook(QualityVerifierHooker(lpparam.classLoader))
                 }
                 lpparam.processName.endsWith(":web") -> {
                     BiliBiliPackage(lpparam.classLoader, param.args[0] as Context)

@@ -19,8 +19,10 @@ import android.provider.MediaStore
 import android.text.InputFilter
 import android.text.InputType
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
+import android.widget.Switch
 import android.widget.TextView
 import androidx.documentfile.provider.DocumentFile
 import kotlinx.coroutines.MainScope
@@ -439,6 +441,13 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     it.setText(prefs.getString("${it.tag}_accessKey", ""))
                     it.hint = ""
                 }
+
+                val qualityVerifyTitle = view.findViewById<TextView>(R.id.quality_verify_title)
+                val qualityVerifySwitch = view.findViewById<Switch>(R.id.quality_verify_switch)
+                qualityVerifyTitle.visibility = View.VISIBLE
+                qualityVerifySwitch.visibility = View.VISIBLE
+                qualityVerifySwitch.isChecked = prefs.getBoolean("quality_verify", false)
+
                 setTitle(R.string.customize_accessKey_title)
                 setView(view)
                 setPositiveButton(android.R.string.ok) { _, _ ->
@@ -448,6 +457,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                         if (accessKey.isNotEmpty()) prefs.edit().putString(key, accessKey).apply()
                         else prefs.edit().remove(key).apply()
                     }
+                    prefs.edit().putBoolean("quality_verify", qualityVerifySwitch.isChecked).apply()
                 }
                 show()
             }
