@@ -211,7 +211,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         )
     }
     val commentSpanTextViewClass by Weak {
-        "com.bilibili.app.comm.comment2.widget.CommentSpanTextView".findClassOrNull(
+        mHookInfo["class_comment_span"]?.findClassOrNull(
             mClassLoader
         )
     }
@@ -577,11 +577,21 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             "method_video_upper_ad"
         ) {
             findVideoUpperAd()
+        }.checkOrPut("class_comment_span") {
+            findCommentSpan()
         }
 
         Log.d(mHookInfo.filterKeys { it != "map_ids" })
         Log.d("Check hook info completed: needUpdate = $needUpdate")
         return needUpdate
+    }
+
+    private fun findCommentSpan() = classesList.filter {
+        it.startsWith("com.bilibili.app.comm.comment2.widget")
+    }.firstOrNull { c ->
+        c.findClass(mClassLoader).declaredFields.count {
+            it.type == Float::class.javaPrimitiveType
+        } > 1
     }
 
     private fun findVideoUpperAd(): Array<String?> {
