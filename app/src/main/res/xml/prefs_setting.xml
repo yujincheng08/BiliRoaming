@@ -214,6 +214,11 @@
             android:title="@string/keywords_filter_title_recommend_title" />
         <SwitchPreference
             android:dependency="hidden"
+            android:key="keywords_filter_reason_recommend"
+            android:summary="@string/keywords_filter_reason_recommend_summary"
+            android:title="@string/keywords_filter_reason_recommend_title" />
+        <SwitchPreference
+            android:dependency="hidden"
             android:key="add_bangumi"
             android:summary="@string/add_bangumi_summary"
             android:title="@string/add_bangumi_title" />
