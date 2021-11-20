@@ -534,7 +534,8 @@ object BiliRoamingApi {
             val sid = module.optInt("id", mid + 1)
             for ((eid, ep) in data.optJSONArray("episodes").orEmpty()
                 .iterator().withIndex()) {
-                ep.put("episode_status", ep.optInt("status"))
+                ep.put("status", 2)
+                ep.put("episode_status", 2)
                 ep.put("ep_id", ep.optInt("id"))
                 ep.put("index", ep.optString("title"))
                 ep.put("indexTitle", ep.optString("long_title"))
