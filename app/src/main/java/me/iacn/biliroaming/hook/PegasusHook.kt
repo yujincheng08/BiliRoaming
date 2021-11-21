@@ -12,11 +12,17 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private val kwdFilterTitleEnabled by lazy {
         sPrefs.getBoolean("keywords_filter_title_recommend", false)
     }
+    private val kwdFilterReasonEnabled by lazy {
+        sPrefs.getBoolean("keywords_filter_reason_recommend", false)
+    }
     private val hideLowPlayCountLimit by lazy {
         sPrefs.getLong("hide_low_play_count_recommend_limit", 100)
     }
     private val kwdFilterTitleList by lazy {
         sPrefs.getString("keywords_filter_title_recommend_list", "")?.split("|") ?: emptyList()
+    }
+    private val kwdFilterReasonList by lazy {
+        sPrefs.getString("keywords_filter_reason_recommend_list", "")?.split("|") ?: emptyList()
     }
 
     private val filterMap = mapOf(
@@ -55,6 +61,7 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
     }
 
+    // 屏蔽过低的播放数
     private fun isLowCountVideo(obj: Any): Boolean {
         if (!hideLowPlayCountEnabled) return false
         val text = try {
@@ -68,7 +75,7 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
     }
 
-
+    // 屏蔽标题关键词
     private fun isContainsBlockKwd(obj: Any): Boolean {
         if (!kwdFilterTitleEnabled || kwdFilterTitleList.isEmpty()) return false
         val title = try {
@@ -78,6 +85,21 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
         kwdFilterTitleList.forEach {
             if (it.isNotEmpty() && title.contains(it)) return true
+        }
+        return false
+    }
+
+    // 屏蔽推荐关键词
+    private fun isRecommend(obj: Any): Boolean {
+        if (!kwdFilterReasonEnabled || kwdFilterReasonList.isEmpty()) return false
+        val reason = try {
+            obj.getObjectField("rcmdReason")?.getObjectField("text").toString()
+        } catch (thr: Throwable) {
+            return false
+        }
+        if (reason == "null") return false
+        kwdFilterReasonList.forEach {
+            if (it.isNotEmpty() && reason.contains(it)) return true
         }
         return false
     }
@@ -97,6 +119,7 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                 .orEmpty() || item in it.getObjectFieldAs<String?>("cardType")
                                 .orEmpty() || item in it.getObjectFieldAs<String?>("goTo")
                                 .orEmpty() || isLowCountVideo(it) || isContainsBlockKwd(it)
+                                || isRecommend(it)
                         }
                     }
                 }

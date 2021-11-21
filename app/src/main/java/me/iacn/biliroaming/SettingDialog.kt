@@ -75,6 +75,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("export_video")?.onPreferenceClickListener = this
             findPreference("hide_low_play_count_recommend")?.onPreferenceClickListener = this
             findPreference("keywords_filter_title_recommend")?.onPreferenceClickListener = this
+            findPreference("keywords_filter_reason_recommend")?.onPreferenceClickListener = this
             findPreference("custom_subtitle")?.onPreferenceChangeListener = this
             findPreference("customize_accessKey")?.onPreferenceClickListener = this
             checkCompatibleVersion()
@@ -525,6 +526,41 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             return true
         }
 
+        private fun onKeywordsFilterReasonRecommendClick(isChecked: Boolean): Boolean {
+            if (!isChecked) return true
+            val tv = EditText(activity)
+            tv.setText(sPrefs.getString("keywords_filter_reason_recommend_list", ""))
+            AlertDialog.Builder(activity).run {
+                setTitle("设置推荐原因过滤关键词")
+                setView(tv)
+                setPositiveButton(android.R.string.ok) { _, _ ->
+                    sPrefs.edit()
+                        .putString("keywords_filter_reason_recommend_list", tv.text.toString())
+                        .apply()
+                    Log.toast("保存成功 重启后生效")
+                }
+                setNegativeButton(android.R.string.cancel, null)
+                setNeutralButton("添加分隔符", null)
+                setCancelable(false)
+                show()
+            }.let {
+                it.getButton(AlertDialog.BUTTON_NEUTRAL).setOnClickListener {
+                    when {
+                        tv.text.isEmpty() -> {
+                            Log.toast("你好像还没有输入内容> <")
+                        }
+                        tv.text.endsWith('|') -> {
+                            Log.toast("啊嘞 上一个分隔符后面好像还没有东西> <")
+                        }
+                        else -> {
+                            tv.text.append('|')
+                        }
+                    }
+                }
+            }
+            return true
+        }
+
         override fun onPreferenceClick(preference: Preference) = when (preference.key) {
             "version" -> onVersionClick()
             "update" -> onUpdateClick()
@@ -537,6 +573,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             "customize_accessKey" -> onCustomizeAccessKeyClick()
             "hide_low_play_count_recommend" -> onHideLowPlayCountRecommendClick((preference as SwitchPreference).isChecked)
             "keywords_filter_title_recommend" -> onKeywordsFilterTitleRecommendClick((preference as SwitchPreference).isChecked)
+            "keywords_filter_reason_recommend" -> onKeywordsFilterReasonRecommendClick((preference as SwitchPreference).isChecked)
             else -> false
         }
     }
