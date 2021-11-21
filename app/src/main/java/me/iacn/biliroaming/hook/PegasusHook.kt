@@ -9,8 +9,11 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private val hideLowPlayCountEnabled by lazy {
         sPrefs.getBoolean("hide_low_play_count_recommend", false)
     }
-    private val hideDurationEnabled by lazy {
-        sPrefs.getBoolean("hide_duration_recommend", false)
+    private val hideShortDurationEnabled by lazy {
+        sPrefs.getBoolean("hide_short_duration_recommend", false)
+    }
+    private val hideLongDurationEnabled by lazy {
+        sPrefs.getBoolean("hide_long_duration_recommend", false)
     }
     private val kwdFilterTitleEnabled by lazy {
         sPrefs.getBoolean("keywords_filter_title_recommend", false)
@@ -33,11 +36,11 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private val hideLowPlayCountLimit by lazy {
         sPrefs.getLong("hide_low_play_count_recommend_limit", 100)
     }
-    private val hideLowDurationLimit by lazy {
-        sPrefs.getInt("hide_low_duration_recommend_limit", 0)
+    private val hideShortDurationLimit by lazy {
+        sPrefs.getInt("hide_short_duration_recommend_limit", 0)
     }
-    private val hideHighDurationLimit by lazy {
-        sPrefs.getInt("hide_high_duration_recommend_limit", 0)
+    private val hideLongDurationLimit by lazy {
+        sPrefs.getInt("hide_long_duration_recommend_limit", 0)
     }
     private val kwdFilterTitleList by lazy {
         sPrefs.getString("keywords_filter_title_recommend_list", "")?.split("|") ?: emptyList()
@@ -110,16 +113,17 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     // 屏蔽指定播放时长
     private fun durationVideo(obj: Any): Boolean {
-        if (!hideDurationEnabled) return false
         val duration = try {
-            obj.getObjectField("playArgs")?.getObjectFieldAs<Int?>("fakeDuration")!!.toInt()
+            obj.getObjectField("playerArgs")?.getObjectFieldAs<Int?>("fakeDuration")!!.toInt()
         } catch (thr: Throwable) {
             return false
         }
-        if (
-            (duration > hideHighDurationLimit && hideHighDurationLimit != 0) ||
-            (duration < hideLowDurationLimit && hideLowDurationLimit != 0)
-        ) return true
+        if (hideLongDurationEnabled) {
+            if (duration > hideLongDurationLimit && hideLongDurationLimit != 0) return true
+        }
+        if (hideShortDurationEnabled) {
+            if (duration < hideShortDurationLimit && hideShortDurationLimit != 0) return true
+        }
         return false
     }
 
@@ -137,7 +141,7 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
 
         // 屏蔽UID
-        if (!kwdFilterUidEnabled && kwdFilterUidList.isNotEmpty()) {
+        if (kwdFilterUidEnabled && kwdFilterUidList.isNotEmpty()) {
             val uid = try {
                 obj.getObjectField("args")?.getObjectField("upId").toString()
             } catch (thr: Throwable) {
@@ -145,12 +149,12 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
             if (uid == "null") return false
             kwdFilterUidList.forEach {
-                if (it.isNotEmpty() && uid.contains(it)) return true
+                if (it.isNotEmpty() && it == uid) return true
             }
         }
 
         // 屏蔽UP主
-        if (!kwdFilterUpnameEnabled && kwdFilterUpnameList.isNotEmpty()) {
+        if (kwdFilterUpnameEnabled && kwdFilterUpnameList.isNotEmpty()) {
             val upname = try {
                 obj.getObjectField("args")?.getObjectField("upName").toString()
             } catch (thr: Throwable) {
@@ -163,33 +167,33 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
 
         // 屏蔽分区
-        if (!kwdFilterRnameEnabled && kwdFilterRnameList.isNotEmpty()) {
-            val upname = try {
+        if (kwdFilterRnameEnabled && kwdFilterRnameList.isNotEmpty()) {
+            val rname = try {
                 obj.getObjectField("args")?.getObjectField("rname").toString()
             } catch (thr: Throwable) {
                 return false
             }
-            if (upname == "null") return false
+            if (rname == "null") return false
             kwdFilterRnameList.forEach {
-                if (it.isNotEmpty() && upname.contains(it)) return true
+                if (it.isNotEmpty() && rname.contains(it)) return true
             }
         }
 
         // 屏蔽频道
-        if (!kwdFilterTnameEnabled && kwdFilterTnameList.isNotEmpty()) {
-            val upname = try {
+        if (kwdFilterTnameEnabled && kwdFilterTnameList.isNotEmpty()) {
+            val tname = try {
                 obj.getObjectField("args")?.getObjectField("tname").toString()
             } catch (thr: Throwable) {
                 return false
             }
-            if (upname == "null") return false
+            if (tname == "null") return false
             kwdFilterTnameList.forEach {
-                if (it.isNotEmpty() && upname.contains(it)) return true
+                if (it.isNotEmpty() && tname.contains(it)) return true
             }
         }
 
         // 屏蔽推荐关键词（可能不存在，必须放最后）
-        if (!kwdFilterReasonEnabled && kwdFilterReasonList.isNotEmpty()) {
+        if (kwdFilterReasonEnabled && kwdFilterReasonList.isNotEmpty()) {
             val reason = try {
                 obj.getObjectField("rcmdReason")?.getObjectField("text").toString()
             } catch (thr: Throwable) {
