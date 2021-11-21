@@ -6,33 +6,6 @@ import me.iacn.biliroaming.utils.*
 class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private val filterSet = sPrefs.getStringSet("customize_home_recommend", emptySet()).orEmpty()
 
-    private val hideLowPlayCountEnabled by lazy {
-        sPrefs.getBoolean("hide_low_play_count_recommend", false)
-    }
-    private val hideShortDurationEnabled by lazy {
-        sPrefs.getBoolean("hide_short_duration_recommend", false)
-    }
-    private val hideLongDurationEnabled by lazy {
-        sPrefs.getBoolean("hide_long_duration_recommend", false)
-    }
-    private val kwdFilterTitleEnabled by lazy {
-        sPrefs.getBoolean("keywords_filter_title_recommend", false)
-    }
-    private val kwdFilterReasonEnabled by lazy {
-        sPrefs.getBoolean("keywords_filter_reason_recommend", false)
-    }
-    private val kwdFilterUidEnabled by lazy {
-        sPrefs.getBoolean("keywords_filter_uid_recommend", false)
-    }
-    private val kwdFilterUpnameEnabled by lazy {
-        sPrefs.getBoolean("keywords_filter_upname_recommend", false)
-    }
-    private val kwdFilterRnameEnabled by lazy {
-        sPrefs.getBoolean("keywords_filter_rname_recommend", false)
-    }
-    private val kwdFilterTnameEnabled by lazy {
-        sPrefs.getBoolean("keywords_filter_tname_recommend", false)
-    }
     private val hideLowPlayCountLimit by lazy {
         sPrefs.getLong("hide_low_play_count_recommend_limit", 100)
     }
@@ -99,7 +72,7 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     // 屏蔽过低的播放数
     private fun isLowCountVideo(obj: Any): Boolean {
-        if (!hideLowPlayCountEnabled) return false
+        if (hideLowPlayCountLimit == 0.toLong()) return false
         val text = try {
             obj.getObjectField("coverLeftText1")
         } catch (thr: Throwable) {
@@ -118,18 +91,14 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         } catch (thr: Throwable) {
             return false
         }
-        if (hideLongDurationEnabled) {
-            if (duration > hideLongDurationLimit && hideLongDurationLimit != 0) return true
-        }
-        if (hideShortDurationEnabled) {
-            if (duration < hideShortDurationLimit && hideShortDurationLimit != 0) return true
-        }
+        if (duration > hideLongDurationLimit && hideLongDurationLimit != 0) return true
+        if (duration < hideShortDurationLimit && hideShortDurationLimit != 0) return true
         return false
     }
 
     private fun isContainsBlockKwd(obj: Any): Boolean {
         // 屏蔽标题关键词
-        if (kwdFilterTitleEnabled && kwdFilterTitleList.isNotEmpty()) {
+        if (kwdFilterTitleList.isNotEmpty()) {
             val title = try {
                 obj.getObjectField("title").toString()
             } catch (thr: Throwable) {
@@ -141,7 +110,7 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
 
         // 屏蔽UID
-        if (kwdFilterUidEnabled && kwdFilterUidList.isNotEmpty()) {
+        if (kwdFilterUidList.isNotEmpty()) {
             val uid = try {
                 obj.getObjectField("args")?.getObjectField("upId").toString()
             } catch (thr: Throwable) {
@@ -154,7 +123,7 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
 
         // 屏蔽UP主
-        if (kwdFilterUpnameEnabled && kwdFilterUpnameList.isNotEmpty()) {
+        if (kwdFilterUpnameList.isNotEmpty()) {
             val upname = try {
                 obj.getObjectField("args")?.getObjectField("upName").toString()
             } catch (thr: Throwable) {
@@ -167,7 +136,7 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
 
         // 屏蔽分区
-        if (kwdFilterRnameEnabled && kwdFilterRnameList.isNotEmpty()) {
+        if (kwdFilterRnameList.isNotEmpty()) {
             val rname = try {
                 obj.getObjectField("args")?.getObjectField("rname").toString()
             } catch (thr: Throwable) {
@@ -180,7 +149,7 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
 
         // 屏蔽频道
-        if (kwdFilterTnameEnabled && kwdFilterTnameList.isNotEmpty()) {
+        if (kwdFilterTnameList.isNotEmpty()) {
             val tname = try {
                 obj.getObjectField("args")?.getObjectField("tname").toString()
             } catch (thr: Throwable) {
@@ -193,7 +162,7 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
 
         // 屏蔽推荐关键词（可能不存在，必须放最后）
-        if (kwdFilterReasonEnabled && kwdFilterReasonList.isNotEmpty()) {
+        if (kwdFilterReasonList.isNotEmpty()) {
             val reason = try {
                 obj.getObjectField("rcmdReason")?.getObjectField("text").toString()
             } catch (thr: Throwable) {
