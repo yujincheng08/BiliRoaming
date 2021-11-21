@@ -31,9 +31,8 @@
             android:id="@+id/hide_low_play_count_recommend"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:singleLine="false"
-            android:digits="0123456789"
-            android:inputType="text"
+            android:singleLine="true"
+            android:inputType="number"
             android:tag="hide_low_play_count_recommend_limit"
             tools:ignore="HardcodedText" />
     </LinearLayout>
@@ -64,9 +63,8 @@
             android:id="@+id/hide_short_duration_recommend"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:singleLine="false"
-            android:digits="0123456789"
-            android:inputType="text"
+            android:singleLine="true"
+            android:inputType="number"
             android:tag="hide_short_duration_recommend_limit"
             tools:ignore="HardcodedText" />
     </LinearLayout>
@@ -88,9 +86,8 @@
             android:id="@+id/hide_long_duration_recommend"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:singleLine="false"
-            android:digits="0123456789"
-            android:inputType="text"
+            android:singleLine="true"
+            android:inputType="number"
             android:tag="hide_long_duration_recommend_limit"
             tools:ignore="HardcodedText" />
     </LinearLayout>
