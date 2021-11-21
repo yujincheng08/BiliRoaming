@@ -146,8 +146,6 @@
     <string name="add_bangumi_summary">在首页标签添加大陆/港澳台番剧分页</string>
     <string name="add_movie_title">添加其他地区影视</string>
     <string name="add_movie_summary">在首页标签添加大陆/港澳台影视分页</string>
-    <string name="keywords_filter_title_recommend_title">关键词过滤首页推送（标题）</string>
-    <string name="keywords_filter_title_recommend_summary">过滤首页推送标题中包含指定关键词的内容</string>
     <string name="custom_subtitle_title">自定义字幕样式</string>
     <string name="custom_subtitle_summary">开启后能自定义CC字幕样式，但透明度跟随弹幕透明度</string>
     <string name="customize_space_title">净化用户空间</string>
@@ -160,6 +158,17 @@
     <string name="anti_live_room_feed_summary">强制直播间使用旧版样式</string>
     <string name="block_video_ad_title">屏蔽视频下方推荐</string>
     <string name="block_video_ad_summary">屏蔽视频下方推荐栏</string>
+    <string name="hide_long_duration_recommend_title">隐藏首页视频时长（最长）</string>
+    <string name="hide_short_duration_recommend_title">隐藏首页视频时长（最短）</string>
+    <string name="hide_duration_recommend_summary">隐藏首页推送指定时长的视频</string>
+    <string name="home_filter_group_title">首页推送过滤</string>
+    <string name="home_filter_title">首页推送过滤菜单</string>
+    <string name="home_filter_summary">关闭后，只会隐藏菜单（重启生效），过滤设置仍会继续运行</string>
+    <string name="keywords_filter_title_recommend_title">关键词过滤首页推送（标题）</string>
     <string name="keywords_filter_reason_recommend_title">关键词过滤首页推送（推荐原因）</string>
-    <string name="keywords_filter_reason_recommend_summary">过滤首页推送推荐原因中包含指定关键词的内容</string>
+    <string name="keywords_filter_uid_recommend_title">关键词过滤首页推送（UID）</string>
+    <string name="keywords_filter_upname_recommend_title">关键词过滤首页推送（UP主）</string>
+    <string name="keywords_filter_rname_recommend_title">关键词过滤首页推送（分区）</string>
+    <string name="keywords_filter_tname_recommend_title">关键词过滤首页推送（频道）</string>
+    <string name="keywords_filter_recommend_summary">过滤首页推送中包含指定关键词的内容</string>
 </resources>
