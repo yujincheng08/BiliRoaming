@@ -61,10 +61,6 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 val hiddenGroup = findPreference("hidden_group") as PreferenceCategory
                 preferenceScreen.removePreference(hiddenGroup)
             }
-            if (!prefs.getBoolean("hidden", false) || !prefs.getBoolean("home_filter", false)) {
-                val hiddenRecommendGroup = findPreference("home_filter_group") as PreferenceCategory
-                preferenceScreen.removePreference(hiddenRecommendGroup)
-            }
             findPreference("version")?.summary = BuildConfig.VERSION_NAME
             findPreference("version")?.onPreferenceClickListener = this
             findPreference("custom_splash")?.onPreferenceChangeListener = this
@@ -77,15 +73,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("pref_export")?.onPreferenceClickListener = this
             findPreference("pref_import")?.onPreferenceClickListener = this
             findPreference("export_video")?.onPreferenceClickListener = this
-            findPreference("hide_low_play_count_recommend")?.onPreferenceClickListener = this
-            findPreference("hide_long_duration_recommend")?.onPreferenceClickListener = this
-            findPreference("hide_short_duration_recommend")?.onPreferenceClickListener = this
-            findPreference("keywords_filter_title_recommend")?.onPreferenceClickListener = this
-            findPreference("keywords_filter_reason_recommend")?.onPreferenceClickListener = this
-            findPreference("keywords_filter_uid_recommend")?.onPreferenceClickListener = this
-            findPreference("keywords_filter_upname_recommend")?.onPreferenceClickListener = this
-            findPreference("keywords_filter_rname_recommend")?.onPreferenceClickListener = this
-            findPreference("keywords_filter_tname_recommend")?.onPreferenceClickListener = this
+            findPreference("home_filter")?.onPreferenceClickListener = this
             findPreference("custom_subtitle")?.onPreferenceChangeListener = this
             findPreference("customize_accessKey")?.onPreferenceClickListener = this
             checkCompatibleVersion()
@@ -466,105 +454,8 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             return true
         }
 
-        private fun onHideLowPlayCountRecommendClick(isChecked: Boolean): Boolean {
-            if (!isChecked) return true
-            val tv = EditText(activity)
-            tv.inputType = InputType.TYPE_CLASS_NUMBER
-            tv.filters = arrayOf(InputFilter.LengthFilter(7))
-            tv.setText(sPrefs.getLong("hide_low_play_count_recommend_limit", 100).toString())
-            AlertDialog.Builder(activity).run {
-                setTitle("设置隐藏播放量")
-                setView(tv)
-                setPositiveButton(android.R.string.ok, null)
-                setNegativeButton(android.R.string.cancel, null)
-                setCancelable(false)
-                show()
-            }.let {
-                it.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener { _ ->
-                    if (tv.text.isEmpty()) {
-                        Log.toast("你好像还没有输入内容> <")
-                    } else {
-                        tv.text.toString().toLong().let { count ->
-                            if (count > 1_000_000) {
-                                Log.toast("你输入的数字太大惹 伦家会坏掉的> <")
-                            } else {
-                                sPrefs.edit()
-                                    .putLong("hide_low_play_count_recommend_limit", count)
-                                    .apply()
-                                Log.toast("保存成功 重启后生效")
-                                it.dismiss()
-                            }
-                        }
-                    }
-                }
-            }
-            return true
-        }
-
-        private fun onKeywordsFilterRecommendClick(clickType: String, isChecked: Boolean): Boolean {
-            if (!isChecked) return true
-            val tv = EditText(activity)
-            tv.setText(sPrefs.getString("keywords_filter_${clickType}_recommend_list", ""))
-            AlertDialog.Builder(activity).run {
-                setTitle("设置过滤关键词")
-                setView(tv)
-                setPositiveButton(android.R.string.ok) { _, _ ->
-                    sPrefs.edit()
-                        .putString("keywords_filter_${clickType}_recommend_list", tv.text.toString())
-                        .apply()
-                    Log.toast("保存成功 重启后生效")
-                }
-                setNegativeButton(android.R.string.cancel, null)
-                setNeutralButton("添加分隔符", null)
-                setCancelable(false)
-                show()
-            }.let {
-                it.getButton(AlertDialog.BUTTON_NEUTRAL).setOnClickListener {
-                    when {
-                        tv.text.isEmpty() -> {
-                            Log.toast("你好像还没有输入内容> <")
-                        }
-                        tv.text.endsWith('|') -> {
-                            Log.toast("啊嘞 上一个分隔符后面好像还没有东西> <")
-                        }
-                        else -> {
-                            tv.text.append('|')
-                        }
-                    }
-                }
-            }
-            return true
-        }
-
-        private fun onHideDurationRecommendClick(clickType: String, info:String, isChecked: Boolean): Boolean {
-            if (!isChecked) return true
-            val tv = EditText(activity)
-            tv.inputType = InputType.TYPE_CLASS_NUMBER
-            tv.filters = arrayOf(InputFilter.LengthFilter(7))
-            tv.setText(sPrefs.getInt("hide_${clickType}_duration_recommend_limit", 0).toString())
-            AlertDialog.Builder(activity).run {
-                setTitle("设置隐藏视频时长")
-                setMessage("设置最${info}时长（秒），设为0不生效。")
-                setView(tv)
-                setPositiveButton(android.R.string.ok, null)
-                setNegativeButton(android.R.string.cancel, null)
-                setCancelable(false)
-                show()
-            }.let {
-                it.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener { _ ->
-                    if (tv.text.isEmpty()) {
-                        Log.toast("你好像还没有输入内容> <")
-                    } else {
-                        tv.text.toString().toInt().let { count ->
-                            sPrefs.edit()
-                                .putInt("hide_${clickType}_duration_recommend_limit", count)
-                                .apply()
-                        }
-                        Log.toast("保存成功 重启后生效")
-                        it.dismiss()
-                    }
-                }
-            }
+        private fun onHomeFilterClick(): Boolean {
+            HomeFilterDialog(activity, prefs).show()
             return true
         }
 
@@ -578,15 +469,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             "pref_import" -> onPrefImportClick()
             "export_video" -> onExportVideoClick()
             "customize_accessKey" -> onCustomizeAccessKeyClick()
-            "hide_low_play_count_recommend" -> onHideLowPlayCountRecommendClick((preference as SwitchPreference).isChecked)
-            "keywords_filter_title_recommend" -> onKeywordsFilterRecommendClick("title", (preference as SwitchPreference).isChecked)
-            "keywords_filter_reason_recommend" -> onKeywordsFilterRecommendClick("reason", (preference as SwitchPreference).isChecked)
-            "keywords_filter_uid_recommend" -> onKeywordsFilterRecommendClick("uid", (preference as SwitchPreference).isChecked)
-            "keywords_filter_upname_recommend" -> onKeywordsFilterRecommendClick("upname", (preference as SwitchPreference).isChecked)
-            "keywords_filter_rname_recommend" -> onKeywordsFilterRecommendClick("rname", (preference as SwitchPreference).isChecked)
-            "keywords_filter_tname_recommend" -> onKeywordsFilterRecommendClick("tname", (preference as SwitchPreference).isChecked)
-            "hide_long_duration_recommend" -> onHideDurationRecommendClick("long","长" , (preference as SwitchPreference).isChecked)
-            "hide_short_duration_recommend" -> onHideDurationRecommendClick("short","短" , (preference as SwitchPreference).isChecked)
+            "home_filter" -> onHomeFilterClick()
             else -> false
         }
     }

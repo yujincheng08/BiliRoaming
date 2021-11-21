@@ -158,9 +158,8 @@
             android:key="hidden"
             android:summary="@string/hidden_summary"
             android:title="@string/hidden_title" />
-        <SwitchPreference
+        <Preference
             android:dependency="hidden"
-            android:defaultValue="true"
             android:key="home_filter"
             android:summary="@string/home_filter_summary"
             android:title="@string/home_filter_title" />
@@ -196,6 +195,13 @@
             android:key="customize_home_tab"
             android:summary="@string/customize_home_tab_summary"
             android:title="@string/customize_home_tab_title" />
+        <MultiSelectListPreference
+            android:dependency="hidden"
+            android:entries="@array/home_recommend_entries"
+            android:entryValues="@array/home_recommend_values"
+            android:key="customize_home_recommend"
+            android:summary="@string/customize_home_recommend_summary"
+            android:title="@string/customize_home_recommend_title" />
         <SwitchPreference
             android:dependency="hidden"
             android:key="purify_city"
@@ -240,63 +246,6 @@
             android:key="block_upper_ad"
             android:summary="@string/block_video_ad_summary"
             android:title="@string/block_video_ad_title" />
-    </PreferenceCategory>
-
-    <PreferenceCategory
-        android:key="home_filter_group"
-        android:title="@string/home_filter_group_title">
-        <MultiSelectListPreference
-            android:dependency="hidden"
-            android:entries="@array/home_recommend_entries"
-            android:entryValues="@array/home_recommend_values"
-            android:key="customize_home_recommend"
-            android:summary="@string/customize_home_recommend_summary"
-            android:title="@string/customize_home_recommend_title" />
-        <SwitchPreference
-            android:dependency="hidden"
-            android:key="hide_low_play_count_recommend"
-            android:summary="@string/hide_low_play_count_recommend_summary"
-            android:title="@string/hide_low_play_count_recommend_title" />
-        <SwitchPreference
-            android:dependency="hidden"
-            android:key="hide_short_duration_recommend"
-            android:summary="@string/hide_duration_recommend_summary"
-            android:title="@string/hide_short_duration_recommend_title" />
-        <SwitchPreference
-            android:dependency="hidden"
-            android:key="hide_long_duration_recommend"
-            android:summary="@string/hide_duration_recommend_summary"
-            android:title="@string/hide_long_duration_recommend_title" />
-        <SwitchPreference
-            android:dependency="hidden"
-            android:key="keywords_filter_title_recommend"
-            android:summary="@string/keywords_filter_recommend_summary"
-            android:title="@string/keywords_filter_title_recommend_title" />
-        <SwitchPreference
-            android:dependency="hidden"
-            android:key="keywords_filter_reason_recommend"
-            android:summary="@string/keywords_filter_recommend_summary"
-            android:title="@string/keywords_filter_reason_recommend_title" />
-        <SwitchPreference
-            android:dependency="hidden"
-            android:key="keywords_filter_uid_recommend"
-            android:summary="@string/keywords_filter_recommend_summary"
-            android:title="@string/keywords_filter_uid_recommend_title" />
-        <SwitchPreference
-            android:dependency="hidden"
-            android:key="keywords_filter_upname_recommend"
-            android:summary="@string/keywords_filter_recommend_summary"
-            android:title="@string/keywords_filter_upname_recommend_title" />
-        <SwitchPreference
-            android:dependency="hidden"
-            android:key="keywords_filter_rname_recommend"
-            android:summary="@string/keywords_filter_recommend_summary"
-            android:title="@string/keywords_filter_rname_recommend_title" />
-        <SwitchPreference
-            android:dependency="hidden"
-            android:key="keywords_filter_tname_recommend"
-            android:summary="@string/keywords_filter_recommend_summary"
-            android:title="@string/keywords_filter_tname_recommend_title" />
     </PreferenceCategory>
 
     <PreferenceCategory

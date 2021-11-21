@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="1"
+        android:singleLine="false"
+        android:textSize="18sp"
+        android:text="@string/hide_low_play_count_recommend_summary"
+        tools:ignore="HardcodedText" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="1"
+            android:singleLine="true"
+            android:text="@string/hide_low_play_count_recommend_title"
+            tools:ignore="HardcodedText" />
+
+        <EditText
+            android:id="@+id/hide_low_play_count_recommend"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:singleLine="false"
+            android:digits="0123456789"
+            android:inputType="text"
+            android:tag="hide_low_play_count_recommend_limit"
+            tools:ignore="HardcodedText" />
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="1"
+        android:singleLine="false"
+        android:textSize="18sp"
+        android:text="@string/hide_duration_recommend_summary"
+        tools:ignore="HardcodedText" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="1"
+            android:singleLine="true"
+            android:text="@string/hide_short_duration_recommend_title"
+            tools:ignore="HardcodedText" />
+
+        <EditText
+            android:id="@+id/hide_short_duration_recommend"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:singleLine="false"
+            android:digits="0123456789"
+            android:inputType="text"
+            android:tag="hide_short_duration_recommend_limit"
+            tools:ignore="HardcodedText" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="1"
+            android:singleLine="true"
+            android:text="@string/hide_long_duration_recommend_title"
+            tools:ignore="HardcodedText" />
+
+        <EditText
+            android:id="@+id/hide_long_duration_recommend"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:singleLine="false"
+            android:digits="0123456789"
+            android:inputType="text"
+            android:tag="hide_long_duration_recommend_limit"
+            tools:ignore="HardcodedText" />
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="1"
+        android:singleLine="false"
+        android:textSize="18sp"
+        android:text="@string/keywords_filter_recommend_summary"
+        tools:ignore="HardcodedText" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="1"
+            android:singleLine="true"
+            android:text="标题"
+            tools:ignore="HardcodedText" />
+
+        <EditText
+            android:id="@+id/keywords_filter_title_recommend"
+            android:layout_weight="1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:singleLine="false"
+            android:inputType="text"
+            android:tag="keywords_filter_title_recommend_list"
+            tools:ignore="HardcodedText" />
+
+        <Button
+            android:id="@+id/btn_add_in_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="添加分隔符"
+            tools:ignore="HardcodedText" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="1"
+            android:singleLine="true"
+            android:text="推荐原因"
+            tools:ignore="HardcodedText" />
+
+        <EditText
+            android:id="@+id/keywords_filter_reason_recommend"
+            android:layout_weight="1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:inputType="text"
+            android:singleLine="false"
+            android:tag="keywords_filter_reason_recommend_list"
+            tools:ignore="HardcodedText" />
+
+        <Button
+            android:id="@+id/btn_add_in_reason"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="添加分隔符"
+            tools:ignore="HardcodedText" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="1"
+            android:singleLine="true"
+            android:text="UID"
+            tools:ignore="HardcodedText" />
+
+        <EditText
+            android:id="@+id/keywords_filter_uid_recommend"
+            android:layout_weight="1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:singleLine="false"
+            android:inputType="text"
+            android:tag="keywords_filter_uid_recommend_list"
+            tools:ignore="HardcodedText" />
+
+        <Button
+            android:id="@+id/btn_add_in_uid"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="添加分隔符"
+            tools:ignore="HardcodedText" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="1"
+            android:singleLine="true"
+            android:text="UP主"
+            tools:ignore="HardcodedText" />
+
+        <EditText
+            android:id="@+id/keywords_filter_upname_recommend"
+            android:layout_weight="1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:singleLine="false"
+            android:inputType="text"
+            android:tag="keywords_filter_upname_recommend_list"
+            tools:ignore="HardcodedText" />
+
+        <Button
+            android:id="@+id/btn_add_in_upname"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="添加分隔符"
+            tools:ignore="HardcodedText" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="1"
+            android:singleLine="true"
+            android:text="分区"
+            tools:ignore="HardcodedText" />
+
+        <EditText
+            android:id="@+id/keywords_filter_rname_recommend"
+            android:layout_weight="1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:singleLine="false"
+            android:inputType="text"
+            android:tag="keywords_filter_rname_recommend_list"
+            tools:ignore="HardcodedText" />
+
+        <Button
+            android:id="@+id/btn_add_in_rname"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="添加分隔符"
+            tools:ignore="HardcodedText" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="1"
+            android:singleLine="true"
+            android:text="频道"
+            tools:ignore="HardcodedText" />
+
+        <EditText
+            android:id="@+id/keywords_filter_tname_recommend"
+            android:layout_weight="1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:singleLine="false"
+            android:inputType="text"
+            android:tag="keywords_filter_tname_recommend_list"
+            tools:ignore="HardcodedText" />
+
+        <Button
+            android:id="@+id/btn_add_in_tname"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="添加分隔符"
+            tools:ignore="HardcodedText" />
+    </LinearLayout>
+
+</LinearLayout>
