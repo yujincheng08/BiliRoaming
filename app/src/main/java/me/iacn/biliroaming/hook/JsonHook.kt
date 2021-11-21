@@ -38,6 +38,8 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             "com.bilibili.bplus.followingcard.net.entity.b".findClassOrNull(mClassLoader)
         val spaceClass =
             "com.bilibili.app.authorspace.api.BiliSpace".findClassOrNull(mClassLoader)
+        val ogvApiResponseClass =
+            "tv.danmaku.bili.ui.offline.api.OgvApiResponse".findClassOrNull(mClassLoader)
 
         instance.fastJsonClass?.hookAfterMethod(
             instance.fastJsonParse(),
@@ -156,7 +158,7 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         val hasMovieTW = tab?.fold(false) { acc, it ->
                             val uri = it.getObjectFieldAs<String>("uri")
                             acc || uri.startsWith("bilibili://pegasus/op/70465")
-                                || uri.startsWith("bilibili://following/home_activity_tab/165373")
+                                    || uri.startsWith("bilibili://following/home_activity_tab/165373")
                         }
                         // 添加大陆影视分页
                         if (hasMovieCN != null && !hasMovieCN) {
@@ -180,7 +182,10 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                 val movieTW = tabClass?.new()
                                     ?.setObjectField("tabId", "40")
                                     ?.setObjectField("name", "影劇")
-                                    ?.setObjectField("uri", "bilibili://following/home_activity_tab/165373")
+                                    ?.setObjectField(
+                                        "uri",
+                                        "bilibili://following/home_activity_tab/165373"
+                                    )
                                     ?.setObjectField("reportId", "港澳台影视tab")
                                     ?.setIntField("pos", 40)
                                 movieTW?.let { l ->
@@ -193,7 +198,10 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                 val movieTW = tabClass?.new()
                                     ?.setObjectField("tabId", "80")
                                     ?.setObjectField("name", "影剧（港澳台）")
-                                    ?.setObjectField("uri", "bilibili://following/home_activity_tab/165373")
+                                    ?.setObjectField(
+                                        "uri",
+                                        "bilibili://following/home_activity_tab/165373"
+                                    )
                                     ?.setObjectField("reportId", "港澳台影视tab")
                                     ?.setIntField("pos", 80)
                                 movieTW?.let { l ->
@@ -340,6 +348,13 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                 else -> false
                             }
                         }
+                    }
+                }
+
+                ogvApiResponseClass -> if (sPrefs.getBoolean("allow_download", false)) {
+                    val resultObj = result.getObjectFieldAs<ArrayList<Any>>("result")
+                    for (i in resultObj) {
+                        i.setIntField("isPlayable", 1)
                     }
                 }
             }
