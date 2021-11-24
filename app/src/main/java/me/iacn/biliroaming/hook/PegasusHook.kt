@@ -35,7 +35,7 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     private val filterMap = mapOf(
-        "advertisement" to arrayListOf("ad", "large_cover_v6", "large_cover_v9"),
+        "advertisement" to arrayListOf("ad"),
         "article" to arrayListOf("article"),
         "bangumi" to arrayListOf("bangumi", "special"),
         "picture" to arrayListOf("picture"),
@@ -43,7 +43,11 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         "banner" to arrayListOf("banner"),
         "live" to arrayListOf("live"),
         "inline" to arrayListOf("inline"),
-        "notify" to arrayListOf("notify_tunnel_v1"),
+        "notify" to arrayListOf("notify_tunnel"),
+        "large_cover" to arrayListOf("large_cover_v"),
+        "large_cover_single" to arrayListOf("large_cover_single"),
+        "middle_cover" to arrayListOf("middle_cover"),
+        "small_cover" to arrayListOf("small_cover"),
     )
 
     private val filter = filterSet.flatMap {
