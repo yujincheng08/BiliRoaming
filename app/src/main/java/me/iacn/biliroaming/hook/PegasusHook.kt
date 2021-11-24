@@ -44,8 +44,7 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         "live" to arrayListOf("live"),
         "inline" to arrayListOf("inline"),
         "notify" to arrayListOf("notify_tunnel"),
-        "large_cover" to arrayListOf("large_cover_v"),
-        "large_cover_single" to arrayListOf("large_cover_single"),
+        "large_cover" to arrayListOf("large_cover"),
         "middle_cover" to arrayListOf("middle_cover"),
         "small_cover" to arrayListOf("small_cover"),
     )
