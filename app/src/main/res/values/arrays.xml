@@ -72,6 +72,9 @@
         <item>直播</item>
         <item>内联视频</item>
         <item>番剧、电影、电视剧、纪录片……</item>
+        <item>大卡</item>
+        <item>中卡</item>
+        <item>小卡</item>
     </string-array>
     <string-array name="home_recommend_values">
         <item>advertisement</item>
@@ -83,6 +86,9 @@
         <item>live</item>
         <item>inline</item>
         <item>bangumi</item>
+        <item>large_cover</item>
+        <item>middle_cover</item>
+        <item>small_cover</item>
     </string-array>
     <string-array name="space_entries">
         <item>分页：主页</item>
