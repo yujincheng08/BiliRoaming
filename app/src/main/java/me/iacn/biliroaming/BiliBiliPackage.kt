@@ -122,7 +122,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val homeUserCenterClass by Weak {
         "tv.danmaku.bili.ui.main2.mine.HomeUserCenterFragment".findClassOrNull(
             mClassLoader
-        ) ?: "tv.danmaku.bilibilihd.ui.main.mine.HdHomeUserCenterFragment".findClass(
+        ) ?: "tv.danmaku.bilibilihd.ui.main.mine.HdHomeUserCenterFragment".findClassOrNull(
             mClassLoader
         )
     }
