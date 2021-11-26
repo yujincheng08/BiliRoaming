@@ -114,6 +114,8 @@
         <item>收藏夹</item>
         <item>comic list</item>
         <item>ugc season list</item>
+        <item>数字藏品展现</item>
+        <item>NFT头像</item>
     </string-array>
     <string-array name="space_values">
         <item>tab.home</item>
@@ -139,6 +141,8 @@
         <item>favoriteBox</item>
         <item>comicList</item>
         <item>ugcSeasonList</item>
+        <item>contractResource</item>
+        <item>nftShowModule</item>
     </string-array>
 
     <string-array name="block_video_ad">
