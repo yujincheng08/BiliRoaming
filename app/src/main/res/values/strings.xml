@@ -46,7 +46,7 @@
     <string name="server_url">https://github.com/yujincheng08/BiliRoaming/wiki/%E5%85%AC%E5%85%B1%E8%A7%A3%E6%9E%90%E6%9C%8D%E5%8A%A1%E5%99%A8</string>
     <string name="github_url">https://github.com/yujincheng08/BiliRoaming</string>
     <string name="group_title">QQ频道</string>
-    <string name="group_summary">点击加入QQ频道（需有QQ频道内测资格）</string>
+    <string name="group_summary">点击加入QQ频道</string>
     <string name="tg_title">TG频道</string>
     <string name="tg_summary">点击加入TG频道</string>
     <string name="tg_url">https://t.me/biliroaming</string>
@@ -75,7 +75,7 @@
     <string name="os_not_support">当前系统版本不支持此功能</string>
     <string name="enable_av_title">显示AV号</string>
     <string name="enable_av_summary">视频详情页显示为AV号</string>
-    <string name="group_url">mqqguild://guild/share?_wv=3&amp;_wwv=128&amp;inviteCode=nDiWt&amp;from=246610&amp;biz=ka</string>
+    <string name="group_url">mqqguild://guild/share?inviteCode=1XJIZQ</string>
     <string name="setting_title">打开模块设置</string>
     <string name="setting_summary">启动客户端并打开模块设置</string>
     <string name="add_4k_title">添加4K支持</string>
