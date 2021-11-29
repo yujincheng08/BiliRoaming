@@ -124,15 +124,17 @@ class HomeFilterDialog(val activity: Activity,prefs: SharedPreferences) : AlertD
                     putLong(low_play_count.tag.toString(), low_play_count.text.toString().toLong())
                     putInt(short_duration.tag.toString(), short_duration.text.toString().toInt())
                     putInt(long_duration.tag.toString(), long_duration.text.toString().toInt())
-                    putString(title.tag.toString(), title.text.toString())
-                    putString(reason.tag.toString(), reason.text.toString())
-                    putString(uid.tag.toString(), uid.text.toString())
-                    putString(upname.tag.toString(), upname.text.toString())
-                    putString(rname.tag.toString(), rname.text.toString())
-                    putString(tname.tag.toString(), tname.text.toString())
                 }.apply()
                 Log.toast("保存成功 重启后生效")
             }
+            prefs.edit().apply {
+                putString(title.tag.toString(), title.text.toString())
+                putString(reason.tag.toString(), reason.text.toString())
+                putString(uid.tag.toString(), uid.text.toString())
+                putString(upname.tag.toString(), upname.text.toString())
+                putString(rname.tag.toString(), rname.text.toString())
+                putString(tname.tag.toString(), tname.text.toString())
+            }.apply()
         }
 
         setTitle("首页推送过滤")
