@@ -115,9 +115,17 @@ class HomeFilterDialog(val activity: Activity,prefs: SharedPreferences) : AlertD
         }
 
         setPositiveButton(android.R.string.ok) { _, _ ->
+            prefs.edit().apply {
+                putString(title.tag.toString(), title.text.toString())
+                putString(reason.tag.toString(), reason.text.toString())
+                putString(uid.tag.toString(), uid.text.toString())
+                putString(upname.tag.toString(), upname.text.toString())
+                putString(rname.tag.toString(), rname.text.toString())
+                putString(tname.tag.toString(), tname.text.toString())
+            }.apply()
             if (low_play_count.text.toString().toLong() > 1_000_000 || 
-                short_duration.text.toString().toInt() > 1000000 || 
-                long_duration.text.toString().toInt() > 1000000) {
+                short_duration.text.toString().toLong() > 1_000_000 || 
+                long_duration.text.toString().toLong() > 1_000_000) {
                 Log.toast("你输入的数字太大惹 伦家会坏掉的> <")
             } else {
                 prefs.edit().apply {
@@ -127,14 +135,6 @@ class HomeFilterDialog(val activity: Activity,prefs: SharedPreferences) : AlertD
                 }.apply()
                 Log.toast("保存成功 重启后生效")
             }
-            prefs.edit().apply {
-                putString(title.tag.toString(), title.text.toString())
-                putString(reason.tag.toString(), reason.text.toString())
-                putString(uid.tag.toString(), uid.text.toString())
-                putString(upname.tag.toString(), upname.text.toString())
-                putString(rname.tag.toString(), rname.text.toString())
-                putString(tname.tag.toString(), tname.text.toString())
-            }.apply()
         }
 
         setTitle("首页推送过滤")
