@@ -75,7 +75,7 @@
     <string name="os_not_support">当前系统版本不支持此功能</string>
     <string name="enable_av_title">显示AV号</string>
     <string name="enable_av_summary">视频详情页显示为AV号</string>
-    <string name="group_url">mqqguild://guild/share?inviteCode=NVoD5&from=246610</string>
+    <string name="group_url">mqqguild://guild/share?inviteCode=NVoD5&amp;from=246610</string>
     <string name="setting_title">打开模块设置</string>
     <string name="setting_summary">启动客户端并打开模块设置</string>
     <string name="add_4k_title">添加4K支持</string>
