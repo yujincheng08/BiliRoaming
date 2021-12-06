@@ -13,7 +13,7 @@ class CommentHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val messageId = getId("message")
         instance.commentCopyClass?.replaceMethod("onLongClick", View::class.java) { param ->
             if (sPrefs.getBoolean("comment_copy_enhance", false)) {
-                (param.args[0] as View?)?.findViewById<View>(messageId)?.let {
+                (param.args[0] as? View)?.findViewById<View>(messageId)?.let {
                     if (instance.commentSpanTextViewClass?.isInstance(it) == true) it else null
                 }?.let { view ->
                     view.getFirstFieldByExactTypeOrNull<CharSequence>()?.also { text ->

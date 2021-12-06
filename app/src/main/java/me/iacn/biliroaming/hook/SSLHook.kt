@@ -101,10 +101,10 @@ class SSLHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             SecureRandom::class.java,
             HostNameResolver::class.java
         ) { param ->
-            val algorithm = param.args[0] as String?
-            val keystore = param.args[1] as KeyStore?
-            val keystorePassword = param.args[2] as String?
-            val random = param.args[4] as SecureRandom?
+            val algorithm = param.args[0] as? String
+            val keystore = param.args[1] as? KeyStore
+            val keystorePassword = param.args[2] as? String
+            val random = param.args[4] as? SecureRandom
 
             @Suppress("UNCHECKED_CAST") val trustManagers =
                 emptyTrustManagers as Array<TrustManager>

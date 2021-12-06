@@ -246,7 +246,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     it.getObjectFieldOrNull(serviceField.name)?.getObjectFieldOrNull(f.name)
                 }.firstOrNull { o ->
                     o?.javaClass?.name?.startsWith("com.bilibili") == false
-                } as BaseDexClassLoader? ?: it
+                } as? BaseDexClassLoader ?: it
             } else if (delegateField != null) {
                 val loaderField =
                     delegateField.type.findFirstFieldByExactTypeOrNull(ClassLoader::class.java)

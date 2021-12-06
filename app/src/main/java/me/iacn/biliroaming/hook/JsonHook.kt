@@ -371,7 +371,7 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             Class::class.java
         ) { param ->
             @Suppress("UNCHECKED_CAST")
-            val result = param.result as MutableList<Any>?
+            val result = param.result as? MutableList<Any>
             when (param.args[1] as Class<*>) {
                 searchRankClass, searchGuessClass ->
                     if (sPrefs.getBoolean("purify_search", false) && sPrefs.getBoolean(

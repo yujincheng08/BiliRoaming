@@ -372,7 +372,7 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         ) {}
 
         val hooker: Hooker = fun(param: MethodHookParam) {
-            val old = param.result as Notification? ?: return
+            val old = param.result as? Notification ?: return
 
             if (old.extras.containsKey("Primitive")) return
 

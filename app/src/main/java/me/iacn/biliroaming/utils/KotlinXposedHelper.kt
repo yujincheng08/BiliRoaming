@@ -436,10 +436,10 @@ fun Any.getFirstFieldByExactType(type: Class<*>): Any? =
 
 @Suppress("UNCHECKED_CAST")
 fun <T> Any.getFirstFieldByExactTypeAs(type: Class<*>) =
-    javaClass.findFirstFieldByExactType(type).get(this) as T?
+    javaClass.findFirstFieldByExactType(type).get(this) as? T
 
 inline fun <reified T:Any> Any.getFirstFieldByExactType() =
-    javaClass.findFirstFieldByExactType(T::class.java).get(this) as T?
+    javaClass.findFirstFieldByExactType(T::class.java).get(this) as? T
 
 fun Any.getFirstFieldByExactTypeOrNull(type: Class<*>?): Any? = runCatchingOrNull {
     javaClass.findFirstFieldByExactTypeOrNull(type)?.get(this)
@@ -447,10 +447,10 @@ fun Any.getFirstFieldByExactTypeOrNull(type: Class<*>?): Any? = runCatchingOrNul
 
 @Suppress("UNCHECKED_CAST")
 fun <T> Any.getFirstFieldByExactTypeOrNullAs(type: Class<*>?) =
-    getFirstFieldByExactTypeOrNull(type) as T?
+    getFirstFieldByExactTypeOrNull(type) as? T
 
 inline fun <reified T> Any.getFirstFieldByExactTypeOrNull() =
-    getFirstFieldByExactTypeOrNull(T::class.java) as T?
+    getFirstFieldByExactTypeOrNull(T::class.java) as? T
 
 fun ClassLoader.allClassesList(delegator: (BaseDexClassLoader) -> BaseDexClassLoader = { x -> x }): List<String> {
     var classLoader = this
