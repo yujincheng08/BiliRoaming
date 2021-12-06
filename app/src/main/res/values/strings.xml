@@ -150,10 +150,10 @@
     <string name="custom_subtitle_summary">开启后能自定义CC字幕样式，但透明度跟随弹幕透明度</string>
     <string name="customize_space_title">净化用户空间</string>
     <string name="customize_space_summary">选择要屏蔽的元素（全选会让你什么也看不到）</string>
-    <string name="comment_copy_summary">禁用长按评论复制到剪切板（减少误触）</string>
-    <string name="comment_copy_title">去除长按评论复制</string>
-    <string name="comment_copy_enhance_title">长按评论弹出评论内容对话框</string>
-    <string name="comment_copy_enhance_summary">长按评论时弹出一个对话框显示评论内容以便选择复制，需要开启“去除长按评论复制”</string>
+    <string name="comment_copy_summary">禁用长按评论/动态复制到剪切板（减少误触）</string>
+    <string name="comment_copy_title">去除长按复制</string>
+    <string name="comment_copy_enhance_title">长按评论/动态弹出评论内容对话框</string>
+    <string name="comment_copy_enhance_summary">长按评论/动态时弹出自由选择对话框，需要开启“去除长按复制”</string>
     <string name="anti_live_room_feed_title">强制旧版直播间样式</string>
     <string name="anti_live_room_feed_summary">强制直播间使用旧版样式</string>
     <string name="block_video_ad_title">屏蔽视频下方推荐</string>

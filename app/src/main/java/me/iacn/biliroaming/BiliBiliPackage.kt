@@ -227,6 +227,12 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     }
     val videoUpperAdClass by Weak { mHookInfo["class_video_upper_ad"]?.findClassOrNull(mClassLoader) }
 
+    val expandableTextViewClass by Weak { "tv.danmaku.bili.videopage.common.widget.view.ExpandableTextView".findClassOrNull(mClassLoader) }
+
+    val ellipsizingTextViewClass by Weak { "com.bilibili.bplus.followingcard.widget.EllipsizingTextView".findClassOrNull(mClassLoader) }
+
+    val dynamicDescHolderListenerClass by Weak { mHookInfo["class_dyn_desc_holder_listener"]?.findClassOrNull(mClassLoader) }
+
     val classesList by lazy {
         mClassLoader.allClassesList {
             val serviceField = it.javaClass.findFirstFieldByExactTypeOrNull(
@@ -579,6 +585,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             findVideoUpperAd()
         }.checkOrPut("class_comment_span") {
             findCommentSpan()
+        }.checkOrPut("class_dyn_desc_holder_listener") {
+            findDynamicDescHolderListener()
         }
 
         Log.d(mHookInfo.filterKeys { it != "map_ids" })
@@ -592,6 +600,16 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         c.findClass(mClassLoader).declaredFields.count {
             it.type == Float::class.javaPrimitiveType
         } > 1
+    }
+
+    private fun findDynamicDescHolderListener() = classesList.filter {
+        it.startsWith("com.bilibili.bplus.followinglist.module.item")
+    }.firstOrNull { c ->
+        c.findClass(mClassLoader).run {
+            declaredMethods.filter {
+                it.name == "onLongClick"
+            }.count() == 1
+        }
     }
 
     private fun findVideoUpperAd(): Array<String?> {
