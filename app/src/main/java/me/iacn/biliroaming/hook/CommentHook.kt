@@ -3,6 +3,8 @@ package me.iacn.biliroaming.hook
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
+import android.text.SpannableStringBuilder
+import android.text.style.ClickableSpan
 import android.view.View
 import android.widget.TextView
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
@@ -11,6 +13,24 @@ import me.iacn.biliroaming.utils.*
 class CommentHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
         if (!sPrefs.getBoolean("comment_copy", false)) return
+        instance.descCopy()?.split(';')?.let {
+            instance.descCopyView()?.split(';')?.zip(it)
+        }?.forEach { p ->
+            p.first.replaceMethod(
+                mClassLoader,
+                p.second,
+                View::class.java,
+                ClickableSpan::class.java
+            ) { param ->
+                if (!sPrefs.getBoolean("comment_copy_enhance", false)) return@replaceMethod Unit
+
+                param.thisObject.getFirstFieldByExactTypeOrNull<SpannableStringBuilder>()?.let {
+                    val view = param.args[0] as View
+                    showCopyDialog(view.context, it, param)
+                }
+            }
+        }
+
 
         instance.dynamicDescHolderListenerClass?.replaceMethod(
             "onLongClick",
