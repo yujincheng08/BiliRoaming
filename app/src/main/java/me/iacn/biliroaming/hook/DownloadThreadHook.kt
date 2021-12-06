@@ -34,7 +34,7 @@ class DownloadThreadHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     }
                 }
                 val view = param.thisObject.getObjectFieldAs<TextView>(textViewField)
-                if (view.tag as Int == 1) {
+                if (view.tag as? Int == 1) {
                     AlertDialog.Builder(view.context).create().run {
                         setTitle("自定义同时缓存数")
                         val numberPicker = NumberPicker(context).apply {
