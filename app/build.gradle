@@ -3,13 +3,13 @@ apply plugin: 'kotlin-android'
 apply plugin: 'com.google.protobuf'
 
 android {
-    compileSdkVersion 31
-    buildToolsVersion '31.0.0'
+    compileSdkVersion 32
+    buildToolsVersion '32.0.0'
 
     defaultConfig {
         applicationId "me.iacn.biliroaming"
         minSdkVersion 21
-        targetSdkVersion 31  // Target Android S
+        targetSdkVersion 32  // Target Android Sv2
         versionCode appVerCode.toInteger()
         versionName appVerName
     }
