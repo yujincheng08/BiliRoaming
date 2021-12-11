@@ -164,4 +164,6 @@
     <string name="home_filter_title">首页推送过滤器</string>
     <string name="home_filter_summary">过滤首页推送的内容（重启两次生效）</string>
     <string name="keywords_filter_recommend_summary">过滤首页推送中包含指定关键词的内容</string>
+    <string name="search_area_movie_title">开启其它地区影剧搜索</string>
+    <string name="search_area_movie_summary">在搜索页面添加其它地区影剧搜索结果，需要解析服务器支持</string>
 </resources>
