@@ -127,8 +127,8 @@
     <string name="speed">速度</string>
     <string name="test_upos_title">UPOS服务器测速</string>
     <string name="test_upos_summary">选择最快的UPOS以获得最好体验</string>
-    <string name="search_area_title">开启其它地区番剧搜索</string>
-    <string name="search_area_summary">在搜索页面添加其它地区番剧搜索结果，需要解析服务器支持</string>
+    <string name="search_area_title">开启其它地区搜索</string>
+    <string name="search_area_summary">在搜索页面添加其它地区搜索结果，需要解析服务器支持</string>
     <string name="customize_bottom_bar_title">自定义底栏</string>
     <string name="customize_bottom_bar_summary">至少保留一个元素（重启两次生效）</string>
     <string name="customize_accessKey_title">自定义访问密钥</string>
