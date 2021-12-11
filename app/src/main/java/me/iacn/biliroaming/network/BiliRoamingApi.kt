@@ -143,9 +143,9 @@ object BiliRoamingApi {
     }
 
     @JvmStatic
-    fun getAreaSearchBangumi(queryString: String, area: String): String? {
+    fun getAreaSearchBangumi(queryString: String, area: String, type: String): String? {
         if (area == "th") {
-            return getThailandSearchBangumi(queryString)
+            return getThailandSearchBangumi(queryString, type)
         }
         val hostUrl = sPrefs.getString(area + "_server", null) ?: return null
         val uri = Uri.Builder()
@@ -154,7 +154,7 @@ object BiliRoamingApi {
             .encodedQuery(
                 signQuery(
                     queryString, mapOf(
-                        "type" to "7",
+                        "type" to type,
                         "appkey" to "1d8b6e7d45233436",
                         "build" to "6400000",
                         "mobi_app" to "android",
@@ -168,7 +168,7 @@ object BiliRoamingApi {
     }
 
     @JvmStatic
-    fun getThailandSearchBangumi(queryString: String): String? {
+    fun getThailandSearchBangumi(queryString: String, type: String): String? {
         val thUrl = sPrefs.getString("th_server", null) ?: return null
         val uri = Uri.Builder()
             .scheme("https")
@@ -176,7 +176,7 @@ object BiliRoamingApi {
             .encodedQuery(
                 signQuery(
                     queryString, mapOf(
-                        "type" to "7",
+                        "type" to type,
                         "appkey" to "7d089525d3611b1c",
                         "build" to "1001310",
                         "mobi_app" to "bstar_a",
