@@ -35,21 +35,17 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
         const val FAIL_CODE = -404
 
-        data class Area(val type: String, val text: String)
+        data class Area(val area: String, val text: String, val type: String, val type_str: String)
 
         private val AREA_TYPES =
             mapOf(
-                114 to Area("th", "泰(番)"),
-                514 to Area("cn", "陆(番)"),
-                1919 to Area("hk", "港(番)"),
-                810 to Area("tw", "台(番)")
-            )
-
-        private val AREA_TYPES2 =
-            mapOf(
-                931 to Area("cn", "陆(影)"),
-                364364 to Area("hk", "港(影)"),
-                889464 to Area("tw", "台(影)")
+                931 to Area("cn", "陆(影)", "8", "movie"),
+                364364 to Area("hk", "港(影)", "8", "movie"),
+                889464 to Area("tw", "台(影)", "8", "movie"),
+                114 to Area("th", "泰(番)", "7", "bangumi"),
+                514 to Area("cn", "陆(番)", "7", "bangumi"),
+                1919 to Area("hk", "港(番)", "7", "bangumi"),
+                810 to Area("tw", "台(番)", "7", "bangumi")
             )
 
         private val USER_SPACES =
@@ -201,7 +197,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 if (url != null && url.startsWith("https://appintl.biliapi.net/intl/gateway/app/search/type")
                 ) {
                     val area = Uri.parse(url).getQueryParameter("type")?.toInt()
-                    if (!AREA_TYPES.containsKey(area) && !AREA_TYPES2.containsKey(area)) {
+                    if (!AREA_TYPES.containsKey(area)) {
                         fixPlaySearchType(body, url)
                     }
                 }
@@ -226,18 +222,8 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                     retrieveAreaSearch(
                                         data,
                                         url,
-                                        it.type,
-                                        "7"
-                                    )
-                                })
-                        } else if (AREA_TYPES2.containsKey(area)) {
-                            body.setObjectField(dataField,
-                                AREA_TYPES2[area]?.let {
-                                    retrieveAreaSearch(
-                                        data,
-                                        url,
-                                        it.type,
-                                        "8"
+                                        it.area,
+                                        it.type
                                     )
                                 })
                         }
@@ -298,25 +284,12 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     param.thisObject.callMethodAs<Bundle>("getArguments").run {
                         val from = getString("from")
                         for (area in AREA_TYPES) {
-                            if (from == area.value.type) {
+                            if (from == area.value.area) {
                                 declaredFields.filter {
                                     it.type == Int::class.javaPrimitiveType
                                 }.forEach {
                                     it.isAccessible = true
-                                    if (it.get(param.thisObject) == 7) it.set(
-                                        param.thisObject,
-                                        area.key
-                                    )
-                                }
-                            }
-                        }
-                        for (area in AREA_TYPES2) {
-                            if (from == area.value.type) {
-                                declaredFields.filter {
-                                    it.type == Int::class.javaPrimitiveType
-                                }.forEach {
-                                    it.isAccessible = true
-                                    if (it.get(param.thisObject) == 8) it.set(
+                                    if (it.get(param.thisObject) == area.value.type.toInt()) it.set(
                                         param.thisObject,
                                         area.key
                                     )
@@ -334,32 +307,20 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             val pageArrays = pageTypesClass.getStaticObjectFieldAs<Array<Any>>("\$VALUES")
             var counter = 0
             for (area in AREA_TYPES) {
-                if (!sPrefs.getString(area.value.type + "_server", null).isNullOrBlank()) {
-                    counter++
+                if (!sPrefs.getString(area.value.area + "_server", null).isNullOrBlank()) {
                     counter++
                 }
             }
             val newPageArray = pageArrays.copyOf(pageArrays.size + counter)
             counter = 0
             for (area in AREA_TYPES) {
-                if (!sPrefs.getString(area.value.type + "_server", null).isNullOrBlank()) {
+                if (!sPrefs.getString(area.value.area + "_server", null).isNullOrBlank()) {
                     newPageArray[pageArrays.size + counter++] = pageTypesClass.new(
-                        "PAGE_BANGUMI",
+                        "PAGE_" + area.value.type_str.toUpperCase(),
                         4,
-                        "bilibili://search-result/new-bangumi?from=" + area.value.type,
+                        "bilibili://search-result/new-" + area.value.type_str + "?from=" + area.value.area,
                         area.key,
-                        "bangumi"
-                    )
-                }
-            }
-            for (area in AREA_TYPES2) {
-                if (!sPrefs.getString(area.value.type + "_server", null).isNullOrBlank()) {
-                    newPageArray[pageArrays.size + counter++] = pageTypesClass.new(
-                        "PAGE_MOVIE",
-                        5,
-                        "bilibili://search-result/new-movie?from=" + area.value.type,
-                        area.key,
-                        "movie"
+                        area.value.type_str
                     )
                 }
             }
@@ -398,20 +359,8 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private fun addAreaTags(body: Any?) {
         body ?: return
         if (sPrefs.getBoolean("hidden", false) && sPrefs.getBoolean("search_area", false)) {
-            for (area in AREA_TYPES2) {
-                if (!sPrefs.getString(area.value.type + "_server", null).isNullOrBlank()) {
-                    searchAllResultNavInfoClass?.new()?.run {
-                        setObjectField("name", area.value.text)
-                        setIntField("pages", 0)
-                        setIntField("total", 0)
-                        setIntField("type", area.key)
-                    }?.also {
-                        body.getObjectFieldAs<MutableList<Any>>("nav").add(1, it)
-                    }
-                }
-            }
             for (area in AREA_TYPES) {
-                if (!sPrefs.getString(area.value.type + "_server", null).isNullOrBlank()) {
+                if (!sPrefs.getString(area.value.area + "_server", null).isNullOrBlank()) {
                     searchAllResultNavInfoClass?.new()?.run {
                         setObjectField("name", area.value.text)
                         setIntField("pages", 0)
