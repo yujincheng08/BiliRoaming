@@ -47,10 +47,9 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
         private val AREA_TYPES2 =
             mapOf(
-                931 to Area("th", "泰(影)"),
-                364364 to Area("cn", "陆(影)"),
-                889464 to Area("hk", "港(影)"),
-                1024 to Area("tw", "台(影)")
+                931 to Area("cn", "陆(影)"),
+                364364 to Area("hk", "港(影)"),
+                889464 to Area("tw", "台(影)")
             )
 
         private val USER_SPACES =
@@ -399,7 +398,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private fun addAreaTags(body: Any?) {
         body ?: return
         if (sPrefs.getBoolean("hidden", false) && sPrefs.getBoolean("search_area", false)) {
-            for (area in AREA_TYPES) {
+            for (area in AREA_TYPES2) {
                 if (!sPrefs.getString(area.value.type + "_server", null).isNullOrBlank()) {
                     searchAllResultNavInfoClass?.new()?.run {
                         setObjectField("name", area.value.text)
@@ -411,7 +410,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     }
                 }
             }
-            for (area in AREA_TYPES2) {
+            for (area in AREA_TYPES) {
                 if (!sPrefs.getString(area.value.type + "_server", null).isNullOrBlank()) {
                     searchAllResultNavInfoClass?.new()?.run {
                         setObjectField("name", area.value.text)
