@@ -42,10 +42,10 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 931 to Area("cn", "陆(影)", "8", "movie"),
                 364364 to Area("hk", "港(影)", "8", "movie"),
                 889464 to Area("tw", "台(影)", "8", "movie"),
-                114 to Area("th", "泰(番)", "7", "bangumi"),
-                514 to Area("cn", "陆(番)", "7", "bangumi"),
-                1919 to Area("hk", "港(番)", "7", "bangumi"),
-                810 to Area("tw", "台(番)", "7", "bangumi")
+                114 to Area("th", "泰", "7", "bangumi"),
+                514 to Area("cn", "陆", "7", "bangumi"),
+                1919 to Area("hk", "港", "7", "bangumi"),
+                810 to Area("tw", "台", "7", "bangumi")
             )
 
         private val USER_SPACES =
