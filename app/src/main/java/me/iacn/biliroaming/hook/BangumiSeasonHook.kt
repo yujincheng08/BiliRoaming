@@ -273,7 +273,9 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 hookAfterMethod("getCommentJumpUrl", hooker = urlHook)
             }
 
-        if (sPrefs.getBoolean("hidden", false) && sPrefs.getBoolean("search_area", false)) {
+        if (sPrefs.getBoolean("hidden", false) &&
+            (sPrefs.getBoolean("search_area_bangumi", false) || sPrefs.getBoolean("search_area_movie", false))
+        ) {
             "com.bilibili.bangumi.ui.page.search.BangumiSearchResultFragment".findClassOrNull(
                 mClassLoader
             )?.run {
@@ -340,7 +342,9 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     private fun retrieveAreaSearch(data: Any?, url: String, area: String, type: String): Any? {
         data ?: return data
-        if (sPrefs.getBoolean("hidden", false) && sPrefs.getBoolean("search_area", false)) {
+        if (sPrefs.getBoolean("hidden", false) &&
+            (sPrefs.getBoolean("search_area_bangumi", false) || sPrefs.getBoolean("search_area_movie", false))
+        ) {
             val content =
                 getAreaSearchBangumi(URL(URLDecoder.decode(url, Charsets.UTF_8.name())).query, area, type)
                     ?: return data
@@ -358,9 +362,12 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     private fun addAreaTags(body: Any?) {
         body ?: return
-        if (sPrefs.getBoolean("hidden", false) && sPrefs.getBoolean("search_area", false)) {
+        if (sPrefs.getBoolean("hidden", false) &&
+            (sPrefs.getBoolean("search_area_bangumi", false) || sPrefs.getBoolean("search_area_movie", false))
+        ) {
             for (area in AREA_TYPES) {
-                if (!sPrefs.getString(area.value.area + "_server", null).isNullOrBlank()) {
+                if (!sPrefs.getString(area.value.area + "_server", null).isNullOrBlank() &&
+                    sPrefs.getBoolean("search_area_" + area.value.type_str, false)) {
                     searchAllResultNavInfoClass?.new()?.run {
                         setObjectField("name", area.value.text)
                         setIntField("pages", 0)
