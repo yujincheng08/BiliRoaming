@@ -350,6 +350,14 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     ?: return data
             val jsonContent = content.toJSONObject()
             val newData = jsonContent.optJSONObject("data") ?: return data
+
+            // 去除追番按钮
+            for (data in newData.getJSONArray("items")) {
+                if (data.optInt("Offset", -1) != -1) {
+                    data.remove("follow_button")
+                }
+            }
+
             return instance.fastJsonClass?.callStaticMethod(
                 instance.fastJsonParse(),
                 newData.toString(),
