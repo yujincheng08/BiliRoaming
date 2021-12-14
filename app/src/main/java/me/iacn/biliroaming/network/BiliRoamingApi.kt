@@ -419,6 +419,8 @@ object BiliRoamingApi {
             }
         }
 
+        var content: String? = null
+
         for ((area, host) in hostList.toList().asReversed()) {
             val accessKey = instance.getCustomizeAccessKey("${area}_server") ?: ""
             val extraMap = if (area == "th") mapOf(
@@ -458,9 +460,10 @@ object BiliRoamingApi {
                     }
                     return if (area == "th") fixThailandPlayurl(it) else it
                 }
+                content = it
             }
         }
-        return null
+        return content
     }
 
     @JvmStatic

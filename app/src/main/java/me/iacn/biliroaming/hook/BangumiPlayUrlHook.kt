@@ -174,25 +174,18 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     val content = getPlayUrl(reconstructQuery(request))
                     countDownLatch?.countDown()
                     content?.let {
+                        val jsonObject = JSONObject(it)
+                        val code = jsonObject.optInt("code", -1)
+                        if (code != 0) {
+                            val message = jsonObject.optString("message", "解析服务器并未给出任何错误信息")
+                            showPlayerError(response, "解析服务器: $message")
+                            return@let
+                        }
                         Log.d("Has replaced play url with proxy server $it")
                         Log.toast("已从代理服务器获取播放地址")
                         param.result = reconstructResponse(response, it, isDownload)
                     } ?: run {
-                        Log.e("Failed to get play url")
-                        Log.toast("获取播放地址失败")
-                        if (response.callMethodAs("hasViewInfo")) {
-                            response.callMethod("getViewInfo")?.callMethod("getDialog")?.run {
-                                callMethod("setMsg", "获取播放地址失败")
-                                callMethod("getTitle")?.callMethod(
-                                    "setText",
-                                    "获取播放地址失败。请检查哔哩漫游设置里的解析服务器设置。"
-                                )
-                                callMethod("getImage")?.callMethod(
-                                    "setUrl",
-                                    "https://i0.hdslb.com/bfs/album/08d5ce2fef8da8adf91024db4a69919b8d02fd5c.png"
-                                )
-                            }
-                        }
+                        showPlayerError(response, "获取播放地址失败。请检查哔哩漫游设置里的解析服务器设置。")
                     }
                 } else if (isDownload) {
                     param.result = fixDownloadProto(response)
@@ -269,6 +262,24 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     )
                 }
             }
+    }
+
+    private fun showPlayerError(response: Any, message: String) {
+        Log.e("Failed to get play url")
+        Log.toast("获取播放地址失败")
+        if (response.callMethodAs("hasViewInfo")) {
+            response.callMethod("getViewInfo")?.callMethod("getDialog")?.run {
+                callMethod("setMsg", "获取播放地址失败")
+                callMethod("getTitle")?.callMethod(
+                    "setText",
+                    message
+                )
+                callMethod("getImage")?.callMethod(
+                    "setUrl",
+                    "https://i0.hdslb.com/bfs/album/08d5ce2fef8da8adf91024db4a69919b8d02fd5c.png"
+                )
+            }
+        }
     }
 
     private fun fixDownload(content: String): String {
