@@ -16,8 +16,6 @@ import android.os.Build
 import android.os.Bundle
 import android.preference.*
 import android.provider.MediaStore
-import android.text.InputFilter
-import android.text.InputType
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.EditText
@@ -110,10 +108,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
 
         private fun checkCompatibleVersion() {
             val versionCode = getVersionCode(packageName)
-            var supportLiveHook = false
-            var supportAdd4K = false
             var supportMusicNotificationHook = true
-            var supportDark = true
             var supportCustomizeTab = true
             val supportFullSplash = try {
                 instance.splashInfoClass?.getMethod("getMode") != null
@@ -122,20 +117,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             }
             val supportMain = !isBuiltIn || !is64 || Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
             when (platform) {
-                "android_i" -> {
-                    if (versionCode in 2050410..2080109) supportLiveHook = true
-                    if (versionCode < 2050410) supportDark = false
-                    supportAdd4K = true
-                }
-                "android_b" -> {
-                    if (versionCode < 6080000) supportAdd4K = true
-                    if (versionCode < 6000000) supportDark = false
-                }
-                "android" -> {
-                    if (versionCode !in 6000000 until 6120000) supportDark = false
-                }
                 "android_hd" -> {
-                    supportDark = false
                     supportCustomizeTab = false
                 }
             }
@@ -153,12 +135,6 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             if (!supportFullSplash) {
                 disablePreference("full_splash")
             }
-            if (!supportLiveHook) {
-                disablePreference("add_live")
-            }
-            if (!supportAdd4K) {
-                disablePreference("add_4k")
-            }
             if (!supportMusicNotificationHook) {
                 disablePreference(
                     "music_notification",
@@ -167,9 +143,6 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             }
             if (!supportMain) {
                 disablePreference("main_func", "Android O以下系统不支持64位Xpatch版，请使用32位版")
-            }
-            if (!supportDark) {
-                disablePreference("follow_dark")
             }
             if (!supportTeenagersMode) {
                 disablePreference("teenagers_mode_dialog")

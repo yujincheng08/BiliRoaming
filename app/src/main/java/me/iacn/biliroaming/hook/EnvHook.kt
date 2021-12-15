@@ -1,7 +1,6 @@
 package me.iacn.biliroaming.hook
 
 import android.content.SharedPreferences
-import me.iacn.biliroaming.Protos
 import me.iacn.biliroaming.utils.*
 import java.util.regex.Pattern
 
@@ -41,20 +40,6 @@ class EnvHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
         }
 
-        if (sPrefs.getBoolean("add_4k", false)) {
-            "com.bilibili.lib.moss.internal.impl.common.header.HeadersKt\$reqDevice\$2".hookAfterMethod(
-                mClassLoader,
-                "invoke"
-            ) { param ->
-                param.result = Protos.Device.newBuilder().run {
-                    mergeFrom(Protos.Device.parseFrom(param.result as ByteArray))
-                    mobiApp = "android"
-                    if (build < 6000000)
-                        build = 6000000
-                    build()
-                }.toByteArray()
-            }
-        }
 //        // Disable tinker
 //        "com.tencent.tinker.loader.app.TinkerApplication".findClass(mClassLoader)?.hookBeforeAllConstructors { param ->
 //            param.args[0] = 0

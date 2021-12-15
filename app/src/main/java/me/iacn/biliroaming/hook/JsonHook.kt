@@ -80,28 +80,6 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         }
                     }
 
-                    if (sPrefs.getBoolean("add_live", false)) {
-                        val tab = data?.getObjectFieldAs<MutableList<Any>>("tab")
-                        val hasLive = tab?.fold(false) { acc, it ->
-                            val uri = it.getObjectFieldAs<String>("uri")
-                            acc || uri.startsWith("bilibili://live/home")
-                        }
-                        if (hasLive != null && !hasLive) {
-                            val live = tabClass?.new()
-                                ?.setObjectField("tabId", "20")
-                                ?.setObjectField("name", "直播")
-                                ?.setObjectField("uri", "bilibili://live/home")
-                                ?.setObjectField("reportId", "直播tab")
-                                ?.setIntField("pos", 1)
-                            live?.let { l ->
-                                tab.forEach {
-                                    it.setIntField("pos", it.getIntField("pos") + 1)
-                                }
-                                tab.add(0, l)
-                            }
-                        }
-                    }
-
                     // 在首页标签添加大陆/港澳台番剧分页
                     if (sPrefs.getBoolean("add_bangumi", false)) {
                         val tab = data?.getObjectFieldAs<MutableList<Any>>("tab")

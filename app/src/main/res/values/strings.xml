@@ -20,8 +20,6 @@
     <string name="teenagers_mode_dialog_summary">仍可从侧滑菜单进入青少年模式</string>
     <string name="allow_download_title">允许下载版权番剧</string>
     <string name="allow_download_summary">使版权番剧可以缓存（同时修复概念版不能投屏的问题）</string>
-    <string name="add_live_title">Play版添加直播</string>
-    <string name="add_live_summary">开启Play版的直播功能</string>
     <string name="cdn_category">加速CDN设置</string>
     <string name="hidden_title">启用隐藏功能</string>
     <string name="hidden_summary">打开后可以使用隐藏功能</string>
@@ -78,8 +76,6 @@
     <string name="group_url">mqqguild://guild/share?inviteCode=NVoD5&amp;from=246610</string>
     <string name="setting_title">打开模块设置</string>
     <string name="setting_summary">启动客户端并打开模块设置</string>
-    <string name="add_4k_title">添加4K支持</string>
-    <string name="add_4k_summary">为概念版和Play版添加4K支持（仍需大会员）</string>
     <string name="custom_download_thread_title">自定义同时缓存数</string>
     <string name="custom_download_thread_summary">自定义最多可以同时下载的视频个数（超过一个需要大会员）</string>
     <string name="save_log_title">保存日志到文件</string>
@@ -88,8 +84,6 @@
     <string name="fix_download_summary">提高版权番剧的下载速度，但是会导致音视频分离</string>
     <string name="customize_home_tab_title">净化首页标签</string>
     <string name="customize_home_tab_summary">请勿全部选择，会使用之前的的标签</string>
-    <string name="follow_dark_title">夜间模式跟随系统</string>
-    <string name="follow_dark_summary">开启后，会根据系统是否在暗黑模式自动切换主题的夜间模式</string>
     <string name="music_notification_title">原生音乐通知样式</string>
     <string name="music_notification_summary">强制音乐通知栏为模块自制的原生样式</string>
     <string name="custom_server_title">设置解析服务器</string>
