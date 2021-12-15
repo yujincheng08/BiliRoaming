@@ -165,7 +165,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val splashInfoClass by Weak {
         "tv.danmaku.bili.ui.splash.brand.BrandShowInfo".findClassOrNull(
             mClassLoader
-        )
+        ) ?: "tv.danmaku.bili.ui.splash.brand.model.BrandShowInfo".findClassOrNull(mClassLoader)
     }
     val commentCopyClass by Weak {
         mHookInfo["class_comment_long_click"]?.findClassOrNull(

@@ -18,8 +18,7 @@ class SplashHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         ) return
         Log.d("startHook: Splash")
 
-        "tv.danmaku.bili.ui.splash.brand.BrandShowInfo".hookAfterMethod(
-            mClassLoader,
+        instance.splashInfoClass?.hookAfterMethod(
             "getMode"
         ) { param ->
             param.result = if (sPrefs.getBoolean("full_splash", false)) {
