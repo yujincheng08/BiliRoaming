@@ -130,6 +130,9 @@ class HomeFilterDialog(val activity: Activity,prefs: SharedPreferences) : AlertD
         }
 
         setTitle("首页推送过滤")
+        
+        view.setPadding(50, 20, 50, 20)
+
         setView(view)
     }
 
