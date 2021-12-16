@@ -532,6 +532,10 @@ object BiliRoamingApi {
     @JvmStatic
     fun fixThailandSeason(result: JSONObject) {
         val episodes = JSONArray()
+
+        // 强制已追番
+        result.optJSONObject("user_status")?.put("follow", 1)
+
         for ((mid, module) in result.optJSONArray("modules").orEmpty().iterator().withIndex()) {
             val data = module.optJSONObject("data") ?: continue
             val sid = module.optInt("id", mid + 1)
