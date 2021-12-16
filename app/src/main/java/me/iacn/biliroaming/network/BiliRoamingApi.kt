@@ -543,12 +543,10 @@ object BiliRoamingApi {
                 ep.put("ep_id", ep.optInt("id"))
                 ep.put("index", ep.optString("title"))
                 ep.put("indexTitle", ep.optString("long_title"))
-
-                // 禁用弹幕
-                ep.put("cid", 1)
-                // 禁用评论
-                ep.put("aid", 1)
-
+                if (ep.optInt("cid", 0) == 0)
+                    ep.put("cid", ep.optInt("id"))
+                if (ep.optInt("aid", 0) == 0)
+                    ep.put("aid", result.optInt("season_id"))
                 ep.put("ep_index", eid + 1)
                 ep.put("section_index", sid + 1)
                 fixRight(ep)
