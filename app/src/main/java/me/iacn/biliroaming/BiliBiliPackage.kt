@@ -647,6 +647,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         val adHolderClass =
             "com.bilibili.ad.adview.videodetail.upper.VideoUpperAdSectionViewHolder".findClassOrNull(
                 mClassLoader
+            ) ?: "com.bilibili.ad.adview.videodetail.upper.VideoUpperAdViewHolder".findClassOrNull(
+                mClassLoader
             ) ?: return arrayOfNulls(2)
         classesList.filter {
             it.startsWith("com.bilibili.ad.adview.videodetail.upper")
@@ -656,7 +658,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             c.declaredMethods.forEach { m ->
                 if (Modifier.isPublic(m.modifiers) && m.parameterTypes.size >= 2 &&
                     m.parameterTypes[0] == ViewGroup::class.java &&
-                    m.parameterTypes[1] == Int::class.javaPrimitiveType &&
                     m.returnType == adHolderClass
                 ) return arrayOf(c.name, m.name)
             }
