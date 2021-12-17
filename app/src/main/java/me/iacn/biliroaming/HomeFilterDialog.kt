@@ -15,13 +15,12 @@ class HomeFilterDialog(val activity: Activity,prefs: SharedPreferences) : AlertD
         val inflater = LayoutInflater.from(context)
         val view = inflater.inflate(layout, null)
 
-        val low_play_count = view.findViewById<EditText>(R.id.hide_low_play_count_recommend)
-        low_play_count.setText(prefs.getLong(low_play_count.tag.toString(), 100).toString())
-        val short_duration = view.findViewById<EditText>(R.id.hide_short_duration_recommend)
-        short_duration.setText(prefs.getInt(short_duration.tag.toString(), 0).toString())
-        val long_duration = view.findViewById<EditText>(R.id.hide_long_duration_recommend)
-        long_duration.setText(prefs.getInt(long_duration.tag.toString(), 0).toString())
-
+        val lovePlayCount = view.findViewById<EditText>(R.id.hide_low_play_count_recommend)
+        lovePlayCount.setText(prefs.getLong(lovePlayCount.tag.toString(), 100).toString())
+        val shortDuration = view.findViewById<EditText>(R.id.hide_short_duration_recommend)
+        shortDuration.setText(prefs.getInt(shortDuration.tag.toString(), 0).toString())
+        val longDuration = view.findViewById<EditText>(R.id.hide_long_duration_recommend)
+        longDuration.setText(prefs.getInt(longDuration.tag.toString(), 0).toString())
         val title = view.findViewById<EditText>(R.id.keywords_filter_title_recommend)
         title.setText(prefs.getString(title.tag.toString(), ""))
         val reason = view.findViewById<EditText>(R.id.keywords_filter_reason_recommend)
@@ -116,9 +115,9 @@ class HomeFilterDialog(val activity: Activity,prefs: SharedPreferences) : AlertD
 
         setPositiveButton(android.R.string.ok) { _, _ ->
             prefs.edit().apply {
-                putLong(low_play_count.tag.toString(), low_play_count.text.toString().toLong())
-                putInt(short_duration.tag.toString(), short_duration.text.toString().toInt())
-                putInt(long_duration.tag.toString(), long_duration.text.toString().toInt())
+                putLong(lovePlayCount.tag.toString(), lovePlayCount.text.toString().toLong())
+                putInt(shortDuration.tag.toString(), shortDuration.text.toString().toInt())
+                putInt(longDuration.tag.toString(), longDuration.text.toString().toInt())
                 putString(title.tag.toString(), title.text.toString())
                 putString(reason.tag.toString(), reason.text.toString())
                 putString(uid.tag.toString(), uid.text.toString())
@@ -130,7 +129,7 @@ class HomeFilterDialog(val activity: Activity,prefs: SharedPreferences) : AlertD
         }
 
         setTitle("首页推送过滤")
-        
+
         view.setPadding(50, 20, 50, 20)
 
         setView(view)
