@@ -48,18 +48,18 @@ class SettingHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
         }
 
-        instance.homeUserCenterClass?.hookBeforeMethod(
-            instance.addSetting(), Context::class.java, List::class.java
+        instance.homeUserCenterClass?.hookBeforeAllMethods(
+            instance.addSetting()
         ) { param ->
             val lastGroup = (param.args[1] as MutableList<*>).lastOrNull()
-                ?: return@hookBeforeMethod
+                ?: return@hookBeforeAllMethods
 
             val itemList =
                 if (lastGroup.javaClass != instance.menuGroupItemClass) lastGroup.getObjectFieldAs<MutableList<Any>?>(
                     "itemList"
                 ) else param.args[1] as MutableList<Any>
 
-            val item = instance.menuGroupItemClass?.new() ?: return@hookBeforeMethod
+            val item = instance.menuGroupItemClass?.new() ?: return@hookBeforeAllMethods
             item.setIntField("id", SETTING_ID)
                 .setObjectField("title", "哔哩漫游设置")
                 .setObjectField(
@@ -69,7 +69,7 @@ class SettingHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 .setObjectField("uri", SETTING_URI)
 
             itemList?.forEach {
-                if (try { it.getIntField("id") == SETTING_ID } catch (t: Throwable) { it.getLongField("id") == SETTING_ID.toLong() }) return@hookBeforeMethod
+                if (try { it.getIntField("id") == SETTING_ID } catch (t: Throwable) { it.getLongField("id") == SETTING_ID.toLong() }) return@hookBeforeAllMethods
             }
             itemList?.add(item)
         }
