@@ -126,6 +126,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             val supportSplashHook = instance.brandSplashClass != null
             val supportDrawer = instance.homeUserCenterClass != null
             val supportTeenagersMode = instance.teenagersModeDialogActivityClass != null
+            val supportCustomizeCC = instance.subtitleSpanClass != null
             if (!supportDrawer)
                 disablePreference("drawer")
             if (!supportSplashHook) {
@@ -150,6 +151,9 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             if (!supportCustomizeTab) {
                 disablePreference("customize_home_tab_title")
                 disablePreference("customize_bottom_bar_title")
+            }
+            if (!supportCustomizeCC) {
+                disablePreference("custom_subtitle")
             }
         }
 
