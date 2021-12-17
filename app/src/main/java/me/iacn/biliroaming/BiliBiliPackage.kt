@@ -1102,7 +1102,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     }?.joinToString(";") { it.name }
 
     private fun findAddSettingMethod() = homeUserCenterClass?.declaredMethods?.firstOrNull {
-        it.parameterTypes.size == 2 && it.parameterTypes[0] == Context::class.java && it.parameterTypes[1] == List::class.java
+        it.parameterTypes.size >= 2 && it.parameterTypes[0] == Context::class.java && it.parameterTypes[1] == List::class.java
     }?.name
 
     private fun findSettingRouterClass() = classesList.filter {
