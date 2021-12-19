@@ -220,6 +220,11 @@
             android:title="@string/customize_accessKey_title" />
         <Preference
             android:dependency="hidden"
+            android:key="force_th_comment"
+            android:summary="@string/force_th_comment_summary"
+            android:title="@string/force_th_comment_title" />
+        <Preference
+            android:dependency="hidden"
             android:key="export_video"
             android:summary="@string/export_video_summary"
             android:title="@string/export_video_title" />

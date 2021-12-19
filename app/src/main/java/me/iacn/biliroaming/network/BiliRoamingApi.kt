@@ -546,15 +546,17 @@ object BiliRoamingApi {
                 ep.put("ep_id", ep.optInt("id"))
                 ep.put("index", ep.optString("title"))
                 ep.put("indexTitle", ep.optString("long_title"))
-                if (ep.optInt("cid", 0) == 0)
+                if (ep.optInt("cid", 0) == 0) {
                     ep.put("cid", ep.optInt("id"))
-                if (ep.optInt("aid", 0) == 0)
+                    ep.optJSONObject("rights")?.put("allow_dm", 0)
+                }
+                if (ep.optInt("aid", 0) == 0) {
                     ep.put("aid", result.optInt("season_id"))
+                    ep.optJSONObject("rights")?.put("area_limit", 1)
+                }
                 ep.put("ep_index", eid + 1)
                 ep.put("section_index", sid + 1)
                 fixRight(ep)
-                ep.optJSONObject("rights")?.put("allow_dm", 0)
-                    ?.put("area_limit", 1)
                 episodes.put(ep)
             }
             data.put("id", sid)

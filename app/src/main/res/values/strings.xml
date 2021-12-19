@@ -160,4 +160,6 @@
     <string name="keywords_filter_recommend_summary">过滤首页推送中包含指定关键词的内容</string>
     <string name="search_area_movie_title">开启其它地区影剧搜索</string>
     <string name="search_area_movie_summary">在搜索页面添加其它地区影剧搜索结果，需要解析服务器支持</string>
+    <string name="force_th_comment_title">强制开启泰区评论弹幕</string>
+    <string name="force_th_comment_summary">强制开启串台的泰区评论弹幕（仅调试使用）</string>
 </resources>
