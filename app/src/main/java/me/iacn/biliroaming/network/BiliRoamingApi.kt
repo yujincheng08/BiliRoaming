@@ -553,6 +553,8 @@ object BiliRoamingApi {
                 ep.put("ep_index", eid + 1)
                 ep.put("section_index", sid + 1)
                 fixRight(ep)
+                ep.optJSONObject("rights")?.put("allow_dm", 0)
+                    ?.put("area_limit", 1)
                 episodes.put(ep)
             }
             data.put("id", sid)
@@ -565,6 +567,7 @@ object BiliRoamingApi {
         }
         result.put("style", style)
         result.optJSONObject("rights")?.put("watch_platform", 1)
+            ?.put("allow_comment", 0)
         result.apply {
             put("actors", result.optJSONObject("actor")?.optString("info"))
             put("is_paster_ads", 0)

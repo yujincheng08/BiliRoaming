@@ -1,8 +1,14 @@
 package me.iacn.biliroaming.hook
 
+import android.annotation.SuppressLint
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.view.View
+import android.widget.ImageView
+import android.widget.TextView
+import kotlinx.coroutines.*
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.Constant.TYPE_EPISODE_ID
 import me.iacn.biliroaming.Constant.TYPE_SEASON_ID
@@ -17,9 +23,12 @@ import java.io.InputStream
 import java.lang.reflect.Method
 import java.net.URL
 import java.net.URLDecoder
+import java.util.*
 import kotlin.Boolean
 import kotlin.Int
+import kotlin.collections.HashMap
 import java.lang.reflect.Array as RArray
+
 
 /**
  * Created by iAcn on 2019/3/27
@@ -156,6 +165,33 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             updateSeasonInfo(param.args, paramMap)
         }
 
+        "com.bilibili.bangumi.ui.page.detail.BangumiCommentInvalidFragmentV2".hookAfterMethod(
+            mClassLoader,
+            "onViewCreated",
+            View::class.java,
+            Bundle::class.java
+        ) { param ->
+            if (lastSeasonInfo["allow_comment"] == "0")
+                (param.args[0] as? View)?.run {
+                    @SuppressLint("SetTextI18n")
+                    findViewById<TextView>(getId("info"))?.text = "由于泰区番剧评论会串到其他正常视频中，\n因而禁用泰区评论，还望理解。"
+                    findViewById<ImageView>(getId("forbid_icon"))?.run {
+                        MainScope().launch {
+                            @Suppress("BlockingMethodInNonBlockingContext") val bitmap =
+                                withContext(Dispatchers.IO) {
+                                    val connection =
+                                        URL("https://i0.hdslb.com/bfs/album/08d5ce2fef8da8adf91024db4a69919b8d02fd5c.png")
+                                            .openConnection()
+                                    connection.connect()
+                                    val input: InputStream = connection.getInputStream()
+                                    BitmapFactory.decodeStream(input)
+                                }
+                            setImageBitmap(bitmap)
+                        }
+                    }
+                }
+        }
+
 
         if (isBuiltIn && is64 && Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
             Log.e("Not support")
@@ -274,7 +310,10 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
 
         if (sPrefs.getBoolean("hidden", false) &&
-            (sPrefs.getBoolean("search_area_bangumi", false) || sPrefs.getBoolean("search_area_movie", false))
+            (sPrefs.getBoolean(
+                "search_area_bangumi",
+                false
+            ) || sPrefs.getBoolean("search_area_movie", false))
         ) {
             "com.bilibili.bangumi.ui.page.search.BangumiSearchResultFragment".findClassOrNull(
                 mClassLoader
@@ -318,7 +357,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             for (area in AREA_TYPES) {
                 if (!sPrefs.getString(area.value.area + "_server", null).isNullOrBlank()) {
                     newPageArray[pageArrays.size + counter++] = pageTypesClass.new(
-                        "PAGE_" + area.value.type_str.toUpperCase(),
+                        "PAGE_" + area.value.type_str.uppercase(Locale.getDefault()),
                         4,
                         "bilibili://search-result/new-" + area.value.type_str + "?from=" + area.value.area,
                         area.key,
@@ -343,18 +382,25 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private fun retrieveAreaSearch(data: Any?, url: String, area: String, type: String): Any? {
         data ?: return data
         if (sPrefs.getBoolean("hidden", false) &&
-            (sPrefs.getBoolean("search_area_bangumi", false) || sPrefs.getBoolean("search_area_movie", false))
+            (sPrefs.getBoolean(
+                "search_area_bangumi",
+                false
+            ) || sPrefs.getBoolean("search_area_movie", false))
         ) {
             val content =
-                getAreaSearchBangumi(URL(URLDecoder.decode(url, Charsets.UTF_8.name())).query, area, type)
+                getAreaSearchBangumi(
+                    URL(URLDecoder.decode(url, Charsets.UTF_8.name())).query,
+                    area,
+                    type
+                )
                     ?: return data
             val jsonContent = content.toJSONObject()
             val newData = jsonContent.optJSONObject("data") ?: return data
 
             // 去除追番按钮
-            for (data in newData.getJSONArray("items")) {
-                if (data.optInt("Offset", -1) != -1) {
-                    data.remove("follow_button")
+            for (item in newData.getJSONArray("items")) {
+                if (item.optInt("Offset", -1) != -1) {
+                    item.remove("follow_button")
                 }
             }
 
@@ -371,11 +417,15 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private fun addAreaTags(body: Any?) {
         body ?: return
         if (sPrefs.getBoolean("hidden", false) &&
-            (sPrefs.getBoolean("search_area_bangumi", false) || sPrefs.getBoolean("search_area_movie", false))
+            (sPrefs.getBoolean(
+                "search_area_bangumi",
+                false
+            ) || sPrefs.getBoolean("search_area_movie", false))
         ) {
             for (area in AREA_TYPES) {
                 if (!sPrefs.getString(area.value.area + "_server", null).isNullOrBlank() &&
-                    sPrefs.getBoolean("search_area_" + area.value.type_str, false)) {
+                    sPrefs.getBoolean("search_area_" + area.value.type_str, false)
+                ) {
                     searchAllResultNavInfoClass?.new()?.run {
                         setObjectField("name", area.value.text)
                         setIntField("pages", 0)
@@ -417,7 +467,13 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 lastSeasonInfo["title"] = newJsonResult?.optString("title")
                 lastSeasonInfo["season_id"] = newJsonResult?.optString("season_id")
                 lastSeasonInfo["watch_platform"] =
-                    newJsonResult?.optJSONObject("rights")?.optInt("watch_platform")?.toString()
+                    newJsonResult?.optJSONObject("rights")?.apply {
+                        if (has("allow_comment") && getInt("allow_comment") == 0) {
+                            remove("allow_comment")
+                            put("area_limit", 1)
+                            lastSeasonInfo["allow_comment"] = "0"
+                        }
+                    }?.optInt("watch_platform")?.toString()
                 for (episode in newJsonResult?.optJSONArray("episodes").orEmpty()) {
                     if (episode.has("cid") && episode.has("id")) {
                         val cid = episode.optInt("cid").toString()
