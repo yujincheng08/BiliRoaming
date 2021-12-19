@@ -213,7 +213,7 @@
             android:key="search_area_movie"
             android:summary="@string/search_area_movie_summary"
             android:title="@string/search_area_movie_title" />
-        <Preference
+        <SwitchPreference
             android:dependency="hidden"
             android:key="customize_accessKey"
             android:summary="@string/customize_accessKey_summary"
