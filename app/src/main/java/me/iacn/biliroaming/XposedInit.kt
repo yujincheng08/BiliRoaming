@@ -13,7 +13,6 @@ import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam
 import me.iacn.biliroaming.hook.*
 import me.iacn.biliroaming.utils.*
-import java.text.SimpleDateFormat
 import java.util.*
 
 
@@ -60,8 +59,8 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                     Log.toast(
                         "哔哩漫游已激活${
                             if (sPrefs.getBoolean("main_func", false)) ""
-                            else "。但未启用番剧解锁功能，请检查哔哩漫游设置。"
-                        }"
+                            else "。\n但未启用番剧解锁功能，请检查哔哩漫游设置。"
+                        }\n请勿在B站任何地方宣传漫游。\n漫游插件开源免费，谨防被骗。"
                     )
                     BiliBiliPackage(lpparam.classLoader, param.args[0] as Context)
                     if (BuildConfig.DEBUG) {
@@ -129,14 +128,12 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
     private fun startLog() = try {
         logFile.delete()
         logFile.createNewFile()
-        val cmd = arrayOf(
+        Runtime.getRuntime().exec(arrayOf(
             "logcat",
-            "-T",
-            SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault()).format(Date()),
+            "-T 1",
             "-f",
             logFile.absolutePath
-        )
-        Runtime.getRuntime().exec(cmd)
+        ))
     } catch (e: Throwable) {
         Log.e(e)
         null
