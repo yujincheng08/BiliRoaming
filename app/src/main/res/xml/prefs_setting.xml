@@ -218,7 +218,7 @@
             android:key="customize_accessKey"
             android:summary="@string/customize_accessKey_summary"
             android:title="@string/customize_accessKey_title" />
-        <Preference
+        <SwitchPreference
             android:dependency="hidden"
             android:key="force_th_comment"
             android:summary="@string/force_th_comment_summary"
