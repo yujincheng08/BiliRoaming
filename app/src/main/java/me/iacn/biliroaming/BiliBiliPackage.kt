@@ -127,7 +127,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             mClassLoader
         )
     }
-    val garbHelperClass by Weak { mHookInfo["class_garb_helper"]?.findClassOrNull(mClassLoader) }
     val musicNotificationHelperClass by Weak {
         mHookInfo["class_music_notification_helper"]?.findClassOrNull(
             mClassLoader
@@ -341,8 +340,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     fun downloadingThread() = mHookInfo["field_download_thread"]
 
     fun reportDownloadThread() = mHookInfo["method_report_download_thread"]
-
-    fun garb() = mHookInfo["method_garb"]
 
     fun setNotification() = mHookInfo["methods_set_notification"]
 
@@ -607,13 +604,16 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         return needUpdate
     }
 
-    private fun findCommentSpan() = classesList.filter {
-        it.startsWith("com.bilibili.app.comm.comment2.widget")
-    }.firstOrNull { c ->
-        c.findClass(mClassLoader).declaredFields.count {
-            it.type == Float::class.javaPrimitiveType
-        } > 1
-    }
+    private fun findCommentSpan() =
+        "com.bilibili.app.comm.comment2.widget.CommentExpandableTextView".findClassOrNull(
+            mClassLoader
+        )?.name ?: classesList.filter {
+            it.startsWith("com.bilibili.app.comm.comment2.widget")
+        }.firstOrNull { c ->
+            c.findClass(mClassLoader).declaredFields.count {
+                it.type == Float::class.javaPrimitiveType
+            } > 1
+        }
 
     private fun findDescCopyView(): Array<String?> {
         val classes = ArrayList<String>()
