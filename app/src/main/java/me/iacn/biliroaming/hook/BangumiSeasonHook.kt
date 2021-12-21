@@ -172,7 +172,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             Bundle::class.java
         ) { param ->
             if (lastSeasonInfo["allow_comment"] != "0" ||
-                !sPrefs.getBoolean("force_th_comment", false)
+                sPrefs.getBoolean("force_th_comment", false)
             ) return@hookAfterMethod
             (param.args[0] as? View)?.run {
                 @SuppressLint("SetTextI18n")
