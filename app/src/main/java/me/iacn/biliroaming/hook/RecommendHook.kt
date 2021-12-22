@@ -5,14 +5,15 @@ import me.iacn.biliroaming.utils.Log
 import me.iacn.biliroaming.utils.hookBeforeAllMethods
 import me.iacn.biliroaming.utils.sPrefs
 
-class UpperAdHook(classLoader: ClassLoader) : BaseHook(classLoader) {
+class RecommendHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     companion object {
         private const val UPPER_HOLDER_NONE = 105
     }
 
     override fun startHook() {
+        //region <UpperVideoRecommend>
         if (!sPrefs.getBoolean("block_upper_recommend_ad", false)) return
-        Log.d("Start hook: UpperAdHook")
+        Log.d("Start hook: UpperVideoRecommend")
         instance.videoUpperAdClass?.hookBeforeAllMethods(
             instance.videoUpperAd()
         ) { param ->
@@ -22,5 +23,6 @@ class UpperAdHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 Log.toast("已清除视频下方推荐")
             }
         }
+        //endregion
     }
 }
