@@ -11,9 +11,8 @@ class RecommendHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     override fun startHook() {
-        //region <UpperVideoRecommend>
         if (!sPrefs.getBoolean("block_upper_recommend_ad", false)) return
-        Log.d("Start hook: UpperVideoRecommend")
+        Log.d("Start hook: RecommendHook")
         instance.videoUpperAdClass?.hookBeforeAllMethods(
             instance.videoUpperAd()
         ) { param ->
@@ -23,6 +22,5 @@ class RecommendHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 Log.toast("已清除视频下方推荐")
             }
         }
-        //endregion
     }
 }
