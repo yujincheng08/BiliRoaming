@@ -644,14 +644,20 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     }
 
     private fun findVideoUpperAd(): Array<String?> {
+        Log.i("Start find UpperAdHook")
         val adHolderClass =
             "com.bilibili.ad.adview.videodetail.upper.VideoUpperAdSectionViewHolder".findClassOrNull(
                 mClassLoader
             ) ?: "com.bilibili.ad.adview.videodetail.upper.VideoUpperAdViewHolder".findClassOrNull(
                 mClassLoader
             ) ?: return arrayOfNulls(2)
+        Log.i("Start find UpperAdHook")
+
+        val reg = Regex("com\\.bilibili\\.ad\\.adview\\.videodetail\\.upper\\..")
         classesList.filter {
             it.startsWith("com.bilibili.ad.adview.videodetail.upper")
+        }.filter { c ->
+            c.matches(reg)
         }.map { c ->
             c.findClass(mClassLoader)
         }.forEach { c ->
