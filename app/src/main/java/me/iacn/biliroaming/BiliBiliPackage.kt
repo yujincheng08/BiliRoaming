@@ -650,8 +650,11 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             ) ?: "com.bilibili.ad.adview.videodetail.upper.VideoUpperAdViewHolder".findClassOrNull(
                 mClassLoader
             ) ?: return arrayOfNulls(2)
+        val reg = Regex("""^com\\.bilibili\\.ad\\.adview\\.videodetail\\.upper\\.[^.]*$""")
         classesList.filter {
             it.startsWith("com.bilibili.ad.adview.videodetail.upper")
+        }.filter { c ->
+            c.matches(reg)
         }.map { c ->
             c.findClass(mClassLoader)
         }.forEach { c ->
@@ -827,6 +830,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         val reg = Regex("^tv\\.danmaku\\.bili\\.[^.]*$")
         val mask = Modifier.STATIC or Modifier.PUBLIC or Modifier.FINAL
         val ids = classesList.filter {
+            it.startsWith("tv.danmaku.bili")
+        }.filter {
             it.matches(reg)
         }.flatMap { c ->
             c.findClass(mClassLoader).declaredFields.filter {
@@ -942,6 +947,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     private fun findShareWrapperClass(): String? {
         val reg = Regex("^com\\.bilibili\\.lib\\.sharewrapper\\.[^.]*$")
         return classesList.filter {
+            it.startsWith("com.bilibili.lib.sharewrapper")
+        }.filter {
             it.matches(reg)
         }.firstOrNull { c ->
             c.findClass(mClassLoader).declaredMethods.filter {
@@ -1146,6 +1153,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 ?: return null
         val regex = Regex("^tv\\.danmaku\\.bili\\.ui\\.main2\\.[^.]*$")
         return classesList.filter {
+            it.startsWith("tv.danmaku.bili.ui.main2")
+        }.filter {
             it.matches(regex)
         }.firstOrNull { c ->
             c.findClass(mClassLoader).declaredFields.filter {
