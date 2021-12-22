@@ -650,7 +650,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             ) ?: "com.bilibili.ad.adview.videodetail.upper.VideoUpperAdViewHolder".findClassOrNull(
                 mClassLoader
             ) ?: return arrayOfNulls(2)
-        val reg = Regex("com\\.bilibili\\.ad\\.adview\\.videodetail\\.upper\\..")
+        val reg = Regex("""^com\\.bilibili\\.ad\\.adview\\.videodetail\\.upper\\.[^.]*$""")
         classesList.filter {
             it.startsWith("com.bilibili.ad.adview.videodetail.upper")
         }.filter { c ->
