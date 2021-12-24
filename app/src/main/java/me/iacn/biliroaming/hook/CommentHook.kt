@@ -52,7 +52,9 @@ class CommentHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             if (!sPrefs.getBoolean("comment_copy_enhance", false)) return@replaceMethod true
             val messageId = getId("message")
             (param.args[0] as? View)?.findViewById<View>(messageId)?.let {
-                if (instance.commentSpanTextViewClass?.isInstance(it) == true) it else null
+                if (instance.commentSpanTextViewClass?.isInstance(it) == true ||
+                    instance.commentSpanEllipsisTextViewClass?.isInstance(it) == true
+                ) it else null
             }?.let { view ->
                 view.getFirstFieldByExactTypeOrNull<CharSequence>()?.also { text ->
                     showCopyDialog(view.context, text, param)
