@@ -717,7 +717,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     private fun fixEpisodesStatus(result: JSONObject?) {
-        if (sPrefs.getString("customize_accessKey", "").isNullOrBlank()) return
+        sPrefs.getString("cn_server_accessKey", null) ?: return
         if (result?.optInt("status") == 13) result.put("status", 2)
         for (module in result?.optJSONArray("modules").orEmpty()) {
             val data = module.optJSONObject("data")

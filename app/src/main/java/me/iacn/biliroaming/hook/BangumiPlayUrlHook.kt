@@ -14,11 +14,8 @@ import java.io.ByteArrayInputStream
 import java.io.InputStream
 import java.lang.reflect.Method
 import java.net.HttpURLConnection
-import java.util.*
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
-import kotlin.collections.ArrayList
-import kotlin.collections.HashMap
 
 /**
  * Created by iAcn on 2019/3/29
@@ -164,13 +161,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     ?: "com.bapis.bilibili.pgc.gateway.player.v2.PlayViewReply".findClass(
                         mClassLoader
                     ).new()
-                if (!response.callMethodAs<Boolean>("hasVideoInfo") ||
-                    (response.callMethodAs("hasViewInfo") &&
-                            response.callMethod("getViewInfo")
-                                ?.callMethodAs<Boolean>("hasDialog") == true) &&
-                    response.callMethod("getViewInfo")?.callMethod("getDialog")
-                        ?.callMethodAs<String>("getType") == "area_limit"
-                ) {
+                if (needProxy(response)) {
                     val content = getPlayUrl(reconstructQuery(request))
                     countDownLatch?.countDown()
                     content?.let {
@@ -262,6 +253,21 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     )
                 }
             }
+    }
+
+    private fun needProxy(response: Any): Boolean {
+        if (!response.callMethodAs<Boolean>("hasVideoInfo")) return true
+
+        val viewInfo = response.callMethod("getViewInfo")
+        val dialog = viewInfo?.callMethod("getDialog")
+        val type = dialog?.callMethodAs<String>("getType")
+        if (type == "area_limit") return true
+
+        sPrefs.getString("cn_server_accessKey", null) ?: return false
+        val business = response.callMethod("getBusiness")
+        if (business?.callMethodAs<Boolean>("getIsPreview") == true) return true
+        if (type != "") return true
+        return false
     }
 
     private fun showPlayerError(response: Any, message: String) {
@@ -359,7 +365,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     private fun needForceProxy(response: Any): Boolean {
-        if (sPrefs.getString("customize_accessKey", "").isNullOrBlank()) return false
+        sPrefs.getString("cn_server_accessKey", null) ?: return false
         val serializedRequest = response.callMethodAs<ByteArray>("toByteArray")
         return PlayViewReply.parseFrom(serializedRequest).business.isPreview
     }
