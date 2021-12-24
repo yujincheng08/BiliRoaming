@@ -16,11 +16,12 @@ class RecommendHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         instance.videoUpperAdClass?.hookBeforeAllMethods(
             instance.videoUpperAd()
         ) { param ->
-            val id = param.args[1] as Int
-            if (id != UPPER_HOLDER_NONE) {
-                param.args[1] = UPPER_HOLDER_NONE
-                Log.toast("已清除视频下方推荐")
-            }
+            (param.args[1] as? Int)?.let { id ->
+                if (id != UPPER_HOLDER_NONE) {
+                    param.args[1] = UPPER_HOLDER_NONE
+                    Log.toast("已清除视频下方推荐")
+                }
+            } ?: run { param.args[1] = null }
         }
     }
 }
