@@ -38,19 +38,21 @@ jobs:
           echo 'org.gradle.parallel=true' >> gradle.properties
           echo 'org.gradle.vfs.watch=true' >> gradle.properties
           echo 'org.gradle.jvmargs=-Xmx2048m' >> gradle.properties
-          bash ./gradlew -PappVerName=${{ env.VERSION }} assembleRelease
+          bash ./gradlew -PappVerName=${{ env.VERSION }} assembleRelease assembleDebug
       - name: Upload built apk
         if: success()
         uses: actions/upload-artifact@v2
         with:
           name: snapshot
-          path: ${{ github.workspace }}/app/build/outputs/apk/release/BiliRoaming_${{ env.VERSION }}.apk
+          path: |
+              ${{ github.workspace }}/app/build/outputs/apk
+              ${{ github.workspace }}/app/build/outputs/mapping
       - name: Post to channel
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
         env:
           CHANNEL_ID: ${{ secrets.TELEGRAM_TO }}
           BOT_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
-          FILE: ${{ github.workspace }}/app/build/outputs/apk/release/BiliRoaming_${{ env.VERSION }}.apk
+          FILE: ${{ github.workspace }}/app/release/BiliRoaming_${{ env.VERSION }}.apk
           COMMIT_MESSAGE: |+
             New push to github\!
             ```

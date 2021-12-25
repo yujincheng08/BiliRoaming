@@ -1,6 +1,19 @@
-import com.google.protobuf.gradle.*
+import com.android.build.api.artifact.ArtifactTransformationRequest
 import com.android.build.api.artifact.SingleArtifact
+import com.android.build.api.variant.BuiltArtifact
+import com.google.protobuf.gradle.*
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.nio.file.Paths
+
+// https://github.com/google/protobuf-gradle-plugin/issues/540#issuecomment-1001053066
+fun com.android.build.api.dsl.AndroidSourceSet.proto(action: SourceDirectorySet.() -> Unit) {
+    (this as? ExtensionAware)
+        ?.extensions
+        ?.getByName("proto")
+        ?.let { it as? SourceDirectorySet }
+        ?.apply(action)
+}
+
 
 plugins {
     id("com.android.application")
@@ -61,16 +74,8 @@ android {
         jvmTarget = "11"
     }
 
-//    applicationVariants.all { variant ->
-//        variant.outputs.all { output ->
-//            if (variant.buildType.name == 'release') {
-//                outputFileName = "BiliRoaming_${defaultConfig.versionName}.apk"
-//            }
-//        }
-//    }
-
     sourceSets {
-        getByName("main").proto {
+        named("main") {
             proto {
                 srcDir("src/main/proto")
                 include("**/*.proto")
@@ -114,13 +119,39 @@ protobuf {
         }
     }
 }
-val copyApk = project.tasks.register<Copy>("copyApk") {
+
+abstract class CopyApksTask : DefaultTask() {
+    @get:Internal
+    abstract val transformer: Property<(input: BuiltArtifact) -> File>
+
+    @get:InputDirectory
+    abstract val apkFolder: DirectoryProperty
+
+    @get:OutputDirectory
+    abstract val outFolder: DirectoryProperty
+
+    @get:Internal
+    abstract val transformationRequest: Property<ArtifactTransformationRequest<CopyApksTask>>
+
+    @TaskAction
+    fun taskAction() = transformationRequest.get().submit(this) { builtArtifact ->
+        File(builtArtifact.outputFile).copyTo(transformer.get()(builtArtifact), true)
+    }
 }
 
 androidComponents.onVariants { variant ->
-    variant.artifacts.use(copyApk).wiredWith(Copy::from)
+    if (variant.name != "release") return@onVariants
+    val updateArtifact = project.tasks.register<CopyApksTask>("copy${variant.name.capitalize()}Apk")
+    val transformationRequest = variant.artifacts.use(updateArtifact)
+        .wiredWithDirectories(CopyApksTask::apkFolder, CopyApksTask::outFolder)
+        .toTransformMany(SingleArtifact.APK)
+    updateArtifact.configure {
+        this.transformationRequest.set(transformationRequest)
+        transformer.set { builtArtifact ->
+            File(projectDir, "${variant.name}/BiliRoaming_${builtArtifact.versionName}.apk")
+        }
+    }
 }
-
 
 dependencies {
     compileOnly("de.robv.android.xposed:api:82")
@@ -180,6 +211,16 @@ tasks.whenTaskAdded {
         }
         "installDebug" -> {
             finalizedBy(restartBiliBili)
+        }
+    }
+}
+
+tasks.withType<KotlinCompile>().all {
+    if (name.contains("release", true)) {
+        kotlinOptions {
+            freeCompilerArgs = freeCompilerArgs + listOf(
+                "-Xassertions=always-disable",
+            )
         }
     }
 }
