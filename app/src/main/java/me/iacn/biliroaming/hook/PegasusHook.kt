@@ -181,7 +181,6 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     override fun startHook() {
-        if (filter.isEmpty()) return
         Log.d("startHook: Pegasus")
         instance.pegasusFeedClass?.hookAfterMethod(
             instance.pegasusFeed(),
@@ -191,12 +190,11 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 ?.let { arr ->
                     arr.removeAll {
                         filter.fold(false) { acc, item ->
-                            acc || item in it.getObjectFieldAs<String?>("cardGoto")
-                                .orEmpty() || item in it.getObjectFieldAs<String?>("cardType")
-                                .orEmpty() || item in it.getObjectFieldAs<String?>("goTo")
-                                .orEmpty() || isLowCountVideo(it) || isContainsBlockKwd(it)
-                                || durationVideo(it)
-                        }
+                            acc || item in it.getObjectFieldOrNullAs<String>("cardGoto")
+                                .orEmpty() || item in it.getObjectFieldOrNullAs<String>("cardType")
+                                .orEmpty() || item in it.getObjectFieldOrNullAs<String>("goTo")
+                                .orEmpty()
+                        } || isLowCountVideo(it) || isContainsBlockKwd(it) || durationVideo(it)
                     }
                 }
         }
