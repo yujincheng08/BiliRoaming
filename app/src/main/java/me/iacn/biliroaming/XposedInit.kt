@@ -21,6 +21,9 @@ import java.util.*
  * Email i@iacn.me
  */
 class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
+    init {
+        Log.d("launch init")
+    }
     override fun initZygote(startupParam: IXposedHookZygoteInit.StartupParam) {
         modulePath = startupParam.modulePath
         moduleRes = getModuleRes(modulePath)

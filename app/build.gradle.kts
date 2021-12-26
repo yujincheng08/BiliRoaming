@@ -21,10 +21,11 @@ plugins {
     id("com.google.protobuf")
 }
 
-val androidStoreFile: String? by rootProject
-val androidStorePassword: String? by rootProject
-val androidKeyAlias: String? by rootProject
-val androidKeyPassword: String? by rootProject
+val releaseStoreFile: String? by rootProject
+val releaseStorePassword: String? by rootProject
+val releaseKeyAlias: String? by rootProject
+val releaseKeyPassword: String? by rootProject
+
 val appVerCode: String by rootProject
 val appVerName: String by rootProject
 
@@ -42,11 +43,11 @@ android {
 
     signingConfigs {
         create("config") {
-            androidStoreFile?.also {
+            releaseStoreFile?.also {
                 storeFile = rootProject.file(it)
-                storePassword = androidStorePassword
-                keyAlias = androidKeyAlias
-                keyPassword = androidKeyPassword
+                storePassword = releaseStorePassword
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPassword
             }
         }
     }
@@ -54,7 +55,7 @@ android {
     buildTypes {
         all {
             signingConfig =
-                if (androidStoreFile.isNullOrEmpty()) signingConfigs.getByName("debug") else signingConfigs.getByName(
+                if (releaseStoreFile.isNullOrEmpty()) signingConfigs.getByName("debug") else signingConfigs.getByName(
                     "config"
                 )
         }
