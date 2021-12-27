@@ -7,7 +7,7 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private val filterSet = sPrefs.getStringSet("customize_home_recommend", emptySet()).orEmpty()
 
     private val hideLowPlayCountLimit by lazy {
-        sPrefs.getLong("hide_low_play_count_recommend_limit", 100)
+        sPrefs.getLong("hide_low_play_count_recommend_limit", 0)
     }
     private val hideShortDurationLimit by lazy {
         sPrefs.getInt("hide_short_duration_recommend_limit", 0)
