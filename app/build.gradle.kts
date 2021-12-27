@@ -2,7 +2,6 @@ import com.android.build.api.artifact.ArtifactTransformationRequest
 import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.variant.BuiltArtifact
 import com.google.protobuf.gradle.*
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.nio.file.Paths
 
 // https://github.com/google/protobuf-gradle-plugin/issues/540#issuecomment-1001053066
@@ -73,6 +72,11 @@ android {
 
     kotlinOptions {
         jvmTarget = "11"
+        freeCompilerArgs = listOf(
+            "-Xno-param-assertions",
+            "-Xno-call-assertions",
+            "-Xno-receiver-assertions",
+        )
     }
 
     sourceSets {
@@ -86,7 +90,7 @@ android {
 
     packagingOptions {
         resources {
-            excludes += arrayOf("META-INF/**", "kotlin/**", "google/**", "**.bin")
+            excludes += arrayOf("**")
         }
     }
 
@@ -156,10 +160,8 @@ androidComponents.onVariants { variant ->
 
 dependencies {
     compileOnly("de.robv.android.xposed:api:82")
-    compileOnly("de.robv.android.xposed:api:82:sources")
     implementation("com.google.protobuf:protobuf-javalite:3.19.1")
     compileOnly("com.google.protobuf:protoc:3.19.1")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.2")
     implementation("androidx.documentfile:documentfile:1.0.1")
 }
@@ -172,12 +174,7 @@ val restartBiliBili = task("restartBiliBili").doLast {
     }
     exec {
         commandLine(
-            adbExecutable,
-            "shell",
-            "am",
-            "start",
-            "--user",
-            "0",
+            adbExecutable, "shell", "am", "start",
             "$(pm resolve-activity --components tv.danmaku.bili)"
         )
     }
@@ -212,16 +209,6 @@ tasks.whenTaskAdded {
         }
         "installDebug" -> {
             finalizedBy(restartBiliBili)
-        }
-    }
-}
-
-tasks.withType<KotlinCompile>().all {
-    if (name.contains("release", true)) {
-        kotlinOptions {
-            freeCompilerArgs = freeCompilerArgs + listOf(
-                "-Xassertions=always-disable",
-            )
         }
     }
 }
