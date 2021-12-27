@@ -187,14 +187,11 @@ val optimizeReleaseRes = task("optimizeReleaseRes").doLast {
     )
     val zip = Paths.get(
         project.buildDir.path, "intermediates",
-        "shrunk_processed_res", "release", "resources-release-stripped.ap_"
+        "optimized_processed_res", "release", "resources-release-optimize.ap_"
     )
     val optimized = File("${zip}.opt")
     val cmd = exec {
-        commandLine(
-            aapt2, "optimize", "--collapse-resource-names",
-            "--shorten-resource-paths", "-o", optimized, zip
-        )
+        commandLine(aapt2, "optimize", "--collapse-resource-names", "-o", optimized, zip)
         isIgnoreExitValue = true
     }
     if (cmd.exitValue == 0) {
