@@ -121,9 +121,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     }
     val mainActivityClass by Weak { "tv.danmaku.bili.MainActivityV2".findClass(mClassLoader) }
     val homeUserCenterClass by Weak {
-        "tv.danmaku.bili.ui.main2.mine.HomeUserCenterFragment".findClassOrNull(
+        "tv.danmaku.bilibilihd.ui.main.mine.HdHomeUserCenterFragment".findClassOrNull(
             mClassLoader
-        ) ?: "tv.danmaku.bilibilihd.ui.main.mine.HdHomeUserCenterFragment".findClassOrNull(
+        ) ?: "tv.danmaku.bili.ui.main2.mine.HomeUserCenterFragment".findClassOrNull(
             mClassLoader
         )
     }

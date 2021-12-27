@@ -116,15 +116,16 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 false
             }
             val supportMain = !isBuiltIn || !is64 || Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
+            var supportDrawer = instance.homeUserCenterClass != null
             when (platform) {
                 "android_hd" -> {
                     supportCustomizeTab = false
+                    supportDrawer = false
                 }
             }
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
                 supportMusicNotificationHook = false
             val supportSplashHook = instance.brandSplashClass != null
-            val supportDrawer = instance.homeUserCenterClass != null
             val supportTeenagersMode = instance.teenagersModeDialogActivityClass != null
             val supportCustomizeCC = instance.subtitleSpanClass != null
             if (!supportDrawer)
