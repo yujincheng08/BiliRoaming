@@ -132,7 +132,7 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
         Runtime.getRuntime().exec(arrayOf(
             "logcat",
             "-T",
-            "1",
+            "100",
             "-f",
             logFile.absolutePath
         ))
