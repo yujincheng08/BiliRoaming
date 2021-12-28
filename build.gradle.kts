@@ -5,8 +5,10 @@ buildscript {
     repositories {
         google()
         mavenCentral()
+        maven(url="https://storage.googleapis.com/r8-releases/raw")
     }
     dependencies {
+        classpath("com.android.tools:r8:3.3.3-dev")
         classpath("com.android.tools.build:gradle:7.0.4")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
         classpath("com.google.protobuf:protobuf-gradle-plugin:0.8.18")

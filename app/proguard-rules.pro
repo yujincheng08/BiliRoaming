@@ -5,7 +5,7 @@
 }
 
 -keepclassmembers class * extends com.google.protobuf.GeneratedMessageLite {
-  *** *_;
+  <fields>;
 }
 
 -keepattributes RuntimeVisible*Annotations
