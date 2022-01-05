@@ -133,6 +133,11 @@
         <SwitchPreference
             android:key="save_log"
             android:title="@string/save_log_title" />
+
+        <Preference
+            android:key="share_log"
+            android:summary="@string/share_log_summary"
+            android:title="@string/share_log_title" />
     </PreferenceCategory>
 
     <PreferenceCategory
