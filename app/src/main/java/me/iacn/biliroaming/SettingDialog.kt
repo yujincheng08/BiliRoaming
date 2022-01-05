@@ -74,6 +74,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("home_filter")?.onPreferenceClickListener = this
             findPreference("custom_subtitle")?.onPreferenceChangeListener = this
             findPreference("customize_accessKey")?.onPreferenceClickListener = this
+            findPreference("share_log")?.onPreferenceClickListener = this
             checkCompatibleVersion()
             checkUpdate()
         }
@@ -437,6 +438,22 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             return true
         }
 
+        private fun onShareLogClick(): Boolean {
+            if (logFile.exists().not() || prefs.getBoolean("save_log", false).not()) {
+                Log.toast("没有保存过日志")
+                return true
+            }
+            logFile.copyTo(File(activity.cacheDir, "boxing/log.txt"), overwrite = true)
+            val uri = Uri.parse("content://${activity.packageName}.fileprovider/internal/log.txt")
+            activity.startActivity(Intent.createChooser(Intent().apply {
+                action = Intent.ACTION_SEND
+                putExtra(Intent.EXTRA_STREAM, uri)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                setDataAndType(uri, "text/log")
+            }, moduleRes.getString(R.string.share_log_title)))
+            return true
+        }
+
         override fun onPreferenceClick(preference: Preference) = when (preference.key) {
             "version" -> onVersionClick()
             "update" -> onUpdateClick()
@@ -448,6 +465,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             "export_video" -> onExportVideoClick()
             "customize_accessKey" -> onCustomizeAccessKeyClick()
             "home_filter" -> onHomeFilterClick()
+            "share_log" -> onShareLogClick()
             else -> false
         }
     }
