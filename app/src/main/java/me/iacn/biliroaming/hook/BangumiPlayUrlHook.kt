@@ -4,6 +4,7 @@ import android.net.Uri
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.Protos.*
 import me.iacn.biliroaming.hook.BangumiSeasonHook.Companion.lastSeasonInfo
+import me.iacn.biliroaming.network.BiliRoamingApi.CustomServerException
 import me.iacn.biliroaming.network.BiliRoamingApi.getPlayUrl
 import me.iacn.biliroaming.network.BiliRoamingApi.getThailandSubtitles
 import me.iacn.biliroaming.utils.*
@@ -162,21 +163,24 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         mClassLoader
                     ).new()
                 if (needProxy(response)) {
-                    val content = getPlayUrl(reconstructQuery(request))
-                    countDownLatch?.countDown()
-                    content?.let {
-                        val jsonObject = JSONObject(it)
-                        val code = jsonObject.optInt("code", -1)
-                        if (code != 0) {
-                            val message = jsonObject.optString("message", "解析服务器并未给出任何错误信息")
-                            showPlayerError(response, "解析服务器: $message")
-                            return@let
+                    try {
+                        val content = getPlayUrl(reconstructQuery(request))
+                        countDownLatch?.countDown()
+                        content?.let {
+                            Log.d("Has replaced play url with proxy server $it")
+                            Log.toast("已从代理服务器获取播放地址")
+                            param.result = reconstructResponse(response, it, isDownload)
+                        } ?: run {
+                            showPlayerError(response, "获取播放地址失败。请检查哔哩漫游设置里的解析服务器设置。")
                         }
-                        Log.d("Has replaced play url with proxy server $it")
-                        Log.toast("已从代理服务器获取播放地址")
-                        param.result = reconstructResponse(response, it, isDownload)
-                    } ?: run {
-                        showPlayerError(response, "获取播放地址失败。请检查哔哩漫游设置里的解析服务器设置。")
+                    } catch (e: CustomServerException){
+                        var messages = ""
+                        for (error in e.errors) {
+                            messages += "${error.key}: ${error.value}\n"
+                        }
+                        showPlayerError(response, "请求解析中服务器发生错误(见 弹出消息/日志)")
+                        Log.e("请求解析服务器发生错误: ${messages.trim()}")
+                        Log.toast("\n${messages.trim()}")
                     }
                 } else if (isDownload) {
                     param.result = fixDownloadProto(response)
