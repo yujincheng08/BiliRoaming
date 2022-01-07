@@ -505,6 +505,9 @@ object BiliRoamingApi {
         val supportFormats = JSONArray()
         val dashVideo = JSONArray()
         for (stream in streamList.orEmpty()) {
+            if (stream.optJSONObject("dash_video")?.optString("base_url").isNullOrBlank()) {
+                continue
+            }
             stream.optJSONObject("stream_info")?.let {
                 supportFormats.put(it)
             }
