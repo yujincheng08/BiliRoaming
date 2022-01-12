@@ -14,11 +14,11 @@ object Log {
     private val handler by lazy { Handler(Looper.getMainLooper()) }
     private var toast: Toast? = null
 
-    fun toast(msg: String, force: Boolean = false) {
+    fun toast(msg: String, force: Boolean = false, duration: Int = Toast.LENGTH_SHORT) {
         if (!force && !sPrefs.getBoolean("show_info", true)) return
         handler.post {
             toast?.cancel()
-            toast = Toast.makeText(currentContext, "", Toast.LENGTH_SHORT).apply {
+            toast = Toast.makeText(currentContext, "", duration).apply {
                 setText("哔哩漫游：$msg")
                 show()
             }
