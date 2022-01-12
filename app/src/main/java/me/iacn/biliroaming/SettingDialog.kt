@@ -318,7 +318,10 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     editTexts.forEach {
                         val host = it.text.toString()
                         if (host.isNotEmpty())
-                            prefs.edit().putString(it.tag.toString(), host).apply()
+                            prefs.edit().putString(
+                                it.tag.toString(),
+                                host.replace(Regex("^https?://"), "")
+                            ).apply()
                         else
                             prefs.edit().remove(it.tag.toString()).apply()
                     }
