@@ -198,6 +198,7 @@ object BiliRoamingApi {
     @JvmStatic
     private fun fixHiddenSeason(result: JSONObject) {
         for (episode in result.optJSONArray("episodes").orEmpty()) {
+            episode.put("link", "https://www.bilibili.com/bangumi/play/ep${episode.optString("ep_id")}")
             episode.put("long_title", episode.optString("indexTitle"))
             episode.put("id", episode.optString("ep_id"))
             episode.put("title", episode.optString("index"))
@@ -550,6 +551,7 @@ object BiliRoamingApi {
                 ep.put("episode_status", 2)
                 ep.put("ep_id", ep.optInt("id"))
                 ep.put("index", ep.optString("title"))
+                ep.put("link", "https://www.bilibili.com/bangumi/play/ep${ep.optInt("id")}")
                 ep.put("indexTitle", ep.optString("long_title"))
                 ep.put("ep_index", eid + 1)
                 ep.put("section_index", sid + 1)
