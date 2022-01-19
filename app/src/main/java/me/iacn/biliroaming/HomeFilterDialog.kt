@@ -16,7 +16,7 @@ class HomeFilterDialog(val activity: Activity,prefs: SharedPreferences) : AlertD
         val view = inflater.inflate(layout, null)
 
         val lovePlayCount = view.findViewById<EditText>(R.id.hide_low_play_count_recommend)
-        lovePlayCount.setText(prefs.getLong(lovePlayCount.tag.toString(), 100).toString())
+        lovePlayCount.setText(prefs.getLong(lovePlayCount.tag.toString(), 0).toString())
         val shortDuration = view.findViewById<EditText>(R.id.hide_short_duration_recommend)
         shortDuration.setText(prefs.getInt(shortDuration.tag.toString(), 0).toString())
         val longDuration = view.findViewById<EditText>(R.id.hide_long_duration_recommend)
