@@ -114,6 +114,11 @@
             android:summary="@string/anti_live_room_feed_summary"
             android:title="@string/anti_live_room_feed_title" />
 
+        <SwitchPreference
+            android:key="replace_story_video"
+            android:summary="@string/replace_story_video_summary"
+            android:title="@string/replace_story_video_title" />
+
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/pref_backup">
         <Preference

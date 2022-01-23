@@ -222,6 +222,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         "com.bilibili.bililive.room.ui.roomv3.LiveRoomActivityV3".findClassOrNull(mClassLoader)
     }
 
+    val storyVideoActivityClass by Weak {
+        "com.bilibili.video.story.StoryVideoActivity".findClassOrNull(mClassLoader)
+    }
+
     val okioWrapperClass by Weak { mHookInfo["class_okio_wrapper"]?.findClassOrNull(mClassLoader) }
     val progressBarClass by Weak {
         "tv.danmaku.biliplayer.view.RingProgressBar".findClassOrNull(
