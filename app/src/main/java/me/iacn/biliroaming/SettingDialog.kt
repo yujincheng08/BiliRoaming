@@ -129,6 +129,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             val supportSplashHook = instance.brandSplashClass != null
             val supportTeenagersMode = instance.teenagersModeDialogActivityClass != null
             val supportCustomizeCC = instance.subtitleSpanClass != null
+            val supportStoryVideo = instance.storyVideoActivityClass != null
             if (!supportDrawer)
                 disablePreference("drawer")
             if (!supportSplashHook) {
@@ -156,6 +157,9 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             }
             if (!supportCustomizeCC) {
                 disablePreference("custom_subtitle")
+            }
+            if (!supportStoryVideo) {
+                disablePreference("replace_story_video")
             }
         }
 

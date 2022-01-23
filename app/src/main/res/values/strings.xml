@@ -164,4 +164,6 @@
     <string name="force_th_comment_summary">强制开启串台的泰区评论弹幕（仅调试使用）</string>
     <string name="share_log_title">分享日志</string>
     <string name="share_log_summary">可能在旧版无效</string>
+    <string name="replace_story_video_title">替换竖版视频</string>
+    <string name="replace_story_video_summary">替换竖版视频为正常视频</string>
 </resources>
