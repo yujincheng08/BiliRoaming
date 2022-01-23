@@ -27,6 +27,8 @@ class CommentHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 param.thisObject.getFirstFieldByExactTypeOrNull<SpannableStringBuilder>()?.let {
                     val view = param.args[0] as View
                     showCopyDialog(view.context, it, param)
+                } ?: (param.args[0] as? TextView)?.let { tv ->
+                    showCopyDialog(tv.context, tv.text, param)
                 }
             }
         }
