@@ -166,4 +166,6 @@
     <string name="share_log_summary">可能在旧版无效</string>
     <string name="replace_story_video_title">替换竖版视频</string>
     <string name="replace_story_video_summary">替换竖版视频为正常视频</string>
+    <string name="auto_generate_chs_subtitle_title">自动生成简中字幕</string>
+    <string name="auto_generate_chs_subtitle_summary">根据繁中字幕自动翻译生成简中字幕，power by 繁化姬</string>
 </resources>

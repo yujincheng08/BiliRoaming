@@ -246,6 +246,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         )
     }
 
+    val videoSubtitleClass by Weak { mHookInfo["class_video_subtitle"]?.findClassOrNull(mClassLoader) }
+    val subtitleItemClass by Weak { mHookInfo["class_subtitle_item"]?.findClassOrNull(mClassLoader) }
+
     val classesList by lazy {
         mClassLoader.allClassesList {
             val serviceField = it.javaClass.findFirstFieldByExactTypeOrNull(
@@ -606,6 +609,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             findDescCopyView()
         }.checkOrPut("class_bangumi_uniform_season") {
             findBangumiUniformSeason()
+        }.checkOrPut("class_video_subtitle") {
+            findVideoSubtitleClass()
+        }.checkOrPut("class_subtitle_item") {
+            findSubtitleItemClass()
         }
 
         Log.d(mHookInfo.filterKeys { it != "map_ids" })
@@ -1188,6 +1195,20 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 it.type == TextView::class.java || it.type == downloadingActivityClass
             }.count() > 1
         }
+    }
+
+    private fun findVideoSubtitleClass(): String? {
+        val regex = "^com\\.bapis\\.bilibili\\.community\\.service\\.\\w+\\.\\w+\\.VideoSubtitle$".toRegex()
+        return classesList.filter {
+            it.matches(regex)
+        }.firstOrNull()
+    }
+
+    private fun findSubtitleItemClass(): String? {
+        val regex = "^com\\.bapis\\.bilibili\\.community\\.service\\.\\w+\\.\\w+\\.SubtitleItem$".toRegex()
+        return classesList.filter {
+            it.matches(regex)
+        }.firstOrNull()
     }
 
     private fun findDownloadThreadField() = downloadingActivityClass?.declaredFields?.firstOrNull {

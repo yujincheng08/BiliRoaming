@@ -1,11 +1,11 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 buildscript {
-    val kotlinVersion by extra ("1.6.10")
+    val kotlinVersion by extra("1.6.10")
     repositories {
         google()
         mavenCentral()
-        maven(url="https://storage.googleapis.com/r8-releases/raw")
+        maven(url = "https://storage.googleapis.com/r8-releases/raw")
     }
     dependencies {
         classpath("com.android.tools:r8:3.3.3-dev")
