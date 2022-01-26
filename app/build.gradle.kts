@@ -168,7 +168,7 @@ dependencies {
     implementation("com.google.protobuf:protobuf-javalite:3.19.1")
     compileOnly("com.google.protobuf:protoc:3.19.1")
     implementation("org.jetbrains.kotlin:kotlin-stdlib")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.0")
     implementation("androidx.documentfile:documentfile:1.0.1")
 }
 
