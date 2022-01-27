@@ -204,9 +204,11 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 Log.d("UUURL")
 Log.d(url)
 Log.d(body.javaClass)
+Log.d("UUURL.0")
                 if (url?.startsWith("https://api.bilibili.com/pgc/view/v2/app/season") == true &&
                     body.javaClass == instance.okioWrapperClass
                 ) {
+Log.d("UUURL.1")
                     val okioBuffer = body.getObjectField(instance.okio())
                     val json =
                         okioBuffer?.callMethodAs<InputStream?>(instance.okioInputStream())?.use {
@@ -218,6 +220,7 @@ Log.d(body.javaClass)
                             )
                             put("code", 0)
                         }
+Log.d("UUURL.1.5")
                     val newStream = json?.toString()?.byteInputStream()
                     body.setObjectField(
                         instance.okio(),
@@ -226,6 +229,7 @@ Log.d(body.javaClass)
                         })
                     body.setLongField(instance.okioLength(), newStream?.available()?.toLong() ?: 0L)
                 }
+Log.d("UUURL.2")
                 // Filter non-bangumi responses
                 // If it isn't bangumi, the type variable will not exist in this map
                 if (instance.bangumiApiResponseClass?.isInstance(body) == true ||
@@ -234,6 +238,7 @@ Log.d(body.javaClass)
                 ) {
                     fixBangumi(body, url)
                 }
+Log.d("UUURL.3")
                 if (url != null && url.startsWith("https://appintl.biliapi.net/intl/gateway/app/search/type")
                 ) {
                     val area = Uri.parse(url).getQueryParameter("type")?.toInt()
