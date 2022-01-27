@@ -613,14 +613,11 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         return needUpdate
     }
 
-    private fun findBangumiUniformSeason() =
-        "com.bilibili.bangumi.data.page.detail.entity.BangumiUniformSeason".findClassOrNull(
-            mClassLoader
-        )?.name ?: classesList.filter {
-            it.startsWith("com.bilibili.bangumi.data.page.detail.entity")
-        }.firstOrNull { c ->
-            c.findClass(mClassLoader).declaredClasses.size >= 20
-        }
+    private fun findBangumiUniformSeason() = classesList.filter {
+        it.startsWith("com.bilibili.bangumi.data.page.detail.entity")
+    }.firstOrNull { c ->
+        c.findClass(mClassLoader).declaredClasses.size >= 20
+    }
 
     private fun findCommentSpan() =
         "com.bilibili.app.comm.comment2.widget.CommentExpandableTextView".findClassOrNull(
