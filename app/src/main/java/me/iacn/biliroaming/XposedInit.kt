@@ -68,7 +68,7 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                         val scope = MainScope()
                         scope.launch {
                             country =
-                                when (fetchJson(SpeedTestDialog.infoUrl)?.optJSONObject("data")?.optString("country")) {
+                                when (fetchJson(Constant.infoUrl)?.optJSONObject("data")?.optString("country")) {
                                     "中国" -> "cn"
                                     "香港" -> "hk"
                                     "台湾" -> "tw"

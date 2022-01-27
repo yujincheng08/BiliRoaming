@@ -20,7 +20,6 @@ import me.iacn.biliroaming.Constant.HOST_REGEX
 import me.iacn.biliroaming.XposedInit.Companion.moduleRes
 import me.iacn.biliroaming.network.BiliRoamingApi.getPlayUrl
 import me.iacn.biliroaming.utils.Log
-import me.iacn.biliroaming.utils.fetchJson
 import me.iacn.biliroaming.utils.sPrefs
 import me.iacn.biliroaming.utils.toJSONObject
 import java.net.URL
@@ -80,7 +79,6 @@ class SpeedTestDialog(private val pref: ListPreference, activity: Activity) :
             "cid=120453316&ep_id=285145&otype=json&fnval=16&module=pgc&platform=android"
         const val overseaParams =
             "cid=13073143&ep_id=100615&otype=json&fnval=16&module=pgc&platform=android"
-        const val infoUrl = "https://api.bilibili.com/client_info"
     }
 
     private val view = ListView(activity)
@@ -169,8 +167,7 @@ class SpeedTestDialog(private val pref: ListPreference, activity: Activity) :
     }
 
     private suspend fun getTestUrl() = withContext(Dispatchers.Default) {
-        val country = fetchJson(infoUrl)?.optJSONObject("data")?.optString("country")
-        val json = if (country == "中国") getPlayUrl(mainlandParams, arrayOf("hk", "tw"))
+        val json = if (XposedInit.country == "cn") getPlayUrl(mainlandParams, arrayOf("hk", "tw"))
         else getPlayUrl(overseaParams, arrayOf("cn"))
         json?.toJSONObject()?.optJSONObject("dash")?.getJSONArray("audio")?.run {
             (0 until length()).map { idx -> optJSONObject(idx) }
