@@ -13,6 +13,7 @@ import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.Constant.TYPE_EPISODE_ID
 import me.iacn.biliroaming.Constant.TYPE_SEASON_ID
 import me.iacn.biliroaming.Protos
+import me.iacn.biliroaming.XposedInit
 import me.iacn.biliroaming.network.BiliRoamingApi
 import me.iacn.biliroaming.network.BiliRoamingApi.getAreaSearchBangumi
 import me.iacn.biliroaming.network.BiliRoamingApi.getContent
@@ -424,6 +425,9 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             ) || sPrefs.getBoolean("search_area_movie", false))
         ) {
             for (area in AREA_TYPES) {
+                if (XposedInit.country == area.value.area) {
+                    continue
+                }
                 if (!sPrefs.getString(area.value.area + "_server", null).isNullOrBlank() &&
                     sPrefs.getBoolean("search_area_" + area.value.type_str, false)
                 ) {
