@@ -201,6 +201,9 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             instance.retrofitResponseClass?.hookBeforeAllConstructors { param ->
                 val url = getUrl(param.args[0])
                 val body = param.args[1] ?: return@hookBeforeAllConstructors
+Log.d("UUURL")
+Log.d(url)
+Log.d(body.javaClass)
                 if (url?.startsWith("https://api.bilibili.com/pgc/view/v2/app/season") == true &&
                     body.javaClass == instance.okioWrapperClass
                 ) {
