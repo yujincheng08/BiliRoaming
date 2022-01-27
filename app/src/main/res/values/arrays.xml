@@ -64,6 +64,7 @@
     </string-array>
     <string-array name="home_recommend_entries">
         <item>广告</item>
+        <item>游戏</item>
         <item>横幅(轮播图)</item>
         <item>通知(追番更新、活动提示)</item>
         <item>文章</item>
@@ -78,6 +79,7 @@
     </string-array>
     <string-array name="home_recommend_values">
         <item>advertisement</item>
+        <item>game</item>
         <item>banner</item>
         <item>notify</item>
         <item>article</item>

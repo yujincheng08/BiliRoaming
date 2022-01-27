@@ -38,6 +38,7 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         "advertisement" to arrayListOf("ad"),
         "article" to arrayListOf("article"),
         "bangumi" to arrayListOf("bangumi", "special"),
+        "game" to arrayListOf("game"),
         "picture" to arrayListOf("picture"),
         "vertical" to arrayListOf("vertical"),
         "banner" to arrayListOf("banner"),
@@ -61,15 +62,19 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     private fun toLong(str: String): Long {
-        return when {
-            str.isNum() ->
-                return str.toDouble().toLong()
-            str.contains("万") ->
-                (str.replace("万", "").toDouble() * 10_000).toLong()
-            str.contains("亿") ->
-                (str.replace("亿", "").toDouble() * 100_000_000).toLong()
-            else ->
-                -1L
+        return try {
+            when {
+                str.isNum() ->
+                    return str.toDouble().toLong()
+                str.contains("万") ->
+                    (str.replace("万", "").toDouble() * 10_000).toLong()
+                str.contains("亿") ->
+                    (str.replace("亿", "").toDouble() * 100_000_000).toLong()
+                else ->
+                    -1L
+            }
+        } catch (e: Throwable) {
+            -1
         }
     }
 
