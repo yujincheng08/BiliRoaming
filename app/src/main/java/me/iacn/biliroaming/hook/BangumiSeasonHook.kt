@@ -227,7 +227,9 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 // If it isn't bangumi, the type variable will not exist in this map
                 if (instance.bangumiApiResponseClass?.isInstance(body) == true ||
                     // for new blue 6.3.7
-                    instance.rxGeneralResponseClass?.isInstance(body) == true
+                    instance.rxGeneralResponseClass?.isInstance(body) == true &&
+                    (url?.startsWith("https://app.bilibili.com/x/v2/search/type") == false &&
+                     url?.startsWith("https://appintl.biliapi.net/intl/gateway/app/search/type") == false)
                 ) {
                     fixBangumi(body, url)
                 }
