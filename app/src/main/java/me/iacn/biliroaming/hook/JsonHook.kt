@@ -135,8 +135,7 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         }
                         val hasMovieTW = tab?.fold(false) { acc, it ->
                             val uri = it.getObjectFieldAs<String>("uri")
-                            acc || uri.startsWith("bilibili://pegasus/op/70465")
-                                    || uri.startsWith("bilibili://following/home_activity_tab/165373")
+                            acc || uri.startsWith("bilibili://following/home_activity_tab/168644")
                         }
                         // 添加大陆影视分页
                         if (hasMovieCN != null && !hasMovieCN) {
@@ -159,12 +158,12 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             if (hasMovieCN != null && !hasMovieCN && platform != "android_b") {
                                 val movieTW = tabClass?.new()
                                     ?.setObjectField("tabId", "40")
-                                    ?.setObjectField("name", "影劇")
+                                    ?.setObjectField("name", "戲劇")
                                     ?.setObjectField(
                                         "uri",
-                                        "bilibili://following/home_activity_tab/165373"
+                                        "bilibili://following/home_activity_tab/168644"
                                     )
-                                    ?.setObjectField("reportId", "港澳台影视tab")
+                                    ?.setObjectField("reportId", "jptv")
                                     ?.setIntField("pos", 40)
                                 movieTW?.let { l ->
                                     tab.forEach {
@@ -175,12 +174,12 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             } else {
                                 val movieTW = tabClass?.new()
                                     ?.setObjectField("tabId", "80")
-                                    ?.setObjectField("name", "影剧（港澳台）")
+                                    ?.setObjectField("name", "戏剧（港澳台）")
                                     ?.setObjectField(
                                         "uri",
-                                        "bilibili://following/home_activity_tab/165373"
+                                        "bilibili://following/home_activity_tab/168644"
                                     )
-                                    ?.setObjectField("reportId", "港澳台影视tab")
+                                    ?.setObjectField("reportId", "jptv")
                                     ?.setIntField("pos", 80)
                                 movieTW?.let { l ->
                                     tab.forEach {
@@ -207,7 +206,7 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                     this == "bilibili://pgc/home" || this == "bilibili://following/home_activity_tab/6544" -> purifytabset.contains(
                                         "bangumi"
                                     )
-                                    this == "bilibili://pgc/home?home_flow_type=2" || this == "bilibili://following/home_activity_tab/165373" -> purifytabset.contains(
+                                    this == "bilibili://pgc/home?home_flow_type=2" || this == "bilibili://following/home_activity_tab/168644" -> purifytabset.contains(
                                         "movie"
                                     )
                                     startsWith("bilibili://pegasus/op/") || startsWith("bilibili://following/home_activity_tab") -> purifytabset.contains(
