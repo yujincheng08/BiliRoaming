@@ -96,7 +96,7 @@ android {
 
 
     lint {
-        isCheckReleaseBuilds = false
+        checkReleaseBuilds = false
     }
 
     dependenciesInfo {
@@ -167,7 +167,7 @@ dependencies {
     compileOnly("de.robv.android.xposed:api:82")
     implementation("com.google.protobuf:protobuf-javalite:3.19.1")
     compileOnly("com.google.protobuf:protoc:3.19.1")
-    implementation("org.jetbrains.kotlin:kotlin-stdlib")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:${rootProject.extra["kotlinVersion"]}")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.2")
     implementation("androidx.documentfile:documentfile:1.0.1")
 }

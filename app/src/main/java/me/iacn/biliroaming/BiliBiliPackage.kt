@@ -41,9 +41,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     }
     val fastJsonClass by Weak { mHookInfo["class_fastjson"]?.findClassOrNull(mClassLoader) }
     val bangumiUniformSeasonClass by Weak {
-        "com.bilibili.bangumi.data.page.detail.entity.BangumiUniformSeason".findClass(
-            mClassLoader
-        )
+        mHookInfo["class_bangumi_uniform_season"]?.findClass(mClassLoader)
     }
     val sectionClass by Weak { mHookInfo["class_section"]?.findClassOrNull(mClassLoader) }
     val partySectionClass by Weak { mHookInfo["class_party_section"]?.findClassOrNull(mClassLoader) }
@@ -216,7 +214,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         )
     }
     val commentSpanEllipsisTextViewClass by Weak {
-        "com.bilibili.app.comm.comment2.widget.CommentSpanEllipsisTextView".findClassOrNull(mClassLoader)
+        "com.bilibili.app.comm.comment2.widget.CommentSpanEllipsisTextView".findClassOrNull(
+            mClassLoader
+        )
     }
     val liveRoomActivityClass by Weak {
         "com.bilibili.bililive.room.ui.roomv3.LiveRoomActivityV3".findClassOrNull(mClassLoader)
@@ -604,12 +604,23 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             findDynamicDescHolderListener()
         }.checkConjunctiveOrPut("classes_desc_copy_view", "method_desc_copy") {
             findDescCopyView()
+        }.checkOrPut("class_bangumi_uniform_season") {
+            findBangumiUniformSeason()
         }
 
         Log.d(mHookInfo.filterKeys { it != "map_ids" })
         Log.d("Check hook info completed: needUpdate = $needUpdate")
         return needUpdate
     }
+
+    private fun findBangumiUniformSeason() =
+        "com.bilibili.bangumi.data.page.detail.entity.BangumiUniformSeason".findClassOrNull(
+            mClassLoader
+        )?.name ?: classesList.filter {
+            it.startsWith("com.bilibili.bangumi.data.page.detail.entity")
+        }.firstOrNull { c ->
+            c.findClass(mClassLoader).declaredClasses.size >= 20
+        }
 
     private fun findCommentSpan() =
         "com.bilibili.app.comm.comment2.widget.CommentExpandableTextView".findClassOrNull(
