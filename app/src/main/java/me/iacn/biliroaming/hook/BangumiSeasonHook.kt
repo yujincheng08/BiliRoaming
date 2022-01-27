@@ -241,22 +241,31 @@ Log.d(body.javaClass)
                         fixPlaySearchType(body, url)
                     }
                 }
+Log.d("ASDF.0")
                 if (instance.generalResponseClass?.isInstance(body) == true ||
                     instance.rxGeneralResponseClass?.isInstance(body) == true
                 ) {
+Log.d("ASDF.1")
                     val dataField =
                         if (instance.generalResponseClass?.isInstance(body) == true) "data" else instance.responseDataField().value
+Log.d("ASDF.2")
                     val data = body.getObjectField(dataField)
+Log.d("ASDF.3")
                     if (data?.javaClass == searchAllResultClass) {
                         addAreaTags(data)
                     }
+Log.d("ASDF.4")
                     url ?: return@hookBeforeAllConstructors
+Log.d("ASDF.5")
                     if (data?.javaClass == bangumiSearchPageClass &&
                         (url.startsWith("https://app.bilibili.com/x/v2/search/type") ||
                                 url.startsWith("https://appintl.biliapi.net/intl/gateway/app/search/type"))
                     ) {
+Log.d("ASDF.6")
                         val area = Uri.parse(url).getQueryParameter("type")?.toInt()
+Log.d("ASDF.7")
                         if (AREA_TYPES.containsKey(area)) {
+Log.d("ASDF.8")
                             body.setObjectField(dataField,
                                 AREA_TYPES[area]?.let {
                                     retrieveAreaSearch(
