@@ -236,7 +236,7 @@ Log.d("UUURL.2")
                     // for new blue 6.3.7
                     instance.rxGeneralResponseClass?.isInstance(body) == true &&
 (!url.startsWith("https://app.bilibili.com/x/v2/search/type") &&
-                                !url.startsWith("https://appintl.biliapi.net/intl/gateway/app/search/type")
+                                !url.startsWith("https://appintl.biliapi.net/intl/gateway/app/search/type"))
                 ) {
                     fixBangumi(body, url)
                 }
