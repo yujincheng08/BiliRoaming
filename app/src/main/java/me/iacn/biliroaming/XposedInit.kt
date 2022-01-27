@@ -70,7 +70,7 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                             country =
                                 when (fetchJson(Constant.infoUrl)?.optJSONObject("data")?.optString("country")) {
                                     "中国" -> "cn"
-                                    "香港" -> "hk"
+                                    "香港", "澳门" -> "hk"
                                     "台湾" -> "tw"
                                     else -> "global"
                                 }
