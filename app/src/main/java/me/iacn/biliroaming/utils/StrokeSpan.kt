@@ -5,7 +5,11 @@ import android.graphics.Paint
 import android.text.TextPaint
 import android.text.style.ReplacementSpan
 
-class StrokeSpan(private val fillColor: Int, private val strokeColor: Int, private val strokeWidth: Float) : ReplacementSpan() {
+class StrokeSpan(
+    private val fillColor: Int,
+    private val strokeColor: Int,
+    private val strokeWidth: Float
+) : ReplacementSpan() {
     private fun fillPaint(paint: Paint): TextPaint =
         TextPaint(paint).apply {
             style = Paint.Style.FILL

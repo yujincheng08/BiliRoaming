@@ -198,7 +198,10 @@ object BiliRoamingApi {
     @JvmStatic
     private fun fixHiddenSeason(result: JSONObject) {
         for (episode in result.optJSONArray("episodes").orEmpty()) {
-            episode.put("link", "https://www.bilibili.com/bangumi/play/ep${episode.optString("ep_id")}")
+            episode.put(
+                "link",
+                "https://www.bilibili.com/bangumi/play/ep${episode.optString("ep_id")}"
+            )
             episode.put("long_title", episode.optString("indexTitle"))
             episode.put("id", episode.optString("ep_id"))
             episode.put("title", episode.optString("index"))
@@ -373,7 +376,7 @@ object BiliRoamingApi {
         )
     }
 
-    class CustomServerException(val errors: Map<String, String>): Throwable()
+    class CustomServerException(val errors: Map<String, String>) : Throwable()
 
     @JvmStatic
     private fun getFromCustomUrl(queryString: String?, priorityArea: Array<String>?): String? {

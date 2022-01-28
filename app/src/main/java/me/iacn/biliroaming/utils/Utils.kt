@@ -18,7 +18,6 @@ import java.lang.ref.WeakReference
 import java.math.BigInteger
 import java.net.URL
 import java.util.*
-import kotlin.collections.HashMap
 import kotlin.reflect.KProperty
 
 class Weak(val initializer: () -> Class<*>?) {

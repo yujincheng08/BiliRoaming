@@ -93,39 +93,40 @@ class SSLHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             param.result = SSLSocketFactory::class.java.new()
         }
 
-        "org.apache.http.conn.ssl.SSLSocketFactory".findClassOrNull(mClassLoader)?.hookAfterConstructor(
-            String::class.java,
-            KeyStore::class.java,
-            String::class.java,
-            KeyStore::class.java,
-            SecureRandom::class.java,
-            HostNameResolver::class.java
-        ) { param ->
-            val algorithm = param.args[0] as? String
-            val keystore = param.args[1] as? KeyStore
-            val keystorePassword = param.args[2] as? String
-            val random = param.args[4] as? SecureRandom
+        "org.apache.http.conn.ssl.SSLSocketFactory".findClassOrNull(mClassLoader)
+            ?.hookAfterConstructor(
+                String::class.java,
+                KeyStore::class.java,
+                String::class.java,
+                KeyStore::class.java,
+                SecureRandom::class.java,
+                HostNameResolver::class.java
+            ) { param ->
+                val algorithm = param.args[0] as? String
+                val keystore = param.args[1] as? KeyStore
+                val keystorePassword = param.args[2] as? String
+                val random = param.args[4] as? SecureRandom
 
-            @Suppress("UNCHECKED_CAST") val trustManagers =
-                emptyTrustManagers as Array<TrustManager>
+                @Suppress("UNCHECKED_CAST") val trustManagers =
+                    emptyTrustManagers as Array<TrustManager>
 
-            val keyManagers = keystore?.let {
-                SSLSocketFactory::class.java.callStaticMethodAs<Array<KeyManager>>(
-                    "createKeyManagers",
-                    keystore,
-                    keystorePassword
+                val keyManagers = keystore?.let {
+                    SSLSocketFactory::class.java.callStaticMethodAs<Array<KeyManager>>(
+                        "createKeyManagers",
+                        keystore,
+                        keystorePassword
+                    )
+                }
+
+
+                param.thisObject.setObjectField("sslcontext", SSLContext.getInstance(algorithm))
+                param.thisObject.getObjectField("sslcontext")
+                    ?.callMethod("init", keyManagers, trustManagers, random)
+                param.thisObject.setObjectField(
+                    "socketfactory",
+                    param.thisObject.getObjectField("sslcontext")?.callMethod("getSocketFactory")
                 )
             }
-
-
-            param.thisObject.setObjectField("sslcontext", SSLContext.getInstance(algorithm))
-            param.thisObject.getObjectField("sslcontext")
-                ?.callMethod("init", keyManagers, trustManagers, random)
-            param.thisObject.setObjectField(
-                "socketfactory",
-                param.thisObject.getObjectField("sslcontext")?.callMethod("getSocketFactory")
-            )
-        }
 
         "org.apache.http.conn.ssl.SSLSocketFactory".hookAfterMethod(
             mClassLoader,

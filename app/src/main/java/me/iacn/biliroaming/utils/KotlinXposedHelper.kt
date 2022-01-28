@@ -438,7 +438,7 @@ fun Any.getFirstFieldByExactType(type: Class<*>): Any? =
 fun <T> Any.getFirstFieldByExactTypeAs(type: Class<*>) =
     javaClass.findFirstFieldByExactType(type).get(this) as? T
 
-inline fun <reified T:Any> Any.getFirstFieldByExactType() =
+inline fun <reified T : Any> Any.getFirstFieldByExactType() =
     javaClass.findFirstFieldByExactType(T::class.java).get(this) as? T
 
 fun Any.getFirstFieldByExactTypeOrNull(type: Class<*>?): Any? = runCatchingOrNull {

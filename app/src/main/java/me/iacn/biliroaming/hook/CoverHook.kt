@@ -54,11 +54,14 @@ class CoverHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                     viewModelField?.type?.declaredMethods?.lastOrNull { it.returnType.name == "com.bilibili.bangumi.data.page.detail.entity.BangumiUniformEpisode" }
                                 val episode =
                                     getObjectField(viewModelField?.name)?.callMethod(episodeMethod?.name)
-                                val hasGson = episode?.javaClass?.annotations?.fold(false) { last, it ->
-                                    last || it.annotationClass.java.name.startsWith("gsonannotator")
-                                } ?: false && instance.gsonFromJson() != null && instance.gsonToJson() != null
+                                val hasGson =
+                                    episode?.javaClass?.annotations?.fold(false) { last, it ->
+                                        last || it.annotationClass.java.name.startsWith("gsonannotator")
+                                    } ?: false && instance.gsonFromJson() != null && instance.gsonToJson() != null
                                 if (hasGson) {
-                                    val json = gson?.callMethodAs<String>(instance.gsonToJson(), episode)?.toJSONObject()
+                                    val json =
+                                        gson?.callMethodAs<String>(instance.gsonToJson(), episode)
+                                            ?.toJSONObject()
                                     url = json?.optString("cover")
                                     filename = "ep${json?.optInt("id")}"
                                     title = json?.optString("share_copy")
@@ -103,10 +106,11 @@ class CoverHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                 activity.getObjectField(viewModelField?.name)
                                     ?.getObjectField(roomFeedField?.name)
                                     ?.getObjectField(currentFeedField?.name)?.run {
-                                    url = getObjectFieldAs(coverField?.name)
-                                    filename = "live${getObjectField(roomIdField?.name).toString()}"
-                                    title = getObjectFieldAs(titleField?.name)
-                                }
+                                        url = getObjectFieldAs(coverField?.name)
+                                        filename =
+                                            "live${getObjectField(roomIdField?.name).toString()}"
+                                        title = getObjectFieldAs(titleField?.name)
+                                    }
                             }
                         }
                     } catch (e: Throwable) {

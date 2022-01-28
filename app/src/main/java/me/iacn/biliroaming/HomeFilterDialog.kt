@@ -9,7 +9,8 @@ import android.widget.EditText
 import me.iacn.biliroaming.XposedInit.Companion.moduleRes
 import me.iacn.biliroaming.utils.Log
 
-class HomeFilterDialog(val activity: Activity,prefs: SharedPreferences) : AlertDialog.Builder(activity)  {
+class HomeFilterDialog(val activity: Activity, prefs: SharedPreferences) :
+    AlertDialog.Builder(activity) {
     init {
         val layout = moduleRes.getLayout(R.layout.home_filter_dialog)
         val inflater = LayoutInflater.from(context)
