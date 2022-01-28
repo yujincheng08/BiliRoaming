@@ -20,11 +20,11 @@ import me.iacn.biliroaming.Constant.HOST_REGEX
 import me.iacn.biliroaming.XposedInit.Companion.moduleRes
 import me.iacn.biliroaming.network.BiliRoamingApi.getPlayUrl
 import me.iacn.biliroaming.utils.Log
-import me.iacn.biliroaming.utils.fetchJson
 import me.iacn.biliroaming.utils.sPrefs
 import me.iacn.biliroaming.utils.toJSONObject
 import java.net.URL
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 class SpeedTestResult(val name: String, val value: String?, var speed: String)
 
@@ -80,7 +80,6 @@ class SpeedTestDialog(private val pref: ListPreference, activity: Activity) :
             "cid=120453316&ep_id=285145&otype=json&fnval=16&module=pgc&platform=android"
         const val overseaParams =
             "cid=13073143&ep_id=100615&otype=json&fnval=16&module=pgc&platform=android"
-        const val infoUrl = "https://api.bilibili.com/client_info"
     }
 
     private val view = ListView(activity)
@@ -127,15 +126,15 @@ class SpeedTestDialog(private val pref: ListPreference, activity: Activity) :
             }
             moduleRes.getStringArray(R.array.upos_entries)
                 .zip(moduleRes.getStringArray(R.array.upos_values)).asFlow().map {
-                scope.launch {
-                    val item = SpeedTestResult(it.first, it.second, "...")
-                    adapter.add(item)
-                    adapter.sort()
-                    val speed = speedTest(it.second, url)
-                    item.speed = speed.toString()
-                    adapter.sort()
-                }
-            }.toList().joinAll()
+                    scope.launch {
+                        val item = SpeedTestResult(it.first, it.second, "...")
+                        adapter.add(item)
+                        adapter.sort()
+                        val speed = speedTest(it.second, url)
+                        item.speed = speed.toString()
+                        adapter.sort()
+                    }
+                }.toList().joinAll()
             dialog.setTitle("测速完成")
         }
         return dialog
@@ -168,11 +167,14 @@ class SpeedTestDialog(private val pref: ListPreference, activity: Activity) :
         0L
     }
 
-    private suspend fun getTestUrl() = withContext(Dispatchers.Default) {
-        val country = fetchJson(infoUrl)?.optJSONObject("data")?.optString("country")
-        val json = if (country == "中国") getPlayUrl(mainlandParams, arrayOf("hk", "tw"))
-        else getPlayUrl(overseaParams, arrayOf("cn"))
-        json?.toJSONObject()?.optJSONObject("dash")?.getJSONArray("audio")?.run {
+    private fun getTestUrl(): String? {
+        val json =
+            if (XposedInit.country.get(5L, TimeUnit.SECONDS) == "cn") getPlayUrl(
+                mainlandParams,
+                arrayOf("hk", "tw")
+            )
+            else getPlayUrl(overseaParams, arrayOf("cn"))
+        return json?.toJSONObject()?.optJSONObject("dash")?.getJSONArray("audio")?.run {
             (0 until length()).map { idx -> optJSONObject(idx) }
         }?.minWithOrNull { a, b -> a.optInt("bandwidth") - b.optInt("bandwidth") }
             ?.optString("base_url")?.replace("https", "http")

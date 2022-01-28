@@ -169,6 +169,7 @@ dependencies {
     compileOnly("com.google.protobuf:protoc:3.19.1")
     implementation("org.jetbrains.kotlin:kotlin-stdlib:${rootProject.extra["kotlinVersion"]}")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.5.2")
     implementation("androidx.documentfile:documentfile:1.0.1")
 }
 
