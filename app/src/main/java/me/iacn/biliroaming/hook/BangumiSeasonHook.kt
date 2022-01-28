@@ -1,6 +1,9 @@
 package me.iacn.biliroaming.hook
 
 import android.annotation.SuppressLint
+import android.app.Activity
+import android.app.AlertDialog
+import android.content.res.Configuration
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Build
@@ -193,6 +196,16 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
         }
 
+        "com.bilibili.bangumi.ui.page.detail.BangumiDetailActivityV3".hookAfterMethod(
+            mClassLoader, "onCreate", Bundle::class.java
+        ) {
+            setErrorMessage(it.thisObject as Activity)
+        }
+        "com.bilibili.bangumi.ui.page.detail.BangumiDetailActivityV3".hookAfterMethod(
+            mClassLoader, "onConfigurationChanged", Configuration::class.java
+        ) {
+            setErrorMessage(it.thisObject as Activity)
+        }
 
         if (isBuiltIn && is64 && Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
             Log.e("Not support")
@@ -743,4 +756,33 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         return request?.getObjectField(urlField)?.toString()
     }
 
+    private fun setErrorMessage(activity: Activity) {
+        val job = MainScope().launch {
+            val id = getId("tv_desc")
+            while (true) {
+                if (activity.isDestroyed) break
+                val tvDesc = activity.findViewById<TextView>(id)
+                if (tvDesc == null) {
+                    delay(500)
+                    continue
+                }
+                tvDesc.maxLines = Int.MAX_VALUE
+                (tvDesc.parent as View).setOnClickListener {
+                    val lines = tvDesc.text.lines()
+                    val title = lines[0]
+                    val message = lines.subList(1, lines.size).fold(StringBuilder()) { sb, line -> sb.appendLine(line) }
+                    AlertDialog.Builder(tvDesc.context)
+                        .setTitle(title)
+                        .setMessage(message)
+                        .setPositiveButton(android.R.string.ok, null)
+                        .show()
+                }
+                break
+            }
+        }
+        MainScope().launch {
+            delay(15_000)
+            job.cancel()
+        }
+    }
 }
