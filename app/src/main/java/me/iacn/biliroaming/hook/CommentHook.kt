@@ -42,7 +42,6 @@ class CommentHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             val dyCardTextId = getId("dy_card_text")
             (param.args[0] as? View)?.findViewById<TextView>(dyCardTextId)?.let {
                 if (instance.ellipsizingTextViewClass?.isInstance(it) == true) it else null
-
             }?.let { view ->
                 view.getFirstFieldByExactTypeOrNull<CharSequence>()?.also { text ->
                     showCopyDialog(view.context, text, param)
