@@ -12,6 +12,7 @@ import de.robv.android.xposed.IXposedHookZygoteInit
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam
 import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import me.iacn.biliroaming.hook.*
 import me.iacn.biliroaming.utils.*
@@ -65,16 +66,20 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                     )
 
                     if (country.isNullOrEmpty()) {
-                        val scope = MainScope()
-                        scope.launch {
+                        val job = MainScope().launch {
                             country =
-                                when (fetchJson(Constant.infoUrl)?.optJSONObject("data")?.optString("country")) {
+                                when (fetchJson(Constant.infoUrl)?.optJSONObject("data")
+                                    ?.optString("country")) {
                                     "中国" -> "cn"
                                     "香港", "澳门" -> "hk"
                                     "台湾" -> "tw"
                                     else -> "global"
                                 }
                             Log.d("当前地区: $country")
+                        }
+                        MainScope().launch {
+                            delay(15000L)
+                            job.cancel()
                         }
                     }
 
@@ -146,13 +151,15 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
     private fun startLog() = try {
         logFile.delete()
         logFile.createNewFile()
-        Runtime.getRuntime().exec(arrayOf(
-            "logcat",
-            "-T",
-            "100",
-            "-f",
-            logFile.absolutePath
-        ))
+        Runtime.getRuntime().exec(
+            arrayOf(
+                "logcat",
+                "-T",
+                "100",
+                "-f",
+                logFile.absolutePath
+            )
+        )
     } catch (e: Throwable) {
         Log.e(e)
         null
