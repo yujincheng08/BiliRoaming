@@ -24,6 +24,7 @@ import me.iacn.biliroaming.utils.sPrefs
 import me.iacn.biliroaming.utils.toJSONObject
 import java.net.URL
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 class SpeedTestResult(val name: String, val value: String?, var speed: String)
 
@@ -119,23 +120,21 @@ class SpeedTestDialog(private val pref: ListPreference, activity: Activity) :
         val dialog = super.show()
         scope.launch {
             dialog.setTitle("正在测速……")
-            val url: String = try {
-                getTestUrl()
-            } catch (t: Throwable) {
+            val url = getTestUrl() ?: run {
                 dialog.setTitle("测速失败")
                 return@launch
             }
             moduleRes.getStringArray(R.array.upos_entries)
                 .zip(moduleRes.getStringArray(R.array.upos_values)).asFlow().map {
-                scope.launch {
-                    val item = SpeedTestResult(it.first, it.second, "...")
-                    adapter.add(item)
-                    adapter.sort()
-                    val speed = speedTest(it.second, url)
-                    item.speed = speed.toString()
-                    adapter.sort()
-                }
-            }.toList().joinAll()
+                    scope.launch {
+                        val item = SpeedTestResult(it.first, it.second, "...")
+                        adapter.add(item)
+                        adapter.sort()
+                        val speed = speedTest(it.second, url)
+                        item.speed = speed.toString()
+                        adapter.sort()
+                    }
+                }.toList().joinAll()
             dialog.setTitle("测速完成")
         }
         return dialog
@@ -168,13 +167,16 @@ class SpeedTestDialog(private val pref: ListPreference, activity: Activity) :
         0L
     }
 
-    private fun getTestUrl(): String {
+    private fun getTestUrl(): String? {
         val json =
-            if (XposedInit.country.get() == "cn") getPlayUrl(mainlandParams, arrayOf("hk", "tw"))
+            if (XposedInit.country.get(5L, TimeUnit.SECONDS) == "cn") getPlayUrl(
+                mainlandParams,
+                arrayOf("hk", "tw")
+            )
             else getPlayUrl(overseaParams, arrayOf("cn"))
         return json?.toJSONObject()?.optJSONObject("dash")?.getJSONArray("audio")?.run {
             (0 until length()).map { idx -> optJSONObject(idx) }
         }?.minWithOrNull { a, b -> a.optInt("bandwidth") - b.optInt("bandwidth") }
-            ?.optString("base_url")?.replace("https", "http") ?: throw Throwable()
+            ?.optString("base_url")?.replace("https", "http")
     }
 }

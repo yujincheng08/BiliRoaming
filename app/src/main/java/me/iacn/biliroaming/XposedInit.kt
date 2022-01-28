@@ -67,16 +67,13 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                     )
 
                     country = MainScope().future(Dispatchers.IO) {
-                        val c =
-                            when (fetchJson(Constant.infoUrl)?.optJSONObject("data")
-                                ?.optString("country")) {
-                                "中国" -> "cn"
-                                "香港", "澳门" -> "hk"
-                                "台湾" -> "tw"
-                                else -> "global"
-                            }
-                        Log.d("当前地区: $c")
-                        c
+                        when (fetchJson(Constant.infoUrl)?.optJSONObject("data")
+                            ?.optString("country")) {
+                            "中国" -> "cn"
+                            "香港", "澳门" -> "hk"
+                            "台湾" -> "tw"
+                            else -> "global"
+                        }.also { Log.d("当前地区: $it") }
                     }
 
                     BiliBiliPackage(lpparam.classLoader, param.args[0] as Context)
