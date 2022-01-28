@@ -11,11 +11,12 @@ import de.robv.android.xposed.IXposedHookLoadPackage
 import de.robv.android.xposed.IXposedHookZygoteInit
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.future.future
 import me.iacn.biliroaming.hook.*
 import me.iacn.biliroaming.utils.*
+import java.util.concurrent.CompletableFuture
 
 
 /**
@@ -65,22 +66,17 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                         }\n请勿在B站任何地方宣传漫游。\n漫游插件开源免费，谨防被骗。"
                     )
 
-                    if (country.isNullOrEmpty()) {
-                        val job = MainScope().launch {
-                            country =
-                                when (fetchJson(Constant.infoUrl)?.optJSONObject("data")
-                                    ?.optString("country")) {
-                                    "中国" -> "cn"
-                                    "香港", "澳门" -> "hk"
-                                    "台湾" -> "tw"
-                                    else -> "global"
-                                }
-                            Log.d("当前地区: $country")
-                        }
-                        MainScope().launch {
-                            delay(15000L)
-                            job.cancel()
-                        }
+                    country = MainScope().future(Dispatchers.IO) {
+                        val c =
+                            when (fetchJson(Constant.infoUrl)?.optJSONObject("data")
+                                ?.optString("country")) {
+                                "中国" -> "cn"
+                                "香港", "澳门" -> "hk"
+                                "台湾" -> "tw"
+                                else -> "global"
+                            }
+                        Log.d("当前地区: $c")
+                        c
                     }
 
                     BiliBiliPackage(lpparam.classLoader, param.args[0] as Context)
@@ -168,7 +164,7 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
     companion object {
         lateinit var modulePath: String
         lateinit var moduleRes: Resources
-        var country: String? = null
+        lateinit var country: CompletableFuture<String>
 
         private val hookers = ArrayList<BaseHook>()
         private var lateInitHook: XC_MethodHook.Unhook? = null

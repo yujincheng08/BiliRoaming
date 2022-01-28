@@ -388,7 +388,7 @@ object BiliRoamingApi {
         if (hostList.isEmpty())
         // reversely
             linkedMapOf("th" to thUrl, "tw" to twUrl, "cn" to cnUrl, "hk" to hkUrl).filterKeys {
-                it != XposedInit.country
+                it != XposedInit.country.get()
             }.filterValues {
                 it != null
             }.mapValuesTo(hostList) {

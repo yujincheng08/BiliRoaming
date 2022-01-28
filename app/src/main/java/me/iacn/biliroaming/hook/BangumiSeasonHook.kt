@@ -425,7 +425,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             ) || sPrefs.getBoolean("search_area_movie", false))
         ) {
             for (area in AREA_TYPES) {
-                if (XposedInit.country == area.value.area) {
+                if (XposedInit.country.get() == area.value.area) {
                     continue
                 }
                 if (!sPrefs.getString(area.value.area + "_server", null).isNullOrBlank() &&

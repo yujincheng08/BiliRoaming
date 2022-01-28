@@ -119,7 +119,9 @@ class SpeedTestDialog(private val pref: ListPreference, activity: Activity) :
         val dialog = super.show()
         scope.launch {
             dialog.setTitle("正在测速……")
-            val url = getTestUrl() ?: run {
+            val url: String = try {
+                getTestUrl()
+            } catch (t: Throwable) {
                 dialog.setTitle("测速失败")
                 return@launch
             }
@@ -166,12 +168,13 @@ class SpeedTestDialog(private val pref: ListPreference, activity: Activity) :
         0L
     }
 
-    private suspend fun getTestUrl() = withContext(Dispatchers.Default) {
-        val json = if (XposedInit.country == "cn") getPlayUrl(mainlandParams, arrayOf("hk", "tw"))
-        else getPlayUrl(overseaParams, arrayOf("cn"))
-        json?.toJSONObject()?.optJSONObject("dash")?.getJSONArray("audio")?.run {
+    private fun getTestUrl(): String {
+        val json =
+            if (XposedInit.country.get() == "cn") getPlayUrl(mainlandParams, arrayOf("hk", "tw"))
+            else getPlayUrl(overseaParams, arrayOf("cn"))
+        return json?.toJSONObject()?.optJSONObject("dash")?.getJSONArray("audio")?.run {
             (0 until length()).map { idx -> optJSONObject(idx) }
         }?.minWithOrNull { a, b -> a.optInt("bandwidth") - b.optInt("bandwidth") }
-            ?.optString("base_url")?.replace("https", "http")
+            ?.optString("base_url")?.replace("https", "http") ?: throw Throwable()
     }
 }
