@@ -5,7 +5,10 @@ import android.graphics.Color
 import android.graphics.Rect
 import android.graphics.Typeface
 import android.text.SpannableString
-import android.text.style.*
+import android.text.style.AbsoluteSizeSpan
+import android.text.style.LineBackgroundSpan
+import android.text.style.MaskFilterSpan
+import android.text.style.StyleSpan
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.utils.*
 import kotlin.math.roundToInt
@@ -46,7 +49,14 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             val fc = Color.parseColor("#$fontColor")
             val sc = Color.parseColor("#$strokeColor")
             if (fixBreak)
-                (start until end).forEach { i -> subtitle.setSpan(StrokeSpan(fc, sc, strokeWidth), i, i + 1, flags) }
+                (start until end).forEach { i ->
+                    subtitle.setSpan(
+                        StrokeSpan(fc, sc, strokeWidth),
+                        i,
+                        i + 1,
+                        flags
+                    )
+                }
             else
                 subtitle.setSpan(StrokeSpan(fc, sc, strokeWidth), start, end, flags)
             subtitle.setSpan(
@@ -75,7 +85,12 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 )
             }
             // should be drawn the last
-            subtitle.setSpan(backgroundSpan(Color.parseColor("#$bgColor"), fontSize), start, end, flags)
+            subtitle.setSpan(
+                backgroundSpan(Color.parseColor("#$bgColor"), fontSize),
+                start,
+                end,
+                flags
+            )
         }
     }
 
@@ -109,13 +124,13 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     this, start, end, flags,
                     sPrefs.getInt("subtitle_blur_solid", 1),
                     sPrefs.getString(
-                            "subtitle_font_color2",
-                            "FFFFFFFF"
+                        "subtitle_font_color2",
+                        "FFFFFFFF"
                     )!!,
                     sPrefs.getInt("subtitle_font_size", 30),
                     sPrefs.getString(
-                            "subtitle_background_color",
-                            "20000000"
+                        "subtitle_background_color",
+                        "20000000"
                     )!!,
                     sPrefs.getString("subtitle_stroke_color", "00000000")!!,
                     sPrefs.getFloat("subtitle_stroke_width", 0F),

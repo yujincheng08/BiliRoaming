@@ -31,7 +31,12 @@ class ARGBColorChooseDialog(context: Context, defColor: Int) : AlertDialog.Build
     private val tvColorG: TextView = view.findViewById(R.id.tv_colorG2)
     private val tvColorB: TextView = view.findViewById(R.id.tv_colorB2)
     val color: Int
-        get() = Color.argb(sbColorA.progress, sbColorR.progress, sbColorG.progress, sbColorB.progress)
+        get() = Color.argb(
+            sbColorA.progress,
+            sbColorR.progress,
+            sbColorG.progress,
+            sbColorB.progress
+        )
 
     private fun getView(context: Context): View {
         val layout = XposedInit.moduleRes.getLayout(R.layout.dialog_argb_color_choose)
@@ -54,7 +59,12 @@ class ARGBColorChooseDialog(context: Context, defColor: Int) : AlertDialog.Build
         val listener: OnSeekBarChangeListener = object : OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
                 if (fromUser) {
-                    val color = Color.argb(sbColorA.progress, sbColorR.progress, sbColorG.progress, sbColorB.progress)
+                    val color = Color.argb(
+                        sbColorA.progress,
+                        sbColorR.progress,
+                        sbColorG.progress,
+                        sbColorB.progress
+                    )
                     etColor.setText(String.format("%08X", 0xFFFFFFFF.toInt() and color))
                 }
                 tvColorA.text = sbColorA.progress.toString()

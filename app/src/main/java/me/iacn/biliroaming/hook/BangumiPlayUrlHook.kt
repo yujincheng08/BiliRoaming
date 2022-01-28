@@ -173,7 +173,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         } ?: run {
                             showPlayerError(response, "获取播放地址失败。请检查哔哩漫游设置里的解析服务器设置。")
                         }
-                    } catch (e: CustomServerException){
+                    } catch (e: CustomServerException) {
                         var messages = ""
                         for (error in e.errors) {
                             messages += "${error.key}: ${error.value}\n"

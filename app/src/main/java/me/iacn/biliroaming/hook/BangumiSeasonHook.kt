@@ -485,7 +485,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 jsonResult == null
             )?.toJSONObject()?.let {
                 it.optInt("code", FAIL_CODE) to it.optJSONObject("result")
-            } ?: FAIL_CODE to null
+            } ?: (FAIL_CODE to null)
             if (isBangumiWithWatchPermission(newJsonResult, newCode)) {
                 Log.d("Got new season information from proxy server: $newJsonResult")
                 lastSeasonInfo["title"] = newJsonResult?.optString("title")
@@ -780,7 +780,8 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 (tvDesc.parent as View).setOnClickListener {
                     val lines = tvDesc.text.lines()
                     val title = lines[0]
-                    val message = lines.subList(1, lines.size).fold(StringBuilder()) { sb, line -> sb.appendLine(line) }
+                    val message = lines.subList(1, lines.size)
+                        .fold(StringBuilder()) { sb, line -> sb.appendLine(line) }
                     AlertDialog.Builder(tvDesc.context)
                         .setTitle(title)
                         .setMessage(message)
