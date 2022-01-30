@@ -37,7 +37,7 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private val filterMap = mapOf(
         "advertisement" to arrayListOf("ad"),
         "article" to arrayListOf("article"),
-        "bangumi" to arrayListOf("bangumi", "special"),
+        "bangumi" to arrayListOf("bangumi", "special", "pgc"),
         "game" to arrayListOf("game"),
         "picture" to arrayListOf("picture"),
         "vertical" to arrayListOf("vertical"),
