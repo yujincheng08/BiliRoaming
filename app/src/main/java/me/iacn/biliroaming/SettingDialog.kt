@@ -75,6 +75,8 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("custom_subtitle")?.onPreferenceChangeListener = this
             findPreference("customize_accessKey")?.onPreferenceClickListener = this
             findPreference("share_log")?.onPreferenceClickListener = this
+            findPreference("skin")?.onPreferenceClickListener = this
+            findPreference("skin_import")?.onPreferenceClickListener = this
             checkCompatibleVersion()
             checkUpdate()
         }
@@ -278,6 +280,20 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                         Log.toast("${e.message}")
                     }
                 }
+                SKIN_IMPORT -> {
+                    val file = File(currentContext.filesDir, "../files/skin.json")
+                    val uri = data?.data
+                    if (resultCode == RESULT_CANCELED || uri == null) return
+                    try {
+                        file.outputStream().use { out ->
+                            activity.contentResolver.openInputStream(uri)?.copyTo(out)
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        Log.toast(e.message ?: "未知错误", true)
+                    }
+                    Log.toast("保存成功 重启两次后生效", true)
+                }
             }
 
             super.onActivityResult(requestCode, resultCode, data)
@@ -410,6 +426,19 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             return true
         }
 
+        private fun onSkinImportClick(isChecked: Boolean): Boolean {
+            if (!isChecked) return true
+            val intent = Intent(Intent.ACTION_GET_CONTENT)
+            intent.type = "application/*"
+            intent.addCategory(Intent.CATEGORY_OPENABLE)
+            try {
+                startActivityForResult(Intent.createChooser(intent, "选择文件"), SKIN_IMPORT)
+            } catch (ex: ActivityNotFoundException) {
+                Log.toast("请安装文件管理器")
+            }
+            return true
+        }
+
         private fun onCustomizeAccessKeyClick(): Boolean {
             AlertDialog.Builder(activity).run {
                 val layout = moduleRes.getLayout(R.layout.customize_backup_dialog)
@@ -461,6 +490,26 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             return true
         }
 
+        private fun onSkinClick(isChecked: Boolean): Boolean {
+            if (!isChecked) return true
+            val tv = EditText(activity)
+            tv.setText(sPrefs.getString("skin_json", "").toString())
+            AlertDialog.Builder(activity).run {
+                setTitle(R.string.skin_title)
+                setView(tv)
+                setPositiveButton(android.R.string.ok) { _, _ ->
+                    sPrefs.edit()
+                        .putString("skin_json", tv.text.toString())
+                        .apply()
+                    Log.toast("保存成功 重启两次后生效")
+                }
+                setNegativeButton(android.R.string.cancel, null)
+                setCancelable(false)
+                show()
+            }
+            return true
+        }
+
         override fun onPreferenceClick(preference: Preference) = when (preference.key) {
             "version" -> onVersionClick()
             "update" -> onUpdateClick()
@@ -473,6 +522,8 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             "customize_accessKey" -> onCustomizeAccessKeyClick()
             "home_filter" -> onHomeFilterClick()
             "share_log" -> onShareLogClick()
+            "skin" -> onSkinClick((preference as SwitchPreference).isChecked)
+            "skin_import" -> onSkinImportClick((preference as SwitchPreference).isChecked)
             else -> false
         }
     }
@@ -500,7 +551,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
 
         setView(prefsFragment.view)
         setTitle("哔哩漫游设置")
-        setNegativeButton("返回") { _, _ ->
+        setNegativeButton(android.R.string.cancel) { _, _ ->
             unhook?.unhook()
         }
         setPositiveButton("确定并重启客户端") { _, _ ->
@@ -534,6 +585,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         const val PREF_IMPORT = 2
         const val PREF_EXPORT = 3
         const val VIDEO_EXPORT = 4
+        const val SKIN_IMPORT = 5
     }
 
 }
