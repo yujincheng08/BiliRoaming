@@ -38,7 +38,7 @@ jobs:
           echo 'org.gradle.parallel=true' >> gradle.properties
           echo 'org.gradle.vfs.watch=true' >> gradle.properties
           echo 'org.gradle.jvmargs=-Xmx2048m' >> gradle.properties
-          bash ./gradlew -PappVerName=${{ env.VERSION }} assembleRelease assembleDebug
+          ./gradlew -PappVerName=${{ env.VERSION }} assembleRelease assembleDebug
       - name: Upload built apk
         if: success()
         uses: actions/upload-artifact@v2
