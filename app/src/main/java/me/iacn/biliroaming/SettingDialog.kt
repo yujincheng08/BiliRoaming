@@ -551,7 +551,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
 
         setView(prefsFragment.view)
         setTitle("哔哩漫游设置")
-        setNegativeButton(android.R.string.cancel) { _, _ ->
+        setNegativeButton("返回") { _, _ ->
             unhook?.unhook()
         }
         setPositiveButton("确定并重启客户端") { _, _ ->
