@@ -91,17 +91,17 @@ class SkinHook (classLoader: ClassLoader) : BaseHook(classLoader) {
                         if (instance.generalResponseClass?.isInstance(body) == true) "data" else instance.responseDataField().value
                     val resultClass = body.getObjectField(dataField)?.javaClass
                     try {
-                        var skin = ""
+                        var skin = 
                         if (sPrefs.getBoolean("skin_import", false)) {
                             // 从 导入 获取
-                            skin = File(currentContext.filesDir, "../files/skin.json")
+                            File(currentContext.filesDir, "../files/skin.json")
                                 .readText().toJSONObject().putOpt("package_md5","")
                                 .toString().replace(
                                     """package_md5":""""", """package_md5":null"""
                                 )
                         } else if (sPrefs.getBoolean("skin", false)) {
                             // 从 填写 获取
-                            skin = sPrefs.getString("skin_json", "")?.toJSONObject().toString()
+                            sPrefs.getString("skin_json", "")?.toJSONObject().toString()
                         }
                         // 准备替换内容
                         val content = """{"user_equip":""" + skin +
