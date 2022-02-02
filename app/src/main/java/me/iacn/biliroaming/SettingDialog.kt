@@ -281,7 +281,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     }
                 }
                 SKIN_IMPORT -> {
-                    val file = File(currentContext.filesDir, "../files/skin.json")
+                    val file = File(currentContext.filesDir, "skin.json")
                     val uri = data?.data
                     if (resultCode == RESULT_CANCELED || uri == null) return
                     try {
@@ -289,7 +289,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                             activity.contentResolver.openInputStream(uri)?.copyTo(out)
                         }
                     } catch (e: Exception) {
-                        e.printStackTrace()
+                        Log.e(e)
                         Log.toast(e.message ?: "未知错误", true)
                     }
                     Log.toast("保存成功 重启两次后生效", true)
