@@ -52,7 +52,9 @@ class SkinHook (classLoader: ClassLoader) : BaseHook(classLoader) {
                                 )
                             }
                             // 从 填写 获取
-                            else if (sPrefs.getBoolean("skin", false)) sPrefs.getString("skin_json", "")?.toJSONObject().toString()
+                            else if (sPrefs.getBoolean("skin", false) && sPrefs.getString("skin_json", "").toString().startsWith("{")) {
+                                sPrefs.getString("skin_json", "")?.toJSONObject().toString()
+                            }
                             else null
                         // 准备替换内容
                         val content = """{"user_equip":""" + skin +
