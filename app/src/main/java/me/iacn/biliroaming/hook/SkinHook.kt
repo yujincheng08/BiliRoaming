@@ -91,22 +91,17 @@ class SkinHook (classLoader: ClassLoader) : BaseHook(classLoader) {
                         if (instance.generalResponseClass?.isInstance(body) == true) "data" else instance.responseDataField().value
                     val resultClass = body.getObjectField(dataField)?.javaClass
                     try {
-                        // 获取用户的json内容
-                        val skin = when {
+                        var skin = ""
+                        if (sPrefs.getBoolean("skin_import", false)) {
                             // 从 导入 获取
-                            sPrefs.getBoolean("skin_import", false) -> {
-                                File(currentContext.filesDir, "../files/skin.json")
-                                    .readText().toJSONObject().putOpt("package_md5","")
-                                    .toString().replace(
-                                        """package_md5":""""", """package_md5":null"""
-                                    )
-                            }
+                            skin = File(currentContext.filesDir, "../files/skin.json")
+                                .readText().toJSONObject().putOpt("package_md5","")
+                                .toString().replace(
+                                    """package_md5":""""", """package_md5":null"""
+                                )
+                        } else if (sPrefs.getBoolean("skin", false)) {
                             // 从 填写 获取
-                            sPrefs.getBoolean("skin", false) -> {
-                                sPrefs.getString("skin_json", "")?.toJSONObject().toString()
-                            }
-                            // 什么都不做(虽然不会有这种可能，但是前面的 when 需要这个)
-                            else -> return@hookBeforeAllConstructors
+                            skin = sPrefs.getString("skin_json", "")?.toJSONObject().toString()
                         }
                         // 准备替换内容
                         val content = """{"user_equip":""" + skin +
@@ -115,8 +110,8 @@ class SkinHook (classLoader: ClassLoader) : BaseHook(classLoader) {
                         // 替换内容
                         body.setObjectField(dataField, newResult)
                     } catch (e: Exception) {
-                        e.printStackTrace()
                         Log.toast("发生错误，请关闭自制主题设置", true)
+                        e.printStackTrace()
                     }
                 }
             }
