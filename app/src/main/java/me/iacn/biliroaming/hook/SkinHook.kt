@@ -12,7 +12,6 @@ import java.lang.reflect.Array as RArray
  */
 
 class SkinHook (classLoader: ClassLoader) : BaseHook(classLoader) {
-    // （这里开始）直接抄 BangumiSeasonHook 的内容
     companion object {
         private val jsonNonStrict = lazy {
             instance.kotlinJsonClass?.getStaticObjectField("Companion")?.callMethod("getNonstrict")
@@ -72,13 +71,11 @@ class SkinHook (classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     private fun Class<*>.fromJson(json: JSONObject) = fromJson(json.toString())
-    // （这里结束）直接抄 BangumiSeasonHook 的内容
 
     override fun startHook() {
         // 判断设置打开了吗？
         if (!sPrefs.getBoolean("skin_import", false) && !sPrefs.getBoolean("skin", false)) return
         Log.d("startHook: Skin")
-        // 这里也是直接抄 BangumiSeasonHook 的内容
         instance.retrofitResponseClass?.hookBeforeAllConstructors { param ->
             val url = getUrl(param.args[0]) ?: return@hookBeforeAllConstructors
             val body = param.args[1] ?: return@hookBeforeAllConstructors
@@ -91,18 +88,17 @@ class SkinHook (classLoader: ClassLoader) : BaseHook(classLoader) {
                         if (instance.generalResponseClass?.isInstance(body) == true) "data" else instance.responseDataField().value
                     val resultClass = body.getObjectField(dataField)?.javaClass
                     try {
-                        var skin = 
-                        if (sPrefs.getBoolean("skin_import", false)) {
+                        val skin =
                             // 从 导入 获取
-                            File(currentContext.filesDir, "../files/skin.json")
-                                .readText().toJSONObject().putOpt("package_md5","")
-                                .toString().replace(
+                            if (sPrefs.getBoolean("skin_import", false)) {
+                                File(currentContext.filesDir, "skin.json").readText()?.toJSONObject().
+                                putOpt("package_md5","").toString()?.replace(
                                     """package_md5":""""", """package_md5":null"""
                                 )
-                        } else if (sPrefs.getBoolean("skin", false)) {
+                            }
                             // 从 填写 获取
-                            sPrefs.getString("skin_json", "")?.toJSONObject().toString()
-                        }
+                            else if (sPrefs.getBoolean("skin", false)) sPrefs.getString("skin_json", "")?.toJSONObject().toString()
+                            else null
                         // 准备替换内容
                         val content = """{"user_equip":""" + skin +
                                 ""","skin_colors":[{"id":8,"name":"简洁白","is_free":true,"color_name":"white"},{"id":2,"name":"少女粉","is_free":true,"color_name":"pink"},{"id":1,"name":"主题黑","is_free":true,"color_name":"black"},{"id":3,"name":"高能红","is_free":true,"color_name":"red"},{"id":4,"name":"咸蛋黄","is_free":true,"color_name":"yellow"},{"id":5,"name":"早苗绿","is_free":true,"color_name":"green"},{"id":6,"name":"宝石蓝","is_free":true,"color_name":"blue"},{"id":7,"name":"罗兰紫","is_free":true,"color_name":"purple"}]}"""
