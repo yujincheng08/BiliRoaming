@@ -473,7 +473,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     sPrefs.edit()
                         .putString("purify_drawer_list", tv.text.toString())
                         .apply()
-                    Log.toast("保存成功 重启两次后生效")
+                    Log.toast("保存成功 重启后生效")
                 }
                 setNegativeButton(android.R.string.cancel, null)
                 setNeutralButton("添加分隔符", null)
