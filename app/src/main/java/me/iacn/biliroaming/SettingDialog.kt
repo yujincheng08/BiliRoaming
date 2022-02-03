@@ -467,7 +467,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             val tv = EditText(activity)
             tv.setText(sPrefs.getString("purify_drawer_list", ""))
             AlertDialog.Builder(activity).run {
-                setTitle("设置过滤关键词")
+                setTitle("设置过滤词（必须相同才生效）")
                 setView(tv)
                 setPositiveButton(android.R.string.ok) { _, _ ->
                     sPrefs.edit()
