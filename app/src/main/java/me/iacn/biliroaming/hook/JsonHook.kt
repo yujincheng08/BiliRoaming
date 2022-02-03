@@ -9,6 +9,10 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val bottomItems = mutableListOf<BottomItem>()
     }
 
+    private val purifyDrawerList by lazy {
+        sPrefs.getString("purify_drawer_list", "")?.split("|") ?: emptyList()
+    }
+
     override fun startHook() {
         Log.d("startHook: Json")
 
@@ -265,6 +269,35 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             }
                         }
                         accountMineClass.findFieldOrNull("vipSectionRight")?.set(result, null)
+                    }
+                    if (sPrefs.getBoolean("purify_drawer2", false) &&
+                        sPrefs.getBoolean("hidden", false)
+                    ) {
+                        result.getObjectFieldOrNullAs<MutableList<*>?>("sectionListV2")?.forEach { section ->
+                            try {
+                                section?.getObjectFieldOrNullAs<MutableList<*>?>("itemList")?.removeAll { items ->
+                                    val title = try {
+                                        items?.getObjectField("title").toString()
+                                    } catch (thr: Throwable) {
+                                        return@removeAll false
+                                    }
+                                    items?.setIntField("redDot",0)
+                                    if (title == "null") return@removeAll false
+                                    purifyDrawerList.forEach {
+                                        if (it.isNotEmpty() && it == title) return@removeAll true
+                                    }
+                                    false
+                                }
+                                val button = section?.getObjectField("button")?.getObjectField("text").toString()
+                                if (button != "null") {
+                                    purifyDrawerList.forEach {
+                                        if (it.isNotEmpty() && it == button) section.setObjectField("button",null)
+                                    }
+                                }
+                            } catch (e: Exception) {
+                                Log.d(e)
+                            }
+                        }
                     }
                     if (sPrefs.getBoolean("custom_theme", false)) {
                         result.setObjectField("garbEntrance", null)
