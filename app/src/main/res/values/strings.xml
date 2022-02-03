@@ -29,6 +29,7 @@
     <string name="purify_game_summary">去除首页右上角游戏中心</string>
     <string name="purify_drawer_title">净化我的页面</string>
     <string name="purify_drawer_summary">净化【我的】页面（一刀切）</string>
+    <string name="purify_drawer_summary2">净化【我的】页面（非一刀切）</string>
     <string name="hidden_group">隐藏功能</string>
     <string name="show_info_summary">显示解锁版权、允许下载等状态信息</string>
     <string name="show_info_title">提示模块运行信息</string>
