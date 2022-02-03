@@ -75,6 +75,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("custom_subtitle")?.onPreferenceChangeListener = this
             findPreference("customize_accessKey")?.onPreferenceClickListener = this
             findPreference("share_log")?.onPreferenceClickListener = this
+            findPreference("purify_drawer2")?.onPreferenceClickListener = this
             checkCompatibleVersion()
             checkUpdate()
         }
@@ -461,6 +462,41 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             return true
         }
 
+        private fun onPurifyDrawerClick(isChecked: Boolean): Boolean {
+            if (!isChecked) return true
+            val tv = EditText(activity)
+            tv.setText(sPrefs.getString("purify_drawer_list", ""))
+            AlertDialog.Builder(activity).run {
+                setTitle("设置过滤关键词")
+                setView(tv)
+                setPositiveButton(android.R.string.ok) { _, _ ->
+                    sPrefs.edit()
+                        .putString("purify_drawer_list", tv.text.toString())
+                        .apply()
+                    Log.toast("保存成功 重启两次后生效")
+                }
+                setNegativeButton(android.R.string.cancel, null)
+                setNeutralButton("添加分隔符", null)
+                setCancelable(false)
+                show()
+            }.let {
+                it.getButton(AlertDialog.BUTTON_NEUTRAL).setOnClickListener {
+                    when {
+                        tv.text.isEmpty() -> {
+                            Log.toast("你好像还没有输入内容> <")
+                        }
+                        tv.text.endsWith('|') -> {
+                            Log.toast("啊嘞 上一个分隔符后面好像还没有东西> <")
+                        }
+                        else -> {
+                            tv.text.append('|')
+                        }
+                    }
+                }
+            }
+            return true
+        }
+
         override fun onPreferenceClick(preference: Preference) = when (preference.key) {
             "version" -> onVersionClick()
             "update" -> onUpdateClick()
@@ -473,6 +509,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             "customize_accessKey" -> onCustomizeAccessKeyClick()
             "home_filter" -> onHomeFilterClick()
             "share_log" -> onShareLogClick()
+            "purify_drawer2" -> onPurifyDrawerClick((preference as SwitchPreference).isChecked)
             else -> false
         }
     }
