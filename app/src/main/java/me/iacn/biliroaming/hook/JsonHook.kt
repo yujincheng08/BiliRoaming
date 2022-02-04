@@ -7,6 +7,7 @@ import java.lang.reflect.Type
 class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     companion object {
         val bottomItems = mutableListOf<BottomItem>()
+        val drawerItems = mutableListOf<BottomItem>()
     }
 
     override fun startHook() {
@@ -70,14 +71,6 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             )
                         )
                         showing.not()
-                    }
-
-                    if (sPrefs.getBoolean("drawer", false)) {
-                        data?.getObjectFieldAs<MutableList<*>?>("bottom")?.removeAll {
-                            it?.getObjectFieldAs<String?>("uri")
-                                ?.startsWith("bilibili://user_center/mine")
-                                ?: false
-                        }
                     }
 
                     // 在首页标签添加大陆/港澳台番剧分页
@@ -230,42 +223,70 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
                 }
                 accountMineClass -> {
-                    if (sPrefs.getBoolean("purify_drawer", false) &&
-                        sPrefs.getBoolean("hidden", false)
-                    ) {
-                        arrayOf(
-                            result.getObjectFieldOrNullAs<MutableList<*>?>("sectionList"),
-                            result.getObjectFieldOrNullAs<MutableList<*>?>("sectionListV2"),
-                            result.getObjectFieldOrNullAs<MutableList<*>?>("padSectionList")
-                        ).forEach { sections ->
-                            var button: Any? = null
-                            sections?.removeAll { item ->
-                                if (platform == "android_hd") {
-                                    when (item?.getObjectFieldAs<String?>("uri")) {
-                                        "bilibili://user_center/teenagersmode" -> return@removeAll true
-                                        "bilibili://user_center/feedback" -> return@removeAll true
-                                        else -> return@removeAll false
+                    drawerItems.clear()
+                    val hides = sPrefs.getStringSet("hided_drawer_items", mutableSetOf())!!
+                    if (platform == "android_hd") {
+                        result.getObjectFieldOrNullAs<MutableList<*>?>("padSectionList")?.removeAll { items ->
+                            // 分析内容
+                            val title = items?.getObjectFieldAs<String>("title")
+                            val uri = items?.getObjectFieldAs<String>("uri")
+                            val id = items?.getObjectField("id").toString()
+                            val showing = id !in hides
+                            // 将结果写入 drawerItems
+                            drawerItems.add(BottomItem(title, uri, id, showing))
+                            // 去除红点
+                            if (sPrefs.getBoolean("purify_drawer_reddot", false)) items?.setIntField("redDot",0)
+                            showing.not()
+                        }
+                    } else {
+                        result.getObjectFieldOrNullAs<MutableList<*>?>("sectionListV2")?.forEach { sections ->
+                            try {
+                                // 去除项目
+                                sections?.getObjectFieldOrNullAs<MutableList<*>?>("itemList")
+                                    ?.removeAll { items ->
+                                        // 分析内容
+                                        val title = try {
+                                            items?.getObjectFieldAs<String>("title")
+                                        } catch (thr: Throwable) {
+                                            return@removeAll false
+                                        }
+                                        if (title == "null") return@removeAll false
+                                        val uri = items?.getObjectFieldAs<String>("uri")
+                                        val id = items?.getObjectFieldAs<Int>("id").toString()
+                                        val showing = id !in hides
+                                        // 将结果写入 drawerItems
+                                        drawerItems.add(BottomItem(title, uri, id, showing))
+                                        // 去除红点
+                                        if (sPrefs.getBoolean("purify_drawer_reddot", false)) items?.setIntField("redDot", 0)
+                                        showing.not()
+                                    }
+                                // 去除按钮
+                                val button = sections?.getObjectFieldOrNull("button")
+                                if (button != null) {
+                                    val buttonText = button.getObjectField("text").toString()
+                                    val showing = buttonText !in hides
+                                    if (buttonText != "null") {
+                                        val uri = button.getObjectFieldAs<String>("jumpUrl")
+                                        drawerItems.add(BottomItem(buttonText, uri, buttonText, showing))
+                                        if (!showing) sections.setObjectField("button", null)
                                     }
                                 }
-
-                                item?.getObjectField("button")?.run {
-                                    if (!getObjectFieldAs<String?>("text").isNullOrEmpty())
-                                        button = this
+                                // 改变样式
+                                if (sPrefs.getBoolean("drawer_style_switch", false)) {
+                                    sections?.setIntField(
+                                        "style",
+                                        when {
+                                            sPrefs.getBoolean("drawer_style", false) -> 2
+                                            else -> 1
+                                        }
+                                    )
                                 }
-
-                                when {
-                                    item?.getObjectFieldAs<String?>("title")
-                                        .isNullOrEmpty() -> false
-                                    item?.getIntField("style") == 2 -> {
-                                        item.setObjectField("button", button)
-                                        false
-                                    }
-                                    else -> true
-                                }
+                            } catch (e: Exception) {
+                                Log.d(e)
                             }
                         }
-                        accountMineClass.findFieldOrNull("vipSectionRight")?.set(result, null)
                     }
+                    accountMineClass.findFieldOrNull("vipSectionRight")?.set(result, null)
                     if (sPrefs.getBoolean("custom_theme", false)) {
                         result.setObjectField("garbEntrance", null)
                     }
