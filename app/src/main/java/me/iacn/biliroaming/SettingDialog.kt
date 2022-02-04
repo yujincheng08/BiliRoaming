@@ -167,7 +167,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             if (!supportDrawerStyle) {
                 disablePreference("drawer_style_switch")
                 disablePreference("drawer_style")
-			}
+            }
         }
 
         private fun disablePreference(
