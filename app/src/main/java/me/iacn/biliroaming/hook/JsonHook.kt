@@ -241,6 +241,9 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     } else {
                         result.getObjectFieldOrNullAs<MutableList<*>?>("sectionListV2")?.forEach { sections ->
                             try {
+                                // 将标题写入 drawerItems
+                                val bigTitle = sections?.getObjectFieldOrNull("title").toString()
+                                if (bigTitle != "null") drawerItems.add(BottomItem("【标题项目】", null, bigTitle, bigTitle !in hides))
                                 // 去除项目
                                 sections?.getObjectFieldOrNullAs<MutableList<*>?>("itemList")
                                     ?.removeAll { items ->
@@ -267,7 +270,7 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                     val showing = buttonText !in hides
                                     if (buttonText != "null") {
                                         val uri = button.getObjectFieldAs<String>("jumpUrl")
-                                        drawerItems.add(BottomItem(buttonText, uri, buttonText, showing))
+                                        drawerItems.add(BottomItem("按钮：", uri, buttonText, showing))
                                         if (!showing) sections.setObjectField("button", null)
                                     }
                                 }
@@ -284,6 +287,10 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             } catch (e: Exception) {
                                 Log.d(e)
                             }
+                        }
+                        // 删除标题组
+                        result.getObjectFieldOrNullAs<MutableList<*>?>("sectionListV2")?.removeAll { sections ->
+                            sections?.getObjectFieldOrNull("title").toString() in hides
                         }
                     }
                     accountMineClass.findFieldOrNull("vipSectionRight")?.set(result, null)
