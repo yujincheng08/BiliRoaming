@@ -273,7 +273,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     ?.getObjectFieldOrNull(loaderField?.name)
                 if (BaseDexClassLoader::class.java.isInstance(out)) out as BaseDexClassLoader else it
             } else it
-        }.also { Log.d("classlist size: ${it.size}") }
+        }.asSequence()
     }
     private val accessKeyInstance by lazy {
         ("com.bilibili.cheese.ui.detail.pay.v2.CheesePayHelperV2\$accessKey\$2".findClassOrNull(
@@ -420,7 +420,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         } catch (e: Exception) {
             e.printStackTrace()
         }
-        return HashMap()
+        return mutableMapOf()
     }
 
     /**
