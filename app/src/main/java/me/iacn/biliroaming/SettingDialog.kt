@@ -77,6 +77,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("share_log")?.onPreferenceClickListener = this
             findPreference("skin")?.onPreferenceClickListener = this
             findPreference("skin_import")?.onPreferenceClickListener = this
+            findPreference("customize_drawer")?.onPreferenceClickListener = this
             checkCompatibleVersion()
             checkUpdate()
         }
@@ -120,10 +121,12 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             }
             val supportMain = !isBuiltIn || !is64 || Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
             var supportDrawer = instance.homeUserCenterClass != null
+            var supportDrawerStyle = true
             when (platform) {
                 "android_hd" -> {
                     supportCustomizeTab = false
                     supportDrawer = false
+                    supportDrawerStyle = false
                 }
             }
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
@@ -162,6 +165,10 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             }
             if (!supportStoryVideo) {
                 disablePreference("replace_story_video")
+            }
+            if (!supportDrawerStyle) {
+                disablePreference("drawer_style_switch")
+                disablePreference("drawer_style")
             }
         }
 
@@ -507,6 +514,39 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 setCancelable(false)
                 show()
             }
+
+        private fun onCustomizeDrawerClick(): Boolean {
+            AlertDialog.Builder(activity).apply {
+                val drawerItems = JsonHook.drawerItems
+                val ids = drawerItems.map { it.id }.toHashSet()
+                sPrefs.getStringSet("hided_drawer_items", null)?.forEach {
+                    if (it.isEmpty() || ids.contains(it)) return@forEach
+                    JsonHook.drawerItems.add(JsonHook.BottomItem("未知", null, it, false))
+                }
+                setTitle(moduleRes.getString(R.string.customize_drawer_title))
+                setPositiveButton(android.R.string.ok) { _, _ ->
+                    val hideItems = mutableSetOf<String>()
+                    JsonHook.drawerItems.forEach {
+                        if (it.showing.not()) {
+                            hideItems.add(it.id ?: "")
+                        }
+                    }
+                    sPrefs.edit().putStringSet("hided_drawer_items", hideItems).apply()
+                }
+                setNegativeButton(android.R.string.cancel, null)
+                val names = Array(drawerItems.size) { i ->
+                    "${drawerItems[i].name} (${drawerItems[i].id}) (${drawerItems[i].uri})"
+                }
+                setNeutralButton("重置") { _, _ ->
+                    sPrefs.edit().remove("hided_drawer_items").apply()
+                }
+                val showings = BooleanArray(drawerItems.size) { i ->
+                    drawerItems[i].showing
+                }
+                setMultiChoiceItems(names, showings) { _, which, isChecked ->
+                    drawerItems[which].showing = isChecked
+                }
+            }.show()
             return true
         }
 
@@ -524,6 +564,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             "share_log" -> onShareLogClick()
             "skin" -> onSkinClick((preference as SwitchPreference).isChecked)
             "skin_import" -> onSkinImportClick((preference as SwitchPreference).isChecked)
+            "customize_drawer" -> onCustomizeDrawerClick()
             else -> false
         }
     }

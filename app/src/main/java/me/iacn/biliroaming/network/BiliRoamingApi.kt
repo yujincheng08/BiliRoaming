@@ -391,6 +391,8 @@ object BiliRoamingApi {
         if (hostList.isEmpty())
         // reversely
             linkedMapOf("th" to thUrl, "tw" to twUrl, "cn" to cnUrl, "hk" to hkUrl).filterKeys {
+                if (sPrefs.getString("${it}_server_accessKey", null).isNullOrEmpty()) 
+                    return@filterKeys true
                 it != (runCatching { XposedInit.country.get(5L, TimeUnit.SECONDS) }.getOrNull()
                     ?: true)
             }.filterValues {
