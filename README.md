@@ -37,7 +37,7 @@ An Xposed module that unblocks bangumi area limit of BILIBILI, and miscellaneous
 - 自定义屏启动图
 
 ＃ 特征
-- 1
+
 - 解锁bangumi区域限制
 - CDN speedup
 - Download bangumi
