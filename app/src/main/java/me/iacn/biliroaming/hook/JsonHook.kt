@@ -93,7 +93,7 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                     "iconSelected",
                                     "http://i0.hdslb.com/bfs/archive/f6739d905dee57d2c0429d9b66acb3f39b294aff.png"
                                 )
-                                setObjectField("uri", "bilibili://main/top_category")
+                                setObjectField("uri", "bilibili://pegasus/channel")
                                 setObjectField("reportId", "频道Bottom")
                                 val pos = 2
                                 setIntField("pos", pos)
