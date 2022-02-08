@@ -74,7 +74,6 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("home_filter")?.onPreferenceClickListener = this
             findPreference("custom_subtitle")?.onPreferenceChangeListener = this
             findPreference("customize_accessKey")?.onPreferenceClickListener = this
-            findPreference("share_log")?.onPreferenceClickListener = this
             checkCompatibleVersion()
             checkUpdate()
         }
@@ -111,6 +110,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             val versionCode = getVersionCode(packageName)
             var supportMusicNotificationHook = true
             var supportCustomizeTab = true
+            var supportAddChannel = false
             val supportFullSplash = try {
                 instance.splashInfoClass?.getMethod("getMode") != null
             } catch (e: Throwable) {
@@ -129,7 +129,6 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             val supportSplashHook = instance.brandSplashClass != null
             val supportTeenagersMode = instance.teenagersModeDialogActivityClass != null
             val supportCustomizeCC = instance.subtitleSpanClass != null
-            val supportStoryVideo = instance.storyVideoActivityClass != null
             if (!supportDrawer)
                 disablePreference("drawer")
             if (!supportSplashHook) {
@@ -151,18 +150,12 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             if (!supportTeenagersMode) {
                 disablePreference("teenagers_mode_dialog")
             }
-            if (!supportAddChannel) {
-                disablePreference("add_channel")
-            }
             if (!supportCustomizeTab) {
                 disablePreference("customize_home_tab_title")
                 disablePreference("customize_bottom_bar_title")
             }
             if (!supportCustomizeCC) {
                 disablePreference("custom_subtitle")
-            }
-            if (!supportStoryVideo) {
-                disablePreference("replace_story_video")
             }
         }
 
@@ -325,10 +318,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     editTexts.forEach {
                         val host = it.text.toString()
                         if (host.isNotEmpty())
-                            prefs.edit().putString(
-                                it.tag.toString(),
-                                host.replace(Regex("^https?://"), "")
-                            ).apply()
+                            prefs.edit().putString(it.tag.toString(), host).apply()
                         else
                             prefs.edit().remove(it.tag.toString()).apply()
                     }
@@ -448,22 +438,6 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             return true
         }
 
-        private fun onShareLogClick(): Boolean {
-            if (logFile.exists().not() || prefs.getBoolean("save_log", false).not()) {
-                Log.toast("没有保存过日志")
-                return true
-            }
-            logFile.copyTo(File(activity.cacheDir, "boxing/log.txt"), overwrite = true)
-            val uri = Uri.parse("content://${activity.packageName}.fileprovider/internal/log.txt")
-            activity.startActivity(Intent.createChooser(Intent().apply {
-                action = Intent.ACTION_SEND
-                putExtra(Intent.EXTRA_STREAM, uri)
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                setDataAndType(uri, "text/log")
-            }, moduleRes.getString(R.string.share_log_title)))
-            return true
-        }
-
         override fun onPreferenceClick(preference: Preference) = when (preference.key) {
             "version" -> onVersionClick()
             "update" -> onUpdateClick()
@@ -475,7 +449,6 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             "export_video" -> onExportVideoClick()
             "customize_accessKey" -> onCustomizeAccessKeyClick()
             "home_filter" -> onHomeFilterClick()
-            "share_log" -> onShareLogClick()
             else -> false
         }
     }
