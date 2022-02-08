@@ -7,7 +7,6 @@ import java.lang.reflect.Type
 class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     companion object {
         val bottomItems = mutableListOf<BottomItem>()
-        val drawerItems = mutableListOf<BottomItem>()
     }
 
     override fun startHook() {
@@ -73,6 +72,52 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         showing.not()
                     }
 
+                    if (sPrefs.getBoolean("drawer", false)) {
+                        data?.getObjectFieldAs<MutableList<*>?>("bottom")?.removeAll {
+                            it?.getObjectFieldAs<String?>("uri")
+                                ?.startsWith("bilibili://user_center/mine")
+                                ?: false
+                        }
+                    }
+
+                    // 在底栏添加频道按钮
+                    if (sPrefs.getBoolean("add_channel", false)) {
+                        val bottom = data?.getObjectFieldAs<MutableList<Any>>("bottom")
+                        val hasChannel = bottom?.fold(false) { acc, it ->
+                            val uri = it.getObjectFieldAs<String?>("uri")
+                            acc || uri?.startsWith("bilibili://pegasus/channel") == true
+                        }
+                        // 不存在频道按钮时才添加
+                        if (hasChannel != null && !hasChannel) {
+                            tabClass?.new()?.run {
+                                setObjectField("tabId", "123")
+                                setObjectField("name", "频道")
+                                setObjectField(
+                                    "icon",
+                                    "http://i0.hdslb.com/bfs/archive/e16c9303e9edbf23031f545fcafc44d1f60cd07b.png"
+                                )
+                                setObjectField(
+                                    "iconSelected",
+                                    "http://i0.hdslb.com/bfs/archive/f6739d905dee57d2c0429d9b66acb3f39b294aff.png"
+                                )
+                                setObjectField("uri", "bilibili://main/top_category")
+                                setObjectField("reportId", "频道Bottom")
+                                val pos = 2
+                                setIntField("pos", pos)
+                                bottom.forEach {
+                                    it.setIntField("pos", it.getIntField("pos").let { p -> p + if (p >= pos) 1 else 0 } )
+                                }
+                                bottom.add(0, this)
+                            }
+                            // 同时移除 首页的右上角的频道按钮
+                            data.getObjectFieldAs<MutableList<*>>("moreCategory").removeAll {
+                                it?.getObjectFieldAs<String?>("uri")?.also { uri -> Log.e(uri) }
+                                    ?.startsWith("bilibili://main/top_category")
+                                    ?: false
+                            }
+                        }
+                    }
+                    
                     // 在首页标签添加大陆/港澳台番剧分页
                     if (sPrefs.getBoolean("add_bangumi", false)) {
                         val tab = data?.getObjectFieldAs<MutableList<Any>>("tab")
@@ -128,7 +173,8 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         }
                         val hasMovieTW = tab?.fold(false) { acc, it ->
                             val uri = it.getObjectFieldAs<String>("uri")
-                            acc || uri.startsWith("bilibili://following/home_activity_tab/168644")
+                            acc || uri.startsWith("bilibili://pegasus/op/70465")
+                                    || uri.startsWith("bilibili://following/home_activity_tab/165373")
                         }
                         // 添加大陆影视分页
                         if (hasMovieCN != null && !hasMovieCN) {
@@ -151,12 +197,12 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             if (hasMovieCN != null && !hasMovieCN && platform != "android_b") {
                                 val movieTW = tabClass?.new()
                                     ?.setObjectField("tabId", "40")
-                                    ?.setObjectField("name", "戲劇")
+                                    ?.setObjectField("name", "影劇")
                                     ?.setObjectField(
                                         "uri",
-                                        "bilibili://following/home_activity_tab/168644"
+                                        "bilibili://following/home_activity_tab/165373"
                                     )
-                                    ?.setObjectField("reportId", "jptv")
+                                    ?.setObjectField("reportId", "港澳台影视tab")
                                     ?.setIntField("pos", 40)
                                 movieTW?.let { l ->
                                     tab.forEach {
@@ -167,12 +213,12 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             } else {
                                 val movieTW = tabClass?.new()
                                     ?.setObjectField("tabId", "80")
-                                    ?.setObjectField("name", "戏剧（港澳台）")
+                                    ?.setObjectField("name", "影剧（港澳台）")
                                     ?.setObjectField(
                                         "uri",
-                                        "bilibili://following/home_activity_tab/168644"
+                                        "bilibili://following/home_activity_tab/165373"
                                     )
-                                    ?.setObjectField("reportId", "jptv")
+                                    ?.setObjectField("reportId", "港澳台影视tab")
                                     ?.setIntField("pos", 80)
                                 movieTW?.let { l ->
                                     tab.forEach {
@@ -199,7 +245,7 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                     this == "bilibili://pgc/home" || this == "bilibili://following/home_activity_tab/6544" -> purifytabset.contains(
                                         "bangumi"
                                     )
-                                    this == "bilibili://pgc/home?home_flow_type=2" || this == "bilibili://following/home_activity_tab/168644" -> purifytabset.contains(
+                                    this == "bilibili://pgc/home?home_flow_type=2" || this == "bilibili://following/home_activity_tab/165373" -> purifytabset.contains(
                                         "movie"
                                     )
                                     startsWith("bilibili://pegasus/op/") || startsWith("bilibili://following/home_activity_tab") -> purifytabset.contains(
@@ -223,77 +269,42 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
                 }
                 accountMineClass -> {
-                    drawerItems.clear()
-                    val hides = sPrefs.getStringSet("hided_drawer_items", mutableSetOf())!!
-                    if (platform == "android_hd") {
-                        result.getObjectFieldOrNullAs<MutableList<*>?>("padSectionList")?.removeAll { items ->
-                            // 分析内容
-                            val title = items?.getObjectFieldAs<String>("title")
-                            val uri = items?.getObjectFieldAs<String>("uri")
-                            val id = items?.getObjectField("id").toString()
-                            val showing = id !in hides
-                            // 将结果写入 drawerItems
-                            drawerItems.add(BottomItem(title, uri, id, showing))
-                            // 去除红点
-                            if (sPrefs.getBoolean("purify_drawer_reddot", false)) items?.setIntField("redDot",0)
-                            showing.not()
-                        }
-                    } else {
-                        result.getObjectFieldOrNullAs<MutableList<*>?>("sectionListV2")?.forEach { sections ->
-                            try {
-                                // 将标题写入 drawerItems
-                                val bigTitle = sections?.getObjectFieldOrNull("title").toString()
-                                if (bigTitle != "null") drawerItems.add(BottomItem("【标题项目】", null, bigTitle, bigTitle !in hides))
-                                // 去除项目
-                                sections?.getObjectFieldOrNullAs<MutableList<*>?>("itemList")
-                                    ?.removeAll { items ->
-                                        // 分析内容
-                                        val title = try {
-                                            items?.getObjectFieldAs<String>("title")
-                                        } catch (thr: Throwable) {
-                                            return@removeAll false
-                                        }
-                                        if (title == "null") return@removeAll false
-                                        val uri = items?.getObjectFieldAs<String>("uri")
-                                        val id = items?.getObjectFieldAs<Int>("id").toString()
-                                        val showing = id !in hides
-                                        // 将结果写入 drawerItems
-                                        drawerItems.add(BottomItem(title, uri, id, showing))
-                                        // 去除红点
-                                        if (sPrefs.getBoolean("purify_drawer_reddot", false)) items?.setIntField("redDot", 0)
-                                        showing.not()
-                                    }
-                                // 去除按钮
-                                val button = sections?.getObjectFieldOrNull("button")
-                                if (button != null) {
-                                    val buttonText = button.getObjectField("text").toString()
-                                    val showing = buttonText !in hides
-                                    if (buttonText != "null") {
-                                        val uri = button.getObjectFieldAs<String>("jumpUrl")
-                                        drawerItems.add(BottomItem("按钮：", uri, buttonText, showing))
-                                        if (!showing) sections.setObjectField("button", null)
+                    if (sPrefs.getBoolean("purify_drawer", false) &&
+                        sPrefs.getBoolean("hidden", false)
+                    ) {
+                        arrayOf(
+                            result.getObjectFieldOrNullAs<MutableList<*>?>("sectionList"),
+                            result.getObjectFieldOrNullAs<MutableList<*>?>("sectionListV2"),
+                            result.getObjectFieldOrNullAs<MutableList<*>?>("padSectionList")
+                        ).forEach { sections ->
+                            var button: Any? = null
+                            sections?.removeAll { item ->
+                                if (platform == "android_hd") {
+                                    when (item?.getObjectFieldAs<String?>("uri")) {
+                                        "bilibili://user_center/teenagersmode" -> return@removeAll true
+                                        "bilibili://user_center/feedback" -> return@removeAll true
+                                        else -> return@removeAll false
                                     }
                                 }
-                                // 改变样式
-                                if (sPrefs.getBoolean("drawer_style_switch", false)) {
-                                    sections?.setIntField(
-                                        "style",
-                                        when {
-                                            sPrefs.getBoolean("drawer_style", false) -> 2
-                                            else -> 1
-                                        }
-                                    )
+
+                                item?.getObjectField("button")?.run {
+                                    if (!getObjectFieldAs<String?>("text").isNullOrEmpty())
+                                        button = this
                                 }
-                            } catch (e: Exception) {
-                                Log.d(e)
+
+                                when {
+                                    item?.getObjectFieldAs<String?>("title")
+                                        .isNullOrEmpty() -> false
+                                    item?.getIntField("style") == 2 -> {
+                                        item.setObjectField("button", button)
+                                        false
+                                    }
+                                    else -> true
+                                }
                             }
                         }
-                        // 删除标题组
-                        result.getObjectFieldOrNullAs<MutableList<*>?>("sectionListV2")?.removeAll { sections ->
-                            sections?.getObjectFieldOrNull("title").toString() in hides
-                        }
+                        accountMineClass.findFieldOrNull("vipSectionRight")?.set(result, null)
                     }
-                    accountMineClass.findFieldOrNull("vipSectionRight")?.set(result, null)
                     if (sPrefs.getBoolean("custom_theme", false)) {
                         result.setObjectField("garbEntrance", null)
                     }
