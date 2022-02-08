@@ -24,7 +24,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ 正式版 ]
+        os: [ windows-latest ]
 
     steps:
     - name: Check out
