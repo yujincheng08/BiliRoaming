@@ -82,19 +82,19 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         }
                         // 不存在频道按钮时才添加
                         if (hasChannel != null && !hasChannel) {
-                            tabClass?.new()?.run {
-                                setObjectField("tabId", "123")
-                                setObjectField("name", "频道")
-                                setObjectField(
+                            val channel = tabClass?.new() {
+                                ?.setObjectField("tabId", "123")
+                                ?.setObjectField("name", "频道")
+                                ?.setObjectField(
                                     "icon",
                                     "http://i0.hdslb.com/bfs/archive/e16c9303e9edbf23031f545fcafc44d1f60cd07b.png"
                                 )
-                                setObjectField(
+                                ?.setObjectField(
                                     "iconSelected",
                                     "http://i0.hdslb.com/bfs/archive/f6739d905dee57d2c0429d9b66acb3f39b294aff.png"
                                 )
-                                setObjectField("uri", "bilibili://pegasus/channel")
-                                setObjectField("reportId", "频道Bottom")
+                                ?.setObjectField("uri", "bilibili://pegasus/channel/")
+                                ?.setObjectField("reportId", "频道Bottom")
                                 val pos = 2
                                 setIntField("pos", pos)
                                 bottom.forEach {
