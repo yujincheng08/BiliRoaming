@@ -360,7 +360,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         }
 
         private fun onCustomizeBottomBarClick(): Boolean {
-            AlertDialog.Builder("com.bilibili.lib.ui.GeneralActivity").apply {
+            AlertDialog.Builder(activity).apply {
                 val bottomItems = JsonHook.bottomItems
                 val ids = bottomItems.map { it.id }.toHashSet()
                 sPrefs.getStringSet("hided_bottom_items", null)?.forEach {
