@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 import me.iacn.biliroaming.Constant.HOST_REGEX
 import me.iacn.biliroaming.XposedInit.Companion.moduleRes
+import me.iacn.biliroaming.network.BiliRoamingApi
 import me.iacn.biliroaming.network.BiliRoamingApi.getPlayUrl
 import me.iacn.biliroaming.utils.Log
 import me.iacn.biliroaming.utils.sPrefs
@@ -168,12 +169,20 @@ class SpeedTestDialog(private val pref: ListPreference, activity: Activity) :
     }
 
     private fun getTestUrl(): String? {
-        val json =
+        val json = try {
             if (XposedInit.country.get(5L, TimeUnit.SECONDS) == "cn") getPlayUrl(
                 mainlandParams,
                 arrayOf("hk", "tw")
             )
             else getPlayUrl(overseaParams, arrayOf("cn"))
+        } catch (e: BiliRoamingApi.CustomServerException) {
+            var messages = ""
+            for (error in e.errors) {
+                messages += "${error.key}: ${error.value}\n"
+            }
+            Log.e("请求解析服务器发生错误: ${messages.trim()}")
+            return null
+        }
         return json?.toJSONObject()?.optJSONObject("dash")?.getJSONArray("audio")?.run {
             (0 until length()).map { idx -> optJSONObject(idx) }
         }?.minWithOrNull { a, b -> a.optInt("bandwidth") - b.optInt("bandwidth") }
