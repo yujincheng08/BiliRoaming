@@ -388,9 +388,54 @@ object BiliRoamingApi {
 
         val hostList = LinkedHashMap<String, String>(4, 1f, true)
 
-        if (hostList.isEmpty())
-        // reversely
-            linkedMapOf("th" to thUrl, "tw" to twUrl, "cn" to cnUrl, "hk" to hkUrl).filterKeys {
+        // check priority area
+        priorityArea?.forEach { area ->
+            when (area) {
+                "tw" -> twUrl?.run { hostList.put("tw", twUrl) }
+                "hk" -> hkUrl?.run { hostList.put("hk", hkUrl) }
+                "cn" -> cnUrl?.run { hostList.put("cn", cnUrl) }
+                else -> thUrl?.run { hostList.put("th", thUrl) }
+            }
+        }
+
+        // check last season info
+        val epIdStartIdx = queryString.indexOf("ep_id=")
+        val epIdEndIdx = queryString.indexOf("&", epIdStartIdx)
+        val epId = queryString.substring(epIdStartIdx + 6, epIdEndIdx)
+        if (!lastSeasonInfo.containsKey("ep_ids") || lastSeasonInfo["ep_ids"]?.contains(epId) != true)
+            lastSeasonInfo.clear()
+
+        // prioritize area using title
+        lastSeasonInfo["title"]?.run {
+            if (contains(Regex("僅.*台")) && twUrl != null) twUrl.run { hostList.put("tw", twUrl) }
+            if (contains(Regex("僅.*港")) && hkUrl != null) hkUrl.run { hostList.put("hk", hkUrl) }
+            if (contains(Regex("[仅|僅].*[东南亚|其他]")) && thUrl != null) thUrl.run {
+                hostList.put(
+                    "th",
+                    thUrl
+                )
+            }
+        }
+
+        // prioritize area using season id
+        val seasonId = lastSeasonInfo["season_id"] ?: if (epId.isEmpty()) null else "ep$epId"
+        if (seasonId != null && sCaches.contains(seasonId)) {
+            val cachedArea = sCaches.getString(seasonId, null)
+            cachedArea?.run {
+                when (cachedArea) {
+                    "tw" -> twUrl?.run { hostList.put("tw", twUrl) }
+                    "hk" -> hkUrl?.run { hostList.put("hk", hkUrl) }
+                    "cn" -> cnUrl?.run { hostList.put("cn", cnUrl) }
+                    else -> thUrl?.run { hostList.put("th", thUrl) }
+                }
+                Log.d("use cached area $cachedArea for $seasonId")
+            }
+        }
+
+        // append leftover area
+        if (hostList.size < 4)
+            linkedMapOf("cn" to cnUrl, "th" to thUrl, "hk" to hkUrl, "tw" to twUrl).filterKeys {
+                if (hostList.containsKey(it)) return@filterKeys false
                 if (!sPrefs.getString("${it}_server_accessKey", null).isNullOrEmpty())
                     return@filterKeys true
                 it != (runCatching { XposedInit.country.get(5L, TimeUnit.SECONDS) }.getOrNull()
@@ -401,38 +446,11 @@ object BiliRoamingApi {
                 it.value!!
             }
 
-        val epIdStartIdx = queryString.indexOf("ep_id=")
-        val epIdEndIdx = queryString.indexOf("&", epIdStartIdx)
-        val epId = queryString.substring(epIdStartIdx + 6, epIdEndIdx)
-
-        if (!lastSeasonInfo.containsKey("ep_ids") || lastSeasonInfo["ep_ids"]?.contains(epId) != true)
-            lastSeasonInfo.clear()
-
-        lastSeasonInfo["title"]?.run {
-            if (contains(Regex("僅.*台")) && twUrl != null) hostList["tw"]
-            if (contains(Regex("僅.*港")) && hkUrl != null) hostList["hk"]
-            if (contains(Regex("[仅|僅].*[东南亚|其他]")) && thUrl != null) hostList["th"]
-        }
-
-        priorityArea?.forEach { area ->
-            if (hostList.containsKey(area)) hostList[area]
-        }
-
         if (hostList.isEmpty()) return null
-
-        val seasonId = lastSeasonInfo["season_id"] ?: if (epId.isEmpty()) null else "ep$epId"
-
-        if (seasonId != null && sCaches.contains(seasonId)) {
-            val cachedArea = sCaches.getString(seasonId, null)
-            if (hostList.containsKey(cachedArea)) {
-                Log.d("use cached area $cachedArea for $seasonId")
-                hostList[cachedArea]
-            }
-        }
 
         val errors: MutableMap<String, String> = mutableMapOf()
 
-        for ((area, host) in hostList.toList().asReversed()) {
+        for ((area, host) in hostList.toList()) {
             val accessKey = instance.getCustomizeAccessKey("${area}_server") ?: ""
             val extraMap = if (area == "th") mapOf(
                 "area" to area,
