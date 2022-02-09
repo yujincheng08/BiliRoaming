@@ -66,24 +66,32 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 param.result = ByteArrayInputStream(content?.toByteArray())
                 return@hookAfterMethod
             }
-            // Replace because in Android R, the sign query hook may not success.
-            // As a workaround, the request will fallback to request from proxy server.
-            // If biliplus is down, we can still get result from proxy server.
-            // However, the speed may not be fast.
-            content = getPlayUrl(queryString.replace("dl=1", "dl_fix=1"))
-            countDownLatch?.countDown()
-            content = content?.let {
-                if (urlString.contains("dl_fix=1") || urlString.contains("dl=1")) {
-                    fixDownload(it)
-                } else content
-            }
-            content?.let {
-                Log.d("Has replaced play url with proxy server $it")
-                Log.toast("已从代理服务器获取播放地址")
-                param.result = ByteArrayInputStream(it.toByteArray())
-            } ?: run {
-                Log.e("Failed to get play url")
-                Log.toast("获播放地址失败")
+            try {
+                // Replace because in Android R, the sign query hook may not success.
+                // As a workaround, the request will fallback to request from proxy server.
+                // If biliplus is down, we can still get result from proxy server.
+                // However, the speed may not be fast.
+                content = getPlayUrl(queryString.replace("dl=1", "dl_fix=1"))
+                countDownLatch?.countDown()
+                content = content?.let {
+                    if (urlString.contains("dl_fix=1") || urlString.contains("dl=1")) {
+                        fixDownload(it)
+                    } else content
+                }
+                content?.let {
+                    Log.d("Has replaced play url with proxy server $it")
+                    Log.toast("已从代理服务器获取播放地址")
+                    param.result = ByteArrayInputStream(it.toByteArray())
+                } ?: run {
+                    Log.e("Failed to get play url")
+                    Log.toast("获播放地址失败")
+                }
+            } catch (e: CustomServerException) {
+                var messages = ""
+                for (error in e.errors) {
+                    messages += "${error.key}: ${error.value}\n"
+                }
+                Log.e("请求解析服务器发生错误: ${messages.trim()}")
             }
         }
 
@@ -117,15 +125,24 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 if (!response.callMethodAs<Boolean>("hasVideoInfo")
                     || needForceProxy(response)
                 ) {
-                    val content = getPlayUrl(reconstructQuery(request))
-                    countDownLatch?.countDown()
-                    content?.let {
-                        Log.d("Has replaced play url with proxy server $it")
-                        Log.toast("已从代理服务器获取播放地址")
-                        param.result = reconstructResponse(response, it, isDownload)
-                    } ?: run {
-                        Log.e("Failed to get play url")
-                        Log.toast("获取播放地址失败")
+                    try {
+                        val content = getPlayUrl(reconstructQuery(request))
+                        countDownLatch?.countDown()
+                        content?.let {
+                            Log.d("Has replaced play url with proxy server $it")
+                            Log.toast("已从代理服务器获取播放地址")
+                            param.result = reconstructResponse(response, it, isDownload)
+                        } ?: run {
+                            Log.e("Failed to get play url")
+                            Log.toast("获取播放地址失败")
+                        }
+                    } catch (e: CustomServerException) {
+                        var messages = ""
+                        for (error in e.errors) {
+                            messages += "${error.key}: ${error.value}\n"
+                        }
+                        showPlayerError(response, "请求解析中服务器发生错误(点此查看更多)\n${messages.trim()}")
+                        Log.e("请求解析服务器发生错误: ${messages.trim()}")
                     }
                 } else if (isDownload) {
                     param.result = fixDownloadProto(response)
