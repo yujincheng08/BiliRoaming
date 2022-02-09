@@ -136,10 +136,12 @@ class SSLHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             param.result = true
         }
 
-        "okhttp3.CertificatePinner".findClassOrNull(mClassLoader)
-            ?.hookBeforeMethod("findMatchingPins", String::class.java) { param ->
+        "okhttp3.CertificatePinner".findClassOrNull(mClassLoader)?.run {
+            (runCatchingOrNull { getDeclaredMethod("findMatchingPins", String::class.java) }
+                ?: declaredMethods.firstOrNull { it.parameterTypes.size == 1 && it.parameterTypes[0] == String::class.java && it.returnType == List::class.java })?.hookBeforeMethod { param ->
                 param.args[0] = ""
             }
+        }
 
         "android.webkit.WebViewClient".findClassOrNull(mClassLoader)?.run {
             replaceMethod(
