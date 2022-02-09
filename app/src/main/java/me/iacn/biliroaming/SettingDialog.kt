@@ -360,7 +360,8 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         }
 
         private fun onCustomizeBottomBarClick(): Boolean {
-            AlertDialog.Builder(activity).apply {
+            //AlertDialog.Builder(activity).apply {
+            AlertDialog.Builder("com.bilibili.lib.ui.GeneralActivity").apply {
                 val bottomItems = JsonHook.bottomItems
                 val ids = bottomItems.map { it.id }.toHashSet()
                 sPrefs.getStringSet("hided_bottom_items", null)?.forEach {
@@ -379,8 +380,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 }
                 setNegativeButton(android.R.string.cancel, null)
                 val names = Array(bottomItems.size) { i ->
-                    //"${bottomItems[i].name} (${bottomItems[i].id}) (${bottomItems[i].uri})"
-                    "${activity}"
+                    "${bottomItems[i].name} (${bottomItems[i].id}) (${bottomItems[i].uri})"
                 }
                 setNeutralButton("重置") { _, _ ->
                     sPrefs.edit().remove("hided_bottom_items").apply()
