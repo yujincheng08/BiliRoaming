@@ -379,7 +379,8 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 }
                 setNegativeButton(android.R.string.cancel, null)
                 val names = Array(bottomItems.size) { i ->
-                    "${bottomItems[i].name} (${bottomItems[i].id}) (${bottomItems[i].uri})"
+                    "${bottomItems[i].name} (${bottomItems[i].id}) (${bottomItems[i].uri})",
+                    "额额额${activity}"
                 }
                 setNeutralButton("重置") { _, _ ->
                     sPrefs.edit().remove("hided_bottom_items").apply()
