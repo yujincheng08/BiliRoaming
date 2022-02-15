@@ -393,7 +393,7 @@ object BiliRoamingApi {
             linkedMapOf("tw" to twUrl, "hk" to hkUrl, "th" to thUrl, "cn" to cnUrl).filterKeys {
                 if (!sPrefs.getString("${it}_server_accessKey", null).isNullOrEmpty())
                     return@filterKeys true
-                it != (runCatching { XposedInit.country.get(5L, TimeUnit.SECONDS) }.getOrNull()
+                it != (runCatching { XposedInit.country.getValue(5) }.getOrNull()
                     ?: true)
             }.filterValues {
                 it != null

@@ -14,6 +14,7 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.future.future
+import kotlinx.coroutines.launch
 import me.iacn.biliroaming.hook.*
 import me.iacn.biliroaming.utils.*
 import java.util.concurrent.CompletableFuture
@@ -66,14 +67,14 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                         }\n请勿在B站任何地方宣传漫游。\n漫游插件开源免费，谨防被骗。"
                     )
 
-                    country = MainScope().future(Dispatchers.IO) {
-                        when (fetchJson(Constant.infoUrl)?.optJSONObject("data")
+                    MainScope().launch(Dispatchers.IO) {
+                        country.setValue(when (fetchJson(Constant.infoUrl)?.optJSONObject("data")
                             ?.optString("country")) {
                             "中国" -> "cn"
                             "香港", "澳门" -> "hk"
                             "台湾" -> "tw"
                             else -> "global"
-                        }.also { Log.d("当前地区: $it") }
+                        }.also { Log.d("当前地区: $it") })
                     }
 
                     BiliBiliPackage(lpparam.classLoader, param.args[0] as Context)
@@ -160,7 +161,7 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
     companion object {
         lateinit var modulePath: String
         lateinit var moduleRes: Resources
-        lateinit var country: CompletableFuture<String>
+        lateinit var country: FutureValue<String>
 
         private val hookers = ArrayList<BaseHook>()
         private var lateInitHook: XC_MethodHook.Unhook? = null

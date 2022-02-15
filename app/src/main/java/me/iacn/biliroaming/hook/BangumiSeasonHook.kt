@@ -440,10 +440,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         ) {
             for (area in AREA_TYPES) {
                 if (runCatching {
-                        XposedInit.country.get(
-                            5L,
-                            TimeUnit.SECONDS
-                        )
+                        XposedInit.country.getValue(5)
                     }.getOrNull() == area.value.area) {
                     continue
                 }
