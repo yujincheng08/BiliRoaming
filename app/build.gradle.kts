@@ -34,7 +34,7 @@ android {
 
     defaultConfig {
         applicationId = "me.iacn.biliroaming"
-        minSdk = 21
+        minSdk = 24
         targetSdk = 32  // Target Android Sv2
         versionCode = appVerCode.toInt()
         versionName = appVerName
