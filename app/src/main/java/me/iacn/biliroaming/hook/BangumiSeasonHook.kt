@@ -53,6 +53,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
         private val AREA_TYPES =
             mapOf(
+                893 to Area("th", "泰(影)", "8", "movie"),
                 931 to Area("cn", "陆(影)", "8", "movie"),
                 364364 to Area("hk", "港(影)", "8", "movie"),
                 889464 to Area("tw", "台(影)", "8", "movie"),
