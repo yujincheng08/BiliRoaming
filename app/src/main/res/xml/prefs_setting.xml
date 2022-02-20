@@ -114,6 +114,11 @@
             android:summary="@string/replace_story_video_summary"
             android:title="@string/replace_story_video_title" />
 
+        <SwitchPreference
+            android:key="purify_share"
+            android:summary="@string/purify_share_summary"
+            android:title="@string/purify_share_title" />
+
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/pref_backup">
         <Preference

@@ -133,6 +133,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             val supportTeenagersMode = instance.teenagersModeDialogActivityClass != null
             val supportCustomizeCC = instance.subtitleSpanClass != null
             val supportStoryVideo = instance.storyVideoActivityClass != null
+            val supportPurifyShare = instance.shareClickResult != null
             if (!supportDrawer)
                 disablePreference("drawer")
             if (!supportSplashHook) {
@@ -167,6 +168,9 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             if (!supportDrawerStyle) {
                 disablePreference("drawer_style_switch")
                 disablePreference("drawer_style")
+            }
+            if (!supportPurifyShare) {
+                disablePreference("purify_share")
             }
         }
 
