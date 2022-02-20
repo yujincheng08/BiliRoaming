@@ -246,6 +246,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         )
     }
 
+    val shareClickResult by Weak {
+        "com.bilibili.lib.sharewrapper.online.api.ShareClickResult".findClassOrNull(mClassLoader)
+    }
+
     val classesList by lazy {
         mClassLoader.allClassesList {
             val serviceField = it.javaClass.findFirstFieldByExactTypeOrNull(
