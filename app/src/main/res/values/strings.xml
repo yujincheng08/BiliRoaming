@@ -170,4 +170,6 @@
     <string name="drawer_style_switch_summary">修改【我的】页面样式</string>
     <string name="drawer_style_title">修改我的页面样式</string>
     <string name="drawer_style_summary">开启改为列表，关闭改为按钮</string>
+    <string name="purify_share_title">净化分享</string>
+    <string name="purify_share_summary">把分享链接中的 b23.tv 短链接换成正常链接</string>
 </resources>
