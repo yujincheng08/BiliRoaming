@@ -656,9 +656,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         it.startsWith("com.bilibili.bplus.followinglist.module.item")
     }.firstOrNull { c ->
         c.findClass(mClassLoader).run {
-            declaredMethods.filter {
+            declaredMethods.count {
                 it.name == "onLongClick"
-            }.count() == 1
+            } == 1
         }
     }
 
@@ -730,9 +730,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         it.startsWith("com.bilibili.app.comm.comment2")
     }.firstOrNull { c ->
         c.findClass(mClassLoader).run {
-            declaredMethods.filter {
+            declaredMethods.count {
                 it.name == "onLongClick"
-            }.count() == 1
+            } == 1
         }
     }
 
@@ -790,9 +790,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     it.startsWith("tv.danmaku.biliplayerv2.service") ||
                             it.startsWith("tv.danmaku.biliplayerimpl")
                 }.firstOrNull { c ->
-                    c.findClass(mClassLoader).declaredFields.filter {
+                    c.findClass(mClassLoader).declaredFields.any {
                         it.type.name == "tv.danmaku.ijk.media.player.IMediaPlayer\$OnErrorListener"
-                    }.count().let { it > 0 }
+                    }
                 }?.findClassOrNull(mClassLoader) ?: return arrayOfNulls(2)
         playerCoreServiceV2class.declaredMethods.forEach { m ->
             if (Modifier.isPublic(m.modifiers) && m.parameterTypes.size == 1 && m.parameterTypes[0] == Boolean::class.java && m.returnType == Float::class.javaPrimitiveType)
@@ -920,17 +920,17 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     private fun findMusicNotificationHelper() = classesList.filter {
         it.startsWith("tv.danmaku.bili.ui.player.notification")
     }.firstOrNull { c ->
-        c.findClass(mClassLoader).declaredFields.filter {
+        c.findClass(mClassLoader).declaredFields.any {
             it.type == PendingIntent::class.java
-        }.count().let { it > 0 }
+        }
     }
 
     private fun findLiveNotificationHelper() = classesList.filter {
         it.startsWith("com.bilibili.bililive.room.ui.liveplayer.background")
     }.firstOrNull { c ->
-        c.findClass(mClassLoader).declaredFields.filter {
+        c.findClass(mClassLoader).declaredFields.any {
             it.type == PendingIntent::class.java
-        }.count().let { it > 0 }
+        }
     }
 
     private fun findGarbHelper(): Array<String?> {
@@ -970,9 +970,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         }.filter {
             it.matches(reg)
         }.firstOrNull { c ->
-            c.findClass(mClassLoader).declaredMethods.filter {
+            c.findClass(mClassLoader).declaredMethods.any {
                 it.parameterTypes.size == 2 && it.parameterTypes[0] == String::class.java && it.parameterTypes[1] == Bundle::class.java
-            }.count().let { it > 0 }
+            }
         }
     }
 
@@ -1062,9 +1062,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     private fun findThemeNameClass() = classesList.filter {
         it.startsWith("tv.danmaku.bili.ui.garb")
     }.firstOrNull { c ->
-        c.findClass(mClassLoader).declaredFields.filter {
+        c.findClass(mClassLoader).declaredFields.count {
             Modifier.isStatic(it.modifiers) && it.type == Map::class.java
-        }.count() == 1
+        } == 1
     }
 
     private fun findThemeNameField() = themeNameClass?.declaredFields?.firstOrNull {
@@ -1087,9 +1087,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     }.firstOrNull { c ->
         c.findClass(mClassLoader).declaredFields.filter {
             Modifier.isStatic(it.modifiers)
-        }.filter {
+        }.count {
             it.type == SparseArray::class.java
-        }.count().let { it > 1 }
+        } > 1
     }
 
     private fun findThemeIdHelper() = classesList.filter {
@@ -1097,9 +1097,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     }.firstOrNull { c ->
         c.findClass(mClassLoader).declaredFields.filter {
             Modifier.isStatic(it.modifiers)
-        }.filter {
+        }.count {
             it.type == SparseArray::class.java
-        }.count().let { it == 1 }
+        } == 1
     }
 
     private fun findColumnHelper() = classesList.filter {
@@ -1107,9 +1107,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     }.firstOrNull { c ->
         c.findClass(mClassLoader).declaredFields.filter {
             Modifier.isStatic(it.modifiers)
-        }.filter {
+        }.count {
             it.type == SparseArray::class.java
-        }.count().let { it > 1 }
+        } > 1
     }
 
     private fun findThemeProcessor(): String? {
@@ -1118,9 +1118,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         return classesList.filter {
             it.startsWith("tv.danmaku.bili.ui.theme")
         }.firstOrNull { c ->
-            c.findClass(mClassLoader).declaredFields.filter {
+            c.findClass(mClassLoader).declaredFields.count {
                 it.type == biliSkinListClass
-            }.count().let { it > 1 }
+            } > 1
         }
     }
 
@@ -1135,9 +1135,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     private fun findSettingRouterClass() = classesList.filter {
         it.startsWith("tv.danmaku.bili.ui.main2")
     }.firstOrNull { c ->
-        c.findClass(mClassLoader).declaredFields.filter {
+        c.findClass(mClassLoader).declaredFields.any {
             it.type == menuGroupItemClass && Modifier.isPublic(it.modifiers)
-        }.count() > 0
+        }
     }
 
     private fun findPartySectionClass() = classesList.filter {
@@ -1145,17 +1145,17 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 it.startsWith("com.bilibili.video.videodetail.party.section") ||
                 it.startsWith("tv.danmaku.bili.ui.video.profile.action")
     }.firstOrNull { c ->
-        c.findClass(mClassLoader).declaredFields.filter {
+        c.findClass(mClassLoader).declaredFields.any {
             it.type == progressBarClass
-        }.count().let { it > 0 }
+        }
     }
 
     private fun findSectionClass() = classesList.filter {
         it.startsWith("tv.danmaku.bili.ui.video.section")
     }.firstOrNull { c ->
-        c.findClass(mClassLoader).declaredFields.filter {
+        c.findClass(mClassLoader).declaredFields.any {
             it.type == progressBarClass
-        }.count().let { it > 0 }
+        }
     }
 
     private fun findLikeMethod() = sectionClass?.declaredMethods?.firstOrNull {
@@ -1176,9 +1176,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         }.filter {
             it.matches(regex)
         }.firstOrNull { c ->
-            c.findClass(mClassLoader).declaredFields.filter {
+            c.findClass(mClassLoader).declaredFields.any {
                 it.type == navigationViewClass
-            }.count() > 0
+            }
         }
     }
 
@@ -1186,11 +1186,11 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         it.startsWith("tv.danmaku.bili.ui.offline")
     }.firstOrNull { c ->
         c.findClass(mClassLoader).run {
-            declaredMethods.filter { m ->
+            declaredMethods.any { m ->
                 m.name == "onClick"
-            }.count() > 0 && declaredFields.filter {
+            } && declaredFields.count {
                 it.type == TextView::class.java || it.type == downloadingActivityClass
-            }.count() > 1
+            } > 1
         }
     }
 

@@ -12,6 +12,7 @@ import de.robv.android.xposed.XposedHelpers.*
 import de.robv.android.xposed.callbacks.XC_LayoutInflated
 import java.lang.reflect.Field
 import java.lang.reflect.Member
+import java.lang.reflect.Modifier
 import java.util.*
 
 typealias MethodHookParam = MethodHookParam
@@ -465,3 +466,8 @@ fun ClassLoader.allClassesList(delegator: (BaseDexClassLoader) -> BaseDexClassLo
                 .orEmpty()
         }.orEmpty()
 }
+
+val Member.isStatic: Boolean
+    inline get() = Modifier.isStatic(this.modifiers)
+val Member.isNotStatic: Boolean
+    inline get() = !this.isStatic
