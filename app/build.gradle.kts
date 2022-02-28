@@ -31,6 +31,7 @@ val appVerName: String by rootProject
 android {
     compileSdk = 32
     buildToolsVersion = "32.0.0"
+    ndkVersion = "23.1.7779620"
 
     defaultConfig {
         applicationId = "me.iacn.biliroaming"
@@ -38,6 +39,35 @@ android {
         targetSdk = 32  // Target Android Sv2
         versionCode = appVerCode.toInt()
         versionName = appVerName
+
+        externalNativeBuild {
+            cmake {
+                targets("biliroaming")
+                abiFilters("arm64-v8a", "x86")
+                arguments("-DANDROID_STL=none")
+                val flags = arrayOf(
+                    "-Wall",
+                    "-Werror",
+                    "-Qunused-arguments",
+                    "-Wno-gnu-string-literal-operator-template",
+                    "-fno-rtti",
+                    "-fvisibility=hidden",
+                    "-fvisibility-inlines-hidden",
+                    "-fno-exceptions",
+                    "-fno-stack-protector",
+                    "-fomit-frame-pointer",
+                    "-Wno-builtin-macro-redefined",
+                    "-ffunction-sections",
+                    "-fdata-sections",
+                    "-Wno-unused-value",
+                    "-Wl,--gc-sections",
+                    "-D__FILE__=__FILE_NAME__",
+                    "-Wl,--exclude-libs,ALL",
+                )
+                cppFlags("-std=c++20", *flags)
+                cFlags("-std=c18", *flags)
+            }
+        }
     }
 
     signingConfigs {
@@ -51,6 +81,14 @@ android {
         }
     }
 
+    buildFeatures {
+        prefab = true
+    }
+
+    androidResources {
+        noCompress("libbiliroaming.so")
+    }
+
     buildTypes {
         all {
             signingConfig =
@@ -62,6 +100,22 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles("proguard-rules.pro")
+            externalNativeBuild {
+                cmake {
+                    val configFlags = arrayOf(
+                        "-Oz",
+                        "-DNDEBUG"
+                    ).joinToString(" ")
+                    arguments(
+                        "-DCMAKE_CXX_FLAGS_RELEASE=$configFlags",
+                        "-DCMAKE_CXX_FLAGS_RELWITHDEBINFO=$configFlags",
+                        "-DCMAKE_C_FLAGS_RELEASE=$configFlags",
+                        "-DCMAKE_C_FLAGS_RELWITHDEBINFO=$configFlags",
+                        "-DDEBUG_SYMBOLS_PATH=${project.buildDir.absolutePath}/symbols/$name",
+                    )
+                }
+            }
+
         }
     }
 
@@ -104,6 +158,12 @@ android {
     }
     androidResources {
         additionalParameters += arrayOf("--allow-reserved-package-id", "--package-id", "0x23")
+    }
+
+    externalNativeBuild {
+        cmake {
+            path("src/main/jni/CMakeLists.txt")
+        }
     }
 }
 
@@ -171,6 +231,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.6.0")
     implementation("androidx.documentfile:documentfile:1.0.1")
+    implementation("dev.rikka.ndk.thirdparty:cxx:1.2.0")
 }
 
 val adbExecutable: String = androidComponents.sdkComponents.adb.get().asFile.absolutePath

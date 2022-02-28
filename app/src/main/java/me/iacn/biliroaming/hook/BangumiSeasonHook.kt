@@ -529,8 +529,8 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
 
     private fun fixBangumi(body: Any, url: String?) {
-        val fieldName =
-            if (isSerializable || isGson) instance.responseDataField().value else "result"
+        val fieldName = "_data"
+            //if (isSerializable || isGson) instance.responseDataField().value else "result"
         val result = body.getObjectField(fieldName)
         val code = body.getIntField("code")
         if (instance.bangumiUniformSeasonClass?.isInstance(result) != true && code != FAIL_CODE) return

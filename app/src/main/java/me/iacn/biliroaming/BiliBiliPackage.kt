@@ -22,6 +22,7 @@ import java.lang.reflect.ParameterizedType
 import java.net.URL
 import java.nio.channels.ByteChannel
 import kotlin.math.max
+import kotlin.system.measureTimeMillis
 
 /**
  * Created by iAcn on 2019/4/5
@@ -486,6 +487,47 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 { m, ks -> ks.fold(false) { acc, k -> acc || m.containsKey(k) } },
                 defaultValue
             )
+
+        var t = measureTimeMillis {
+            DexHelper(
+                mClassLoader.findDexClassLoader {
+                    val serviceField = it.javaClass.findFirstFieldByExactTypeOrNull(
+                        "com.bilibili.lib.tribe.core.internal.loader.DefaultClassLoaderService".findClassOrNull(
+                            mClassLoader
+                        )
+                    )
+                    val delegateField = it.javaClass.findFirstFieldByExactTypeOrNull(
+                        "com.bilibili.lib.tribe.core.internal.loader.TribeLoaderDelegate".findClassOrNull(
+                            mClassLoader
+                        )
+                    )
+                    if (serviceField != null) {
+                        serviceField.type.declaredFields.filter { f ->
+                            f.type == ClassLoader::class.java
+                        }.map { f ->
+                            it.getObjectFieldOrNull(serviceField.name)?.getObjectFieldOrNull(f.name)
+                        }.firstOrNull { o ->
+                            o?.javaClass?.name?.startsWith("com.bilibili") == false
+                        } as? BaseDexClassLoader ?: it
+                    } else if (delegateField != null) {
+                        val loaderField =
+                            delegateField.type.findFirstFieldByExactTypeOrNull(ClassLoader::class.java)
+                        val out = it.getObjectFieldOrNull(delegateField.name)
+                            ?.getObjectFieldOrNull(loaderField?.name)
+                        if (BaseDexClassLoader::class.java.isInstance(out)) out as BaseDexClassLoader else it
+                    } else it
+                }
+            ).use { helper ->
+                val class_bangumi_uniform_season = helper.findMethodUsingString(
+                    "BangumiAllButton",
+                    true, -1, 0, null, -1, null, null, null, true
+                ).firstOrNull()?.let {
+                    helper.decodeMethodIndex(it)
+                }?.declaringClass?.declaringClass
+                mHookInfo["class_bangumi_uniform_season"] = class_bangumi_uniform_season?.name
+            }
+        }
+        Log.d("load time $t")
 
         mHookInfo.checkOrPut("class_retrofit_response") {
             findRetrofitResponseClass()
