@@ -55,6 +55,8 @@ public class DexHelper implements AutoCloseable, Closeable {
 
     public native Class<?> decodeClassIndex(long classIndex);
 
+    public native void createFullCache();
+
     @Override
     public native void close();
 

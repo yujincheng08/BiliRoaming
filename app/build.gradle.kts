@@ -130,6 +130,7 @@ android {
             "-Xno-param-assertions",
             "-Xno-call-assertions",
             "-Xno-receiver-assertions",
+            "-opt-in=kotlin.RequiresOptIn",
         )
     }
 
@@ -169,7 +170,7 @@ android {
 
 protobuf {
     protoc {
-        artifact = "com.google.protobuf:protoc:3.19.1"
+        artifact = "com.google.protobuf:protoc:3.19.4"
     }
 
     generatedFilesBaseDir = "$projectDir/src/generated"
@@ -178,6 +179,9 @@ protobuf {
         all().forEach { task ->
             task.builtins {
                 id("java") {
+                    option("lite")
+                }
+                id("kotlin") {
                     option("lite")
                 }
             }
@@ -225,8 +229,8 @@ configurations.all {
 
 dependencies {
     compileOnly("de.robv.android.xposed:api:82")
-    implementation("com.google.protobuf:protobuf-javalite:3.19.1")
-    compileOnly("com.google.protobuf:protoc:3.19.1")
+    implementation("com.google.protobuf:protobuf-kotlin-lite:3.19.4")
+    compileOnly("com.google.protobuf:protoc:3.19.4")
     implementation("org.jetbrains.kotlin:kotlin-stdlib:${rootProject.extra["kotlinVersion"]}")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.6.0")

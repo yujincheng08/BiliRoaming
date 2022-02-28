@@ -641,3 +641,13 @@ extern "C" JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *) {
   cookie_field = env->GetFieldID(dex_file, "mCookie", "Ljava/lang/Object;");
   return JNI_VERSION_1_4;
 }
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_me_iacn_biliroaming_utils_DexHelper_createFullCache(JNIEnv *env, jobject thiz) {
+  auto *helper =
+          reinterpret_cast<DexHelper *>(env->GetLongField(thiz, token_field));
+  if (!helper)
+    return;
+  helper->CreateFullCache();
+}

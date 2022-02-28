@@ -518,16 +518,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     } else it
                 }
             ).use { helper ->
-                val class_bangumi_uniform_season = helper.findMethodUsingString(
-                    "BangumiAllButton",
-                    true, -1, 0, null, -1, null, null, null, true
-                ).firstOrNull()?.let {
-                    helper.decodeMethodIndex(it)
-                }?.declaringClass?.declaringClass
-                mHookInfo["class_bangumi_uniform_season"] = class_bangumi_uniform_season?.name
+                helper.createFullCache()
             }
         }
-        Log.d("load time $t")
+        Log.d("load and cache time $t")
 
         mHookInfo.checkOrPut("class_retrofit_response") {
             findRetrofitResponseClass()
