@@ -76,7 +76,6 @@ struct MyDexFile {
   size_t size_{};
   const uint8_t *const data_begin_{};
   const size_t data_size_{};
-  const std::string location_{};
 
   virtual ~MyDexFile() = default;
 };
@@ -163,7 +162,7 @@ Java_me_iacn_biliroaming_utils_DexHelper_load(JNIEnv *env, jobject thiz,
   auto elements = (jobjectArray)env->GetObjectField(path_list, element_field);
   if (!elements)
     return 0;
-  std::vector<std::tuple<const void *, size_t>> images;
+  std::vector<std::tuple<const void *, size_t, const void *, size_t>> images;
   for (auto i = 0, len = env->GetArrayLength(elements); i < len; ++i) {
     auto element = env->GetObjectArrayElement(elements, i);
     auto java_dex_file = env->GetObjectField(element, dex_file_field);
@@ -173,8 +172,12 @@ Java_me_iacn_biliroaming_utils_DexHelper_load(JNIEnv *env, jobject thiz,
         env->GetLongArrayElements(cookie, nullptr));
     while (dex_file_length-- > 1) {
       const auto *dex_file = dex_files[dex_file_length];
-      LOGD("Got dex file %s", dex_file->location_.data());
-      images.emplace_back(dex_file->begin_, dex_file->size_);
+      LOGD("Got dex file %d", dex_file_length);
+      if (dex::Reader::IsCompact(dex_file->begin_)) {
+        images.emplace_back(dex_file->begin_, dex_file->size_, dex_file->data_begin_, dex_file->data_size_);
+      } else {
+        images.emplace_back(dex_file->begin_, dex_file->size_, nullptr, 0);
+      }
     }
   }
   auto res = reinterpret_cast<jlong>(new DexHelper(images));
