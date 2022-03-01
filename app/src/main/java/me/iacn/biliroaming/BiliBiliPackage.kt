@@ -3,9 +3,11 @@
 package me.iacn.biliroaming
 
 import android.app.AndroidAppHelper
+import android.app.Notification
 import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
+import android.graphics.Bitmap
 import android.os.Bundle
 import android.text.style.ClickableSpan
 import android.text.style.LineBackgroundSpan
@@ -252,6 +254,18 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         "com.bilibili.lib.sharewrapper.online.api.ShareClickResult".findClassOrNull(mClassLoader)
     }
 
+    val backgroundPlayer by Weak {
+        mHookInfo["class_background_player"]?.findClassOrNull(mClassLoader)
+    }
+
+    val playerService by Weak {
+        mHookInfo["class_player_service"]?.findClassOrNull(mClassLoader)
+    }
+
+    val playerOnSeekComplete by Weak {
+        mHookInfo["class_player_on_seek_complete"]?.findClassOrNull(mClassLoader)
+    }
+
     val classesList by lazy {
         mClassLoader.allClassesList {
             val serviceField = it.javaClass.findFirstFieldByExactTypeOrNull(
@@ -401,6 +415,12 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     fun okioReadFrom() = mHookInfo["method_okio_buffer_read_from"]
 
     fun videoUpperAd() = mHookInfo["method_video_upper_ad"]
+
+    fun seekTo() = mHookInfo["method_seek_to"]
+
+    fun onSeekComplete() = mHookInfo["method_on_seek_complete"]
+
+    fun setState() = mHookInfo["method_set_state"]
 
     private fun readHookInfo(context: Context): MutableMap<String, String?> {
         try {
@@ -647,6 +667,137 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                             }.firstOrNull()?.declaringClass?.name
                 }
 
+                val bitmap = helper.encodeClassIndex(Bitmap::class.java)
+                val notification = helper.encodeClassIndex(Notification::class.java)
+                val class_music_notification_helper = helper.findMethodUsingString("buildNewJBNotification", true, notification, 1, "LL", -1, longArrayOf(bitmap), null, null, true).map{
+                    helper.decodeMethodIndex(it)
+                }.firstOrNull()?.declaringClass
+                mHookInfo["class_music_notification_helper"] = class_music_notification_helper?.name
+                val class_live_notification_helper = helper.findMethodUsingString(
+                    "buildLiveNotification",
+                    true,
+                    notification,
+                    1,
+                    "LL",
+                    -1,
+                    longArrayOf(bitmap),
+                    null,
+                    null,
+                    true
+                ).map {
+                    helper.decodeMethodIndex(it)
+                }.firstOrNull()?.declaringClass
+                mHookInfo["class_live_notification_helper"] = class_live_notification_helper?.name
+
+                val class_background_player = helper.findMethodUsingString(
+                    "backgroundPlayer status changed",
+                    true,
+                    -1,
+                    2,
+                    "VIZ",
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).map {
+                    helper.decodeMethodIndex(it)
+                }.firstOrNull()?.declaringClass
+                mHookInfo["class_background_player"] = class_background_player?.name
+                mHookInfo["player_interface"] =
+                    class_background_player?.interfaces?.firstOrNull()?.name
+//                val class_music_player = helper.findMethodUsingString("MusicBackgroundPlayBack status changed", true, -1, 3, "VIZZ", -1, null, null, null, true).map {
+//                    helper.decodeMethodIndex(it)
+//                }.firstOrNull()?.declaringClass
+//                mHookInfo["class_music_player"] = class_music_player?.name
+
+                val class_player_service = helper.findMethodUsingString(
+                    "mPlayerServiceManager",
+                    true,
+                    -1,
+                    0,
+                    "L",
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).map {
+                    helper.decodeMethodIndex(it)
+                }.firstOrNull()?.declaringClass?.superclass?.interfaces?.firstOrNull()
+                mHookInfo["class_player_service"] = class_player_service?.name
+
+                val method_seek_to = helper.findMethodUsingString(
+                    "[player]seek to",
+                    true,
+                    -1,
+                    1,
+                    "VI",
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).map {
+                    helper.decodeMethodIndex(it)
+                }.firstOrNull()
+                mHookInfo["method_seek_to"] = method_seek_to?.name
+                mHookInfo["class_player_core_service_v2"] = method_seek_to?.declaringClass?.name
+
+                val player_on_seek_complete = helper.findMethodUsingString(
+                    "[player]seek complete",
+                    true,
+                    -1,
+                    1,
+                    "VL",
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).map {
+                    helper.decodeMethodIndex(it)
+                }.firstOrNull()
+                mHookInfo["method_on_seek_complete"] = player_on_seek_complete?.name
+                mHookInfo["class_player_on_seek_complete"] =
+                    player_on_seek_complete?.declaringClass?.name
+                val player_core_service = helper.encodeClassIndex(method_seek_to?.declaringClass)
+                val player_speed = helper.findMethodUsingString(
+                    "player_key_video_speed",
+                    true,
+                    -1,
+                    1,
+                    "FZ",
+                    player_core_service,
+                    null,
+                    null,
+                    null,
+                    true
+                ).map {
+                    helper.decodeMethodIndex(it)
+                }.firstOrNull()
+                mHookInfo["method_get_default_speed"] = player_speed?.name
+                val set_state = helper.findMethodUsingString(
+                    "MediaSession setPlaybackState",
+                    true,
+                    -1,
+                    1,
+                    "VI",
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).map {
+                    helper.decodeMethodIndex(it)
+                }.firstOrNull()
+                mHookInfo["method_set_state"] = set_state?.name
+
+//                val class_music_wrap_player = helper.findMethodUsingString("MusicWrapperPlayer", false, -1, 3, "VLIL", -1, null, null, null, true).map {
+//                    helper.decodeMethodIndex(it)
+//                }.firstOrNull()?.declaringClass
+//                mHookInfo["class_music_wrap_player"] = class_music_wrap_player?.name
+
 //                helper.findMethodUsingString(
 //                    "null cannot be cast to non-null type android.content.ClipboardManager",
 //                    false,
@@ -751,8 +902,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             findBangumiParamsMap()
         }.checkConjunctiveOrPut("class_gson_converter", "field_gson") {
             findGson()
-        }.checkConjunctiveOrPut("class_player_options_panel_holder", "field_playback_speed_list") {
-            findPlaybackSpeedList()
         }.checkConjunctiveOrPut("class_player_core_service_v2", "method_get_default_speed") {
             findGetDefaultSpeed()
         }.checkConjunctiveOrPut("method_gson_tojson", "method_gson_fromjson") {
@@ -982,19 +1131,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         playerCoreServiceV2class.declaredMethods.forEach { m ->
             if (Modifier.isPublic(m.modifiers) && m.parameterTypes.size == 1 && m.parameterTypes[0] == Boolean::class.java && m.returnType == Float::class.javaPrimitiveType)
                 return arrayOf(playerCoreServiceV2class.name, m.name)
-        }
-        return arrayOfNulls(2)
-    }
-
-    private fun findPlaybackSpeedList(): Array<String?> {
-        classesList.filter {
-            it.startsWith("tv.danmaku.biliplayer.features.options.PlayerOptionsPanelHolder") ||
-                    it.startsWith("com.bilibili.playerbizcommon.widget.function.setting")
-        }.forEach { c ->
-            c.findClass(mClassLoader).declaredFields.forEach { f ->
-                if (Modifier.isStatic(f.modifiers) && f.type == FloatArray::class.java)
-                    return arrayOf(c, f.name)
-            }
         }
         return arrayOfNulls(2)
     }
