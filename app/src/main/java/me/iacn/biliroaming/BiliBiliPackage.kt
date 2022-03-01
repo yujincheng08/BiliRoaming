@@ -287,9 +287,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         ) ?: "com.bilibili.cheese.ui.detail.pay.v2.CheesePayHelperV2\$accessKey\$2".findClassOrNull(
             mClassLoader
         )
-            ?: "com.bilibili.bangumi.ui.page.detail.pay.BangumiPayHelperV2\$accessKey\$2".findClassOrNull(
-                mClassLoader
-            ))?.getStaticObjectField("INSTANCE")
+        ?: "com.bilibili.bangumi.ui.page.detail.pay.BangumiPayHelperV2\$accessKey\$2".findClassOrNull(
+            mClassLoader
+        ))?.getStaticObjectField("INSTANCE")
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -528,28 +528,98 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     helper.decodeMethodIndex(it)
                 }?.declaringClass?.declaringClass
                 mHookInfo["class_bangumi_uniform_season"] = class_bangumi_uniform_season?.name
-                val class_menu_item = helper.encodeClassIndex("com.bilibili.lib.homepage.mine.MenuGroup\$Item".findClass(mClassLoader));
+                val class_menu_item = helper.encodeClassIndex(
+                    "com.bilibili.lib.homepage.mine.MenuGroup\$Item".findClass(mClassLoader)
+                );
                 val add_setting_route = helper.findField(class_menu_item, null, false).map {
                     helper.decodeFieldIndex(it)
                 }.filterNotNull().filter {
                     Modifier.isPublic(it.modifiers) && !Modifier.isFinal(it.modifiers)
                 }.firstOrNull {
-                    helper.findMethodSettingField(helper.encodeFieldIndex(it),
+                    helper.findMethodSettingField(
+                        helper.encodeFieldIndex(it),
                         -1, -1, null,
-                        helper.encodeClassIndex(it.declaringClass), null, null, null, false).count { m->
-                            helper.decodeMethodIndex(m).apply {
-                                Log.d(this)
-                            } is Constructor<*>
+                        helper.encodeClassIndex(it.declaringClass), null, null, null, false
+                    ).count { m ->
+                        helper.decodeMethodIndex(m).apply {
+                            Log.d(this)
+                        } is Constructor<*>
                     } > 0
                 }?.declaringClass
                 mHookInfo["class_setting_router"] = add_setting_route?.name
-                val class_bangumi_params_map = helper.findMethodUsingString("UniformSeasonParams(", true, -1, 0, null, -1, null, null, null, true).firstOrNull()?.let {
+                val class_bangumi_params_map = helper.findMethodUsingString(
+                    "UniformSeasonParams(",
+                    true,
+                    -1,
+                    0,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).firstOrNull()?.let {
                     helper.decodeMethodIndex(it)
                 }?.declaringClass
                 mHookInfo["class_bangumi_params_map"] = class_bangumi_params_map?.name
-                mHookInfo["method_params_to_map"] = class_bangumi_params_map?.declaredMethods?.firstOrNull {
-                    it.returnType == java.util.Map::class.java
+                mHookInfo["method_params_to_map"] =
+                    class_bangumi_params_map?.declaredMethods?.firstOrNull {
+                        it.returnType == java.util.Map::class.java
+                    }?.name
+                val g = "com.google.gson.Gson".findClass(mClassLoader)
+                val gson_class = helper.encodeClassIndex(g)
+                val class_gson_converter = helper.findField(gson_class, null, false).map {
+                    helper.decodeFieldIndex(it)
+                }.filterNotNull().filter {
+                    it.isStatic && Modifier.isFinal(it.modifiers) && Modifier.isPublic(it.modifiers)
+                }.map {
+                    it.declaringClass
+                }.firstOrNull {
+                    it.declaredMethods.count { m ->
+                        m.returnType == g && m.isNotStatic
+                    } > 0
+                }
+                mHookInfo["class_gson_converter"] = class_gson_converter?.name
+                mHookInfo["field_gson"] = class_gson_converter?.declaredMethods?.firstOrNull { m ->
+                    m.returnType == g && m.isNotStatic
                 }?.name
+                val fastjosn_object =
+                    helper.encodeClassIndex("com.alibaba.fastjson.JSONObject".findClass(mClassLoader))
+                val class_pegasus_feed = helper.findMethodUsingString(
+                    "card_type is empty",
+                    false,
+                    -1,
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    longArrayOf(fastjosn_object),
+                    null,
+                    true
+                ).map {
+                    helper.decodeMethodIndex(it)
+                }.firstOrNull()?.declaringClass
+                mHookInfo["class_pegasus_feed"] = class_pegasus_feed?.name
+                val class_okhttp_response = helper.findMethodUsingString(
+                    "Cannot buffer entire body for content length",
+                    true,
+                    -1,
+                    0,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).map {
+                    helper.decodeMethodIndex(it)
+                }.firstOrNull()?.declaringClass
+                mHookInfo["class_okhttp_response"] = class_okhttp_response?.name
+                mHookInfo["method_pegasus_feed"] =
+                    class_pegasus_feed?.declaredMethods?.firstOrNull {
+                        it.parameterTypes.size == 1 && it.parameterTypes[0] == class_okhttp_response
+                                && it.returnType != Object::class.java
+                    }?.name
             }
         }
         Log.d("load and cache time $t")
