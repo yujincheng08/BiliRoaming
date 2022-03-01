@@ -640,10 +640,33 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                         isStatic && Modifier.isFinal(declaringClass.modifiers)
                     }
                 }.firstOrNull()?.let {
-                    mHookInfo["class_comment_long_click"] = helper.findMethodInvoking(it, -1, 2, "VLL", -1, null, null, null, false).map { m ->
-                        helper.decodeMethodIndex(m)
-                    }.firstOrNull()?.declaringClass?.name
+                    mHookInfo["class_comment_long_click"] =
+                        helper.findMethodInvoking(it, -1, 2, "VLL", -1, null, null, null, false)
+                            .map { m ->
+                                helper.decodeMethodIndex(m)
+                            }.firstOrNull()?.declaringClass?.name
                 }
+
+//                helper.findMethodUsingString(
+//                    "null cannot be cast to non-null type android.content.ClipboardManager",
+//                    false,
+//                    -1,
+//                    2,
+//                    "VZL",
+//                    -1,
+//                    null,
+//                    null,
+//                    null,
+//                    false
+//                ).firstOrNull()?.let {
+//                    val dcl = helper.encodeClassIndex(helper.decodeMethodIndex(it)?.declaringClass)
+//                    helper.findMethodInvoked(it, -1, -1, null, dcl, null, null, null, false)?.firstOrNull()
+//                }?.let {
+//                    val clickable_span = helper.encodeClassIndex(ClickableSpan::class.java)
+//                    helper.findMethodInvoked(it, -1, 2, "VLL", -1, longArrayOf(view, clickable_span), null, null, false).forEach { m ->
+//                        Log.d(helper.decodeMethodIndex(m))
+//                    }
+//                }
             }
         }
         Log.d("load and cache time $t")
@@ -799,7 +822,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         val classes = ArrayList<String>()
         val methods = ArrayList<String>()
         classesList.filter {
-            it.startsWith("tv.danmaku.bili.ui.video.profile.info.DescViewHolder")
+            it.startsWith("tv.danmaku.bili.ui.video.profile.info.DescViewHolder") ||
+                    it.startsWith("tv.danmaku.bili.ui.video.section.info.DescViewHolder")
         }.map { c ->
             c.findClass(mClassLoader)
         }.forEach { c ->
