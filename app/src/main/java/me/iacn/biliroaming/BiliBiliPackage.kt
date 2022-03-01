@@ -282,7 +282,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         }.asSequence()
     }
     private val accessKeyInstance by lazy {
-        ("com.bilibili.cheese.ui.detail.pay.v2.CheesePayHelperV2\$accessKey\$2".findClassOrNull(
+        ("com.bilibili.cheese.ui.detail.pay.v3.CheesePayHelperV3\$accessKey\$2".findClassOrNull(
+            mClassLoader
+        ) ?: "com.bilibili.cheese.ui.detail.pay.v2.CheesePayHelperV2\$accessKey\$2".findClassOrNull(
             mClassLoader
         )
             ?: "com.bilibili.bangumi.ui.page.detail.pay.BangumiPayHelperV2\$accessKey\$2".findClassOrNull(
@@ -541,6 +543,13 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     } > 0
                 }?.declaringClass
                 mHookInfo["class_setting_router"] = add_setting_route?.name
+                val class_bangumi_params_map = helper.findMethodUsingString("UniformSeasonParams(", true, -1, 0, null, -1, null, null, null, true).firstOrNull()?.let {
+                    helper.decodeMethodIndex(it)
+                }?.declaringClass
+                mHookInfo["class_bangumi_params_map"] = class_bangumi_params_map?.name
+                mHookInfo["method_params_to_map"] = class_bangumi_params_map?.declaredMethods?.firstOrNull {
+                    it.returnType == java.util.Map::class.java
+                }?.name
             }
         }
         Log.d("load and cache time $t")
