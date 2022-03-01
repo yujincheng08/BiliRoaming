@@ -156,6 +156,8 @@ Java_me_iacn_biliroaming_utils_DexHelper_findMethodUsingString(
 extern "C" JNIEXPORT jlong JNICALL
 Java_me_iacn_biliroaming_utils_DexHelper_load(JNIEnv *env, jobject thiz,
                                               jobject class_loader) {
+  if (!class_loader)
+    return 0;
   auto path_list = env->GetObjectField(class_loader, path_list_field);
   if (!path_list)
     return 0;
@@ -165,8 +167,11 @@ Java_me_iacn_biliroaming_utils_DexHelper_load(JNIEnv *env, jobject thiz,
   std::vector<std::tuple<const void *, size_t, const void *, size_t>> images;
   for (auto i = 0, len = env->GetArrayLength(elements); i < len; ++i) {
     auto element = env->GetObjectArrayElement(elements, i);
+    if (!element) continue;
     auto java_dex_file = env->GetObjectField(element, dex_file_field);
+    if (!java_dex_file) continue;
     auto cookie = (jlongArray)env->GetObjectField(java_dex_file, cookie_field);
+    if (!cookie) continue;
     auto dex_file_length = env->GetArrayLength(cookie);
     const auto *dex_files = reinterpret_cast<const MyDexFile **>(
         env->GetLongArrayElements(cookie, nullptr));
@@ -180,6 +185,7 @@ Java_me_iacn_biliroaming_utils_DexHelper_load(JNIEnv *env, jobject thiz,
       }
     }
   }
+  if (images.empty()) return 0;
   auto res = reinterpret_cast<jlong>(new DexHelper(images));
   env->SetLongField(thiz, token_field, res);
   return res;
