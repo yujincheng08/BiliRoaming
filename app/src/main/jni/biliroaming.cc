@@ -131,7 +131,7 @@ Java_me_iacn_biliroaming_utils_DexHelper_findMethodUsingString(
   auto out = helper->FindMethodUsingString(
       str_, match_prefix, return_type, parameter_count,
       parameter_shorty_ ? parameter_shorty_ : "", declaring_class,
-      contains_parameter_types_, contains_parameter_types_, dex_priority_,
+      parameter_types_, contains_parameter_types_, dex_priority_,
       find_first);
 
   env->ReleaseStringUTFChars(str, str_);
@@ -245,7 +245,7 @@ Java_me_iacn_biliroaming_utils_DexHelper_findMethodInvoking(
   auto out = helper->FindMethodInvoking(
       method_index, return_type, parameter_count,
       parameter_shorty_ ? parameter_shorty_ : "", declaring_class,
-      contains_parameter_types_, contains_parameter_types_, dex_priority_,
+      parameter_types_, contains_parameter_types_, dex_priority_,
       find_first);
 
   if (parameter_shorty_)
@@ -313,7 +313,7 @@ Java_me_iacn_biliroaming_utils_DexHelper_findMethodInvoked(
   auto out = helper->FindMethodInvoked(
       method_index, return_type, parameter_count,
       parameter_shorty_ ? parameter_shorty_ : "", declaring_class,
-      contains_parameter_types_, contains_parameter_types_, dex_priority_,
+      parameter_types_, contains_parameter_types_, dex_priority_,
       find_first);
 
   if (parameter_shorty_)
@@ -381,7 +381,7 @@ Java_me_iacn_biliroaming_utils_DexHelper_findMethodSettingField(
   auto out = helper->FindMethodSettingField(
       field_index, return_type, parameter_count,
       parameter_shorty_ ? parameter_shorty_ : "", declaring_class,
-      contains_parameter_types_, contains_parameter_types_, dex_priority_,
+      parameter_types_, contains_parameter_types_, dex_priority_,
       find_first);
 
   if (parameter_shorty_)
@@ -449,7 +449,7 @@ Java_me_iacn_biliroaming_utils_DexHelper_findMethodGettingField(
   auto out = helper->FindMethodGettingField(
       field_index, return_type, parameter_count,
       parameter_shorty_ ? parameter_shorty_ : "", declaring_class,
-      contains_parameter_types_, contains_parameter_types_, dex_priority_,
+      parameter_types_, contains_parameter_types_, dex_priority_,
       find_first);
 
   if (parameter_shorty_)
@@ -513,6 +513,8 @@ Java_me_iacn_biliroaming_utils_DexHelper_decodeMethodIndex(JNIEnv *env,
   auto out = helper->DecodeMethod(method_index);
   auto cl = env->GetObjectField(thiz, class_loader_field);
   auto clazz = LoadClass(env, cl, out.declaring_class.name);
+  if (!clazz)
+    return nullptr;
   env->DeleteLocalRef(cl);
   std::string sig;
   sig.reserve(4096);
@@ -553,9 +555,10 @@ Java_me_iacn_biliroaming_utils_DexHelper_decodeFieldIndex(JNIEnv *env,
     env->ExceptionClear();
     fid = env->GetStaticFieldID(clazz, out.name.data(), out.type.name.data());
   }
-//  if (!fid) {
-  //env->ExceptionClear();
-//    return nullptr; }
+  if (!fid) {
+    env->ExceptionClear();
+    return nullptr;
+  }
   auto res = env->ToReflectedField(clazz, fid, false);
   env->DeleteLocalRef(clazz);
   return res;
@@ -616,7 +619,7 @@ Java_me_iacn_biliroaming_utils_DexHelper_encodeMethodIndex(JNIEnv *env,
   for (const auto &descriptor : param_descriptors) {
     params_name.emplace_back(descriptor);
   }
-  auto res = helper->CreateMethodIndex(name, GetClassDescriptor(env, clazz),
+  auto res = helper->CreateMethodIndex(GetClassDescriptor(env, clazz), name,
                                        params_name);
   env->ReleaseStringUTFChars(java_name, name);
   return static_cast<jlong>(res);

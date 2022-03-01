@@ -491,7 +491,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 defaultValue
             )
 
-        var t = measureTimeMillis {
+        val t = measureTimeMillis {
             DexHelper(
                 mClassLoader.findDexClassLoader {
                     val serviceField = it.javaClass.findFirstFieldByExactTypeOrNull(
@@ -541,9 +541,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                         -1, -1, null,
                         helper.encodeClassIndex(it.declaringClass), null, null, null, false
                     ).count { m ->
-                        helper.decodeMethodIndex(m).apply {
-                            Log.d(this)
-                        } is Constructor<*>
+                        helper.decodeMethodIndex(m) is Constructor<*>
                     } > 0
                 }?.declaringClass
                 mHookInfo["class_setting_router"] = add_setting_route?.name
@@ -620,6 +618,32 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                         it.parameterTypes.size == 1 && it.parameterTypes[0] == class_okhttp_response
                                 && it.returnType != Object::class.java
                     }?.name
+                val view = helper.encodeClassIndex(View::class.java)
+                val on_long_clicker = helper.encodeMethodIndex(
+                    View::class.java.getDeclaredMethod(
+                        "setOnLongClickListener",
+                        View.OnLongClickListener::class.java
+                    )
+                )
+                helper.findMethodInvoked(
+                    on_long_clicker,
+                    -1,
+                    2,
+                    "VLL",
+                    -1,
+                    longArrayOf(view, -1),
+                    null,
+                    null,
+                    false
+                ).filter {
+                    helper.decodeMethodIndex(it).run {
+                        isStatic && Modifier.isFinal(declaringClass.modifiers)
+                    }
+                }.firstOrNull()?.let {
+                    mHookInfo["class_comment_long_click"] = helper.findMethodInvoking(it, -1, 2, "VLL", -1, null, null, null, false).map { m ->
+                        helper.decodeMethodIndex(m)
+                    }.firstOrNull()?.declaringClass?.name
+                }
             }
         }
         Log.d("load and cache time $t")
