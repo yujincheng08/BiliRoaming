@@ -155,12 +155,34 @@ message EndPage {
     bool hide = 0x2;
 }
 
+message PopWin {
+
+}
+
+message PromptBar {
+
+}
+
+message PayTip {
+
+}
+
+message HighDefinitionTrialInfo {
+
+}
+
 message ViewInfo {
     Dialog dialog = 0x1;
     Toast toast = 0x2;
     CouponInfo coupon_info = 0x3;
     repeated int64 demand_no_pay_epids = 0x4;
     EndPage endpage = 0x5;
+    map<string, bool> exp_config = 0x6;
+    PopWin pop_win = 0x7;
+    PromptBar try_watch_prompt_bar = 0x8;
+    PayTip pay_tip = 0x9;
+    HighDefinitionTrialInfo high_definition_trial_info = 0xa;
+    map<string, Dialog> ext_dialog = 0xb;
 }
 
 message PlayViewReply {
