@@ -527,6 +527,11 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 business = businessInfo {
                     isPreview = jsonContent.optInt("is_preview", 0) == 1
                 }
+
+                viewInfo = viewInfo {
+
+                }
+
                 if (isDownload) {
                     fixDownloadProto()
                 }
