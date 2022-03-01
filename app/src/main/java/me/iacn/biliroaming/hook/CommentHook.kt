@@ -6,6 +6,7 @@ import android.content.Intent
 import android.text.SpannableStringBuilder
 import android.text.style.ClickableSpan
 import android.view.View
+import android.widget.FrameLayout
 import android.widget.TextView
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.utils.*
@@ -52,6 +53,7 @@ class CommentHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         instance.commentCopyClass?.replaceMethod("onLongClick", View::class.java) { param ->
             if (!sPrefs.getBoolean("comment_copy_enhance", false)) return@replaceMethod true
             val messageId = getId("message")
+            if (param.args[0] is FrameLayout) return@replaceMethod param.invokeOriginalMethod()
             (param.args[0] as? View)?.findViewById<View>(messageId)?.let {
                 if (instance.commentSpanTextViewClass?.isInstance(it) == true ||
                     instance.commentSpanEllipsisTextViewClass?.isInstance(it) == true
