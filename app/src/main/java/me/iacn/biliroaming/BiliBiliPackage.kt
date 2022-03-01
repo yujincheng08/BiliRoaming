@@ -17,6 +17,7 @@ import android.widget.TextView
 import dalvik.system.BaseDexClassLoader
 import me.iacn.biliroaming.utils.*
 import java.io.*
+import java.lang.reflect.Constructor
 import java.lang.reflect.Modifier
 import java.lang.reflect.ParameterizedType
 import java.net.URL
@@ -518,7 +519,28 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     } else it
                 }
             ).use { helper ->
-                helper.createFullCache()
+                val class_bangumi_uniform_season = helper.findMethodUsingString(
+                    "BangumiAllButton",
+                    true, -1, 0, null, -1, null, null, null, true
+                ).firstOrNull()?.let {
+                    helper.decodeMethodIndex(it)
+                }?.declaringClass?.declaringClass
+                mHookInfo["class_bangumi_uniform_season"] = class_bangumi_uniform_season?.name
+                val class_menu_item = helper.encodeClassIndex("com.bilibili.lib.homepage.mine.MenuGroup\$Item".findClass(mClassLoader));
+                val add_setting_route = helper.findField(class_menu_item, null, false).map {
+                    helper.decodeFieldIndex(it)
+                }.filterNotNull().filter {
+                    Modifier.isPublic(it.modifiers) && !Modifier.isFinal(it.modifiers)
+                }.firstOrNull {
+                    helper.findMethodSettingField(helper.encodeFieldIndex(it),
+                        -1, -1, null,
+                        helper.encodeClassIndex(it.declaringClass), null, null, null, false).count { m->
+                            helper.decodeMethodIndex(m).apply {
+                                Log.d(this)
+                            } is Constructor<*>
+                    } > 0
+                }?.declaringClass
+                mHookInfo["class_setting_router"] = add_setting_route?.name
             }
         }
         Log.d("load and cache time $t")

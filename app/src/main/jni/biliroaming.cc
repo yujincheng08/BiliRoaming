@@ -63,8 +63,9 @@ std::string GetClassDescriptor(JNIEnv *env, jclass clazz) {
       descriptor = "F";
     } else if (descriptor == "double") {
       descriptor = "D";
+    } else {
+      descriptor = "L" + descriptor + ";";
     }
-    descriptor = "L" + std::string(name) + ";";
   }
   env->ReleaseStringUTFChars(java_name, name);
   return descriptor;
@@ -147,7 +148,7 @@ Java_me_iacn_biliroaming_utils_DexHelper_findMethodUsingString(
   auto res = env->NewLongArray(static_cast<int>(out.size()));
   auto res_element = env->GetLongArrayElements(res, nullptr);
   for (size_t i = 0; i < out.size(); ++i) {
-    res_element[i] = out[i];
+    res_element[i] = static_cast<jlong>(out[i]);
   }
   env->ReleaseLongArrayElements(res, res_element, 0);
   return res;
@@ -179,6 +180,7 @@ Java_me_iacn_biliroaming_utils_DexHelper_load(JNIEnv *env, jobject thiz,
       const auto *dex_file = dex_files[dex_file_length];
       LOGD("Got dex file %d", dex_file_length);
       if (dex::Reader::IsCompact(dex_file->begin_)) {
+        LOGD("compact dex");
         images.emplace_back(dex_file->begin_, dex_file->size_, dex_file->data_begin_, dex_file->data_size_);
       } else {
         images.emplace_back(dex_file->begin_, dex_file->size_, nullptr, 0);
@@ -253,7 +255,7 @@ Java_me_iacn_biliroaming_utils_DexHelper_findMethodInvoking(
   auto res = env->NewLongArray(static_cast<int>(out.size()));
   auto res_element = env->GetLongArrayElements(res, nullptr);
   for (size_t i = 0; i < out.size(); ++i) {
-    res_element[i] = out[i];
+    res_element[i] = static_cast<jlong>(out[i]);
   }
   env->ReleaseLongArrayElements(res, res_element, 0);
   return res;
@@ -320,7 +322,7 @@ Java_me_iacn_biliroaming_utils_DexHelper_findMethodInvoked(
   auto res = env->NewLongArray(static_cast<int>(out.size()));
   auto res_element = env->GetLongArrayElements(res, nullptr);
   for (size_t i = 0; i < out.size(); ++i) {
-    res_element[i] = out[i];
+    res_element[i] = static_cast<jlong>(out[i]);
   }
   env->ReleaseLongArrayElements(res, res_element, 0);
   return res;
@@ -387,7 +389,7 @@ Java_me_iacn_biliroaming_utils_DexHelper_findMethodSettingField(
   auto res = env->NewLongArray(static_cast<int>(out.size()));
   auto res_element = env->GetLongArrayElements(res, nullptr);
   for (size_t i = 0; i < out.size(); ++i) {
-    res_element[i] = out[i];
+    res_element[i] = static_cast<jlong>(out[i]);
   }
   env->ReleaseLongArrayElements(res, res_element, 0);
   return res;
@@ -454,7 +456,7 @@ Java_me_iacn_biliroaming_utils_DexHelper_findMethodGettingField(
   auto res = env->NewLongArray(static_cast<int>(out.size()));
   auto res_element = env->GetLongArrayElements(res, nullptr);
   for (size_t i = 0; i < out.size(); ++i) {
-    res_element[i] = out[i];
+    res_element[i] = static_cast<jlong>(out[i]);
   }
   env->ReleaseLongArrayElements(res, res_element, 0);
   return res;
@@ -484,7 +486,7 @@ Java_me_iacn_biliroaming_utils_DexHelper_findField(JNIEnv *env, jobject thiz,
   auto res = env->NewLongArray(static_cast<int>(out.size()));
   auto res_element = env->GetLongArrayElements(res, nullptr);
   for (size_t i = 0; i < out.size(); ++i) {
-    res_element[i] = out[i];
+    res_element[i] = static_cast<jlong>(out[i]);
   }
   env->ReleaseLongArrayElements(res, res_element, 0);
   return res;
@@ -528,10 +530,13 @@ Java_me_iacn_biliroaming_utils_DexHelper_decodeFieldIndex(JNIEnv *env,
   auto out = helper->DecodeField(field_index);
   auto cl = env->GetObjectField(thiz, class_loader_field);
   auto clazz = LoadClass(env, cl, out.declaring_class.name);
+  if (!clazz) return nullptr;
   env->DeleteLocalRef(cl);
-  return env->ToReflectedField(
+  auto res = env->ToReflectedField(
       clazz, env->GetFieldID(clazz, out.name.data(), out.type.name.data()),
       false);
+  env->DeleteLocalRef(clazz);
+  return res;
 }
 
 extern "C" JNIEXPORT jlong JNICALL
@@ -540,7 +545,9 @@ Java_me_iacn_biliroaming_utils_DexHelper_encodeClassIndex(JNIEnv *env,
                                                           jclass clazz) {
   auto *helper =
       reinterpret_cast<DexHelper *>(env->GetLongField(thiz, token_field));
-  return helper->CreateClassIndex(GetClassDescriptor(env, clazz));
+  if (!helper)
+    return -1;
+  return static_cast<jlong>(helper->CreateClassIndex(GetClassDescriptor(env, clazz)));
 }
 
 extern "C" JNIEXPORT jlong JNICALL
@@ -554,9 +561,9 @@ Java_me_iacn_biliroaming_utils_DexHelper_encodeFieldIndex(JNIEnv *env,
   auto java_name = (jstring)env->CallObjectMethod(field, get_name_method);
   auto clazz = (jclass)env->CallObjectMethod(field, get_declaring_class_method);
   auto name = env->GetStringUTFChars(java_name, nullptr);
-  auto res = helper->CreateFieldIndex(name, GetClassDescriptor(env, clazz));
+  auto res = helper->CreateFieldIndex(GetClassDescriptor(env, clazz), name);
   env->ReleaseStringUTFChars(java_name, name);
-  return res;
+  return static_cast<jlong>(res);
 }
 
 extern "C" JNIEXPORT jlong JNICALL
@@ -576,7 +583,7 @@ Java_me_iacn_biliroaming_utils_DexHelper_encodeMethodIndex(JNIEnv *env,
   auto param_len = env->GetArrayLength(params);
   std::vector<std::string> param_descriptors;
   param_descriptors.reserve(param_len);
-  for (size_t i = 0; i < param_len; ++i) {
+  for (int i = 0; i < param_len; ++i) {
     auto param = (jclass)env->GetObjectArrayElement(params, i);
     param_descriptors.emplace_back(GetClassDescriptor(env, param));
     env->DeleteLocalRef(param);
@@ -589,7 +596,7 @@ Java_me_iacn_biliroaming_utils_DexHelper_encodeMethodIndex(JNIEnv *env,
   auto res = helper->CreateMethodIndex(name, GetClassDescriptor(env, clazz),
                                        params_name);
   env->ReleaseStringUTFChars(java_name, name);
-  return res;
+  return static_cast<jlong>(res);
 }
 
 extern "C" JNIEXPORT jclass JNICALL
