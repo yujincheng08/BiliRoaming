@@ -3,7 +3,7 @@ syntax = "proto3";
 package me.iacn.biliroaming;
 
 option java_package = "me.iacn.biliroaming";
-option java_outer_classname = "Protos";
+option java_outer_classname = "API";
 option optimize_for = LITE_RUNTIME;
 
 enum CodeType {

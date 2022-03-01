@@ -3,7 +3,7 @@ package me.iacn.biliroaming.hook
 import android.net.Uri
 import me.iacn.biliroaming.*
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
-import me.iacn.biliroaming.Protos.*
+import me.iacn.biliroaming.API.*
 import me.iacn.biliroaming.hook.BangumiSeasonHook.Companion.lastSeasonInfo
 import me.iacn.biliroaming.network.BiliRoamingApi.CustomServerException
 import me.iacn.biliroaming.network.BiliRoamingApi.getPlayUrl

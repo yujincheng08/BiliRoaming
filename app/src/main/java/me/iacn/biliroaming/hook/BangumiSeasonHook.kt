@@ -302,7 +302,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             ?.hookAfterMethod("view", "com.bapis.bilibili.app.view.v1.ViewReq") { param ->
                 param.result?.let { return@hookAfterMethod }
                 val serializedRequest = param.args[0].callMethodAs<ByteArray>("toByteArray")
-                val req = Protos.ViewReq.parseFrom(serializedRequest)
+                val req = API.ViewReq.parseFrom(serializedRequest)
                 val reply = fixViewProto(req)
                 val serializedReply = reply?.toByteArray() ?: return@hookAfterMethod
                 param.result = (param.method as Method).returnType.callStaticMethod(
@@ -546,7 +546,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
     }
 
-    private fun fixViewProto(req: Protos.ViewReq): Protos.ViewReply? {
+    private fun fixViewProto(req: API.ViewReq): API.ViewReply? {
         val query = Uri.Builder().run {
             appendQueryParameter("id", req.aid.toString())
             appendQueryParameter("bvid", req.bvid.toString())
