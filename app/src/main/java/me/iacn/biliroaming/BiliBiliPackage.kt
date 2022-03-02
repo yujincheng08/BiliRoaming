@@ -512,6 +512,17 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             )
 
         val t = measureTimeMillis {
+            if (mHookInfo.isNotEmpty()) {
+                Log.d("skip duplicate native load")
+                return@measureTimeMillis
+            }
+            try {
+                System.loadLibrary("biliroaming")
+            } catch (e: Throwable) {
+                Log.toast("Unsupported arch or framework")
+                return@measureTimeMillis
+            }
+            needUpdate = true
             DexHelper(
                 mClassLoader.findDexClassLoader {
                     val serviceField = it.javaClass.findFirstFieldByExactTypeOrNull(

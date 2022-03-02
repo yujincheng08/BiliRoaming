@@ -41,8 +41,6 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
         if (!Constant.BILIBILI_PACKAGE_NAME.containsValue(lpparam.packageName) &&
             "tv.danmaku.bili.MainActivityV2".findClassOrNull(lpparam.classLoader) == null
         ) return
-        Log.d("to load lib")
-        System.loadLibrary("biliroaming")
         Instrumentation::class.java.hookBeforeMethod(
             "callApplicationOnCreate",
             Application::class.java
