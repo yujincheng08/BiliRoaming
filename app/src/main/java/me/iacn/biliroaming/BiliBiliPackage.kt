@@ -559,22 +559,15 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     helper.decodeMethodIndex(it)
                 }?.declaringClass?.declaringClass
                 mHookInfo["class_bangumi_uniform_season"] = class_bangumi_uniform_season?.name
-                val class_menu_item = helper.encodeClassIndex(
-                    "com.bilibili.lib.homepage.mine.MenuGroup\$Item".findClass(mClassLoader)
-                );
-                val add_setting_route = helper.findField(class_menu_item, null, false).map {
-                    helper.decodeFieldIndex(it)
-                }.filterNotNull().filter {
-                    Modifier.isPublic(it.modifiers) && !Modifier.isFinal(it.modifiers)
-                }.firstOrNull {
-                    helper.findMethodSettingField(
-                        helper.encodeFieldIndex(it),
-                        -1, -1, null,
-                        helper.encodeClassIndex(it.declaringClass), null, null, null, false
-                    ).count { m ->
-                        helper.decodeMethodIndex(m) is Constructor<*>
-                    } > 0
-                }?.declaringClass
+                val add_setting_route = helper.findMethodUsingString("UperHotMineSolution", false, -1, 0, "V", -1, null, null, null, true).map {
+                    helper.decodeMethodIndex(it)
+                }.firstOrNull()?.declaringClass?.interfaces?.firstOrNull()?.let {
+                    helper.encodeClassIndex(it)
+                }?.let {
+                    helper.findField(it, null, true).map { f ->
+                        helper.decodeFieldIndex(f)
+                    }.firstOrNull()?.declaringClass
+                }
                 mHookInfo["class_setting_router"] = add_setting_route?.name
                 val class_bangumi_params_map = helper.findMethodUsingString(
                     "UniformSeasonParams(",
