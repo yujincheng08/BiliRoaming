@@ -17,7 +17,7 @@ object Log {
     fun toast(msg: String, force: Boolean = false, duration: Int = Toast.LENGTH_SHORT) {
         if (!force && !sPrefs.getBoolean("show_info", true)) return
         handler.post {
-            toastHelper?.runCatchingOrNull {
+            toastHelper.runCatchingOrNull {
                 callStaticMethod("cancel")
                 callStaticMethod("showToast", currentContext, "哔哩漫游：$msg", duration)
                 Unit
