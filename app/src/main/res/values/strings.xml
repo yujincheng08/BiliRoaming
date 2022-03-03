@@ -146,6 +146,8 @@
     <string name="comment_copy_title">去除长按复制</string>
     <string name="comment_copy_enhance_title">长按自由复制</string>
     <string name="comment_copy_enhance_summary">长按评论/动态/视频简介时弹出自由选择对话框，需要开启“去除长按复制”</string>
+    <string name="revert_live_room_feed_title">强制旧版直播间样式</string>
+    <string name="revert_live_room_feed_summary">强制直播间使用旧版样式</string>
     <string name="block_video_ad_title">屏蔽视频下方推荐</string>
     <string name="block_video_ad_summary">屏蔽视频下方推荐栏</string>
     <string name="hide_long_duration_recommend_title">隐藏首页视频时长大于</string>
