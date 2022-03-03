@@ -268,6 +268,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         mHookInfo["class_player_on_seek_complete"]?.findClassOrNull(mClassLoader)
     }
 
+    val kanbanCallback by Weak {
+        mHookInfo["class_kanban_callback"]?.findClassOrNull(mClassLoader)
+    }
+
     val classesList by lazy {
         mClassLoader.allClassesList {
             val serviceField = it.javaClass.findFirstFieldByExactTypeOrNull(
@@ -423,6 +427,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     fun onSeekComplete() = mHookInfo["method_on_seek_complete"]
 
     fun setState() = mHookInfo["method_set_state"]
+
+    fun kanbanCallback() = mHookInfo["method_kanban_callback"]
 
     private fun readHookInfo(context: Context): MutableMap<String, String?> {
         try {
@@ -822,6 +828,21 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 }.firstOrNull()
                 mHookInfo["method_set_state"] = set_state?.name
 
+                "tv.danmaku.bili.ui.kanban.KanBanUserStatus".findClassOrNull(mClassLoader)
+                    ?.runCatchingOrNull {
+                        getDeclaredMethod("isUseKanBan")
+                    }?.let {
+                    helper.encodeMethodIndex(it)
+                }?.let {
+                    helper.findMethodInvoked(it, -1, 1, "VL", -1, null, null, null, true)
+                        ?.firstOrNull()
+                }?.let {
+                    helper.decodeMethodIndex(it)
+                }?.let {
+                    mHookInfo["class_kanban_callback"] = it.declaringClass.name
+                    mHookInfo["method_kanban_callback"] = it.name
+                }
+
 //                val class_music_wrap_player = helper.findMethodUsingString("MusicWrapperPlayer", false, -1, 3, "VLIL", -1, null, null, null, true).map {
 //                    helper.decodeMethodIndex(it)
 //                }.firstOrNull()?.declaringClass
@@ -982,11 +1003,30 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             "onSeekComplete"
         }.checkOrPut("class_player_on_seek_complete") {
             findPlayerOnSeekComplete()
+        }.checkConjunctiveOrPut("class_kanban_callback", "method_kanban_callback") {
+            findKanbanCallback()
         }
 
         Log.d(mHookInfo.filterKeys { it != "map_ids" })
         Log.d("Check hook info completed: needUpdate = $needUpdate")
         return needUpdate
+    }
+
+    private fun findKanbanCallback(): Array<String?> {
+        val status = "tv.danmaku.bili.ui.kanban.KanBanUserStatus".findClassOrNull(mClassLoader)
+            ?: return arrayOfNulls(2)
+        classesList.filter {
+            it.startsWith("tv.danmaku.bili.ui.kanban")
+        }.map { c ->
+            c.findClass(mClassLoader)
+        }.forEach { c ->
+            c.declaredMethods.forEach { m ->
+                if (m.returnType == Void::class.javaPrimitiveType && m.parameterTypes.size == 1 &&
+                    m.parameterTypes[0] == status
+                ) return arrayOf(c.name, m.name)
+            }
+        }
+        return arrayOfNulls(2)
     }
 
     private fun findBangumiUniformSeason() = classesList.filter {
