@@ -511,6 +511,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             )
 
         val t = measureTimeMillis {
+            return@measureTimeMillis
             if (mHookInfo.isNotEmpty()) {
                 Log.d("skip duplicate native load")
                 return@measureTimeMillis
@@ -518,6 +519,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             try {
                 System.loadLibrary("biliroaming")
             } catch (e: Throwable) {
+                Log.e(e)
                 Log.toast("不支持该架构或框架，部分功能可能失效")
                 return@measureTimeMillis
             }
