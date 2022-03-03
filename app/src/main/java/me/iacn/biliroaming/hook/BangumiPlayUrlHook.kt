@@ -2,8 +2,8 @@ package me.iacn.biliroaming.hook
 
 import android.net.Uri
 import me.iacn.biliroaming.*
-import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.API.*
+import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.hook.BangumiSeasonHook.Companion.lastSeasonInfo
 import me.iacn.biliroaming.network.BiliRoamingApi.CustomServerException
 import me.iacn.biliroaming.network.BiliRoamingApi.getPlayUrl
@@ -162,7 +162,8 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 ) {
                     if (!sPrefs.getBoolean("fix_download", false)
                         || request.callMethodAs<Long>("getQn") == 0L
-                        || request.callMethodAs<Int>("getFnval") == 0) {
+                        || request.callMethodAs<Int>("getFnval") == 0
+                    ) {
                         request.callMethod("setFnval", 0)
                     }
                     isDownload = true
