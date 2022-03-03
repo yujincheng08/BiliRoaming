@@ -85,7 +85,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     param.result = ByteArrayInputStream(it.toByteArray())
                 } ?: run {
                     Log.e("Failed to get play url")
-                    Log.toast("获播放地址失败")
+                    Log.toast("获取播放地址失败")
                 }
             } catch (e: CustomServerException) {
                 var messages = ""
