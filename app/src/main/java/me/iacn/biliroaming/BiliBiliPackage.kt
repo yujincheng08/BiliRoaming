@@ -990,6 +990,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     }.firstOrNull { c ->
         c.findClass(mClassLoader).declaredClasses.size >= 20
     }
+
     private fun findPlayerOnSeekComplete() = classesList.filter {
         playerCoreServiceV2Class?.name?.let { name -> it.startsWith(name) } ?: false
     }.firstOrNull { c ->
@@ -1557,7 +1558,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     }?.name
 
     private fun findPartyLikeMethod() = partySectionClass?.declaredMethods?.firstOrNull {
-        it.parameterTypes.size == 1 && it.parameterTypes[0] == Object::class.java
+        it.parameterTypes.size == 1 && it.returnType == Void::class.javaPrimitiveType && (
+                it.parameterTypes[0] == Object::class.java ||
+                        it.parameterTypes[0].name.startsWith("tv.danmaku.bili.videopage.foundation.section")
+                )
     }?.name
 
     private fun findDrawerClass(): String? {

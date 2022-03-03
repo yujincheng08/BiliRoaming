@@ -34,16 +34,19 @@ class AutoLikeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 likeView?.callOnClick()
             }
         }
-        instance.partySectionClass?.hookAfterMethod(
-            instance.partyLikeMethod(),
-            Object::class.java,
-            hooker = hooker
-        )
+        instance.partyLikeMethod()?.let {
+            instance.partySectionClass?.hookAfterAllMethods(
+                it,
+                hooker = hooker
+            )
+        }
 
-        instance.sectionClass?.hookAfterMethod(
-            instance.likeMethod(),
-            Object::class.java,
-            hooker = hooker
-        )
+        instance.likeMethod() ?.let {
+            instance.sectionClass?.hookAfterMethod(
+                it,
+                Object::class.java,
+                hooker = hooker
+            )
+        }
     }
 }
