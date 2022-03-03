@@ -143,6 +143,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         }
                         showPlayerError(response, "请求解析中服务器发生错误(点此查看更多)\n${messages.trim()}")
                         Log.e("请求解析服务器发生错误: ${messages.trim()}")
+                        Log.toast("请求解析服务器发生错误: ${messages.trim()}")
                     }
                 } else if (isDownload) {
                     param.result = fixDownloadProto(response)
@@ -187,6 +188,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             param.result = reconstructResponse(response, it, isDownload)
                         } ?: run {
                             showPlayerError(response, "获取播放地址失败。请检查哔哩漫游设置里的解析服务器设置。")
+                            Log.toast("获取播放地址失败。请检查哔哩漫游设置里的解析服务器设置。")
                         }
                     } catch (e: CustomServerException) {
                         var messages = ""
@@ -195,6 +197,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         }
                         showPlayerError(response, "请求解析中服务器发生错误(点此查看更多)\n${messages.trim()}")
                         Log.e("请求解析服务器发生错误: ${messages.trim()}")
+                        Log.toast("请求解析服务器发生错误: ${messages.trim()}")
                     }
                 } else if (isDownload) {
                     param.result = fixDownloadProto(response)
@@ -292,8 +295,6 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     private fun showPlayerError(response: Any, message: String) {
-        Log.e("Failed to get play url")
-        Log.toast("获取播放地址失败")
         if (response.callMethodAs("hasViewInfo")) {
             response.callMethod("getViewInfo")?.callMethod("getDialog")?.run {
                 callMethod("setMsg", "获取播放地址失败")
