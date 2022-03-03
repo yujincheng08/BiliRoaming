@@ -17,10 +17,17 @@ object Log {
     fun toast(msg: String, force: Boolean = false, duration: Int = Toast.LENGTH_SHORT) {
         if (!force && !sPrefs.getBoolean("show_info", true)) return
         handler.post {
-            toast?.cancel()
-            toast = Toast.makeText(currentContext, "", duration).apply {
-                setText("哔哩漫游：$msg")
-                show()
+            "com.bilibili.droid.ToastHelper".findClassOrNull(currentContext.classLoader)
+                ?.runCatchingOrNull {
+                    callStaticMethod("cancel")
+                    callStaticMethod("showToast", currentContext, "哔哩漫游：$msg", duration)
+                    Unit
+                } ?: run {
+                toast?.cancel()
+                toast = Toast.makeText(currentContext, "", duration).apply {
+                    setText("哔哩漫游：$msg")
+                    show()
+                }
             }
         }
     }
