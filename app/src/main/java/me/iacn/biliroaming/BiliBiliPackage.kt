@@ -19,7 +19,6 @@ import android.widget.TextView
 import dalvik.system.BaseDexClassLoader
 import me.iacn.biliroaming.utils.*
 import java.io.*
-import java.lang.reflect.Constructor
 import java.lang.reflect.Modifier
 import java.lang.reflect.ParameterizedType
 import java.net.URL
@@ -519,7 +518,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             try {
                 System.loadLibrary("biliroaming")
             } catch (e: Throwable) {
-                Log.toast("Unsupported arch or framework")
+                Log.toast("不支持该架构或框架，部分功能可能失效")
                 return@measureTimeMillis
             }
             needUpdate = true
@@ -1468,7 +1467,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     private fun findPartySectionClass() = classesList.filter {
         it.startsWith("tv.danmaku.bili.ui.video.party.section") ||
                 it.startsWith("com.bilibili.video.videodetail.party.section") ||
-                it.startsWith("tv.danmaku.bili.ui.video.profile.action")
+                it.startsWith("tv.danmaku.bili.ui.video.profile.action") ||
+                it.startsWith("tv.danmaku.bili.ui.video.section.action")
     }.firstOrNull { c ->
         c.findClass(mClassLoader).declaredFields.any {
             it.type == progressBarClass
