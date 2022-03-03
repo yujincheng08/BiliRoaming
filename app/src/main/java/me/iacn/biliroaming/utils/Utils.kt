@@ -102,6 +102,8 @@ val platform by lazy {
 
 val logFile by lazy { File(currentContext.externalCacheDir, "log.txt") }
 
+val toastHelper: Class<*> by lazy { currentContext.classLoader.loadClass("com.bilibili.droid.ToastHelper") }
+
 @Suppress("DEPRECATION")
 val sPrefs
     get() = currentContext.getSharedPreferences("biliroaming", Context.MODE_MULTI_PROCESS)!!
