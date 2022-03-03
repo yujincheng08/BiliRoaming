@@ -106,14 +106,13 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 if (sPrefs.getBoolean("allow_download", false)
                     && request.callMethodAs<Int>("getDownload") >= 1
                 ) {
-                    if (sPrefs.getBoolean("fix_download", false)
-                        && request.callMethodAs<Long>("getQn") != 0L
-                        && request.callMethodAs<Int>("getFnval") != 0
+                    if (!sPrefs.getBoolean("fix_download", false)
+                        || request.callMethodAs<Long>("getQn") == 0L
+                        || request.callMethodAs<Int>("getFnval") == 0
                     ) {
-                        isDownload = true
-                    } else {
                         request.callMethod("setFnval", 0)
                     }
+                    isDownload = true
                     request.callMethod("setDownload", 0)
                 }
             }
@@ -160,14 +159,12 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 if (sPrefs.getBoolean("allow_download", false)
                     && request.callMethodAs<Int>("getDownload") >= 1
                 ) {
-                    if (sPrefs.getBoolean("fix_download", false)
-                        && request.callMethodAs<Long>("getQn") != 0L
-                        && request.callMethodAs<Int>("getFnval") != 0
-                    ) {
-                        isDownload = true
-                    } else {
+                    if (!sPrefs.getBoolean("fix_download", false)
+                        || request.callMethodAs<Long>("getQn") == 0L
+                        || request.callMethodAs<Int>("getFnval") == 0) {
                         request.callMethod("setFnval", 0)
                     }
+                    isDownload = true
                     request.callMethod("setDownload", 0)
                 }
             }
