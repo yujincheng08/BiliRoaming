@@ -224,6 +224,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val liveRoomActivityClass by Weak {
         "com.bilibili.bililive.room.ui.roomv3.LiveRoomActivityV3".findClassOrNull(mClassLoader)
     }
+    val liveKvConfigHelperClass by Weak {
+        "com.bilibili.bililive.tec.kvcore.LiveKvConfigHelper".findClassOrNull(mClassLoader)
+    }
 
     val storyVideoActivityClass by Weak {
         "com.bilibili.video.story.StoryVideoActivity".findClassOrNull(mClassLoader)
