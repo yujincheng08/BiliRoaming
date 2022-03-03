@@ -558,7 +558,18 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     helper.decodeMethodIndex(it)
                 }?.declaringClass?.declaringClass
                 mHookInfo["class_bangumi_uniform_season"] = class_bangumi_uniform_season?.name
-                val add_setting_route = helper.findMethodUsingString("UperHotMineSolution", false, -1, 0, "V", -1, null, null, null, true).map {
+                val add_setting_route = helper.findMethodUsingString(
+                    "UperHotMineSolution",
+                    false,
+                    -1,
+                    0,
+                    "V",
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).map {
                     helper.decodeMethodIndex(it)
                 }.firstOrNull()?.declaringClass?.interfaces?.firstOrNull()?.let {
                     helper.encodeClassIndex(it)
@@ -672,7 +683,18 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
                 val bitmap = helper.encodeClassIndex(Bitmap::class.java)
                 val notification = helper.encodeClassIndex(Notification::class.java)
-                val class_music_notification_helper = helper.findMethodUsingString("buildNewJBNotification", true, notification, 1, "LL", -1, longArrayOf(bitmap), null, null, true).map{
+                val class_music_notification_helper = helper.findMethodUsingString(
+                    "buildNewJBNotification",
+                    true,
+                    notification,
+                    1,
+                    "LL",
+                    -1,
+                    longArrayOf(bitmap),
+                    null,
+                    null,
+                    true
+                ).map {
                     helper.decodeMethodIndex(it)
                 }.firstOrNull()?.declaringClass
                 mHookInfo["class_music_notification_helper"] = class_music_notification_helper?.name
@@ -946,6 +968,16 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             findDescCopyView()
         }.checkOrPut("class_bangumi_uniform_season") {
             findBangumiUniformSeason()
+        }.checkOrPut("class_background_player") {
+            findBackgroundPlayer()
+        }.checkOrPut("method_set_state") {
+            findSetState()
+        }.checkOrPut("method_seek_to") {
+            findSeekTo()
+        }.checkOrPut("method_on_seek_complete") {
+            "onSeekComplete"
+        }.checkOrPut("class_player_on_seek_complete") {
+            findPlayerOnSeekComplete()
         }
 
         Log.d(mHookInfo.filterKeys { it != "map_ids" })
@@ -957,6 +989,43 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         it.startsWith("com.bilibili.bangumi.data.page.detail.entity")
     }.firstOrNull { c ->
         c.findClass(mClassLoader).declaredClasses.size >= 20
+    }
+    private fun findPlayerOnSeekComplete() = classesList.filter {
+        playerCoreServiceV2Class?.name?.let { name -> it.startsWith(name) } ?: false
+    }.firstOrNull { c ->
+        c.findClass(mClassLoader).interfaces.map { it.name }
+            .contains("tv.danmaku.ijk.media.player.IMediaPlayer\$OnSeekCompleteListener")
+    }
+
+    private fun findSetState() = absMusicServiceClass?.declaredMethods?.firstOrNull {
+        it.parameterTypes.size == 1 &&
+                it.parameterTypes[0] == Int::class.javaPrimitiveType &&
+                it.returnType == Void::class.javaPrimitiveType &&
+                (Modifier.isProtected(it.modifiers) || Modifier.isPrivate(it.modifiers))
+    }?.name
+
+    private fun findSeekTo() = try {
+        playerCoreServiceV2Class?.getDeclaredMethod(
+            "seekTo",
+            Int::class.javaPrimitiveType
+        )?.name
+    } catch (e: Throwable) {
+        "a"
+    }
+
+    private fun findBackgroundPlayer(): String? {
+        val backgroundService = absMusicServiceClass?.declaredFields?.filter {
+            Modifier.isProtected(it.modifiers)
+        }?.map {
+            it.type
+        }?.firstOrNull {
+            it.name.startsWith("tv.danmaku.bili.ui.player.notification")
+        }
+        return classesList.filter {
+            it.startsWith("tv.danmaku.biliplayerv2.service.business.background")
+        }.firstOrNull { c ->
+            c.findClass(mClassLoader).interfaces.contains(backgroundService)
+        }
     }
 
     private fun findCommentSpan() =
