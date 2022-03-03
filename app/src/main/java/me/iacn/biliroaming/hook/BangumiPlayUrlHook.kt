@@ -93,6 +93,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     messages += "${error.key}: ${error.value}\n"
                 }
                 Log.e("请求解析服务器发生错误: ${messages.trim()}")
+                Log.toast("请求解析服务器发生错误: ${messages.trim()}")
             }
         }
 
