@@ -1,8 +1,8 @@
 package me.iacn.biliroaming.utils;
 
 import java.io.Closeable;
-import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
+import java.lang.reflect.Member;
 
 public class DexHelper implements AutoCloseable, Closeable {
     public static final int NO_CLASS_INDEX = -1;
@@ -43,9 +43,9 @@ public class DexHelper implements AutoCloseable, Closeable {
 
     public native long[] findField(long type, int[] dexPriority, boolean findFirst);
 
-    public native Executable decodeMethodIndex(long methodIndex);
+    public native Member decodeMethodIndex(long methodIndex);
 
-    public native long encodeMethodIndex(Executable method);
+    public native long encodeMethodIndex(Member method);
 
     public native Field decodeFieldIndex(long fieldIndex);
 
