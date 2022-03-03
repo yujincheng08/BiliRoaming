@@ -110,9 +110,19 @@
             android:title="@string/custom_download_thread_title" />
 
         <SwitchPreference
+            android:key="revert_live_room_feed"
+            android:summary="@string/revert_live_room_feed_summary"
+            android:title="@string/revert_live_room_feed_title" />
+
+        <SwitchPreference
             android:key="replace_story_video"
             android:summary="@string/replace_story_video_summary"
             android:title="@string/replace_story_video_title" />
+
+        <SwitchPreference
+            android:key="purify_share"
+            android:summary="@string/purify_share_summary"
+            android:title="@string/purify_share_title" />
 
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/pref_backup">

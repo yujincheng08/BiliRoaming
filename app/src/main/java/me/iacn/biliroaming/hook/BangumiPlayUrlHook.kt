@@ -1,8 +1,9 @@
 package me.iacn.biliroaming.hook
 
 import android.net.Uri
+import me.iacn.biliroaming.*
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
-import me.iacn.biliroaming.Protos.*
+import me.iacn.biliroaming.API.*
 import me.iacn.biliroaming.hook.BangumiSeasonHook.Companion.lastSeasonInfo
 import me.iacn.biliroaming.network.BiliRoamingApi.CustomServerException
 import me.iacn.biliroaming.network.BiliRoamingApi.getPlayUrl
@@ -105,14 +106,13 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 if (sPrefs.getBoolean("allow_download", false)
                     && request.callMethodAs<Int>("getDownload") >= 1
                 ) {
-                    if (sPrefs.getBoolean("fix_download", false)
-                        && request.callMethodAs<Long>("getQn") != 0L
-                        && request.callMethodAs<Int>("getFnval") != 0
+                    if (!sPrefs.getBoolean("fix_download", false)
+                        || request.callMethodAs<Long>("getQn") == 0L
+                        || request.callMethodAs<Int>("getFnval") == 0
                     ) {
-                        isDownload = true
-                    } else {
                         request.callMethod("setFnval", 0)
                     }
+                    isDownload = true
                     request.callMethod("setDownload", 0)
                 }
             }
@@ -159,14 +159,12 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 if (sPrefs.getBoolean("allow_download", false)
                     && request.callMethodAs<Int>("getDownload") >= 1
                 ) {
-                    if (sPrefs.getBoolean("fix_download", false)
-                        && request.callMethodAs<Long>("getQn") != 0L
-                        && request.callMethodAs<Int>("getFnval") != 0
-                    ) {
-                        isDownload = true
-                    } else {
+                    if (!sPrefs.getBoolean("fix_download", false)
+                        || request.callMethodAs<Long>("getQn") == 0L
+                        || request.callMethodAs<Int>("getFnval") == 0) {
                         request.callMethod("setFnval", 0)
                     }
+                    isDownload = true
                     request.callMethod("setDownload", 0)
                 }
             }
@@ -245,34 +243,37 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         data.optJSONArray("subtitles").orEmpty()
                     }
                     if (subtitles.length() == 0) return@hookAfterMethod
-                    val newResBuilder = param.result?.let {
-                        DmViewReply.newBuilder(
-                            DmViewReply.parseFrom(
-                                param.result.callMethodAs<ByteArray>("toByteArray")
-                            )
-                        )
-                    } ?: run {
-                        DmViewReply.newBuilder()
-                    }
-                    newResBuilder.subtitle = VideoSubtitle.newBuilder().run {
-                        for (subtitle in subtitles) {
-                            addSubtitles(SubtitleItem.newBuilder().run {
-                                id = subtitle.optLong("id")
-                                idStr = subtitle.optLong("id").toString()
-                                subtitleUrl = subtitle.optString("url")
-                                lan = subtitle.optString("key")
-                                lanDoc = subtitle.optString("title")
-                                build()
-                            })
+
+                    val newRes = param.result?.let {
+                        DmViewReply.parseFrom(
+                            param.result.callMethodAs<ByteArray>("toByteArray")
+                        ).copy {
+                            buildSubtitles(subtitles)
                         }
-                        build()
+                    } ?: dmViewReply {
+                        buildSubtitles(subtitles)
                     }
                     param.result = (param.method as Method).returnType.callStaticMethod(
                         "parseFrom",
-                        newResBuilder.build().toByteArray()
+                        newRes.toByteArray()
                     )
                 }
             }
+    }
+
+    private fun DmViewReplyKt.Dsl.buildSubtitles(subtitles: JSONArray) {
+        subtitle = videoSubtitle {
+            for (subtitle in subtitles) {
+                this.subtitles +=
+                    subtitleItem {
+                        id = subtitle.optLong("id")
+                        idStr = subtitle.optLong("id").toString()
+                        subtitleUrl = subtitle.optString("url")
+                        lan = subtitle.optString("key")
+                        lanDoc = subtitle.optString("title")
+                    }
+            }
+        }
     }
 
     private fun needProxy(response: Any): Boolean {
@@ -338,23 +339,14 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         return json.toString()
     }
 
-    private fun fixDownloadProto(response: Any): Any {
-        val serializedRequest = response.callMethodAs<ByteArray>("toByteArray")
-        val newRes =
-            fixDownloadProto(PlayViewReply.newBuilder(PlayViewReply.parseFrom(serializedRequest)))
-        val serializedResponse = newRes.toByteArray()
-        return response.javaClass.callStaticMethod("parseFrom", serializedResponse)!!
-    }
-
-    private fun fixDownloadProto(builder: PlayViewReply.Builder) = builder.run {
-        videoInfo = VideoInfo.newBuilder(builder.videoInfo).run {
+    private fun PlayViewReplyKt.Dsl.fixDownloadProto() {
+        videoInfo = videoInfo.copy {
             var audioId = 0
             var setted = false
-            val streams = streamListList.map {
+            val streams = streamList.map {
                 if (it.streamInfo.quality != quality || setted) {
-                    Stream.newBuilder(it).run {
+                    it.copy {
                         clearContent()
-                        build()
                     }
                 } else {
                     audioId = it.dashVideo.audioId
@@ -362,18 +354,24 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     it
                 }
             }
-            val audio = dashAudioList.first {
+            val audio = dashAudio.first {
                 it.id != audioId
             }
-            clearStreamList()
-            clearDashAudio()
-            addAllStreamList(streams)
-            addDashAudio(audio)
-            build()
+            streamList.clear()
+            dashAudio.clear()
+            streamList += streams
+            dashAudio += audio
         }
-        build()
     }
 
+    private fun fixDownloadProto(response: Any): Any {
+        val serializedRequest = response.callMethodAs<ByteArray>("toByteArray")
+        val newRes = PlayViewReply.parseFrom(serializedRequest).copy {
+            fixDownloadProto()
+        }
+        val serializedResponse = newRes.toByteArray()
+        return response.javaClass.callStaticMethod("parseFrom", serializedResponse)!!
+    }
 
     private fun isLimitWatchingArea(jsonText: String) = try {
         val json = JSONObject(jsonText)
@@ -418,122 +416,123 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
             }
             val videoCodeCid = jsonContent.optInt("video_codecid")
-            val builder = PlayViewReply.newBuilder()
-            builder.playConf = PlayAbilityConf.newBuilder().run {
-                dislikeDisable = true
-                likeDisable = true
-                elecDisable = true
-                build()
-            }
-            val videoInfoBuilder = VideoInfo.newBuilder().apply {
-                timelength = jsonContent.optLong("timelength")
-                videoCodecid = jsonContent.optInt("video_codecid")
-                quality = jsonContent.optInt("quality")
-                format = jsonContent.optString("format")
-            }
-            val qualityMap = jsonContent.optJSONArray("accept_quality")?.let {
-                (0 until it.length()).map { idx -> it.optInt(idx) }
-            }
-            val type = jsonContent.optString("type")
-            val formatMap = HashMap<Int, JSONObject>()
-            for (format in jsonContent.optJSONArray("support_formats").orEmpty()) {
-                formatMap[format.optInt("quality")] = format
-            }
-            if (type == "DASH") {
-                val audioIds = ArrayList<Int>()
-                for (audio in jsonContent.optJSONObject("dash")?.optJSONArray("audio").orEmpty()) {
-                    videoInfoBuilder.addDashAudio(DashItem.newBuilder().run {
-                        audio.run {
-                            baseUrl = optString("base_url")
-                            id = optInt("id")
-                            audioIds.add(id)
-                            md5 = optString("md5")
-                            size = optLong("size")
-                            codecid = optInt("codecid")
-                            bandwidth = optInt("bandwidth")
-                            for (bk in optJSONArray("backup_url").orEmpty().asSequence<String>())
-                                addBackupUrl(bk)
-                        }
-                        build()
-                    })
+            val serializedResponse = playViewReply {
+                playConf = playAbilityConf {
+                    dislikeDisable = true
+                    likeDisable = true
+                    elecDisable = true
                 }
-                for (video in jsonContent.optJSONObject("dash")?.optJSONArray("video").orEmpty()) {
-                    if (video.optInt("codecid") != videoCodeCid) continue
-                    videoInfoBuilder.addStreamList(Stream.newBuilder().run {
-                        dashVideo = DashVideo.newBuilder().run {
-                            video.run {
-                                baseUrl = optString("base_url")
-                                for (bk in optJSONArray("backup_url").orEmpty()
-                                    .asSequence<String>())
-                                    addBackupUrl(bk)
-                                bandwidth = optInt("bandwidth")
-                                codecid = optInt("codecid")
-                                md5 = optString("md5")
-                                size = optLong("size")
-                            }
-                            // Not knowing the extract matching,
-                            // just use the largest id
-                            audioId = audioIds.maxOrNull() ?: audioIds[0]
-                            noRexcode = jsonContent.optInt("no_rexcode") != 0
-                            build()
-                        }
-                        streamInfo = StreamInfo.newBuilder().run {
-                            quality = video.optInt("id")
-                            intact = true
-                            attribute = 0
-                            formatMap[quality]?.let { fmt ->
-                                reconstructFormat(this, fmt)
-                            }
-                            build()
-                        }
-                        build()
-                    })
 
+                val qualityMap = jsonContent.optJSONArray("accept_quality")?.let {
+                    (0 until it.length()).map { idx -> it.optInt(idx) }
                 }
-            } else if (type == "FLV" || type == "MP4") {
-                qualityMap?.forEach { quality ->
-                    videoInfoBuilder.addStreamList(Stream.newBuilder().run {
-                        streamInfo = StreamInfo.newBuilder().run {
-                            this.quality = quality
-                            intact = true
-                            attribute = 0
-                            formatMap[quality]?.let { fmt ->
-                                reconstructFormat(this, fmt)
-                            }
-                            build()
-                        }
-                        if (quality == jsonContent.optInt("quality")) {
-                            segmentVideo = SegmentVideo.newBuilder().run {
-                                for (segment in jsonContent.optJSONArray("durl").orEmpty()) {
-                                    addSegment(ResponseUrl.newBuilder().run {
-                                        segment.run {
-                                            length = optLong("length")
-                                            for (bk in optJSONArray("backup_url").orEmpty()
-                                                .asSequence<String>())
-                                                addBackupUrl(bk)
-                                            md5 = optString("md5")
-                                            order = optInt("order")
-                                            size = optLong("size")
-                                            url = optString("url")
-                                        }
-                                        build()
-                                    })
+                val type = jsonContent.optString("type")
+                val formatMap = HashMap<Int, JSONObject>()
+                for (format in jsonContent.optJSONArray("support_formats").orEmpty()) {
+                    formatMap[format.optInt("quality")] = format
+                }
+
+                videoInfo = videoInfo {
+                    timelength = jsonContent.optLong("timelength")
+                    videoCodecid = jsonContent.optInt("video_codecid")
+                    quality = jsonContent.optInt("quality")
+                    format = jsonContent.optString("format")
+
+                    if (type == "DASH") {
+                        val audioIds = ArrayList<Int>()
+                        for (audio in jsonContent.optJSONObject("dash")?.optJSONArray("audio")
+                            .orEmpty()) {
+                            dashAudio += dashItem {
+                                audio.run {
+                                    baseUrl = optString("base_url")
+                                    id = optInt("id")
+                                    audioIds.add(id)
+                                    md5 = optString("md5")
+                                    size = optLong("size")
+                                    codecid = optInt("codecid")
+                                    bandwidth = optInt("bandwidth")
+                                    for (bk in optJSONArray("backup_url").orEmpty()
+                                        .asSequence<String>())
+                                        backupUrl += bk
                                 }
-                                build()
                             }
                         }
-                        build()
-                    })
-                }
-            }
+                        for (video in jsonContent.optJSONObject("dash")?.optJSONArray("video")
+                            .orEmpty()) {
+                            if (video.optInt("codecid") != videoCodeCid) continue
+                            streamList += stream {
+                                dashVideo = dashVideo {
+                                    video.run {
+                                        baseUrl = optString("base_url")
+                                        backupUrl += optJSONArray("backup_url").orEmpty()
+                                            .asSequence<String>().toList()
+                                        bandwidth = optInt("bandwidth")
+                                        codecid = optInt("codecid")
+                                        md5 = optString("md5")
+                                        size = optLong("size")
+                                    }
+                                    // Not knowing the extract matching,
+                                    // just use the largest id
+                                    audioId = audioIds.maxOrNull() ?: audioIds[0]
+                                    noRexcode = jsonContent.optInt("no_rexcode") != 0
+                                }
+                                streamInfo = streamInfo {
+                                    quality = video.optInt("id")
+                                    intact = true
+                                    attribute = 0
+                                    formatMap[quality]?.let { fmt ->
+                                        reconstructFormat(fmt)
+                                    }
+                                }
+                            }
+                        }
+                    } else if (type == "FLV" || type == "MP4") {
+                        qualityMap?.forEach { quality ->
+                            streamList += stream {
+                                streamInfo = streamInfo {
+                                    this.quality = quality
+                                    intact = true
+                                    attribute = 0
+                                    formatMap[quality]?.let { fmt ->
+                                        reconstructFormat(fmt)
+                                    }
+                                }
 
-            builder.videoInfo = videoInfoBuilder.build()
-            builder.business = BusinessInfo.newBuilder().run {
-                isPreview = jsonContent.optInt("is_preview", 0) == 1
-                build()
-            }
-            val serializedResponse =
-                (if (isDownload) fixDownloadProto(builder) else builder.build()).toByteArray()
+                                if (quality == jsonContent.optInt("quality")) {
+                                    segmentVideo = segmentVideo {
+                                        for (seg in jsonContent.optJSONArray("durl")
+                                            .orEmpty()) {
+                                            segment += responseUrl {
+                                                seg.run {
+                                                    length = optLong("length")
+                                                    backupUrl += optJSONArray("backup_url").orEmpty()
+                                                        .asSequence<String>().toList()
+                                                    md5 = optString("md5")
+                                                    order = optInt("order")
+                                                    size = optLong("size")
+                                                    url = optString("url")
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                business = businessInfo {
+                    isPreview = jsonContent.optInt("is_preview", 0) == 1
+                }
+
+                viewInfo = viewInfo {
+
+                }
+
+                if (isDownload) {
+                    fixDownloadProto()
+                }
+            }.toByteArray()
             return response.javaClass.callStaticMethod("parseFrom", serializedResponse)!!
         } catch (e: Throwable) {
             Log.e(e)
@@ -541,17 +540,13 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         return response
     }
 
-    private fun reconstructFormat(builder: StreamInfo.Builder, fmt: JSONObject) {
-        builder.run {
-            fmt.run {
-                description = optString("description")
-                format = optString("format")
-                needVip = optBoolean("need_vip", false)
-                needLogin = optBoolean("need_login", false)
-                newDescription = optString("new_description")
-                superscript = optString("superscript")
-                displayDesc = optString("display_desc")
-            }
-        }
+    private fun StreamInfoKt.Dsl.reconstructFormat(fmt: JSONObject) = fmt.run {
+        description = optString("description")
+        format = optString("format")
+        needVip = optBoolean("need_vip", false)
+        needLogin = optBoolean("need_login", false)
+        newDescription = optString("new_description")
+        superscript = optString("superscript")
+        displayDesc = optString("display_desc")
     }
 }

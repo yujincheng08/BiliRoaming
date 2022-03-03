@@ -12,11 +12,10 @@ import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import kotlinx.coroutines.*
+import me.iacn.biliroaming.*
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.Constant.TYPE_EPISODE_ID
 import me.iacn.biliroaming.Constant.TYPE_SEASON_ID
-import me.iacn.biliroaming.Protos
-import me.iacn.biliroaming.XposedInit
 import me.iacn.biliroaming.network.BiliRoamingApi
 import me.iacn.biliroaming.network.BiliRoamingApi.getAreaSearchBangumi
 import me.iacn.biliroaming.network.BiliRoamingApi.getContent
@@ -303,7 +302,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             ?.hookAfterMethod("view", "com.bapis.bilibili.app.view.v1.ViewReq") { param ->
                 param.result?.let { return@hookAfterMethod }
                 val serializedRequest = param.args[0].callMethodAs<ByteArray>("toByteArray")
-                val req = Protos.ViewReq.parseFrom(serializedRequest)
+                val req = API.ViewReq.parseFrom(serializedRequest)
                 val reply = fixViewProto(req)
                 val serializedReply = reply?.toByteArray() ?: return@hookAfterMethod
                 param.result = (param.method as Method).returnType.callStaticMethod(
@@ -529,8 +528,8 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
 
     private fun fixBangumi(body: Any, url: String?) {
-        val fieldName =
-            if (isSerializable || isGson) instance.responseDataField().value else "result"
+        val fieldName = "_data"
+            //if (isSerializable || isGson) instance.responseDataField().value else "result"
         val result = body.getObjectField(fieldName)
         val code = body.getIntField("code")
         if (instance.bangumiUniformSeasonClass?.isInstance(result) != true && code != FAIL_CODE) return
@@ -547,7 +546,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
     }
 
-    private fun fixViewProto(req: Protos.ViewReq): Protos.ViewReply? {
+    private fun fixViewProto(req: API.ViewReq): API.ViewReply? {
         val query = Uri.Builder().run {
             appendQueryParameter("id", req.aid.toString())
             appendQueryParameter("bvid", req.bvid.toString())
@@ -568,27 +567,23 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val result = content.optJSONObject("v2_app_api")
         if (result?.has("season") != true) return null
 
-        return Protos.ViewReply.newBuilder().run {
-            arc = Protos.Arc.newBuilder().run {
-                author = Protos.Author.newBuilder().run {
+        return viewReply {
+            arc = arc {
+                author = author {
                     result.optJSONObject("owner")?.run {
                         mid = optLong("mid")
                         face = optString("face")
                         name = optString("name")
                     }
-                    build()
                 }
-
-                dimension = Protos.Dimension.newBuilder().run {
+                dimension = dimension {
                     result.optJSONObject("dimension")?.run {
                         width = optLong("width")
                         height = optLong("height")
                         rotate = optLong("rotate")
                     }
-                    build()
                 }
-
-                stat = Protos.Stat.newBuilder().run {
+                stat = stat {
                     result.optJSONObject("stat")?.run {
                         aid = optLong("aid")
                         view = optInt("view")
@@ -602,7 +597,6 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         like = optInt("like")
                         dislike = optInt("dislike")
                     }
-                    build()
                 }
                 result.run {
                     aid = optLong("aid")
@@ -621,10 +615,9 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     typeName = optString("tname")
                     videos = optLong("videos")
                 }
-                build()
             }
             bvid = result.optString("bvid")
-            season = Protos.Season.newBuilder().run {
+            season = season {
                 result.optJSONObject("season")?.run {
                     allowDownload = "1"
                     seasonId = optString("season_id").toLong()
@@ -638,14 +631,13 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     ovgPlayurl = optString("ogv_play_url")
                     isJump = optInt("is_jump")
                 }
-                build()
             }
             val pages = result.optJSONArray("pages")
             for (page in pages.orEmpty()) {
-                addPages(Protos.ViewPage.newBuilder().run {
+                this.pages += viewPage {
                     downloadSubtitle = page.optString("download_subtitle")
                     downloadTitle = page.optString("download_title")
-                    this.page = Protos.Page.newBuilder().run {
+                    this.page = page {
                         this.page = page.optInt("page")
                         page.run {
                             cid = optLong("cid")
@@ -655,29 +647,27 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             vid = optString("vid")
                             webLink = optString("weblink")
                         }
-                        dimension = Protos.Dimension.newBuilder().run {
+                        dimension = dimension{
                             page.optJSONObject("dimension")?.run {
                                 width = optLong("width")
                                 height = optLong("height")
                                 rotate = optLong("rotate")
                             }
-                            build()
                         }
-                        build()
                     }
-                    build()
-                })
+                }
             }
             shortLink = result.optString("short_link")
             result.optJSONObject("t_icon")?.let {
                 for (key in it.keys()) {
-                    val icon = it.optJSONObject(key)?.optString("icon")
-                    putTIcon(key, Protos.TIcon.newBuilder().setIcon(icon).build())
+                    this.tIcon[key] = tIcon {
+                        icon = it.optJSONObject(key)?.optString("icon") ?: ""
+                    }
                 }
             }
             val tags = result.optJSONArray("tag")
             for (tag in tags.orEmpty()) {
-                addTag(Protos.Tag.newBuilder().run {
+                this.tag += tag {
                     tag.run {
                         id = optLong("tag_id")
                         name = optString("tag_name")
@@ -688,10 +678,8 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         tagType = optString("tag_type")
                         uri = optString("uri")
                     }
-                    build()
-                })
+                }
             }
-            build()
         }
     }
 

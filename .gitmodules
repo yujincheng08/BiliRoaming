@@ -1,0 +1,3 @@
+[submodule "app/src/main/jni/dex_builder"]
+	path = app/src/main/jni/dex_builder
+	url = git@github.com:LSPosed/DexBuilder.git

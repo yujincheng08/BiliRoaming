@@ -146,6 +146,8 @@
     <string name="comment_copy_title">去除长按复制</string>
     <string name="comment_copy_enhance_title">长按自由复制</string>
     <string name="comment_copy_enhance_summary">长按评论/动态/视频简介时弹出自由选择对话框，需要开启“去除长按复制”</string>
+    <string name="revert_live_room_feed_title">强制旧版直播间样式</string>
+    <string name="revert_live_room_feed_summary">强制直播间使用旧版样式</string>
     <string name="block_video_ad_title">屏蔽视频下方推荐</string>
     <string name="block_video_ad_summary">屏蔽视频下方推荐栏</string>
     <string name="hide_long_duration_recommend_title">隐藏首页视频时长大于</string>
@@ -173,4 +175,6 @@
     <string name="skin_title">填写自制主题</string>
     <string name="skin_import_title">导入自制主题</string>
     <string name="skin_summary">重启后，要等待十几秒下载资源，然后再重启（同时开启时的优先度：导入＞填写）</string>
+    <string name="purify_share_title">净化分享</string>
+    <string name="purify_share_summary">把分享链接中的 b23.tv 短链接换成正常链接</string>
 </resources>

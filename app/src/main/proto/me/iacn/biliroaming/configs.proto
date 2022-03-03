@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package me.iacn.biliroaming;
+
+option java_package = "me.iacn.biliroaming";
+option java_outer_classname = "Configs";
+option optimize_for = LITE_RUNTIME;
+
+message VideoUpperAdInfo {
+  string class_name = 1;
+  string method_name = 2;
+}
+
+message HookInfo {
+  int64 last_update_time = 1;
+  string class_bangumi_season = 2;
+  VideoUpperAdInfo video_upper_ad = 3;
+}

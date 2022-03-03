@@ -109,9 +109,8 @@ class MainActivity : Activity() {
                 (findPreference("about") as PreferenceCategory).addPreference(Preference(activity).apply {
                     key = "update"
                     title = resources.getString(R.string.update_title)
-                    summary = result.optString("body").substringAfterLast("更新日志\r\n").run {
-                        if (isNotEmpty()) this else resources.getString(R.string.update_summary)
-                    }
+                    summary = result.optString("body").substringAfterLast("更新日志\r\n")
+                        .ifEmpty { resources.getString(R.string.update_summary) }
                     onPreferenceClickListener = this@PrefsFragment
                     order = 1
                 })

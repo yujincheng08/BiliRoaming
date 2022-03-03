@@ -83,15 +83,6 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
     }
 
-    private val updateStateMethod by lazy {
-        instance.absMusicServiceClass?.declaredMethods?.firstOrNull {
-            it.parameterTypes.size == 1 &&
-                    it.parameterTypes[0] == Int::class.javaPrimitiveType &&
-                    it.returnType == Void::class.javaPrimitiveType &&
-                    (Modifier.isProtected(it.modifiers) || Modifier.isPrivate(it.modifiers))
-        }?.apply { isAccessible = true }
-    }
-
     private val updateMetadataMethod by lazy {
         instance.absMusicServiceClass?.declaredMethods?.firstOrNull {
             it.parameterTypes.size == 1 &&
@@ -99,28 +90,9 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
     }
 
-    private val playerHelperField by lazy {
+    private val notificationServiceField by lazy {
         instance.absMusicServiceClass?.declaredFields?.firstOrNull {
-            it.type.name.startsWith("tv.danmaku.bili.ui.player.notification") &&
-                    Modifier.isProtected(it.modifiers)
-        }
-    }
-
-    private val backgroundHelper by lazy {
-        instance.classesList.filter {
-            it.startsWith("tv.danmaku.biliplayerv2.service.business.background")
-        }.firstOrNull { c ->
-            c.findClass(mClassLoader).interfaces.contains(playerHelperField?.type)
-        }
-    }
-
-    private val musicHelper by lazy {
-        instance.classesList.filter {
-            it.startsWith("com.bilibili.music.app.base.mediaplayer")
-        }.firstOrNull { c ->
-            c.findClass(mClassLoader).interfaces.filter {
-                it == playerHelperField?.type
-            }.count().let { it > 0 }
+            instance.backgroundPlayer?.interfaces?.contains(it.type) == true
         }
     }
 
@@ -162,34 +134,17 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
     }
 
-    private val backgroundPlayerField by lazy {
-        backgroundHelper?.findClass(mClassLoader)?.declaredFields?.firstOrNull {
-            it.type.name.run {
-                startsWith("tv.danmaku.biliplayerv2") &&
-                        !startsWith("tv.danmaku.biliplayerv2.service")
-            }
+    private val playerServiceField by lazy {
+        instance.backgroundPlayer?.declaredFields?.firstOrNull {
+            it.type == instance.playerService
         }
-    }
-
-    private val mediaPlayerInterface by lazy {
-        "tv.danmaku.ijk.media.player.IMediaPlayer".findClass(mClassLoader)
-    }
-
-    private val corePlayerOnSeekListenerClass by lazy {
-        instance.classesList.filter {
-            instance.playerCoreServiceV2Class?.name?.let { name -> it.startsWith(name) } ?: false
-        }.firstOrNull { c ->
-            c.findClass(mClassLoader).interfaces.map { it.name }
-                .contains("tv.danmaku.ijk.media.player.IMediaPlayer\$OnSeekCompleteListener")
-        }?.findClass(mClassLoader)
     }
 
     private val corePlayerMethod by lazy {
-        backgroundPlayerField?.type?.declaredMethods?.firstOrNull {
+        instance.playerService?.declaredMethods?.firstOrNull {
             instance.playerCoreServiceV2Class?.interfaces?.contains(it.returnType) ?: false
         }
     }
-
 
     private val getDurationMethod by lazy {
         try {
@@ -207,54 +162,10 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
     }
 
-    private val seekToMethod by lazy {
-        try {
-            instance.playerCoreServiceV2Class?.getDeclaredMethod(
-                "seekTo",
-                Int::class.javaPrimitiveType
-            )?.name
-        } catch (e: Throwable) {
-            "a"
-        }
+    private val mediaPlayerInterface by lazy {
+        "tv.danmaku.ijk.media.player.IMediaPlayer".findClass(mClassLoader)
     }
 
-    private val rxMediaPlayerInterface by lazy {
-        "com.bilibili.opd.app.bizcommon.mediaplayer.rx.RxMediaPlayer".findClass(mClassLoader)
-    }
-
-    private val rxMediaPlayerField by lazy {
-        musicHelper?.findClass(mClassLoader)?.declaredFields?.firstOrNull {
-            it.type == rxMediaPlayerInterface
-        }
-    }
-
-    private val rxMediaPlayerClass by lazy {
-        instance.classesList.filter {
-            it.startsWith("com.bilibili.opd.app.bizcommon.mediaplayer.rx")
-        }.firstOrNull { c ->
-            c.findClass(mClassLoader).interfaces.contains(rxMediaPlayerInterface)
-        }?.findClass(mClassLoader)
-    }
-
-    private val rxMediaPlayerImplClass by lazy {
-        rxMediaPlayerClass?.declaredClasses?.firstOrNull { c ->
-            c.declaredFields.filter {
-                it.type == mediaPlayerInterface
-            }.count() > 0
-        }
-    }
-
-    private val rxMediaPlayerImplField by lazy {
-        rxMediaPlayerClass?.declaredFields?.firstOrNull {
-            it.type == rxMediaPlayerImplClass
-        }
-    }
-
-    private val mediaPlayerField by lazy {
-        rxMediaPlayerImplClass?.declaredFields?.firstOrNull {
-            it.type == mediaPlayerInterface
-        }
-    }
 
     override fun startHook() {
         if (!sPrefs.getBoolean("music_notification", false)) return
@@ -262,7 +173,7 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         Log.d("startHook: MusicNotification")
 
         updateMetadataMethod?.hookBeforeMethod { param ->
-            val playerHelper = param.thisObject.getObjectField(playerHelperField?.name)
+            val notificationService = param.thisObject.getObjectField(notificationServiceField?.name)
             metadataField?.isAccessible = true
             val bundle = metadataField?.get(param.thisObject)
                 ?.getObjectFieldAs<Bundle>(metadataBundleField?.name)
@@ -270,14 +181,9 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             val currentDuration = bundle.getLong(MediaMetadata.METADATA_KEY_DURATION)
             if (currentDuration != 0L) return@hookBeforeMethod
             param.args[0] = true
-            duration = when (playerHelper?.javaClass?.name) {
-                musicHelper ->
-                    playerHelper?.getObjectField(rxMediaPlayerField?.name)
-                        ?.getObjectField(rxMediaPlayerImplField?.name)
-                        ?.getObjectField(mediaPlayerField?.name)?.callMethodAs<Long>("getDuration")
-                        ?: 0L
-                backgroundHelper ->
-                    playerHelper?.getObjectField(backgroundPlayerField?.name)
+            duration = when (notificationService?.javaClass) {
+                instance.backgroundPlayer ->
+                    notificationService?.getObjectField(playerServiceField?.name)
                         ?.callMethod(corePlayerMethod?.name)?.callMethodAs<Int>(getDurationMethod)
                         ?.toLong()
                         ?: 0L
@@ -286,12 +192,8 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             bundle.putLong(MediaMetadata.METADATA_KEY_DURATION, duration)
         }
 
-        rxMediaPlayerClass?.hookBeforeMethod("onSeekComplete", mediaPlayerInterface) {
-            absMusicService?.let { s -> updateStateMethod?.let { m -> m(s, lastState) } }
-        }
-
-        corePlayerOnSeekListenerClass?.hookBeforeMethod("onSeekComplete", mediaPlayerInterface) {
-            absMusicService?.let { s -> updateStateMethod?.let { m -> m(s, lastState) } }
+        instance.playerOnSeekComplete?.hookBeforeMethod(instance.onSeekComplete(), mediaPlayerInterface) {
+            absMusicService?.callMethod(instance.setState(), lastState)
         }
 
         mediaSessionCallbackClass?.hookAfterMethod(
@@ -308,32 +210,21 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 else
                     res
             }
-            val playerHelper = absMusicService?.getObjectField(playerHelperField?.name)
-            when (playerHelper?.javaClass?.name) {
-                musicHelper ->
-                    playerHelper?.getObjectField(rxMediaPlayerField?.name)
-                        ?.getObjectField(rxMediaPlayerImplField?.name)
-                        ?.getObjectField(mediaPlayerField?.name)?.callMethod("seekTo", position)
-                backgroundHelper ->
-                    playerHelper?.getObjectField(backgroundPlayerField?.name)
+            val playerHelper = absMusicService?.getObjectField(notificationServiceField?.name)
+            when (playerHelper?.javaClass) {
+                instance.backgroundPlayer ->
+                    playerHelper?.getObjectField(playerServiceField?.name)
                         ?.callMethod(corePlayerMethod?.name)
-                        ?.callMethod(seekToMethod, position.toInt())
+                        ?.callMethod(instance.seekTo(), position.toInt())
             }
-            absMusicService?.let { s -> updateStateMethod?.let { m -> m(s, lastState) } }
+            absMusicService?.callMethod(instance.setState(), lastState)
         }
 
-        updateStateMethod?.hookBeforeMethod { param ->
+        instance.absMusicServiceClass?.hookBeforeMethod(instance.setState(), Int::class.java) { param ->
             lastState = param.args[0] as Int
-            val playerHelper = param.thisObject.getObjectField(playerHelperField?.name)
-            when (playerHelper?.javaClass?.name) {
-                musicHelper ->
-                    playerHelper?.getObjectField(rxMediaPlayerField?.name)
-                        ?.getObjectField(rxMediaPlayerImplField?.name)
-                        ?.getObjectField(mediaPlayerField?.name)?.run {
-                            position = callMethodAs("getCurrentPosition")
-                            speed = callMethodAs("getSpeed", 0.0f)
-                        }
-                backgroundHelper -> playerHelper?.getObjectField(backgroundPlayerField?.name)
+            val playerHelper = param.thisObject.getObjectField(notificationServiceField?.name)
+            when (playerHelper?.javaClass) {
+                instance.backgroundPlayer -> playerHelper?.getObjectField(playerServiceField?.name)
                     ?.callMethod(corePlayerMethod?.name)?.run {
                         position = callMethodAs<Int>(getCurrentPositionMethod).toLong()
                         speed = try {

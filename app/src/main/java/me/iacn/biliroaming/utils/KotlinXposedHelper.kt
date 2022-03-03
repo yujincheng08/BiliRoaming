@@ -12,6 +12,7 @@ import de.robv.android.xposed.XposedHelpers.*
 import de.robv.android.xposed.callbacks.XC_LayoutInflated
 import java.lang.reflect.Field
 import java.lang.reflect.Member
+import java.lang.reflect.Modifier
 import java.util.*
 
 typealias MethodHookParam = MethodHookParam
@@ -452,16 +453,25 @@ fun <T> Any.getFirstFieldByExactTypeOrNullAs(type: Class<*>?) =
 inline fun <reified T> Any.getFirstFieldByExactTypeOrNull() =
     getFirstFieldByExactTypeOrNull(T::class.java) as? T
 
-fun ClassLoader.allClassesList(delegator: (BaseDexClassLoader) -> BaseDexClassLoader = { x -> x }): List<String> {
+inline fun ClassLoader.findDexClassLoader(crossinline delegator: (BaseDexClassLoader) -> BaseDexClassLoader = { x -> x }): BaseDexClassLoader? {
     var classLoader = this
     while (classLoader !is BaseDexClassLoader) {
         if (classLoader.parent != null) classLoader = classLoader.parent
-        else return emptyList()
+        else return null
     }
-    return delegator(classLoader).getObjectField("pathList")
+    return delegator(classLoader)
+}
+
+inline fun ClassLoader.allClassesList(crossinline delegator: (BaseDexClassLoader) -> BaseDexClassLoader = { x -> x }): List<String> {
+    return findDexClassLoader(delegator)?.getObjectField("pathList")
         ?.getObjectFieldAs<Array<Any>>("dexElements")
         ?.flatMap {
             it.getObjectField("dexFile")?.callMethodAs<Enumeration<String>>("entries")?.toList()
                 .orEmpty()
         }.orEmpty()
 }
+
+val Member.isStatic: Boolean
+    inline get() = Modifier.isStatic(this.modifiers)
+val Member.isNotStatic: Boolean
+    inline get() = !this.isStatic
