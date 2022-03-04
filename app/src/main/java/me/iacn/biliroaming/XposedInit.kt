@@ -128,7 +128,7 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
             hooker.startHook()
         } catch (e: Throwable) {
             Log.e(e)
-            Log.toast("出现错误${e.message}，部分功能可能失效。")
+            Log.toast("出现错误\n${e.message}\n部分功能可能失效。${e.stackTrace.joinToString("\n")}")
         }
     }
 
@@ -138,7 +138,7 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                 it.lateInitHook()
             } catch (e: Throwable) {
                 Log.e(e)
-                Log.toast("出现错误${e.message}，部分功能可能失效。")
+                Log.toast("出现错误\n${e.message}\n部分功能可能失效。${e.stackTrace.joinToString("\n")}")
             }
         }
     }
