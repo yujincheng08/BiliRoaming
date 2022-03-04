@@ -88,7 +88,10 @@ object BiliRoamingApi {
                     fixThailandSeason(result)
                     seasonJson = it
                 }
+                checkErrorToast(it, true)
             }
+        } else {
+            checkErrorToast(seasonJson)
         }
         return seasonJson.toString()
     }
@@ -674,6 +677,9 @@ object BiliRoamingApi {
             Log.e("getContent error: $e with url $urlString")
             Log.e(e)
             null
+        }?.also {
+            Log.d("getContent url: $urlString")
+            Log.d("getContent result: $it")
         }
     }
 

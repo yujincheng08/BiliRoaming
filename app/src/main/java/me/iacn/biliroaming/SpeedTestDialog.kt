@@ -180,7 +180,7 @@ class SpeedTestDialog(private val pref: ListPreference, activity: Activity) :
             for (error in e.errors) {
                 messages += "${error.key}: ${error.value}\n"
             }
-            Log.e("请求解析服务器发生错误: ${messages.trim()}")
+            Log.w("请求解析服务器发生错误: ${messages.trim()}")
             return null
         }
         return json?.toJSONObject()?.optJSONObject("dash")?.getJSONArray("audio")?.run {
