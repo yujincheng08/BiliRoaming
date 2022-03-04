@@ -6,6 +6,7 @@ import android.os.Handler
 import android.os.Looper
 import android.widget.Toast
 import de.robv.android.xposed.XposedBridge
+import me.iacn.biliroaming.BiliBiliPackage
 import me.iacn.biliroaming.Constant.TAG
 import android.util.Log as ALog
 
@@ -17,9 +18,14 @@ object Log {
     fun toast(msg: String, force: Boolean = false, duration: Int = Toast.LENGTH_SHORT) {
         if (!force && !sPrefs.getBoolean("show_info", true)) return
         handler.post {
-            toastHelper?.runCatchingOrNull {
-                callStaticMethod("cancel")
-                callStaticMethod("showToast", currentContext, "哔哩漫游：$msg", duration)
+            BiliBiliPackage.instance.toastHelper?.runCatchingOrNull {
+                callStaticMethod(BiliBiliPackage.instance.cancelShowToast())
+                callStaticMethod(
+                    BiliBiliPackage.instance.showToast(),
+                    currentContext,
+                    "哔哩漫游：$msg",
+                    duration
+                )
                 Unit
             } ?: run {
                 toast?.cancel()
