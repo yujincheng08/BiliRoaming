@@ -83,7 +83,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     Log.toast("已从代理服务器获取播放地址")
                     param.result = ByteArrayInputStream(it.toByteArray())
                 } ?: run {
-                    Log.d("Failed to get play url")
+                    Log.w("Failed to get play url")
                     Log.toast("获取播放地址失败")
                 }
             } catch (e: CustomServerException) {
@@ -91,7 +91,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 for (error in e.errors) {
                     messages += "${error.key}: ${error.value}\n"
                 }
-                Log.d("请求解析服务器发生错误: ${messages.trim()}")
+                Log.w("请求解析服务器发生错误: ${messages.trim()}")
                 Log.toast("请求解析服务器发生错误: ${messages.trim()}")
             }
         }
@@ -132,7 +132,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             Log.toast("已从代理服务器获取播放地址")
                             param.result = reconstructResponse(response, it, isDownload)
                         } ?: run {
-                            Log.d("Failed to get play url")
+                            Log.w("Failed to get play url")
                             Log.toast("获取播放地址失败")
                         }
                     } catch (e: CustomServerException) {
@@ -141,7 +141,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             messages += "${error.key}: ${error.value}\n"
                         }
                         showPlayerError(response, "请求解析中服务器发生错误(点此查看更多)\n${messages.trim()}")
-                        Log.d("请求解析服务器发生错误: ${messages.trim()}")
+                        Log.w("请求解析服务器发生错误: ${messages.trim()}")
                         Log.toast("请求解析服务器发生错误: ${messages.trim()}")
                     }
                 } else if (isDownload) {
@@ -195,7 +195,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             messages += "${error.key}: ${error.value}\n"
                         }
                         showPlayerError(response, "请求解析中服务器发生错误(点此查看更多)\n${messages.trim()}")
-                        Log.d("请求解析服务器发生错误: ${messages.trim()}")
+                        Log.w("请求解析服务器发生错误: ${messages.trim()}")
                         Log.toast("请求解析服务器发生错误: ${messages.trim()}")
                     }
                 } else if (isDownload) {
