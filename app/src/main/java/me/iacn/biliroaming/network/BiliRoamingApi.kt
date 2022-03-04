@@ -615,7 +615,7 @@ object BiliRoamingApi {
     @SuppressLint("SetJavaScriptEnabled")
     fun getContent(urlString: String): String? {
         val timeout = 10000
-        val result = try {
+        return try {
             // Work around for android 7
             if (Build.VERSION.SDK_INT == Build.VERSION_CODES.N &&
                 urlString.startsWith("https") &&
@@ -677,10 +677,10 @@ object BiliRoamingApi {
             Log.e("getContent error: $e with url $urlString")
             Log.e(e)
             null
+        }?.also {
+            Log.d("getContent url: $urlString")
+            Log.d("getContent result: $it")
         }
-        Log.d("getContent url: $urlString")
-        Log.d("getContent result: $result")
-        return result
     }
 
 }
