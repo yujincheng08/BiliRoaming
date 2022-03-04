@@ -486,7 +486,6 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 it.optInt("code", FAIL_CODE) to it.optJSONObject("result")
             } ?: (FAIL_CODE to null)
             if (isBangumiWithWatchPermission(newJsonResult, newCode)) {
-                Log.d("Got new season information from proxy server: $newJsonResult")
                 lastSeasonInfo["title"] = newJsonResult?.optString("title")
                 lastSeasonInfo["season_id"] = newJsonResult?.optString("season_id")
                 lastSeasonInfo["watch_platform"] =
@@ -540,8 +539,6 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             body.setIntField("code", 0)
                 .setObjectField(fieldName, instance.bangumiUniformSeasonClass?.fromJson(it))
         } ?: run {
-            Log.d("Failed to get new season information from proxy server")
-            Log.toast("解锁失败，请重试")
             lastSeasonInfo.clear()
         }
     }
@@ -687,7 +684,6 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         var queryString = urlString.substring(urlString.indexOf("?") + 1)
         queryString = queryString.replace("aid=", "id=")
         val content = BiliRoamingApi.getView(queryString) ?: return data
-        Log.d("Got view information from proxy server: $content")
         val detailClass = instance.biliVideoDetailClass ?: return data
         val newJsonResult = content.toJSONObject().optJSONObject("v2_app_api") ?: return data
         newJsonResult.optJSONObject("season")?.optString("newest_ep_id")?.let {
