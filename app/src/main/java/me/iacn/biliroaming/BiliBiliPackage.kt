@@ -520,6 +520,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             )
 
         val t = measureTimeMillis {
+            if (!BuildConfig.useDexHelper) {
+                return@measureTimeMillis
+            }
             if (mHookInfo.isNotEmpty()) {
                 Log.d("skip duplicate native load")
                 return@measureTimeMillis
