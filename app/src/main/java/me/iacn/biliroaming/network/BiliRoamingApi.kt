@@ -87,8 +87,11 @@ object BiliRoamingApi {
                 it.optJSONObject("result")?.let { result ->
                     fixThailandSeason(result)
                     seasonJson = it
+                    checkErrorToast(seasonJson, true)
                 }
             }
+        } else {
+            checkErrorToast(seasonJson)
         }
         return seasonJson.toString()
     }
@@ -612,7 +615,7 @@ object BiliRoamingApi {
     @SuppressLint("SetJavaScriptEnabled")
     fun getContent(urlString: String): String? {
         val timeout = 10000
-        return try {
+        val result = try {
             // Work around for android 7
             if (Build.VERSION.SDK_INT == Build.VERSION_CODES.N &&
                 urlString.startsWith("https") &&
@@ -675,6 +678,9 @@ object BiliRoamingApi {
             Log.e(e)
             null
         }
+        Log.d("getContent url: $urlString")
+        Log.d("getContent result: $result")
+        return result
     }
 
 }

@@ -112,6 +112,17 @@ val sPrefs
 val sCaches
     get() = currentContext.getSharedPreferences("biliroaming_cache", Context.MODE_MULTI_PROCESS)!!
 
+fun checkErrorToast(json: JSONObject, isCustomServer: Boolean = false) {
+    if (json.optInt("code", 0) != 0) {
+        Log.toast(
+            (if (isCustomServer) "请求解析服务器发生错误: " else "请求发生错误: ") + json.optString(
+                "message",
+                "未知错误"
+            )
+        )
+    }
+}
+
 fun signQuery(query: String?, extraMap: Map<String, String> = emptyMap()): String? {
     val queryMap = TreeMap<String, String>()
     val pairs = query?.split("&".toRegex())?.toTypedArray() ?: return null

@@ -410,6 +410,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 )
                     ?: return data
             val jsonContent = content.toJSONObject()
+            checkErrorToast(jsonContent, true)
             val newData = jsonContent.optJSONObject("data") ?: return data
 
             // 去除追番按钮
