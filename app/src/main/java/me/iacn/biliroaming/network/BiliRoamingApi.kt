@@ -87,8 +87,8 @@ object BiliRoamingApi {
                 it.optJSONObject("result")?.let { result ->
                     fixThailandSeason(result)
                     seasonJson = it
-                    checkErrorToast(seasonJson, true)
                 }
+                checkErrorToast(it, true)
             }
         } else {
             checkErrorToast(seasonJson)
