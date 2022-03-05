@@ -76,7 +76,8 @@ object BiliRoamingApi {
             if ((it.optJSONArray("episodes")?.length() == 0 && it.optJSONObject("publish")
                     ?.optInt("is_started", -1) != 0)
                 || (it.optInt("total_ep", 0) == -1 && it.optJSONObject("up_info")
-                    ?.optInt("mid") != 11783021)
+                    ?.optInt("mid")
+                    ?.let { mid -> mid == 11783021 || mid == 1988098633 || mid == 2042149112 } != true)
                 || (it.has("total_ep") && it.optInt("total_ep") != -1 && it.optInt("total_ep")
                     .toString() != it.optJSONObject("newest_ep")?.optString("index"))
             ) {
@@ -398,7 +399,8 @@ object BiliRoamingApi {
             }?.distinct() ?: emptyList()
 
         listOf(
-            (sPrefs.getString("upos_host", null) ?: XposedInit.moduleRes.getString(R.string.cos_host)) to ""
+            (sPrefs.getString("upos_host", null)
+                ?: XposedInit.moduleRes.getString(R.string.cos_host)) to ""
         ) + list
     }
 
