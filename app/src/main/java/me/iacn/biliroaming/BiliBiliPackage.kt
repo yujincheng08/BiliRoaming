@@ -276,6 +276,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         "com.bilibili.droid.ToastHelper".findClassOrNull(mClassLoader)
     }
 
+    val videoDetailCallback by Weak {
+        mHookInfo["class_video_detail_callback"]?.findClassOrNull(mClassLoader)
+    }
+
     val classesList by lazy {
         mClassLoader.allClassesList {
             val serviceField = it.javaClass.findFirstFieldByExactTypeOrNull(
@@ -843,16 +847,16 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     ?.runCatchingOrNull {
                         getDeclaredMethod("isUseKanBan")
                     }?.let {
-                    helper.encodeMethodIndex(it)
-                }?.let {
-                    helper.findMethodInvoked(it, -1, 1, "VL", -1, null, null, null, true)
-                        ?.firstOrNull()
-                }?.let {
-                    helper.decodeMethodIndex(it)
-                }?.let {
-                    mHookInfo["class_kanban_callback"] = it.declaringClass.name
-                    mHookInfo["method_kanban_callback"] = it.name
-                }
+                        helper.encodeMethodIndex(it)
+                    }?.let {
+                        helper.findMethodInvoked(it, -1, 1, "VL", -1, null, null, null, true)
+                            ?.firstOrNull()
+                    }?.let {
+                        helper.decodeMethodIndex(it)
+                    }?.let {
+                        mHookInfo["class_kanban_callback"] = it.declaringClass.name
+                        mHookInfo["method_kanban_callback"] = it.name
+                    }
 
 //                val class_music_wrap_player = helper.findMethodUsingString("MusicWrapperPlayer", false, -1, 3, "VLIL", -1, null, null, null, true).map {
 //                    helper.decodeMethodIndex(it)
@@ -935,6 +939,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             findLikeMethod()
         }.checkOrPut("method_party_like") {
             findPartyLikeMethod()
+        }.checkOrPut("class_video_detail_callback") {
+            findVideoDetailCallback()
         }.checkOrPut("class_download_thread_listener") {
             findDownloadThreadListener()
         }.checkOrPut("field_download_thread") {
@@ -1014,6 +1020,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             "onSeekComplete"
         }.checkOrPut("class_player_on_seek_complete") {
             findPlayerOnSeekComplete()
+        }.checkOrPut("class_player_service") {
+            findPlayerService()
         }.checkConjunctiveOrPut("class_kanban_callback", "method_kanban_callback") {
             findKanbanCallback()
         }.checkOrPut("method_show_toast") {
@@ -1026,6 +1034,27 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         Log.d("Check hook info completed: needUpdate = $needUpdate")
         return needUpdate
     }
+
+    private fun findVideoDetailCallback() :String?{
+        val callback = "com.bilibili.okretro.BiliApiDataCallback".findClassOrNull(mClassLoader)
+        return classesList.filter {
+            it.startsWith("tv.danmaku.bili.ui.video.videodetail.function")
+        }.map { c ->
+            c.findClass(mClassLoader)
+        }.filter {
+            it.superclass == callback
+        }.firstOrNull {
+            it.declaredFields.size == 1
+        }?.name
+    }
+
+    private fun findPlayerService() =
+        backgroundPlayer?.declaredFields?.firstOrNull {
+            it.type.name.run {
+                startsWith("tv.danmaku.biliplayerv2") &&
+                        !startsWith("tv.danmaku.biliplayerv2.service")
+            }
+        }?.type?.name
 
     private fun findKanbanCallback(): Array<String?> {
         val status = "tv.danmaku.bili.ui.kanban.KanBanUserStatus".findClassOrNull(mClassLoader)
