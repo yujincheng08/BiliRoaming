@@ -166,6 +166,15 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         "tv.danmaku.ijk.media.player.IMediaPlayer".findClass(mClassLoader)
     }
 
+    private val setStateMethod by lazy {
+        instance.absMusicServiceClass?.runCatchingOrNull {
+            getDeclaredMethod(
+                instance.setState()!!,
+                Int::class.javaPrimitiveType
+            ).also { it.isAccessible = true }
+        }
+    }
+
 
     override fun startHook() {
         if (!sPrefs.getBoolean("music_notification", false)) return
@@ -173,7 +182,8 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         Log.d("startHook: MusicNotification")
 
         updateMetadataMethod?.hookBeforeMethod { param ->
-            val notificationService = param.thisObject.getObjectField(notificationServiceField?.name)
+            val notificationService =
+                param.thisObject.getObjectField(notificationServiceField?.name)
             metadataField?.isAccessible = true
             val bundle = metadataField?.get(param.thisObject)
                 ?.getObjectFieldAs<Bundle>(metadataBundleField?.name)
@@ -192,8 +202,11 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             bundle.putLong(MediaMetadata.METADATA_KEY_DURATION, duration)
         }
 
-        instance.playerOnSeekComplete?.hookBeforeMethod(instance.onSeekComplete(), mediaPlayerInterface) {
-            absMusicService?.callMethod(instance.setState(), lastState)
+        instance.playerOnSeekComplete?.hookBeforeMethod(
+            instance.onSeekComplete(),
+            mediaPlayerInterface
+        ) { _ ->
+            setStateMethod?.let { it -> it(absMusicService, lastState) }
         }
 
         mediaSessionCallbackClass?.hookAfterMethod(
@@ -201,15 +214,6 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             Long::class.javaPrimitiveType
         ) { param ->
             position = param.args[0] as Long
-            val absMusicService = mediaSessionCallbackClass?.declaredFields?.get(0)?.run {
-                val res = param.thisObject.getObjectField(name)?.run {
-                    getObjectField(javaClass.declaredFields.last().name)
-                }
-                if (instance.absMusicServiceClass?.isInstance(res) != true)
-                    res?.getObjectField(res.javaClass.declaredFields.last().name)
-                else
-                    res
-            }
             val playerHelper = absMusicService?.getObjectField(notificationServiceField?.name)
             when (playerHelper?.javaClass) {
                 instance.backgroundPlayer ->
@@ -217,10 +221,10 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         ?.callMethod(corePlayerMethod?.name)
                         ?.callMethod(instance.seekTo(), position.toInt())
             }
-            absMusicService?.callMethod(instance.setState(), lastState)
+            setStateMethod?.let { it -> it(absMusicService, lastState) }
         }
 
-        instance.absMusicServiceClass?.hookBeforeMethod(instance.setState(), Int::class.java) { param ->
+        setStateMethod?.hookBeforeMethod { param ->
             lastState = param.args[0] as Int
             val playerHelper = param.thisObject.getObjectField(notificationServiceField?.name)
             when (playerHelper?.javaClass) {
@@ -283,7 +287,10 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 val serviceField = param.thisObject.javaClass.declaredFields.firstOrNull {
                     it.type.superclass == Service::class.java
                 } ?: return
-                val tokenMethod = serviceField.type.declaredMethods.firstOrNull {
+                val sessionField = serviceField.type.declaredFields.firstOrNull {
+                    it.type.name.endsWith("MediaSessionCompat")
+                } ?: return
+                val tokenMethod = sessionField.type.declaredMethods.firstOrNull {
                     it.returnType.name.endsWith("Token")
                 } ?: return
                 param.result = Notification.Builder(
@@ -409,8 +416,9 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         }
                     )
                     val token = param.thisObject.getObjectField(serviceField.name)
-                        ?.callMethod(tokenMethod.name)?.getObjectField("a") as MediaSession.Token
-                    mediaStyle.setMediaSession(token)
+                        ?.getObjectField(sessionField.name)
+                        ?.callMethod(tokenMethod.name)?.getObjectField("a") as? MediaSession.Token
+                    token?.let { mediaStyle.setMediaSession(it) }
                     style = mediaStyle
                     extras.putBoolean("Primitive", true)
                     build()

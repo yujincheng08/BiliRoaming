@@ -1108,7 +1108,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         }?.map {
             it.type
         }?.firstOrNull {
-            it.name.startsWith("tv.danmaku.bili.ui.player.notification")
+            it.isInterface && it.name.startsWith("tv.danmaku.bili.ui.player.notification")
         }
         return classesList.filter {
             it.startsWith("tv.danmaku.biliplayerv2.service.business.background")
