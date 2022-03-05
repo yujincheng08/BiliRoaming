@@ -457,18 +457,31 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         }
 
         private fun onShareLogClick(): Boolean {
-            if (logFile.exists().not() || prefs.getBoolean("save_log", false).not()) {
+            if ((logFile.exists().not() && oldLogFile.exists().not()) || prefs.getBoolean("save_log", false).not()) {
                 Log.toast("没有保存过日志")
                 return true
             }
-            logFile.copyTo(File(activity.cacheDir, "boxing/log.txt"), overwrite = true)
-            val uri = Uri.parse("content://${activity.packageName}.fileprovider/internal/log.txt")
-            activity.startActivity(Intent.createChooser(Intent().apply {
-                action = Intent.ACTION_SEND
-                putExtra(Intent.EXTRA_STREAM, uri)
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                setDataAndType(uri, "text/log")
-            }, moduleRes.getString(R.string.share_log_title)))
+            AlertDialog.Builder(activity)
+                .setTitle(moduleRes.getString(R.string.share_log_title))
+                .setItems(arrayOf("log.txt", "old_log.txt (崩溃相关发这个)")){ _, witch ->
+                    val toShareLog = when (witch) {
+                        0 -> logFile
+                        else -> oldLogFile
+                    }
+                    if (toShareLog.exists()) {
+                        toShareLog.copyTo(File(activity.cacheDir, "boxing/log.txt"), overwrite = true)
+                        val uri = Uri.parse("content://${activity.packageName}.fileprovider/internal/log.txt")
+                        activity.startActivity(Intent.createChooser(Intent().apply {
+                            action = Intent.ACTION_SEND
+                            putExtra(Intent.EXTRA_STREAM, uri)
+                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            setDataAndType(uri, "text/log")
+                        }, moduleRes.getString(R.string.share_log_title)))
+                    } else {
+                        Log.toast("日志文件不存在")
+                    }
+                }
+                .show()
             return true
         }
 
