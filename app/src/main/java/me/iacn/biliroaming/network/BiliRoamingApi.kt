@@ -10,7 +10,6 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.BuildConfig
-import me.iacn.biliroaming.Constant.HOST_REGEX
 import me.iacn.biliroaming.R
 import me.iacn.biliroaming.XposedInit
 import me.iacn.biliroaming.hook.BangumiSeasonHook.Companion.lastSeasonInfo
@@ -50,6 +49,12 @@ object BiliRoamingApi {
     private const val THAILAND_PATH_SUBTITLES = "/intl/gateway/v2/app/subtitle"
     private const val THAILAND_PATH_SEARCH = "/intl/gateway/v2/app/search/type"
     private const val THAILAND_PATH_SEASON = "/intl/gateway/v2/ogv/view/app/season"
+
+    const val overseaTestParams =
+        "cid=120453316&ep_id=285145&otype=json&fnval=16&module=pgc&platform=android"
+    const val mainlandTestParams =
+        "cid=13073143&ep_id=100615&otype=json&fnval=16&module=pgc&platform=android"
+
 
     @JvmStatic
     fun getSeason(info: Map<String, String?>, hidden: Boolean): String? {
@@ -367,16 +372,70 @@ object BiliRoamingApi {
         }
     }
 
+    val mcdn by lazy {
+        val params = if (XposedInit.country.get(5L, TimeUnit.SECONDS) == "cn") mainlandTestParams
+        else overseaTestParams
+        val uri = Uri.Builder()
+            .scheme("https")
+            .encodedAuthority("api.bilibili.com/pgc/player/api/playurl")
+            .encodedQuery(signQuery(params, emptyMap()))
+            .toString()
+
+        val list = getContent(uri)?.toJSONObject()?.optJSONObject("dash")?.optJSONArray("video")
+            ?.asSequence<JSONObject>()
+            ?.toList()
+            ?.flatMap {
+                listOfNotNull(it.optString("base_url")) + (it.optJSONArray("backup_url")
+                    ?.asSequence<String>()?.toList() ?: emptyList())
+            }?.mapNotNull {
+                Uri.parse(it).encodedAuthority
+            }?.distinct() ?: emptyList()
+
+        listOf(
+            sPrefs.getString("upos_host", null) ?: XposedInit.moduleRes.getString(R.string.cos_host)
+        ) + list
+    }
+
+    private fun replaceUPOS(stream: JSONObject) {
+        val baseAuthority = mcdn[0]
+        if (baseAuthority == "\$1") return
+        val base = Uri.parse(stream.optString("base_url"))
+        stream.put(
+            "base_url",
+            Uri.Builder().scheme(base.scheme).encodedAuthority(baseAuthority).encodedPath(base.encodedPath)
+                .encodedQuery(base.encodedQuery).toString()
+        )
+        if (mcdn.size <= 1) return
+        val backup = stream.optJSONArray("backup_url")?.asSequence<String>() ?: emptySequence()
+        val newBackup = mutableListOf<String>()
+        backup.mapTo(newBackup) {
+            val url = Uri.parse(it)
+            Uri.Builder().scheme(url.scheme).encodedAuthority(baseAuthority).encodedPath(url.encodedPath)
+                .encodedQuery(url.encodedQuery).toString()
+        }
+        mcdn.subList(1, mcdn.size).mapTo(newBackup) {
+            Uri.Builder().scheme(base.scheme).encodedAuthority(it).encodedPath(base.encodedPath)
+                .encodedQuery(base.encodedQuery).toString()
+        }
+        newBackup.add(base.toString())
+        newBackup.addAll(backup)
+        stream.put("backup_url", JSONArray(newBackup))
+    }
+
     @JvmStatic
     fun getPlayUrl(queryString: String?, priorityArea: Array<String>? = null): String? {
         return getFromCustomUrl(queryString, priorityArea)?.let {
-            JSONObject(it).optJSONObject("result")?.toString() ?: it
-        }?.replace(
-            HOST_REGEX, "://${
-                sPrefs.getString("upos_host", null)
-                    ?: XposedInit.moduleRes.getString(R.string.wcs_host)
-            }/"
-        )
+            JSONObject(it).let { json -> json.optJSONObject("result") ?: json }.apply {
+                optJSONObject("dash")?.run {
+                    for (video in optJSONArray("video").orEmpty()) {
+                        replaceUPOS(video)
+                    }
+                    for (audio in optJSONArray("audio").orEmpty()) {
+                        replaceUPOS(audio)
+                    }
+                }
+            }.toString()
+        }
     }
 
     class CustomServerException(val errors: Map<String, String>) : Throwable()
