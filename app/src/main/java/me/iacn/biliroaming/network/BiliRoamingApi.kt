@@ -372,7 +372,7 @@ object BiliRoamingApi {
         }
     }
 
-    val mcdn by lazy {
+    private val mcdn by lazy {
         val params = if (XposedInit.country.get(5L, TimeUnit.SECONDS) == "cn") mainlandTestParams
         else overseaTestParams
         val uri = Uri.Builder()
@@ -388,21 +388,26 @@ object BiliRoamingApi {
                 listOfNotNull(it.optString("base_url")) + (it.optJSONArray("backup_url")
                     ?.asSequence<String>()?.toList() ?: emptyList())
             }?.mapNotNull {
-                Uri.parse(it).encodedAuthority
+                Uri.parse(it).run {
+                    encodedAuthority?.let {
+                        encodedAuthority to (query?.substringBefore("&e=", "") ?: "")
+                    }
+                }
             }?.distinct() ?: emptyList()
 
         listOf(
-            sPrefs.getString("upos_host", null) ?: XposedInit.moduleRes.getString(R.string.cos_host)
+            (sPrefs.getString("upos_host", null) ?: XposedInit.moduleRes.getString(R.string.cos_host)) to ""
         ) + list
     }
 
     private fun replaceUPOS(stream: JSONObject) {
         val baseAuthority = mcdn[0]
-        if (baseAuthority == "\$1") return
+        if (baseAuthority.first == "\$1") return
         val base = Uri.parse(stream.optString("base_url"))
         stream.put(
             "base_url",
-            Uri.Builder().scheme(base.scheme).encodedAuthority(baseAuthority).encodedPath(base.encodedPath)
+            Uri.Builder().scheme(base.scheme).encodedAuthority(baseAuthority.first).encodedPath(base.encodedPath)
+                .query(baseAuthority.second)
                 .encodedQuery(base.encodedQuery).toString()
         )
         if (mcdn.size <= 1) return
@@ -410,12 +415,12 @@ object BiliRoamingApi {
         val newBackup = mutableListOf<String>()
         backup.mapTo(newBackup) {
             val url = Uri.parse(it)
-            Uri.Builder().scheme(url.scheme).encodedAuthority(baseAuthority).encodedPath(url.encodedPath)
-                .encodedQuery(url.encodedQuery).toString()
+            Uri.Builder().scheme(url.scheme).encodedAuthority(baseAuthority.first).encodedPath(url.encodedPath)
+                .query(baseAuthority.second).encodedQuery(url.encodedQuery).toString()
         }
         mcdn.subList(1, mcdn.size).mapTo(newBackup) {
-            Uri.Builder().scheme(base.scheme).encodedAuthority(it).encodedPath(base.encodedPath)
-                .encodedQuery(base.encodedQuery).toString()
+            Uri.Builder().scheme(base.scheme).encodedAuthority(it.first).encodedPath(base.encodedPath)
+                .query(it.second).encodedQuery(base.encodedQuery).toString()
         }
         newBackup.add(base.toString())
         newBackup.addAll(backup)
