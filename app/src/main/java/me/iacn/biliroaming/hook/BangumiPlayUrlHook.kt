@@ -56,6 +56,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 !urlString.startsWith("https://apiintl.biliapi.net/intl/gateway/ogv/player/api/playurl")
             )
                 return@hookAfterMethod
+            if (urlString.contains("&test=true")) return@hookAfterMethod
             val queryString = urlString.substring(urlString.indexOf("?") + 1)
             if ((!queryString.contains("ep_id=") && !queryString.contains("module=bangumi"))
                 || queryString.contains("ep_id=0") /*workaround*/) return@hookAfterMethod
