@@ -74,8 +74,10 @@ object BiliRoamingApi {
             fixRight(it)
             if (hidden) getExtraInfo(it, instance.accessKey)
             if ((it.optJSONArray("episodes")?.length() == 0 && it.optJSONObject("publish")
-                    ?.optInt("is_started", -1) != 0) || it.optInt("total_ep", 0) == -1
-                || (it.has("total_ep") && it.optInt("total_ep")
+                    ?.optInt("is_started", -1) != 0)
+                || (it.optInt("total_ep", 0) == -1 && it.optJSONObject("up_info")
+                    ?.optInt("mid") != 11783021)
+                || (it.has("total_ep") && it.optInt("total_ep") != -1 && it.optInt("total_ep")
                     .toString() != it.optJSONObject("newest_ep")?.optString("index"))
             ) {
                 fixThailandSeasonFlag = true
@@ -406,7 +408,8 @@ object BiliRoamingApi {
         val base = Uri.parse(stream.optString("base_url"))
         stream.put(
             "base_url",
-            Uri.Builder().scheme(base.scheme).encodedAuthority(baseAuthority.first).encodedPath(base.encodedPath)
+            Uri.Builder().scheme(base.scheme).encodedAuthority(baseAuthority.first)
+                .encodedPath(base.encodedPath)
                 .query(baseAuthority.second)
                 .encodedQuery(base.encodedQuery).toString()
         )
@@ -415,11 +418,13 @@ object BiliRoamingApi {
         val newBackup = mutableListOf<String>()
         backup.mapTo(newBackup) {
             val url = Uri.parse(it)
-            Uri.Builder().scheme(url.scheme).encodedAuthority(baseAuthority.first).encodedPath(url.encodedPath)
+            Uri.Builder().scheme(url.scheme).encodedAuthority(baseAuthority.first)
+                .encodedPath(url.encodedPath)
                 .query(baseAuthority.second).encodedQuery(url.encodedQuery).toString()
         }
         mcdn.subList(1, mcdn.size).mapTo(newBackup) {
-            Uri.Builder().scheme(base.scheme).encodedAuthority(it.first).encodedPath(base.encodedPath)
+            Uri.Builder().scheme(base.scheme).encodedAuthority(it.first)
+                .encodedPath(base.encodedPath)
                 .query(it.second).encodedQuery(base.encodedQuery).toString()
         }
         newBackup.add(base.toString())
