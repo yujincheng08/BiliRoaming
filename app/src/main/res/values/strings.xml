@@ -47,7 +47,7 @@
     <string name="tg_summary">点击加入TG频道</string>
     <string name="tg_url">https://t.me/biliroaming</string>
     <string name="upos_title">UPOS服务器设置</string>
-    <string name="upos_summary">设置解锁番剧的服务器，可加快视频加载速度</string>
+    <string name="upos_summary">设置解锁番剧的服务器，可加快视频加载速度；当所选 UPOS 不能用时，会回退到 MCDN。</string>
     <string name="purify_splash_title">净化开屏页面</string>
     <string name="purify_splash_summary">去除启动客户端时的推广</string>
     <string name="custom_splash_title">替换启动图</string>
