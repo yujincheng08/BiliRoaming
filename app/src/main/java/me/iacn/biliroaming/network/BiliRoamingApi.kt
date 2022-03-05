@@ -51,9 +51,9 @@ object BiliRoamingApi {
     private const val THAILAND_PATH_SEASON = "/intl/gateway/v2/ogv/view/app/season"
 
     const val overseaTestParams =
-        "cid=120453316&ep_id=285145&otype=json&fnval=16&module=pgc&platform=android"
+        "cid=120453316&ep_id=285145&otype=json&fnval=16&module=pgc&platform=android&test=true"
     const val mainlandTestParams =
-        "cid=13073143&ep_id=100615&otype=json&fnval=16&module=pgc&platform=android"
+        "cid=13073143&ep_id=100615&otype=json&fnval=16&module=pgc&platform=android&test=true"
 
 
     @JvmStatic
