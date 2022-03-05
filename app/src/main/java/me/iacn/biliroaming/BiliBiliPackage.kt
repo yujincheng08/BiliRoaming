@@ -272,6 +272,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         mHookInfo["class_kanban_callback"]?.findClassOrNull(mClassLoader)
     }
 
+    val toastHelper by Weak {
+        "com.bilibili.droid.ToastHelper".findClassOrNull(mClassLoader)
+    }
+
     val classesList by lazy {
         mClassLoader.allClassesList {
             val serviceField = it.javaClass.findFirstFieldByExactTypeOrNull(
@@ -429,6 +433,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     fun setState() = mHookInfo["method_set_state"]
 
     fun kanbanCallback() = mHookInfo["method_kanban_callback"]
+
+    fun showToast() = mHookInfo["method_show_toast"]
+
+    fun cancelShowToast() = mHookInfo["method_cancel_show_toast"]
 
     private fun readHookInfo(context: Context): MutableMap<String, String?> {
         try {
@@ -1008,6 +1016,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             findPlayerOnSeekComplete()
         }.checkConjunctiveOrPut("class_kanban_callback", "method_kanban_callback") {
             findKanbanCallback()
+        }.checkOrPut("method_show_toast") {
+            findShowToast()
+        }.checkOrPut("method_cancel_show_toast") {
+            findCancelShowToast()
         }
 
         Log.d(mHookInfo.filterKeys { it != "map_ids" })
@@ -1641,6 +1653,17 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     private fun findDownloadThreadField() = downloadingActivityClass?.declaredFields?.firstOrNull {
         it.type == Int::class.javaPrimitiveType
+    }?.name
+
+    private fun findShowToast() = toastHelper?.declaredMethods?.firstOrNull {
+        it.isStatic && it.parameterTypes.size == 3 &&
+                it.parameterTypes[0] == Context::class.java &&
+                it.parameterTypes[1] == String::class.java &&
+                it.parameterTypes[2] == Int::class.javaPrimitiveType
+    }?.name
+
+    private fun findCancelShowToast() = toastHelper?.declaredMethods?.firstOrNull {
+        it.isStatic && it.parameterTypes.isEmpty()
     }?.name
 
 
