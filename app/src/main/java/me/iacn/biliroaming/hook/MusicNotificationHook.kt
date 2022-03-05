@@ -206,7 +206,7 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             instance.onSeekComplete(),
             mediaPlayerInterface
         ) { _ ->
-            setStateMethod?.let { it -> it(absMusicService, lastState) }
+            absMusicService?.let { s -> setStateMethod?.let { m -> m(s, lastState) } }
         }
 
         mediaSessionCallbackClass?.hookAfterMethod(
@@ -221,7 +221,7 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         ?.callMethod(corePlayerMethod?.name)
                         ?.callMethod(instance.seekTo(), position.toInt())
             }
-            setStateMethod?.let { it -> it(absMusicService, lastState) }
+            absMusicService?.let { s -> setStateMethod?.let { m -> m(s, lastState) } }
         }
 
         setStateMethod?.hookBeforeMethod { param ->
