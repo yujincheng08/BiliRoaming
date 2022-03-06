@@ -376,32 +376,30 @@ object BiliRoamingApi {
     }
 
     private val mcdn by lazy {
-        val params = if (XposedInit.country.get(5L, TimeUnit.SECONDS) == "cn") mainlandTestParams
-        else overseaTestParams
-        val uri = Uri.Builder()
-            .scheme("https")
-            .encodedAuthority("api.bilibili.com/pgc/player/api/playurl")
-            .encodedQuery(signQuery(params, emptyMap()))
-            .toString()
-
-        val list = getContent(uri)?.toJSONObject()?.optJSONObject("dash")?.optJSONArray("video")
-            ?.asSequence<JSONObject>()
-            ?.toList()
-            ?.flatMap {
-                listOfNotNull(it.optString("base_url")) + (it.optJSONArray("backup_url")
-                    ?.asSequence<String>()?.toList() ?: emptyList())
-            }?.mapNotNull {
-                Uri.parse(it).run {
-                    encodedAuthority?.let {
-                        encodedAuthority to (query?.substringBefore("&e=", "") ?: "")
-                    }
-                }
-            }?.distinct() ?: emptyList()
-
         listOf(
             (sPrefs.getString("upos_host", null)
                 ?: XposedInit.moduleRes.getString(R.string.cos_host)) to ""
-        ) + list
+        ) + if (XposedInit.country.get(5L, TimeUnit.SECONDS) == "cn") {
+            val uri = Uri.Builder()
+                .scheme("https")
+                .encodedAuthority("api.bilibili.com/pgc/player/api/playurl")
+                .encodedQuery(signQuery(mainlandTestParams, emptyMap()))
+                .toString()
+
+            getContent(uri)?.toJSONObject()?.optJSONObject("dash")?.optJSONArray("video")
+                ?.asSequence<JSONObject>()
+                ?.toList()
+                ?.flatMap {
+                    listOfNotNull(it.optString("base_url")) + (it.optJSONArray("backup_url")
+                        ?.asSequence<String>()?.toList() ?: emptyList())
+                }?.mapNotNull {
+                    Uri.parse(it).run {
+                        encodedAuthority?.let {
+                            encodedAuthority to (query?.substringBefore("&e=", "") ?: "")
+                        }
+                    }
+                }?.distinct() ?: emptyList()
+        } else listOf(XposedInit.moduleRes.getString(R.string.akamai_host) to "")
     }
 
     private fun replaceUPOS(stream: JSONObject) {
