@@ -57,13 +57,21 @@ object BiliRoamingApi {
 
 
     @JvmStatic
-    fun getSeason(info: Map<String, String?>, hidden: Boolean): String? {
+    fun getSeason(info: Map<String, String?>, hidden_hint: Boolean): String? {
+        var hidden = hidden_hint
         val builder = Uri.Builder()
         builder.scheme("https")
             .encodedAuthority(if (hidden) BILI_HIDDEN_SEASON_URL else BILI_SEASON_URL)
         info.filter { !it.value.isNullOrEmpty() }
             .forEach { builder.appendQueryParameter(it.key, it.value) }
-        var seasonJson = getContent(builder.toString())?.toJSONObject() ?: return null
+        var seasonJson = getContent(builder.toString())?.toJSONObject()?.let {
+            if (it.optInt("code") == -404) {
+                hidden = true
+                getContent(
+                    builder.encodedAuthority(BILI_HIDDEN_SEASON_URL).toString()
+                )?.toJSONObject()
+            } else it
+        } ?: return null
         var fixThailandSeasonFlag = false
         seasonJson.optJSONObject("result")?.also {
             if (hidden) fixHiddenSeason(it)
