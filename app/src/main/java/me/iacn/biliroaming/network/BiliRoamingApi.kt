@@ -410,7 +410,7 @@ object BiliRoamingApi {
         val base = Uri.parse(stream.optString("base_url"))
         stream.put(
             "base_url",
-            Uri.Builder().scheme(base.scheme).encodedAuthority(baseAuthority.first)
+            Uri.Builder().scheme("https").encodedAuthority(baseAuthority.first)
                 .encodedPath(base.encodedPath)
                 .query(baseAuthority.second)
                 .encodedQuery(base.encodedQuery).toString()
@@ -420,12 +420,12 @@ object BiliRoamingApi {
         val newBackup = mutableListOf<String>()
         backup.mapTo(newBackup) {
             val url = Uri.parse(it)
-            Uri.Builder().scheme(url.scheme).encodedAuthority(baseAuthority.first)
+            Uri.Builder().scheme("https").encodedAuthority(baseAuthority.first)
                 .encodedPath(url.encodedPath)
                 .query(baseAuthority.second).encodedQuery(url.encodedQuery).toString()
         }
         mcdn.subList(1, mcdn.size).mapTo(newBackup) {
-            Uri.Builder().scheme(base.scheme).encodedAuthority(it.first)
+            Uri.Builder().scheme("https").encodedAuthority(it.first)
                 .encodedPath(base.encodedPath)
                 .query(it.second).encodedQuery(base.encodedQuery).toString()
         }
