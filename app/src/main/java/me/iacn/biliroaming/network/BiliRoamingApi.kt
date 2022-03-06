@@ -61,7 +61,7 @@ object BiliRoamingApi {
         var hidden = hidden_hint
         val builder = Uri.Builder()
         builder.scheme("https")
-            .encodedAuthority(if (hidden_hint) BILI_HIDDEN_SEASON_URL else BILI_SEASON_URL)
+            .encodedAuthority(if (hidden) BILI_HIDDEN_SEASON_URL else BILI_SEASON_URL)
         info.filter { !it.value.isNullOrEmpty() }
             .forEach { builder.appendQueryParameter(it.key, it.value) }
         var seasonJson = getContent(builder.toString())?.toJSONObject()?.let {
