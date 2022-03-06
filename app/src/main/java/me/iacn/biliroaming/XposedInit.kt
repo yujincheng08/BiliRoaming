@@ -144,6 +144,12 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
     }
 
     private fun startLog() = try {
+        if (logFile.exists()) {
+            if (oldLogFile.exists()) {
+                oldLogFile.delete()
+            }
+            logFile.renameTo(oldLogFile)
+        }
         logFile.delete()
         logFile.createNewFile()
         Runtime.getRuntime().exec(
