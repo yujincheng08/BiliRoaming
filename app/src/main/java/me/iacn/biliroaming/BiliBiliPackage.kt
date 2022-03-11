@@ -949,14 +949,14 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             findReportDownloadThread()
         }.checkConjunctiveOrPut("class_garb_helper", "method_garb") {
             findGarbHelper()
+        }.checkOrPut("class_abs_music_service") {
+            findAbsMusicService()
         }.checkOrPut("class_music_notification_helper") {
             findMusicNotificationHelper()
         }.checkOrPut("class_live_notification_helper") {
             findLiveNotificationHelper()
         }.checkConjunctiveOrPut("methods_set_notification", "class_notification_builder") {
             findSetNotificationMethods()
-        }.checkOrPut("class_abs_music_service") {
-            findAbsMusicService()
         }.checkOrPut("class_drawer_layout_params") {
             findDrawerLayoutParams()
         }.checkConjunctiveOrPut("method_open_drawer", "method_close_drawer") {
@@ -1035,7 +1035,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         return needUpdate
     }
 
-    private fun findVideoDetailCallback() :String?{
+    private fun findVideoDetailCallback(): String? {
         val callback = "com.bilibili.okretro.BiliApiDataCallback".findClassOrNull(mClassLoader)
         return classesList.filter {
             it.startsWith("tv.danmaku.bili.ui.video.videodetail.function")
@@ -1077,12 +1077,14 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         it.startsWith("com.bilibili.bangumi.data.page.detail")
     }.firstOrNull { c ->
         c.findClass(mClassLoader).declaredClasses.size >= 20
-    } ?: "com.bilibili.bangumi.data.page.detail.SeasonRepository".findClassOrNull(mClassLoader)?.declaredMethods?.mapNotNull { m ->
-        m.parameterTypes.firstOrNull()
-    }?.firstOrNull { c -> c.declaredClasses.size >= 20 }?.name
+    }
+        ?: "com.bilibili.bangumi.data.page.detail.SeasonRepository".findClassOrNull(mClassLoader)?.declaredMethods?.mapNotNull { m ->
+            m.parameterTypes.firstOrNull()
+        }?.firstOrNull { c -> c.declaredClasses.size >= 20 }?.name
 
     private fun findPlayerOnSeekComplete() = classesList.filter {
-        playerCoreServiceV2Class?.name?.let { name -> it.startsWith(name) } ?: false
+        playerCoreServiceV2Class?.name?.let { name -> it.startsWith(name.substringBeforeLast('.')) }
+            ?: false
     }.firstOrNull { c ->
         c.findClass(mClassLoader).interfaces.map { it.name }
             .contains("tv.danmaku.ijk.media.player.IMediaPlayer\$OnSeekCompleteListener")
@@ -1401,19 +1403,40 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             arrayOf(name, parameterTypes[0].name)
         } ?: arrayOfNulls(2)
 
-    private fun findMusicNotificationHelper() = classesList.filter {
-        it.startsWith("tv.danmaku.bili.ui.player.notification")
-    }.firstOrNull { c ->
-        c.findClass(mClassLoader).declaredFields.any {
-            it.type == PendingIntent::class.java
+    private fun findMusicNotificationHelper(): String? {
+        val prefix = absMusicServiceClass?.declaredFields?.firstOrNull {
+            it.type.name.count { c -> c == '.' } == 1
+        }?.type?.name?.substringBefore(
+            '.',
+            ".."
+        )
+        return classesList.filter {
+            it.startsWith("tv.danmaku.bili.ui.player.notification") || it.startsWith(prefix ?: "..")
+        }.firstOrNull { c ->
+            c.findClass(mClassLoader).declaredFields.any {
+                it.type == PendingIntent::class.java
+            }
         }
     }
 
-    private fun findLiveNotificationHelper() = classesList.filter {
-        it.startsWith("com.bilibili.bililive.room.ui.liveplayer.background")
-    }.firstOrNull { c ->
-        c.findClass(mClassLoader).declaredFields.any {
-            it.type == PendingIntent::class.java
+    private fun findLiveNotificationHelper(): String? {
+        val prefix =
+            "com.bilibili.bililive.room.ui.liveplayer.background.AbsLiveBackgroundPlayerService".findClassOrNull(
+                mClassLoader
+            )?.declaredFields?.firstOrNull {
+                it.type.name.count { c -> c == '.' } == 1
+            }?.type?.name?.substringBefore(
+                '.',
+                ".."
+            )
+        return classesList.filter {
+            it.startsWith("com.bilibili.bililive.room.ui.liveplayer.background") || it.startsWith(
+                prefix ?: ".."
+            )
+        }.firstOrNull { c ->
+            c.findClass(mClassLoader).declaredFields.any {
+                it.type == PendingIntent::class.java
+            }
         }
     }
 
