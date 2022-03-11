@@ -1651,7 +1651,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         it.startsWith("tv.danmaku.bili.ui.video.party.section") ||
                 it.startsWith("com.bilibili.video.videodetail.party.section") ||
                 it.startsWith("tv.danmaku.bili.ui.video.profile.action") ||
-                it.startsWith("tv.danmaku.bili.ui.video.section.action")
+                it.startsWith("tv.danmaku.bili.ui.video.section.action") || it.startsWith("aj2")
     }.firstOrNull { c ->
         c.findClass(mClassLoader).declaredFields.any {
             it.type == progressBarClass
