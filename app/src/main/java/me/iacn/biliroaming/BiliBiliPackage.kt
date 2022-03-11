@@ -1074,7 +1074,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     }
 
     private fun findBangumiUniformSeason() = classesList.filter {
-        it.startsWith("com.bilibili.bangumi.data.page.detail.entity")
+        it.startsWith("com.bilibili.bangumi.data.page.detail")
     }.firstOrNull { c ->
         c.findClass(mClassLoader).declaredClasses.size >= 20
     }
