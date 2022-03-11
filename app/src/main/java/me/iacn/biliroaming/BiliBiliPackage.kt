@@ -1077,7 +1077,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         it.startsWith("com.bilibili.bangumi.data.page.detail")
     }.firstOrNull { c ->
         c.findClass(mClassLoader).declaredClasses.size >= 20
-    }
+    } ?: "com.bilibili.bangumi.data.page.detail.SeasonRepository".findClassOrNull(mClassLoader)?.declaredMethods?.mapNotNull { m ->
+        m.parameterTypes.firstOrNull()
+    }?.firstOrNull { c -> c.declaredClasses.size >= 20 }?.name
 
     private fun findPlayerOnSeekComplete() = classesList.filter {
         playerCoreServiceV2Class?.name?.let { name -> it.startsWith(name) } ?: false
@@ -1283,7 +1285,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 ?: "tv.danmaku.biliplayerimpl.core.PlayerCoreServiceV2".findClassOrNull(mClassLoader)
                 ?: classesList.filter {
                     it.startsWith("tv.danmaku.biliplayerv2.service") ||
-                            it.startsWith("tv.danmaku.biliplayerimpl")
+                            it.startsWith("tv.danmaku.biliplayerimpl") || it.startsWith("dn2")
                 }.firstOrNull { c ->
                     c.findClass(mClassLoader).declaredFields.any {
                         it.type.name == "tv.danmaku.ijk.media.player.IMediaPlayer\$OnErrorListener"
