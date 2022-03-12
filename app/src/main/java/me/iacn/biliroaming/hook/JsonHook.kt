@@ -73,6 +73,14 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         showing.not()
                     }
 
+                    if (sPrefs.getBoolean("drawer", false) && !sPrefs.getBoolean("hidden", false)) {
+                        data?.getObjectFieldAs<MutableList<*>?>("bottom")?.removeAll {
+                            it?.getObjectFieldAs<String?>("uri")
+                                ?.startsWith("bilibili://user_center/mine")
+                                ?: false
+                        }
+                    }
+
                     // 在首页标签添加大陆/港澳台番剧分页
                     if (sPrefs.getBoolean("add_bangumi", false)) {
                         val tab = data?.getObjectFieldAs<MutableList<Any>>("tab")

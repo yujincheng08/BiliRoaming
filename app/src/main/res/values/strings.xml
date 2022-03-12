@@ -23,8 +23,6 @@
     <string name="cdn_category">加速CDN设置</string>
     <string name="hidden_title">启用隐藏功能</string>
     <string name="hidden_summary">打开后可以使用隐藏功能</string>
-<!--    <string name="purify_channel_title">净化频道</string>-->
-<!--    <string name="purify_channel_summary">去除底部频道</string>-->
     <string name="purify_game_title">净化游戏中心</string>
     <string name="purify_game_summary">去除首页右上角游戏中心</string>
     <string name="hidden_group">隐藏功能</string>
@@ -87,7 +85,7 @@
     <string name="custom_server_title">设置解析服务器</string>
     <string name="custom_server_summary">使用设置的服务器解析区域限制番剧的播放地址；如不知如何设置，请查看帮助文档</string>
     <string name="drawer_title">移动我的页面到侧边栏</string>
-    <string name="drawer_summary">移动后，可以点击首页的头像或者在空白地方左划打开侧边栏</string>
+    <string name="drawer_summary">移动后，可以点击首页的头像或者在空白地方左划打开侧边栏\n关闭时，需要重启两次客户端才能复原。如果无法还原，请重启手机。</string>
     <string name="full_splash_title">强制满屏启动图</string>
     <string name="full_splash_summary">去两头留中间形式满屏，无论是否自定启动图</string>
 <!--    <string name="get_cover_title">长按保存封面</string>-->
