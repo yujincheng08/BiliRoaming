@@ -458,7 +458,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
 
         private fun onShareLogClick(): Boolean {
             if ((logFile.exists().not() && oldLogFile.exists().not()) || prefs.getBoolean("save_log", false).not()) {
-                Log.toast("没有保存过日志")
+                Log.toast("没有保存过日志", force = true)
                 return true
             }
             AlertDialog.Builder(activity)
@@ -478,7 +478,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                             setDataAndType(uri, "text/log")
                         }, moduleRes.getString(R.string.share_log_title)))
                     } else {
-                        Log.toast("日志文件不存在")
+                        Log.toast("日志文件不存在", force = true)
                     }
                 }
                 .show()
