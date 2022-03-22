@@ -669,7 +669,8 @@ extern "C" JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *) {
       env->GetMethodID(member, "getDeclaringClass", "()Ljava/lang/Class;");
   get_name_method = env->GetMethodID(member, "getName", "()Ljava/lang/String;");
   jclass executable = env->FindClass("java/lang/reflect/Executable");
-  if (!executable){
+  if (!executable) {
+    env->ExceptionClear();
     executable = env->FindClass("java/lang/reflect/AbstractMethod");
   }
   get_parameters_method =
