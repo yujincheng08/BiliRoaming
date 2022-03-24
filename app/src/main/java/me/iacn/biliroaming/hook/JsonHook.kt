@@ -264,6 +264,16 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                         if (title == "null") return@removeAll false
                                         val uri = items?.getObjectFieldAs<String>("uri")
                                         val id = items?.getObjectFieldAs<Int>("id").toString()
+
+                                        // 修改成自定义按钮
+                                        if (sPrefs.getBoolean("add_custom_link", false) && id == sPrefs.getString("custom_link_id", "")){
+                                            val icon = items?.getObjectFieldAs<String>("icon").toString()
+                                            items?.setObjectField("title", sPrefs.getString("custom_link_title", title))
+                                                ?.setObjectField("uri", sPrefs.getString("custom_link_uri", uri))
+                                                ?.setObjectField("icon", sPrefs.getString("custom_link_icon", icon))
+                                            return@removeAll false
+                                        }
+
                                         val showing = id !in hides
                                         // 将结果写入 drawerItems
                                         drawerItems.add(BottomItem(title, uri, id, showing))
