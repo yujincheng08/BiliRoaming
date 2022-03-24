@@ -76,6 +76,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("customize_accessKey")?.onPreferenceClickListener = this
             findPreference("share_log")?.onPreferenceClickListener = this
             findPreference("customize_drawer")?.onPreferenceClickListener = this
+            findPreference("custom_link")?.onPreferenceClickListener = this
             checkCompatibleVersion()
             checkUpdate()
         }
@@ -520,6 +521,34 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             return true
         }
 
+        private fun onCustomLinkClick(): Boolean {
+            val tv = EditText(activity)
+            tv.setText(sPrefs.getString("custom_link", ""))
+            tv.hint = "bilibili://user_center/vip"
+            AlertDialog.Builder(activity).run {
+                setTitle(R.string.custom_link_summary)
+                setView(tv)
+                setPositiveButton(android.R.string.ok) { _, _ ->
+                    if (tv.text.toString().startsWith("bilibili://")) {
+                        sPrefs.edit().putString("custom_link", tv.text.toString()).apply()
+                        val intent = Intent(
+                            Intent.ACTION_VIEW,
+                            Uri.parse(sPrefs.getString("custom_link", ""))
+                        )
+                        startActivity(intent)
+                    } else {
+                        Log.toast("格式不正确", force = true)
+                    }
+                }
+                setNeutralButton("清空") { _, _ ->
+                    sPrefs.edit().remove("custom_link").apply()
+                }
+                setNegativeButton(android.R.string.cancel, null)
+                show()
+            }
+            return true
+        }
+
         override fun onPreferenceClick(preference: Preference) = when (preference.key) {
             "version" -> onVersionClick()
             "update" -> onUpdateClick()
@@ -533,6 +562,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             "home_filter" -> onHomeFilterClick()
             "share_log" -> onShareLogClick()
             "customize_drawer" -> onCustomizeDrawerClick()
+            "custom_link" -> onCustomLinkClick()
             else -> false
         }
     }
