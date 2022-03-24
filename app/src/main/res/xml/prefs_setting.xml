@@ -185,6 +185,10 @@
             android:summary="@string/customize_drawer_summary"
             android:title="@string/customize_drawer_title" />
         <SwitchPreference
+            android:key="add_custom_button"
+            android:summary="@string/add_custom_button_summary"
+            android:title="@string/add_custom_button_title" />
+        <SwitchPreference
             android:dependency="hidden"
             android:key="purify_drawer_reddot"
             android:summary="@string/purify_drawer_reddot_summary"
