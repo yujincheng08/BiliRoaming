@@ -77,6 +77,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("share_log")?.onPreferenceClickListener = this
             findPreference("customize_drawer")?.onPreferenceClickListener = this
             findPreference("custom_link")?.onPreferenceClickListener = this
+            findPreference("add_custom_button")?.onPreferenceClickListener = this
             checkCompatibleVersion()
             checkUpdate()
         }
@@ -549,6 +550,35 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             return true
         }
 
+        private fun onAddCustomButtonClick(): Boolean {
+            AlertDialog.Builder(activity).run {
+                val layout = moduleRes.getLayout(R.layout.custom_button)
+                val inflater = LayoutInflater.from(context)
+                val view = inflater.inflate(layout, null)
+                val editTexts = arrayOf(
+                    view.findViewById<EditText>(R.id.custom_button_id),
+                    view.findViewById(R.id.custom_button_title),
+                    view.findViewById(R.id.custom_button_uri),
+                    view.findViewById(R.id.custom_button_icon)
+                )
+                editTexts.forEach {
+                    it.setText(prefs.getString("${it.tag}", ""))
+                }
+                setTitle(R.string.add_custom_button_title)
+                setView(view)
+                setPositiveButton(android.R.string.ok) { _, _ ->
+                    editTexts.forEach {
+                        val key = "${it.tag}"
+                        val value = it.text.toString()
+                        if (value.isNotEmpty()) prefs.edit().putString(key, value).apply()
+                        else prefs.edit().remove(key).apply()
+                    }
+                }
+                show()
+            }
+            return true
+        }
+
         override fun onPreferenceClick(preference: Preference) = when (preference.key) {
             "version" -> onVersionClick()
             "update" -> onUpdateClick()
@@ -563,6 +593,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             "share_log" -> onShareLogClick()
             "customize_drawer" -> onCustomizeDrawerClick()
             "custom_link" -> onCustomLinkClick()
+            "add_custom_button" -> onAddCustomButtonClick()
             else -> false
         }
     }
