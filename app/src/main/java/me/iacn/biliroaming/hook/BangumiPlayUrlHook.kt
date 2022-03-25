@@ -283,14 +283,24 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         if (!response.callMethodAs<Boolean>("hasVideoInfo")) return true
 
         val viewInfo = response.callMethod("getViewInfo")
-        val dialog = viewInfo?.callMethod("getDialog")
-        val type = dialog?.callMethodAs<String>("getType")
-        if (type == "area_limit") return true
+
+        if (viewInfo?.callMethod("getDialog")
+                ?.callMethodAs<String>("getType") == "area_limit"
+        ) return true
+
+        if (viewInfo?.callMethod("getEndPage")?.callMethod("getDialog")
+                ?.callMethodAs<String>("getType") == "area_limit"
+        ) return true
 
         sPrefs.getString("cn_server_accessKey", null) ?: return false
         val business = response.callMethod("getBusiness")
         if (business?.callMethodAs<Boolean>("getIsPreview") == true) return true
-        if (type != "") return true
+        if (viewInfo?.callMethod("getDialog")
+                ?.callMethodAs<String>("getType")?.let { it != "" } == true
+        ) return true
+        if (viewInfo?.callMethod("getEndPage")?.callMethod("getDialog")
+                ?.callMethodAs<String>("getType")?.let { it != "" } == true
+        ) return true
         return false
     }
 
