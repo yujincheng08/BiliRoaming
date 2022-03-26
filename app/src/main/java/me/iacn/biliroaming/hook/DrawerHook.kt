@@ -18,7 +18,7 @@ class DrawerHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
         Log.d("startHook: DrawerHook")
 
-        instance.kanbanCallback?.new(null)?.callMethod(instance.kanbanCallback(), null)
+        instance.kanbanCallbackClass?.new(null)?.callMethod(instance.kanbanCallback(), null)
 
         instance.mainActivityClass?.hookAfterMethod("onCreate", Bundle::class.java) { param ->
             val self = param.thisObject as Activity

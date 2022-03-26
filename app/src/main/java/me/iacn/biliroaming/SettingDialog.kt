@@ -135,7 +135,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             val supportTeenagersMode = instance.teenagersModeDialogActivityClass != null
             val supportCustomizeCC = instance.subtitleSpanClass != null
             val supportStoryVideo = instance.storyVideoActivityClass != null
-            val supportPurifyShare = instance.shareClickResult != null
+            val supportPurifyShare = instance.shareClickResultClass != null
             if (!supportDrawer)
                 disablePreference("drawer")
             if (!supportSplashHook) {

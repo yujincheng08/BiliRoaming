@@ -6,13 +6,226 @@ option java_package = "me.iacn.biliroaming";
 option java_outer_classname = "Configs";
 option optimize_for = LITE_RUNTIME;
 
+message Class {
+  optional string name = 1;
+}
+
+message Method {
+  optional string name = 1;
+}
+
+message Field {
+  optional string name = 1;
+}
+
+message OkHttp {
+  optional Field request = 1;
+  optional Field url = 2;
+}
+
+message FastJson {
+  optional Class class = 1;
+  optional Method parse = 2;
+}
+
+
+message ShareWrapper {
+  optional Class class = 1;
+  optional Method method = 2;
+}
+
+message ThemeName {
+  optional Class class = 1;
+  optional Field field = 2;
+}
+
+message ReportDownload {
+  optional Class class = 1;
+  optional Method method = 2;
+}
+
+message GrabHelper {
+  optional Class class = 1;
+  optional Method method = 2;
+}
+
+message NotificationBuilder {
+  optional Class class = 1;
+  optional Method method = 2;
+}
+
+message BangumiParams {
+  optional Class class = 1;
+  optional Method params_to_map = 2;
+}
+
+message GsonHelper {
+  optional Field gson = 1;
+  optional Class gson_converter = 2;
+  optional Method to_json = 3;
+  optional Method from_json = 4;
+}
+
+message PlayerCoreService {
+  optional Class class = 1;
+  optional Method get_default_speed = 2;
+  optional Method seek_to = 3;
+  optional Method on_seek_complete = 4;
+  optional Class seek_complete_listener = 5;
+}
+
+message PegasusFeed {
+  optional Class class = 1;
+  optional Method method = 2;
+}
+
+message OkIO {
+  optional Class class = 1;
+  optional Field field = 2;
+  optional Field length = 3;
+}
+
+message OkIOBuffer {
+  optional Class class = 1;
+  optional Method input_stream = 2;
+  optional Method read_from = 3;
+}
+
 message VideoUpperAdInfo {
-  string class_name = 1;
-  string method_name = 2;
+  optional Class class = 1;
+  optional Method method = 2;
+}
+
+message DescCopy {
+  repeated Class classes = 1;
+  repeated Method methods = 2;
+}
+
+message KanBan {
+  optional Class class = 1;
+  optional Method method = 2;
+}
+
+message ToastHelper {
+  optional Class class = 1;
+  optional Method show = 2;
+  optional Method cancel = 3;
+}
+
+message ThemeProcessor {
+  optional Class class = 1;
+  repeated Method methods = 2;
+}
+
+message MapIds {
+  map<string, int32> ids = 1;
+}
+
+message ThemeHelper {
+  optional Class class = 1;
+  optional Field color_array = 2;
+}
+
+message ThemeIdHelper {
+  optional Class class = 1;
+  optional Field color_id = 2;
+}
+
+message ColumnHelper {
+  optional Class class = 1;
+  optional Field color_array = 2;
+}
+
+message SignQuery {
+  optional Class class = 1;
+  optional Method method = 2;
+}
+
+message Section {
+  optional Class class = 1;
+  optional Method method = 2;
+}
+
+message PartySection {
+  optional Class class = 1;
+  optional Method method = 2;
+}
+
+message Drawer {
+  optional Class class = 1;
+  optional Class layout = 2;
+  optional Class layout_params = 3;
+  optional Method open = 4;
+  optional Method close = 5;
+  optional Method is_open = 6;
+}
+
+message DownloadThread {
+  optional Class download_activity = 1;
+  optional Class listener = 2;
+  optional Field field = 3;
+  optional ReportDownload report_download = 4;
+}
+
+message Settings {
+  optional Class home_user_center = 1;
+  optional Class menu_group_item = 2;
+  optional Class setting_router = 3;
+  optional Method add_setting = 4;
+}
+
+message MusicNotification {
+  optional Class abs_music_service = 1;
+  optional Class background_player = 2;
+  optional Method set_state = 3;
+  optional Class helper = 4;
+  optional NotificationBuilder builder = 5;
+  optional Class player_service = 6;
+  optional Class media_session_callback = 7;
 }
 
 message HookInfo {
   int64 last_update_time = 1;
-  string class_bangumi_season = 2;
-  VideoUpperAdInfo video_upper_ad = 3;
+  optional MapIds map_ids = 2;
+  optional Class bangumi_api_response = 8;
+  optional Class progress_bar = 9;
+  optional Class retrofit_response = 10;
+  optional OkHttp ok_http = 11;
+  optional FastJson fast_json = 12;
+  optional ThemeHelper theme_helper = 13;
+  optional ThemeIdHelper theme_id_helper = 14;
+  optional ColumnHelper column_helper = 17;
+  optional Method skin_list = 19;
+  optional ThemeProcessor theme_processor = 20;
+  optional Class theme_list_click = 22;
+  optional ShareWrapper share_wrapper = 23;
+  optional ThemeName theme_name = 24;
+  optional Section section = 25;
+  optional PartySection party_section = 26;
+  optional SignQuery sign_query = 27;
+  optional Class general_response = 28;
+  optional Drawer drawer = 30;
+  optional Settings settings = 31;
+  optional Class video_detail_callback = 33;
+  optional DownloadThread download_thread = 34;
+  optional GrabHelper grab_helper = 37;
+  optional MusicNotification music_notification = 38;
+  optional Class live_notification_helper = 40;
+  optional BangumiParams bangumi_params = 45;
+  optional GsonHelper gson_helper = 46;
+  optional PlayerCoreService player_core_service = 47;
+  optional PegasusFeed pegasus_feed = 49;
+  optional Class okhttp_response = 50;
+  optional Class chronos_switch = 51;
+  optional Class subtitle_span = 52;
+  optional Class comment_long_click = 53;
+  optional OkIO okio = 54;
+  optional OkIOBuffer okio_buffer = 55;
+  optional VideoUpperAdInfo video_upper_ad = 56;
+  optional Class comment_span = 57;
+  optional Class dyn_desc_holder_listener = 58;
+  optional DescCopy desc_copy = 59;
+  optional Class bangumi_season = 60;
+  optional KanBan kan_ban = 67;
+  optional ToastHelper toast_helper = 68;
 }

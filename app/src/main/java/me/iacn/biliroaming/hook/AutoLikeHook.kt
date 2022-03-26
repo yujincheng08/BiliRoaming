@@ -16,7 +16,7 @@ class AutoLikeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val detailClass = instance.biliVideoDetailClass ?: return
         var detail: Any? = null
 
-        instance.videoDetailCallback?.hookAfterMethod(
+        instance.videoDetailCallbackClass?.hookAfterMethod(
             "onDataSuccess",
             Object::class.java
         ) { param ->
