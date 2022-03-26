@@ -15,7 +15,10 @@ import android.view.ViewGroup
 import android.widget.TextView
 import dalvik.system.BaseDexClassLoader
 import me.iacn.biliroaming.utils.*
-import java.io.*
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.io.InputStream
 import java.lang.reflect.Modifier
 import java.lang.reflect.ParameterizedType
 import java.net.URL
@@ -29,8 +32,14 @@ val Configs.Method.orNull get() = if (hasName()) name else null
 val Configs.Field.orNull get() = if (hasName()) name else null
 
 class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContext: Context) {
+    init {
+        instance = this
+    }
+
     private val mHookInfo: Configs.HookInfo = readHookInfo(mContext).also {
-        Log.d(it)
+        Log.d(it.copy {
+            clearMapIds()
+        })
     }
     val bangumiApiResponseClass by Weak { mHookInfo.bangumiApiResponse from mClassLoader }
     val rxGeneralResponseClass by Weak { "com.bilibili.okretro.call.rxjava.RxGeneralResponse" from mClassLoader }
@@ -230,7 +239,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     } catch (e: Throwable) {
                         null
                     }?.lastUpdateTime ?: 0
-                    val info = ObjectInputStream(FileInputStream(hookInfoFile)).use {
+                    val info = FileInputStream(hookInfoFile).use {
                         runCatchingOrNull { Configs.HookInfo.parseFrom(it) }
                             ?: Configs.HookInfo.newBuilder().build()
                     }
@@ -547,6 +556,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     "tv.danmaku.bilibilihd.ui.main.mine.HdHomeUserCenterFragment" from classloader
                         ?: "tv.danmaku.bili.ui.main2.mine.HomeUserCenterFragment" from classloader
                         ?: return@settings
+                menuGroupItem = class_ { name = menuGroupItemClass.name }
+                homeUserCenter = class_ { name = homeUserCenterClass.name }
                 settingRouter = class_ {
                     name = classesList.filter {
                         it.startsWith("tv.danmaku.bili.ui.main2")
@@ -564,22 +575,19 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             }
             drawer = drawer {
                 val navigationViewClass =
-                    "android.support.design.widget.NavigationView".findClassOrNull(classloader)
-                        ?: return@drawer
-                val drawerLayoutClass = "androidx.drawerlayout.widget.DrawerLayout" from classloader
-                    ?: "android.support.v4.widget.DrawerLayout" from classloader ?: return@drawer
+                    "android.support.design.widget.NavigationView" from classloader
                 val regex = Regex("^tv\\.danmaku\\.bili\\.ui\\.main2\\.[^.]*$")
                 class_ = class_ {
                     name = classesList.filter {
                         it.startsWith("tv.danmaku.bili.ui.main2")
-                    }.filter {
-                        it.matches(regex)
-                    }.firstOrNull { c ->
+                    }.filter { it.matches(regex) }.firstOrNull { c ->
                         c.findClass(classloader).declaredFields.any {
                             it.type == navigationViewClass
                         }
                     } ?: return@class_
                 }
+                val drawerLayoutClass = "androidx.drawerlayout.widget.DrawerLayout" from classloader
+                    ?: "android.support.v4.widget.DrawerLayout" from classloader ?: return@drawer
                 layout = class_ { name = drawerLayoutClass.name }
                 layoutParams = class_ {
                     name = drawerLayoutClass.declaredClasses.firstOrNull {
@@ -1061,17 +1069,22 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 }
             }
             toastHelper = toastHelper {
-                val clazz = "com.bilibili.droid.ToastHelper" from classloader
-                clazz?.declaredMethods?.firstOrNull {
-                    it.isStatic && it.parameterTypes.size == 3 &&
-                            it.parameterTypes[0] == Context::class.java &&
-                            it.parameterTypes[1] == String::class.java &&
-                            it.parameterTypes[2] == Int::class.javaPrimitiveType
-                }?.name
-
-                clazz?.declaredMethods?.firstOrNull {
-                    it.isStatic && it.parameterTypes.isEmpty()
-                }?.name
+                val toastHelperClass =
+                    "com.bilibili.droid.ToastHelper" from classloader ?: return@toastHelper
+                class_ = class_ { name = toastHelperClass.name }
+                show = method {
+                    name = toastHelperClass.declaredMethods.firstOrNull {
+                        it.isStatic && it.parameterTypes.size == 3 &&
+                                it.parameterTypes[0] == Context::class.java &&
+                                it.parameterTypes[1] == String::class.java &&
+                                it.parameterTypes[2] == Int::class.javaPrimitiveType
+                    }?.name ?: return@method
+                }
+                cancel = method {
+                    name = toastHelperClass.declaredMethods.firstOrNull {
+                        it.isStatic && it.parameterTypes.isEmpty()
+                    }?.name ?: return@method
+                }
             }
         }
 
