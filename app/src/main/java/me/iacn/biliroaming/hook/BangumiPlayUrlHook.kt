@@ -2,8 +2,8 @@ package me.iacn.biliroaming.hook
 
 import android.net.Uri
 import me.iacn.biliroaming.*
-import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.API.*
+import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.hook.BangumiSeasonHook.Companion.lastSeasonInfo
 import me.iacn.biliroaming.network.BiliRoamingApi.CustomServerException
 import me.iacn.biliroaming.network.BiliRoamingApi.getPlayUrl
@@ -56,6 +56,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 !urlString.startsWith("https://apiintl.biliapi.net/intl/gateway/ogv/player/api/playurl")
             )
                 return@hookAfterMethod
+            if (urlString.contains("&test=true")) return@hookAfterMethod
             val queryString = urlString.substring(urlString.indexOf("?") + 1)
             if ((!queryString.contains("ep_id=") && !queryString.contains("module=bangumi"))
                 || queryString.contains("ep_id=0") /*workaround*/) return@hookAfterMethod
@@ -80,19 +81,19 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     } else content
                 }
                 content?.let {
-                    Log.d("Has replaced play url with proxy server $it")
-                    Log.toast("已从代理服务器获取播放地址")
+                    Log.toast("已从代理服务器获取播放地址\n如加载缓慢或黑屏，可去漫游设置中测速并设置 UPOS")
                     param.result = ByteArrayInputStream(it.toByteArray())
                 } ?: run {
-                    Log.e("Failed to get play url")
-                    Log.toast("获播放地址失败")
+                    Log.w("Failed to get play url")
+                    Log.toast("获取播放地址失败")
                 }
             } catch (e: CustomServerException) {
                 var messages = ""
                 for (error in e.errors) {
                     messages += "${error.key}: ${error.value}\n"
                 }
-                Log.e("请求解析服务器发生错误: ${messages.trim()}")
+                Log.w("请求解析服务器发生错误: ${messages.trim()}")
+                Log.toast("请求解析服务器发生错误: ${messages.trim()}")
             }
         }
 
@@ -129,11 +130,10 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         val content = getPlayUrl(reconstructQuery(request))
                         countDownLatch?.countDown()
                         content?.let {
-                            Log.d("Has replaced play url with proxy server $it")
-                            Log.toast("已从代理服务器获取播放地址")
+                            Log.toast("已从代理服务器获取播放地址\n如加载缓慢或黑屏，可去漫游设置中测速并设置 UPOS")
                             param.result = reconstructResponse(response, it, isDownload)
                         } ?: run {
-                            Log.e("Failed to get play url")
+                            Log.w("Failed to get play url")
                             Log.toast("获取播放地址失败")
                         }
                     } catch (e: CustomServerException) {
@@ -142,7 +142,8 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             messages += "${error.key}: ${error.value}\n"
                         }
                         showPlayerError(response, "请求解析中服务器发生错误(点此查看更多)\n${messages.trim()}")
-                        Log.e("请求解析服务器发生错误: ${messages.trim()}")
+                        Log.w("请求解析服务器发生错误: ${messages.trim()}")
+                        Log.toast("请求解析服务器发生错误: ${messages.trim()}")
                     }
                 } else if (isDownload) {
                     param.result = fixDownloadProto(response)
@@ -161,7 +162,8 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 ) {
                     if (!sPrefs.getBoolean("fix_download", false)
                         || request.callMethodAs<Long>("getQn") == 0L
-                        || request.callMethodAs<Int>("getFnval") == 0) {
+                        || request.callMethodAs<Int>("getFnval") == 0
+                    ) {
                         request.callMethod("setFnval", 0)
                     }
                     isDownload = true
@@ -182,11 +184,11 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         val content = getPlayUrl(reconstructQuery(request))
                         countDownLatch?.countDown()
                         content?.let {
-                            Log.d("Has replaced play url with proxy server $it")
-                            Log.toast("已从代理服务器获取播放地址")
+                            Log.toast("已从代理服务器获取播放地址\n如加载缓慢或黑屏，可去漫游设置中测速并设置 UPOS")
                             param.result = reconstructResponse(response, it, isDownload)
                         } ?: run {
                             showPlayerError(response, "获取播放地址失败。请检查哔哩漫游设置里的解析服务器设置。")
+                            Log.toast("获取播放地址失败。请检查哔哩漫游设置里的解析服务器设置。")
                         }
                     } catch (e: CustomServerException) {
                         var messages = ""
@@ -194,7 +196,8 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             messages += "${error.key}: ${error.value}\n"
                         }
                         showPlayerError(response, "请求解析中服务器发生错误(点此查看更多)\n${messages.trim()}")
-                        Log.e("请求解析服务器发生错误: ${messages.trim()}")
+                        Log.w("请求解析服务器发生错误: ${messages.trim()}")
+                        Log.toast("请求解析服务器发生错误: ${messages.trim()}")
                     }
                 } else if (isDownload) {
                     param.result = fixDownloadProto(response)
@@ -280,20 +283,28 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         if (!response.callMethodAs<Boolean>("hasVideoInfo")) return true
 
         val viewInfo = response.callMethod("getViewInfo")
-        val dialog = viewInfo?.callMethod("getDialog")
-        val type = dialog?.callMethodAs<String>("getType")
-        if (type == "area_limit") return true
+
+        if (viewInfo?.callMethod("getDialog")
+                ?.callMethodAs<String>("getType") == "area_limit"
+        ) return true
+
+        if (viewInfo?.callMethod("getEndPage")?.callMethod("getDialog")
+                ?.callMethodAs<String>("getType") == "area_limit"
+        ) return true
 
         sPrefs.getString("cn_server_accessKey", null) ?: return false
         val business = response.callMethod("getBusiness")
         if (business?.callMethodAs<Boolean>("getIsPreview") == true) return true
-        if (type != "") return true
+        if (viewInfo?.callMethod("getDialog")
+                ?.callMethodAs<String>("getType")?.let { it != "" } == true
+        ) return true
+        if (viewInfo?.callMethod("getEndPage")?.callMethod("getDialog")
+                ?.callMethodAs<String>("getType")?.let { it != "" } == true
+        ) return true
         return false
     }
 
     private fun showPlayerError(response: Any, message: String) {
-        Log.e("Failed to get play url")
-        Log.toast("获取播放地址失败")
         if (response.callMethodAs("hasViewInfo")) {
             response.callMethod("getViewInfo")?.callMethod("getDialog")?.run {
                 callMethod("setMsg", "获取播放地址失败")

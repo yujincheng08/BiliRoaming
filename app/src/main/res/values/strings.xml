@@ -23,8 +23,6 @@
     <string name="cdn_category">加速CDN设置</string>
     <string name="hidden_title">启用隐藏功能</string>
     <string name="hidden_summary">打开后可以使用隐藏功能</string>
-<!--    <string name="purify_channel_title">净化频道</string>-->
-<!--    <string name="purify_channel_summary">去除底部频道</string>-->
     <string name="purify_game_title">净化游戏中心</string>
     <string name="purify_game_summary">去除首页右上角游戏中心</string>
     <string name="hidden_group">隐藏功能</string>
@@ -47,7 +45,7 @@
     <string name="tg_summary">点击加入TG频道</string>
     <string name="tg_url">https://t.me/biliroaming</string>
     <string name="upos_title">UPOS服务器设置</string>
-    <string name="upos_summary">设置解锁番剧的服务器，可加快视频加载速度</string>
+    <string name="upos_summary">设置解锁番剧的服务器，可加快视频加载速度；当所选 UPOS 不能用时，会回退到 MCDN。</string>
     <string name="purify_splash_title">净化开屏页面</string>
     <string name="purify_splash_summary">去除启动客户端时的推广</string>
     <string name="custom_splash_title">替换启动图</string>
@@ -87,7 +85,7 @@
     <string name="custom_server_title">设置解析服务器</string>
     <string name="custom_server_summary">使用设置的服务器解析区域限制番剧的播放地址；如不知如何设置，请查看帮助文档</string>
     <string name="drawer_title">移动我的页面到侧边栏</string>
-    <string name="drawer_summary">移动后，可以点击首页的头像或者在空白地方左划打开侧边栏</string>
+    <string name="drawer_summary">移动后，可以点击首页的头像或者在空白地方左划打开侧边栏\n关闭时，需要重启两次客户端才能复原。如果无法还原，请重启手机。</string>
     <string name="full_splash_title">强制满屏启动图</string>
     <string name="full_splash_summary">去两头留中间形式满屏，无论是否自定启动图</string>
 <!--    <string name="get_cover_title">长按保存封面</string>-->
@@ -177,4 +175,8 @@
     <string name="skin_summary">重启后，要等待十几秒下载资源，然后再重启（同时开启时的优先度：导入＞填写）</string>
     <string name="purify_share_title">净化分享</string>
     <string name="purify_share_summary">把分享链接中的 b23.tv 短链接换成正常链接</string>
+    <string name="custom_link_title">开启自定义链接</string>
+    <string name="custom_link_summary">仅支持 bilibili:// 开头的格式</string>
+    <string name="add_custom_button_title">在【我的】页面添加自定义按钮</string>
+    <string name="add_custom_button_summary">指定修改其中一个项目</string>
 </resources>

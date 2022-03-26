@@ -124,6 +124,11 @@
             android:summary="@string/purify_share_summary"
             android:title="@string/purify_share_title" />
 
+        <Preference
+            android:key="custom_link"
+            android:summary="@string/custom_link_summary"
+            android:title="@string/custom_link_title" />
+
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/pref_backup">
         <Preference
@@ -179,6 +184,10 @@
             android:key="customize_drawer"
             android:summary="@string/customize_drawer_summary"
             android:title="@string/customize_drawer_title" />
+        <SwitchPreference
+            android:key="add_custom_button"
+            android:summary="@string/add_custom_button_summary"
+            android:title="@string/add_custom_button_title" />
         <SwitchPreference
             android:dependency="hidden"
             android:key="purify_drawer_reddot"

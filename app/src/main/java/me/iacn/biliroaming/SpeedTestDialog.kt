@@ -20,6 +20,8 @@ import me.iacn.biliroaming.Constant.HOST_REGEX
 import me.iacn.biliroaming.XposedInit.Companion.moduleRes
 import me.iacn.biliroaming.network.BiliRoamingApi
 import me.iacn.biliroaming.network.BiliRoamingApi.getPlayUrl
+import me.iacn.biliroaming.network.BiliRoamingApi.mainlandTestParams
+import me.iacn.biliroaming.network.BiliRoamingApi.overseaTestParams
 import me.iacn.biliroaming.utils.Log
 import me.iacn.biliroaming.utils.sPrefs
 import me.iacn.biliroaming.utils.toJSONObject
@@ -75,13 +77,6 @@ class SpeedTestDialog(private val pref: ListPreference, activity: Activity) :
     AlertDialog.Builder(activity) {
     private val scope = MainScope()
     private val speedTestDispatcher = Executors.newFixedThreadPool(1).asCoroutineDispatcher()
-
-    companion object {
-        const val mainlandParams =
-            "cid=120453316&ep_id=285145&otype=json&fnval=16&module=pgc&platform=android"
-        const val overseaParams =
-            "cid=13073143&ep_id=100615&otype=json&fnval=16&module=pgc&platform=android"
-    }
 
     private val view = ListView(activity)
     private val adapter = SpeedTestAdapter(activity)
@@ -171,16 +166,16 @@ class SpeedTestDialog(private val pref: ListPreference, activity: Activity) :
     private fun getTestUrl(): String? {
         val json = try {
             if (XposedInit.country.get(5L, TimeUnit.SECONDS) == "cn") getPlayUrl(
-                mainlandParams,
+                overseaTestParams,
                 arrayOf("hk", "tw")
             )
-            else getPlayUrl(overseaParams, arrayOf("cn"))
+            else getPlayUrl(mainlandTestParams, arrayOf("cn"))
         } catch (e: BiliRoamingApi.CustomServerException) {
             var messages = ""
             for (error in e.errors) {
                 messages += "${error.key}: ${error.value}\n"
             }
-            Log.e("请求解析服务器发生错误: ${messages.trim()}")
+            Log.w("请求解析服务器发生错误: ${messages.trim()}")
             return null
         }
         return json?.toJSONObject()?.optJSONObject("dash")?.getJSONArray("audio")?.run {

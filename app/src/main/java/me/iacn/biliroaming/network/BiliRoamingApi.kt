@@ -10,7 +10,6 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.BuildConfig
-import me.iacn.biliroaming.Constant.HOST_REGEX
 import me.iacn.biliroaming.R
 import me.iacn.biliroaming.XposedInit
 import me.iacn.biliroaming.hook.BangumiSeasonHook.Companion.lastSeasonInfo
@@ -51,14 +50,28 @@ object BiliRoamingApi {
     private const val THAILAND_PATH_SEARCH = "/intl/gateway/v2/app/search/type"
     private const val THAILAND_PATH_SEASON = "/intl/gateway/v2/ogv/view/app/season"
 
+    const val overseaTestParams =
+        "cid=120453316&ep_id=285145&otype=json&fnval=16&module=pgc&platform=android&test=true"
+    const val mainlandTestParams =
+        "cid=13073143&ep_id=100615&otype=json&fnval=16&module=pgc&platform=android&test=true"
+
+
     @JvmStatic
-    fun getSeason(info: Map<String, String?>, hidden: Boolean): String? {
+    fun getSeason(info: Map<String, String?>, hidden_hint: Boolean): String? {
+        var hidden = hidden_hint
         val builder = Uri.Builder()
         builder.scheme("https")
             .encodedAuthority(if (hidden) BILI_HIDDEN_SEASON_URL else BILI_SEASON_URL)
         info.filter { !it.value.isNullOrEmpty() }
             .forEach { builder.appendQueryParameter(it.key, it.value) }
-        var seasonJson = getContent(builder.toString())?.toJSONObject() ?: return null
+        var seasonJson = getContent(builder.toString())?.toJSONObject()?.let {
+            if (it.optInt("code") == -404) {
+                hidden = true
+                getContent(
+                    builder.encodedAuthority(BILI_HIDDEN_SEASON_URL).toString()
+                )?.toJSONObject()
+            } else it
+        } ?: return null
         var fixThailandSeasonFlag = false
         seasonJson.optJSONObject("result")?.also {
             if (hidden) fixHiddenSeason(it)
@@ -69,8 +82,11 @@ object BiliRoamingApi {
             fixRight(it)
             if (hidden) getExtraInfo(it, instance.accessKey)
             if ((it.optJSONArray("episodes")?.length() == 0 && it.optJSONObject("publish")
-                    ?.optInt("is_started", -1) != 0) || it.optInt("total_ep", 0) == -1
-                || (it.has("total_ep") && it.optInt("total_ep")
+                    ?.optInt("is_started", -1) != 0)
+                || (it.optInt("total_ep", 0) == -1 && it.optJSONObject("up_info")
+                    ?.optInt("mid")
+                    ?.let { mid -> mid == 11783021 || mid == 1988098633 || mid == 2042149112 } != true)
+                || (it.has("total_ep") && it.optInt("total_ep") != -1 && it.optInt("total_ep")
                     .toString() != it.optJSONObject("newest_ep")?.optString("index"))
             ) {
                 fixThailandSeasonFlag = true
@@ -88,7 +104,10 @@ object BiliRoamingApi {
                     fixThailandSeason(result)
                     seasonJson = it
                 }
+                checkErrorToast(it, true)
             }
+        } else {
+            checkErrorToast(seasonJson)
         }
         return seasonJson.toString()
     }
@@ -202,7 +221,7 @@ object BiliRoamingApi {
                 "link",
                 "https://www.bilibili.com/bangumi/play/ep${episode.optString("ep_id")}"
             )
-            episode.put("long_title", episode.optString("indexTitle"))
+            episode.put("long_title", episode.optString("indexTitle", episode.optString("index_title")))
             episode.put("id", episode.optString("ep_id"))
             episode.put("title", episode.optString("index"))
             episode.put("rights", BILI_RIGHT_TEMPLATE.toJSONObject())
@@ -364,16 +383,77 @@ object BiliRoamingApi {
         }
     }
 
+    private val mcdn by lazy {
+        listOf(
+            (sPrefs.getString("upos_host", null)
+                ?: XposedInit.moduleRes.getString(R.string.cos_host)) to ""
+        ) + if (XposedInit.country.get(5L, TimeUnit.SECONDS) == "cn") {
+            val uri = Uri.Builder()
+                .scheme("https")
+                .encodedAuthority("api.bilibili.com/pgc/player/api/playurl")
+                .encodedQuery(signQuery(mainlandTestParams, emptyMap()))
+                .toString()
+
+            getContent(uri)?.toJSONObject()?.optJSONObject("dash")?.optJSONArray("video")
+                ?.asSequence<JSONObject>()
+                ?.toList()
+                ?.flatMap {
+                    listOfNotNull(it.optString("base_url")) + (it.optJSONArray("backup_url")
+                        ?.asSequence<String>()?.toList() ?: emptyList())
+                }?.mapNotNull {
+                    Uri.parse(it).run {
+                        encodedAuthority?.let {
+                            encodedAuthority to (query?.substringBefore("&e=", "") ?: "")
+                        }
+                    }
+                }?.distinct() ?: emptyList()
+        } else listOf(XposedInit.moduleRes.getString(R.string.akamai_host) to "")
+    }
+
+    private fun replaceUPOS(stream: JSONObject) {
+        val baseAuthority = mcdn[0]
+        if (baseAuthority.first == "\$1") return
+        val base = Uri.parse(stream.optString("base_url"))
+        stream.put(
+            "base_url",
+            Uri.Builder().scheme("https").encodedAuthority(baseAuthority.first)
+                .encodedPath(base.encodedPath)
+                .query(baseAuthority.second)
+                .encodedQuery(base.encodedQuery).toString()
+        )
+        if (mcdn.size <= 1) return
+        val backup = stream.optJSONArray("backup_url")?.asSequence<String>() ?: emptySequence()
+        val newBackup = mutableListOf<String>()
+        backup.mapTo(newBackup) {
+            val url = Uri.parse(it)
+            Uri.Builder().scheme("https").encodedAuthority(baseAuthority.first)
+                .encodedPath(url.encodedPath)
+                .query(baseAuthority.second).encodedQuery(url.encodedQuery).toString()
+        }
+        mcdn.subList(1, mcdn.size).mapTo(newBackup) {
+            Uri.Builder().scheme("https").encodedAuthority(it.first)
+                .encodedPath(base.encodedPath)
+                .query(it.second).encodedQuery(base.encodedQuery).toString()
+        }
+        newBackup.add(base.toString())
+        newBackup.addAll(backup)
+        stream.put("backup_url", JSONArray(newBackup))
+    }
+
     @JvmStatic
     fun getPlayUrl(queryString: String?, priorityArea: Array<String>? = null): String? {
         return getFromCustomUrl(queryString, priorityArea)?.let {
-            JSONObject(it).optJSONObject("result")?.toString() ?: it
-        }?.replace(
-            HOST_REGEX, "://${
-                sPrefs.getString("upos_host", null)
-                    ?: XposedInit.moduleRes.getString(R.string.wcs_host)
-            }/"
-        )
+            JSONObject(it).let { json -> json.optJSONObject("result") ?: json }.apply {
+                optJSONObject("dash")?.run {
+                    for (video in optJSONArray("video").orEmpty()) {
+                        replaceUPOS(video)
+                    }
+                    for (audio in optJSONArray("audio").orEmpty()) {
+                        replaceUPOS(audio)
+                    }
+                }
+            }.toString()
+        }
     }
 
     class CustomServerException(val errors: Map<String, String>) : Throwable()
@@ -674,6 +754,9 @@ object BiliRoamingApi {
             Log.e("getContent error: $e with url $urlString")
             Log.e(e)
             null
+        }?.also {
+            Log.d("getContent url: $urlString")
+            Log.d("getContent result: $it")
         }
     }
 

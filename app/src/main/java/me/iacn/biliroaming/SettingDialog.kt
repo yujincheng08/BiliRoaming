@@ -78,6 +78,8 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("skin")?.onPreferenceClickListener = this
             findPreference("skin_import")?.onPreferenceClickListener = this
             findPreference("customize_drawer")?.onPreferenceClickListener = this
+            findPreference("custom_link")?.onPreferenceClickListener = this
+            findPreference("add_custom_button")?.onPreferenceClickListener = this
             checkCompatibleVersion()
             checkUpdate()
         }
@@ -135,7 +137,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             val supportTeenagersMode = instance.teenagersModeDialogActivityClass != null
             val supportCustomizeCC = instance.subtitleSpanClass != null
             val supportStoryVideo = instance.storyVideoActivityClass != null
-            val supportPurifyShare = instance.shareClickResult != null
+            val supportPurifyShare = instance.shareClickResultClass != null
             if (!supportDrawer)
                 disablePreference("drawer")
             if (!supportSplashHook) {
@@ -486,18 +488,31 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         }
 
         private fun onShareLogClick(): Boolean {
-            if (logFile.exists().not() || prefs.getBoolean("save_log", false).not()) {
-                Log.toast("没有保存过日志")
+            if ((logFile.exists().not() && oldLogFile.exists().not()) || prefs.getBoolean("save_log", false).not()) {
+                Log.toast("没有保存过日志", force = true)
                 return true
             }
-            logFile.copyTo(File(activity.cacheDir, "boxing/log.txt"), overwrite = true)
-            val uri = Uri.parse("content://${activity.packageName}.fileprovider/internal/log.txt")
-            activity.startActivity(Intent.createChooser(Intent().apply {
-                action = Intent.ACTION_SEND
-                putExtra(Intent.EXTRA_STREAM, uri)
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                setDataAndType(uri, "text/log")
-            }, moduleRes.getString(R.string.share_log_title)))
+            AlertDialog.Builder(activity)
+                .setTitle(moduleRes.getString(R.string.share_log_title))
+                .setItems(arrayOf("log.txt", "old_log.txt (崩溃相关发这个)")){ _, witch ->
+                    val toShareLog = when (witch) {
+                        0 -> logFile
+                        else -> oldLogFile
+                    }
+                    if (toShareLog.exists()) {
+                        toShareLog.copyTo(File(activity.cacheDir, "boxing/log.txt"), overwrite = true)
+                        val uri = Uri.parse("content://${activity.packageName}.fileprovider/internal/log.txt")
+                        activity.startActivity(Intent.createChooser(Intent().apply {
+                            action = Intent.ACTION_SEND
+                            putExtra(Intent.EXTRA_STREAM, uri)
+                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            setDataAndType(uri, "text/log")
+                        }, moduleRes.getString(R.string.share_log_title)))
+                    } else {
+                        Log.toast("日志文件不存在", force = true)
+                    }
+                }
+                .show()
             return true
         }
 
@@ -551,6 +566,59 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 }
                 setNegativeButton(android.R.string.cancel, null)
                 setCancelable(false)
+
+        private fun onCustomLinkClick(): Boolean {
+            val tv = EditText(activity)
+            tv.setText(sPrefs.getString("custom_link", ""))
+            tv.hint = "bilibili://user_center/vip"
+            AlertDialog.Builder(activity).run {
+                setTitle(R.string.custom_link_summary)
+                setView(tv)
+                setPositiveButton(android.R.string.ok) { _, _ ->
+                    if (tv.text.toString().startsWith("bilibili://")) {
+                        sPrefs.edit().putString("custom_link", tv.text.toString()).apply()
+                        val intent = Intent(
+                            Intent.ACTION_VIEW,
+                            Uri.parse(sPrefs.getString("custom_link", ""))
+                        )
+                        startActivity(intent)
+                    } else {
+                        Log.toast("格式不正确", force = true)
+                    }
+                }
+                setNeutralButton("清空") { _, _ ->
+                    sPrefs.edit().remove("custom_link").apply()
+                }
+                setNegativeButton(android.R.string.cancel, null)
+                show()
+            }
+            return true
+        }
+
+        private fun onAddCustomButtonClick(): Boolean {
+            AlertDialog.Builder(activity).run {
+                val layout = moduleRes.getLayout(R.layout.custom_button)
+                val inflater = LayoutInflater.from(context)
+                val view = inflater.inflate(layout, null)
+                val editTexts = arrayOf(
+                    view.findViewById<EditText>(R.id.custom_button_id),
+                    view.findViewById(R.id.custom_button_title),
+                    view.findViewById(R.id.custom_button_uri),
+                    view.findViewById(R.id.custom_button_icon)
+                )
+                editTexts.forEach {
+                    it.setText(prefs.getString("${it.tag}", ""))
+                }
+                setTitle(R.string.add_custom_button_title)
+                setView(view)
+                setPositiveButton(android.R.string.ok) { _, _ ->
+                    editTexts.forEach {
+                        val key = "${it.tag}"
+                        val value = it.text.toString()
+                        if (value.isNotEmpty()) prefs.edit().putString(key, value).apply()
+                        else prefs.edit().remove(key).apply()
+                    }
+                }
                 show()
             }
             return true
@@ -571,6 +639,8 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             "skin" -> onSkinClick((preference as SwitchPreference).isChecked)
             "skin_import" -> onSkinImportClick((preference as SwitchPreference).isChecked)
             "customize_drawer" -> onCustomizeDrawerClick()
+            "custom_link" -> onCustomLinkClick()
+            "add_custom_button" -> onAddCustomButtonClick()
             else -> false
         }
     }

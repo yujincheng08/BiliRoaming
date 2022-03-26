@@ -15,7 +15,8 @@ class DownloadThreadHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         Log.d("startHook: DownloadThread")
         instance.downloadThreadListenerClass?.run {
             hookBeforeAllConstructors { param ->
-                val view = param.args[1] as TextView
+                if (param.args.size < 2) return@hookBeforeAllConstructors
+                val view = param.args[1] as? TextView ?: return@hookBeforeAllConstructors
                 val visibility = if (view.tag as Int == 1) {
                     view.text = "自定义"
                     View.VISIBLE

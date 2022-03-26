@@ -14,24 +14,34 @@ class AutoLikeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
         val likeId = getId("frame1")
         val detailClass = instance.biliVideoDetailClass ?: return
+        var detail: Any? = null
+
+        instance.videoDetailCallbackClass?.hookAfterMethod(
+            "onDataSuccess",
+            Object::class.java
+        ) { param ->
+            if (detailClass.isInstance(param.args[0]))
+                detail = param.args[0]
+        }
 
         val hooker: Hooker = fun(param) {
             val sec = param.thisObject ?: return
-            val detail = sec.javaClass.findFieldByExactType(detailClass)?.get(sec)
-            val avid = detail?.getLongField("mAvid") ?: return
-            if (likedVideos.contains(avid)) return
-            likedVideos.add(avid)
-            val requestUser = detail.getObjectField("mRequestUser")
-            val like = requestUser?.getIntField("mLike")
-            val likeView = sec.javaClass.declaredFields.filter {
-                View::class.java.isAssignableFrom(it.type)
-            }.map {
-                sec.getObjectField(it.name) as View
-            }.firstOrNull {
-                it.id == likeId
-            }
-            if (like == 0) {
-                likeView?.callOnClick()
+            detail?.let { detail ->
+                val avid = detail.getLongField("mAvid")
+                if (likedVideos.contains(avid)) return
+                likedVideos.add(avid)
+                val requestUser = detail.getObjectField("mRequestUser")
+                val like = requestUser?.getIntField("mLike")
+                val likeView = sec.javaClass.declaredFields.filter {
+                    View::class.java.isAssignableFrom(it.type)
+                }.map {
+                    sec.getObjectField(it.name) as View
+                }.firstOrNull {
+                    it.id == likeId
+                }
+                if (like == 0) {
+                    likeView?.callOnClick()
+                }
             }
         }
         instance.partyLikeMethod()?.let {
@@ -41,7 +51,7 @@ class AutoLikeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             )
         }
 
-        instance.likeMethod() ?.let {
+        instance.likeMethod()?.let {
             instance.sectionClass?.hookAfterMethod(
                 it,
                 Object::class.java,

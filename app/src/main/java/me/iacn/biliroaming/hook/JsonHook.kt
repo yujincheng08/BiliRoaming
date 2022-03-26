@@ -73,6 +73,14 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         showing.not()
                     }
 
+                    if (sPrefs.getBoolean("drawer", false) && !sPrefs.getBoolean("hidden", false)) {
+                        data?.getObjectFieldAs<MutableList<*>?>("bottom")?.removeAll {
+                            it?.getObjectFieldAs<String?>("uri")
+                                ?.startsWith("bilibili://user_center/mine")
+                                ?: false
+                        }
+                    }
+
                     // 在首页标签添加大陆/港澳台番剧分页
                     if (sPrefs.getBoolean("add_bangumi", false)) {
                         val tab = data?.getObjectFieldAs<MutableList<Any>>("tab")
@@ -256,6 +264,16 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                         if (title == "null") return@removeAll false
                                         val uri = items?.getObjectFieldAs<String>("uri")
                                         val id = items?.getObjectFieldAs<Int>("id").toString()
+
+                                        // 修改成自定义按钮
+                                        if (sPrefs.getBoolean("add_custom_button", false) && id == sPrefs.getString("custom_button_id", "")){
+                                            val icon = items?.getObjectFieldAs<String>("icon").toString()
+                                            items?.setObjectField("title", sPrefs.getString("custom_button_title", title))
+                                                ?.setObjectField("uri", sPrefs.getString("custom_button_uri", uri))
+                                                ?.setObjectField("icon", sPrefs.getString("custom_button_icon", icon))
+                                            return@removeAll false
+                                        }
+
                                         val showing = id !in hides
                                         // 将结果写入 drawerItems
                                         drawerItems.add(BottomItem(title, uri, id, showing))
