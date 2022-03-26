@@ -221,7 +221,7 @@ object BiliRoamingApi {
                 "link",
                 "https://www.bilibili.com/bangumi/play/ep${episode.optString("ep_id")}"
             )
-            episode.put("long_title", episode.optString("indexTitle"))
+            episode.put("long_title", episode.optString("indexTitle", episode.optString("index_title")))
             episode.put("id", episode.optString("ep_id"))
             episode.put("title", episode.optString("index"))
             episode.put("rights", BILI_RIGHT_TEMPLATE.toJSONObject())

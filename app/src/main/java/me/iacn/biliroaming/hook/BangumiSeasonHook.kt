@@ -530,7 +530,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         if (isBangumiWithWatchPermission(jsonResult, code)) {
             jsonResult?.also { allowDownload(it); fixEpisodesStatus(it) }
         } else {
-            Log.toast("发现版权番剧，尝试解锁……")
+            Log.toast("发现区域限制番剧，尝试解锁……")
             Log.d("Info: $lastSeasonInfo")
             val (newCode, newJsonResult) = getSeason(
                 lastSeasonInfo,
