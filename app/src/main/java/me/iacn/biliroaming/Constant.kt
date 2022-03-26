@@ -16,7 +16,7 @@ object Constant {
         "HD版" to HD_PACKAGE_NAME
     )
     const val TAG = "BiliRoaming"
-    const val HOOK_INFO_FILE_NAME = "hookinfo.dat"
+    const val HOOK_INFO_FILE_NAME = "hookinfo.pb"
     const val TYPE_SEASON_ID = 0
     const val TYPE_MEDIA_ID = 1
     const val TYPE_EPISODE_ID = 2

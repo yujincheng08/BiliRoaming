@@ -97,17 +97,15 @@ class CustomThemeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
 
         // No reset when not logged in
-        instance.themeReset()?.let { its ->
-            val replacer: Replacer = { param ->
-                if (Thread.currentThread().stackTrace.count { s ->
-                        s.className == "tv.danmaku.bili.MainActivityV2" && s.methodName == "onPostCreate"
-                    } > 0
-                ) null else
-                    invokeOriginalMethod(param.method, param.thisObject, param.args)
-            }
-            its.split(";").map {
-                instance.themeProcessorClass?.replaceMethod(it, replacer = replacer)
-            }
+        val replacer: Replacer = { param ->
+            if (Thread.currentThread().stackTrace.count { s ->
+                    s.className == "tv.danmaku.bili.MainActivityV2" && s.methodName == "onPostCreate"
+                } > 0
+            ) null else
+                invokeOriginalMethod(param.method, param.thisObject, param.args)
+        }
+        instance.themeReset().forEach {
+            instance.themeProcessorClass?.replaceMethod(it, replacer = replacer)
         }
     }
 

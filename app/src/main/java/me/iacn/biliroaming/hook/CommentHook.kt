@@ -14,12 +14,11 @@ import me.iacn.biliroaming.utils.*
 class CommentHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
         if (!sPrefs.getBoolean("comment_copy", false)) return
-        instance.descCopy()?.split(';')?.let {
-            instance.descCopyView()?.split(';')?.zip(it)
-        }?.forEach { p ->
-            p.first.replaceMethod(
-                mClassLoader,
-                p.second,
+        instance.descCopyView().zip(instance.descCopy()).forEach { p ->
+            val clazz = p.first ?: return@forEach
+            val method = p.second ?: return@forEach
+            clazz.replaceMethod(
+                method,
                 View::class.java,
                 ClickableSpan::class.java
             ) { param ->

@@ -7,10 +7,10 @@ import me.iacn.biliroaming.utils.hookBeforeMethod
 class PurifyShareHook (classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
         if (!sPrefs.getBoolean("purify_share", false)) return
-        instance.shareClickResult?.hookBeforeMethod("getContent") {
+        instance.shareClickResultClass?.hookBeforeMethod("getContent") {
             it.result = null
         }
-        instance.shareClickResult?.hookBeforeMethod("getLink") {
+        instance.shareClickResultClass?.hookBeforeMethod("getLink") {
             it.result = null
         }
     }

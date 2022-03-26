@@ -364,7 +364,12 @@ fun Class<*>.callStaticMethodOrNull(
 
 fun String.findClass(classLoader: ClassLoader?): Class<*> = findClass(this, classLoader)
 
+infix fun String.on(classLoader: ClassLoader?): Class<*> = findClass(this, classLoader)
+
 fun String.findClassOrNull(classLoader: ClassLoader?): Class<*>? =
+    findClassIfExists(this, classLoader)
+
+infix fun String.from(classLoader: ClassLoader?): Class<*>? =
     findClassIfExists(this, classLoader)
 
 fun Class<*>.new(vararg args: Any?): Any = newInstance(this, *args)

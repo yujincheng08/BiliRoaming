@@ -266,7 +266,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     instance.rxGeneralResponseClass?.isInstance(body) == true
                 ) {
                     val dataField =
-                        if (instance.generalResponseClass?.isInstance(body) == true) "data" else instance.responseDataField().value
+                        if (instance.generalResponseClass?.isInstance(body) == true) "data" else instance.responseDataField()
                     val data = body.getObjectField(dataField)
                     if (data?.javaClass == searchAllResultClass) {
                         addAreaTags(data)
@@ -517,7 +517,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     private fun fixPlaySearchType(body: Any, url: String) {
         val dataField =
-            if (instance.generalResponseClass?.isInstance(body) == true) "data" else instance.responseDataField().value
+            if (instance.generalResponseClass?.isInstance(body) == true) "data" else instance.responseDataField()
         val resultClass = body.getObjectField(dataField)?.javaClass ?: return
         if (!url.contains("type=7") && !url.contains("type=8")) return
         val newUrl = url.replace("appintl.biliapi.net/intl/gateway/app/", "app.bilibili.com/x/v2/")

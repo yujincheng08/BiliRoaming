@@ -92,7 +92,7 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     private val notificationServiceField by lazy {
         instance.absMusicServiceClass?.declaredFields?.firstOrNull {
-            instance.backgroundPlayer?.interfaces?.contains(it.type) == true
+            instance.backgroundPlayerClass?.interfaces?.contains(it.type) == true
         }
     }
 
@@ -106,16 +106,6 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         mediaMetadataClass?.declaredFields?.firstOrNull {
             it.type == Bundle::class.java
         }
-    }
-
-    private val mediaSessionCallbackClass by lazy {
-        instance.classesList.filter {
-            it.startsWith("android.support.v4.media.session")
-        }.firstOrNull { c ->
-            c.findClass(mClassLoader).declaredMethods.filter {
-                it.name == "onSeekTo"
-            }.count().let { it > 0 }
-        }?.findClass(mClassLoader)
     }
 
     private val playbackStateBuilderClass by lazy {
@@ -135,13 +125,13 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     private val playerServiceField by lazy {
-        instance.backgroundPlayer?.declaredFields?.firstOrNull {
-            it.type == instance.playerService
+        instance.backgroundPlayerClass?.declaredFields?.firstOrNull {
+            it.type == instance.playerServiceClass
         }
     }
 
     private val corePlayerMethod by lazy {
-        instance.playerService?.declaredMethods?.firstOrNull {
+        instance.playerServiceClass?.declaredMethods?.firstOrNull {
             instance.playerCoreServiceV2Class?.interfaces?.contains(it.returnType) ?: false
         }
     }
@@ -192,7 +182,7 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             if (currentDuration != 0L) return@hookBeforeMethod
             param.args[0] = true
             duration = when (notificationService?.javaClass) {
-                instance.backgroundPlayer ->
+                instance.backgroundPlayerClass ->
                     notificationService?.getObjectField(playerServiceField?.name)
                         ?.callMethod(corePlayerMethod?.name)?.callMethodAs<Int>(getDurationMethod)
                         ?.toLong()
@@ -202,21 +192,21 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             bundle.putLong(MediaMetadata.METADATA_KEY_DURATION, duration)
         }
 
-        instance.playerOnSeekComplete?.hookBeforeMethod(
+        instance.playerOnSeekCompleteClass?.hookBeforeMethod(
             instance.onSeekComplete(),
             mediaPlayerInterface
         ) { _ ->
             absMusicService?.let { s -> setStateMethod?.let { m -> m(s, lastState) } }
         }
 
-        mediaSessionCallbackClass?.hookAfterMethod(
+        instance.mediaSessionCallbackClass?.hookAfterMethod(
             "onSeekTo",
             Long::class.javaPrimitiveType
         ) { param ->
             position = param.args[0] as Long
             val playerHelper = absMusicService?.getObjectField(notificationServiceField?.name)
             when (playerHelper?.javaClass) {
-                instance.backgroundPlayer ->
+                instance.backgroundPlayerClass ->
                     playerHelper?.getObjectField(playerServiceField?.name)
                         ?.callMethod(corePlayerMethod?.name)
                         ?.callMethod(instance.seekTo(), position.toInt())
@@ -228,7 +218,7 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             lastState = param.args[0] as Int
             val playerHelper = param.thisObject.getObjectField(notificationServiceField?.name)
             when (playerHelper?.javaClass) {
-                instance.backgroundPlayer -> playerHelper?.getObjectField(playerServiceField?.name)
+                instance.backgroundPlayerClass -> playerHelper?.getObjectField(playerServiceField?.name)
                     ?.callMethod(corePlayerMethod?.name)?.run {
                         position = callMethodAs<Int>(getCurrentPositionMethod).toLong()
                         speed = try {
