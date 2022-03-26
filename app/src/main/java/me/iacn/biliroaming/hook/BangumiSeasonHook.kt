@@ -436,6 +436,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 instance.fastJsonClass?.callStaticMethod(
                     instance.fastJsonParse(), item.toString(), goto?.callMethod("getImpl")
                 )?.let {
+                    it.setIntField("viewType", goto?.callMethodAs<String>("getLayout").hashCode())
                     newItems.add(it)
                 }
             }
