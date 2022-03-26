@@ -866,13 +866,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 onSeekComplete = method {
                     name = "onSeekComplete"
                 }
+                val prefix = playerCoreServiceV2Class.name.substringBeforeLast('.')
                 seekCompleteListener = class_ {
                     name = classesList.filter {
-                        playerCoreServiceV2Class.name.startsWith(
-                            name.substringBeforeLast(
-                                '.'
-                            )
-                        )
+                        name.startsWith(prefix)
                     }.firstOrNull { c ->
                         c.findClass(classloader).interfaces.map { it.name }
                             .contains("tv.danmaku.ijk.media.player.IMediaPlayer\$OnSeekCompleteListener")
