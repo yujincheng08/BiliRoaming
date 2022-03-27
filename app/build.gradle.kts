@@ -3,6 +3,7 @@ import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.variant.BuiltArtifact
 import com.google.protobuf.gradle.*
 import java.nio.file.Paths
+import org.gradle.internal.os.OperatingSystem
 
 // https://github.com/google/protobuf-gradle-plugin/issues/540#issuecomment-1001053066
 fun com.android.build.api.dsl.AndroidSourceSet.proto(action: SourceDirectorySet.() -> Unit) {
@@ -13,6 +14,15 @@ fun com.android.build.api.dsl.AndroidSourceSet.proto(action: SourceDirectorySet.
         ?.apply(action)
 }
 
+fun findInPath(executable: String): String? {
+    val pathEnv = System.getenv("PATH")
+    return pathEnv.split(File.pathSeparator).map { folder ->
+        Paths.get("${folder}${File.separator}${executable}${if (OperatingSystem.current().isWindows) ".exe" else ""}")
+            .toFile()
+    }.firstOrNull { path ->
+        path.exists()
+    }?.absolutePath
+}
 
 plugins {
     id("com.android.application")
@@ -27,12 +37,11 @@ val releaseKeyPassword: String? by rootProject
 
 val appVerCode: String by rootProject
 val appVerName: String by rootProject
-val useDexHelper: String by rootProject
 
 android {
     compileSdk = 32
     buildToolsVersion = "32.0.0"
-    ndkVersion = "23.1.7779620"
+    ndkVersion = "24.0.8215888"
 
     defaultConfig {
         applicationId = "me.iacn.biliroaming"
@@ -41,12 +50,10 @@ android {
         versionCode = appVerCode.toInt()
         versionName = appVerName
 
-        buildConfigField("boolean", "useDexHelper", useDexHelper)
-
         externalNativeBuild {
             cmake {
                 targets("biliroaming")
-                abiFilters("arm64-v8a", "x86")
+                abiFilters("armeabi-v7a", "arm64-v8a", "x86")
                 arguments("-DANDROID_STL=none")
                 val flags = arrayOf(
                     "-Wall",
@@ -69,6 +76,10 @@ android {
                 )
                 cppFlags("-std=c++20", *flags)
                 cFlags("-std=c18", *flags)
+                findInPath("ccache")?.let {
+                    println("Using ccache $it")
+                    arguments += "-DANDROID_CCACHE=$it"
+                }
             }
         }
     }
@@ -105,6 +116,7 @@ android {
             proguardFiles("proguard-rules.pro")
             externalNativeBuild {
                 cmake {
+                    cppFlags += "-flto"
                     val configFlags = arrayOf(
                         "-Oz",
                         "-DNDEBUG"
@@ -143,9 +155,6 @@ android {
                 srcDir("src/main/proto")
                 include("**/*.proto")
             }
-            if (useDexHelper != "true") {
-                (java as com.android.build.gradle.api.AndroidSourceDirectorySet).exclude("**.java")
-            }
         }
     }
 
@@ -168,10 +177,8 @@ android {
     }
 
     externalNativeBuild {
-        if (useDexHelper == "true") {
-            cmake {
-                path("src/main/jni/CMakeLists.txt")
-            }
+        cmake {
+            path("src/main/jni/CMakeLists.txt")
         }
     }
 }

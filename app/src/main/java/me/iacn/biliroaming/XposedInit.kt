@@ -49,9 +49,7 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
             @Suppress("DEPRECATION")
             when {
                 !lpparam.processName.contains(":") -> {
-                    if (sPrefs.getBoolean("save_log", false) ||
-                        sPrefs.getBoolean("show_hint", true)
-                    ) {
+                    if (shouldSaveLog) {
                         startLog()
                     }
                     Log.d("BiliBili process launched ...")

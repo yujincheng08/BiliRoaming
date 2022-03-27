@@ -152,10 +152,6 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
     }
 
-    private val mediaPlayerInterface by lazy {
-        "tv.danmaku.ijk.media.player.IMediaPlayer".findClass(mClassLoader)
-    }
-
     private val setStateMethod by lazy {
         instance.absMusicServiceClass?.runCatchingOrNull {
             getDeclaredMethod(
@@ -164,7 +160,6 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             ).also { it.isAccessible = true }
         }
     }
-
 
     override fun startHook() {
         if (!sPrefs.getBoolean("music_notification", false)) return
@@ -192,10 +187,9 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             bundle.putLong(MediaMetadata.METADATA_KEY_DURATION, duration)
         }
 
-        instance.playerOnSeekCompleteClass?.hookBeforeMethod(
-            instance.onSeekComplete(),
-            mediaPlayerInterface
-        ) { _ ->
+        instance.playerOnSeekCompleteClass?.hookBeforeAllMethods(
+            instance.onSeekComplete()
+        ) {
             absMusicService?.let { s -> setStateMethod?.let { m -> m(s, lastState) } }
         }
 

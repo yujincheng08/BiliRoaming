@@ -478,5 +478,9 @@ inline fun ClassLoader.allClassesList(crossinline delegator: (BaseDexClassLoader
 
 val Member.isStatic: Boolean
     inline get() = Modifier.isStatic(this.modifiers)
+val Member.isFinal: Boolean
+    inline get() = Modifier.isFinal(this.modifiers)
+val Member.isPublic: Boolean
+    inline get() = Modifier.isPublic(this.modifiers)
 val Member.isNotStatic: Boolean
     inline get() = !this.isStatic
