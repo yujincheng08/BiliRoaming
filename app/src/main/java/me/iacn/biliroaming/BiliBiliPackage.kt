@@ -22,7 +22,6 @@ import java.io.InputStream
 import java.lang.reflect.Method
 import java.lang.reflect.Modifier
 import java.lang.reflect.ParameterizedType
-import java.net.URL
 import java.nio.channels.ByteChannel
 import kotlin.math.max
 import kotlin.system.measureTimeMillis
@@ -339,34 +338,71 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 name = "com.bilibili.bangumi.data.common.api.BangumiApiResponse"
             }
             retrofitResponse = class_ {
-                name = this@hookInfo.bangumiApiResponse.from(classloader)?.methods?.filter {
-                    "extractResult" == it.name
-                }?.map {
-                    it.parameterTypes[0]
-                }?.firstOrNull()?.name ?: "retrofit2.HttpException".findClassOrNull(classloader)
-                    ?.findFieldOrNull("response")?.type?.name ?: return@class_
+                name = dexHelper.findMethodUsingString(
+                    "rawResponse must be successful response",
+                    false,
+                    -1,
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).asSequence().firstNotNullOfOrNull {
+                    dexHelper.decodeMethodIndex(it)
+                }?.declaringClass?.name ?: return@class_
             }
             okHttp = okHttp {
-                val hostRequestInterceptorClass =
-                    "com.bililive.bililive.infra.hybrid.interceptor.HostRequestInterceptor".findClassOrNull(
-                        classloader
-                    ) ?: "com.bililive.bililive.liveweb.interceptor.a".findClassOrNull(classloader)
-                val okHttpRequestClass = hostRequestInterceptorClass?.declaredMethods?.firstOrNull {
-                    it.parameterTypes.size == 1 && it.parameterTypes[0] == it.returnType
-                }?.returnType
-                this@hookInfo.retrofitResponse.from(classloader)?.declaredConstructors?.forEach { c ->
-                    c.parameterTypes[0].declaredFields.forEach { f1 ->
-                        if (f1.type == okHttpRequestClass) {
-                            okHttpRequestClass?.declaredFields?.forEach { f2 ->
-                                f2.type.declaredMethods.forEach { m ->
-                                    if (m.parameterTypes.isEmpty() && m.returnType == URL::class.java) {
-                                        request = field { name = f1.name }
-                                        url = field { name = f2.name }
-                                    }
-                                }
-                            }
-                        }
-                    }
+                val responseClass = dexHelper.findMethodUsingString(
+                    "Response{protocol=",
+                    false,
+                    -1,
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).asSequence().firstNotNullOfOrNull {
+                    dexHelper.decodeMethodIndex(it)
+                }?.declaringClass ?: return@okHttp
+                val requestClass = dexHelper.findMethodUsingString(
+                    "Request{method=",
+                    false,
+                    -1,
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).asSequence().firstNotNullOfOrNull {
+                    dexHelper.decodeMethodIndex(it)
+                }?.declaringClass ?: return@okHttp
+                val urlClass = dexHelper.findMethodUsingString(
+                    ":@",
+                    false,
+                    -1,
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).asSequence().firstNotNullOfOrNull {
+                    dexHelper.decodeMethodIndex(it)
+                }?.declaringClass ?: return@okHttp
+                request = field {
+                    name = responseClass.findFirstFieldByExactTypeOrNull(requestClass)?.name
+                        ?: return@field
+                }
+                url = field {
+                    name =
+                        requestClass.findFirstFieldByExactTypeOrNull(urlClass)?.name ?: return@field
                 }
             }
             fastJson = fastJson {
