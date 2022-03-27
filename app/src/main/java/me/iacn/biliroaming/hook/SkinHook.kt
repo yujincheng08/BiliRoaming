@@ -41,7 +41,7 @@ class SkinHook (classLoader: ClassLoader) : BaseHook(classLoader) {
             ) {
                 // 判断网址要不要处理
                 if (url.startsWith("https://app.bilibili.com/x/resource/show/skin?")) {
-                    val dataField = if (instance.generalResponseClass?.isInstance(body) == true) "data" else instance.responseDataField().value
+                    val dataField = if (instance.generalResponseClass?.isInstance(body) == true) "data" else instance.responseDataField()
                     val resultClass = body.getObjectField(dataField)?.javaClass
                     try {
                         val skin =
