@@ -136,6 +136,8 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             val supportCustomizeCC = instance.subtitleSpanClass != null
             val supportStoryVideo = instance.storyVideoActivityClass != null
             val supportPurifyShare = instance.shareClickResultClass != null
+            val supportDownloadThread = versionCode < 6630000
+            val supportCustomizeTheme = versionCode < 6630000
             if (!supportDrawer)
                 disablePreference("drawer")
             if (!supportSplashHook) {
@@ -173,6 +175,12 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             }
             if (!supportPurifyShare) {
                 disablePreference("purify_share")
+            }
+            if (!supportDownloadThread) {
+                disablePreference("custom_download_thread")
+            }
+            if (!supportCustomizeTheme) {
+                disablePreference("custom_theme")
             }
         }
 
