@@ -459,7 +459,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         }
 
         private fun onShareLogClick(): Boolean {
-            if ((logFile.exists().not() && oldLogFile.exists().not()) || prefs.getBoolean("save_log", false).not()) {
+            if ((logFile.exists().not() && oldLogFile.exists().not()) || shouldSaveLog.not()) {
                 Log.toast("没有保存过日志", force = true)
                 return true
             }
