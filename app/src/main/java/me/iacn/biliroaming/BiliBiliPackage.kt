@@ -594,14 +594,14 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                         null,
                         null,
                         true
-                    ).map {
+                    ).asSequence().firstNotNullOfOrNull {
                         dexHelper.decodeMethodIndex(it)
-                    }.firstOrNull()?.declaringClass?.interfaces?.firstOrNull()?.let {
+                    }?.declaringClass?.interfaces?.firstOrNull()?.let {
                         dexHelper.encodeClassIndex(it)
                     }?.let {
-                        dexHelper.findField(it, null, true).map { f ->
+                        dexHelper.findField(it, null, true).asSequence().firstNotNullOfOrNull { f ->
                             dexHelper.decodeFieldIndex(f)
-                        }.firstOrNull()?.declaringClass
+                        }?.declaringClass
                     }?.name ?: return@class_
                 }
             }
@@ -739,9 +739,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     null,
                     null,
                     true
-                ).map {
+                ).asSequence().firstNotNullOfOrNull {
                     dexHelper.decodeMethodIndex(it)
-                }.firstOrNull()?.declaringClass ?: return@musicNotification
+                }?.declaringClass ?: return@musicNotification
                 helper = class_ { name = musicNotificationHelperClass.name }
                 liveHelper = class_ {
                     name = dexHelper.findMethodUsingString(
@@ -755,9 +755,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                         null,
                         null,
                         true
-                    ).map {
+                    ).asSequence().firstNotNullOfOrNull {
                         dexHelper.decodeMethodIndex(it)
-                    }.firstOrNull()?.declaringClass?.name ?: return@class_
+                    }?.declaringClass?.name ?: return@class_
                 }
                 builder = notificationBuilder {
                     val notificationBuilderClass = dexHelper.findMethodUsingString(
@@ -771,9 +771,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                         null,
                         null,
                         true
-                    ).map {
+                    ).asSequence().firstNotNullOfOrNull {
                         dexHelper.decodeMethodIndex(it)
-                    }.firstOrNull()?.declaringClass ?: return@notificationBuilder
+                    }?.declaringClass ?: return@notificationBuilder
                     musicNotificationHelperClass.declaredMethods.lastOrNull {
                         it.parameterTypes.size == 1 && it.parameterTypes[0] == notificationBuilderClass
                     }?.let {
@@ -792,9 +792,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     null,
                     null,
                     true
-                ).map {
+                ).asSequence().firstNotNullOfOrNull {
                     dexHelper.decodeMethodIndex(it)
-                }.firstOrNull()?.declaringClass ?: return@musicNotification
+                }?.declaringClass ?: return@musicNotification
                 backgroundPlayer = class_ { name = backgroundPlayerClass.name }
                 val setStateMethod = dexHelper.findMethodUsingString(
                     "MediaSession setPlaybackState",
@@ -807,9 +807,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     null,
                     null,
                     true
-                ).map {
+                ).asSequence().firstNotNullOfOrNull {
                     dexHelper.decodeMethodIndex(it)
-                }.firstOrNull() ?: return@musicNotification
+                } ?: return@musicNotification
                 setState = method { name = setStateMethod.name }
                 absMusicService = class_ { name = setStateMethod.declaringClass.name }
                 playerService = class_ {
@@ -824,9 +824,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                         null,
                         null,
                         true
-                    ).map {
+                    ).asSequence().firstNotNullOfOrNull {
                         dexHelper.decodeMethodIndex(it)
-                    }.firstOrNull()?.declaringClass?.superclass?.interfaces?.firstOrNull()?.name
+                    }?.declaringClass?.superclass?.interfaces?.firstOrNull()?.name
                         ?: return@class_
                 }
                 mediaSessionCallback = class_ {
@@ -886,46 +886,55 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 }
             }
             playerCoreService = playerCoreService {
-                val playerCoreServiceV2Class =
-                    "tv.danmaku.biliplayerv2.service.core.PlayerCoreServiceV2".findClassOrNull(
-                        classloader
-                    )
-                        ?: "tv.danmaku.biliplayerimpl.core.PlayerCoreServiceV2".findClassOrNull(
-                            classloader
-                        )
-                        ?: classesList.filter {
-                            it.startsWith("tv.danmaku.biliplayerv2.service") ||
-                                    it.startsWith("tv.danmaku.biliplayerimpl") || it.startsWith("dn2")
-                        }.firstOrNull { c ->
-                            c.findClass(classloader).declaredFields.any {
-                                it.type.name == "tv.danmaku.ijk.media.player.IMediaPlayer\$OnErrorListener"
-                            }
-                        }?.findClassOrNull(classloader) ?: return@playerCoreService
-                playerCoreServiceV2Class.declaredMethods.forEach { m ->
-                    if (Modifier.isPublic(m.modifiers) && m.parameterTypes.size == 1 && m.parameterTypes[0] == Boolean::class.java && m.returnType == Float::class.javaPrimitiveType) {
-                        class_ = class_ { name = playerCoreServiceV2Class.name }
-                        getDefaultSpeed = method { name = m.name }
-                    }
-                }
-                seekTo = method {
-                    name = runCatchingOrNull {
-                        playerCoreServiceV2Class.getDeclaredMethod(
-                            "seekTo",
-                            Int::class.javaPrimitiveType
-                        ).name
-                    } ?: "a"
-                }
-                onSeekComplete = method {
-                    name = "onSeekComplete"
-                }
-                val prefix = playerCoreServiceV2Class.name.substringBeforeLast('.')
-                seekCompleteListener = class_ {
-                    name = classesList.filter {
-                        name.startsWith(prefix)
-                    }.firstOrNull { c ->
-                        c.findClass(classloader).interfaces.map { it.name }
-                            .contains("tv.danmaku.ijk.media.player.IMediaPlayer\$OnSeekCompleteListener")
-                    } ?: return@class_
+                val seekToMethod = dexHelper.findMethodUsingString(
+                    "[player]seek to",
+                    true,
+                    -1,
+                    1,
+                    "VI",
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).asSequence().firstNotNullOfOrNull {
+                    dexHelper.decodeMethodIndex(it)
+                } ?: return@playerCoreService
+                val playerCoreServiceClass = seekToMethod.declaringClass
+                seekTo = method { name = seekToMethod.name }
+                class_ = class_ { name = playerCoreServiceClass.name }
+                val onSeekCompleteMethod = dexHelper.findMethodUsingString(
+                    "[player]seek complete",
+                    true,
+                    -1,
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).asSequence().firstNotNullOfOrNull {
+                    dexHelper.decodeMethodIndex(it)
+                } ?: return@playerCoreService
+                onSeekComplete = method { name = onSeekCompleteMethod.name }
+                seekCompleteListener =
+                    class_ { name = onSeekCompleteMethod.declaringClass.name }
+                getDefaultSpeed = method {
+                    name = dexHelper.findMethodUsingString(
+                        "player_key_video_speed",
+                        true,
+                        -1,
+                        1,
+                        "FZ",
+                        dexHelper.encodeClassIndex(playerCoreServiceClass),
+                        null,
+                        null,
+                        null,
+                        true
+                    ).asSequence().firstNotNullOfOrNull {
+                        dexHelper.decodeMethodIndex(it)
+                    }?.name ?: return@method
                 }
             }
             generalResponse = class_ {
@@ -943,9 +952,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     null,
                     null,
                     true
-                ).map {
+                ).asSequence().firstNotNullOfOrNull {
                     dexHelper.decodeMethodIndex(it)
-                }.firstOrNull()?.declaringClass?.name ?: return@class_
+                }?.declaringClass?.name ?: return@class_
             }
             pegasusFeed = pegasusFeed {
                 val fastJSONObject =
@@ -961,9 +970,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     longArrayOf(fastJSONObject),
                     null,
                     true
-                ).map {
+                ).asSequence().firstNotNullOfOrNull {
                     dexHelper.decodeMethodIndex(it)
-                }.firstOrNull()?.declaringClass ?: return@pegasusFeed
+                }?.declaringClass ?: return@pegasusFeed
                 class_ = class_ { name = pegasusFeedClass.name }
                 method = method {
                     name = pegasusFeedClass.declaredMethods.firstOrNull {
@@ -1019,7 +1028,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 } ?: return@class_
             }
             okio = okIO {
-                val responseClass = this@hookInfo.okhttpResponse.from(classloader) ?: return@okIO
+                val responseClass =
+                    this@hookInfo.okhttpResponse.from(classloader) ?: return@okIO
                 val wrapperClass = classesList.filter {
                     it.startsWith(responseClass.name)
                 }.map { c ->
