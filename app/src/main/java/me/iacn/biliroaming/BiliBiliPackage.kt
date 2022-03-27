@@ -919,23 +919,28 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 }.firstOrNull()?.declaringClass?.name ?: return@class_
             }
             pegasusFeed = pegasusFeed {
-                val itemClass =
-                    "com.bilibili.pegasus.api.model.BasicIndexItem".findClassOrNull(classloader)
-                classesList.filter {
-                    it.startsWith("com.bilibili.pegasus.api")
-                }.map { c ->
-                    c.findClass(classloader)
-                }.filter { c ->
-                    c.declaredMethods.firstOrNull {
-                        it.returnType == itemClass
-                    } != null
-                }.forEach { c ->
-                    c.declaredMethods.forEach {
-                        if (it.parameterTypes.size == 1 && it.returnType.name == this@hookInfo.generalResponse.name) {
-                            class_ = class_ { name = c.name }
-                            method = method { name = it.name }
-                        }
-                    }
+                val fastJSONObject =
+                    dexHelper.encodeClassIndex("com.alibaba.fastjson.JSONObject" from classloader)
+                val pegasusFeedClass = dexHelper.findMethodUsingString(
+                    "card_type is empty",
+                    false,
+                    -1,
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    longArrayOf(fastJSONObject),
+                    null,
+                    true
+                ).map {
+                    dexHelper.decodeMethodIndex(it)
+                }.firstOrNull()?.declaringClass ?: return@pegasusFeed
+                class_ = class_ { name = pegasusFeedClass.name }
+                method = method {
+                    name = pegasusFeedClass.declaredMethods.firstOrNull {
+                        it.parameterTypes.size == 1 && it.parameterTypes[0].name == this@hookInfo.okhttpResponse.name
+                                && it.returnType != Object::class.java
+                    }?.name ?: return@method
                 }
             }
             chronosSwitch = class_ {
@@ -1091,7 +1096,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 }?.let {
                     dexHelper.decodeMethodIndex(it)
                 }?.let {
-                    class_ = class_ { name = it.declaringClass.name}
+                    class_ = class_ { name = it.declaringClass.name }
                     method = method { name = it.name }
                 }
             }
