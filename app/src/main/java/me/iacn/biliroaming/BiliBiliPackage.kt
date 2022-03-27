@@ -571,17 +571,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 val menuGroupItemClass =
                     "com.bilibili.lib.homepage.mine.MenuGroup\$Item" from classloader
                         ?: return@settings
-                val homeUserCenterClass =
-                    "tv.danmaku.bilibilihd.ui.main.mine.HdHomeUserCenterFragment" from classloader
-                        ?: "tv.danmaku.bili.ui.main2.mine.HomeUserCenterFragment" from classloader
-                        ?: return@settings
                 menuGroupItem = class_ { name = menuGroupItemClass.name }
-                homeUserCenter = class_ { name = homeUserCenterClass.name }
-                addSetting = method {
-                    name = homeUserCenterClass.declaredMethods.firstOrNull {
-                        it.parameterTypes.size >= 2 && it.parameterTypes[0] == Context::class.java && it.parameterTypes[1] == List::class.java
-                    }?.name ?: return@method
-                }
                 settingRouter = class_ {
                     name = dexHelper.findMethodUsingString(
                         "UperHotMineSolution",
@@ -604,6 +594,24 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                         }?.declaringClass
                     }?.name ?: return@class_
                 }
+                val contextIndex = dexHelper.encodeClassIndex(Context::class.java)
+                val listIndex = dexHelper.encodeClassIndex(List::class.java)
+                val addSettingMethod = dexHelper.findMethodUsingString(
+                    "moveCursor=",
+                    false,
+                    -1,
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    longArrayOf(contextIndex, listIndex),
+                    null,
+                    true
+                ).asSequence().firstNotNullOfOrNull {
+                    dexHelper.decodeMethodIndex(it)
+                } ?: return@settings
+                homeUserCenter = class_ { name = addSettingMethod.declaringClass.name }
+                addSetting = method { name = addSettingMethod.name }
             }
             drawer = drawer {
                 val navigationViewClass =
