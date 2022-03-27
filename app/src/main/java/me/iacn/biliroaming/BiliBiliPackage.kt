@@ -576,19 +576,32 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                         ?: return@settings
                 menuGroupItem = class_ { name = menuGroupItemClass.name }
                 homeUserCenter = class_ { name = homeUserCenterClass.name }
-                settingRouter = class_ {
-                    name = classesList.filter {
-                        it.startsWith("tv.danmaku.bili.ui.main2")
-                    }.firstOrNull { c ->
-                        c.findClass(classloader).declaredFields.any {
-                            it.type == menuGroupItemClass && Modifier.isPublic(it.modifiers)
-                        }
-                    } ?: return@class_
-                }
                 addSetting = method {
                     name = homeUserCenterClass.declaredMethods.firstOrNull {
                         it.parameterTypes.size >= 2 && it.parameterTypes[0] == Context::class.java && it.parameterTypes[1] == List::class.java
                     }?.name ?: return@method
+                }
+                settingRouter = class_ {
+                    name = dexHelper.findMethodUsingString(
+                        "UperHotMineSolution",
+                        false,
+                        -1,
+                        0,
+                        "V",
+                        -1,
+                        null,
+                        null,
+                        null,
+                        true
+                    ).map {
+                        dexHelper.decodeMethodIndex(it)
+                    }.firstOrNull()?.declaringClass?.interfaces?.firstOrNull()?.let {
+                        dexHelper.encodeClassIndex(it)
+                    }?.let {
+                        dexHelper.findField(it, null, true).map { f ->
+                            dexHelper.decodeFieldIndex(f)
+                        }.firstOrNull()?.declaringClass
+                    }?.name ?: return@class_
                 }
             }
             drawer = drawer {
