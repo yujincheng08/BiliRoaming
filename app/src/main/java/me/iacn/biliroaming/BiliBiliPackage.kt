@@ -1064,22 +1064,21 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 }?.declaringClass?.declaringClass?.name ?: return@class_
             }
             kanBan = kanBan {
-                val status =
+                val statusClass =
                     "tv.danmaku.bili.ui.kanban.KanBanUserStatus".findClassOrNull(classloader)
                         ?: return@kanBan
-                classesList.filter {
-                    it.startsWith("tv.danmaku.bili.ui.kanban")
-                }.map { c ->
-                    c.findClass(classloader)
-                }.forEach { c ->
-                    c.declaredMethods.forEach { m ->
-                        if (m.returnType == Void::class.javaPrimitiveType && m.parameterTypes.size == 1 &&
-                            m.parameterTypes[0] == status
-                        ) {
-                            class_ = class_ { name = c.name }
-                            method = method { name = m.name }
-                        }
-                    }
+                statusClass.runCatchingOrNull {
+                    getDeclaredMethod("isUseKanBan")
+                }?.let {
+                    dexHelper.encodeMethodIndex(it)
+                }?.let {
+                    dexHelper.findMethodInvoked(it, -1, 1, "VL", -1, null, null, null, true)
+                        ?.firstOrNull()
+                }?.let {
+                    dexHelper.decodeMethodIndex(it)
+                }?.let {
+                    class_ = class_ { name = it.declaringClass.name}
+                    method = method { name = it.name }
                 }
             }
             toastHelper = toastHelper {
