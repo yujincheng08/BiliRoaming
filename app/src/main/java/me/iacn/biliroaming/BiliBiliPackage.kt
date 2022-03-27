@@ -46,23 +46,29 @@ private fun GeneratedMessageLite<*, *>.print(indent: Int = 0): String {
             append(f.name.substringBeforeLast("_"), ": ")
             toString()
         }
-        if (v is GeneratedMessageLite<*, *>) {
-            sb.appendLine(name)
-            sb.append(v.print(indent + 1))
-        } else if (v is List<*>) {
-            for (vv in v) {
-                for (i in 0 until indent) sb.append('\t')
-                sb.append(name)
-                if (vv is GeneratedMessageLite<*, *>) {
-                    sb.appendLine()
-                    sb.append(vv.print(indent + 1))
-                } else {
-                    sb.appendLine(vv?.toString() ?: "null")
+        when (v) {
+            is GeneratedMessageLite<*, *> -> {
+                sb.appendLine(name)
+                sb.append(v.print(indent + 1))
+            }
+            is List<*> -> {
+                for (vv in v) {
+                    sb.append(name)
+                    when (vv) {
+                        is GeneratedMessageLite<*, *> -> {
+                            sb.appendLine()
+                            sb.append(vv.print(indent + 1))
+                        }
+                        else -> {
+                            sb.appendLine(vv?.toString() ?: "null")
+                        }
+                    }
                 }
             }
-        } else {
-            sb.append(name)
-            sb.appendLine(v?.toString() ?: "null")
+            else -> {
+                sb.append(name)
+                sb.appendLine(v?.toString() ?: "null")
+            }
         }
     }
     return sb.toString()
