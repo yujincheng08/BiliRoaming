@@ -80,6 +80,8 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("customize_drawer")?.onPreferenceClickListener = this
             findPreference("custom_link")?.onPreferenceClickListener = this
             findPreference("add_custom_button")?.onPreferenceClickListener = this
+            findPreference("skin")?.onPreferenceClickListener = this
+            findPreference("skin_import")?.onPreferenceClickListener = this
             checkCompatibleVersion()
             checkUpdate()
         }
@@ -434,6 +436,19 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             return true
         }
 
+        private fun onSkinImportClick(isChecked: Boolean): Boolean {
+            if (!isChecked) return true
+            val intent = Intent(Intent.ACTION_GET_CONTENT)
+            intent.type = "application/*"
+            intent.addCategory(Intent.CATEGORY_OPENABLE)
+            try {
+                startActivityForResult(Intent.createChooser(intent, "选择文件"), SKIN_IMPORT)
+            } catch (ex: ActivityNotFoundException) {
+                Log.toast("请安装文件管理器")
+            }
+            return true
+        }
+
         private fun onExportVideoClick(): Boolean {
             VideoExportDialog(activity, this).show()
             return true
@@ -595,7 +610,28 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             return true
         }
 
-        private fun onAddCustomButtonClick(): Boolean {
+        private fun onSkinClick(isChecked: Boolean): Boolean {
+            if (!isChecked) return true
+            val tv = EditText(activity)
+            tv.setText(sPrefs.getString("skin_json", "").toString())
+            AlertDialog.Builder(activity).run {
+                setTitle(R.string.skin_title)
+                setView(tv)
+                setPositiveButton(android.R.string.ok) { _, _ ->
+                    sPrefs.edit()
+                        .putString("skin_json", tv.text.toString())
+                        .apply()
+                    Log.toast("保存成功 重启两次后生效")
+                }
+                setNegativeButton(android.R.string.cancel, null)
+                setCancelable(false)
+                show()
+            }
+            return true
+        }
+
+        private fun onAddCustomButtonClick(isChecked: Boolean): Boolean {
+            if (!isChecked) return true
             AlertDialog.Builder(activity).run {
                 val layout = moduleRes.getLayout(R.layout.custom_button)
                 val inflater = LayoutInflater.from(context)
@@ -640,7 +676,9 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             "skin_import" -> onSkinImportClick((preference as SwitchPreference).isChecked)
             "customize_drawer" -> onCustomizeDrawerClick()
             "custom_link" -> onCustomLinkClick()
-            "add_custom_button" -> onAddCustomButtonClick()
+            "add_custom_button" -> onAddCustomButtonClick((preference as SwitchPreference).isChecked)
+            "skin" -> onSkinClick((preference as SwitchPreference).isChecked)
+            "skin_import" -> onSkinImportClick((preference as SwitchPreference).isChecked)
             else -> false
         }
     }
