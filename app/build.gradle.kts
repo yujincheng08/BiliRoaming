@@ -46,7 +46,7 @@ android {
         externalNativeBuild {
             cmake {
                 targets("biliroaming")
-                abiFilters("arm64-v8a", "x86")
+                abiFilters("armeabi-v7a", "arm64-v8a", "x86")
                 arguments("-DANDROID_STL=none")
                 val flags = arrayOf(
                     "-Wall",

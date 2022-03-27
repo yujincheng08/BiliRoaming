@@ -25,6 +25,8 @@ import java.net.URL
 import java.nio.channels.ByteChannel
 import kotlin.math.max
 import kotlin.system.measureTimeMillis
+import kotlin.time.ExperimentalTime
+import kotlin.time.measureTimedValue
 
 
 infix fun Configs.Class.from(cl: ClassLoader) = if (hasName()) name.findClassOrNull(cl) else null
@@ -36,10 +38,12 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         instance = this
     }
 
-    private val mHookInfo: Configs.HookInfo = readHookInfo(mContext).also {
-        Log.d(it.copy {
-            clearMapIds()
-        })
+    @OptIn(ExperimentalTime::class)
+    private val mHookInfo: Configs.HookInfo = run {
+        val (result, time) = measureTimedValue { readHookInfo(mContext) }
+        Log.d("load hookinfo $time")
+        Log.d(result.copy { clearMapIds() })
+        result
     }
     val bangumiApiResponseClass by Weak { mHookInfo.bangumiApiResponse from mClassLoader }
     val rxGeneralResponseClass by Weak { "com.bilibili.okretro.call.rxjava.RxGeneralResponse" from mClassLoader }
@@ -264,31 +268,45 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     companion object {
         @JvmStatic
+        fun findRealClassloader(classloader: BaseDexClassLoader): BaseDexClassLoader {
+            val serviceField = classloader.javaClass.findFirstFieldByExactTypeOrNull(
+                "com.bilibili.lib.tribe.core.internal.loader.DefaultClassLoaderService" from classloader
+            )
+            val delegateField = classloader.javaClass.findFirstFieldByExactTypeOrNull(
+                "com.bilibili.lib.tribe.core.internal.loader.TribeLoaderDelegate" from classloader
+            )
+            return if (serviceField != null) {
+                serviceField.type.declaredFields.filter { f ->
+                    f.type == ClassLoader::class.java
+                }.map { f ->
+                    classloader.getObjectFieldOrNull(serviceField.name)
+                        ?.getObjectFieldOrNull(f.name)
+                }.firstOrNull { o ->
+                    o?.javaClass?.name?.startsWith("com.bilibili") == false
+                } as? BaseDexClassLoader ?: classloader
+            } else if (delegateField != null) {
+                val loaderField =
+                    delegateField.type.findFirstFieldByExactTypeOrNull(ClassLoader::class.java)
+                val out = classloader.getObjectFieldOrNull(delegateField.name)
+                    ?.getObjectFieldOrNull(loaderField?.name)
+                if (BaseDexClassLoader::class.java.isInstance(out)) out as BaseDexClassLoader else classloader
+            } else classloader
+        }
+
+        @JvmStatic
         fun initHookInfo(context: Context) = hookInfo {
             val classloader = context.classLoader
-            val classesList = context.classLoader.allClassesList {
-                val serviceField = it.javaClass.findFirstFieldByExactTypeOrNull(
-                    "com.bilibili.lib.tribe.core.internal.loader.DefaultClassLoaderService" from classloader
-                )
-                val delegateField = it.javaClass.findFirstFieldByExactTypeOrNull(
-                    "com.bilibili.lib.tribe.core.internal.loader.TribeLoaderDelegate" from classloader
-                )
-                if (serviceField != null) {
-                    serviceField.type.declaredFields.filter { f ->
-                        f.type == ClassLoader::class.java
-                    }.map { f ->
-                        it.getObjectFieldOrNull(serviceField.name)?.getObjectFieldOrNull(f.name)
-                    }.firstOrNull { o ->
-                        o?.javaClass?.name?.startsWith("com.bilibili") == false
-                    } as? BaseDexClassLoader ?: it
-                } else if (delegateField != null) {
-                    val loaderField =
-                        delegateField.type.findFirstFieldByExactTypeOrNull(ClassLoader::class.java)
-                    val out = it.getObjectFieldOrNull(delegateField.name)
-                        ?.getObjectFieldOrNull(loaderField?.name)
-                    if (BaseDexClassLoader::class.java.isInstance(out)) out as BaseDexClassLoader else it
-                } else it
-            }.asSequence()
+            val classesList = context.classLoader.allClassesList(::findRealClassloader).asSequence()
+
+            try {
+                System.loadLibrary("biliroaming")
+            } catch (e: Throwable) {
+                Log.e(e)
+                Log.toast("不支持该架构或框架，部分功能可能失效")
+                return@hookInfo
+            }
+
+            val dexHelper = DexHelper(classloader.findDexClassLoader(::findRealClassloader))
             lastUpdateTime = max(
                 context.packageManager.getPackageInfo(
                     AndroidAppHelper.currentPackageName(),
@@ -1033,18 +1051,12 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 }
             }
             bangumiSeason = class_ {
-                name = classesList.filter {
-                    it.startsWith("com.bilibili.bangumi.data.page.detail")
-                }.firstOrNull { c ->
-                    c.findClass(classloader).declaredClasses.size >= 20
-                }
-                    ?: "com.bilibili.bangumi.data.page.detail.SeasonRepository".findClassOrNull(
-                        classloader
-                    )?.declaredMethods?.mapNotNull { m ->
-                        m.parameterTypes.firstOrNull()
-                    }?.firstOrNull { c -> c.declaredClasses.size >= 20 }?.name ?: return@class_
-
-
+                name =  dexHelper.findMethodUsingString(
+                    "BangumiAllButton",
+                    true, -1, 0, null, -1, null, null, null, true
+                ).firstOrNull()?.let {
+                    dexHelper.decodeMethodIndex(it)
+                }?.declaringClass?.declaringClass?.name ?: return@class_
             }
             kanBan = kanBan {
                 val status =
