@@ -6,7 +6,6 @@ import android.app.AndroidAppHelper
 import android.app.Notification
 import android.content.Context
 import android.graphics.Bitmap
-import android.os.Bundle
 import android.text.style.ClickableSpan
 import android.text.style.LineBackgroundSpan
 import android.util.SparseArray
@@ -294,7 +293,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                         runCatchingOrNull { Configs.HookInfo.parseFrom(it) }
                             ?: Configs.HookInfo.newBuilder().build()
                     }
-                    if (info.lastUpdateTime >= lastUpdateTime && info.lastUpdateTime >= lastModuleUpdateTime)
+                    if (info.lastUpdateTime >= lastUpdateTime && info.lastUpdateTime >= lastModuleUpdateTime
+                        && getVersionCode(context.packageName) >= info.clientVersionCode
+                        && BuildConfig.VERSION_CODE >= info.moduleVersionCode)
                         return info
                 }
             }
@@ -367,6 +368,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     )
                 }?.lastUpdateTime ?: 0
             )
+            clientVersionCode = getVersionCode(context.packageName)
+            moduleVersionCode = BuildConfig.VERSION_CODE
             mapIds = mapIds {
                 val reg = Regex("^tv\\.danmaku\\.bili\\.[^.]*$")
                 val mask = Modifier.STATIC or Modifier.PUBLIC or Modifier.FINAL
