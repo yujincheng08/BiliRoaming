@@ -902,6 +902,22 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             generalResponse = class_ {
                 name = "com.bilibili.okretro.GeneralResponse"
             }
+            okhttpResponse = class_ {
+                name = dexHelper.findMethodUsingString(
+                    "Cannot buffer entire body for content length",
+                    true,
+                    -1,
+                    0,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).map {
+                    dexHelper.decodeMethodIndex(it)
+                }.firstOrNull()?.declaringClass?.name ?: return@class_
+            }
             pegasusFeed = pegasusFeed {
                 val itemClass =
                     "com.bilibili.pegasus.api.model.BasicIndexItem".findClassOrNull(classloader)
@@ -917,8 +933,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     c.declaredMethods.forEach {
                         if (it.parameterTypes.size == 1 && it.returnType.name == this@hookInfo.generalResponse.name) {
                             class_ = class_ { name = c.name }
-                            this@hookInfo.okhttpResponse =
-                                class_ { name = it.parameterTypes[0].name }
                             method = method { name = it.name }
                         }
                     }
