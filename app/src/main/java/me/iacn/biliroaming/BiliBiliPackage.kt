@@ -19,6 +19,7 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.InputStream
+import java.lang.reflect.Method
 import java.lang.reflect.Modifier
 import java.lang.reflect.ParameterizedType
 import java.net.URL
@@ -975,14 +976,31 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 } ?: return@class_
             }
             commentLongClick = class_ {
-                name = classesList.filter {
-                    it.startsWith("com.bilibili.app.comm.comment2")
-                }.firstOrNull { c ->
-                    c.findClass(classloader).run {
-                        declaredMethods.count {
-                            it.name == "onLongClick"
-                        } == 1
-                    }
+                val viewIndex = dexHelper.encodeClassIndex(View::class.java)
+                val onLongClickListenerIndex = dexHelper.encodeMethodIndex(
+                    View::class.java.getDeclaredMethod(
+                        "setOnLongClickListener",
+                        View.OnLongClickListener::class.java
+                    )
+                )
+                name = dexHelper.findMethodInvoked(
+                    onLongClickListenerIndex,
+                    -1,
+                    2,
+                    "VLL",
+                    -1,
+                    longArrayOf(viewIndex, -1),
+                    null,
+                    null,
+                    false
+                ).firstOrNull {
+                    dexHelper.decodeMethodIndex(it).also { m -> Log.d(m) }
+                        .run { isStatic && isPublic && (this as? Method)?.parameterTypes?.get(0) == View::class.java }
+                }?.let {
+                    dexHelper.findMethodInvoking(it, -1, 2, "VLL", -1, null, null, null, false)
+                        .map { m ->
+                            dexHelper.decodeMethodIndex(m)
+                        }.firstOrNull()?.declaringClass?.name
                 } ?: return@class_
             }
             okio = okIO {
