@@ -110,7 +110,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val liveKvConfigHelperClass by Weak { "com.bilibili.bililive.tec.kvcore.LiveKvConfigHelper" from mClassLoader }
     val storyVideoActivityClass by Weak { "com.bilibili.video.story.StoryVideoActivity" from mClassLoader }
     val okioWrapperClass by Weak { mHookInfo.okio.class_ from mClassLoader }
-    val progressBarClass by Weak { mHookInfo.progressBar from mClassLoader }
     val videoUpperAdClass by Weak { mHookInfo.videoUpperAd.class_ from mClassLoader }
     val ellipsizingTextViewClass by Weak { "com.bilibili.bplus.followingcard.widget.EllipsizingTextView" from mClassLoader }
     val dynamicDescHolderListenerClass by Weak { mHookInfo.dynDescHolderListener from mClassLoader }
@@ -506,19 +505,14 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     }?.name ?: return@field
                 }
             }
-            progressBar = class_ {
-                name = ("tv.danmaku.biliplayer.view.RingProgressBar" from classloader
-                    ?: "com.bilibili.playerbizcommon.view.RingProgressBar" from classloader)?.name
-                    ?: return@class_
-            }
             section = section {
+                val progressBarClass = "tv.danmaku.biliplayer.view.RingProgressBar" from classloader
+                    ?: "com.bilibili.playerbizcommon.view.RingProgressBar" from classloader
                 val sectionClass = classesList.filter {
                     it.startsWith("tv.danmaku.bili.ui.video.section")
                 }.firstNotNullOfOrNull { c ->
                     c.findClass(classloader).takeIf {
-                        it.declaredFields.any { f ->
-                            f.type.name == this@hookInfo.progressBar.name
-                        }
+                        it.declaredFields.any { f -> f.type == progressBarClass }
                     }
                 } ?: return@section
                 class_ = class_ { name = sectionClass.name }

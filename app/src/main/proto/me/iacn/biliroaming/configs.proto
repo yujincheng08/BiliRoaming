@@ -189,7 +189,6 @@ message HookInfo {
   int64 last_update_time = 1;
   optional MapIds map_ids = 2;
   optional Class bangumi_api_response = 8;
-  optional Class progress_bar = 9;
   optional Class retrofit_response = 10;
   optional OkHttp ok_http = 11;
   optional FastJson fast_json = 12;
