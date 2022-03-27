@@ -20,7 +20,8 @@ jobs:
       - name: Retrieve version
         run: |
           echo VERSION=$(echo ${{ github.event.head_commit.id }} | head -c 10) >> $GITHUB_ENV
-      - uses: actions/cache@v2
+      - name: Cache gradle dep
+        uses: actions/cache@v2
         with:
           path: |
             ~/.gradle/caches
@@ -28,19 +29,38 @@ jobs:
             !~/.gradle/caches/build-cache-*
           key: gradle-deps-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: gradle-deps
-      - uses: actions/cache@v2
+      - name: Install dep
+        run: |
+          sudo apt-get install -y ccache ninja-build
+          ccache -o max_size=1G
+          ccache -o hash_dir=false
+          ccache -o compiler_check='%compiler% -dumpmachine; %compiler% -dumpversion'
+          ccache -zp
+      - name: Cache gradle build
+        uses: actions/cache@v2
         with:
           path: |
             ~/.gradle/caches/build-cache-*
           key: gradle-builds-${{ github.sha }}
           restore-keys: gradle-builds
+      - name: Cache native build
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.ccache
+          key: native-cache-${{ github.sha }}
+          restore-keys: native-cache-
       - name: Build with Gradle
         run: |
           echo 'org.gradle.caching=true' >> gradle.properties
           echo 'org.gradle.parallel=true' >> gradle.properties
           echo 'org.gradle.vfs.watch=true' >> gradle.properties
           echo 'org.gradle.jvmargs=-Xmx2048m' >> gradle.properties
+          echo 'android.native.buildOutput=verbose' >> gradle.properties
+          ln -s $(which ninja) $(dirname $(which cmake)) # https://issuetracker.google.com/issues/206099937
+          echo "cmake.dir=$(dirname $(dirname $(which cmake)))" >> local.properties
           ./gradlew -PappVerName=${{ env.VERSION }} assembleRelease assembleDebug
+          ccache -s
       - name: Upload built apk
         if: success()
         uses: actions/upload-artifact@v2

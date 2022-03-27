@@ -3,6 +3,7 @@ import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.variant.BuiltArtifact
 import com.google.protobuf.gradle.*
 import java.nio.file.Paths
+import org.gradle.internal.os.OperatingSystem
 
 // https://github.com/google/protobuf-gradle-plugin/issues/540#issuecomment-1001053066
 fun com.android.build.api.dsl.AndroidSourceSet.proto(action: SourceDirectorySet.() -> Unit) {
@@ -13,6 +14,15 @@ fun com.android.build.api.dsl.AndroidSourceSet.proto(action: SourceDirectorySet.
         ?.apply(action)
 }
 
+fun findInPath(executable: String): String? {
+    val pathEnv = System.getenv("PATH")
+    return pathEnv.split(File.pathSeparator).map { folder ->
+        Paths.get("${folder}${File.separator}${executable}${if (OperatingSystem.current().isWindows) ".exe" else ""}")
+            .toFile()
+    }.firstOrNull { path ->
+        path.exists()
+    }?.absolutePath
+}
 
 plugins {
     id("com.android.application")
@@ -32,7 +42,7 @@ val useDexHelper: String by rootProject
 android {
     compileSdk = 32
     buildToolsVersion = "32.0.0"
-    ndkVersion = "23.1.7779620"
+    ndkVersion = "24.0.8215888"
 
     defaultConfig {
         applicationId = "me.iacn.biliroaming"
@@ -69,6 +79,10 @@ android {
                 )
                 cppFlags("-std=c++20", *flags)
                 cFlags("-std=c18", *flags)
+                findInPath("ccache")?.let {
+                    println("Using ccache $it")
+                    arguments += "-DANDROID_CCACHE=$it"
+                }
             }
         }
     }
