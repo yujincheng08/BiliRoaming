@@ -22,7 +22,6 @@ import java.io.InputStream
 import java.lang.reflect.Method
 import java.lang.reflect.Modifier
 import java.lang.reflect.ParameterizedType
-import java.nio.channels.ByteChannel
 import kotlin.math.max
 import kotlin.system.measureTimeMillis
 import kotlin.time.ExperimentalTime
@@ -1179,21 +1178,28 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 length = field { name = okioLenField.name }
             }
             okioBuffer = okIOBuffer {
-                val okioBufferClass = classesList.filter {
-                    it.startsWith("okio")
-                }.map { c ->
-                    c.findClass(classloader)
-                }.firstOrNull { c ->
-                    c.interfaces.contains(ByteChannel::class.java)
-                } ?: return@okIOBuffer
+                val okioBufferClass = dexHelper.findMethodUsingString(
+                    "already attached to a buffer",
+                    false,
+                    -1,
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).asSequence().firstNotNullOfOrNull {
+                    dexHelper.decodeMethodIndex(it)
+                }?.declaringClass ?: return@okIOBuffer
+                class_ = class_ { name = okioBufferClass.name }
                 val okioInputStreamMethod = okioBufferClass.declaredMethods.firstOrNull {
                     it.parameterTypes.isEmpty() && it.returnType == InputStream::class.java
                 } ?: return@okIOBuffer
+                inputStream = method { name = okioInputStreamMethod.name }
                 val okioReadFromMethod = okioBufferClass.declaredMethods.firstOrNull {
                     it.parameterTypes.size == 1 && it.parameterTypes[0] == InputStream::class.java
                 } ?: return@okIOBuffer
-                class_ = class_ { name = okioBufferClass.name }
-                inputStream = method { name = okioInputStreamMethod.name }
                 readFrom = method { name = okioReadFromMethod.name }
             }
             videoUpperAd = videoUpperAdInfo {
