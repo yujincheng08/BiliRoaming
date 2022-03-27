@@ -295,7 +295,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     }
                     if (info.lastUpdateTime >= lastUpdateTime && info.lastUpdateTime >= lastModuleUpdateTime
                         && getVersionCode(context.packageName) >= info.clientVersionCode
-                        && BuildConfig.VERSION_CODE >= info.moduleVersionCode)
+                        && BuildConfig.VERSION_CODE >= info.moduleVersionCode
+                    )
                         return info
                 }
             }
@@ -1111,8 +1112,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                         null,
                         true
                     ).firstOrNull() ?: return@playerCoreService
-                    val doSeekToMethod = dexHelper.decodeMethodIndex(doSeekToIndex) ?: return@playerCoreService
-                    val playerCoreServiceIndex = dexHelper.encodeClassIndex(doSeekToMethod.declaringClass)
+                    val doSeekToMethod =
+                        dexHelper.decodeMethodIndex(doSeekToIndex) ?: return@playerCoreService
+                    val playerCoreServiceIndex =
+                        dexHelper.encodeClassIndex(doSeekToMethod.declaringClass)
                     dexHelper.findMethodInvoked(
                         doSeekToIndex,
                         -1,
@@ -1468,17 +1471,36 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 }
             }
             toastHelper = toastHelper {
-                val toastHelperClass =
-                    "com.bilibili.droid.ToastHelper" from classloader ?: return@toastHelper
+                val showToastCallerIndex = dexHelper.findMethodUsingString(
+                    "main.lessonmodel.enterdetail.change-pswd-success.click",
+                    false,
+                    -1,
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).firstOrNull() ?: return@toastHelper
+                val contextIndex = dexHelper.encodeClassIndex(Context::class.java)
+                val stringIndex = dexHelper.encodeClassIndex(String::class.java)
+                val showToastMethod = dexHelper.findMethodInvoking(
+                    showToastCallerIndex,
+                    -1,
+                    3,
+                    "VLLI",
+                    -1,
+                    longArrayOf(contextIndex, stringIndex, -1),
+                    null,
+                    null,
+                    true
+                ).asSequence().firstNotNullOfOrNull {
+                    dexHelper.decodeMethodIndex(it)
+                } ?: return@toastHelper
+                val toastHelperClass = showToastMethod.declaringClass
                 class_ = class_ { name = toastHelperClass.name }
-                show = method {
-                    name = toastHelperClass.declaredMethods.firstOrNull {
-                        it.isStatic && it.parameterTypes.size == 3 &&
-                                it.parameterTypes[0] == Context::class.java &&
-                                it.parameterTypes[1] == String::class.java &&
-                                it.parameterTypes[2] == Int::class.javaPrimitiveType
-                    }?.name ?: return@method
-                }
+                show = method { name = showToastMethod.name }
                 cancel = method {
                     name = toastHelperClass.declaredMethods.firstOrNull {
                         it.isStatic && it.parameterTypes.isEmpty()
