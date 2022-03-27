@@ -56,10 +56,6 @@ class SkinHook (classLoader: ClassLoader) : BaseHook(classLoader) {
                             else if (sPrefs.getBoolean("skin", false) && sPrefs.getString("skin_json", "").toString().startsWith("{")) {
                                 sPrefs.getString("skin_json", "")?.toJSONObject().toString()
                             }
-                            // 从 WEB 获取
-                            else if (sPrefs.getBoolean("skin", false) && sPrefs.getString("skin_json", "").toString().startsWith("https://")) {
-                                getContent(sPrefs.getString("skin_json", "").toString())?.toJSONObject()?.optJSONObject("data").toString()
-                            }
                             else null
                         // 准备替换内容
                         val content = """{"user_equip":""" + skin +
