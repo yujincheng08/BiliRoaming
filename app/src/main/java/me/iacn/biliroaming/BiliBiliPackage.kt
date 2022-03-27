@@ -13,6 +13,7 @@ import android.util.SparseArray
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import com.google.protobuf.GeneratedMessageLite
 import dalvik.system.BaseDexClassLoader
 import me.iacn.biliroaming.utils.*
 import java.io.File
@@ -33,6 +34,40 @@ infix fun Configs.Class.from(cl: ClassLoader) = if (hasName()) name.findClassOrN
 val Configs.Method.orNull get() = if (hasName()) name else null
 val Configs.Field.orNull get() = if (hasName()) name else null
 
+private fun GeneratedMessageLite<*, *>.print(indent: Int = 0): String {
+    val sb = StringBuilder()
+    for (f in javaClass.declaredFields) {
+        if (f.name.startsWith("bitField")) continue
+        if (f.isStatic) continue
+        f.isAccessible = true
+        val v = f.get(this)
+        val name = StringBuffer().run {
+            for (i in 0 until indent) append('\t')
+            append(f.name.substringBeforeLast("_"), ": ")
+            toString()
+        }
+        if (v is GeneratedMessageLite<*, *>) {
+            sb.appendLine(name)
+            sb.append(v.print(indent + 1))
+        } else if (v is List<*>) {
+            for (vv in v) {
+                for (i in 0 until indent) sb.append('\t')
+                sb.append(name)
+                if (vv is GeneratedMessageLite<*, *>) {
+                    sb.appendLine()
+                    sb.append(vv.print(indent + 1))
+                } else {
+                    sb.appendLine(vv?.toString() ?: "null")
+                }
+            }
+        } else {
+            sb.append(name)
+            sb.appendLine(v?.toString() ?: "null")
+        }
+    }
+    return sb.toString()
+}
+
 class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContext: Context) {
     init {
         instance = this
@@ -42,7 +77,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     private val mHookInfo: Configs.HookInfo = run {
         val (result, time) = measureTimedValue { readHookInfo(mContext) }
         Log.d("load hookinfo $time")
-        Log.d(result.copy { clearMapIds() })
+        Log.d(result.copy { clearMapIds() }.print())
         result
     }
     val bangumiApiResponseClass by Weak { mHookInfo.bangumiApiResponse from mClassLoader }
@@ -1252,16 +1287,20 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 }
             }
             commentSpan = class_ {
-                name =
-                    "com.bilibili.app.comm.comment2.widget.CommentExpandableTextView".findClassOrNull(
-                        classloader
-                    )?.name ?: classesList.filter {
-                        it.startsWith("com.bilibili.app.comm.comment2.widget")
-                    }.firstOrNull { c ->
-                        c.findClass(classloader).declaredFields.count {
-                            it.type == Float::class.javaPrimitiveType
-                        } > 1
-                    } ?: return@class_
+                name = dexHelper.findMethodUsingString(
+                    "comment.catch_on_draw_exception",
+                    false,
+                    -1,
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).asSequence().firstNotNullOfOrNull {
+                    dexHelper.decodeMethodIndex(it)
+                }?.declaringClass?.name ?: return@class_
             }
             dynDescHolderListener = class_ {
                 name = classesList.filter {
