@@ -740,13 +740,41 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 }
                 val contextIndex = dexHelper.encodeClassIndex(Context::class.java)
                 val listIndex = dexHelper.encodeClassIndex(List::class.java)
-                val addSettingMethod = dexHelper.findMethodUsingString(
-                    "game center list",
-                    true,
+                val homeUserCenterClass = dexHelper.findMethodUsingString(
+                    "main.my-information.noportrait.0.show",
+                    false,
                     -1,
                     -1,
                     null,
                     -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).asSequence().firstNotNullOfOrNull {
+                    dexHelper.decodeMethodIndex(it)
+                }?.declaringClass ?: return@settings
+                val homeUserCenterIndex = dexHelper.encodeClassIndex(homeUserCenterClass)
+                val addSettingMethod = dexHelper.findMethodUsingString(
+                    "activity://main/preference",
+                    true,
+                    -1,
+                    -1,
+                    null,
+                    homeUserCenterIndex,
+                    null,
+                    longArrayOf(contextIndex, listIndex),
+                    null,
+                    true
+                ).asSequence().firstNotNullOfOrNull {
+                    dexHelper.decodeMethodIndex(it)
+                } ?: dexHelper.findMethodUsingString(
+                    "bilibili://main/preference",
+                    true,
+                    -1,
+                    -1,
+                    null,
+                    homeUserCenterIndex,
                     null,
                     longArrayOf(contextIndex, listIndex),
                     null,
@@ -754,7 +782,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 ).asSequence().firstNotNullOfOrNull {
                     dexHelper.decodeMethodIndex(it)
                 } ?: return@settings
-                homeUserCenter = class_ { name = addSettingMethod.declaringClass.name }
+                homeUserCenter = class_ { name = homeUserCenterClass.name }
                 addSetting = method { name = addSettingMethod.name }
             }
             drawer = drawer {
