@@ -811,20 +811,25 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 } ?: return@class_
             }
             bangumiParams = bangumiParams {
-                val bangumiDetailApiServiceClass = classesList.filter {
-                    it.startsWith("com.bilibili.bangumi.data.page.detail")
-                }.map { c ->
-                    c.findClass(classloader)
-                }.lastOrNull { c ->
-                    c.declaredMethods.map { it.name }.contains("getViewSeasonV2")
-                }
-                bangumiDetailApiServiceClass?.declaredClasses?.forEach { c ->
-                    c.declaredMethods.forEach { m ->
-                        if (m.returnType == Map::class.java && m.parameterTypes.isEmpty()) {
-                            class_ = class_ { name = c.name }
-                            paramsToMap = method { name = m.name }
-                        }
-                    }
+                val bangumiParamsClass = dexHelper.findMethodUsingString(
+                    "UniformSeasonParams(",
+                    true,
+                    -1,
+                    0,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).firstOrNull()?.let {
+                    dexHelper.decodeMethodIndex(it)
+                }?.declaringClass ?: return@bangumiParams
+                class_ = class_ { name = bangumiParamsClass.name }
+                paramsToMap = method {
+                    name = bangumiParamsClass.declaredMethods.firstOrNull {
+                        it.returnType == java.util.Map::class.java
+                    }?.name ?: return@method
                 }
             }
             gsonHelper = gsonHelper {
@@ -1051,7 +1056,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 }
             }
             bangumiSeason = class_ {
-                name =  dexHelper.findMethodUsingString(
+                name = dexHelper.findMethodUsingString(
                     "BangumiAllButton",
                     true, -1, 0, null, -1, null, null, null, true
                 ).firstOrNull()?.let {
@@ -1095,6 +1100,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     }?.name ?: return@method
                 }
             }
+
+            dexHelper.close()
         }
 
         @Volatile
