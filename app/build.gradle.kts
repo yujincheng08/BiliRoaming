@@ -37,7 +37,6 @@ val releaseKeyPassword: String? by rootProject
 
 val appVerCode: String by rootProject
 val appVerName: String by rootProject
-val useDexHelper: String by rootProject
 
 android {
     compileSdk = 32
@@ -50,8 +49,6 @@ android {
         targetSdk = 32  // Target Android Sv2
         versionCode = appVerCode.toInt()
         versionName = appVerName
-
-        buildConfigField("boolean", "useDexHelper", useDexHelper)
 
         externalNativeBuild {
             cmake {
@@ -158,9 +155,6 @@ android {
                 srcDir("src/main/proto")
                 include("**/*.proto")
             }
-            if (useDexHelper != "true") {
-                (java as com.android.build.gradle.api.AndroidSourceDirectorySet).exclude("**.java")
-            }
         }
     }
 
@@ -183,10 +177,8 @@ android {
     }
 
     externalNativeBuild {
-        if (useDexHelper == "true") {
-            cmake {
-                path("src/main/jni/CMakeLists.txt")
-            }
+        cmake {
+            path("src/main/jni/CMakeLists.txt")
         }
     }
 }
