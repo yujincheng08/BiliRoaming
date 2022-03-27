@@ -11,7 +11,7 @@ import android.widget.TextView
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.utils.*
 
-class CommentHook(classLoader: ClassLoader) : BaseHook(classLoader) {
+class CopyHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
         if (!sPrefs.getBoolean("comment_copy", false)) return
         instance.descCopyView().zip(instance.descCopy()).forEach { p ->
