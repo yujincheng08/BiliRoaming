@@ -170,9 +170,6 @@
     <string name="drawer_style_switch_summary">修改【我的】页面样式</string>
     <string name="drawer_style_title">修改我的页面样式</string>
     <string name="drawer_style_summary">开启改为列表，关闭改为按钮</string>
-    <string name="skin_title">填写自制主题</string>
-    <string name="skin_import_title">导入自制主题</string>
-    <string name="skin_summary">重启后，要等待十几秒下载资源，然后再重启（同时开启时的优先度：导入＞填写）</string>
     <string name="purify_share_title">净化分享</string>
     <string name="purify_share_summary">把分享链接中的 b23.tv 短链接换成正常链接</string>
     <string name="custom_link_title">开启自定义链接</string>
