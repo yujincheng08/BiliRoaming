@@ -19,6 +19,7 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.InputStream
+import java.lang.reflect.Constructor
 import java.lang.reflect.Method
 import java.lang.reflect.Modifier
 import java.lang.reflect.ParameterizedType
@@ -1160,21 +1161,42 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             okio = okIO {
                 val responseClass =
                     this@hookInfo.okhttpResponse.from(classloader) ?: return@okIO
-                val wrapperClass = classesList.filter {
-                    it.startsWith(responseClass.name)
-                }.map { c ->
-                    c.findClass(classloader)
-                }.firstOrNull { c ->
-                    c.superclass == responseClass
-                } ?: return@okIO
+                val responseClassIndex = dexHelper.encodeClassIndex(responseClass)
+                val createMethodIndex = dexHelper.findMethodUsingString(
+                    "source == null",
+                    false,
+                    -1,
+                    -1,
+                    null,
+                    responseClassIndex,
+                    null,
+                    null,
+                    null,
+                    true
+                ).firstOrNull() ?: return@okIO
+                val wrapperClass = dexHelper.findMethodInvoking(
+                    createMethodIndex,
+                    -1,
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    false
+                ).asSequence().firstNotNullOfOrNull {
+                    dexHelper.decodeMethodIndex(it).takeIf { m ->
+                        m is Constructor<*>
+                    }
+                }?.declaringClass ?: return@okIO
+                class_ = class_ { name = wrapperClass.name }
                 val okioField = wrapperClass.declaredFields.firstOrNull { f ->
-                    f.type.name.startsWith("okio")
+                    f.type.isAbstract
                 } ?: return@okIO
+                field = field { name = okioField.name }
                 val okioLenField = wrapperClass.declaredFields.firstOrNull { f ->
                     f.type == Long::class.javaPrimitiveType
                 } ?: return@okIO
-                class_ = class_ { name = wrapperClass.name }
-                field = field { name = okioField.name }
                 length = field { name = okioLenField.name }
             }
             okioBuffer = okIOBuffer {
