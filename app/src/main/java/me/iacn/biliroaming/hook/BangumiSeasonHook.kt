@@ -285,7 +285,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                     )
                                 })
                             } else if (data?.javaClass == biliSearchOgvResultClass) {
-                                data.setObjectField("items", AREA_TYPES[area]?.let {
+                                body.setObjectField(dataField, AREA_TYPES[area]?.let {
                                     retrieveAreaSearchV2(
                                         data, url, it.area, it.type
                                     )
@@ -423,16 +423,14 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             checkErrorToast(jsonContent, true)
             val newData = jsonContent.optJSONObject("data") ?: return data
 
-            // 去除追番按钮
+            val newItems = mutableListOf<Any>()
             for (item in newData.getJSONArray("items")) {
+                // 去除追番按钮
                 if (item.optInt("Offset", -1) != -1) {
                     item.remove("follow_button")
                 }
-            }
-
-            val newItems: MutableList<Any> = mutableListOf()
-            for (item in newData.getJSONArray("items")) {
-                val goto = baseSearchItemClass?.getStaticObjectFieldAs<Map<String, Any>>("sMap")?.get(item.optString("goto"))
+                val goto = baseSearchItemClass?.getStaticObjectFieldAs<Map<String, Any>>("sMap")
+                    ?.get(item.optString("goto"))
                 instance.fastJsonClass?.callStaticMethod(
                     instance.fastJsonParse(), item.toString(), goto?.callMethod("getImpl")
                 )?.let {
@@ -440,7 +438,9 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     newItems.add(it)
                 }
             }
-            return newItems
+            return data.javaClass.new()
+                .setObjectField("items", newItems)
+                .setIntField("totalPages", newData.optInt("pages"))
         } else {
             return data
         }
