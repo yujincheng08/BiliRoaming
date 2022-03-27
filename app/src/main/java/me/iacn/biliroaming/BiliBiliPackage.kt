@@ -529,27 +529,24 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 }
             }
             partySection = partySection {
-                val partySectionClass = classesList.filter {
-                    it.startsWith("tv.danmaku.bili.ui.video.party.section") ||
-                            it.startsWith("com.bilibili.video.videodetail.party.section") ||
-                            it.startsWith("tv.danmaku.bili.ui.video.profile.action") ||
-                            it.startsWith("tv.danmaku.bili.ui.video.section.action") || it.startsWith(
-                        "aj2"
-                    )
-                }.firstNotNullOfOrNull { c ->
-                    c.findClass(classloader).takeIf {
-                        it.declaredFields.any { f ->
-                            f.type.name == this@hookInfo.progressBar.name
-                        }
-                    }
-                } ?: return@partySection
+                val partySectionClass = dexHelper.findMethodUsingString(
+                    "mRecommendLayout",
+                    false,
+                    -1,
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).asSequence().firstNotNullOfOrNull {
+                    dexHelper.decodeMethodIndex(it)
+                }?.declaringClass ?: return@partySection
                 class_ = class_ { name = partySectionClass.name }
                 method = method {
-                    name = partySectionClass.declaredMethods.firstOrNull {
-                        it.parameterTypes.size == 1 && it.returnType == Void::class.javaPrimitiveType && (
-                                it.parameterTypes[0] == Object::class.java ||
-                                        it.parameterTypes[0].name.startsWith("tv.danmaku.bili.videopage.foundation.section")
-                                )
+                    name = partySectionClass.superclass?.declaredMethods?.firstOrNull {
+                        it.parameterTypes.size == 1 && it.returnType == Void::class.javaPrimitiveType && !it.isFinal
                     }?.name ?: return@method
                 }
             }
