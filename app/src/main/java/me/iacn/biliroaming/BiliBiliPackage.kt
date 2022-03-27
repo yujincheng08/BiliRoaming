@@ -306,7 +306,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 return@hookInfo
             }
 
-            val dexHelper = DexHelper(classloader.findDexClassLoader(::findRealClassloader))
+            val dexHelper =
+                DexHelper(classloader.findDexClassLoader(::findRealClassloader) ?: return@hookInfo)
             lastUpdateTime = max(
                 context.packageManager.getPackageInfo(
                     AndroidAppHelper.currentPackageName(),
@@ -861,17 +862,36 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 }
             }
             gsonHelper = gsonHelper {
-                val gsonClass = "com.google.gson.Gson".findClassOrNull(classloader)
-                    ?: return@gsonHelper
-                classesList.filter {
-                    it.startsWith("com.bilibili.okretro.converter") || it.startsWith("com.bilibili.api.utils")
-                }.forEach { c ->
-                    c.findClass(classloader).declaredFields.forEach { f ->
-                        if (Modifier.isStatic(f.modifiers) && f.type == gsonClass) {
-                            gson = field { name = f.name }
-                            gsonConverter = class_ { name = c }
-                        }
-                    }
+                val gsonClass = dexHelper.findMethodUsingString(
+                    "AssertionError (GSON",
+                    true,
+                    -1,
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).asSequence().firstNotNullOfOrNull {
+                    dexHelper.decodeMethodIndex(it)
+                }?.declaringClass ?: return@gsonHelper
+                val gsonConverterClass =
+                    dexHelper.findField(dexHelper.encodeClassIndex(gsonClass), null, false)
+                        .asSequence().firstNotNullOfOrNull {
+                            dexHelper.decodeFieldIndex(it)?.takeIf { f ->
+                                f.isStatic && f.isFinal && f.isPublic
+                            }?.declaringClass?.takeIf { c ->
+                                c.declaredMethods.count { m ->
+                                    m.returnType == gsonClass && m.isNotStatic
+                                } > 0
+                            }
+                        } ?: return@gsonHelper
+                gsonConverter = class_ { name = gsonConverterClass.name }
+                gson = field {
+                    name = gsonConverterClass.declaredMethods.firstOrNull { m ->
+                        m.returnType == gsonClass && m.isNotStatic
+                    }?.name ?: return@field
                 }
                 toJson = method {
                     name = gsonClass.declaredMethods.firstOrNull { m ->
@@ -957,7 +977,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             }
             pegasusFeed = pegasusFeed {
                 val fastJSONObject =
-                    dexHelper.encodeClassIndex("com.alibaba.fastjson.JSONObject" from classloader)
+                    dexHelper.encodeClassIndex(
+                        "com.alibaba.fastjson.JSONObject" from classloader ?: return@pegasusFeed
+                    )
                 val pegasusFeedClass = dexHelper.findMethodUsingString(
                     "card_type is empty",
                     false,
@@ -1018,7 +1040,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     false
                 ).firstOrNull {
                     dexHelper.decodeMethodIndex(it)
-                        .run { isStatic && isPublic && (this as? Method)?.parameterTypes?.get(0) == View::class.java }
+                        ?.run { isStatic && isPublic && (this as? Method)?.parameterTypes?.get(0) == View::class.java } == true
                 }?.let {
                     dexHelper.findMethodInvoking(it, -1, 2, "VLL", -1, null, null, null, false)
                         .map { m ->
@@ -1144,10 +1166,17 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 statusClass.runCatchingOrNull {
                     getDeclaredMethod("isUseKanBan")
                 }?.let {
-                    dexHelper.encodeMethodIndex(it)
-                }?.let {
-                    dexHelper.findMethodInvoked(it, -1, 1, "VL", -1, null, null, null, true)
-                        ?.firstOrNull()
+                    dexHelper.findMethodInvoked(
+                        dexHelper.encodeMethodIndex(it),
+                        -1,
+                        1,
+                        "VL",
+                        -1,
+                        null,
+                        null,
+                        null,
+                        true
+                    ).firstOrNull()
                 }?.let {
                     dexHelper.decodeMethodIndex(it)
                 }?.let {
