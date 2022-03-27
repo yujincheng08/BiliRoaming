@@ -120,6 +120,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val kanbanCallbackClass by Weak { mHookInfo.kanBan.class_ from mClassLoader }
     val toastHelperClass by Weak { mHookInfo.toastHelper.class_ from mClassLoader }
     val videoDetailCallbackClass by Weak { mHookInfo.videoDetailCallback from mClassLoader }
+    val biliAccountsClass by Weak { mHookInfo.biliAccounts.class_ from mClassLoader }
 
     private val accessKeyInstance by lazy {
         ("com.bilibili.cheese.ui.detail.pay.v3.CheesePayHelperV3\$accessKey\$2".findClassOrNull(
@@ -142,8 +143,14 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         return key
     }
 
+    val biliAccounts
+        get() = biliAccountsClass?.callStaticMethodOrNull(
+            mHookInfo.biliAccounts.get.orNull,
+            AndroidAppHelper.currentApplication()
+        )
+
     val accessKey
-        get() = accessKeyInstance?.callMethodAs<String>("invoke")
+        get() = biliAccounts?.callMethodOrNullAs<String>(mHookInfo.biliAccounts.getAccessKey.orNull)
 
     fun fastJsonParse() = mHookInfo.fastJson.parse.orNull
 
@@ -423,6 +430,61 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 val notObfuscated = "JSON" == fastJsonClass.simpleName
                 class_ = class_ { name = fastJsonClass.name }
                 parse = method { name = if (notObfuscated) "parseObject" else "a" }
+            }
+            biliAccounts = biliAccounts {
+                val biliAccountsClass = dexHelper.findMethodUsingString(
+                    "authorization_code",
+                    false,
+                    -1,
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).asSequence().firstNotNullOfOrNull {
+                    dexHelper.decodeMethodIndex(it)
+                }?.declaringClass ?: return@biliAccounts
+                class_ = class_ { name = biliAccountsClass.name }
+                val biliAccountIndex = dexHelper.encodeClassIndex(biliAccountsClass)
+                val biliAuthFragmentMethodIndex = dexHelper.findMethodUsingString(
+                    "initFacial enter",
+                    true,
+                    -1,
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).firstOrNull() ?: return@biliAccounts
+                val calledMethods = dexHelper.findMethodInvoking(
+                    biliAuthFragmentMethodIndex,
+                    -1,
+                    -1,
+                    null,
+                    biliAccountIndex,
+                    null,
+                    null,
+                    null,
+                    false
+                ).asSequence().mapNotNull {
+                    dexHelper.decodeMethodIndex(it) as? Method
+                }
+
+                get = method {
+                    name = calledMethods.firstOrNull {
+                        it.isStatic && it.parameterTypes.size == 1 && it.parameterTypes[0] == Context::class.java && it.returnType == biliAccountsClass
+                    }?.name ?: return@method
+                }
+
+                getAccessKey = method {
+                    name = calledMethods.firstOrNull {
+                        it.isNotStatic && it.parameterTypes.isEmpty() && it.returnType == String::class.java
+                    }?.name ?: return@method
+                }
             }
             themeHelper = themeHelper {
                 val themeHelperClass = classesList.filter {

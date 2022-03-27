@@ -185,15 +185,22 @@ message MusicNotification {
   optional Class live_helper = 8;
 }
 
+message BiliAccounts {
+  optional Class class = 1;
+  optional Method get = 2;
+  optional Method get_access_key = 3;
+}
+
 message HookInfo {
   int64 last_update_time = 1;
   optional MapIds map_ids = 2;
-  optional Class bangumi_api_response = 8;
   optional Class retrofit_response = 10;
   optional OkHttp ok_http = 11;
   optional FastJson fast_json = 12;
   optional ThemeHelper theme_helper = 13;
   optional ThemeIdHelper theme_id_helper = 14;
+  optional Class bangumi_api_response = 15;
+  optional BiliAccounts bili_accounts = 16;
   optional ColumnHelper column_helper = 17;
   optional Method skin_list = 19;
   optional ThemeProcessor theme_processor = 20;
