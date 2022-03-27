@@ -618,24 +618,22 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     }?.name ?: return@class_
             }
             shareWrapper = shareWrapper {
-                class_ = class_ {
-                    val reg = Regex("^com\\.bilibili\\.lib\\.sharewrapper\\.[^.]*$")
-                    name = classesList.filter {
-                        it.startsWith("com.bilibili.lib.sharewrapper")
-                    }.filter {
-                        it.matches(reg)
-                    }.firstOrNull { c ->
-                        c.findClass(classloader).declaredMethods.any {
-                            it.parameterTypes.size == 2 && it.parameterTypes[0] == String::class.java && it.parameterTypes[1] == Bundle::class.java
-                        }
-                    } ?: return@class_
-                }
-                method = method {
-                    name =
-                        this@shareWrapper.class_.from(classloader)?.declaredMethods?.firstOrNull {
-                            it.parameterTypes.size == 2 && it.parameterTypes[0] == String::class.java && it.parameterTypes[1] == Bundle::class.java
-                        }?.name ?: return@method
-                }
+                val shareMethod = dexHelper.findMethodUsingString(
+                    "share.helper.inner",
+                    false,
+                    -1,
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).asSequence().firstNotNullOfOrNull {
+                    dexHelper.decodeMethodIndex(it)
+                } ?: return@shareWrapper
+                class_ = class_ { name = shareMethod.declaringClass.name }
+                method = method { name = shareMethod.name }
             }
             themeName = themeName {
                 val themeNameClass = classesList.filter {
