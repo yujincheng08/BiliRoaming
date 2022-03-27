@@ -910,11 +910,11 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 }
                 builder = notificationBuilder {
                     val notificationBuilderClass = dexHelper.findMethodUsingString(
-                        "android.intent.extra.CHANNEL_ID",
+                        "android.chronometerCountDown",
                         false,
                         -1,
-                        2,
-                        "LLL",
+                        1,
+                        "LZ",
                         -1,
                         null,
                         null,
