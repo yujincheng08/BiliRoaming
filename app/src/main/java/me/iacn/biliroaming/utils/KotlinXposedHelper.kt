@@ -118,7 +118,7 @@ inline fun Class<*>.hookAfterAllMethods(methodName: String?, crossinline hooker:
 
     })
 
-inline fun Class<*>.replaceAfterAllMethods(methodName: String?, crossinline replacer: Replacer) =
+inline fun Class<*>.replaceAllMethods(methodName: String?, crossinline replacer: Replacer) =
     hookAllMethods(methodName, object : XC_MethodReplacement() {
         override fun replaceHookedMethod(param: MethodHookParam) = param.callReplacer(replacer)
     })
@@ -174,7 +174,7 @@ inline fun Class<*>.hookBeforeAllConstructors(crossinline hooker: Hooker) =
         override fun beforeHookedMethod(param: MethodHookParam) = param.callHooker(hooker)
     })
 
-inline fun Class<*>.replaceAfterAllConstructors(crossinline hooker: Hooker) =
+inline fun Class<*>.replaceAllConstructors(crossinline hooker: Hooker) =
     hookAllConstructors(object : XC_MethodReplacement() {
         override fun replaceHookedMethod(param: MethodHookParam) = param.callHooker(hooker)
     })

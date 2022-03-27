@@ -1275,18 +1275,61 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 } ?: return@class_
             }
             descCopy = descCopy {
-                classesList.filter {
-                    it.startsWith("tv.danmaku.bili.ui.video.profile.info.DescViewHolder") ||
-                            it.startsWith("tv.danmaku.bili.ui.video.section.info.DescViewHolder")
-                }.map { c ->
-                    c.findClass(classloader)
-                }.forEach { c ->
-                    c.declaredMethods.firstOrNull { m ->
-                        m.parameterTypes.size == 2 && m.parameterTypes[0] == View::class.java && m.parameterTypes[1] == ClickableSpan::class.java
-                    }?.let {
-                        classes + c.name
-                        methods + it.name
-                    }
+                val descViewHolderClass = dexHelper.findMethodUsingString(
+                    "AV%d",
+                    false,
+                    -1,
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).asSequence().firstNotNullOfOrNull {
+                    dexHelper.decodeMethodIndex(it)
+                }?.declaringClass ?: return@descCopy
+                val descViewHolderIndex = dexHelper.encodeClassIndex(descViewHolderClass)
+                val copyMethodIndex = dexHelper.findMethodUsingString(
+                    "clipboard",
+                    false,
+                    -1,
+                    -1,
+                    null,
+                    descViewHolderIndex,
+                    null,
+                    null,
+                    null,
+                    true
+                ).firstOrNull() ?: return@descCopy
+                val toCopyMethodIndex = dexHelper.findMethodInvoked(
+                    copyMethodIndex,
+                    -1,
+                    3,
+                    "VLZL",
+                    descViewHolderIndex,
+                    null,
+                    null,
+                    null,
+                    true
+                ).firstOrNull() ?: return@descCopy
+                val viewIndex = dexHelper.encodeClassIndex(View::class.java)
+                val clickableSpanIndex = dexHelper.encodeClassIndex(ClickableSpan::class.java)
+                dexHelper.findMethodInvoked(
+                    toCopyMethodIndex,
+                    -1,
+                    2,
+                    "VLL",
+                    -1,
+                    longArrayOf(viewIndex, clickableSpanIndex),
+                    null,
+                    null,
+                    false
+                ).asSequence().mapNotNull {
+                    dexHelper.decodeMethodIndex(it)
+                }.forEach {
+                    classes += class_ { name = it.declaringClass.name }
+                    methods += method { name = it.name }
                 }
             }
             bangumiSeason = class_ {
