@@ -406,10 +406,22 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 }
             }
             fastJson = fastJson {
-                val fastJsonClass = "com.alibaba.fastjson.JSON" from classloader
-                    ?: "com.alibaba.fastjson.a" from classloader
-                val notObfuscated = "JSON" == fastJsonClass?.simpleName
-                class_ = class_ { name = fastJsonClass?.name ?: return@class_ }
+                val fastJsonClass = dexHelper.findMethodUsingString(
+                    "toJSON error",
+                    false,
+                    -1,
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).asSequence().firstNotNullOfOrNull {
+                    dexHelper.decodeMethodIndex(it)
+                }?.declaringClass ?: return@fastJson
+                val notObfuscated = "JSON" == fastJsonClass.simpleName
+                class_ = class_ { name = fastJsonClass.name }
                 parse = method { name = if (notObfuscated) "parseObject" else "a" }
             }
             themeHelper = themeHelper {
