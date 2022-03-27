@@ -3,9 +3,9 @@
 package me.iacn.biliroaming
 
 import android.app.AndroidAppHelper
-import android.app.PendingIntent
-import android.app.Service
+import android.app.Notification
 import android.content.Context
+import android.graphics.Bitmap
 import android.os.Bundle
 import android.text.style.ClickableSpan
 import android.text.style.LineBackgroundSpan
@@ -78,7 +78,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val mainActivityClass by Weak { "tv.danmaku.bili.MainActivityV2" from mClassLoader }
     val homeUserCenterClass by Weak { mHookInfo.settings.homeUserCenter from mClassLoader }
     val musicNotificationHelperClass by Weak { mHookInfo.musicNotification.helper from mClassLoader }
-    val liveNotificationHelperClass by Weak { mHookInfo.liveNotificationHelper from mClassLoader }
+    val liveNotificationHelperClass by Weak { mHookInfo.musicNotification.liveHelper from mClassLoader }
     val notificationBuilderClass by Weak { mHookInfo.musicNotification.builder.class_ from mClassLoader }
     val absMusicServiceClass by Weak { mHookInfo.musicNotification.absMusicService from mClassLoader }
     val menuGroupItemClass by Weak { mHookInfo.settings.menuGroupItem from mClassLoader }
@@ -726,72 +726,108 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 }
             }
             musicNotification = musicNotification {
-                val absMusicServiceClass = classesList.filter {
-                    it.startsWith("tv.danmaku.bili.ui.player.notification")
-                }.firstNotNullOfOrNull { c ->
-                    c.findClass(classloader).takeIf {
-                        it.superclass == Service::class.java
-                    }
-                } ?: return@musicNotification
-                absMusicService = class_ { name = absMusicServiceClass.name }
-                val prefix = absMusicServiceClass.declaredFields.firstOrNull {
-                    it.type.name.count { c -> c == '.' } == 1
-                }?.type?.name?.substringBefore(
-                    '.',
-                    ".."
-                )
-                val musicNotificationHelperClass = classesList.filter {
-                    it.startsWith("tv.danmaku.bili.ui.player.notification") || it.startsWith(
-                        prefix ?: ".."
-                    )
-                }.firstNotNullOfOrNull { c ->
-                    c.findClass(classloader).takeIf {
-                        it.declaredFields.any { f ->
-                            f.type == PendingIntent::class.java
-                        }
-                    }
-                } ?: return@musicNotification
+                val bitmapIndex = dexHelper.encodeClassIndex(Bitmap::class.java)
+                val notificationIndex = dexHelper.encodeClassIndex(Notification::class.java)
+                val musicNotificationHelperClass = dexHelper.findMethodUsingString(
+                    "buildNewJBNotification",
+                    true,
+                    notificationIndex,
+                    1,
+                    "LL",
+                    -1,
+                    longArrayOf(bitmapIndex),
+                    null,
+                    null,
+                    true
+                ).map {
+                    dexHelper.decodeMethodIndex(it)
+                }.firstOrNull()?.declaringClass ?: return@musicNotification
                 helper = class_ { name = musicNotificationHelperClass.name }
+                liveHelper = class_ {
+                    name = dexHelper.findMethodUsingString(
+                        "buildLiveNotification",
+                        true,
+                        notificationIndex,
+                        1,
+                        "LL",
+                        -1,
+                        longArrayOf(bitmapIndex),
+                        null,
+                        null,
+                        true
+                    ).map {
+                        dexHelper.decodeMethodIndex(it)
+                    }.firstOrNull()?.declaringClass?.name ?: return@class_
+                }
                 builder = notificationBuilder {
+                    val notificationBuilderClass = dexHelper.findMethodUsingString(
+                        "android.intent.extra.CHANNEL_ID",
+                        false,
+                        -1,
+                        2,
+                        "LLL",
+                        -1,
+                        null,
+                        null,
+                        null,
+                        true
+                    ).map {
+                        dexHelper.decodeMethodIndex(it)
+                    }.firstOrNull()?.declaringClass ?: return@notificationBuilder
                     musicNotificationHelperClass.declaredMethods.lastOrNull {
-                        it.parameterTypes.size == 1 && it.parameterTypes[0].name.run {
-                            startsWith("android.support.v4.app") ||
-                                    startsWith("androidx.core.app") ||
-                                    startsWith("androidx.core.app.NotificationCompat\$Builder")
-                        }
+                        it.parameterTypes.size == 1 && it.parameterTypes[0] == notificationBuilderClass
                     }?.let {
-                        class_ = class_ { name = it.parameterTypes[0].name }
+                        class_ = class_ { name = notificationBuilderClass.name }
                         method = method { name = it.name }
                     }
                 }
-                val backgroundService = absMusicServiceClass.declaredFields.filter {
-                    Modifier.isProtected(it.modifiers)
-                }.map { it.type }.firstOrNull {
-                    it.isInterface && it.name.startsWith("tv.danmaku.bili.ui.player.notification")
-                }
-                val backgroundPlayerClass = classesList.filter {
-                    it.startsWith("tv.danmaku.biliplayerv2.service.business.background")
-                }.firstNotNullOfOrNull { c ->
-                    c.findClass(classloader).takeIf {
-                        it.interfaces.contains(backgroundService)
-                    }
-                } ?: return@musicNotification
+                val backgroundPlayerClass = dexHelper.findMethodUsingString(
+                    "backgroundPlayer status changed",
+                    true,
+                    -1,
+                    2,
+                    "VIZ",
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).map {
+                    dexHelper.decodeMethodIndex(it)
+                }.firstOrNull()?.declaringClass ?: return@musicNotification
                 backgroundPlayer = class_ { name = backgroundPlayerClass.name }
-                setState = method {
-                    name = absMusicServiceClass.declaredMethods.firstOrNull {
-                        it.parameterTypes.size == 1 &&
-                                it.parameterTypes[0] == Int::class.javaPrimitiveType &&
-                                it.returnType == Void::class.javaPrimitiveType &&
-                                (Modifier.isProtected(it.modifiers) || Modifier.isPrivate(it.modifiers))
-                    }?.name ?: return@method
-                }
+                val setStateMethod = dexHelper.findMethodUsingString(
+                    "MediaSession setPlaybackState",
+                    true,
+                    -1,
+                    1,
+                    "VI",
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).map {
+                    dexHelper.decodeMethodIndex(it)
+                }.firstOrNull() ?: return@musicNotification
+                setState = method { name = setStateMethod.name }
+                absMusicService = class_ { name = setStateMethod.declaringClass.name }
                 playerService = class_ {
-                    name = backgroundPlayerClass.declaredFields.firstOrNull {
-                        it.type.name.run {
-                            startsWith("tv.danmaku.biliplayerv2") &&
-                                    !startsWith("tv.danmaku.biliplayerv2.service")
-                        }
-                    }?.type?.name ?: return@class_
+                    name = dexHelper.findMethodUsingString(
+                        "mPlayerServiceManager",
+                        true,
+                        -1,
+                        0,
+                        "L",
+                        -1,
+                        null,
+                        null,
+                        null,
+                        true
+                    ).map {
+                        dexHelper.decodeMethodIndex(it)
+                    }.firstOrNull()?.declaringClass?.superclass?.interfaces?.firstOrNull()?.name
+                        ?: return@class_
                 }
                 mediaSessionCallback = class_ {
                     name = classesList.filter {
@@ -802,27 +838,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                         } > 0
                     } ?: return@class_
                 }
-
-            }
-            liveNotificationHelper = class_ {
-                val prefix =
-                    "com.bilibili.bililive.room.ui.liveplayer.background.AbsLiveBackgroundPlayerService".findClassOrNull(
-                        classloader
-                    )?.declaredFields?.firstOrNull {
-                        it.type.name.count { c -> c == '.' } == 1
-                    }?.type?.name?.substringBefore(
-                        '.',
-                        ".."
-                    )
-                name = classesList.filter {
-                    it.startsWith("com.bilibili.bililive.room.ui.liveplayer.background") || it.startsWith(
-                        prefix ?: ".."
-                    )
-                }.firstOrNull { c ->
-                    c.findClass(classloader).declaredFields.any {
-                        it.type == PendingIntent::class.java
-                    }
-                } ?: return@class_
             }
             bangumiParams = bangumiParams {
                 val bangumiParamsClass = dexHelper.findMethodUsingString(
@@ -994,7 +1009,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     null,
                     false
                 ).firstOrNull {
-                    dexHelper.decodeMethodIndex(it).also { m -> Log.d(m) }
+                    dexHelper.decodeMethodIndex(it)
                         .run { isStatic && isPublic && (this as? Method)?.parameterTypes?.get(0) == View::class.java }
                 }?.let {
                     dexHelper.findMethodInvoking(it, -1, 2, "VLL", -1, null, null, null, false)

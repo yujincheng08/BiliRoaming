@@ -182,6 +182,7 @@ message MusicNotification {
   optional NotificationBuilder builder = 5;
   optional Class player_service = 6;
   optional Class media_session_callback = 7;
+  optional Class live_helper = 8;
 }
 
 message HookInfo {
@@ -210,7 +211,6 @@ message HookInfo {
   optional DownloadThread download_thread = 34;
   optional GrabHelper grab_helper = 37;
   optional MusicNotification music_notification = 38;
-  optional Class live_notification_helper = 40;
   optional BangumiParams bangumi_params = 45;
   optional GsonHelper gson_helper = 46;
   optional PlayerCoreService player_core_service = 47;
