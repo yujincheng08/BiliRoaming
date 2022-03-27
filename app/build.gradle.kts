@@ -119,6 +119,7 @@ android {
             proguardFiles("proguard-rules.pro")
             externalNativeBuild {
                 cmake {
+                    cppFlags += "-flto"
                     val configFlags = arrayOf(
                         "-Oz",
                         "-DNDEBUG"
