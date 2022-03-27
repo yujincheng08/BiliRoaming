@@ -589,8 +589,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 val contextIndex = dexHelper.encodeClassIndex(Context::class.java)
                 val listIndex = dexHelper.encodeClassIndex(List::class.java)
                 val addSettingMethod = dexHelper.findMethodUsingString(
-                    "moveCursor=",
-                    false,
+                    "game center list",
+                    true,
                     -1,
                     -1,
                     null,
