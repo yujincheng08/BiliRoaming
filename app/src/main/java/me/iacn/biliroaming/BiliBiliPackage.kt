@@ -954,7 +954,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                         true
                     ).asSequence().firstNotNullOfOrNull {
                         dexHelper.decodeMethodIndex(it)
-                    }?.declaringClass ?: return@notificationBuilder
+                    }?.declaringClass
+                        ?: "androidx.core.app.NotificationCompat\$Builder".findClassOrNull(
+                            classloader
+                        ) ?: return@notificationBuilder
                     musicNotificationHelperClass.declaredMethods.lastOrNull {
                         it.parameterTypes.size == 1 && it.parameterTypes[0] == notificationBuilderClass
                     }?.let {
