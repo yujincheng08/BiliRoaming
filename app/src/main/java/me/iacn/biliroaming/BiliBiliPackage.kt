@@ -6,6 +6,7 @@ import android.app.AndroidAppHelper
 import android.app.Notification
 import android.content.Context
 import android.graphics.Bitmap
+import android.os.Bundle
 import android.text.style.ClickableSpan
 import android.text.style.LineBackgroundSpan
 import android.util.SparseArray
@@ -622,7 +623,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     }?.name ?: return@class_
             }
             shareWrapper = shareWrapper {
-                val shareMethod = dexHelper.findMethodUsingString(
+                val shareToIndex = dexHelper.findMethodUsingString(
                     "share.helper.inner",
                     false,
                     -1,
@@ -633,10 +634,25 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     null,
                     null,
                     true
+                ).firstOrNull() ?: return@shareWrapper
+                val shareHelperClass = dexHelper.decodeMethodIndex(shareToIndex)?.declaringClass ?: return@shareWrapper
+                class_ = class_ { name = shareHelperClass.name }
+                val shareHelperIndex = dexHelper.encodeClassIndex(shareHelperClass)
+                val stringIndex = dexHelper.encodeClassIndex(String::class.java)
+                val bundleIndex = dexHelper.encodeClassIndex(Bundle::class.java)
+                val shareMethod = dexHelper.findMethodInvoking(
+                    shareToIndex,
+                    -1,
+                    2,
+                    "VLL",
+                    shareHelperIndex,
+                    longArrayOf(stringIndex, bundleIndex),
+                    null,
+                    null,
+                    true
                 ).asSequence().firstNotNullOfOrNull {
                     dexHelper.decodeMethodIndex(it)
                 } ?: return@shareWrapper
-                class_ = class_ { name = shareMethod.declaringClass.name }
                 method = method { name = shareMethod.name }
             }
             themeName = themeName {
