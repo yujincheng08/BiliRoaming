@@ -235,7 +235,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         }?.apply {
                             put(
                                 "data",
-                                fixBangumi(optJSONObject("data"), optInt("code", FAIL_CODE))
+                                fixBangumi(optJSONObject("data"), optInt("code", FAIL_CODE), url)
                             )
                             put("code", 0)
                         }
@@ -526,10 +526,21 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         body.setObjectField(dataField, newResult)
     }
 
-    private fun fixBangumi(jsonResult: JSONObject?, code: Int) =
+    private fun fixBangumi(jsonResult: JSONObject?, code: Int, url: String?) =
         if (isBangumiWithWatchPermission(jsonResult, code)) {
+            Log.d("raw bangumi $jsonResult")
             jsonResult?.also { allowDownload(it); fixEpisodesStatus(it) }
         } else {
+            url?.let { Uri.parse(it) }?.run {
+                getQueryParameter("ep_id")?.let {
+                    lastSeasonInfo.clear()
+                    lastSeasonInfo["ep_id"] = it
+                }
+                getQueryParameter("season_id")?.let {
+                    lastSeasonInfo.clear()
+                    lastSeasonInfo["season_id"] = it
+                }
+            }
             Log.toast("发现区域限制番剧，尝试解锁……")
             Log.d("Info: $lastSeasonInfo")
             val (newCode, newJsonResult) = getSeason(
@@ -588,7 +599,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         if (url?.contains("cards?") == true) return
         val jsonResult = result?.toJson()
         // Filter normal bangumi and other responses
-        fixBangumi(jsonResult, code)?.let {
+        fixBangumi(jsonResult, code, url)?.let {
             body.setIntField("code", 0)
                 .setObjectField(fieldName, instance.bangumiUniformSeasonClass?.fromJson(it))
         } ?: run {
