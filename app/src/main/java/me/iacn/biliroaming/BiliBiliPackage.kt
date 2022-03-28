@@ -526,7 +526,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 }
 
                 getAccessKey = method {
-                    name = calledMethods.firstOrNull {
+                    name = biliAccountsClass.declaredMethods.firstOrNull {
                         it.isNotStatic && it.parameterTypes.isEmpty() && it.returnType == String::class.java
                     }?.name ?: return@method
                 }
