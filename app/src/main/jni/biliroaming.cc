@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <jni.h>
 #include <fcntl.h>
-#include <unordered_map>
+#include <map>
 #include <zlib.h>
 #include <list>
 
@@ -20,8 +20,6 @@
   LOGE(fmt " failed with %d: %s", ##args, errno, strerror(errno))
 
 namespace {
-
-
 jfieldID token_field;
 jfieldID class_loader_field;
 jmethodID load_class_method;
@@ -88,13 +86,12 @@ private:
   size_t len_ = 0;
 };
 
-void *myalloc(void *q, unsigned n, unsigned m)
+void *myalloc([[maybe_unused]] void *q, unsigned n, unsigned m)
 {
-  (void)q;
   return calloc(n, m);
 }
 
-void myfree(void *q, void *p)
+void myfree([[maybe_unused]] void *q, void *p)
 {
   (void)q;
   free(p);
@@ -213,7 +210,7 @@ public:
       return nullptr;
     }
 private:
-    std::unordered_map<std::string_view, ZipLocalFile*> entries;
+    std::map<std::string_view, ZipLocalFile*> entries;
 };
 static_assert(offsetof(ZipLocalFile, signature) == 0);
 static_assert(offsetof(ZipLocalFile, version) == 4);
@@ -227,7 +224,7 @@ static_assert(offsetof(ZipLocalFile, uncompress_size) == 22);
 static_assert(offsetof(ZipLocalFile, file_name_length) == 26);
 static_assert(offsetof(ZipLocalFile, name) == 30);
 
-std::unordered_map<DexHelper*, std::list<MemMap>> dex_maps;
+using Handler = std::tuple<std::unique_ptr<DexHelper>, std::list<MemMap>>;
 
 jclass LoadClass(JNIEnv *env, jobject class_loader,
                  std::string_view descriptor) {
@@ -288,10 +285,11 @@ Java_me_iacn_biliroaming_utils_DexHelper_findMethodUsingString(
     jlong declaring_class, jlongArray parameter_types,
     jlongArray contains_parameter_types, jintArray dex_priority,
     jboolean find_first) {
-  auto *helper =
-      reinterpret_cast<DexHelper *>(env->GetLongField(thiz, token_field));
-  if (!helper)
+  auto *handler =
+      reinterpret_cast<Handler *>(env->GetLongField(thiz, token_field));
+  if (!handler)
     return env->NewLongArray(0);
+  auto &[helper, _] = *handler;
   if (!str)
     return env->NewLongArray(0);
   auto str_ = env->GetStringUTFChars(str, nullptr);
@@ -436,10 +434,7 @@ Java_me_iacn_biliroaming_utils_DexHelper_load(JNIEnv *env, jobject thiz,
   }
   if (images.empty())
     return 0;
-  auto* dex_helper = new DexHelper(images);
-  LOGD("dex helper %p", dex_helper);
-  dex_maps.emplace(dex_helper, std::move(maps));
-  auto res = reinterpret_cast<jlong>(dex_helper);
+  auto res = reinterpret_cast<jlong>(new Handler(std::make_unique<DexHelper>(images), std::move(maps)));
   env->SetLongField(thiz, token_field, res);
   return res;
 }
@@ -450,10 +445,11 @@ Java_me_iacn_biliroaming_utils_DexHelper_findMethodInvoking(
     jshort parameter_count, jstring parameter_shorty, jlong declaring_class,
     jlongArray parameter_types, jlongArray contains_parameter_types,
     jintArray dex_priority, jboolean find_first) {
-  auto *helper =
-      reinterpret_cast<DexHelper *>(env->GetLongField(thiz, token_field));
-  if (!helper)
+  auto *handler =
+      reinterpret_cast<Handler *>(env->GetLongField(thiz, token_field));
+  if (!handler)
     return env->NewLongArray(0);
+  auto &[helper, _] = *handler;
   auto parameter_shorty_ =
       parameter_shorty ? env->GetStringUTFChars(parameter_shorty, nullptr)
                        : nullptr;
@@ -518,10 +514,11 @@ Java_me_iacn_biliroaming_utils_DexHelper_findMethodInvoked(
     jshort parameter_count, jstring parameter_shorty, jlong declaring_class,
     jlongArray parameter_types, jlongArray contains_parameter_types,
     jintArray dex_priority, jboolean find_first) {
-  auto *helper =
-      reinterpret_cast<DexHelper *>(env->GetLongField(thiz, token_field));
-  if (!helper)
+  auto *handler =
+      reinterpret_cast<Handler *>(env->GetLongField(thiz, token_field));
+  if (!handler)
     return env->NewLongArray(0);
+  auto &[helper, _] = *handler;
   auto parameter_shorty_ =
       parameter_shorty ? env->GetStringUTFChars(parameter_shorty, nullptr)
                        : nullptr;
@@ -586,10 +583,11 @@ Java_me_iacn_biliroaming_utils_DexHelper_findMethodSettingField(
     jshort parameter_count, jstring parameter_shorty, jlong declaring_class,
     jlongArray parameter_types, jlongArray contains_parameter_types,
     jintArray dex_priority, jboolean find_first) {
-  auto *helper =
-      reinterpret_cast<DexHelper *>(env->GetLongField(thiz, token_field));
-  if (!helper)
+  auto *handler =
+      reinterpret_cast<Handler *>(env->GetLongField(thiz, token_field));
+  if (!handler)
     return env->NewLongArray(0);
+  auto &[helper, _] = *handler;
   auto parameter_shorty_ =
       parameter_shorty ? env->GetStringUTFChars(parameter_shorty, nullptr)
                        : nullptr;
@@ -654,10 +652,11 @@ Java_me_iacn_biliroaming_utils_DexHelper_findMethodGettingField(
     jshort parameter_count, jstring parameter_shorty, jlong declaring_class,
     jlongArray parameter_types, jlongArray contains_parameter_types,
     jintArray dex_priority, jboolean find_first) {
-  auto *helper =
-      reinterpret_cast<DexHelper *>(env->GetLongField(thiz, token_field));
-  if (!helper)
+  auto *handler =
+      reinterpret_cast<Handler *>(env->GetLongField(thiz, token_field));
+  if (!handler)
     return env->NewLongArray(0);
+  auto &[helper, _] = *handler;
   auto parameter_shorty_ =
       parameter_shorty ? env->GetStringUTFChars(parameter_shorty, nullptr)
                        : nullptr;
@@ -721,10 +720,11 @@ Java_me_iacn_biliroaming_utils_DexHelper_findField(JNIEnv *env, jobject thiz,
                                                    jlong type,
                                                    jintArray dex_priority,
                                                    jboolean find_first) {
-  auto *helper =
-      reinterpret_cast<DexHelper *>(env->GetLongField(thiz, token_field));
-  if (!helper)
+  auto *handler =
+      reinterpret_cast<Handler *>(env->GetLongField(thiz, token_field));
+  if (!handler)
     return env->NewLongArray(0);
+  auto &[helper, _] = *handler;
   std::vector<size_t> dex_priority_;
   jint *dex_priority_elements = nullptr;
   if (dex_priority) {
@@ -753,10 +753,11 @@ extern "C" JNIEXPORT jobject JNICALL
 Java_me_iacn_biliroaming_utils_DexHelper_decodeMethodIndex(JNIEnv *env,
                                                            jobject thiz,
                                                            jlong method_index) {
-  auto *helper =
-      reinterpret_cast<DexHelper *>(env->GetLongField(thiz, token_field));
-  if (!helper)
+  auto *handler =
+      reinterpret_cast<Handler *>(env->GetLongField(thiz, token_field));
+  if (!handler)
     return env->NewLongArray(0);
+  auto &[helper, _] = *handler;
   auto out = helper->DecodeMethod(method_index);
   auto cl = env->GetObjectField(thiz, class_loader_field);
   auto clazz = LoadClass(env, cl, out.declaring_class.name);
@@ -787,10 +788,11 @@ extern "C" JNIEXPORT jobject JNICALL
 Java_me_iacn_biliroaming_utils_DexHelper_decodeFieldIndex(JNIEnv *env,
                                                           jobject thiz,
                                                           jlong field_index) {
-  auto *helper =
-      reinterpret_cast<DexHelper *>(env->GetLongField(thiz, token_field));
-  if (!helper)
+  auto *handler =
+      reinterpret_cast<Handler *>(env->GetLongField(thiz, token_field));
+  if (!handler)
     return env->NewLongArray(0);
+  auto &[helper, _] = *handler;
   auto out = helper->DecodeField(field_index);
   auto cl = env->GetObjectField(thiz, class_loader_field);
   auto clazz = LoadClass(env, cl, out.declaring_class.name);
@@ -815,10 +817,11 @@ extern "C" JNIEXPORT jlong JNICALL
 Java_me_iacn_biliroaming_utils_DexHelper_encodeClassIndex(JNIEnv *env,
                                                           jobject thiz,
                                                           jclass clazz) {
-  auto *helper =
-      reinterpret_cast<DexHelper *>(env->GetLongField(thiz, token_field));
-  if (!helper)
+  auto *handler =
+      reinterpret_cast<Handler *>(env->GetLongField(thiz, token_field));
+  if (!handler)
     return -1;
+  auto &[helper, _] = *handler;
   return static_cast<jlong>(
       helper->CreateClassIndex(GetClassDescriptor(env, clazz)));
 }
@@ -827,10 +830,11 @@ extern "C" JNIEXPORT jlong JNICALL
 Java_me_iacn_biliroaming_utils_DexHelper_encodeFieldIndex(JNIEnv *env,
                                                           jobject thiz,
                                                           jobject field) {
-  auto *helper =
-      reinterpret_cast<DexHelper *>(env->GetLongField(thiz, token_field));
-  if (!helper)
+  auto *handler =
+      reinterpret_cast<Handler *>(env->GetLongField(thiz, token_field));
+  if (!handler)
     return -1;
+  auto &[helper, _] = *handler;
   auto java_name = (jstring)env->CallObjectMethod(field, get_name_method);
   auto clazz = (jclass)env->CallObjectMethod(field, get_declaring_class_method);
   auto name = env->GetStringUTFChars(java_name, nullptr);
@@ -843,10 +847,11 @@ extern "C" JNIEXPORT jlong JNICALL
 Java_me_iacn_biliroaming_utils_DexHelper_encodeMethodIndex(JNIEnv *env,
                                                            jobject thiz,
                                                            jobject method) {
-  auto *helper =
-      reinterpret_cast<DexHelper *>(env->GetLongField(thiz, token_field));
-  if (!helper)
+  auto *handler =
+      reinterpret_cast<Handler *>(env->GetLongField(thiz, token_field));
+  if (!handler)
     return -1;
+  auto &[helper, _] = *handler;
   auto java_name = (jstring)env->CallObjectMethod(method, get_name_method);
   auto clazz =
       (jclass)env->CallObjectMethod(method, get_declaring_class_method);
@@ -876,10 +881,11 @@ extern "C" JNIEXPORT jclass JNICALL
 Java_me_iacn_biliroaming_utils_DexHelper_decodeClassIndex(JNIEnv *env,
                                                           jobject thiz,
                                                           jlong class_index) {
-  auto *helper =
-      reinterpret_cast<DexHelper *>(env->GetLongField(thiz, token_field));
-  if (!helper)
+  auto *handler =
+      reinterpret_cast<Handler *>(env->GetLongField(thiz, token_field));
+  if (!handler)
     return nullptr;
+  auto &[helper, _] = *handler;
   auto out = helper->DecodeClass(class_index);
   auto cl = env->GetObjectField(thiz, class_loader_field);
   auto res = LoadClass(env, cl, out.name);
@@ -889,11 +895,10 @@ Java_me_iacn_biliroaming_utils_DexHelper_decodeClassIndex(JNIEnv *env,
 
 extern "C" JNIEXPORT void JNICALL
 Java_me_iacn_biliroaming_utils_DexHelper_close(JNIEnv *env, jobject thiz) {
-  auto *helper =
-      reinterpret_cast<DexHelper *>(env->GetLongField(thiz, token_field));
-  dex_maps.erase(helper);
+  auto *handler =
+      reinterpret_cast<Handler *>(env->GetLongField(thiz, token_field));
   env->SetLongField(thiz, token_field, jlong(0));
-  delete helper;
+  delete handler;
 }
 
 extern "C" JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *) {
@@ -940,9 +945,10 @@ extern "C" JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *) {
 extern "C" JNIEXPORT void JNICALL
 Java_me_iacn_biliroaming_utils_DexHelper_createFullCache(JNIEnv *env,
                                                          jobject thiz) {
-  auto *helper =
-      reinterpret_cast<DexHelper *>(env->GetLongField(thiz, token_field));
-  if (!helper)
+  auto *handler =
+      reinterpret_cast<Handler *>(env->GetLongField(thiz, token_field));
+  if (!handler)
     return;
+  auto &[helper, _] = *handler;
   helper->CreateFullCache();
 }
