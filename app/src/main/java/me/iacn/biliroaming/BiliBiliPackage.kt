@@ -1258,7 +1258,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     false
                 ).firstOrNull {
                     dexHelper.decodeMethodIndex(it)
-                        ?.run { isStatic && isPublic && (this as? Method)?.parameterTypes?.get(0) == View::class.java } == true
+                        ?.run { this !is Constructor<*> && isStatic && isPublic && (this as? Method)?.parameterTypes.let { t -> t?.get(0) == View::class.java && t[1] != CharSequence::class.java } } == true
                 }?.let {
                     dexHelper.findMethodInvoking(it, -1, 2, "VLL", -1, null, null, null, false)
                         .map { m ->
