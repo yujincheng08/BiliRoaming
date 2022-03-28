@@ -163,17 +163,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val videoDetailCallbackClass by Weak { mHookInfo.videoDetailCallback from mClassLoader }
     val biliAccountsClass by Weak { mHookInfo.biliAccounts.class_ from mClassLoader }
 
-    private val accessKeyInstance by lazy {
-        ("com.bilibili.cheese.ui.detail.pay.v3.CheesePayHelperV3\$accessKey\$2".findClassOrNull(
-            mClassLoader
-        ) ?: "com.bilibili.cheese.ui.detail.pay.v2.CheesePayHelperV2\$accessKey\$2".findClassOrNull(
-            mClassLoader
-        )
-        ?: "com.bilibili.bangumi.ui.page.detail.pay.BangumiPayHelperV2\$accessKey\$2".findClassOrNull(
-            mClassLoader
-        ))?.getStaticObjectField("INSTANCE")
-    }
-
     val ids: Map<String, Int> by lazy {
         mHookInfo.mapIds.idsMap
     }
@@ -184,14 +173,16 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         return key
     }
 
-    val biliAccounts
-        get() = biliAccountsClass?.callStaticMethodOrNull(
+    val biliAccounts by lazy {
+        biliAccountsClass?.callStaticMethodOrNull(
             mHookInfo.biliAccounts.get.orNull,
             AndroidAppHelper.currentApplication()
         )
+    }
 
-    val accessKey
-        get() = biliAccounts?.callMethodOrNullAs<String>(mHookInfo.biliAccounts.getAccessKey.orNull)
+    val accessKey by lazy {
+        biliAccounts?.callMethodOrNullAs<String>(mHookInfo.biliAccounts.getAccessKey.orNull)
+    }
 
     fun fastJsonParse() = mHookInfo.fastJson.parse.orNull
 
