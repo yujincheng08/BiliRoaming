@@ -6,6 +6,7 @@ import android.app.AndroidAppHelper
 import android.app.Notification
 import android.content.Context
 import android.graphics.Bitmap
+import android.os.Bundle
 import android.text.style.ClickableSpan
 import android.text.style.LineBackgroundSpan
 import android.util.SparseArray
@@ -637,7 +638,11 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     dexHelper.decodeMethodIndex(it)
                 } ?: return@shareWrapper
                 class_ = class_ { name = shareMethod.declaringClass.name }
-                method = method { name = shareMethod.name }
+                method = method {
+                    name = shareMethod.declaringClass.declaredMethods.firstOrNull { m ->
+                        m.parameterTypes.size == 2 && m.parameterTypes[0] == String::class.java && m.parameterTypes[1] == Bundle::class.java
+                    }?.name ?: shareMethod.name
+                }
             }
             themeName = themeName {
                 val themeNameClass = classesList.filter {
