@@ -196,6 +196,7 @@ message HookInfo {
   optional MapIds map_ids = 2;
   int32 client_version_code = 3;
   int32 module_version_code = 4;
+  string module_version_name = 5;
   optional Class retrofit_response = 10;
   optional OkHttp ok_http = 11;
   optional FastJson fast_json = 12;

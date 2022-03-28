@@ -288,6 +288,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     if (info.lastUpdateTime >= lastUpdateTime && info.lastUpdateTime >= lastModuleUpdateTime
                         && getVersionCode(context.packageName) >= info.clientVersionCode
                         && BuildConfig.VERSION_CODE >= info.moduleVersionCode
+                        && BuildConfig.VERSION_NAME == info.moduleVersionName
                     )
                         return info
                 }
@@ -363,6 +364,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             )
             clientVersionCode = getVersionCode(context.packageName)
             moduleVersionCode = BuildConfig.VERSION_CODE
+            moduleVersionName = BuildConfig.VERSION_NAME
             mapIds = mapIds {
                 val reg = Regex("^tv\\.danmaku\\.bili\\.[^.]*$")
                 val mask = Modifier.STATIC or Modifier.PUBLIC or Modifier.FINAL
