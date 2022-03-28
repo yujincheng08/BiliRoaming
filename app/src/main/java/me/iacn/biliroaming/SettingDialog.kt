@@ -535,7 +535,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             tv.setText(sPrefs.getString("custom_link", ""))
             tv.hint = "bilibili://user_center/vip"
             AlertDialog.Builder(activity).run {
-                setTitle(R.string.custom_link_summary)
+                setTitle(moduleRes.getString(R.string.custom_link_summary))
                 setView(tv)
                 setPositiveButton(android.R.string.ok) { _, _ ->
                     if (tv.text.toString().startsWith("bilibili://")) {
