@@ -6,6 +6,7 @@ import android.app.AndroidAppHelper
 import android.app.Notification
 import android.content.Context
 import android.graphics.Bitmap
+import android.os.Bundle
 import android.text.style.ClickableSpan
 import android.text.style.LineBackgroundSpan
 import android.util.SparseArray
@@ -162,17 +163,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val videoDetailCallbackClass by Weak { mHookInfo.videoDetailCallback from mClassLoader }
     val biliAccountsClass by Weak { mHookInfo.biliAccounts.class_ from mClassLoader }
 
-    private val accessKeyInstance by lazy {
-        ("com.bilibili.cheese.ui.detail.pay.v3.CheesePayHelperV3\$accessKey\$2".findClassOrNull(
-            mClassLoader
-        ) ?: "com.bilibili.cheese.ui.detail.pay.v2.CheesePayHelperV2\$accessKey\$2".findClassOrNull(
-            mClassLoader
-        )
-        ?: "com.bilibili.bangumi.ui.page.detail.pay.BangumiPayHelperV2\$accessKey\$2".findClassOrNull(
-            mClassLoader
-        ))?.getStaticObjectField("INSTANCE")
-    }
-
     val ids: Map<String, Int> by lazy {
         mHookInfo.mapIds.idsMap
     }
@@ -183,14 +173,16 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         return key
     }
 
-    val biliAccounts
-        get() = biliAccountsClass?.callStaticMethodOrNull(
+    val biliAccounts by lazy {
+        biliAccountsClass?.callStaticMethodOrNull(
             mHookInfo.biliAccounts.get.orNull,
             AndroidAppHelper.currentApplication()
         )
+    }
 
-    val accessKey
-        get() = biliAccounts?.callMethodOrNullAs<String>(mHookInfo.biliAccounts.getAccessKey.orNull)
+    val accessKey by lazy {
+        biliAccounts?.callMethodOrNullAs<String>(mHookInfo.biliAccounts.getAccessKey.orNull)
+    }
 
     fun fastJsonParse() = mHookInfo.fastJson.parse.orNull
 
@@ -622,7 +614,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     }?.name ?: return@class_
             }
             shareWrapper = shareWrapper {
-                val shareMethod = dexHelper.findMethodUsingString(
+                val shareToIndex = dexHelper.findMethodUsingString(
                     "share.helper.inner",
                     false,
                     -1,
@@ -633,10 +625,26 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     null,
                     null,
                     true
+                ).firstOrNull() ?: return@shareWrapper
+                val shareHelperClass =
+                    dexHelper.decodeMethodIndex(shareToIndex)?.declaringClass ?: return@shareWrapper
+                class_ = class_ { name = shareHelperClass.name }
+                val shareHelperIndex = dexHelper.encodeClassIndex(shareHelperClass)
+                val stringIndex = dexHelper.encodeClassIndex(String::class.java)
+                val bundleIndex = dexHelper.encodeClassIndex(Bundle::class.java)
+                val shareMethod = dexHelper.findMethodInvoking(
+                    shareToIndex,
+                    -1,
+                    2,
+                    "VLL",
+                    shareHelperIndex,
+                    longArrayOf(stringIndex, bundleIndex),
+                    null,
+                    null,
+                    true
                 ).asSequence().firstNotNullOfOrNull {
                     dexHelper.decodeMethodIndex(it)
                 } ?: return@shareWrapper
-                class_ = class_ { name = shareMethod.declaringClass.name }
                 method = method { name = shareMethod.name }
             }
             themeName = themeName {
@@ -940,25 +948,49 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                         dexHelper.decodeMethodIndex(it)
                     }?.declaringClass?.name ?: return@class_
                 }
+                val musicNotificationHelperIndex =
+                    dexHelper.encodeClassIndex(musicNotificationHelperClass);
+                val musicManagerIndex = dexHelper.findMethodUsingString(
+                    "the build sdk >= 8.0",
+                    true,
+                    -1,
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).firstOrNull() ?: return@musicNotification
                 builder = notificationBuilder {
-                    val notificationBuilderClass = dexHelper.findMethodUsingString(
-                        "android.chronometerCountDown",
-                        false,
+                    dexHelper.findMethodInvoking(
+                        musicManagerIndex,
                         -1,
-                        1,
-                        "LZ",
-                        -1,
+                        0,
+                        "L",
+                        musicNotificationHelperIndex,
                         null,
                         null,
                         null,
-                        true
-                    ).asSequence().firstNotNullOfOrNull {
+                        false
+                    ).asSequence().flatMap {
+                        dexHelper.findMethodInvoking(
+                            it,
+                            -1,
+                            1,
+                            "VL",
+                            musicNotificationHelperIndex,
+                            null,
+                            null,
+                            null,
+                            false
+                        ).asSequence()
+                    }.firstNotNullOfOrNull {
                         dexHelper.decodeMethodIndex(it)
-                    }?.declaringClass ?: return@notificationBuilder
-                    musicNotificationHelperClass.declaredMethods.lastOrNull {
-                        it.parameterTypes.size == 1 && it.parameterTypes[0] == notificationBuilderClass
                     }?.let {
-                        class_ = class_ { name = notificationBuilderClass.name }
+                        class_ = class_ {
+                            name = (it as? Method)?.parameterTypes?.get(0)?.name ?: return@class_
+                        }
                         method = method { name = it.name }
                     }
                 }
@@ -1251,7 +1283,13 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     false
                 ).firstOrNull {
                     dexHelper.decodeMethodIndex(it)
-                        ?.run { isStatic && isPublic && (this as? Method)?.parameterTypes?.get(0) == View::class.java } == true
+                        ?.run {
+                            this !is Constructor<*> && isStatic && isPublic && (this as? Method)?.parameterTypes.let { t ->
+                                t?.get(
+                                    0
+                                ) == View::class.java && t[1] != CharSequence::class.java
+                            }
+                        } == true
                 }?.let {
                     dexHelper.findMethodInvoking(it, -1, 2, "VLL", -1, null, null, null, false)
                         .map { m ->
