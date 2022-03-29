@@ -380,19 +380,21 @@ Java_me_iacn_biliroaming_utils_DexHelper_load(JNIEnv *env, jobject thiz,
     const auto *dex_files = reinterpret_cast<const MyDexFile **>(
         env->GetLongArrayElements(cookie, nullptr));
     std::vector<std::tuple<const void *, size_t, const void *, size_t>> dex_images;
-    while (dex_file_length-- > 1) {
-      const auto *dex_file = dex_files[dex_file_length];
-      LOGD("Got dex file %d", dex_file_length);
-      if (!dex_file) {
-        LOGW("Skip empty dex file %d", dex_file_length);
-        continue;
-      }
-      if (dex::Reader::IsCompact(dex_file->begin_)) {
-        LOGD("skip compact dex");
-        dex_images.clear();
-        break;
-      } else {
-        dex_images.emplace_back(dex_file->begin_, dex_file->size_, nullptr, 0);
+    if (!dex_files[0]) {
+      while (dex_file_length-- > 1) {
+        const auto *dex_file = dex_files[dex_file_length];
+        LOGD("Got dex file %d", dex_file_length);
+        if (!dex_file) {
+          LOGW("Skip empty dex file %d", dex_file_length);
+          continue;
+        }
+        if (dex::Reader::IsCompact(dex_file->begin_)) {
+          LOGD("skip compact dex");
+          dex_images.clear();
+          break;
+        } else {
+          dex_images.emplace_back(dex_file->begin_, dex_file->size_, nullptr, 0);
+        }
       }
     }
     if (dex_images.empty()) {
