@@ -176,4 +176,7 @@
     <string name="custom_link_summary">仅支持 bilibili:// 开头的格式</string>
     <string name="add_custom_button_title">在【我的】页面添加自定义按钮</string>
     <string name="add_custom_button_summary">指定修改其中一个项目</string>
+    <string name="skin_title">填写自制主题</string>
+    <string name="skin_import_title">导入自制主题</string>
+    <string name="skin_summary">重启后，要等待十几秒下载资源，然后再重启（同时开启时的优先度：导入＞填写）</string>
 </resources>
