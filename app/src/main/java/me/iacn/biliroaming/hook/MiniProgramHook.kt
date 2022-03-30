@@ -34,8 +34,9 @@ class MiniProgramHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     if (conn.responseCode == HttpURLConnection.HTTP_MOVED_TEMP) {
                         val target = URL(conn.getHeaderField("Location"))
                         val bv =
-                            target.path.split("/").first { it.startsWith("BV") && it.length == 12 }
-                        if (bv.isEmpty()) return@hookBeforeMethod
+                            target.path.split("/")
+                                .firstOrNull { it.startsWith("BV") && it.length == 12 }
+                                ?: return@hookBeforeMethod
                         val av = bv2av(bv)
                         val query = target.query.split("&").map {
                             it.split("=")
