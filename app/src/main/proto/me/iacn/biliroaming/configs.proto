@@ -191,6 +191,11 @@ message BiliAccounts {
   optional Method get_access_key = 3;
 }
 
+message DarkSwitch {
+  optional Class user_fragment = 1;
+  optional Method switch_dark_mode = 2;
+}
+
 message HookInfo {
   int64 last_update_time = 1;
   optional MapIds map_ids = 2;
@@ -237,4 +242,5 @@ message HookInfo {
   optional Class bangumi_season = 60;
   optional KanBan kan_ban = 67;
   optional ToastHelper toast_helper = 68;
+  optional DarkSwitch dark_switch = 69;
 }

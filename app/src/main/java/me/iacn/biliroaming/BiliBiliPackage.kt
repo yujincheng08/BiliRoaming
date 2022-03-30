@@ -162,6 +162,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val toastHelperClass by Weak { mHookInfo.toastHelper.class_ from mClassLoader }
     val videoDetailCallbackClass by Weak { mHookInfo.videoDetailCallback from mClassLoader }
     val biliAccountsClass by Weak { mHookInfo.biliAccounts.class_ from mClassLoader }
+    val userFragmentClass by Weak { mHookInfo.darkSwitch.userFragment from mClassLoader }
 
     val ids: Map<String, Int> by lazy {
         mHookInfo.mapIds.idsMap
@@ -265,6 +266,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     fun showToast() = mHookInfo.toastHelper.show.orNull
 
     fun cancelShowToast() = mHookInfo.toastHelper.cancel.orNull
+
+    fun switchDarkMode() = mHookInfo.darkSwitch.switchDarkMode.orNull
 
     private fun readHookInfo(context: Context): Configs.HookInfo {
         try {
@@ -1546,6 +1549,38 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                         it.isStatic && it.parameterTypes.isEmpty()
                     }?.name ?: return@method
                 }
+            }
+            darkSwitch = darkSwitch {
+                val userFragmentClass = dexHelper.findMethodUsingString(
+                    "key_global_link_entrance_shown",
+                    false,
+                    -1,
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).map {
+                    dexHelper.decodeMethodIndex(it)
+                }.firstOrNull()?.declaringClass ?: return@darkSwitch
+                val switchDarkModeMethod = dexHelper.findMethodUsingString(
+                    "default",
+                    false,
+                    -1,
+                    -1,
+                    null,
+                    dexHelper.encodeClassIndex(userFragmentClass),
+                    null,
+                    null,
+                    null,
+                    true
+                ).map {
+                    dexHelper.decodeMethodIndex(it)
+                }.firstOrNull() ?: return@darkSwitch
+                userFragment = class_ { name = userFragmentClass.name }
+                switchDarkMode = method { name = switchDarkModeMethod.name }
             }
 
             dexHelper.close()
