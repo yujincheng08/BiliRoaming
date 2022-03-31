@@ -612,7 +612,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private fun fixViewProto(req: API.ViewReq): API.ViewReply? {
         val av = when {
             req.hasAid() -> req.aid.toString()
-            req.hasBvid() -> req.bvid.toString()
+            req.hasBvid() -> bv2av(req.bvid).toString()
             else -> return null
         }
         val query = Uri.Builder().run {
