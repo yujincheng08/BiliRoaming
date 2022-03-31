@@ -217,15 +217,18 @@ object BiliRoamingApi {
     @JvmStatic
     private fun fixHiddenSeason(result: JSONObject) {
         for (episode in result.optJSONArray("episodes").orEmpty()) {
+            val epId = episode.optString("ep_id")
             episode.put(
                 "link",
                 "https://www.bilibili.com/bangumi/play/ep${episode.optString("ep_id")}"
             )
             episode.put("long_title", episode.optString("indexTitle", episode.optString("index_title")))
-            episode.put("id", episode.optString("ep_id"))
+            episode.put("id", epId)
             episode.put("title", episode.optString("index"))
             episode.put("rights", BILI_RIGHT_TEMPLATE.toJSONObject())
             episode.put("status", episode.optInt("episode_status"))
+            episode.put("share_url", "https://www.bilibili.com/bangumi/play/ep$epId")
+            episode.put("short_link", "https://b23.tv/ep$epId")
         }
     }
 

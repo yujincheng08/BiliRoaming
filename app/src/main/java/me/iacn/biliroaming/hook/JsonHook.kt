@@ -233,12 +233,28 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 accountMineClass -> {
                     drawerItems.clear()
                     val hides = sPrefs.getStringSet("hided_drawer_items", mutableSetOf())!!
+                    var deleteUpper = false
+                    if (("创作中心" !in hides && "推荐服务" in hides && "更多服务" in hides) || 
+                        ("創作中心" !in hides && "推薦服務" in hides && "更多服務" in hides)) {
+                        deleteUpper = true
+                        Log.toast("自定义我的页面，【标题项目】不能只保留【创作中心】，因此不删除任何标题项目，请修改你的漫游设置。", true)
+                    }
                     if (platform == "android_hd") {
                         result.getObjectFieldOrNullAs<MutableList<*>?>("padSectionList")?.removeAll { items ->
                             // 分析内容
                             val title = items?.getObjectFieldAs<String>("title")
                             val uri = items?.getObjectFieldAs<String>("uri")
                             val id = items?.getObjectField("id").toString()
+
+                            // 修改成自定义按钮
+                            if (sPrefs.getBoolean("add_custom_button", false) && id == sPrefs.getString("custom_button_id", "")){
+                                val icon = items?.getObjectFieldAs<String>("icon").toString()
+                                items?.setObjectField("title", sPrefs.getString("custom_button_title", title))
+                                    ?.setObjectField("uri", sPrefs.getString("custom_button_uri", uri))
+                                    ?.setObjectField("icon", sPrefs.getString("custom_button_icon", icon))
+                                return@removeAll false
+                            }
+
                             val showing = id !in hides
                             // 将结果写入 drawerItems
                             drawerItems.add(BottomItem(title, uri, id, showing))
@@ -307,8 +323,10 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             }
                         }
                         // 删除标题组
-                        result.getObjectFieldOrNullAs<MutableList<*>?>("sectionListV2")?.removeAll { sections ->
-                            sections?.getObjectFieldOrNull("title").toString() in hides
+                        if (!deleteUpper) {
+                            result.getObjectFieldOrNullAs<MutableList<*>?>("sectionListV2")?.removeAll { sections ->
+                                sections?.getObjectFieldOrNull("title").toString() in hides
+                            }
                         }
                     }
                     accountMineClass.findFieldOrNull("vipSectionRight")?.set(result, null)

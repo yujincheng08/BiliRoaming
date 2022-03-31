@@ -13,17 +13,17 @@ import android.util.SparseArray
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import com.google.protobuf.GeneratedMessageLite
 import dalvik.system.BaseDexClassLoader
 import me.iacn.biliroaming.utils.*
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.InputStream
+import java.lang.reflect.Constructor
 import java.lang.reflect.Method
 import java.lang.reflect.Modifier
 import java.lang.reflect.ParameterizedType
-import java.net.URL
-import java.nio.channels.ByteChannel
 import kotlin.math.max
 import kotlin.system.measureTimeMillis
 import kotlin.time.ExperimentalTime
@@ -34,6 +34,46 @@ infix fun Configs.Class.from(cl: ClassLoader) = if (hasName()) name.findClassOrN
 val Configs.Method.orNull get() = if (hasName()) name else null
 val Configs.Field.orNull get() = if (hasName()) name else null
 
+private fun GeneratedMessageLite<*, *>.print(indent: Int = 0): String {
+    val sb = StringBuilder()
+    for (f in javaClass.declaredFields) {
+        if (f.name.startsWith("bitField")) continue
+        if (f.isStatic) continue
+        f.isAccessible = true
+        val v = f.get(this)
+        val name = StringBuffer().run {
+            for (i in 0 until indent) append('\t')
+            append(f.name.substringBeforeLast("_"), ": ")
+            toString()
+        }
+        when (v) {
+            is GeneratedMessageLite<*, *> -> {
+                sb.appendLine(name)
+                sb.append(v.print(indent + 1))
+            }
+            is List<*> -> {
+                for (vv in v) {
+                    sb.append(name)
+                    when (vv) {
+                        is GeneratedMessageLite<*, *> -> {
+                            sb.appendLine()
+                            sb.append(vv.print(indent + 1))
+                        }
+                        else -> {
+                            sb.appendLine(vv?.toString() ?: "null")
+                        }
+                    }
+                }
+            }
+            else -> {
+                sb.append(name)
+                sb.appendLine(v?.toString() ?: "null")
+            }
+        }
+    }
+    return sb.toString()
+}
+
 class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContext: Context) {
     init {
         instance = this
@@ -43,7 +83,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     private val mHookInfo: Configs.HookInfo = run {
         val (result, time) = measureTimedValue { readHookInfo(mContext) }
         Log.d("load hookinfo $time")
-        Log.d(result.copy { clearMapIds() })
+        Log.d(result.copy { clearMapIds() }.print())
         result
     }
     val bangumiApiResponseClass by Weak { mHookInfo.bangumiApiResponse from mClassLoader }
@@ -121,17 +161,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val kanbanCallbackClass by Weak { mHookInfo.kanBan.class_ from mClassLoader }
     val toastHelperClass by Weak { mHookInfo.toastHelper.class_ from mClassLoader }
     val videoDetailCallbackClass by Weak { mHookInfo.videoDetailCallback from mClassLoader }
-
-    private val accessKeyInstance by lazy {
-        ("com.bilibili.cheese.ui.detail.pay.v3.CheesePayHelperV3\$accessKey\$2".findClassOrNull(
-            mClassLoader
-        ) ?: "com.bilibili.cheese.ui.detail.pay.v2.CheesePayHelperV2\$accessKey\$2".findClassOrNull(
-            mClassLoader
-        )
-        ?: "com.bilibili.bangumi.ui.page.detail.pay.BangumiPayHelperV2\$accessKey\$2".findClassOrNull(
-            mClassLoader
-        ))?.getStaticObjectField("INSTANCE")
-    }
+    val biliAccountsClass by Weak { mHookInfo.biliAccounts.class_ from mClassLoader }
 
     val ids: Map<String, Int> by lazy {
         mHookInfo.mapIds.idsMap
@@ -143,8 +173,16 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         return key
     }
 
-    val accessKey
-        get() = accessKeyInstance?.callMethodAs<String>("invoke")
+    val biliAccounts by lazy {
+        biliAccountsClass?.callStaticMethodOrNull(
+            mHookInfo.biliAccounts.get.orNull,
+            AndroidAppHelper.currentApplication()
+        )
+    }
+
+    val accessKey by lazy {
+        biliAccounts?.callMethodOrNullAs<String>(mHookInfo.biliAccounts.getAccessKey.orNull)
+    }
 
     fun fastJsonParse() = mHookInfo.fastJson.parse.orNull
 
@@ -247,7 +285,11 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                         runCatchingOrNull { Configs.HookInfo.parseFrom(it) }
                             ?: Configs.HookInfo.newBuilder().build()
                     }
-                    if (info.lastUpdateTime >= lastUpdateTime && info.lastUpdateTime >= lastModuleUpdateTime)
+                    if (info.lastUpdateTime >= lastUpdateTime && info.lastUpdateTime >= lastModuleUpdateTime
+                        && getVersionCode(context.packageName) >= info.clientVersionCode
+                        && BuildConfig.VERSION_CODE >= info.moduleVersionCode
+                        && BuildConfig.VERSION_NAME == info.moduleVersionName
+                    )
                         return info
                 }
             }
@@ -306,7 +348,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 return@hookInfo
             }
 
-            val dexHelper = DexHelper(classloader.findDexClassLoader(::findRealClassloader))
+            val dexHelper =
+                DexHelper(classloader.findDexClassLoader(::findRealClassloader) ?: return@hookInfo)
             lastUpdateTime = max(
                 context.packageManager.getPackageInfo(
                     AndroidAppHelper.currentPackageName(),
@@ -319,6 +362,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     )
                 }?.lastUpdateTime ?: 0
             )
+            clientVersionCode = getVersionCode(context.packageName)
+            moduleVersionCode = BuildConfig.VERSION_CODE
+            moduleVersionName = BuildConfig.VERSION_NAME
             mapIds = mapIds {
                 val reg = Regex("^tv\\.danmaku\\.bili\\.[^.]*$")
                 val mask = Modifier.STATIC or Modifier.PUBLIC or Modifier.FINAL
@@ -338,42 +384,146 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 name = "com.bilibili.bangumi.data.common.api.BangumiApiResponse"
             }
             retrofitResponse = class_ {
-                name = this@hookInfo.bangumiApiResponse.from(classloader)?.methods?.filter {
-                    "extractResult" == it.name
-                }?.map {
-                    it.parameterTypes[0]
-                }?.firstOrNull()?.name ?: "retrofit2.HttpException".findClassOrNull(classloader)
-                    ?.findFieldOrNull("response")?.type?.name ?: return@class_
+                name = dexHelper.findMethodUsingString(
+                    "rawResponse must be successful response",
+                    false,
+                    -1,
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).asSequence().firstNotNullOfOrNull {
+                    dexHelper.decodeMethodIndex(it)
+                }?.declaringClass?.name ?: return@class_
             }
             okHttp = okHttp {
-                val hostRequestInterceptorClass =
-                    "com.bililive.bililive.infra.hybrid.interceptor.HostRequestInterceptor".findClassOrNull(
-                        classloader
-                    ) ?: "com.bililive.bililive.liveweb.interceptor.a".findClassOrNull(classloader)
-                val okHttpRequestClass = hostRequestInterceptorClass?.declaredMethods?.firstOrNull {
-                    it.parameterTypes.size == 1 && it.parameterTypes[0] == it.returnType
-                }?.returnType
-                this@hookInfo.retrofitResponse.from(classloader)?.declaredConstructors?.forEach { c ->
-                    c.parameterTypes[0].declaredFields.forEach { f1 ->
-                        if (f1.type == okHttpRequestClass) {
-                            okHttpRequestClass?.declaredFields?.forEach { f2 ->
-                                f2.type.declaredMethods.forEach { m ->
-                                    if (m.parameterTypes.isEmpty() && m.returnType == URL::class.java) {
-                                        request = field { name = f1.name }
-                                        url = field { name = f2.name }
-                                    }
-                                }
-                            }
-                        }
-                    }
+                val responseClass = dexHelper.findMethodUsingString(
+                    "Response{protocol=",
+                    false,
+                    -1,
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).asSequence().firstNotNullOfOrNull {
+                    dexHelper.decodeMethodIndex(it)
+                }?.declaringClass ?: return@okHttp
+                val requestClass = dexHelper.findMethodUsingString(
+                    "Request{method=",
+                    false,
+                    -1,
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).asSequence().firstNotNullOfOrNull {
+                    dexHelper.decodeMethodIndex(it)
+                }?.declaringClass ?: return@okHttp
+                val urlClass = dexHelper.findMethodUsingString(
+                    ":@",
+                    false,
+                    -1,
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).asSequence().firstNotNullOfOrNull {
+                    dexHelper.decodeMethodIndex(it)
+                }?.declaringClass ?: return@okHttp
+                request = field {
+                    name = responseClass.findFirstFieldByExactTypeOrNull(requestClass)?.name
+                        ?: return@field
+                }
+                url = field {
+                    name =
+                        requestClass.findFirstFieldByExactTypeOrNull(urlClass)?.name ?: return@field
                 }
             }
             fastJson = fastJson {
-                val fastJsonClass = "com.alibaba.fastjson.JSON" from classloader
-                    ?: "com.alibaba.fastjson.a" from classloader
-                val notObfuscated = "JSON" == fastJsonClass?.simpleName
-                class_ = class_ { name = fastJsonClass?.name ?: return@class_ }
+                val fastJsonClass = dexHelper.findMethodUsingString(
+                    "toJSON error",
+                    false,
+                    -1,
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).asSequence().firstNotNullOfOrNull {
+                    dexHelper.decodeMethodIndex(it)
+                }?.declaringClass ?: return@fastJson
+                val notObfuscated = "JSON" == fastJsonClass.simpleName
+                class_ = class_ { name = fastJsonClass.name }
                 parse = method { name = if (notObfuscated) "parseObject" else "a" }
+            }
+            biliAccounts = biliAccounts {
+                val biliAccountsClass = dexHelper.findMethodUsingString(
+                    "authorization_code",
+                    false,
+                    -1,
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).asSequence().firstNotNullOfOrNull {
+                    dexHelper.decodeMethodIndex(it)
+                }?.declaringClass ?: return@biliAccounts
+                class_ = class_ { name = biliAccountsClass.name }
+                val biliAccountIndex = dexHelper.encodeClassIndex(biliAccountsClass)
+                val biliAuthFragmentMethodIndex = dexHelper.findMethodUsingString(
+                    "initFacial enter",
+                    true,
+                    -1,
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).firstOrNull() ?: return@biliAccounts
+                val calledMethods = dexHelper.findMethodInvoking(
+                    biliAuthFragmentMethodIndex,
+                    -1,
+                    -1,
+                    null,
+                    biliAccountIndex,
+                    null,
+                    null,
+                    null,
+                    false
+                ).asSequence().mapNotNull {
+                    dexHelper.decodeMethodIndex(it) as? Method
+                }
+
+                get = method {
+                    name = calledMethods.firstOrNull {
+                        it.isStatic && it.parameterTypes.size == 1 && it.parameterTypes[0] == Context::class.java && it.returnType == biliAccountsClass
+                    }?.name ?: return@method
+                }
+
+                getAccessKey = method {
+                    name = calledMethods.firstOrNull {
+                        it.isNotStatic && it.parameterTypes.isEmpty() && it.returnType == String::class.java
+                    }?.name ?: return@method
+                }
             }
             themeHelper = themeHelper {
                 val themeHelperClass = classesList.filter {
@@ -466,24 +616,38 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     }?.name ?: return@class_
             }
             shareWrapper = shareWrapper {
-                class_ = class_ {
-                    val reg = Regex("^com\\.bilibili\\.lib\\.sharewrapper\\.[^.]*$")
-                    name = classesList.filter {
-                        it.startsWith("com.bilibili.lib.sharewrapper")
-                    }.filter {
-                        it.matches(reg)
-                    }.firstOrNull { c ->
-                        c.findClass(classloader).declaredMethods.any {
-                            it.parameterTypes.size == 2 && it.parameterTypes[0] == String::class.java && it.parameterTypes[1] == Bundle::class.java
-                        }
-                    } ?: return@class_
-                }
-                method = method {
-                    name =
-                        this@shareWrapper.class_.from(classloader)?.declaredMethods?.firstOrNull {
-                            it.parameterTypes.size == 2 && it.parameterTypes[0] == String::class.java && it.parameterTypes[1] == Bundle::class.java
-                        }?.name ?: return@method
-                }
+                val shareToIndex = dexHelper.findMethodUsingString(
+                    "share.helper.inner",
+                    false,
+                    -1,
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).firstOrNull() ?: return@shareWrapper
+                val shareHelperClass =
+                    dexHelper.decodeMethodIndex(shareToIndex)?.declaringClass ?: return@shareWrapper
+                class_ = class_ { name = shareHelperClass.name }
+                val shareHelperIndex = dexHelper.encodeClassIndex(shareHelperClass)
+                val stringIndex = dexHelper.encodeClassIndex(String::class.java)
+                val bundleIndex = dexHelper.encodeClassIndex(Bundle::class.java)
+                val shareMethod = dexHelper.findMethodInvoking(
+                    shareToIndex,
+                    -1,
+                    2,
+                    "VLL",
+                    shareHelperIndex,
+                    longArrayOf(stringIndex, bundleIndex),
+                    null,
+                    null,
+                    true
+                ).asSequence().firstNotNullOfOrNull {
+                    dexHelper.decodeMethodIndex(it)
+                } ?: return@shareWrapper
+                method = method { name = shareMethod.name }
             }
             themeName = themeName {
                 val themeNameClass = classesList.filter {
@@ -587,13 +751,41 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 }
                 val contextIndex = dexHelper.encodeClassIndex(Context::class.java)
                 val listIndex = dexHelper.encodeClassIndex(List::class.java)
-                val addSettingMethod = dexHelper.findMethodUsingString(
-                    "moveCursor=",
+                val homeUserCenterClass = dexHelper.findMethodUsingString(
+                    "main.my-information.noportrait.0.show",
                     false,
                     -1,
                     -1,
                     null,
                     -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).asSequence().firstNotNullOfOrNull {
+                    dexHelper.decodeMethodIndex(it)
+                }?.declaringClass ?: return@settings
+                val homeUserCenterIndex = dexHelper.encodeClassIndex(homeUserCenterClass)
+                val addSettingMethod = dexHelper.findMethodUsingString(
+                    "activity://main/preference",
+                    true,
+                    -1,
+                    -1,
+                    null,
+                    homeUserCenterIndex,
+                    null,
+                    longArrayOf(contextIndex, listIndex),
+                    null,
+                    true
+                ).asSequence().firstNotNullOfOrNull {
+                    dexHelper.decodeMethodIndex(it)
+                } ?: dexHelper.findMethodUsingString(
+                    "bilibili://main/preference",
+                    true,
+                    -1,
+                    -1,
+                    null,
+                    homeUserCenterIndex,
                     null,
                     longArrayOf(contextIndex, listIndex),
                     null,
@@ -601,7 +793,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 ).asSequence().firstNotNullOfOrNull {
                     dexHelper.decodeMethodIndex(it)
                 } ?: return@settings
-                homeUserCenter = class_ { name = addSettingMethod.declaringClass.name }
+                homeUserCenter = class_ { name = homeUserCenterClass.name }
                 addSetting = method { name = addSettingMethod.name }
             }
             drawer = drawer {
@@ -758,25 +950,49 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                         dexHelper.decodeMethodIndex(it)
                     }?.declaringClass?.name ?: return@class_
                 }
+                val musicNotificationHelperIndex =
+                    dexHelper.encodeClassIndex(musicNotificationHelperClass);
+                val musicManagerIndex = dexHelper.findMethodUsingString(
+                    "the build sdk >= 8.0",
+                    true,
+                    -1,
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).firstOrNull() ?: return@musicNotification
                 builder = notificationBuilder {
-                    val notificationBuilderClass = dexHelper.findMethodUsingString(
-                        "android.intent.extra.CHANNEL_ID",
-                        false,
+                    dexHelper.findMethodInvoking(
+                        musicManagerIndex,
                         -1,
-                        2,
-                        "LLL",
-                        -1,
+                        0,
+                        "L",
+                        musicNotificationHelperIndex,
                         null,
                         null,
                         null,
-                        true
-                    ).asSequence().firstNotNullOfOrNull {
+                        false
+                    ).asSequence().flatMap {
+                        dexHelper.findMethodInvoking(
+                            it,
+                            -1,
+                            1,
+                            "VL",
+                            musicNotificationHelperIndex,
+                            null,
+                            null,
+                            null,
+                            false
+                        ).asSequence()
+                    }.firstNotNullOfOrNull {
                         dexHelper.decodeMethodIndex(it)
-                    }?.declaringClass ?: return@notificationBuilder
-                    musicNotificationHelperClass.declaredMethods.lastOrNull {
-                        it.parameterTypes.size == 1 && it.parameterTypes[0] == notificationBuilderClass
                     }?.let {
-                        class_ = class_ { name = notificationBuilderClass.name }
+                        class_ = class_ {
+                            name = (it as? Method)?.parameterTypes?.get(0)?.name ?: return@class_
+                        }
                         method = method { name = it.name }
                     }
                 }
@@ -861,17 +1077,36 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 }
             }
             gsonHelper = gsonHelper {
-                val gsonClass = "com.google.gson.Gson".findClassOrNull(classloader)
-                    ?: return@gsonHelper
-                classesList.filter {
-                    it.startsWith("com.bilibili.okretro.converter") || it.startsWith("com.bilibili.api.utils")
-                }.forEach { c ->
-                    c.findClass(classloader).declaredFields.forEach { f ->
-                        if (Modifier.isStatic(f.modifiers) && f.type == gsonClass) {
-                            gson = field { name = f.name }
-                            gsonConverter = class_ { name = c }
-                        }
-                    }
+                val gsonClass = dexHelper.findMethodUsingString(
+                    "AssertionError (GSON",
+                    true,
+                    -1,
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).asSequence().firstNotNullOfOrNull {
+                    dexHelper.decodeMethodIndex(it)
+                }?.declaringClass ?: return@gsonHelper
+                val gsonConverterClass =
+                    dexHelper.findField(dexHelper.encodeClassIndex(gsonClass), null, false)
+                        .asSequence().firstNotNullOfOrNull {
+                            dexHelper.decodeFieldIndex(it)?.takeIf { f ->
+                                f.isStatic && f.isFinal && f.isPublic
+                            }?.declaringClass?.takeIf { c ->
+                                c.declaredMethods.count { m ->
+                                    m.returnType == gsonClass && m.isNotStatic
+                                } > 0
+                            }
+                        } ?: return@gsonHelper
+                gsonConverter = class_ { name = gsonConverterClass.name }
+                gson = field {
+                    name = gsonConverterClass.declaredMethods.firstOrNull { m ->
+                        m.returnType == gsonClass && m.isNotStatic
+                    }?.name ?: return@field
                 }
                 toJson = method {
                     name = gsonClass.declaredMethods.firstOrNull { m ->
@@ -898,6 +1133,36 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     true
                 ).asSequence().firstNotNullOfOrNull {
                     dexHelper.decodeMethodIndex(it)
+                } ?: run {
+                    val doSeekToIndex = dexHelper.findMethodUsingString(
+                        "[player]seek to",
+                        true,
+                        -1,
+                        2,
+                        "VIZ",
+                        -1,
+                        null,
+                        null,
+                        null,
+                        true
+                    ).firstOrNull() ?: return@playerCoreService
+                    val doSeekToMethod =
+                        dexHelper.decodeMethodIndex(doSeekToIndex) ?: return@playerCoreService
+                    val playerCoreServiceIndex =
+                        dexHelper.encodeClassIndex(doSeekToMethod.declaringClass)
+                    dexHelper.findMethodInvoked(
+                        doSeekToIndex,
+                        -1,
+                        1,
+                        "VI",
+                        playerCoreServiceIndex,
+                        null,
+                        null,
+                        null,
+                        true
+                    ).asSequence().firstNotNullOfOrNull {
+                        dexHelper.decodeMethodIndex(it)
+                    }
                 } ?: return@playerCoreService
                 val playerCoreServiceClass = seekToMethod.declaringClass
                 seekTo = method { name = seekToMethod.name }
@@ -957,7 +1222,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             }
             pegasusFeed = pegasusFeed {
                 val fastJSONObject =
-                    dexHelper.encodeClassIndex("com.alibaba.fastjson.JSONObject" from classloader)
+                    dexHelper.encodeClassIndex(
+                        "com.alibaba.fastjson.JSONObject" from classloader ?: return@pegasusFeed
+                    )
                 val pegasusFeedClass = dexHelper.findMethodUsingString(
                     "card_type is empty",
                     false,
@@ -1018,7 +1285,13 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     false
                 ).firstOrNull {
                     dexHelper.decodeMethodIndex(it)
-                        .run { isStatic && isPublic && (this as? Method)?.parameterTypes?.get(0) == View::class.java }
+                        ?.run {
+                            this !is Constructor<*> && isStatic && isPublic && (this as? Method)?.parameterTypes.let { t ->
+                                t?.get(
+                                    0
+                                ) == View::class.java && t[1] != CharSequence::class.java
+                            }
+                        } == true
                 }?.let {
                     dexHelper.findMethodInvoking(it, -1, 2, "VLL", -1, null, null, null, false)
                         .map { m ->
@@ -1029,39 +1302,67 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             okio = okIO {
                 val responseClass =
                     this@hookInfo.okhttpResponse.from(classloader) ?: return@okIO
-                val wrapperClass = classesList.filter {
-                    it.startsWith(responseClass.name)
-                }.map { c ->
-                    c.findClass(classloader)
-                }.firstOrNull { c ->
-                    c.superclass == responseClass
-                } ?: return@okIO
+                val responseClassIndex = dexHelper.encodeClassIndex(responseClass)
+                val createMethodIndex = dexHelper.findMethodUsingString(
+                    "source == null",
+                    false,
+                    -1,
+                    -1,
+                    null,
+                    responseClassIndex,
+                    null,
+                    null,
+                    null,
+                    true
+                ).firstOrNull() ?: return@okIO
+                val wrapperClass = dexHelper.findMethodInvoking(
+                    createMethodIndex,
+                    -1,
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    false
+                ).asSequence().firstNotNullOfOrNull {
+                    dexHelper.decodeMethodIndex(it).takeIf { m ->
+                        m is Constructor<*>
+                    }
+                }?.declaringClass ?: return@okIO
+                class_ = class_ { name = wrapperClass.name }
                 val okioField = wrapperClass.declaredFields.firstOrNull { f ->
-                    f.type.name.startsWith("okio")
+                    f.type.isAbstract
                 } ?: return@okIO
+                field = field { name = okioField.name }
                 val okioLenField = wrapperClass.declaredFields.firstOrNull { f ->
                     f.type == Long::class.javaPrimitiveType
                 } ?: return@okIO
-                class_ = class_ { name = wrapperClass.name }
-                field = field { name = okioField.name }
                 length = field { name = okioLenField.name }
             }
             okioBuffer = okIOBuffer {
-                val okioBufferClass = classesList.filter {
-                    it.startsWith("okio")
-                }.map { c ->
-                    c.findClass(classloader)
-                }.firstOrNull { c ->
-                    c.interfaces.contains(ByteChannel::class.java)
-                } ?: return@okIOBuffer
+                val okioBufferClass = dexHelper.findMethodUsingString(
+                    "already attached to a buffer",
+                    false,
+                    -1,
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).asSequence().firstNotNullOfOrNull {
+                    dexHelper.decodeMethodIndex(it)
+                }?.declaringClass ?: return@okIOBuffer
+                class_ = class_ { name = okioBufferClass.name }
                 val okioInputStreamMethod = okioBufferClass.declaredMethods.firstOrNull {
                     it.parameterTypes.isEmpty() && it.returnType == InputStream::class.java
                 } ?: return@okIOBuffer
+                inputStream = method { name = okioInputStreamMethod.name }
                 val okioReadFromMethod = okioBufferClass.declaredMethods.firstOrNull {
                     it.parameterTypes.size == 1 && it.parameterTypes[0] == InputStream::class.java
                 } ?: return@okIOBuffer
-                class_ = class_ { name = okioBufferClass.name }
-                inputStream = method { name = okioInputStreamMethod.name }
                 readFrom = method { name = okioReadFromMethod.name }
             }
             videoUpperAd = videoUpperAdInfo {
@@ -1092,16 +1393,20 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 }
             }
             commentSpan = class_ {
-                name =
-                    "com.bilibili.app.comm.comment2.widget.CommentExpandableTextView".findClassOrNull(
-                        classloader
-                    )?.name ?: classesList.filter {
-                        it.startsWith("com.bilibili.app.comm.comment2.widget")
-                    }.firstOrNull { c ->
-                        c.findClass(classloader).declaredFields.count {
-                            it.type == Float::class.javaPrimitiveType
-                        } > 1
-                    } ?: return@class_
+                name = dexHelper.findMethodUsingString(
+                    "comment.catch_on_draw_exception",
+                    false,
+                    -1,
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).asSequence().firstNotNullOfOrNull {
+                    dexHelper.decodeMethodIndex(it)
+                }?.declaringClass?.name ?: return@class_
             }
             dynDescHolderListener = class_ {
                 name = classesList.filter {
@@ -1115,18 +1420,61 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 } ?: return@class_
             }
             descCopy = descCopy {
-                classesList.filter {
-                    it.startsWith("tv.danmaku.bili.ui.video.profile.info.DescViewHolder") ||
-                            it.startsWith("tv.danmaku.bili.ui.video.section.info.DescViewHolder")
-                }.map { c ->
-                    c.findClass(classloader)
-                }.forEach { c ->
-                    c.declaredMethods.firstOrNull { m ->
-                        m.parameterTypes.size == 2 && m.parameterTypes[0] == View::class.java && m.parameterTypes[1] == ClickableSpan::class.java
-                    }?.let {
-                        classes + c.name
-                        methods + it.name
-                    }
+                val descViewHolderClass = dexHelper.findMethodUsingString(
+                    "AV%d",
+                    false,
+                    -1,
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).asSequence().firstNotNullOfOrNull {
+                    dexHelper.decodeMethodIndex(it)
+                }?.declaringClass ?: return@descCopy
+                val descViewHolderIndex = dexHelper.encodeClassIndex(descViewHolderClass)
+                val copyMethodIndex = dexHelper.findMethodUsingString(
+                    "clipboard",
+                    false,
+                    -1,
+                    -1,
+                    null,
+                    descViewHolderIndex,
+                    null,
+                    null,
+                    null,
+                    true
+                ).firstOrNull() ?: return@descCopy
+                val toCopyMethodIndex = dexHelper.findMethodInvoked(
+                    copyMethodIndex,
+                    -1,
+                    3,
+                    "VLZL",
+                    descViewHolderIndex,
+                    null,
+                    null,
+                    null,
+                    true
+                ).firstOrNull() ?: return@descCopy
+                val viewIndex = dexHelper.encodeClassIndex(View::class.java)
+                val clickableSpanIndex = dexHelper.encodeClassIndex(ClickableSpan::class.java)
+                dexHelper.findMethodInvoked(
+                    toCopyMethodIndex,
+                    -1,
+                    2,
+                    "VLL",
+                    -1,
+                    longArrayOf(viewIndex, clickableSpanIndex),
+                    null,
+                    null,
+                    false
+                ).asSequence().mapNotNull {
+                    dexHelper.decodeMethodIndex(it)
+                }.forEach {
+                    classes += class_ { name = it.declaringClass.name }
+                    methods += method { name = it.name }
                 }
             }
             bangumiSeason = class_ {
@@ -1144,10 +1492,17 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 statusClass.runCatchingOrNull {
                     getDeclaredMethod("isUseKanBan")
                 }?.let {
-                    dexHelper.encodeMethodIndex(it)
-                }?.let {
-                    dexHelper.findMethodInvoked(it, -1, 1, "VL", -1, null, null, null, true)
-                        ?.firstOrNull()
+                    dexHelper.findMethodInvoked(
+                        dexHelper.encodeMethodIndex(it),
+                        -1,
+                        1,
+                        "VL",
+                        -1,
+                        null,
+                        null,
+                        null,
+                        true
+                    ).firstOrNull()
                 }?.let {
                     dexHelper.decodeMethodIndex(it)
                 }?.let {
@@ -1156,17 +1511,36 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 }
             }
             toastHelper = toastHelper {
-                val toastHelperClass =
-                    "com.bilibili.droid.ToastHelper" from classloader ?: return@toastHelper
+                val showToastCallerIndex = dexHelper.findMethodUsingString(
+                    "main.lessonmodel.enterdetail.change-pswd-success.click",
+                    false,
+                    -1,
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).firstOrNull() ?: return@toastHelper
+                val contextIndex = dexHelper.encodeClassIndex(Context::class.java)
+                val stringIndex = dexHelper.encodeClassIndex(String::class.java)
+                val showToastMethod = dexHelper.findMethodInvoking(
+                    showToastCallerIndex,
+                    -1,
+                    3,
+                    "VLLI",
+                    -1,
+                    longArrayOf(contextIndex, stringIndex, -1),
+                    null,
+                    null,
+                    true
+                ).asSequence().firstNotNullOfOrNull {
+                    dexHelper.decodeMethodIndex(it)
+                } ?: return@toastHelper
+                val toastHelperClass = showToastMethod.declaringClass
                 class_ = class_ { name = toastHelperClass.name }
-                show = method {
-                    name = toastHelperClass.declaredMethods.firstOrNull {
-                        it.isStatic && it.parameterTypes.size == 3 &&
-                                it.parameterTypes[0] == Context::class.java &&
-                                it.parameterTypes[1] == String::class.java &&
-                                it.parameterTypes[2] == Int::class.javaPrimitiveType
-                    }?.name ?: return@method
-                }
+                show = method { name = showToastMethod.name }
                 cancel = method {
                     name = toastHelperClass.declaredMethods.firstOrNull {
                         it.isStatic && it.parameterTypes.isEmpty()
