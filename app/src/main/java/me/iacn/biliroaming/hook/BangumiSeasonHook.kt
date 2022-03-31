@@ -608,8 +608,11 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     private fun fixViewProto(req: API.ViewReq): API.ViewReply? {
-        var av = req.aid.toString()
-        if (av == "0") {av = bv2av(req.bvid.toString()).toString()}
+        val av = when {
+            req.hasAid() -> req.aid.toString()
+            req.hasBvid() -> req.bvid.toString()
+            else -> return null
+        }
         val query = Uri.Builder().run {
             appendQueryParameter("id", av)
             appendQueryParameter("bvid", req.bvid.toString())
@@ -749,10 +752,10 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private fun fixView(data: Any?, urlString: String): Any? {
         var queryString = urlString.substring(urlString.indexOf("?") + 1)
         var av = queryString.split("aid=")[1].split('&')[0]
-        if (av == "0"){
+        if (av == "0") {
             val bv = queryString.split("bvid=")[1].split('&')[0]
             av = bv2av(bv).toString()
-            queryString = queryString.replace("aid=0", "id="+av)
+            queryString = queryString.replace("aid=0", "id=" + av)
         }
         queryString = queryString.replace("aid=", "id=")
         val content = BiliRoamingApi.getView(queryString) ?: return data
