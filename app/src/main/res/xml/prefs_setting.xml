@@ -90,6 +90,12 @@
             android:title="@string/comment_copy_enhance_title" />
 
         <SwitchPreference
+            android:key="check_reply"
+            android:summary="@string/check_reply_summary"
+            android:title="@string/check_reply_title"
+            android:defaultValue="true"/>
+
+        <SwitchPreference
             android:key="mini_program"
             android:summary="@string/mini_program_summary"
             android:title="@string/mini_program_title" />

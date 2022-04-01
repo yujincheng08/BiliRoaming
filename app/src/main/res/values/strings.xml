@@ -176,4 +176,6 @@
     <string name="custom_link_summary">仅支持 bilibili:// 开头的格式</string>
     <string name="add_custom_button_title">在【我的】页面添加自定义按钮</string>
     <string name="add_custom_button_summary">指定修改其中一个项目</string>
+    <string name="check_reply_title">评论区阿瓦隆检测</string>
+    <string name="check_reply_summary">检测评论后是否被“阿瓦隆”系统屏蔽，默认开启\n“阿瓦隆”：B站AI筛选过滤评论系统，屏蔽后该评论将仅对个人显示</string>
 </resources>

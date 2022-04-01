@@ -37,6 +37,7 @@ object BiliRoamingApi {
     private const val BILI_USER_STATUS_URL = "api.bilibili.com/pgc/view/web/season/user/status"
     private const val BILI_MEDIA_URL = "bangumi.bilibili.com/view/web_api/media"
     private const val BILI_SECTION_URL = "api.bilibili.com/pgc/web/season/section"
+    private const val BILI_CHECK_REPLY_URL = "api.bilibili.com/x/v2/reply/info"
     private const val BILI_MODULE_TEMPLATE =
         "{\"data\": {},\"id\": 0,\"module_style\": {\"hidden\": 0,\"line\": 1},\"more\": \"查看更多\",\"style\": \"positive\",\"title\": \"选集\"}"
     private const val BILI_RIGHT_TEMPLATE =
@@ -689,6 +690,14 @@ object BiliRoamingApi {
         builder.appendQueryParameter("module", "bangumi")
         builder.appendQueryParameter("otype", "json")
         builder.appendQueryParameter("platform", "android")
+        return getContent(builder.toString())
+    }
+
+    @JvmStatic
+    fun checkUpReply(queryString: String?): String? {
+        val builder = Uri.Builder()
+        builder.scheme("https").encodedAuthority(BILI_CHECK_REPLY_URL)
+        builder.appendQueryParameter("rpid", queryString)
         return getContent(builder.toString())
     }
 
