@@ -554,8 +554,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             return true
         }
 
-        private fun onAddCustomButtonClick(isChecked: Boolean): Boolean {
-            if (!isChecked) return true
+        private fun onAddCustomButtonClick(): Boolean {
             AlertDialog.Builder(activity).run {
                 val layout = moduleRes.getLayout(R.layout.custom_button)
                 val inflater = LayoutInflater.from(context)
