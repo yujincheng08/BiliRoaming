@@ -2,6 +2,7 @@
 
 package me.iacn.biliroaming
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Activity.RESULT_CANCELED
 import android.app.AlertDialog
@@ -469,14 +470,18 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             }
             AlertDialog.Builder(activity)
                 .setTitle(moduleRes.getString(R.string.share_log_title))
-                .setItems(arrayOf("log.txt", "old_log.txt (崩溃相关发这个)")){ _, witch ->
+                .setItems(arrayOf("log.txt", "old_log.txt (崩溃相关发这个)")) { _, witch ->
                     val toShareLog = when (witch) {
                         0 -> logFile
                         else -> oldLogFile
                     }
                     if (toShareLog.exists()) {
-                        toShareLog.copyTo(File(activity.cacheDir, "boxing/log.txt"), overwrite = true)
-                        val uri = Uri.parse("content://${activity.packageName}.fileprovider/internal/log.txt")
+                        toShareLog.copyTo(
+                            File(activity.cacheDir, "boxing/log.txt"),
+                            overwrite = true
+                        )
+                        val uri =
+                            Uri.parse("content://${activity.packageName}.fileprovider/internal/log.txt")
                         activity.startActivity(Intent.createChooser(Intent().apply {
                             action = Intent.ACTION_SEND
                             putExtra(Intent.EXTRA_STREAM, uri)
@@ -630,6 +635,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         }
         setPositiveButton("确定并重启客户端") { _, _ ->
             unhook?.unhook()
+            prefsFragment.preferenceManager.forceSavePreference()
             restartApplication(activity)
         }
     }
@@ -643,6 +649,19 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             activity.finishAffinity()
             activity.startActivity(intent)
             exitProcess(0)
+        }
+
+        @SuppressLint("CommitPrefEdits")
+        @JvmStatic
+        fun PreferenceManager.forceSavePreference() {
+            sharedPreferences.let {
+                val cm = (getObjectFieldOrNull("mEditor")
+                    ?: it.edit()).callMethodOrNull("commitToMemory")
+                val lock = it.getObjectFieldOrNull("mWritingToDiskLock") ?: return@let
+                synchronized(lock) {
+                    it.callMethodOrNull("writeToFile", cm, true)
+                }
+            }
         }
 
         @JvmStatic
