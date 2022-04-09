@@ -34,46 +34,6 @@ infix fun Configs.Class.from(cl: ClassLoader) = if (hasName()) name.findClassOrN
 val Configs.Method.orNull get() = if (hasName()) name else null
 val Configs.Field.orNull get() = if (hasName()) name else null
 
-private fun GeneratedMessageLite<*, *>.print(indent: Int = 0): String {
-    val sb = StringBuilder()
-    for (f in javaClass.declaredFields) {
-        if (f.name.startsWith("bitField")) continue
-        if (f.isStatic) continue
-        f.isAccessible = true
-        val v = f.get(this)
-        val name = StringBuffer().run {
-            for (i in 0 until indent) append('\t')
-            append(f.name.substringBeforeLast("_"), ": ")
-            toString()
-        }
-        when (v) {
-            is GeneratedMessageLite<*, *> -> {
-                sb.appendLine(name)
-                sb.append(v.print(indent + 1))
-            }
-            is List<*> -> {
-                for (vv in v) {
-                    sb.append(name)
-                    when (vv) {
-                        is GeneratedMessageLite<*, *> -> {
-                            sb.appendLine()
-                            sb.append(vv.print(indent + 1))
-                        }
-                        else -> {
-                            sb.appendLine(vv?.toString() ?: "null")
-                        }
-                    }
-                }
-            }
-            else -> {
-                sb.append(name)
-                sb.appendLine(v?.toString() ?: "null")
-            }
-        }
-    }
-    return sb.toString()
-}
-
 class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContext: Context) {
     init {
         instance = this

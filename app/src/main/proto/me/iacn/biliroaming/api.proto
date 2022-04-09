@@ -7,498 +7,465 @@ option java_outer_classname = "API";
 option optimize_for = LITE_RUNTIME;
 
 enum CodeType {
-    NOCODE = 0;
-    CODE264 = 1;
-    CODE265 = 2;
+  NOCODE = 0;
+  CODE264 = 1;
+  CODE265 = 2;
 }
 
 message PlayViewReq {
-    optional int64 ep_id = 0x1;
-    optional int64 cid = 0x2;
-    optional int64 qn = 0x3;
-    optional int32 fnver = 0x4;
-    optional int32 fnval = 0x5;
-    optional int32 download = 0x6;
-    optional int32 force_host = 0x7;
-    optional int32 fourk = 0x8;
-    optional string spmid = 0x9;
-    optional string from_spmid = 0xa;
-    optional int32 teenagers_mode = 0xb;
-    optional CodeType prefer_codec_type = 0xc;
-    optional bool is_preview = 0xd;
+  optional int64 ep_id = 0x1;
+  optional int64 cid = 0x2;
+  optional int64 qn = 0x3;
+  optional int32 fnver = 0x4;
+  optional int32 fnval = 0x5;
+  optional int32 download = 0x6;
+  optional int32 force_host = 0x7;
+  optional int32 fourk = 0x8;
+  optional string spmid = 0x9;
+  optional string from_spmid = 0xa;
+  optional int32 teenagers_mode = 0xb;
+  optional CodeType prefer_codec_type = 0xc;
+  optional bool is_preview = 0xd;
 }
 
 message BusinessInfo {
-    optional bool is_preview = 1;
-    optional bool bp = 2;
-    optional string marlin_token = 3;
+  optional bool is_preview = 1;
+  optional bool bp = 2;
+  optional string marlin_token = 3;
 }
 
 message PlayAbilityConf {
-    optional bool background_play_disable = 0x1;
-    optional bool flip_disable = 0x2;
-    optional bool cast_disable = 0x3;
-    optional bool feedback_disable = 0x4;
-    optional bool subtitle_disable = 0x5;
-    optional bool playback_rate_disable = 0x6;
-    optional bool time_up_disable = 0x7;
-    optional bool playback_mode_disable = 0x8;
-    optional bool scale_mode_disable = 0x9;
-    optional bool like_disable = 0xa;
-    optional bool dislike_disable = 0xb;
-    optional bool coin_disable = 0xc;
-    optional bool elec_disable = 0xd;
-    optional bool share_disable = 0xe;
-    optional bool screen_shot_disable = 0xf;
-    optional bool lock_screen_disable = 0x10;
-    optional bool recommend_disable = 0x11;
-    optional bool playback_speed_disable = 0x12;
-    optional bool definition_disable = 0x13;
-    optional bool selections_disable = 0x14;
-    optional bool next_disable = 0x15;
-    optional bool edit_dm_disable = 0x16;
+  optional bool background_play_disable = 0x1;
+  optional bool flip_disable = 0x2;
+  optional bool cast_disable = 0x3;
+  optional bool feedback_disable = 0x4;
+  optional bool subtitle_disable = 0x5;
+  optional bool playback_rate_disable = 0x6;
+  optional bool time_up_disable = 0x7;
+  optional bool playback_mode_disable = 0x8;
+  optional bool scale_mode_disable = 0x9;
+  optional bool like_disable = 0xa;
+  optional bool dislike_disable = 0xb;
+  optional bool coin_disable = 0xc;
+  optional bool elec_disable = 0xd;
+  optional bool share_disable = 0xe;
+  optional bool screen_shot_disable = 0xf;
+  optional bool lock_screen_disable = 0x10;
+  optional bool recommend_disable = 0x11;
+  optional bool playback_speed_disable = 0x12;
+  optional bool definition_disable = 0x13;
+  optional bool selections_disable = 0x14;
+  optional bool next_disable = 0x15;
+  optional bool edit_dm_disable = 0x16;
 }
 
 message StreamLimit {
-    optional string title = 0x1;
-    optional string uri = 0x2;
-    optional string msg = 0x3;
+  optional string title = 0x1;
+  optional string uri = 0x2;
+  optional string msg = 0x3;
 }
 
 message StreamInfo {
-    optional int32 quality = 0x1;
-    optional string format = 0x2;
-    optional string description = 0x3;
-    optional int32 err_code = 0x4;
-    optional StreamLimit limit = 0x5;
-    optional bool need_vip = 0x6;
-    optional bool need_login = 0x7;
-    optional bool intact = 0x8;
-    optional bool no_rexcode = 0x9;
-    optional int64 attribute = 0xa;
-    optional string new_description = 0xb;
-    optional string display_desc = 0xc;
-    optional string superscript = 0xd;
+  optional int32 quality = 0x1;
+  optional string format = 0x2;
+  optional string description = 0x3;
+  optional int32 err_code = 0x4;
+  optional StreamLimit limit = 0x5;
+  optional bool need_vip = 0x6;
+  optional bool need_login = 0x7;
+  optional bool intact = 0x8;
+  optional bool no_rexcode = 0x9;
+  optional int64 attribute = 0xa;
+  optional string new_description = 0xb;
+  optional string display_desc = 0xc;
+  optional string superscript = 0xd;
 }
 
 message DashVideo {
-    optional string base_url = 0x1;
-    repeated string backup_url = 0x2;
-    optional int32 bandwidth = 0x3;
-    optional int32 codecid = 0x4;
-    optional string md5 = 0x5;
-    optional int64 size = 0x6;
-    optional int32 audio_id = 0x7;
-    optional bool no_rexcode = 0x8;
+  optional string base_url = 0x1;
+  repeated string backup_url = 0x2;
+  optional int32 bandwidth = 0x3;
+  optional int32 codecid = 0x4;
+  optional string md5 = 0x5;
+  optional int64 size = 0x6;
+  optional int32 audio_id = 0x7;
+  optional bool no_rexcode = 0x8;
 }
 
 message ResponseUrl {
-    repeated string backup_url = 0x5;
-    optional int64 length = 0x2;
-    optional string md5 = 0x6;
-    optional int32 order = 0x1;
-    optional int64 size = 0x3;
-    optional string url = 0x4;
+  repeated string backup_url = 0x5;
+  optional int64 length = 0x2;
+  optional string md5 = 0x6;
+  optional int32 order = 0x1;
+  optional int64 size = 0x3;
+  optional string url = 0x4;
 }
 
-message SegmentVideo {
-    repeated ResponseUrl segment = 0x1;
-}
+message SegmentVideo { repeated ResponseUrl segment = 0x1; }
 
 message Stream {
-    optional StreamInfo stream_info = 0x1;
-    oneof content {
-        DashVideo dash_video = 0x2;
-        SegmentVideo segment_video = 0x3;
-    }
+  optional StreamInfo stream_info = 0x1;
+  oneof content {
+    DashVideo dash_video = 0x2;
+    SegmentVideo segment_video = 0x3;
+  }
 }
 
 message DashItem {
-    optional int32 id = 0x1;
-    optional string base_url = 0x2;
-    repeated string backup_url = 0x3;
-    optional int32 bandwidth = 0x4;
-    optional int32 codecid = 0x5;
-    optional string md5 = 0x6;
-    optional int64 size = 0x7;
+  optional int32 id = 0x1;
+  optional string base_url = 0x2;
+  repeated string backup_url = 0x3;
+  optional int32 bandwidth = 0x4;
+  optional int32 codecid = 0x5;
+  optional string md5 = 0x6;
+  optional int64 size = 0x7;
 }
 
 message VideoInfo {
-    optional int32 quality = 0x1;
-    optional string format = 0x2;
-    optional int64 timelength = 0x3;
-    optional int32 video_codecid = 0x4;
-    repeated Stream stream_list = 0x5;
-    repeated DashItem dash_audio = 0x6;
+  optional int32 quality = 0x1;
+  optional string format = 0x2;
+  optional int64 timelength = 0x3;
+  optional int32 video_codecid = 0x4;
+  repeated Stream stream_list = 0x5;
+  repeated DashItem dash_audio = 0x6;
 }
 
-message Event {
+message Event {}
 
+message TextInfo {
+  optional string text = 0x1;
+  optional string text_color = 0x2;
+  optional string text_color_night = 0x3;
 }
 
-message Dialog{
+message DialogConfig {}
 
+message ImageInfo { optional string url = 0x1; }
+
+message ButtonInfo {}
+
+message Report {}
+
+message BottomDisplay {}
+
+message Dialog {
+  optional int64 code = 0x1;
+  optional string msg = 0x2;
+  optional string type = 0x3;
+  optional string style = 0x4;
+  optional DialogConfig config = 0x5;
+  optional TextInfo title = 0x6;
+  optional TextInfo subtitle = 0x7;
+  optional ImageInfo image = 0x8;
+  repeated ButtonInfo button = 0x9;
+  optional BusinessInfo button_desc = 0xa;
+  optional Report report = 0xb;
+  optional int32 count_down_sec = 0xc;
+  optional TextInfo right_bottom_desc = 0xd;
+  repeated BottomDisplay bottom_display = 0xe;
 }
 
-message Toast{
-
-}
+message Toast {}
 
 message CouponInfo {
-    optional int64 code = 0x1;
-    optional string msg = 0x2;
-    optional string type = 0x3;
+  optional int64 code = 0x1;
+  optional string msg = 0x2;
+  optional string type = 0x3;
 }
 
 message EndPage {
-    optional Dialog dialog = 0x1;
-    optional bool hide = 0x2;
+  optional Dialog dialog = 0x1;
+  optional bool hide = 0x2;
 }
 
-message PopWin {
+message PopWin {}
 
-}
+message PromptBar {}
 
-message PromptBar {
+message PayTip {}
 
-}
-
-message PayTip {
-
-}
-
-message HighDefinitionTrialInfo {
-
-}
+message HighDefinitionTrialInfo {}
 
 message ViewInfo {
-    optional Dialog dialog = 0x1;
-    optional Toast toast = 0x2;
-    optional CouponInfo coupon_info = 0x3;
-    repeated int64 demand_no_pay_epids = 0x4;
-    optional EndPage endpage = 0x5;
-    map<string, bool> exp_config = 0x6;
-    optional PopWin pop_win = 0x7;
-    optional PromptBar try_watch_prompt_bar = 0x8;
-    optional PayTip pay_tip = 0x9;
-    optional HighDefinitionTrialInfo high_definition_trial_info = 0xa;
-    map<string, Dialog> ext_dialog = 0xb;
+  optional Dialog dialog = 0x1;
+  optional Toast toast = 0x2;
+  optional CouponInfo coupon_info = 0x3;
+  repeated int64 demand_no_pay_epids = 0x4;
+  optional EndPage endpage = 0x5;
+  map<string, bool> exp_config = 0x6;
+  optional PopWin pop_win = 0x7;
+  optional PromptBar try_watch_prompt_bar = 0x8;
+  optional PayTip pay_tip = 0x9;
+  optional HighDefinitionTrialInfo high_definition_trial_info = 0xa;
+  map<string, Dialog> ext_dialog = 0xb;
 }
 
 message PlayViewReply {
-    optional VideoInfo video_info = 0x1;
-    optional PlayAbilityConf play_conf = 0x2;
-    optional BusinessInfo business = 0x3;
-    optional Event event = 0x4;
-    optional ViewInfo view_info = 0x5;
+  optional VideoInfo video_info = 0x1;
+  optional PlayAbilityConf play_conf = 0x2;
+  optional BusinessInfo business = 0x3;
+  optional Event event = 0x4;
+  optional ViewInfo view_info = 0x5;
 }
 
 message ViewReq {
-    optional int64 aid = 0x1;
-    optional string bvid = 0x2;
-    optional string from = 0x3;
-    optional string trackid = 0x4;
-    optional string ad_extra = 0x5;
-    optional int32 qn = 0x6;
-    optional int32 fnver = 0x7;
-    optional int32 fnval = 0x8;
-    optional int32 force_host = 0x9;
-    optional int32 fourk = 0xa;
-    optional string spmid = 0xb;
-    optional string from_spmid = 0xc;
-    optional int32 autoplay = 0xd;
+  optional int64 aid = 0x1;
+  optional string bvid = 0x2;
+  optional string from = 0x3;
+  optional string trackid = 0x4;
+  optional string ad_extra = 0x5;
+  optional int32 qn = 0x6;
+  optional int32 fnver = 0x7;
+  optional int32 fnval = 0x8;
+  optional int32 force_host = 0x9;
+  optional int32 fourk = 0xa;
+  optional string spmid = 0xb;
+  optional string from_spmid = 0xc;
+  optional int32 autoplay = 0xd;
 }
 
-message UserSeason {
-    optional string attention = 0x1;
-}
+message UserSeason { optional string attention = 0x1; }
 
 message SeasonPlayer {
-    optional int64 aid = 0x1;
-    optional string vid = 0x2;
-    optional int64 cid = 0x3;
-    optional string from = 0x4;
+  optional int64 aid = 0x1;
+  optional string vid = 0x2;
+  optional int64 cid = 0x3;
+  optional string from = 0x4;
 }
 
-message Rights {
-
-}
+message Rights {}
 
 message Stat {
-    optional int64 aid = 0x1;
-    optional int32 view = 0x2;
-    optional int32 danmaku = 0x3;
-    optional int32 reply = 0x4;
-    optional int32 fav = 0x5;
-    optional int32 coin = 0x6;
-    optional int32 share = 0x7;
-    optional int32 now_rank = 0x8;
-    optional int32 his_rank = 0x9;
-    optional int32 like = 0xa;
-    optional int32 dislike = 0xb;
+  optional int64 aid = 0x1;
+  optional int32 view = 0x2;
+  optional int32 danmaku = 0x3;
+  optional int32 reply = 0x4;
+  optional int32 fav = 0x5;
+  optional int32 coin = 0x6;
+  optional int32 share = 0x7;
+  optional int32 now_rank = 0x8;
+  optional int32 his_rank = 0x9;
+  optional int32 like = 0xa;
+  optional int32 dislike = 0xb;
 }
 
 message Author {
-    optional int64 mid = 0x1;
-    optional string name = 0x2;
-    optional string face = 0x3;
+  optional int64 mid = 0x1;
+  optional string name = 0x2;
+  optional string face = 0x3;
 }
 
 message Dimension {
-    optional int64 width = 0x1;
-    optional int64 height = 0x2;
-    optional int64 rotate = 0x3;
+  optional int64 width = 0x1;
+  optional int64 height = 0x2;
+  optional int64 rotate = 0x3;
 }
 
-message StaffInfo {
-
-}
+message StaffInfo {}
 
 message Arc {
-    optional int64 aid = 0x1;
-    optional int64 videos = 0x2;
-    optional int32 type_id = 0x3;
-    optional string type_name = 0x4;
-    optional int32 copyright = 0x5;
-    optional string pic = 0x6;
-    optional string title = 0x7;
-    optional int64 pubdate = 0x8;
-    optional int64 ctime = 0x9;
-    optional string desc = 0xa;
-    optional int32 state = 0xb;
-    optional int32 access = 0xc;
-    optional int64 attribute_v2 = 0xd;
-    optional string tag = 0xe;
-    repeated string tags = 0xf;
-    optional int64 duration = 0x10;
-    optional int64 mission_id = 0x11;
-    optional int64 order_id = 0x12;
-    optional string redirect_url = 0x13;
-    optional int64 forward = 0x14;
-    optional Rights rights = 0x15;
-    optional Author author = 0x16;
-    optional Stat stat = 0x17;
-    optional string report_result = 0x18;
-    optional string dynamic = 0x19;
-    optional int64 first_cid = 0x1a;
-    optional Dimension dimension = 0x1b;
-    repeated StaffInfo staff_info = 0x1c;
-    optional int64 season_id = 0x1d;
-    optional int32 attribute = 0x1e;
+  optional int64 aid = 0x1;
+  optional int64 videos = 0x2;
+  optional int32 type_id = 0x3;
+  optional string type_name = 0x4;
+  optional int32 copyright = 0x5;
+  optional string pic = 0x6;
+  optional string title = 0x7;
+  optional int64 pubdate = 0x8;
+  optional int64 ctime = 0x9;
+  optional string desc = 0xa;
+  optional int32 state = 0xb;
+  optional int32 access = 0xc;
+  optional int64 attribute_v2 = 0xd;
+  optional string tag = 0xe;
+  repeated string tags = 0xf;
+  optional int64 duration = 0x10;
+  optional int64 mission_id = 0x11;
+  optional int64 order_id = 0x12;
+  optional string redirect_url = 0x13;
+  optional int64 forward = 0x14;
+  optional Rights rights = 0x15;
+  optional Author author = 0x16;
+  optional Stat stat = 0x17;
+  optional string report_result = 0x18;
+  optional string dynamic = 0x19;
+  optional int64 first_cid = 0x1a;
+  optional Dimension dimension = 0x1b;
+  repeated StaffInfo staff_info = 0x1c;
+  optional int64 season_id = 0x1d;
+  optional int32 attribute = 0x1e;
 }
 
 message Season {
-    optional string allow_download = 0x1;
-    optional int64 season_id = 0x2;
-    optional int32 is_jump = 0x3;
-    optional string title = 0x4;
-    optional string cover = 0x5;
-    optional int32 is_finish = 0x6;
-    optional int32 newest_epid = 0x7;
-    optional string newest_ep_index = 0x8;
-    optional int64 total_count = 0x9;
-    optional int32 weekday = 0xa;
-    optional UserSeason user_season = 0xb;
-    optional SeasonPlayer player = 0xc;
-    optional string ovg_playurl = 0xd;
+  optional string allow_download = 0x1;
+  optional int64 season_id = 0x2;
+  optional int32 is_jump = 0x3;
+  optional string title = 0x4;
+  optional string cover = 0x5;
+  optional int32 is_finish = 0x6;
+  optional int32 newest_epid = 0x7;
+  optional string newest_ep_index = 0x8;
+  optional int64 total_count = 0x9;
+  optional int32 weekday = 0xa;
+  optional UserSeason user_season = 0xb;
+  optional SeasonPlayer player = 0xc;
+  optional string ovg_playurl = 0xd;
 }
 
-message Bgm {
+message Bgm {}
 
-}
+message CMConfig {}
 
-message CMConfig {
+message CM {}
 
-}
+message Config {}
 
-message CM {
+message CustomConfig {}
 
-}
+message Dislike {}
 
-message Config {
+message ElecRank {}
 
-}
+message History {}
+message Honor {}
 
-message CustomConfig {
+message Interaction {}
 
-}
+message Label {}
 
-message Dislike {
+message OwnerExt {}
 
-}
-
-message ElecRank {
-
-}
-
-message History {
-
-}
-message Honor {
-
-}
-
-message Interaction {
-
-}
-
-message Label {
-
-}
-
-message OwnerExt {
-
-}
-
-message Audio {
-}
-message DM {
-}
+message Audio {}
+message DM {}
 message Page {
-    optional int64 cid = 0x1;
-    optional int32 page = 0x2;
-    optional string from = 0x3;
-    optional string part = 0x4;
-    optional int64 duration = 0x5;
-    optional string vid = 0x6;
-    optional string desc = 0x7;
-    optional string web_link = 0x8;
-    optional Dimension dimension = 0x9;
+  optional int64 cid = 0x1;
+  optional int32 page = 0x2;
+  optional string from = 0x3;
+  optional string part = 0x4;
+  optional int64 duration = 0x5;
+  optional string vid = 0x6;
+  optional string desc = 0x7;
+  optional string web_link = 0x8;
+  optional Dimension dimension = 0x9;
 }
 
 message ViewPage {
-    optional Page page = 0x1;
-    optional Audio audio = 0x2;
-    optional DM dm = 0x3;
-    optional string download_title = 0x4;
-    optional string download_subtitle = 0x5;
+  optional Page page = 0x1;
+  optional Audio audio = 0x2;
+  optional DM dm = 0x3;
+  optional string download_title = 0x4;
+  optional string download_subtitle = 0x5;
 }
 
-message PlayerIcon {
-}
+message PlayerIcon {}
 
-message RelateTab {
-}
-message Relate {
-}
-message ReqUser {
-}
-message Staff {
-}
-message TIcon {
-    optional string icon = 0x1;
-}
+message RelateTab {}
+message Relate {}
+message ReqUser {}
+message Staff {}
+message TIcon { optional string icon = 0x1; }
 message Tag {
-    optional int64 id = 0x1;
-    optional string name = 0x2;
-    optional int64 likes = 0x3;
-    optional int64 hates = 0x4;
-    optional int32 liked = 0x5;
-    optional int32 hated = 0x6;
-    optional string uri = 0x7;
-    optional string tag_type = 0x8;
+  optional int64 id = 0x1;
+  optional string name = 0x2;
+  optional int64 likes = 0x3;
+  optional int64 hates = 0x4;
+  optional int32 liked = 0x5;
+  optional int32 hated = 0x6;
+  optional string uri = 0x7;
+  optional string tag_type = 0x8;
 }
-message UgcSeason {
-}
+message UgcSeason {}
 message ViewReply {
-    optional string activity_url = 0x11;
-    optional Arc arc = 0x1;
-    optional string argue_msg = 0x14;
-    repeated Bgm bgm = 0x12;
-    optional string bvid = 0xe;
-    optional CMConfig cm_config = 0x1f;
-    repeated CM cms = 0x1e;
-    optional Config config = 0x19;
-    optional CustomConfig custom_config = 0x1d;
-    optional Dislike dislike = 0xb;
-    optional int32 encode = 0x1c;
-    optional ElecRank elec_rank = 0x8;
-    optional History history = 0x9;
-    optional Honor honor = 0xf;
-    optional Interaction interaction = 0x1b;
-    optional Label label = 0x17;
-    optional OwnerExt owner_ext = 0x3;
-    repeated ViewPage pages = 0x2;
-    optional int32 play_param = 0x16;
-    optional PlayerIcon player_icon = 0xc;
-    repeated RelateTab relate_tab = 0x10;
-    repeated Relate relates = 0xa;
-    optional ReqUser req_user = 0x4;
+  optional string activity_url = 0x11;
+  optional Arc arc = 0x1;
+  optional string argue_msg = 0x14;
+  repeated Bgm bgm = 0x12;
+  optional string bvid = 0xe;
+  optional CMConfig cm_config = 0x1f;
+  repeated CM cms = 0x1e;
+  optional Config config = 0x19;
+  optional CustomConfig custom_config = 0x1d;
+  optional Dislike dislike = 0xb;
+  optional int32 encode = 0x1c;
+  optional ElecRank elec_rank = 0x8;
+  optional History history = 0x9;
+  optional Honor honor = 0xf;
+  optional Interaction interaction = 0x1b;
+  optional Label label = 0x17;
+  optional OwnerExt owner_ext = 0x3;
+  repeated ViewPage pages = 0x2;
+  optional int32 play_param = 0x16;
+  optional PlayerIcon player_icon = 0xc;
+  repeated RelateTab relate_tab = 0x10;
+  repeated Relate relates = 0xa;
+  optional ReqUser req_user = 0x4;
 
-    optional Season season = 0x7;
-    optional string share_subtitle = 0x1a;
-    optional string short_link = 0x15;
-    repeated Staff staff = 0x13;
-    map<string, TIcon> t_icon = 0x6;
-    repeated Tag tag = 0x5;
-    optional UgcSeason ugc_season = 0x18;
-    optional string vip_active = 0xd;
+  optional Season season = 0x7;
+  optional string share_subtitle = 0x1a;
+  optional string short_link = 0x15;
+  repeated Staff staff = 0x13;
+  map<string, TIcon> t_icon = 0x6;
+  repeated Tag tag = 0x5;
+  optional UgcSeason ugc_season = 0x18;
+  optional string vip_active = 0xd;
 }
 
 message Device {
-    optional int32 app_id = 0x1;
-    optional int32 build = 0x2;
-    optional string buvid = 0x3;
-    optional string mobi_app = 0x4;
-    optional string platform = 0x5;
-    optional string device = 0x6;
-    optional string channel = 0x7;
-    optional string brand = 0x8;
-    optional string model = 0x9;
-    optional string osver = 0xa;
+  optional int32 app_id = 0x1;
+  optional int32 build = 0x2;
+  optional string buvid = 0x3;
+  optional string mobi_app = 0x4;
+  optional string platform = 0x5;
+  optional string device = 0x6;
+  optional string channel = 0x7;
+  optional string brand = 0x8;
+  optional string model = 0x9;
+  optional string osver = 0xa;
 }
 
 message DmViewReq {
-    optional int32 pid = 0x1;
-    optional int64 oid = 0x2;
-    optional int32 type = 0x3;
-    optional string spmid = 0x4;
-    optional int32 is_hard_boot = 0x5;
+  optional int32 pid = 0x1;
+  optional int64 oid = 0x2;
+  optional int32 type = 0x3;
+  optional string spmid = 0x4;
+  optional int32 is_hard_boot = 0x5;
 }
 
-message DanmakuFlagConfig {
+message DanmakuFlagConfig {}
 
-}
+message VideoMask {}
 
-message VideoMask {
+message DanmuPlayerViewConfig {}
 
-}
-
-message DanmuPlayerViewConfig {
-
-}
-
-message UserInfo {
-
-}
+message UserInfo {}
 
 message SubtitleItem {
-    optional int64 id = 0x1;
-    optional string id_str = 0x2;
-    optional string lan = 0x3;
-    optional string lan_doc = 0x4;
-    optional string subtitle_url = 0x5;
-    optional UserInfo author = 0x6;
+  optional int64 id = 0x1;
+  optional string id_str = 0x2;
+  optional string lan = 0x3;
+  optional string lan_doc = 0x4;
+  optional string subtitle_url = 0x5;
+  optional UserInfo author = 0x6;
 }
 
 message VideoSubtitle {
-    optional string lan = 0x1;
-    optional string lan_doc = 0x2;
-    repeated SubtitleItem subtitles = 0x3;
+  optional string lan = 0x1;
+  optional string lan_doc = 0x2;
+  repeated SubtitleItem subtitles = 0x3;
 }
 
 message DmViewReply {
-    optional bool d = 0x1;
-    VideoMask mask = 0x2;
-    optional VideoSubtitle subtitle = 0x3;
-    repeated string special_dms = 0x4;
-    optional DanmakuFlagConfig ai_flag = 0x5;
-    optional DanmuPlayerViewConfig player_config = 0x6;
-    optional int32 send_box_style = 0x7;
-    optional bool allow = 0x8;
-    bool check_box = 0x9;
-    optional string check_box_show_msg = 0xa;
-    optional string text_placeholder = 0xb;
-    optional string input_place_holder = 0xc;
-    repeated string report_filter_content = 0xd;
+  optional bool d = 0x1;
+  VideoMask mask = 0x2;
+  optional VideoSubtitle subtitle = 0x3;
+  repeated string special_dms = 0x4;
+  optional DanmakuFlagConfig ai_flag = 0x5;
+  optional DanmuPlayerViewConfig player_config = 0x6;
+  optional int32 send_box_style = 0x7;
+  optional bool allow = 0x8;
+  bool check_box = 0x9;
+  optional string check_box_show_msg = 0xa;
+  optional string text_placeholder = 0xb;
+  optional string input_place_holder = 0xc;
+  repeated string report_filter_content = 0xd;
 }
