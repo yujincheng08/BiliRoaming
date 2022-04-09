@@ -141,7 +141,8 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         for (error in e.errors) {
                             messages += "${error.key}: ${error.value}\n"
                         }
-                        showPlayerError(response, "请求解析中服务器发生错误(点此查看更多)\n${messages.trim()}")
+                        param.result =
+                            showPlayerError(response, "请求解析中服务器发生错误(点此查看更多)\n${messages.trim()}")
                         Log.w("请求解析服务器发生错误: ${messages.trim()}")
                         Log.toast("请求解析服务器发生错误: ${messages.trim()}")
                     }
@@ -186,16 +187,14 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         content?.let {
                             Log.toast("已从代理服务器获取播放地址\n如加载缓慢或黑屏，可去漫游设置中测速并设置 UPOS")
                             param.result = reconstructResponse(response, it, isDownload)
-                        } ?: run {
-                            showPlayerError(response, "获取播放地址失败。请检查哔哩漫游设置里的解析服务器设置。")
-                            Log.toast("获取播放地址失败。请检查哔哩漫游设置里的解析服务器设置。")
-                        }
+                        } ?: throw CustomServerException(mapOf("未知错误" to "请检查哔哩漫游设置中解析服务器设置。"))
                     } catch (e: CustomServerException) {
                         var messages = ""
                         for (error in e.errors) {
                             messages += "${error.key}: ${error.value}\n"
                         }
-                        showPlayerError(response, "请求解析中服务器发生错误(点此查看更多)\n${messages.trim()}")
+                        param.result =
+                            showPlayerError(response, "请求解析中服务器发生错误(点此查看更多)\n${messages.trim()}")
                         Log.w("请求解析服务器发生错误: ${messages.trim()}")
                         Log.toast("请求解析服务器发生错误: ${messages.trim()}")
                     }
@@ -304,21 +303,34 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         return false
     }
 
-    private fun showPlayerError(response: Any, message: String) {
-        if (response.callMethodAs("hasViewInfo")) {
-            response.callMethod("getViewInfo")?.callMethod("getDialog")?.run {
-                callMethod("setMsg", "获取播放地址失败")
-                callMethod("getTitle")?.callMethod(
-                    "setText",
-                    message
-                )
-                callMethod("getImage")?.callMethod(
-                    "setUrl",
-                    "https://i0.hdslb.com/bfs/album/08d5ce2fef8da8adf91024db4a69919b8d02fd5c.png"
-                )
+    private fun showPlayerError(response: Any, message: String) = runCatchingOrNull {
+        val serializedRequest = response.callMethodAs<ByteArray>("toByteArray")
+        val newRes = PlayViewReply.parseFrom(serializedRequest).copy {
+            viewInfo = viewInfo.copy {
+                if (endpage.hasDialog()) {
+                    dialog = endpage.dialog
+                }
+                dialog = dialog.copy {
+                    msg = "获取播放地址失败"
+                    title = title.copy {
+                        text = message
+                        if (!hasTextColor()) textColor = "#ffffff"
+                    }
+                    image = image.copy {
+                        url =
+                            "https://i0.hdslb.com/bfs/album/08d5ce2fef8da8adf91024db4a69919b8d02fd5c.png"
+                    }
+                    if (!hasCode()) code = 6002003
+                    if (!hasStyle()) style = "horizontal_image"
+                    if (!hasType()) type = "area_limit"
+                }
+                clearEndpage()
             }
+            clearVideoInfo()
         }
-    }
+        val serializedResponse = newRes.toByteArray()
+        response.javaClass.callStaticMethod("parseFrom", serializedResponse)!!
+    } ?: response
 
     private fun fixDownload(content: String): String {
         val json = JSONObject(content)
@@ -375,14 +387,14 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
     }
 
-    private fun fixDownloadProto(response: Any): Any {
+    private fun fixDownloadProto(response: Any) = runCatchingOrNull {
         val serializedRequest = response.callMethodAs<ByteArray>("toByteArray")
         val newRes = PlayViewReply.parseFrom(serializedRequest).copy {
             fixDownloadProto()
         }
         val serializedResponse = newRes.toByteArray()
-        return response.javaClass.callStaticMethod("parseFrom", serializedResponse)!!
-    }
+        response.javaClass.callStaticMethod("parseFrom", serializedResponse)!!
+    } ?: response
 
     private fun isLimitWatchingArea(jsonText: String) = try {
         val json = JSONObject(jsonText)

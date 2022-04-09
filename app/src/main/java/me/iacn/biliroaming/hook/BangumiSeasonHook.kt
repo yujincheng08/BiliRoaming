@@ -530,7 +530,6 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     private fun fixBangumi(jsonResult: JSONObject?, code: Int, url: String?) =
         if (isBangumiWithWatchPermission(jsonResult, code)) {
-            Log.d("raw bangumi $jsonResult")
             jsonResult?.also { allowDownload(it); fixEpisodesStatus(it) }
         } else {
             url?.let { Uri.parse(it) }?.run {
@@ -612,7 +611,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private fun fixViewProto(req: API.ViewReq): API.ViewReply? {
         val av = when {
             req.hasAid() -> req.aid.toString()
-            req.hasBvid() -> req.bvid.toString()
+            req.hasBvid() -> bv2av(req.bvid).toString()
             else -> return null
         }
         val query = Uri.Builder().run {
