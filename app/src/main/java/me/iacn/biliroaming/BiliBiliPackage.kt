@@ -249,6 +249,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                         && getVersionCode(context.packageName) >= info.clientVersionCode
                         && BuildConfig.VERSION_CODE >= info.moduleVersionCode
                         && BuildConfig.VERSION_NAME == info.moduleVersionName
+                        && info.biliAccounts.getAccessKey.orNull != null
                     )
                         return info
                 }
