@@ -13,7 +13,6 @@ import android.util.SparseArray
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import com.google.protobuf.GeneratedMessageLite
 import dalvik.system.BaseDexClassLoader
 import me.iacn.biliroaming.utils.*
 import java.io.File
@@ -246,8 +245,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                             ?: Configs.HookInfo.newBuilder().build()
                     }
                     if (info.lastUpdateTime >= lastUpdateTime && info.lastUpdateTime >= lastModuleUpdateTime
-                        && getVersionCode(context.packageName) >= info.clientVersionCode
-                        && BuildConfig.VERSION_CODE >= info.moduleVersionCode
+                        && getVersionCode(context.packageName) == info.clientVersionCode
+                        && BuildConfig.VERSION_CODE == info.moduleVersionCode
                         && BuildConfig.VERSION_NAME == info.moduleVersionName
                         && info.biliAccounts.getAccessKey.orNull != null
                     )
@@ -912,7 +911,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     }?.declaringClass?.name ?: return@class_
                 }
                 val musicNotificationHelperIndex =
-                    dexHelper.encodeClassIndex(musicNotificationHelperClass);
+                    dexHelper.encodeClassIndex(musicNotificationHelperClass)
                 val musicManagerIndex = dexHelper.findMethodUsingString(
                     "the build sdk >= 8.0",
                     true,
