@@ -279,6 +279,11 @@
             android:key="block_upper_recommend_ad"
             android:summary="@string/block_video_ad_summary"
             android:title="@string/block_video_ad_title" />
+        <SwitchPreference
+            android:dependency="hidden"
+            android:key="auto_generate_subtitle"
+            android:summary="@string/auto_generate_subtitle_summary"
+            android:title="@string/auto_generate_subtitle_title" />
     </PreferenceCategory>
 
     <PreferenceCategory
