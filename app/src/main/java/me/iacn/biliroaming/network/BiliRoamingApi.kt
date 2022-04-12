@@ -555,7 +555,7 @@ object BiliRoamingApi {
                     return if (area == "th") fixThailandPlayurl(it) else it
                 }
                 errors.put(area, JSONObject(it).optString("message"))
-            }
+            } ?: errors.putIfAbsent(area, "服务器不可用")
         }
         throw CustomServerException(errors)
     }

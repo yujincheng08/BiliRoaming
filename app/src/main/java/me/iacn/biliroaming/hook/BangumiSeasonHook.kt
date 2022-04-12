@@ -530,7 +530,6 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     private fun fixBangumi(jsonResult: JSONObject?, code: Int, url: String?) =
         if (isBangumiWithWatchPermission(jsonResult, code)) {
-            Log.d("raw bangumi $jsonResult")
             jsonResult?.also { allowDownload(it); fixEpisodesStatus(it) }
         } else {
             url?.let { Uri.parse(it) }?.run {
