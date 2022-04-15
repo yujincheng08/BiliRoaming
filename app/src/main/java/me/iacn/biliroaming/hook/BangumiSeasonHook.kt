@@ -297,8 +297,10 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         url.startsWith("https://appintl.biliapi.net/intl/gateway/app/view?") &&
                         body.getIntField("code") == FAIL_CODE
                     ) {
-                        body.setObjectField(dataField, fixView(data, url))
-                        body.setIntField("code", 0)
+                        fixView(data, url)?.let {
+                            body.setObjectField(dataField, it)
+                            body.setIntField("code", 0)
+                        }
                     } else if (url.startsWith("https://app.bilibili.com/x/v2/space?")) {
                         val mid = Uri.parse(url).getQueryParameter("vmid")
                         mid?.let {
@@ -528,7 +530,6 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     private fun fixBangumi(jsonResult: JSONObject?, code: Int, url: String?) =
         if (isBangumiWithWatchPermission(jsonResult, code)) {
-            Log.d("raw bangumi $jsonResult")
             jsonResult?.also { allowDownload(it); fixEpisodesStatus(it) }
         } else {
             url?.let { Uri.parse(it) }?.run {
@@ -608,8 +609,11 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     private fun fixViewProto(req: API.ViewReq): API.ViewReply? {
-        var av = req.aid.toString()
-        if (av == "0") {av = bv2av(req.bvid.toString()).toString()}
+        val av = when {
+            req.hasAid() -> req.aid.toString()
+            req.hasBvid() -> bv2av(req.bvid).toString()
+            else -> return null
+        }
         val query = Uri.Builder().run {
             appendQueryParameter("id", av)
             appendQueryParameter("bvid", req.bvid.toString())
@@ -747,14 +751,13 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     private fun fixView(data: Any?, urlString: String): Any? {
-        var queryString = urlString.substring(urlString.indexOf("?") + 1)
-        var av = queryString.split("aid=")[1].split('&')[0]
-        if (av == "0"){
-            val bv = queryString.split("bvid=")[1].split('&')[0]
-            av = bv2av(bv).toString()
-            queryString = queryString.replace("aid=0", "id="+av)
-        }
-        queryString = queryString.replace("aid=", "id=")
+        val uri = Uri.parse(urlString)
+        val av = uri.getQueryParameter("aid")?.takeIf {
+            it != "0"
+        } ?: uri.getQueryParameter("bvid")?.let {
+            bv2av(it).toString()
+        } ?: return null
+        val queryString = uri.encodedQuery + "&id=$av"
         val content = BiliRoamingApi.getView(queryString) ?: return data
         val detailClass = instance.biliVideoDetailClass ?: return data
         val newJsonResult = content.toJSONObject().optJSONObject("v2_app_api") ?: return data

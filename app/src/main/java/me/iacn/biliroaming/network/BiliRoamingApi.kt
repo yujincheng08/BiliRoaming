@@ -446,7 +446,7 @@ object BiliRoamingApi {
     @JvmStatic
     fun getPlayUrl(queryString: String?, priorityArea: Array<String>? = null): String? {
         return getFromCustomUrl(queryString, priorityArea)?.let {
-            JSONObject(it).let { json -> json.optJSONObject("result") ?: json }.apply {
+            runCatchingOrNull { JSONObject(it).let { json -> json.optJSONObject("result") ?: json }.apply {
                 optJSONObject("dash")?.run {
                     for (video in optJSONArray("video").orEmpty()) {
                         replaceUPOS(video)
@@ -455,7 +455,7 @@ object BiliRoamingApi {
                         replaceUPOS(audio)
                     }
                 }
-            }.toString()
+            }.toString() } ?: throw CustomServerException(mapOf("default" to "Not valid json $it"))
         }
     }
 
@@ -555,7 +555,7 @@ object BiliRoamingApi {
                     return if (area == "th") fixThailandPlayurl(it) else it
                 }
                 errors.put(area, JSONObject(it).optString("message"))
-            }
+            } ?: errors.putIfAbsent(area, "服务器不可用")
         }
         throw CustomServerException(errors)
     }

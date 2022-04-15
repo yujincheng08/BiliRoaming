@@ -6,6 +6,7 @@ import android.content.pm.PackageManager.GET_META_DATA
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import androidx.documentfile.provider.DocumentFile
+import com.google.protobuf.GeneratedMessageLite
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.Constant
 import me.iacn.biliroaming.XposedInit
@@ -202,3 +203,44 @@ fun DocumentFile.findOrCreateDir(displayName: String) = this.findFile(displayNam
 
 val shouldSaveLog
     get() = sPrefs.getBoolean("save_log", false) || sPrefs.getBoolean("show_hint", true)
+
+fun GeneratedMessageLite<*, *>.print(indent: Int = 0): String {
+    val sb = StringBuilder()
+    for (f in javaClass.declaredFields) {
+        if (f.name.startsWith("bitField")) continue
+        if (f.isStatic) continue
+        f.isAccessible = true
+        val v = f.get(this)
+        val name = StringBuffer().run {
+            for (i in 0 until indent) append('\t')
+            append(f.name.substringBeforeLast("_"), ": ")
+            toString()
+        }
+        when (v) {
+            is GeneratedMessageLite<*, *> -> {
+                sb.appendLine(name)
+                sb.append(v.print(indent + 1))
+            }
+            is List<*> -> {
+                for (vv in v) {
+                    sb.append(name)
+                    when (vv) {
+                        is GeneratedMessageLite<*, *> -> {
+                            sb.appendLine()
+                            sb.append(vv.print(indent + 1))
+                        }
+                        else -> {
+                            sb.appendLine(vv?.toString() ?: "null")
+                        }
+                    }
+                }
+            }
+            else -> {
+                sb.append(name)
+                sb.appendLine(v?.toString() ?: "null")
+            }
+        }
+    }
+    return sb.toString()
+}
+

@@ -1,15 +1,15 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 buildscript {
-    val kotlinVersion by extra ("1.6.10")
+    val kotlinVersion by extra ("1.6.20")
     repositories {
         google()
         mavenCentral()
         maven(url="https://storage.googleapis.com/r8-releases/raw")
     }
     dependencies {
-        classpath("com.android.tools:r8:3.3.14-dev")
-        classpath("com.android.tools.build:gradle:7.1.2")
+        classpath("com.android.tools:r8:3.3.28")
+        classpath("com.android.tools.build:gradle:7.1.3")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
         classpath("com.google.protobuf:protobuf-gradle-plugin:0.8.18")
 
