@@ -640,6 +640,14 @@ object BiliRoamingApi {
             val sid = module.optInt("id", mid + 1)
             for ((eid, ep) in data.optJSONArray("episodes").orEmpty()
                 .iterator().withIndex()) {
+                if (ep.optInt("status") == 13) {
+                    ep.put("badge", "泰区会员")
+                    ep.put("badge_info", JSONObject().apply {
+                        put("bg_color", "#FB7299")
+                        put("bg_color_night", "#BB5B76")
+                        put("text", "泰区会员")
+                    })
+                }
                 ep.put("status", 2)
                 ep.put("episode_status", 2)
                 ep.put("ep_id", ep.optInt("id"))
