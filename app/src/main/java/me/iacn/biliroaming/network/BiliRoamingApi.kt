@@ -83,9 +83,11 @@ object BiliRoamingApi {
             if (hidden) getExtraInfo(it, instance.accessKey)
             if ((it.optJSONArray("episodes")?.length() == 0 && it.optJSONObject("publish")
                     ?.optInt("is_started", -1) != 0)
-                || (it.optInt("total_ep", 0) == -1 && it.optJSONObject("up_info")
+                || (it.optJSONObject("up_info")
                     ?.optInt("mid")
-                    ?.let { mid -> mid == 11783021 || mid == 1988098633 || mid == 2042149112 } != true)
+                    // 677043260 Classic_Anime
+                    // 688418886 Anime_Ongoing
+                    ?.let { mid -> mid == 677043260 || mid == 688418886 } == true)
                 || (it.has("total_ep") && it.optInt("total_ep") != -1 && it.optInt("total_ep")
                     .toString() != it.optJSONObject("newest_ep")?.optString("index"))
             ) {
