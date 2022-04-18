@@ -11,10 +11,6 @@
         <item>ks32（金山）</item>
         <item>kodo（七牛）</item>
         <item>kodob（七牛）</item>
-        <item>wcs（网宿）</item>
-        <item>wcsb（网宿）</item>
-        <item>upws（网宿）</item>
-        <item>bda2（网宿）</item>
         <item>hw（华为）</item>
         <item>hwb（华为）</item>
         <item>uphw（华为）</item>
@@ -33,10 +29,6 @@
         <item>@string/ks32_host</item>
         <item>@string/kodo_host</item>
         <item>@string/kodob_host</item>
-        <item>@string/wcs_host</item>
-        <item>@string/wcsb_host</item>
-        <item>@string/upws_host</item>
-        <item>@string/upbda2_host</item>
         <item>@string/hw_host</item>
         <item>@string/hwb_host</item>
         <item>@string/uphw_host</item>
@@ -67,17 +59,17 @@
     <string-array name="home_recommend_entries">
         <item>广告</item>
         <item>游戏</item>
-        <item>横幅(轮播图)</item>
-        <item>通知(追番更新、活动提示)</item>
+        <item>横幅（轮播图）</item>
+        <item>通知（追番更新、活动提示）</item>
         <item>文章</item>
         <item>动态</item>
         <item>竖屏视频</item>
         <item>直播</item>
         <item>内联视频</item>
         <item>番剧、电影、电视剧、纪录片……</item>
-        <item>大卡(单列显示的)</item>
+        <item>大卡（单列显示的）</item>
         <item>中卡</item>
-        <item>小卡(双列显示的)</item>
+        <item>小卡（双列显示的）</item>
     </string-array>
     <string-array name="home_recommend_values">
         <item>advertisement</item>

@@ -102,12 +102,12 @@
     <string name="cos_host">upos-sz-mirrorcos.bilivideo.com</string>
     <string name="cosb_host">upos-sz-mirrorcosb.bilivideo.com</string>
     <string name="bos_host">upos-sz-mirrorbos.bilivideo.com</string>
-    <string name="wcs_host">upos-sz-mirrorwcs.bilivideo.com</string>
-    <string name="wcsb_host">upos-sz-mirrorwcsb.bilivideo.com</string>
+<!--    <string name="wcs_host">upos-sz-mirrorwcs.bilivideo.com</string>-->
+<!--    <string name="wcsb_host">upos-sz-mirrorwcsb.bilivideo.com</string>-->
     <string name="hw_host">upos-sz-mirrorhw.bilivideo.com</string>
     <string name="hwb_host">upos-sz-mirrorhwb.bilivideo.com</string>
-    <string name="upbda2_host">upos-sz-upcdnbda2.bilivideo.com</string>
-    <string name="upws_host">upos-sz-upcdnws.bilivideo.com</string>
+<!--    <string name="upbda2_host">upos-sz-upcdnbda2.bilivideo.com</string>-->
+<!--    <string name="upws_host">upos-sz-upcdnws.bilivideo.com</string>-->
     <string name="uphw_host">upos-sz-upcdnhw.bilivideo.com</string>
     <string name="js_host">upos-tf-all-js.bilivideo.com</string>
     <string name="hk_host">cn-hk-eq-bcache-01.bilivideo.com</string>
