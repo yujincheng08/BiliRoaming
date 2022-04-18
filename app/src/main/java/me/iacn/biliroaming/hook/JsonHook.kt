@@ -206,8 +206,8 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         // 添加港澳韩综分页
                         if (hasKoreaHK != null && !hasKoreaHK) {
                             // 如果有台湾韩综分页，则使用繁体标题
-                            var tabName = "韩综（港澳）"
-                            if (hasKoreaTW != null && !hasKoreaTW) {tabName = "韓綜（港澳）"}
+                            var tabName = "韓綜（港澳）"
+                            if (hasKoreaTW != null && !hasKoreaTW) {tabName = "韩综（港澳）"}
                             val koreaHK = tabClass?.new()
                                 ?.setObjectField("tabId", "803")
                                 ?.setObjectField("name", tabName)
@@ -224,8 +224,8 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         // 添加台湾韩综分页
                         if (hasKoreaTW != null && !hasKoreaTW) {
                             // 如果有港澳韩综分页，则使用繁体标题
-                            var tabName = "韩综（台湾）"
-                            if (hasKoreaHK != null && !hasKoreaHK) {tabName = "韓綜（台灣）"}
+                            var tabName = "韓綜（台灣）"
+                            if (hasKoreaHK != null && !hasKoreaHK) {tabName = "韩综（台湾）"}
                             val koreaTW = tabClass?.new()
                                 ?.setObjectField("tabId", "804")
                                 ?.setObjectField("name", tabName)
