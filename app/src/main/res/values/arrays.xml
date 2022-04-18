@@ -42,6 +42,7 @@
         <item>热门</item>
         <item>番剧</item>
         <item>影视</item>
+        <item>韩综</item>
         <item>热点</item>
         <item>其它</item>
     </string-array>
@@ -51,6 +52,7 @@
         <item>hottopic</item>
         <item>bangumi</item>
         <item>movie</item>
+        <item>korea</item>
         <item>activity</item>
         <item>other_tabs</item>
     </string-array>

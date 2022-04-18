@@ -176,4 +176,6 @@
     <string name="custom_link_summary">仅支持 bilibili:// 开头的格式</string>
     <string name="add_custom_button_title">在【我的】页面添加自定义按钮</string>
     <string name="add_custom_button_summary">指定修改其中一个项目</string>
+    <string name="add_korea_title">添加其他地区韩综</string>
+    <string name="add_korea_summary">在首页标签添加港澳台韩综分页</string>
 </resources>
