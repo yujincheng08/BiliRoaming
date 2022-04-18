@@ -178,4 +178,6 @@
     <string name="add_custom_button_summary">指定修改其中一个项目</string>
     <string name="add_korea_title">添加其他地区韩综</string>
     <string name="add_korea_summary">在首页标签添加港澳台韩综分页</string>
+    <string name="fix_space_title">修复UP主空间</string>
+    <string name="fix_space_summary">修复部份被屏蔽的UP主空间</string>
 </resources>

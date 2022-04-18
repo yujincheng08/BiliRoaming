@@ -60,13 +60,6 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 1919 to Area("hk", "港", "7", "bangumi"),
                 810 to Area("tw", "台", "7", "bangumi")
             )
-
-        private val USER_SPACES =
-            mapOf(
-                "11783021" to "哔哩哔哩番剧出差",
-                "1988098633" to "b站_戲劇咖",
-                "2042149112" to "b站_綜藝咖"
-            )
     }
 
     private val isSerializable by lazy {
@@ -303,9 +296,13 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         }
                     } else if (url.startsWith("https://app.bilibili.com/x/v2/space?")) {
                         val mid = Uri.parse(url).getQueryParameter("vmid")
-                        mid?.let {
-                            USER_SPACES[it]?.run {
-                                body.setObjectField(dataField, fixSpace(data, mid, this))
+                        var code = body.getIntFieldOrNull("code")
+                        if (code != 0 && sPrefs.getBoolean("fix_space", false)) {
+                            val content = getContent("https://account.bilibili.com/api/member/getCardByMid?callback=userinfo&mid=" + mid)
+                            code = content?.toJSONObject()?.getIntFieldOrNull("code")
+                            if (code != 0) {
+                                body.setObjectField(dataField,
+                                    mid?.let { fixSpace(data, it, content.toString()) })
                                 body.setIntField("code", 0)
                             }
                         }
@@ -402,12 +399,27 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
     }
 
-    private fun fixSpace(data: Any?, mid: String, name: String): Any? {
+    private fun fixSpace(data: Any?, mid: String, content: String): Any? {
         instance.biliSpaceClass ?: return data
-        if (data != null) return data
+        val card = content.toJSONObject().optJSONObject("card") ?: return data
+        val name = card.optString("name")
+        val sex = card.optString("sex")
+        val rank = card.optString("rank")
+        val face = card.optString("face")
+        var sign = card.optString("sign")
+        if (sign != "") sign = "，原签名："+sign
+        val fans = card.optInt("fans").toString()
+        val friend = card.optInt("friend").toString()
+        val attention = card.optInt("attention").toString()
+        val current_level = card.optJSONObject("level_info")?.optInt("current_level").toString()
+        val current_min = card.optJSONObject("level_info")?.optInt("current_min").toString()
+        val current_exp = card.optJSONObject("level_info")?.optInt("current_exp").toString()
+        val next_exp = card.optJSONObject("level_info")?.optInt("next_exp").toString()
+        val official_verify_type = card.optJSONObject("official_verify")?.optInt("type").toString()
+        val official_verify_desc = card.optJSONObject("official_verify")?.optString("desc")
         return instance.fastJsonClass?.callStaticMethod(
             instance.fastJsonParse(),
-            """{"relation":-999,"guest_relation":-999,"default_tab":"video","is_params":true,"setting":{"fav_video":0,"coins_video":0,"likes_video":0,"bangumi":0,"played_game":0,"groups":0,"comic":0,"bbq":0,"dress_up":0,"disable_following":0,"live_playback":1,"close_space_medal":0,"only_show_wearing":0},"tab":{"archive":true,"article":false,"clip":false,"album":false,"favorite":false,"bangumi":false,"coin":false,"like":false,"community":false,"dynamic":true,"audios":false,"shop":false,"mall":false,"ugc_season":false,"comic":false,"cheese":false,"sub_comic":false,"activity":false,"series":false},"card":{"mid":"$mid","name":"哔哩漫游","approve":false,"sex":"保密","rank":"","face":"https://i0.hdslb.com/bfs/album/887ff772ba48558c82e21772f8a8d81cbf94ea1e.png","DisplayRank":"","regtime":0,"spacesta":0,"birthday":"","place":"","description":"该页面由哔哩漫游修复","article":0,"attentions":null,"fans":114,"friend":0,"attention":514,"sign":"该页面由哔哩漫游修复","level_info":{"current_level":6,"current_min":28800,"current_exp":28801,"next_exp":"--"},"pendant":{"pid":0,"name":"","image":"","expire":0,"image_enhance":"","image_enhance_frame":""},"nameplate":{"nid":0,"name":"","image":"","image_small":"","level":"","condition":""},"official_verify":{"type":1,"desc":"原 $name 官方账号","role":3,"title":"$name 官方账号"},"vip":{"vipType":0,"vipDueDate":0,"dueRemark":"","accessStatus":0,"vipStatus":0,"vipStatusWarn":"","themeType":0,"label":{"path":"","text":"","label_theme":"","text_color":"","bg_style":0,"bg_color":"","border_color":""}},"silence":0,"end_time":0,"silence_url":"","likes":{"like_num":233,"skr_tip":"视频、专栏、动态累计获赞"},"pr_info":{},"relation":{"status":1},"is_deleted":0,"honours":{"colour":{"dark":"#CE8620","normal":"#F0900B"},"tags":null},"profession":{}},"images":{"imgUrl":"https://i0.hdslb.com/bfs/album/16b6731618d911060e26f8fc95684c26bddc897c.jpg","night_imgurl":"https://i0.hdslb.com/bfs/album/ca79ebb2ebeee86c5634234c688b410661ea9623.png","has_garb":true,"goods_available":true},"live":{"roomStatus":0,"roundStatus":0,"liveStatus":0,"url":"","title":"","cover":"","online":0,"roomid":0,"broadcast_type":0,"online_hidden":0,"link":""},"archive":{"order":[{"title":"最新发布","value":"pubdate"},{"title":"最多播放","value":"click"}],"count":9999,"item":[]},"series":{"item":[]},"play_game":{"count":0,"item":[]},"article":{"count":0,"item":[],"lists_count":0,"lists":[]},"season":{"count":0,"item":[]},"coin_archive":{"count":0,"item":[]},"like_archive":{"count":0,"item":[]},"audios":{"count":0,"item":[]},"favourite2":{"count":0,"item":[]},"comic":{"count":0,"item":[]},"ugc_season":{"count":0,"item":[]},"cheese":{"count":0,"item":[]},"fans_effect":{},"tab2":[{"title":"动态","param":"dynamic"},{"title":"投稿","param":"contribute","items":[{"title":"视频","param":"video"}]}]}""",
+            """{"relation":-999,"guest_relation":-999,"default_tab":"video","is_params":true,"setting":{"fav_video":0,"coins_video":0,"likes_video":0,"bangumi":0,"played_game":0,"groups":0,"comic":0,"bbq":0,"dress_up":0,"disable_following":0,"live_playback":1,"close_space_medal":0,"only_show_wearing":0},"tab":{"archive":true,"article":true,"clip":true,"album":true,"favorite":false,"bangumi":false,"coin":false,"like":false,"community":false,"dynamic":true,"audios":true,"shop":false,"mall":false,"ugc_season":false,"comic":false,"cheese":false,"sub_comic":false,"activity":false,"series":false},"card":{"mid":"$mid","name":""""+name+"""","approve":false,"sex":""""+sex+"""","rank":""""+rank+"""","face":""""+face+"""","DisplayRank":"","regtime":0,"spacesta":0,"birthday":"","place":"","description":"该页面由哔哩漫游修复","article":0,"attentions":null,"fans":"""+fans+""","friend":"""+friend+""","attention":"""+attention+""","sign":"该页面由哔哩漫游修复"""+sign+"""","level_info":{"current_level":"""+current_level+""","current_min":"""+current_min+""","current_exp":"""+current_exp+""","next_exp":""""+next_exp+""""},"pendant":{"pid":0,"name":"","image":"","expire":0,"image_enhance":"","image_enhance_frame":""},"nameplate":{"nid":0,"name":"","image":"","image_small":"","level":"","condition":""},"official_verify":{"type":"""+official_verify_type+""","desc":""""+official_verify_desc+"""","role":3,"title":""""+official_verify_desc+""""},"vip":{"vipType":0,"vipDueDate":0,"dueRemark":"","accessStatus":0,"vipStatus":0,"vipStatusWarn":"","themeType":0,"label":{"path":"","text":"","label_theme":"","text_color":"","bg_style":0,"bg_color":"","border_color":""}},"silence":0,"end_time":0,"silence_url":"","likes":{"like_num":0,"skr_tip":"该页面由哔哩漫游修复"},"pr_info":{},"relation":{"status":1},"is_deleted":0,"honours":{"colour":{"dark":"#CE8620","normal":"#F0900B"},"tags":null},"profession":{}},"images":{"imgUrl":"","night_imgurl":"","has_garb":true,"goods_available":true},"live":{"roomStatus":0,"roundStatus":0,"liveStatus":0,"url":"","title":"","cover":"","online":0,"roomid":0,"broadcast_type":0,"online_hidden":0,"link":""},"archive":{"order":[{"title":"最新发布","value":"pubdate"},{"title":"最多播放","value":"click"}],"count":9999,"item":[]},"series":{"item":[]},"play_game":{"count":0,"item":[]},"article":{"count":0,"item":[],"lists_count":0,"lists":[]},"season":{"count":0,"item":[]},"coin_archive":{"count":0,"item":[]},"like_archive":{"count":0,"item":[]},"audios":{"count":0,"item":[]},"favourite2":{"count":0,"item":[]},"comic":{"count":0,"item":[]},"ugc_season":{"count":0,"item":[]},"cheese":{"count":0,"item":[]},"fans_effect":{},"tab2":[{"title":"动态","param":"dynamic"},{"title":"投稿","param":"contribute","items":[{"title":"视频","param":"video"}]}]}""",
             instance.biliSpaceClass
         ) ?: data
     }

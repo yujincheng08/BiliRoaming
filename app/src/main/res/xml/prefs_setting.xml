@@ -129,6 +129,11 @@
             android:summary="@string/custom_link_summary"
             android:title="@string/custom_link_title" />
 
+        <SwitchPreference
+            android:key="fix_space"
+            android:summary="@string/fix_space_summary"
+            android:title="@string/fix_space_title" />
+
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/pref_backup">
         <Preference
