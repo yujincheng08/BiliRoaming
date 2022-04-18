@@ -195,21 +195,19 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     // 在首页标签添加港澳/台湾韩综分页
                     if (sPrefs.getBoolean("add_korea", false)) {
                         val tab = data?.getObjectFieldAs<MutableList<Any>>("tab")
-                        val koreaHKTab = tab?.fold(false) { acc, it ->
+                        val hasKoreaHK = tab?.fold(false) { acc, it ->
                             val uri = it.getObjectFieldAs<String>("uri")
                             acc || uri.startsWith("bilibili://following/home_activity_tab/163541")
                         }
-                        val koreaTWTab = tab?.fold(false) { acc, it ->
+                        val hasKoreaTW = tab?.fold(false) { acc, it ->
                             val uri = it.getObjectFieldAs<String>("uri")
                             acc || uri.startsWith("bilibili://following/home_activity_tab/95636")
                         }
-                        val hasKoreaHK = koreaHKTab != null && !koreaHKTab
-                        val hasKoreaTW = koreaTWTab != null && !koreaTWTab
                         // 添加港澳韩综分页
-                        if (hasKoreaHK) {
+                        if (hasKoreaHK != null && !hasKoreaHK) {
                             // 如果有台湾韩综分页，则使用繁体标题
                             var tabName = "韩综（港澳）"
-                            if (hasKoreaTW) {tabName = "韓綜（港澳）"}
+                            if (hasKoreaTW != null && !hasKoreaTW) {tabName = "韓綜（港澳）"}
                             val koreaHK = tabClass?.new()
                                 ?.setObjectField("tabId", "803")
                                 ?.setObjectField("name", tabName)
@@ -224,10 +222,10 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             }
                         }
                         // 添加台湾韩综分页
-                        if (hasKoreaTW) {
+                        if (hasKoreaTW != null && !hasKoreaTW) {
                             // 如果有港澳韩综分页，则使用繁体标题
-                            var tabName = "韩综（台湾）"                            
-                            if (hasKoreaTW) {tabName = "韓綜（台灣）"}
+                            var tabName = "韩综（台湾）"
+                            if (hasKoreaHK != null && !hasKoreaHK) {tabName = "韓綜（台灣）"}
                             val koreaTW = tabClass?.new()
                                 ?.setObjectField("tabId", "804")
                                 ?.setObjectField("name", tabName)
@@ -288,7 +286,7 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     drawerItems.clear()
                     val hides = sPrefs.getStringSet("hided_drawer_items", mutableSetOf())!!
                     var deleteUpper = false
-                    if (("创作中心" !in hides && "推荐服务" in hides && "更多服务" in hides) || 
+                    if (("创作中心" !in hides && "推荐服务" in hides && "更多服务" in hides) ||
                         ("創作中心" !in hides && "推薦服務" in hides && "更多服務" in hides)) {
                         deleteUpper = true
                         Log.toast("自定义我的页面，【标题项目】不能只保留【创作中心】，因此不删除任何标题项目，请修改你的漫游设置。", true)
