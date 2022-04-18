@@ -244,6 +244,11 @@
             android:title="@string/add_movie_title" />
         <SwitchPreference
             android:dependency="hidden"
+            android:key="add_korea"
+            android:summary="@string/add_korea_summary"
+            android:title="@string/add_korea_title" />
+        <SwitchPreference
+            android:dependency="hidden"
             android:key="search_area_bangumi"
             android:summary="@string/search_area_summary"
             android:title="@string/search_area_title" />

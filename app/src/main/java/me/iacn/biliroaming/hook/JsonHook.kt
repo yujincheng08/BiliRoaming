@@ -192,6 +192,57 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         }
                     }
 
+                    // 在首页标签添加港澳/台湾韩综分页
+                    if (sPrefs.getBoolean("add_korea", false)) {
+                        val tab = data?.getObjectFieldAs<MutableList<Any>>("tab")
+                        val koreaHKTab = tab?.fold(false) { acc, it ->
+                            val uri = it.getObjectFieldAs<String>("uri")
+                            acc || uri.startsWith("bilibili://following/home_activity_tab/163541")
+                        }
+                        val koreaTWTab = tab?.fold(false) { acc, it ->
+                            val uri = it.getObjectFieldAs<String>("uri")
+                            acc || uri.startsWith("bilibili://following/home_activity_tab/95636")
+                        }
+                        val hasKoreaHK = koreaHKTab != null && !koreaHKTab
+                        val hasKoreaTW = koreaTWTab != null && !koreaTWTab
+                        // 添加港澳韩综分页
+                        if (hasKoreaHK) {
+                            // 如果有台湾韩综分页，则使用繁体标题
+                            var tabName = "韩综（港澳）"
+                            if (hasKoreaTW) {tabName = "韓綜（港澳）"}
+                            val koreaHK = tabClass?.new()
+                                ?.setObjectField("tabId", "803")
+                                ?.setObjectField("name", tabName)
+                                ?.setObjectField("uri", "bilibili://following/home_activity_tab/163541")
+                                ?.setObjectField("reportId", "koreavhk")
+                                ?.setIntField("pos", 803)
+                            koreaHK?.let { l ->
+                                tab.forEach {
+                                    it.setIntField("pos", it.getIntField("pos") + 0)
+                                }
+                                tab.add(0, l)
+                            }
+                        }
+                        // 添加台湾韩综分页
+                        if (hasKoreaTW) {
+                            // 如果有港澳韩综分页，则使用繁体标题
+                            var tabName = "韩综（台湾）"                            
+                            if (hasKoreaTW) {tabName = "韓綜（台灣）"}
+                            val koreaTW = tabClass?.new()
+                                ?.setObjectField("tabId", "804")
+                                ?.setObjectField("name", tabName)
+                                ?.setObjectField("uri", "bilibili://following/home_activity_tab/95636")
+                                ?.setObjectField("reportId", "koreavtw")
+                                ?.setIntField("pos", 804)
+                            koreaTW?.let { l ->
+                                tab.forEach {
+                                    it.setIntField("pos", it.getIntField("pos") + 0)
+                                }
+                                tab.add(0, l)
+                            }
+                        }
+                    }
+
                     if (sPrefs.getStringSet("customize_home_tab", emptySet())
                             ?.isNotEmpty() == true
                     ) {
@@ -209,6 +260,9 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                     )
                                     this == "bilibili://pgc/home?home_flow_type=2" || this == "bilibili://following/home_activity_tab/168644" -> purifytabset.contains(
                                         "movie"
+                                    )
+                                    this == "bilibili://following/home_activity_tab/95636" || this == "bilibili://following/home_activity_tab/163541" -> purifytabset.contains(
+                                        "korea"
                                     )
                                     startsWith("bilibili://pegasus/op/") || startsWith("bilibili://following/home_activity_tab") -> purifytabset.contains(
                                         "activity"
