@@ -298,7 +298,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         val mid = Uri.parse(url).getQueryParameter("vmid")
                         var code = body.getIntFieldOrNull("code")
                         if (code != 0 && sPrefs.getBoolean("fix_space", false)) {
-                            val content = getContent("https://account.bilibili.com/api/member/getCardByMid?callback=userinfo&mid=" + mid)
+                            val content = getContent("https://account.bilibili.com/api/member/getCardByMid?mid=" + mid)
                             code = content?.toJSONObject()?.getIntFieldOrNull("code")
                             if (code != 0) {
                                 body.setObjectField(dataField,
