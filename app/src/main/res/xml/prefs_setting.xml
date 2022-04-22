@@ -293,7 +293,10 @@
             android:dependency="hidden"
             android:key="skin_import"
             android:summary="@string/skin_summary"
-            android:title="@string/skin_import_title" />
+            android:title="@string/skin_import_title"
+            android:key="auto_generate_subtitle"
+            android:summary="@string/auto_generate_subtitle_summary"
+            android:title="@string/auto_generate_subtitle_title" />
     </PreferenceCategory>
 
     <PreferenceCategory
