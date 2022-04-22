@@ -28,7 +28,7 @@
 
     <PreferenceCategory android:title="@string/cdn_category">
         <ListPreference
-            android:defaultValue="@string/wcs_host"
+            android:defaultValue="@string/ks3_host"
             android:entries="@array/upos_entries"
             android:entryValues="@array/upos_values"
             android:key="upos_host"
@@ -244,6 +244,11 @@
             android:title="@string/add_movie_title" />
         <SwitchPreference
             android:dependency="hidden"
+            android:key="add_korea"
+            android:summary="@string/add_korea_summary"
+            android:title="@string/add_korea_title" />
+        <SwitchPreference
+            android:dependency="hidden"
             android:key="search_area_bangumi"
             android:summary="@string/search_area_summary"
             android:title="@string/search_area_title" />
@@ -267,6 +272,7 @@
             android:key="export_video"
             android:summary="@string/export_video_summary"
             android:title="@string/export_video_title" />
+            android:title="@string/export_video_title" />
         <MultiSelectListPreference
             android:dependency="hidden"
             android:entries="@array/space_entries"
@@ -288,7 +294,12 @@
             android:dependency="hidden"
             android:key="skin_import"
             android:summary="@string/skin_summary"
-            android:title="@string/skin_import_title" />
+            android:title="@string/skin_import_title"/>
+		<SwitchPreference
+			android:dependency="hidden"
+            android:key="auto_generate_subtitle"
+            android:summary="@string/auto_generate_subtitle_summary"
+            android:title="@string/auto_generate_subtitle_title" />
     </PreferenceCategory>
 
     <PreferenceCategory
