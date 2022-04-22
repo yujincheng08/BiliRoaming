@@ -192,6 +192,49 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         }
                     }
 
+                    // 在首页标签添加港澳/台湾韩综分页
+                    if (sPrefs.getBoolean("add_korea", false)) {
+                        val tab = data?.getObjectFieldAs<MutableList<Any>>("tab")
+                        val hasKoreaHK = tab?.fold(false) { acc, it ->
+                            val uri = it.getObjectFieldAs<String>("uri")
+                            acc || uri.startsWith("bilibili://following/home_activity_tab/163541")
+                        }
+                        val hasKoreaTW = tab?.fold(false) { acc, it ->
+                            val uri = it.getObjectFieldAs<String>("uri")
+                            acc || uri.startsWith("bilibili://following/home_activity_tab/95636")
+                        }
+                        // 添加港澳韩综分页
+                        if (hasKoreaHK != null && !hasKoreaHK) {
+                            val koreaHK = tabClass?.new()
+                                ?.setObjectField("tabId", "803")
+                                ?.setObjectField("name", "韩综（港澳）")
+                                ?.setObjectField("uri", "bilibili://following/home_activity_tab/163541")
+                                ?.setObjectField("reportId", "koreavhk")
+                                ?.setIntField("pos", 803)
+                            koreaHK?.let { l ->
+                                tab.forEach {
+                                    it.setIntField("pos", it.getIntField("pos") + 0)
+                                }
+                                tab.add(0, l)
+                            }
+                        }
+                        // 添加台湾韩综分页
+                        if (hasKoreaTW != null && !hasKoreaTW) {
+                            val koreaTW = tabClass?.new()
+                                ?.setObjectField("tabId", "804")
+                                ?.setObjectField("name", "韩综（台湾）")
+                                ?.setObjectField("uri", "bilibili://following/home_activity_tab/95636")
+                                ?.setObjectField("reportId", "koreavtw")
+                                ?.setIntField("pos", 804)
+                            koreaTW?.let { l ->
+                                tab.forEach {
+                                    it.setIntField("pos", it.getIntField("pos") + 0)
+                                }
+                                tab.add(0, l)
+                            }
+                        }
+                    }
+
                     if (sPrefs.getStringSet("customize_home_tab", emptySet())
                             ?.isNotEmpty() == true
                     ) {
@@ -209,6 +252,9 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                     )
                                     this == "bilibili://pgc/home?home_flow_type=2" || this == "bilibili://following/home_activity_tab/168644" -> purifytabset.contains(
                                         "movie"
+                                    )
+                                    this == "bilibili://following/home_activity_tab/95636" || this == "bilibili://following/home_activity_tab/163541" -> purifytabset.contains(
+                                        "korea"
                                     )
                                     startsWith("bilibili://pegasus/op/") || startsWith("bilibili://following/home_activity_tab") -> purifytabset.contains(
                                         "activity"
@@ -234,7 +280,7 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     drawerItems.clear()
                     val hides = sPrefs.getStringSet("hided_drawer_items", mutableSetOf())!!
                     var deleteUpper = false
-                    if (("创作中心" !in hides && "推荐服务" in hides && "更多服务" in hides) || 
+                    if (("创作中心" !in hides && "推荐服务" in hides && "更多服务" in hides) ||
                         ("創作中心" !in hides && "推薦服務" in hides && "更多服務" in hides)) {
                         deleteUpper = true
                         Log.toast("自定义我的页面，【标题项目】不能只保留【创作中心】，因此不删除任何标题项目，请修改你的漫游设置。", true)
