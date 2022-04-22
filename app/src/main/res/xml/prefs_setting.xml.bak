@@ -286,6 +286,7 @@
             android:title="@string/block_video_ad_title" />
         <SwitchPreference
             android:dependency="hidden"
+<<<<<<< HEAD
             android:key="skin"
             android:summary="@string/skin_summary"
             android:title="@string/skin_title" />

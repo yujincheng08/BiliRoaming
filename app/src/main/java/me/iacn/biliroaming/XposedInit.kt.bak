@@ -106,8 +106,11 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                     startHook(QualityHook(lpparam.classLoader))
                     startHook(ReplaceStoryHook(lpparam.classLoader))
                     startHook(PurifyShareHook(lpparam.classLoader))
+<<<<<<< HEAD
                     startHook(SkinHook(lpparam.classLoader))
+=======
                     startHook(VideoSubtitleHook(lpparam.classLoader))
+>>>>>>> 632c41d58cae0b07905cb8a89af4b0febaf6ac6e
                 }
                 lpparam.processName.endsWith(":web") -> {
                     BiliBiliPackage(lpparam.classLoader, param.args[0] as Context)
