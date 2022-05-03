@@ -255,7 +255,9 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 ) {
                     fixBangumi(body, url)
                 }
-                if (url != null && url.startsWith("https://appintl.biliapi.net/intl/gateway/app/search/type")
+                if (url != null && (url.startsWith("https://appintl.biliapi.net/intl/gateway/app/search/type") || url.startsWith(
+                        "https://app.bilibili.com/x/intl/search/type"
+                    ))
                 ) {
                     val area = Uri.parse(url).getQueryParameter("type")?.toInt()
                     if (!AREA_TYPES.containsKey(area)) {
@@ -274,7 +276,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     url ?: return@hookBeforeAllConstructors
                     if (url.startsWith("https://app.bilibili.com/x/v2/search/type") || url.startsWith(
                             "https://appintl.biliapi.net/intl/gateway/app/search/type"
-                        )
+                        ) || url.startsWith("https://app.bilibili.com/x/intl/search/type")
                     ) {
                         val area = Uri.parse(url).getQueryParameter("type")?.toInt()
                         if (AREA_TYPES.containsKey(area)) {
