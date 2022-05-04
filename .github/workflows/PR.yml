@@ -21,7 +21,9 @@ jobs:
       with:
         java-version: '11'
     - name: Build with Gradle
-      run: ./gradlew assemble
+      run: |
+        echo 'org.gradle.jvmargs=-Xmx2048m' >> gradle.properties
+        ./gradlew assemble
     - name: Upload build artifact
       uses: actions/upload-artifact@v2
       with:
