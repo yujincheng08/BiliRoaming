@@ -28,7 +28,7 @@
 
     <PreferenceCategory android:title="@string/cdn_category">
         <ListPreference
-            android:defaultValue="@string/wcs_host"
+            android:defaultValue="@string/ks3_host"
             android:entries="@array/upos_entries"
             android:entryValues="@array/upos_values"
             android:key="upos_host"
@@ -128,6 +128,11 @@
             android:key="custom_link"
             android:summary="@string/custom_link_summary"
             android:title="@string/custom_link_title" />
+
+        <SwitchPreference
+            android:key="fix_space"
+            android:summary="@string/fix_space_summary"
+            android:title="@string/fix_space_title" />
 
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/pref_backup">
@@ -242,6 +247,11 @@
             android:key="add_movie"
             android:summary="@string/add_movie_summary"
             android:title="@string/add_movie_title" />
+        <SwitchPreference
+            android:dependency="hidden"
+            android:key="add_korea"
+            android:summary="@string/add_korea_summary"
+            android:title="@string/add_korea_title" />
         <SwitchPreference
             android:dependency="hidden"
             android:key="search_area_bangumi"

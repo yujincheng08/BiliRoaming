@@ -102,12 +102,12 @@
     <string name="cos_host">upos-sz-mirrorcos.bilivideo.com</string>
     <string name="cosb_host">upos-sz-mirrorcosb.bilivideo.com</string>
     <string name="bos_host">upos-sz-mirrorbos.bilivideo.com</string>
-    <string name="wcs_host">upos-sz-mirrorwcs.bilivideo.com</string>
-    <string name="wcsb_host">upos-sz-mirrorwcsb.bilivideo.com</string>
+<!--    <string name="wcs_host">upos-sz-mirrorwcs.bilivideo.com</string>-->
+<!--    <string name="wcsb_host">upos-sz-mirrorwcsb.bilivideo.com</string>-->
     <string name="hw_host">upos-sz-mirrorhw.bilivideo.com</string>
     <string name="hwb_host">upos-sz-mirrorhwb.bilivideo.com</string>
-    <string name="upbda2_host">upos-sz-upcdnbda2.bilivideo.com</string>
-    <string name="upws_host">upos-sz-upcdnws.bilivideo.com</string>
+<!--    <string name="upbda2_host">upos-sz-upcdnbda2.bilivideo.com</string>-->
+<!--    <string name="upws_host">upos-sz-upcdnws.bilivideo.com</string>-->
     <string name="uphw_host">upos-sz-upcdnhw.bilivideo.com</string>
     <string name="js_host">upos-tf-all-js.bilivideo.com</string>
     <string name="hk_host">cn-hk-eq-bcache-01.bilivideo.com</string>
@@ -176,6 +176,10 @@
     <string name="custom_link_summary">仅支持 bilibili:// 开头的格式</string>
     <string name="add_custom_button_title">在【我的】页面添加自定义按钮</string>
     <string name="add_custom_button_summary">指定修改其中一个项目</string>
+    <string name="add_korea_title">添加其他地区韩综</string>
+    <string name="add_korea_summary">在首页标签添加港澳台韩综分页</string>
+    <string name="fix_space_title">修复UP主空间</string>
+    <string name="fix_space_summary">修复部分被屏蔽的UP主空间</string>
     <string name="skin_title">填写自制主题</string>
     <string name="skin_import_title">导入自制主题</string>
     <string name="skin_summary">重启后，要等待十几秒下载资源，然后再重启（同时开启时的优先度：导入＞填写）</string>
