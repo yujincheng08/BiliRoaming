@@ -180,4 +180,6 @@
     <string name="add_korea_summary">在首页标签添加港澳台韩综分页</string>
     <string name="fix_space_title">修复UP主空间</string>
     <string name="fix_space_summary">修复部分被屏蔽的UP主空间</string>
+    <string name="auto_generate_subtitle_title">互转简繁字幕</string>
+    <string name="auto_generate_subtitle_summary">为简繁字幕生成相应的繁简字幕\nPowered by 繁化姬</string>
 </resources>
