@@ -101,6 +101,8 @@
     <string name="kodob_host">upos-sz-mirrorkodob.bilivideo.com</string>
     <string name="cos_host">upos-sz-mirrorcos.bilivideo.com</string>
     <string name="cosb_host">upos-sz-mirrorcosb.bilivideo.com</string>
+    <string name="coso1_host">upos-sz-mirrorcoso1.bilivideo.com</string>
+    <string name="coso2_host">upos-sz-mirrorcoso2.bilivideo.com</string>
     <string name="bos_host">upos-sz-mirrorbos.bilivideo.com</string>
 <!--    <string name="wcs_host">upos-sz-mirrorwcs.bilivideo.com</string>-->
 <!--    <string name="wcsb_host">upos-sz-mirrorwcsb.bilivideo.com</string>-->
