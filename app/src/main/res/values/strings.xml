@@ -88,8 +88,8 @@
     <string name="drawer_summary">移动后，可以点击首页的头像或者在空白地方左划打开侧边栏\n关闭时，需要重启两次客户端才能复原。如果无法还原，请重启手机。</string>
     <string name="full_splash_title">强制满屏启动图</string>
     <string name="full_splash_summary">去两头留中间形式满屏，无论是否自定启动图</string>
-<!--    <string name="get_cover_title">长按保存封面</string>-->
-<!--    <string name="get_cover_summary">开启后，长按播放器可保存视频、直播间、番剧封面</string>-->
+    <!--    <string name="get_cover_title">长按保存封面</string>-->
+    <!--    <string name="get_cover_summary">开启后，长按播放器可保存视频、直播间、番剧封面</string>-->
     <string name="purify_city_title">净化同城标签</string>
     <string name="purify_city_summary">去除动态页面的同城标签</string>
     <string name="setting">设置</string>
@@ -104,12 +104,12 @@
     <string name="coso1_host">upos-sz-mirrorcoso1.bilivideo.com</string>
     <string name="coso2_host">upos-sz-mirrorcoso2.bilivideo.com</string>
     <string name="bos_host">upos-sz-mirrorbos.bilivideo.com</string>
-<!--    <string name="wcs_host">upos-sz-mirrorwcs.bilivideo.com</string>-->
-<!--    <string name="wcsb_host">upos-sz-mirrorwcsb.bilivideo.com</string>-->
+    <!--    <string name="wcs_host">upos-sz-mirrorwcs.bilivideo.com</string>-->
+    <!--    <string name="wcsb_host">upos-sz-mirrorwcsb.bilivideo.com</string>-->
     <string name="hw_host">upos-sz-mirrorhw.bilivideo.com</string>
     <string name="hwb_host">upos-sz-mirrorhwb.bilivideo.com</string>
-<!--    <string name="upbda2_host">upos-sz-upcdnbda2.bilivideo.com</string>-->
-<!--    <string name="upws_host">upos-sz-upcdnws.bilivideo.com</string>-->
+    <!--    <string name="upbda2_host">upos-sz-upcdnbda2.bilivideo.com</string>-->
+    <!--    <string name="upws_host">upos-sz-upcdnws.bilivideo.com</string>-->
     <string name="uphw_host">upos-sz-upcdnhw.bilivideo.com</string>
     <string name="js_host">upos-tf-all-js.bilivideo.com</string>
     <string name="hk_host">cn-hk-eq-bcache-01.bilivideo.com</string>
@@ -182,6 +182,8 @@
     <string name="add_korea_summary">在首页标签添加港澳台韩综分页</string>
     <string name="fix_space_title">修复UP主空间</string>
     <string name="fix_space_summary">修复部分被屏蔽的UP主空间</string>
+    <string name="customize_dynamic_title">动态过滤</string>
+    <string name="customize_dynamic_summary">支持按类型和关键字过滤</string>
     <string name="auto_generate_subtitle_title">互转简繁字幕</string>
     <string name="auto_generate_subtitle_summary">为简繁字幕生成相应的繁简字幕\nPowered by 繁化姬</string>
 </resources>
