@@ -79,6 +79,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("customize_drawer")?.onPreferenceClickListener = this
             findPreference("custom_link")?.onPreferenceClickListener = this
             findPreference("add_custom_button")?.onPreferenceClickListener = this
+            findPreference("customize_dynamic")?.onPreferenceClickListener = this
             checkCompatibleVersion()
             checkUpdate()
         }
@@ -588,6 +589,11 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             return true
         }
 
+        private fun onCustomDynamicClick(): Boolean {
+            DynamicFilterDialog(activity, prefs).show()
+            return true
+        }
+
         override fun onPreferenceClick(preference: Preference) = when (preference.key) {
             "version" -> onVersionClick()
             "update" -> onUpdateClick()
@@ -603,6 +609,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             "customize_drawer" -> onCustomizeDrawerClick()
             "custom_link" -> onCustomLinkClick()
             "add_custom_button" -> onAddCustomButtonClick()
+            "customize_dynamic" -> onCustomDynamicClick()
             else -> false
         }
     }
