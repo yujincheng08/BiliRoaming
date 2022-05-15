@@ -295,6 +295,16 @@
             android:key="customize_dynamic"
             android:summary="@string/customize_dynamic_summary"
             android:title="@string/customize_dynamic_title" />
+        <SwitchPreference
+            android:dependency="hidden"
+            android:key="skin"
+            android:summary="@string/skin_summary"
+            android:title="@string/skin_title" />
+        <SwitchPreference
+            android:dependency="hidden"
+            android:key="skin_import"
+            android:summary="@string/skin_summary"
+            android:title="@string/skin_import_title" />
     </PreferenceCategory>
 
     <PreferenceCategory
