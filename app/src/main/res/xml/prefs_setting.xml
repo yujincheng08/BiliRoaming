@@ -295,6 +295,11 @@
             android:key="customize_dynamic"
             android:summary="@string/customize_dynamic_summary"
             android:title="@string/customize_dynamic_title" />
+        <SwitchPreference
+            android:dependency="hidden"
+            android:key="auto_generate_subtitle"
+            android:summary="@string/auto_generate_subtitle_summary"
+            android:title="@string/auto_generate_subtitle_title" />
     </PreferenceCategory>
 
     <PreferenceCategory
