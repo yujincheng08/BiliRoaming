@@ -10,16 +10,14 @@ class DynamicHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             ?.map { it.toInt() } ?: listOf()
     }
     private val purifyContents by lazy {
-        sPrefs.getString("customize_dynamic_keywords_content", null)
-            ?.split("|")?.filter { it.isNotBlank() } ?: listOf()
+        sPrefs.getStringSet("customize_dynamic_keyword_content", null) ?: setOf()
     }
     private val purifyUpNames by lazy {
-        sPrefs.getString("customize_dynamic_keywords_upname", null)
-            ?.split("|")?.filter { it.isNotBlank() } ?: listOf()
+        sPrefs.getStringSet("customize_dynamic_keyword_upname", null) ?: setOf()
     }
     private val purifyUidList by lazy {
-        sPrefs.getString("customize_dynamic_keywords_uid", null)
-            ?.split("|")?.mapNotNull { it.toLongOrNull() } ?: listOf()
+        sPrefs.getStringSet("customize_dynamic_keyword_uid", null)
+            ?.mapNotNull { it.toLongOrNull() } ?: setOf()
     }
 
     override fun startHook() {
@@ -47,15 +45,25 @@ class DynamicHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     }
                 }
 
+                if (purifyContents.isNotEmpty()) {
+                    val modulesText = e?.callMethodAs<List<*>>("getModulesList")
+                        ?.joinToString(separator = "") {
+                            it?.callMethod("getModuleDesc")
+                                ?.callMethodAs<String>("getText") ?: ""
+                        } ?: ""
+                    if (modulesText.isNotEmpty() && purifyContents.any { modulesText.contains(it) }) {
+                        idxList.add(idx)
+                    }
+                }
+
                 val extend = e?.callMethod("getExtend")
 
                 if (purifyContents.isNotEmpty()) {
                     val contentOrig = extend
                         ?.callMethodAs<List<*>>("getOrigDescList")
-                        ?.map {
+                        ?.joinToString(separator = "") {
                             it?.callMethodAs<String>("getOrigText") ?: ""
-                        }?.filter { it.isNotEmpty() }
-                        ?.joinToString(separator = "|") ?: ""
+                        } ?: ""
                     if (contentOrig.isNotEmpty() && purifyContents.any { contentOrig.contains(it) }) {
                         idxList.add(idx)
                     }
@@ -64,10 +72,9 @@ class DynamicHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 if (purifyContents.isNotEmpty()) {
                     val content = extend
                         ?.callMethodAs<List<*>>("getDescList")
-                        ?.map {
+                        ?.joinToString(separator = "") {
                             it?.callMethodAs<String>("getOrigText") ?: ""
-                        }?.filter { it.isNotEmpty() }
-                        ?.joinToString(separator = "|") ?: ""
+                        } ?: ""
                     if (content.isNotEmpty() && purifyContents.any { content.contains(it) }) {
                         idxList.add(idx)
                     }

@@ -176,6 +176,7 @@
         <item>广告</item>
         <item>小程序</item>
         <item>直播推荐</item>
+        <item>故事</item>
         <item>话题推荐</item>
     </string-array>
     <string-array name="dynamic_values">
@@ -193,6 +194,7 @@
         <item>15</item>
         <item>16</item>
         <item>18</item>
+        <item>22</item>
         <item>23</item>
     </string-array>
 </resources>
