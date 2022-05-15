@@ -130,6 +130,7 @@
             android:title="@string/custom_link_title" />
 
         <SwitchPreference
+            android:defaultValue="true"
             android:key="fix_space"
             android:summary="@string/fix_space_summary"
             android:title="@string/fix_space_title" />
