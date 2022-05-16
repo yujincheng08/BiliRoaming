@@ -6,7 +6,6 @@ class DynamicHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     private val purifyTypes by lazy {
         sPrefs.getStringSet("customize_dynamic_type", null)
-            ?.flatMap { it.split(',') }
             ?.map { it.toInt() } ?: listOf()
     }
     private val purifyContents by lazy {

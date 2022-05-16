@@ -165,18 +165,21 @@
         <item>转发</item>
         <item>投稿视频</item>
         <item>番剧、电影等</item>
-        <item>付费内容</item>
+        <item>付费内容 1</item>
+        <item>付费内容 2</item>
         <item>折叠</item>
         <item>文字</item>
         <item>图文</item>
         <item>文章</item>
         <item>音频</item>
-        <item>H5</item>
+        <item>通用 方形</item>
+        <item>通用 竖形</item>
         <item>直播</item>
         <item>播放列表</item>
         <item>广告</item>
         <item>小程序</item>
         <item>订阅</item>
+        <item>新订阅</item>
         <item>直播推荐</item>
         <item>横幅</item>
         <item>合集</item>
@@ -189,18 +192,21 @@
         <item>1</item>
         <item>2</item>
         <item>3</item>
-        <item>4,14</item>
+        <item>4</item>
+        <item>14</item>
         <item>5</item>
         <item>6</item>
         <item>7</item>
         <item>8</item>
         <item>9</item>
-        <item>10,11</item>
+        <item>10</item>
+        <item>11</item>
         <item>12</item>
         <item>13</item>
         <item>15</item>
         <item>16</item>
-        <item>17,21</item>
+        <item>17</item>
+        <item>21</item>
         <item>18</item>
         <item>19</item>
         <item>20</item>
