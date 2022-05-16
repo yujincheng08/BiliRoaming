@@ -162,28 +162,35 @@
     </string-array>
 
     <string-array name="dynamic_entries">
-        <item>分享</item>
-        <item>视频</item>
-        <item>番剧</item>
-        <item>课程</item>
+        <item>转发</item>
+        <item>投稿视频</item>
+        <item>番剧、电影等</item>
+        <item>付费内容</item>
+        <item>折叠</item>
         <item>文字</item>
         <item>图文</item>
         <item>文章</item>
-        <item>音乐</item>
+        <item>音频</item>
         <item>H5</item>
-        <item>演唱会</item>
+        <item>直播</item>
         <item>播放列表</item>
         <item>广告</item>
         <item>小程序</item>
+        <item>订阅</item>
         <item>直播推荐</item>
+        <item>横幅</item>
+        <item>合集</item>
         <item>故事</item>
         <item>话题推荐</item>
+        <item>付费更新</item>
+        <item>话题集合</item>
     </string-array>
     <string-array name="dynamic_values">
         <item>1</item>
         <item>2</item>
         <item>3</item>
-        <item>4</item>
+        <item>4,14</item>
+        <item>5</item>
         <item>6</item>
         <item>7</item>
         <item>8</item>
@@ -193,8 +200,13 @@
         <item>13</item>
         <item>15</item>
         <item>16</item>
+        <item>17,21</item>
         <item>18</item>
+        <item>19</item>
+        <item>20</item>
         <item>22</item>
         <item>23</item>
+        <item>24</item>
+        <item>25</item>
     </string-array>
 </resources>

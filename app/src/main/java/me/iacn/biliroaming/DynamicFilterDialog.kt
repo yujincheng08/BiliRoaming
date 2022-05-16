@@ -146,27 +146,18 @@ class DynamicFilterDialog(val activity: Activity, prefs: SharedPreferences) :
                     if (view.isChecked) add(view.tag.toString())
                 }
             }
-            val contentValues = contentGroup.children
+
+            fun getInputValues(viewGroup: ViewGroup) = viewGroup.children
                 .filterIsInstance<ViewGroup>()
                 .flatMap { it.children }
                 .filterIsInstance<EditText>()
                 .map { it.text.toString().trim() }
                 .filter { it.isNotEmpty() }
                 .toSet()
-            val upNameValues = upNameGroup.children
-                .filterIsInstance<ViewGroup>()
-                .flatMap { it.children }
-                .filterIsInstance<EditText>()
-                .map { it.text.toString().trim() }
-                .filter { it.isNotEmpty() }
-                .toSet()
-            val uidValues = uidGroup.children
-                .filterIsInstance<ViewGroup>()
-                .flatMap { it.children }
-                .filterIsInstance<EditText>()
-                .map { it.text.toString().trim() }
-                .filter { it.isNotEmpty() }
-                .toSet()
+
+            val contentValues = getInputValues(contentGroup)
+            val upNameValues = getInputValues(upNameGroup)
+            val uidValues = getInputValues(uidGroup)
 
             prefs.edit().apply {
                 putStringSet("customize_dynamic_type", typeValues)
