@@ -19,6 +19,7 @@ import android.preference.*
 import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import android.view.WindowManager
 import android.widget.EditText
 import android.widget.TextView
 import androidx.documentfile.provider.DocumentFile
@@ -590,7 +591,15 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         }
 
         private fun onCustomDynamicClick(): Boolean {
-            DynamicFilterDialog(activity, prefs).show()
+            DynamicFilterDialog(activity, prefs).create().also { dialog ->
+                dialog.setOnShowListener {
+                    dialog.window?.clearFlags(
+                        WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+                                or WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM
+                    )
+                    dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE)
+                }
+            }.show()
             return true
         }
 
