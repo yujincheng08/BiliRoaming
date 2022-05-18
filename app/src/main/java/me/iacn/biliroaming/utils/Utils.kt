@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.pm.PackageManager.GET_META_DATA
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.util.TypedValue
 import android.view.View
 import android.view.ViewGroup
 import androidx.documentfile.provider.DocumentFile
@@ -257,3 +258,13 @@ val ViewGroup.children: Sequence<View>
     get() = object : Sequence<View> {
         override fun iterator() = this@children.iterator()
     }
+
+fun View.addBackgroundRipple() = with(TypedValue()) {
+    context.theme.resolveAttribute(android.R.attr.selectableItemBackground, this, true)
+    setBackgroundResource(resourceId)
+}
+
+fun View.addBackgroundCircleRipple() = with(TypedValue()) {
+    context.theme.resolveAttribute(android.R.attr.selectableItemBackgroundBorderless, this, true)
+    setBackgroundResource(resourceId)
+}

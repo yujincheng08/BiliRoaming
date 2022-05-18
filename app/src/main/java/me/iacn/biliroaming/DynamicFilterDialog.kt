@@ -1,9 +1,12 @@
+@file:Suppress("NOTHING_TO_INLINE")
+
 package me.iacn.biliroaming
 
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.SharedPreferences
 import android.graphics.Typeface
+import android.text.TextUtils
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
@@ -12,15 +15,13 @@ import android.view.inputmethod.EditorInfo
 import android.widget.*
 import me.iacn.biliroaming.XposedInit.Companion.moduleRes
 import me.iacn.biliroaming.utils.Log
+import me.iacn.biliroaming.utils.addBackgroundRipple
 import me.iacn.biliroaming.utils.children
 import kotlin.math.roundToInt
 
 class DynamicFilterDialog(val activity: Activity, prefs: SharedPreferences) :
     AlertDialog.Builder(activity) {
     init {
-        val dynamicTypes = moduleRes.getStringArray(R.array.dynamic_entries).zip(
-            moduleRes.getStringArray(R.array.dynamic_values)
-        )
         val scrollView = ScrollView(context).apply {
             scrollBarStyle = ScrollView.SCROLLBARS_OUTSIDE_OVERLAY
         }
@@ -32,16 +33,41 @@ class DynamicFilterDialog(val activity: Activity, prefs: SharedPreferences) :
             )
         }
         scrollView.addView(root)
+
+        val rmTopicOfAllTitle = string(R.string.customize_dynamic_all_rm_topic_title)
+        val rmTopicOfAllSwitch = switchPrefsItem(rmTopicOfAllTitle).let {
+            root.addView(it.first)
+            it.second
+        }
+        rmTopicOfAllSwitch.isChecked = prefs.getBoolean("customize_dynamic_all_rm_topic", false)
+
+        val rmUpOfAllTitle = string(R.string.customize_dynamic_all_rm_up_title)
+        val rmUpOfAllSwitch = switchPrefsItem(rmUpOfAllTitle).let {
+            root.addView(it.first)
+            it.second
+        }
+        rmUpOfAllSwitch.isChecked = prefs.getBoolean("customize_dynamic_all_rm_up", false)
+
+        val rmUpOfVideoTitle = string(R.string.customize_dynamic_video_rm_up_title)
+        val rmUpOfVideoSwitch = switchPrefsItem(rmUpOfVideoTitle).let {
+            root.addView(it.first)
+            it.second
+        }
+        rmUpOfVideoSwitch.isChecked = prefs.getBoolean("customize_dynamic_video_rm_up", false)
+
         val byTypeTitle = TextView(context).apply {
-            text = "按类型"
+            text = string(R.string.customize_dynamic_by_type)
             typeface = Typeface.DEFAULT_BOLD
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 18F)
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 18F)
+            ).apply {
+                setMargins(0, 10.dp, 0, 0)
+            }
         }
         root.addView(byTypeTitle)
+
         val gridLayout = GridLayout(context).apply {
             columnCount = 4
             layoutParams = LinearLayout.LayoutParams(
@@ -50,6 +76,9 @@ class DynamicFilterDialog(val activity: Activity, prefs: SharedPreferences) :
             )
         }
         root.addView(gridLayout)
+        val dynamicTypes = moduleRes.getStringArray(R.array.dynamic_entries).zip(
+            moduleRes.getStringArray(R.array.dynamic_values)
+        )
         val colSpec = fun(colWeight: Float) = GridLayout.spec(GridLayout.UNDEFINED, colWeight)
         val rowSpec = { GridLayout.spec(GridLayout.UNDEFINED) }
         val typePrefs = prefs.getStringSet("customize_dynamic_type", null) ?: setOf()
@@ -67,16 +96,17 @@ class DynamicFilterDialog(val activity: Activity, prefs: SharedPreferences) :
             gridLayout.addView(checkBox)
             gridLayout.addView(textView)
         }
+
         val byKeywordTitle = TextView(context).apply {
-            text = "按关键字"
+            text = string(R.string.customize_dynamic_by_keyword)
             typeface = Typeface.DEFAULT_BOLD
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 18F)
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             ).apply {
-                setMargins(0, 10, 0, 0)
+                setMargins(0, 10.dp, 0, 0)
             }
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 18F)
         }
         root.addView(byKeywordTitle)
 
@@ -87,7 +117,7 @@ class DynamicFilterDialog(val activity: Activity, prefs: SharedPreferences) :
                 LinearLayout.LayoutParams.WRAP_CONTENT
             )
         }
-        root.addView(keywordTypeHeader(contentGroup, "内容") {
+        root.addView(keywordTypeHeader(contentGroup, string(R.string.customize_dynamic_content)) {
             keywordInputItem(contentGroup).let {
                 contentGroup.addView(it.first)
                 it.second.requestFocus()
@@ -106,7 +136,7 @@ class DynamicFilterDialog(val activity: Activity, prefs: SharedPreferences) :
                 LinearLayout.LayoutParams.WRAP_CONTENT
             )
         }
-        root.addView(keywordTypeHeader(upNameGroup, "UP主") {
+        root.addView(keywordTypeHeader(upNameGroup, string(R.string.customize_dynamic_up)) {
             keywordInputItem(upNameGroup).let {
                 upNameGroup.addView(it.first)
                 it.second.requestFocus()
@@ -125,7 +155,7 @@ class DynamicFilterDialog(val activity: Activity, prefs: SharedPreferences) :
                 LinearLayout.LayoutParams.WRAP_CONTENT
             )
         }
-        root.addView(keywordTypeHeader(uidGroup, "UID") {
+        root.addView(keywordTypeHeader(uidGroup, string(R.string.customize_dynamic_uid)) {
             keywordInputItem(uidGroup, type = EditorInfo.TYPE_CLASS_NUMBER).let {
                 uidGroup.addView(it.first)
                 it.second.requestFocus()
@@ -137,7 +167,7 @@ class DynamicFilterDialog(val activity: Activity, prefs: SharedPreferences) :
             uidGroup.addView(keywordInputItem(uidGroup, it, EditorInfo.TYPE_CLASS_NUMBER).first)
         }
 
-        setTitle(moduleRes.getString(R.string.customize_dynamic_title))
+        setTitle(string(R.string.customize_dynamic_title))
 
         setPositiveButton(android.R.string.ok) { _, _ ->
             val typeValues = buildSet {
@@ -160,25 +190,30 @@ class DynamicFilterDialog(val activity: Activity, prefs: SharedPreferences) :
             val uidValues = getInputValues(uidGroup)
 
             prefs.edit().apply {
+                putBoolean("customize_dynamic_all_rm_topic", rmTopicOfAllSwitch.isChecked)
+                putBoolean("customize_dynamic_all_rm_up", rmUpOfAllSwitch.isChecked)
+                putBoolean("customize_dynamic_video_rm_up", rmUpOfVideoSwitch.isChecked)
                 putStringSet("customize_dynamic_type", typeValues)
                 putStringSet("customize_dynamic_keyword_content", contentValues)
                 putStringSet("customize_dynamic_keyword_upname", upNameValues)
                 putStringSet("customize_dynamic_keyword_uid", uidValues)
             }.apply()
-            Log.toast("保存成功 重启后生效")
+            Log.toast(string(R.string.customize_dynamic_save_success))
         }
 
-        root.setPadding(50, 20, 50, 20)
+        root.setPadding(16.dp, 10.dp, 16.dp, 10.dp)
 
         setView(scrollView)
     }
 
     private val Int.dp
-        get() = TypedValue.applyDimension(
+        inline get() = TypedValue.applyDimension(
             TypedValue.COMPLEX_UNIT_DIP,
             toFloat(),
             context.resources.displayMetrics
         ).roundToInt()
+
+    private inline fun string(resId: Int) = moduleRes.getString(resId)
 
     private fun keywordTypeHeader(
         group: ViewGroup,
@@ -186,8 +221,8 @@ class DynamicFilterDialog(val activity: Activity, prefs: SharedPreferences) :
         onClick: (v: View) -> Unit,
     ): LinearLayout {
         val layout = LinearLayout(context).apply {
-            orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.START
+            orientation = LinearLayout.HORIZONTAL
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
@@ -204,7 +239,7 @@ class DynamicFilterDialog(val activity: Activity, prefs: SharedPreferences) :
             minWidth = 60.dp
         }
         val addView = Button(context).apply {
-            text = "添加"
+            text = string(R.string.customize_dynamic_add)
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
@@ -212,7 +247,7 @@ class DynamicFilterDialog(val activity: Activity, prefs: SharedPreferences) :
             setOnClickListener(onClick)
         }
         val clearView = Button(context).apply {
-            text = "删除所有"
+            text = string(R.string.customize_dynamic_clear)
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
@@ -249,7 +284,7 @@ class DynamicFilterDialog(val activity: Activity, prefs: SharedPreferences) :
             setSingleLine()
         }
         val button = Button(context).apply {
-            text = "删除"
+            text = string(R.string.customize_dynamic_delete)
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
@@ -259,5 +294,41 @@ class DynamicFilterDialog(val activity: Activity, prefs: SharedPreferences) :
         layout.addView(editText)
         layout.addView(button)
         return Pair(layout, editText)
+    }
+
+    private fun switchPrefsItem(title: String): Pair<LinearLayout, Switch> {
+        val layout = LinearLayout(context).apply {
+            gravity = Gravity.CENTER_VERTICAL
+            orientation = LinearLayout.HORIZONTAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        }
+        val titleView = TextView(context).apply {
+            text = title
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 16F)
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                weight = 1F
+                setSingleLine()
+                ellipsize = TextUtils.TruncateAt.END
+                setPadding(0, 8.dp, 0, 8.dp)
+                setMargins(0, 0, 10.dp, 0)
+            }
+        }
+        val switcher = Switch(context).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        }
+        layout.setOnClickListener { switcher.toggle() }
+        layout.addBackgroundRipple()
+        layout.addView(titleView)
+        layout.addView(switcher)
+        return Pair(layout, switcher)
     }
 }
