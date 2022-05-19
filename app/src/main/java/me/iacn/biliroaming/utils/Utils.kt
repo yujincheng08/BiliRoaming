@@ -5,6 +5,9 @@ import android.content.Context
 import android.content.pm.PackageManager.GET_META_DATA
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.os.Build
 import android.util.TypedValue
 import android.view.View
 import android.view.ViewGroup
@@ -267,4 +270,23 @@ fun View.addBackgroundRipple() = with(TypedValue()) {
 fun View.addBackgroundCircleRipple() = with(TypedValue()) {
     context.theme.resolveAttribute(android.R.attr.selectableItemBackgroundBorderless, this, true)
     setBackgroundResource(resourceId)
+}
+
+fun isNetworkConnected(): Boolean {
+    val connectivityManager =
+        currentContext.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        val capabilities =
+            connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+                ?: return false
+        if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR))
+            return true
+        if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI))
+            return true
+        if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET))
+            return true
+        return false
+    } else {
+        return connectivityManager.activeNetworkInfo?.isAvailable ?: return false
+    }
 }

@@ -279,9 +279,9 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     private fun needProxy(response: Any): Boolean {
-        if (Thread.currentThread().stackTrace.any { it.methodName == "resolveFromDownloadFile" }) {
+        if (!isNetworkConnected() && Thread.currentThread().stackTrace.any { it.methodName == "resolveFromDownloadFile" })
             return false
-        }
+
         if (!response.callMethodAs<Boolean>("hasVideoInfo")) return true
 
         val viewInfo = response.callMethod("getViewInfo")
