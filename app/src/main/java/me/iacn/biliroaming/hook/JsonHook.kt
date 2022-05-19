@@ -494,24 +494,6 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     }
             }
         }
-
-        if (sPrefs.getBoolean("purify_city", false) &&
-            sPrefs.getBoolean("hidden", false)
-        ) {
-            listOf(
-                "com.bapis.bilibili.app.dynamic.v1.DynTabReply",
-                "com.bapis.bilibili.app.dynamic.v2.DynTabReply"
-            ).forEach { clazz ->
-                clazz.hookAfterMethod(
-                    mClassLoader,
-                    "getDynTabList"
-                ) { param ->
-                    param.result = (param.result as List<*>).filter {
-                        it?.callMethodAs<Long>("getCityId") == 0L
-                    }
-                }
-            }
-        }
     }
 
     data class BottomItem(

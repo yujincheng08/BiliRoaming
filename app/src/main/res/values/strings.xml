@@ -196,4 +196,10 @@
     <string name="customize_dynamic_delete">删除</string>
     <string name="customize_dynamic_clear">删除所有</string>
     <string name="customize_dynamic_save_success">保存成功 重启后生效</string>
+    <string name="remove_video_relate_promote_title">移除视频下方的相关推广</string>
+    <string name="remove_video_relate_promote_summary">移除视频下方的相关推广，例如游戏、课程、推广视频等</string>
+    <string name="remove_video_relate_only_av_title">仅展示UP投稿视频</string>
+    <string name="remove_video_relate_only_av_summary">上个选项的基础上，仅展示UP投稿视频，移除番剧等内容</string>
+    <string name="remove_video_cmd_dms_title">移除投票弹幕、三连关注、预告</string>
+    <string name="remove_video_cmd_dms_summary">移除视频播放时出现的投票弹幕、三连关注、预告等</string>
 </resources>
