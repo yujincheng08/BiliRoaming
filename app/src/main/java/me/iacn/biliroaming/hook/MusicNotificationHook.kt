@@ -112,9 +112,9 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val playbackStateClass =
             "android.support.v4.media.session.PlaybackStateCompat".findClassOrNull(mClassLoader)
         playbackStateClass?.declaredClasses?.firstOrNull { c ->
-            c.declaredMethods.filter {
+            c.declaredMethods.any {
                 it.returnType == playbackStateClass && it.parameterTypes.isEmpty()
-            }.count() > 0
+            }
         }
     }
 

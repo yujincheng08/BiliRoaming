@@ -29,13 +29,14 @@ class DynamicHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     override fun startHook() {
-        if (purifyTypes.isNotEmpty() || purifyContents.isNotEmpty()
-            || purifyUpNames.isNotEmpty() || purifyUidList.isNotEmpty()
-            || removeTopicOfAll || removeUpOfAll
+        val hidden = sPrefs.getBoolean("hidden", false)
+        if (hidden && (purifyTypes.isNotEmpty() || purifyContents.isNotEmpty()
+                    || purifyUpNames.isNotEmpty() || purifyUidList.isNotEmpty()
+                    || removeTopicOfAll || removeUpOfAll)
         ) {
             hookDynAll()
         }
-        if (removeUpOfVideo) {
+        if (hidden && removeUpOfVideo) {
             hookDynVideo()
         }
     }
