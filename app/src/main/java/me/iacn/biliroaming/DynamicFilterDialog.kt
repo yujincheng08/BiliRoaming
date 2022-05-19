@@ -5,6 +5,7 @@ package me.iacn.biliroaming
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.SharedPreferences
+import android.graphics.Color
 import android.graphics.Typeface
 import android.text.TextUtils
 import android.util.TypedValue
@@ -309,7 +310,7 @@ class DynamicFilterDialog(val activity: Activity, prefs: SharedPreferences) :
             text = title
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 16F)
             layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
+                0,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             ).apply {
                 weight = 1F
@@ -320,6 +321,10 @@ class DynamicFilterDialog(val activity: Activity, prefs: SharedPreferences) :
             }
         }
         val switcher = Switch(context).apply {
+            isClickable = false
+            isSoundEffectsEnabled = false
+            isHapticFeedbackEnabled = false
+            setBackgroundColor(Color.TRANSPARENT)
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
