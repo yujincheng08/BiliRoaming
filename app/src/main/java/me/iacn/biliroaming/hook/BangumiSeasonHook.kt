@@ -20,7 +20,6 @@ import me.iacn.biliroaming.network.BiliRoamingApi
 import me.iacn.biliroaming.network.BiliRoamingApi.getAreaSearchBangumi
 import me.iacn.biliroaming.network.BiliRoamingApi.getContent
 import me.iacn.biliroaming.network.BiliRoamingApi.getSeason
-import me.iacn.biliroaming.network.BiliRoamingApi.getSpace
 import me.iacn.biliroaming.utils.*
 import org.json.JSONObject
 import java.io.InputStream
@@ -60,6 +59,13 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 514 to Area("cn", "陆", "7", "bangumi"),
                 1919 to Area("hk", "港", "7", "bangumi"),
                 810 to Area("tw", "台", "7", "bangumi")
+            )
+
+        private val USER_SPACES =
+            mapOf(
+                "11783021" to "哔哩哔哩番剧出差",
+                "1988098633" to "b站_戲劇咖",
+                "2042149112" to "b站_綜藝咖"
             )
     }
 
@@ -268,7 +274,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     url ?: return@hookBeforeAllConstructors
                     if (url.startsWith("https://app.bilibili.com/x/v2/search/type") || url.startsWith(
                             "https://appintl.biliapi.net/intl/gateway/app/search/type"
-                        ) || url.startsWith("https://app.bilibili.com/x/intl/search/type")
+                        )
                     ) {
                         val area = Uri.parse(url).getQueryParameter("type")?.toInt()
                         if (AREA_TYPES.containsKey(area)) {
@@ -296,11 +302,10 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             body.setIntField("code", 0)
                         }
                     } else if (url.startsWith("https://app.bilibili.com/x/v2/space?")) {
-                        val code = body.getIntFieldOrNull("code")
-                        val mid = Uri.parse(url).getQueryParameter("vmid")?.toLongOrNull()
-                        if (code != 0 && sPrefs.getBoolean("fix_space", false)) {
-                            fixSpace(mid)?.let {
-                                body.setObjectField(dataField, it)
+                        val mid = Uri.parse(url).getQueryParameter("vmid")
+                        mid?.let {
+                            USER_SPACES[it]?.run {
+                                body.setObjectField(dataField, fixSpace(data, mid, this))
                                 body.setIntField("code", 0)
                             }
                         }
@@ -397,16 +402,14 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
     }
 
-    private fun fixSpace(mid: Long?): Any? {
-        mid ?: return null
-        instance.biliSpaceClass ?: return null
-        return getSpace(mid)?.let {
-            instance.fastJsonClass?.callStaticMethodOrNull(
-                instance.fastJsonParse(),
-                it,
-                instance.biliSpaceClass
-            )
-        }
+    private fun fixSpace(data: Any?, mid: String, name: String): Any? {
+        instance.biliSpaceClass ?: return data
+        if (data != null) return data
+        return instance.fastJsonClass?.callStaticMethod(
+            instance.fastJsonParse(),
+            """{"relation":-999,"guest_relation":-999,"default_tab":"video","is_params":true,"setting":{"fav_video":0,"coins_video":0,"likes_video":0,"bangumi":0,"played_game":0,"groups":0,"comic":0,"bbq":0,"dress_up":0,"disable_following":0,"live_playback":1,"close_space_medal":0,"only_show_wearing":0},"tab":{"archive":true,"article":false,"clip":false,"album":false,"favorite":false,"bangumi":false,"coin":false,"like":false,"community":false,"dynamic":true,"audios":false,"shop":false,"mall":false,"ugc_season":false,"comic":false,"cheese":false,"sub_comic":false,"activity":false,"series":false},"card":{"mid":"$mid","name":"哔哩漫游","approve":false,"sex":"保密","rank":"","face":"https://i0.hdslb.com/bfs/album/887ff772ba48558c82e21772f8a8d81cbf94ea1e.png","DisplayRank":"","regtime":0,"spacesta":0,"birthday":"","place":"","description":"该页面由哔哩漫游修复","article":0,"attentions":null,"fans":114,"friend":0,"attention":514,"sign":"该页面由哔哩漫游修复","level_info":{"current_level":6,"current_min":28800,"current_exp":28801,"next_exp":"--"},"pendant":{"pid":0,"name":"","image":"","expire":0,"image_enhance":"","image_enhance_frame":""},"nameplate":{"nid":0,"name":"","image":"","image_small":"","level":"","condition":""},"official_verify":{"type":1,"desc":"原 $name 官方账号","role":3,"title":"$name 官方账号"},"vip":{"vipType":0,"vipDueDate":0,"dueRemark":"","accessStatus":0,"vipStatus":0,"vipStatusWarn":"","themeType":0,"label":{"path":"","text":"","label_theme":"","text_color":"","bg_style":0,"bg_color":"","border_color":""}},"silence":0,"end_time":0,"silence_url":"","likes":{"like_num":233,"skr_tip":"视频、专栏、动态累计获赞"},"pr_info":{},"relation":{"status":1},"is_deleted":0,"honours":{"colour":{"dark":"#CE8620","normal":"#F0900B"},"tags":null},"profession":{}},"images":{"imgUrl":"https://i0.hdslb.com/bfs/album/16b6731618d911060e26f8fc95684c26bddc897c.jpg","night_imgurl":"https://i0.hdslb.com/bfs/album/ca79ebb2ebeee86c5634234c688b410661ea9623.png","has_garb":true,"goods_available":true},"live":{"roomStatus":0,"roundStatus":0,"liveStatus":0,"url":"","title":"","cover":"","online":0,"roomid":0,"broadcast_type":0,"online_hidden":0,"link":""},"archive":{"order":[{"title":"最新发布","value":"pubdate"},{"title":"最多播放","value":"click"}],"count":9999,"item":[]},"series":{"item":[]},"play_game":{"count":0,"item":[]},"article":{"count":0,"item":[],"lists_count":0,"lists":[]},"season":{"count":0,"item":[]},"coin_archive":{"count":0,"item":[]},"like_archive":{"count":0,"item":[]},"audios":{"count":0,"item":[]},"favourite2":{"count":0,"item":[]},"comic":{"count":0,"item":[]},"ugc_season":{"count":0,"item":[]},"cheese":{"count":0,"item":[]},"fans_effect":{},"tab2":[{"title":"动态","param":"dynamic"},{"title":"投稿","param":"contribute","items":[{"title":"视频","param":"video"}]}]}""",
+            instance.biliSpaceClass
+        ) ?: data
     }
 
     private fun retrieveAreaSearchV2(data: Any?, url: String, area: String, type: String): Any? {

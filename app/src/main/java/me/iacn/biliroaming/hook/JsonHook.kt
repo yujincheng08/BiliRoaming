@@ -20,7 +20,6 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val accountMineClass =
             "tv.danmaku.bili.ui.main2.api.AccountMine".findClassOrNull(mClassLoader)
         val splashClass = "tv.danmaku.bili.ui.splash.SplashData".findClassOrNull(mClassLoader)
-            ?: "tv.danmaku.bili.ui.splash.ad.model.SplashData".findClassOrNull(mClassLoader)
         val tabClass =
             "tv.danmaku.bili.ui.main2.resource.MainResourceManager\$Tab".findClassOrNull(
                 mClassLoader
@@ -31,7 +30,6 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             "com.bilibili.search.api.DefaultKeyword".findClassOrNull(mClassLoader)
         val brandSplashDataClass =
             "tv.danmaku.bili.ui.splash.brand.BrandSplashData".findClassOrNull(mClassLoader)
-                ?: "tv.danmaku.bili.ui.splash.brand.model.BrandSplashData".findClassOrNull(mClassLoader)
         val eventEntranceClass =
             "tv.danmaku.bili.ui.main.event.model.EventEntranceModel".findClassOrNull(mClassLoader)
         val searchRanksClass = "com.bilibili.search.api.SearchRanks".findClassOrNull(mClassLoader)

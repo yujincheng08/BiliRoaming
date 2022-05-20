@@ -181,7 +181,6 @@ android {
             path("src/main/jni/CMakeLists.txt")
         }
     }
-    namespace = "me.iacn.biliroaming"
 }
 
 protobuf {

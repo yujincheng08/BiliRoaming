@@ -88,6 +88,8 @@
     <string name="drawer_summary">移动后，可以点击首页的头像或者在空白地方左划打开侧边栏\n关闭时，需要重启两次客户端才能复原。如果无法还原，请重启手机。</string>
     <string name="full_splash_title">强制满屏启动图</string>
     <string name="full_splash_summary">去两头留中间形式满屏，无论是否自定启动图</string>
+<!--    <string name="get_cover_title">长按保存封面</string>-->
+<!--    <string name="get_cover_summary">开启后，长按播放器可保存视频、直播间、番剧封面</string>-->
     <string name="purify_city_title">净化同城标签</string>
     <string name="purify_city_summary">去除动态页面的同城标签</string>
     <string name="setting">设置</string>
@@ -99,11 +101,13 @@
     <string name="kodob_host">upos-sz-mirrorkodob.bilivideo.com</string>
     <string name="cos_host">upos-sz-mirrorcos.bilivideo.com</string>
     <string name="cosb_host">upos-sz-mirrorcosb.bilivideo.com</string>
-    <string name="coso1_host">upos-sz-mirrorcoso1.bilivideo.com</string>
-    <string name="coso2_host">upos-sz-mirrorcoso2.bilivideo.com</string>
     <string name="bos_host">upos-sz-mirrorbos.bilivideo.com</string>
+<!--    <string name="wcs_host">upos-sz-mirrorwcs.bilivideo.com</string>-->
+<!--    <string name="wcsb_host">upos-sz-mirrorwcsb.bilivideo.com</string>-->
     <string name="hw_host">upos-sz-mirrorhw.bilivideo.com</string>
     <string name="hwb_host">upos-sz-mirrorhwb.bilivideo.com</string>
+<!--    <string name="upbda2_host">upos-sz-upcdnbda2.bilivideo.com</string>-->
+<!--    <string name="upws_host">upos-sz-upcdnws.bilivideo.com</string>-->
     <string name="uphw_host">upos-sz-upcdnhw.bilivideo.com</string>
     <string name="js_host">upos-tf-all-js.bilivideo.com</string>
     <string name="hk_host">cn-hk-eq-bcache-01.bilivideo.com</string>
@@ -179,21 +183,4 @@
 	<string name="skin_title">填写自制主题</string>
     <string name="skin_import_title">导入自制主题</string>
     <string name="skin_summary">重启后，要等待十几秒下载资源，然后再重启（同时开启时的优先度：导入＞填写）</string>
-</resources>
-    <string name="fix_space_title">修复UP主空间</string>
-    <string name="fix_space_summary">修复部分被屏蔽的UP主空间</string>
-    <string name="customize_dynamic_title">净化动态</string>
-    <string name="customize_dynamic_summary">支持移除话题及最常访问，支持按类型和关键字过滤动态</string>
-    <string name="customize_dynamic_all_rm_topic_title">移除热门话题（综合）</string>
-    <string name="customize_dynamic_all_rm_up_title">移除最常访问（综合）</string>
-    <string name="customize_dynamic_video_rm_up_title">移除最常访问（视频）</string>
-    <string name="customize_dynamic_by_type">按类型</string>
-    <string name="customize_dynamic_by_keyword">按关键字</string>
-    <string name="customize_dynamic_content">内容</string>
-    <string name="customize_dynamic_up">UP主</string>
-    <string name="customize_dynamic_uid">UID</string>
-    <string name="customize_dynamic_add">添加</string>
-    <string name="customize_dynamic_delete">删除</string>
-    <string name="customize_dynamic_clear">删除所有</string>
-    <string name="customize_dynamic_save_success">保存成功 重启后生效</string>
 </resources>

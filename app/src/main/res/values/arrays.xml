@@ -4,8 +4,6 @@
         <item>不替换</item>
         <item>cos（腾讯）</item>
         <item>cosb（腾讯）</item>
-        <item>coso1（腾讯）</item>
-        <item>coso2（腾讯）</item>
         <item>bos（腾讯）</item>
         <item>ks3（金山）</item>
         <item>ks3b（金山）</item>
@@ -24,8 +22,6 @@
         <item>$1</item>
         <item>@string/cos_host</item>
         <item>@string/cosb_host</item>
-        <item>@string/coso1_host</item>
-        <item>@string/coso2_host</item>
         <item>@string/bos_host</item>
         <item>@string/ks3_host</item>
         <item>@string/ks3b_host</item>
@@ -154,65 +150,10 @@
         <item>game</item>
     </string-array>
 
-    <string-array name="xposed_scope">
+    <string-array name="xposed_scope" >
         <item>tv.danmaku.bili</item>
         <item>com.bilibili.app.blue</item>
         <item>com.bilibili.app.in</item>
         <item>tv.danmaku.bilibilihd</item>
-    </string-array>
-
-    <string-array name="dynamic_entries">
-        <item>转发</item>
-        <item>投稿视频</item>
-        <item>番剧、电影等</item>
-        <item>付费内容 1</item>
-        <item>付费内容 2</item>
-        <item>折叠</item>
-        <item>文字</item>
-        <item>图文</item>
-        <item>文章</item>
-        <item>音频</item>
-        <item>通用 方形</item>
-        <item>通用 竖形</item>
-        <item>直播</item>
-        <item>播放列表</item>
-        <item>广告</item>
-        <item>小程序</item>
-        <item>订阅</item>
-        <item>新订阅</item>
-        <item>直播推荐</item>
-        <item>横幅</item>
-        <item>合集</item>
-        <item>故事</item>
-        <item>话题推荐</item>
-        <item>付费更新</item>
-        <item>话题集合</item>
-    </string-array>
-    <string-array name="dynamic_values">
-        <item>1</item>
-        <item>2</item>
-        <item>3</item>
-        <item>4</item>
-        <item>14</item>
-        <item>5</item>
-        <item>6</item>
-        <item>7</item>
-        <item>8</item>
-        <item>9</item>
-        <item>10</item>
-        <item>11</item>
-        <item>12</item>
-        <item>13</item>
-        <item>15</item>
-        <item>16</item>
-        <item>17</item>
-        <item>21</item>
-        <item>18</item>
-        <item>19</item>
-        <item>20</item>
-        <item>22</item>
-        <item>23</item>
-        <item>24</item>
-        <item>25</item>
     </string-array>
 </resources>

@@ -129,12 +129,6 @@
             android:summary="@string/custom_link_summary"
             android:title="@string/custom_link_title" />
 
-        <SwitchPreference
-            android:defaultValue="true"
-            android:key="fix_space"
-            android:summary="@string/fix_space_summary"
-            android:title="@string/fix_space_title" />
-
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/pref_backup">
         <Preference
@@ -306,11 +300,6 @@
             android:key="auto_generate_subtitle"
             android:summary="@string/auto_generate_subtitle_summary"
             android:title="@string/auto_generate_subtitle_title" />
-        <Preference
-            android:dependency="hidden"
-            android:key="customize_dynamic"
-            android:summary="@string/customize_dynamic_summary"
-            android:title="@string/customize_dynamic_title" />
     </PreferenceCategory>
 
     <PreferenceCategory
