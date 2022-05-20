@@ -5,6 +5,9 @@ import android.content.Context
 import android.content.pm.PackageManager.GET_META_DATA
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.util.TypedValue
+import android.view.View
+import android.view.ViewGroup
 import androidx.documentfile.provider.DocumentFile
 import com.google.protobuf.GeneratedMessageLite
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
@@ -244,3 +247,24 @@ fun GeneratedMessageLite<*, *>.print(indent: Int = 0): String {
     return sb.toString()
 }
 
+operator fun ViewGroup.iterator(): MutableIterator<View> = object : MutableIterator<View> {
+    private var index = 0
+    override fun hasNext() = index < childCount
+    override fun next() = getChildAt(index++) ?: throw IndexOutOfBoundsException()
+    override fun remove() = removeViewAt(--index)
+}
+
+val ViewGroup.children: Sequence<View>
+    get() = object : Sequence<View> {
+        override fun iterator() = this@children.iterator()
+    }
+
+fun View.addBackgroundRipple() = with(TypedValue()) {
+    context.theme.resolveAttribute(android.R.attr.selectableItemBackground, this, true)
+    setBackgroundResource(resourceId)
+}
+
+fun View.addBackgroundCircleRipple() = with(TypedValue()) {
+    context.theme.resolveAttribute(android.R.attr.selectableItemBackgroundBorderless, this, true)
+    setBackgroundResource(resourceId)
+}
