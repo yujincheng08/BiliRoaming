@@ -182,9 +182,21 @@
     <string name="add_korea_summary">在首页标签添加港澳台韩综分页</string>
     <string name="fix_space_title">修复UP主空间</string>
     <string name="fix_space_summary">修复部分被屏蔽的UP主空间</string>
-    <string name="customize_dynamic_title">动态过滤</string>
-    <string name="customize_dynamic_summary">支持按类型和关键字过滤</string>
     <string name="skin_title">填写自制主题</string>
     <string name="skin_import_title">导入自制主题</string>
     <string name="skin_summary">重启后，要等待十几秒下载资源，然后再重启（同时开启时的优先度：导入＞填写）</string>
+    <string name="customize_dynamic_title">净化动态</string>
+    <string name="customize_dynamic_summary">支持移除话题及最常访问，支持按类型和关键字过滤动态</string>
+    <string name="customize_dynamic_all_rm_topic_title">移除热门话题（综合）</string>
+    <string name="customize_dynamic_all_rm_up_title">移除最常访问（综合）</string>
+    <string name="customize_dynamic_video_rm_up_title">移除最常访问（视频）</string>
+    <string name="customize_dynamic_by_type">按类型</string>
+    <string name="customize_dynamic_by_keyword">按关键字</string>
+    <string name="customize_dynamic_content">内容</string>
+    <string name="customize_dynamic_up">UP主</string>
+    <string name="customize_dynamic_uid">UID</string>
+    <string name="customize_dynamic_add">添加</string>
+    <string name="customize_dynamic_delete">删除</string>
+    <string name="customize_dynamic_clear">删除所有</string>
+    <string name="customize_dynamic_save_success">保存成功 重启后生效</string>
 </resources>
