@@ -54,8 +54,10 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 "viewProgress",
                 "com.bapis.bilibili.app.view.v1.ViewProgressReq"
             ) { param ->
-                param.result?.callMethod("getVideoGuide")
-                    ?.callMethod("clearCommandDms")
+                param.result?.callMethod("getVideoGuide")?.run {
+                    callMethod("clearAttention")
+                    callMethod("clearCommandDms")
+                }
             }
         }
     }
