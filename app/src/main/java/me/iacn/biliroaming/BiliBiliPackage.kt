@@ -121,6 +121,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val toastHelperClass by Weak { mHookInfo.toastHelper.class_ from mClassLoader }
     val videoDetailCallbackClass by Weak { mHookInfo.videoDetailCallback from mClassLoader }
     val biliAccountsClass by Weak { mHookInfo.biliAccounts.class_ from mClassLoader }
+    val networkExceptionClass by Weak { "com.bilibili.lib.moss.api.NetworkException" from mClassLoader }
 
     val ids: Map<String, Int> by lazy {
         mHookInfo.mapIds.idsMap

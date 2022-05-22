@@ -175,6 +175,13 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 "playView",
                 "com.bapis.bilibili.pgc.gateway.player.v2.PlayViewReq"
             ) { param ->
+                // th:
+                // com.bilibili.lib.moss.api.BusinessException: 抱歉您所使用的平台不可观看！
+                // com.bilibili.lib.moss.api.BusinessException: 啥都木有
+                // connection err <- should skip because of cache:
+                // throwable: com.bilibili.lib.moss.api.NetworkException
+                if (instance.networkExceptionClass?.isInstance(param.throwable) == true)
+                    return@hookAfterMethod
                 val request = param.args[0]
                 val response = param.result
                     ?: "com.bapis.bilibili.pgc.gateway.player.v2.PlayViewReply".findClass(
