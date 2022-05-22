@@ -64,7 +64,7 @@ class DynamicFilterDialog(val activity: Activity, prefs: SharedPreferences) :
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             ).apply {
-                setMargins(0, 10.dp, 0, 0)
+                topMargin = 10.dp
             }
         }
         root.addView(byTypeTitle)
@@ -106,7 +106,7 @@ class DynamicFilterDialog(val activity: Activity, prefs: SharedPreferences) :
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             ).apply {
-                setMargins(0, 10.dp, 0, 0)
+                topMargin = 10.dp
             }
         }
         root.addView(byKeywordTitle)
@@ -253,7 +253,7 @@ class DynamicFilterDialog(val activity: Activity, prefs: SharedPreferences) :
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             ).apply {
-                setMargins(6.dp, 0, 0, 0)
+                marginStart = 6.dp
             }
             setOnClickListener { group.removeAllViews() }
         }
@@ -278,11 +278,11 @@ class DynamicFilterDialog(val activity: Activity, prefs: SharedPreferences) :
         val editText = EditText(context).apply {
             inputType = type
             setText(keyword)
+            setSingleLine()
             layoutParams = LinearLayout.LayoutParams(
                 0,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             ).apply { weight = 1F }
-            setSingleLine()
         }
         val button = Button(context).apply {
             text = string(R.string.customize_dynamic_delete)
@@ -309,15 +309,15 @@ class DynamicFilterDialog(val activity: Activity, prefs: SharedPreferences) :
         val titleView = TextView(context).apply {
             text = title
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 16F)
+            setSingleLine()
+            ellipsize = TextUtils.TruncateAt.END
+            setPadding(0, 8.dp, 0, 8.dp)
             layoutParams = LinearLayout.LayoutParams(
                 0,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             ).apply {
                 weight = 1F
-                setSingleLine()
-                ellipsize = TextUtils.TruncateAt.END
-                setPadding(0, 8.dp, 0, 8.dp)
-                setMargins(0, 0, 10.dp, 0)
+                marginEnd = 10.dp
             }
         }
         val switcher = Switch(context).apply {
