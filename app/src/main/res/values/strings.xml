@@ -182,6 +182,11 @@
     <string name="add_korea_summary">在首页标签添加港澳台韩综分页</string>
     <string name="fix_space_title">修复UP主空间</string>
     <string name="fix_space_summary">修复部分被屏蔽的UP主空间</string>
+    <string name="auto_generate_subtitle_title">互转简繁字幕</string>
+    <string name="auto_generate_subtitle_summary">为简繁字幕生成相应的繁简字幕\nPowered by 繁化姬</string>
+    <string name="skin_title">填写魔法刻录</string>
+    <string name="skin_import_title">导入魔法刻录</string>
+    <string name="skin_summary">重启后，要等待十几秒下载资源，然后再重启（同时开启时的优先度：导入＞填写）</string>
     <string name="customize_dynamic_title">净化动态</string>
     <string name="customize_dynamic_summary">支持移除话题及最常访问，支持按类型和关键字过滤动态</string>
     <string name="customize_dynamic_all_rm_topic_title">移除热门话题（综合）</string>
