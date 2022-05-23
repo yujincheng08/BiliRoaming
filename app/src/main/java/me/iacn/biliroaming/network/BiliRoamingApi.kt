@@ -774,7 +774,7 @@ object BiliRoamingApi {
                 connection.connect()
                 if (connection.responseCode == HttpURLConnection.HTTP_OK) {
                     val inputStream = connection.inputStream
-                    getStreamContent(when (connection.contentEncoding) {
+                    getStreamContent(when (connection.contentEncoding.lowercase()) {
                         "gzip" -> GZIPInputStream(inputStream)
                         "br" -> instance.brotliInputStreamClass!!.new(inputStream) as InputStream
                         "deflate" -> InflaterInputStream(inputStream)
