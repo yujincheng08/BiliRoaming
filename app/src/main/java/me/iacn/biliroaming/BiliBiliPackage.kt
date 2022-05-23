@@ -122,6 +122,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val videoDetailCallbackClass by Weak { mHookInfo.videoDetailCallback from mClassLoader }
     val biliAccountsClass by Weak { mHookInfo.biliAccounts.class_ from mClassLoader }
     val networkExceptionClass by Weak { "com.bilibili.lib.moss.api.NetworkException" from mClassLoader }
+    val brotliInputStreamClass by Weak { mHookInfo.brotliInputStream from mClassLoader }
 
     val ids: Map<String, Int> by lazy {
         mHookInfo.mapIds.idsMap
@@ -1507,6 +1508,22 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                         it.isStatic && it.parameterTypes.isEmpty()
                     }?.name ?: return@method
                 }
+            }
+            brotliInputStream = class_ {
+                name = dexHelper.findMethodUsingString(
+                    "Brotli decoder initialization failed",
+                    false,
+                    -1,
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).asSequence().firstNotNullOfOrNull {
+                    dexHelper.decodeMethodIndex(it)
+                }?.declaringClass?.name ?: return@class_
             }
 
             dexHelper.close()
