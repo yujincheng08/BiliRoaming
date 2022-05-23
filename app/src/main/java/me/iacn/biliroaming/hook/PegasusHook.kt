@@ -16,22 +16,29 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         sPrefs.getInt("hide_long_duration_recommend_limit", 0)
     }
     private val kwdFilterTitleList by lazy {
-        sPrefs.getString("keywords_filter_title_recommend_list", "")?.split("|") ?: emptyList()
+        migrateHomeFilterPrefsIfNeeded()
+        sPrefs.getStringSet("home_filter_keywords_title", null) ?: setOf()
     }
     private val kwdFilterReasonList by lazy {
-        sPrefs.getString("keywords_filter_reason_recommend_list", "")?.split("|") ?: emptyList()
+        migrateHomeFilterPrefsIfNeeded()
+        sPrefs.getStringSet("home_filter_keywords_reason", null) ?: setOf()
     }
     private val kwdFilterUidList by lazy {
-        sPrefs.getString("keywords_filter_uid_recommend_list", "")?.split("|") ?: emptyList()
+        migrateHomeFilterPrefsIfNeeded()
+        sPrefs.getStringSet("home_filter_keywords_uid", null)
+            ?.mapNotNull { it.toLongOrNull() } ?: listOf()
     }
     private val kwdFilterUpnameList by lazy {
-        sPrefs.getString("keywords_filter_upname_recommend_list", "")?.split("|") ?: emptyList()
+        migrateHomeFilterPrefsIfNeeded()
+        sPrefs.getStringSet("home_filter_keywords_up", null) ?: setOf()
     }
     private val kwdFilterRnameList by lazy {
-        sPrefs.getString("keywords_filter_rname_recommend_list", "")?.split("|") ?: emptyList()
+        migrateHomeFilterPrefsIfNeeded()
+        sPrefs.getStringSet("home_filter_keywords_category", null) ?: setOf()
     }
     private val kwdFilterTnameList by lazy {
-        sPrefs.getString("keywords_filter_tname_recommend_list", "")?.split("|") ?: emptyList()
+        migrateHomeFilterPrefsIfNeeded()
+        sPrefs.getStringSet("home_filter_keywords_channel", null) ?: setOf()
     }
 
     private val filterMap = mapOf(
@@ -120,13 +127,12 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         // 屏蔽UID
         if (kwdFilterUidList.isNotEmpty()) {
             val uid = try {
-                obj.getObjectField("args")?.getObjectField("upId").toString()
+                obj.getObjectField("args")?.getObjectFieldAs("upId") ?: 0L
             } catch (thr: Throwable) {
                 return false
             }
-            if (uid == "null") return false
             kwdFilterUidList.forEach {
-                if (it.isNotEmpty() && it == uid) return true
+                if (it == uid) return true
             }
         }
 

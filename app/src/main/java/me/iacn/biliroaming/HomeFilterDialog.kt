@@ -1,139 +1,290 @@
+@file:Suppress("NOTHING_TO_INLINE")
+
 package me.iacn.biliroaming
 
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.SharedPreferences
-import android.view.LayoutInflater
-import android.widget.Button
-import android.widget.EditText
-import me.iacn.biliroaming.XposedInit.Companion.moduleRes
+import android.graphics.Typeface
+import android.text.TextUtils
+import android.util.TypedValue
+import android.view.Gravity
+import android.view.View
+import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
+import android.widget.*
 import me.iacn.biliroaming.utils.Log
+import me.iacn.biliroaming.utils.children
+import me.iacn.biliroaming.utils.migrateHomeFilterPrefsIfNeeded
+import kotlin.math.roundToInt
 
 class HomeFilterDialog(val activity: Activity, prefs: SharedPreferences) :
     AlertDialog.Builder(activity) {
     init {
-        val layout = moduleRes.getLayout(R.layout.home_filter_dialog)
-        val inflater = LayoutInflater.from(context)
-        val view = inflater.inflate(layout, null)
+        migrateHomeFilterPrefsIfNeeded()
+        val scrollView = ScrollView(context).apply {
+            scrollBarStyle = ScrollView.SCROLLBARS_OUTSIDE_OVERLAY
+        }
+        val root = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT
+            )
+        }
+        scrollView.addView(root)
 
-        val lovePlayCount = view.findViewById<EditText>(R.id.hide_low_play_count_recommend)
-        lovePlayCount.setText(prefs.getLong(lovePlayCount.tag.toString(), 0).toString())
-        val shortDuration = view.findViewById<EditText>(R.id.hide_short_duration_recommend)
-        shortDuration.setText(prefs.getInt(shortDuration.tag.toString(), 0).toString())
-        val longDuration = view.findViewById<EditText>(R.id.hide_long_duration_recommend)
-        longDuration.setText(prefs.getInt(longDuration.tag.toString(), 0).toString())
-        val title = view.findViewById<EditText>(R.id.keywords_filter_title_recommend)
-        title.setText(prefs.getString(title.tag.toString(), ""))
-        val reason = view.findViewById<EditText>(R.id.keywords_filter_reason_recommend)
-        reason.setText(prefs.getString(reason.tag.toString(), ""))
-        val uid = view.findViewById<EditText>(R.id.keywords_filter_uid_recommend)
-        uid.setText(prefs.getString(uid.tag.toString(), ""))
-        val upname = view.findViewById<EditText>(R.id.keywords_filter_upname_recommend)
-        upname.setText(prefs.getString(upname.tag.toString(), ""))
-        val rname = view.findViewById<EditText>(R.id.keywords_filter_rname_recommend)
-        rname.setText(prefs.getString(rname.tag.toString(), ""))
-        val tname = view.findViewById<EditText>(R.id.keywords_filter_tname_recommend)
-        tname.setText(prefs.getString(tname.tag.toString(), ""))
+        root.addView(TextView(context).apply {
+            text = string(R.string.hide_low_play_count_recommend_summary)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 18F)
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        })
+        val lowPlayCountInput = textInputItem(string(R.string.hide_low_play_count_recommend_title))
+            .let {
+                root.addView(it.first)
+                it.second
+            }
+        prefs.getLong("hide_low_play_count_recommend_limit", 0).takeIf { it > 0 }
+            ?.let { lowPlayCountInput.setText(it.toString()) }
 
-        view.findViewById<Button>(R.id.btn_add_in_title).setOnClickListener {
-            when {
-                title.text.isEmpty() -> {
-                    Log.toast("你好像还没有输入内容> <")
-                }
-                title.text.endsWith('|') -> {
-                    Log.toast("啊嘞 上一个分隔符后面好像还没有东西> <")
-                }
-                else -> {
-                    title.text.append('|')
-                }
+        root.addView(TextView(context).apply {
+            text = string(R.string.hide_duration_recommend_summary)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 18F)
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        })
+        val shortDurationInput = textInputItem(string(R.string.hide_short_duration_recommend_title))
+            .let {
+                root.addView(it.first)
+                it.second
             }
-        }
-        view.findViewById<Button>(R.id.btn_add_in_reason).setOnClickListener {
-            when {
-                reason.text.isEmpty() -> {
-                    Log.toast("你好像还没有输入内容> <")
-                }
-                reason.text.endsWith('|') -> {
-                    Log.toast("啊嘞 上一个分隔符后面好像还没有东西> <")
-                }
-                else -> {
-                    reason.text.append('|')
-                }
+        val longDurationInput = textInputItem(string(R.string.hide_long_duration_recommend_title))
+            .let {
+                root.addView(it.first)
+                it.second
             }
+        prefs.getInt("hide_short_duration_recommend_limit", 0).takeIf { it > 0 }
+            ?.let { shortDurationInput.setText(it.toString()) }
+        prefs.getInt("hide_long_duration_recommend_limit", 0).takeIf { it > 0 }
+            ?.let { longDurationInput.setText(it.toString()) }
+
+        root.addView(TextView(context).apply {
+            text = string(R.string.keywords_filter_recommend_summary)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 18F)
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        })
+        val titleGroup = root.addKeywordGroup(string(R.string.keyword_group_name_title))
+        val reasonGroup = root.addKeywordGroup(string(R.string.keyword_group_name_rcmd_reason))
+        val uidGroup = root.addKeywordGroup(
+            string(R.string.keyword_group_name_uid),
+            EditorInfo.TYPE_CLASS_NUMBER
+        )
+        val upGroup = root.addKeywordGroup(string(R.string.keyword_group_name_up))
+        val categoryGroup = root.addKeywordGroup(string(R.string.keyword_group_name_category))
+        val channelGroup = root.addKeywordGroup(string(R.string.keyword_group_name_channel))
+        prefs.getStringSet("home_filter_keywords_title", null)?.forEach {
+            titleGroup.addView(keywordInputItem(titleGroup, it).first)
         }
-        view.findViewById<Button>(R.id.btn_add_in_uid).setOnClickListener {
-            when {
-                uid.text.isEmpty() -> {
-                    Log.toast("你好像还没有输入内容> <")
-                }
-                uid.text.endsWith('|') -> {
-                    Log.toast("啊嘞 上一个分隔符后面好像还没有东西> <")
-                }
-                else -> {
-                    uid.text.append('|')
-                }
-            }
+        prefs.getStringSet("home_filter_keywords_reason", null)?.forEach {
+            reasonGroup.addView(keywordInputItem(reasonGroup, it).first)
         }
-        view.findViewById<Button>(R.id.btn_add_in_upname).setOnClickListener {
-            when {
-                upname.text.isEmpty() -> {
-                    Log.toast("你好像还没有输入内容> <")
-                }
-                upname.text.endsWith('|') -> {
-                    Log.toast("啊嘞 上一个分隔符后面好像还没有东西> <")
-                }
-                else -> {
-                    upname.text.append('|')
-                }
-            }
+        prefs.getStringSet("home_filter_keywords_uid", null)?.forEach {
+            uidGroup.addView(keywordInputItem(uidGroup, it, EditorInfo.TYPE_CLASS_NUMBER).first)
         }
-        view.findViewById<Button>(R.id.btn_add_in_rname).setOnClickListener {
-            when {
-                rname.text.isEmpty() -> {
-                    Log.toast("你好像还没有输入内容> <")
-                }
-                rname.text.endsWith('|') -> {
-                    Log.toast("啊嘞 上一个分隔符后面好像还没有东西> <")
-                }
-                else -> {
-                    rname.text.append('|')
-                }
-            }
+        prefs.getStringSet("home_filter_keywords_up", null)?.forEach {
+            upGroup.addView(keywordInputItem(upGroup, it).first)
         }
-        view.findViewById<Button>(R.id.btn_add_in_tname).setOnClickListener {
-            when {
-                tname.text.isEmpty() -> {
-                    Log.toast("你好像还没有输入内容> <")
-                }
-                tname.text.endsWith('|') -> {
-                    Log.toast("啊嘞 上一个分隔符后面好像还没有东西> <")
-                }
-                else -> {
-                    tname.text.append('|')
-                }
-            }
+        prefs.getStringSet("home_filter_keywords_category", null)?.forEach {
+            categoryGroup.addView(keywordInputItem(categoryGroup, it).first)
         }
+        prefs.getStringSet("home_filter_keywords_channel", null)?.forEach {
+            channelGroup.addView(keywordInputItem(channelGroup, it).first)
+        }
+
+        setTitle(string(R.string.home_filter_title))
 
         setPositiveButton(android.R.string.ok) { _, _ ->
+            val lowPlayCount = lowPlayCountInput.text.toString().toLongOrNull() ?: 0
+            val shortDuration = shortDurationInput.text.toString().toIntOrNull() ?: 0
+            val longDuration = longDurationInput.text.toString().toIntOrNull() ?: 0
+
+            fun getKeywords(viewGroup: ViewGroup) = viewGroup.children
+                .filterIsInstance<ViewGroup>()
+                .flatMap { it.children }
+                .filterIsInstance<EditText>()
+                .map { it.text.toString().trim() }
+                .filter { it.isNotEmpty() }
+                .toSet()
+
             prefs.edit().apply {
-                putLong(lovePlayCount.tag.toString(), lovePlayCount.text.toString().toLong())
-                putInt(shortDuration.tag.toString(), shortDuration.text.toString().toInt())
-                putInt(longDuration.tag.toString(), longDuration.text.toString().toInt())
-                putString(title.tag.toString(), title.text.toString())
-                putString(reason.tag.toString(), reason.text.toString())
-                putString(uid.tag.toString(), uid.text.toString())
-                putString(upname.tag.toString(), upname.text.toString())
-                putString(rname.tag.toString(), rname.text.toString())
-                putString(tname.tag.toString(), tname.text.toString())
+                putLong("hide_low_play_count_recommend_limit", lowPlayCount)
+                putInt("hide_short_duration_recommend_limit", shortDuration)
+                putInt("hide_long_duration_recommend_limit", longDuration)
+                putStringSet("home_filter_keywords_title", getKeywords(titleGroup))
+                putStringSet("home_filter_keywords_reason", getKeywords(reasonGroup))
+                putStringSet("home_filter_keywords_uid", getKeywords(uidGroup))
+                putStringSet("home_filter_keywords_up", getKeywords(upGroup))
+                putStringSet("home_filter_keywords_category", getKeywords(categoryGroup))
+                putStringSet("home_filter_keywords_channel", getKeywords(channelGroup))
             }.apply()
-            Log.toast("保存成功 重启后生效")
+
+            Log.toast(string(R.string.prefs_save_success_and_reboot))
         }
+        setNegativeButton(android.R.string.cancel, null)
 
-        setTitle("首页推送过滤")
+        root.setPadding(16.dp, 10.dp, 16.dp, 10.dp)
 
-        view.setPadding(50, 20, 50, 20)
-
-        setView(view)
+        setView(scrollView)
     }
 
+    private val Int.dp
+        inline get() = TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP,
+            toFloat(),
+            context.resources.displayMetrics
+        ).roundToInt()
+
+    private inline fun string(resId: Int) = XposedInit.moduleRes.getString(resId)
+
+    private fun textInputItem(
+        name: String,
+        type: Int = EditorInfo.TYPE_CLASS_NUMBER
+    ): Pair<LinearLayout, EditText> {
+        val layout = LinearLayout(context).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        }
+        val textView = TextView(context).apply {
+            text = name
+            setSingleLine()
+            ellipsize = TextUtils.TruncateAt.END
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        }
+        val editText = EditText(context).apply {
+            setSingleLine()
+            inputType = type
+            layoutParams = LinearLayout.LayoutParams(
+                0,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { weight = 1F }
+        }
+        layout.addView(textView)
+        layout.addView(editText)
+        return Pair(layout, editText)
+    }
+
+    private fun keywordTypeHeader(
+        group: ViewGroup,
+        name: String,
+        onClick: (v: View) -> Unit,
+    ): LinearLayout {
+        val layout = LinearLayout(context).apply {
+            gravity = Gravity.START
+            orientation = LinearLayout.HORIZONTAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        }
+        val nameView = TextView(context).apply {
+            text = name
+            typeface = Typeface.DEFAULT_BOLD
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 16F)
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            minWidth = 64.dp
+        }
+        val addView = Button(context).apply {
+            text = string(R.string.keyword_group_add)
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            setOnClickListener(onClick)
+        }
+        val clearView = Button(context).apply {
+            text = string(R.string.keyword_group_clear)
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                marginStart = 6.dp
+            }
+            setOnClickListener { group.removeAllViews() }
+        }
+        layout.addView(nameView)
+        layout.addView(addView)
+        layout.addView(clearView)
+        return layout
+    }
+
+    private fun keywordInputItem(
+        parent: ViewGroup,
+        keyword: String = "",
+        type: Int = EditorInfo.TYPE_CLASS_TEXT,
+    ): Pair<LinearLayout, EditText> {
+        val layout = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        }
+        val editText = EditText(context).apply {
+            inputType = type
+            setText(keyword)
+            setSingleLine()
+            layoutParams = LinearLayout.LayoutParams(
+                0,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { weight = 1F }
+        }
+        val button = Button(context).apply {
+            text = string(R.string.keyword_group_delete)
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            setOnClickListener { parent.removeView(layout) }
+        }
+        layout.addView(editText)
+        layout.addView(button)
+        return Pair(layout, editText)
+    }
+
+    private fun LinearLayout.addKeywordGroup(
+        name: String,
+        inputType: Int = EditorInfo.TYPE_CLASS_TEXT
+    ): ViewGroup {
+        val group = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        }
+        addView(keywordTypeHeader(group, name) {
+            keywordInputItem(group, type = inputType).let {
+                group.addView(it.first)
+                it.second.requestFocus()
+            }
+        })
+        addView(group)
+        return group
+    }
 }
