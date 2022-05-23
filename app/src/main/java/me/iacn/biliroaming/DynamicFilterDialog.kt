@@ -176,7 +176,7 @@ class DynamicFilterDialog(val activity: Activity, prefs: SharedPreferences) :
         group: ViewGroup,
         name: String,
         onClick: (v: View) -> Unit,
-    ): LinearLayout {
+    ): Pair<LinearLayout, Button> {
         val layout = LinearLayout(context).apply {
             gravity = Gravity.START
             orientation = LinearLayout.HORIZONTAL
@@ -211,12 +211,13 @@ class DynamicFilterDialog(val activity: Activity, prefs: SharedPreferences) :
             ).apply {
                 marginStart = 6.dp
             }
+            visibility = View.INVISIBLE
             setOnClickListener { group.removeAllViews() }
         }
         layout.addView(nameView)
         layout.addView(addView)
         layout.addView(clearView)
-        return layout
+        return Pair(layout, clearView)
     }
 
     private fun keywordInputItem(
@@ -304,10 +305,30 @@ class DynamicFilterDialog(val activity: Activity, prefs: SharedPreferences) :
                 LinearLayout.LayoutParams.WRAP_CONTENT
             )
         }
-        addView(keywordTypeHeader(group, name) {
+        val clearButton = keywordTypeHeader(group, name) {
             keywordInputItem(group, type = inputType).let {
                 group.addView(it.first)
                 it.second.requestFocus()
+            }
+        }.let {
+            addView(it.first)
+            it.second
+        }
+        group.setOnHierarchyChangeListener(object : ViewGroup.OnHierarchyChangeListener {
+            override fun onChildViewAdded(parent: View, child: View) {
+                if (group.childCount == 0) {
+                    clearButton.visibility = View.INVISIBLE
+                } else {
+                    clearButton.visibility = View.VISIBLE
+                }
+            }
+
+            override fun onChildViewRemoved(parent: View, child: View) {
+                if (group.childCount == 0) {
+                    clearButton.visibility = View.INVISIBLE
+                } else {
+                    clearButton.visibility = View.VISIBLE
+                }
             }
         })
         addView(group)
