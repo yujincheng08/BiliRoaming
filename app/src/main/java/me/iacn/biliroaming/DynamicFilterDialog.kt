@@ -111,60 +111,19 @@ class DynamicFilterDialog(val activity: Activity, prefs: SharedPreferences) :
         }
         root.addView(byKeywordTitle)
 
-        val contentGroup = LinearLayout(context).apply {
-            orientation = LinearLayout.VERTICAL
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-        }
-        root.addView(keywordTypeHeader(contentGroup, string(R.string.customize_dynamic_content)) {
-            keywordInputItem(contentGroup).let {
-                contentGroup.addView(it.first)
-                it.second.requestFocus()
-            }
-        })
-        root.addView(contentGroup)
-        val contentPrefs = prefs.getStringSet("customize_dynamic_keyword_content", null) ?: setOf()
-        contentPrefs.forEach {
+        val contentGroup = root.addKeywordGroup(string(R.string.keyword_group_name_content))
+        val upNameGroup = root.addKeywordGroup(string(R.string.keyword_group_name_up))
+        val uidGroup = root.addKeywordGroup(
+            string(R.string.keyword_group_name_uid),
+            EditorInfo.TYPE_CLASS_NUMBER
+        )
+        prefs.getStringSet("customize_dynamic_keyword_content", null)?.forEach {
             contentGroup.addView(keywordInputItem(contentGroup, it).first)
         }
-
-        val upNameGroup = LinearLayout(context).apply {
-            orientation = LinearLayout.VERTICAL
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-        }
-        root.addView(keywordTypeHeader(upNameGroup, string(R.string.customize_dynamic_up)) {
-            keywordInputItem(upNameGroup).let {
-                upNameGroup.addView(it.first)
-                it.second.requestFocus()
-            }
-        })
-        root.addView(upNameGroup)
-        val upNamePrefs = prefs.getStringSet("customize_dynamic_keyword_upname", null) ?: setOf()
-        upNamePrefs.forEach {
+        prefs.getStringSet("customize_dynamic_keyword_upname", null)?.forEach {
             upNameGroup.addView(keywordInputItem(upNameGroup, it).first)
         }
-
-        val uidGroup = LinearLayout(context).apply {
-            orientation = LinearLayout.VERTICAL
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-        }
-        root.addView(keywordTypeHeader(uidGroup, string(R.string.customize_dynamic_uid)) {
-            keywordInputItem(uidGroup, type = EditorInfo.TYPE_CLASS_NUMBER).let {
-                uidGroup.addView(it.first)
-                it.second.requestFocus()
-            }
-        })
-        root.addView(uidGroup)
-        val uidPrefs = prefs.getStringSet("customize_dynamic_keyword_uid", null) ?: setOf()
-        uidPrefs.forEach {
+        prefs.getStringSet("customize_dynamic_keyword_uid", null)?.forEach {
             uidGroup.addView(keywordInputItem(uidGroup, it, EditorInfo.TYPE_CLASS_NUMBER).first)
         }
 
@@ -178,7 +137,7 @@ class DynamicFilterDialog(val activity: Activity, prefs: SharedPreferences) :
                 }
             }
 
-            fun getInputValues(viewGroup: ViewGroup) = viewGroup.children
+            fun getKeywords(viewGroup: ViewGroup) = viewGroup.children
                 .filterIsInstance<ViewGroup>()
                 .flatMap { it.children }
                 .filterIsInstance<EditText>()
@@ -186,21 +145,18 @@ class DynamicFilterDialog(val activity: Activity, prefs: SharedPreferences) :
                 .filter { it.isNotEmpty() }
                 .toSet()
 
-            val contentValues = getInputValues(contentGroup)
-            val upNameValues = getInputValues(upNameGroup)
-            val uidValues = getInputValues(uidGroup)
-
             prefs.edit().apply {
                 putBoolean("customize_dynamic_all_rm_topic", rmTopicOfAllSwitch.isChecked)
                 putBoolean("customize_dynamic_all_rm_up", rmUpOfAllSwitch.isChecked)
                 putBoolean("customize_dynamic_video_rm_up", rmUpOfVideoSwitch.isChecked)
                 putStringSet("customize_dynamic_type", typeValues)
-                putStringSet("customize_dynamic_keyword_content", contentValues)
-                putStringSet("customize_dynamic_keyword_upname", upNameValues)
-                putStringSet("customize_dynamic_keyword_uid", uidValues)
+                putStringSet("customize_dynamic_keyword_content", getKeywords(contentGroup))
+                putStringSet("customize_dynamic_keyword_upname", getKeywords(upNameGroup))
+                putStringSet("customize_dynamic_keyword_uid", getKeywords(uidGroup))
             }.apply()
-            Log.toast(string(R.string.customize_dynamic_save_success))
+            Log.toast(string(R.string.prefs_save_success_and_reboot))
         }
+        setNegativeButton(android.R.string.cancel, null)
 
         root.setPadding(16.dp, 10.dp, 16.dp, 10.dp)
 
@@ -220,7 +176,7 @@ class DynamicFilterDialog(val activity: Activity, prefs: SharedPreferences) :
         group: ViewGroup,
         name: String,
         onClick: (v: View) -> Unit,
-    ): LinearLayout {
+    ): Pair<LinearLayout, Button> {
         val layout = LinearLayout(context).apply {
             gravity = Gravity.START
             orientation = LinearLayout.HORIZONTAL
@@ -237,10 +193,10 @@ class DynamicFilterDialog(val activity: Activity, prefs: SharedPreferences) :
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             )
-            minWidth = 60.dp
+            minWidth = 40.dp
         }
         val addView = Button(context).apply {
-            text = string(R.string.customize_dynamic_add)
+            text = string(R.string.keyword_group_add)
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
@@ -248,19 +204,20 @@ class DynamicFilterDialog(val activity: Activity, prefs: SharedPreferences) :
             setOnClickListener(onClick)
         }
         val clearView = Button(context).apply {
-            text = string(R.string.customize_dynamic_clear)
+            text = string(R.string.keyword_group_clear)
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             ).apply {
                 marginStart = 6.dp
             }
+            visibility = View.INVISIBLE
             setOnClickListener { group.removeAllViews() }
         }
         layout.addView(nameView)
         layout.addView(addView)
         layout.addView(clearView)
-        return layout
+        return Pair(layout, clearView)
     }
 
     private fun keywordInputItem(
@@ -285,7 +242,7 @@ class DynamicFilterDialog(val activity: Activity, prefs: SharedPreferences) :
             ).apply { weight = 1F }
         }
         val button = Button(context).apply {
-            text = string(R.string.customize_dynamic_delete)
+            text = string(R.string.keyword_group_delete)
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
@@ -335,5 +292,46 @@ class DynamicFilterDialog(val activity: Activity, prefs: SharedPreferences) :
         layout.addView(titleView)
         layout.addView(switcher)
         return Pair(layout, switcher)
+    }
+
+    private fun LinearLayout.addKeywordGroup(
+        name: String,
+        inputType: Int = EditorInfo.TYPE_CLASS_TEXT
+    ): ViewGroup {
+        val group = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        }
+        val clearButton = keywordTypeHeader(group, name) {
+            keywordInputItem(group, type = inputType).let {
+                group.addView(it.first)
+                it.second.requestFocus()
+            }
+        }.let {
+            addView(it.first)
+            it.second
+        }
+        group.setOnHierarchyChangeListener(object : ViewGroup.OnHierarchyChangeListener {
+            override fun onChildViewAdded(parent: View, child: View) {
+                if (group.childCount == 0) {
+                    clearButton.visibility = View.INVISIBLE
+                } else {
+                    clearButton.visibility = View.VISIBLE
+                }
+            }
+
+            override fun onChildViewRemoved(parent: View, child: View) {
+                if (group.childCount == 0) {
+                    clearButton.visibility = View.INVISIBLE
+                } else {
+                    clearButton.visibility = View.VISIBLE
+                }
+            }
+        })
+        addView(group)
+        return group
     }
 }
