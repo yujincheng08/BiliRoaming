@@ -29,13 +29,14 @@ class DynamicHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     override fun startHook() {
-        if (purifyTypes.isNotEmpty() || purifyContents.isNotEmpty()
-            || purifyUpNames.isNotEmpty() || purifyUidList.isNotEmpty()
-            || removeTopicOfAll || removeUpOfAll
+        val hidden = sPrefs.getBoolean("hidden", false)
+        if (hidden && (purifyTypes.isNotEmpty() || purifyContents.isNotEmpty()
+                    || purifyUpNames.isNotEmpty() || purifyUidList.isNotEmpty()
+                    || removeTopicOfAll || removeUpOfAll)
         ) {
             hookDynAll()
         }
-        if (removeUpOfVideo) {
+        if (hidden && removeUpOfVideo) {
             hookDynVideo()
         }
     }
@@ -126,10 +127,7 @@ class DynamicHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             "dynVideo",
             "com.bapis.bilibili.app.dynamic.v2.DynVideoReq"
         ) { param ->
-            val dynVideoReply = param.result
-                ?: return@hookAfterMethod
-            if (removeUpOfVideo)
-                dynVideoReply.callMethod("clearVideoUpList")
+            param.result?.callMethod("clearVideoUpList")
         }
     }
 }

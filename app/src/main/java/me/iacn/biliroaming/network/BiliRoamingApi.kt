@@ -18,10 +18,13 @@ import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 import java.io.IOException
+import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import java.util.zip.GZIPInputStream
+import java.util.zip.InflaterInputStream
 
 
 /**
@@ -767,10 +770,16 @@ object BiliRoamingApi {
                 connection.connectTimeout = timeout
                 connection.readTimeout = timeout
                 connection.setRequestProperty("x-from-biliroaming", BuildConfig.VERSION_NAME)
+                connection.setRequestProperty("Accept-Encoding", "${if (instance.brotliInputStreamClass != null) "br," else ""}gzip,deflate")
                 connection.connect()
                 if (connection.responseCode == HttpURLConnection.HTTP_OK) {
                     val inputStream = connection.inputStream
-                    getStreamContent(inputStream)
+                    getStreamContent(when (connection.contentEncoding.lowercase()) {
+                        "gzip" -> GZIPInputStream(inputStream)
+                        "br" -> instance.brotliInputStreamClass!!.new(inputStream) as InputStream
+                        "deflate" -> InflaterInputStream(inputStream)
+                        else -> inputStream
+                    })
                 } else null
             }
 

@@ -385,8 +385,8 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 splashClass -> if (sPrefs.getBoolean("purify_splash", false) &&
                     sPrefs.getBoolean("hidden", false)
                 ) {
-                    result.getObjectFieldAs<MutableList<*>?>("splashList")?.clear()
-                    result.getObjectFieldAs<MutableList<*>?>("strategyList")?.clear()
+                    result.getObjectFieldOrNullAs<MutableList<*>>("splashList")?.clear()
+                    result.getObjectFieldOrNullAs<MutableList<*>>("strategyList")?.clear()
                 }
                 defaultWordClass, defaultKeywordClass, searchRanksClass, searchReferralClass, followingcardSearchRanksClass -> if (sPrefs.getBoolean(
                         "purify_search",
@@ -402,10 +402,8 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 brandSplashDataClass -> if (sPrefs.getBoolean("custom_splash", false) ||
                     sPrefs.getBoolean("custom_splash_logo", false)
                 ) {
-                    val brandList = result.getObjectFieldAs<MutableList<Any>>("brandList")
-                    val showList = result.getObjectFieldAs<MutableList<Any>>("showList")
-                    brandList.clear()
-                    showList.clear()
+                    result.getObjectFieldOrNullAs<MutableList<Any>>("brandList")?.clear()
+                    result.getObjectFieldOrNullAs<MutableList<Any>>("showList")?.clear()
                 }
                 eventEntranceClass -> if (sPrefs.getBoolean("purify_game", false) &&
                     sPrefs.getBoolean("hidden", false)
@@ -492,24 +490,6 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             )
                         }
                     }
-            }
-        }
-
-        if (sPrefs.getBoolean("purify_city", false) &&
-            sPrefs.getBoolean("hidden", false)
-        ) {
-            listOf(
-                "com.bapis.bilibili.app.dynamic.v1.DynTabReply",
-                "com.bapis.bilibili.app.dynamic.v2.DynTabReply"
-            ).forEach { clazz ->
-                clazz.hookAfterMethod(
-                    mClassLoader,
-                    "getDynTabList"
-                ) { param ->
-                    param.result = (param.result as List<*>).filter {
-                        it?.callMethodAs<Long>("getCityId") == 0L
-                    }
-                }
             }
         }
     }
