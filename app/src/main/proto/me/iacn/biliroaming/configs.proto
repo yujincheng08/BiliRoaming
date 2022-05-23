@@ -237,4 +237,5 @@ message HookInfo {
   optional Class bangumi_season = 60;
   optional KanBan kan_ban = 67;
   optional ToastHelper toast_helper = 68;
+  optional Class brotli_input_stream = 69;
 }
