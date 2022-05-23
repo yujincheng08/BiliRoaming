@@ -24,6 +24,7 @@ import java.net.URL
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.zip.GZIPInputStream
+import java.util.zip.InflaterInputStream
 
 
 /**
@@ -769,13 +770,14 @@ object BiliRoamingApi {
                 connection.connectTimeout = timeout
                 connection.readTimeout = timeout
                 connection.setRequestProperty("x-from-biliroaming", BuildConfig.VERSION_NAME)
-                connection.setRequestProperty("Accept-Encoding", "${if (instance.brotliInputStreamClass != null) "br," else ""}gzip")
+                connection.setRequestProperty("Accept-Encoding", "${if (instance.brotliInputStreamClass != null) "br," else ""}gzip,deflate")
                 connection.connect()
                 if (connection.responseCode == HttpURLConnection.HTTP_OK) {
                     val inputStream = connection.inputStream
                     getStreamContent(when (connection.contentEncoding) {
                         "gzip" -> GZIPInputStream(inputStream)
                         "br" -> instance.brotliInputStreamClass!!.new(inputStream) as InputStream
+                        "deflate" -> InflaterInputStream(inputStream)
                         else -> inputStream
                     })
                 } else null
