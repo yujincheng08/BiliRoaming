@@ -167,11 +167,15 @@ message DownloadThread {
   optional ReportDownload report_download = 4;
 }
 
+message HomeUserCenter {
+  optional Class class = 1;
+  optional Method add_setting = 2;
+}
+
 message Settings {
-  optional Class home_user_center = 1;
   optional Class menu_group_item = 2;
   optional Class setting_router = 3;
-  optional Method add_setting = 4;
+  repeated HomeUserCenter home_user_center = 5;
 }
 
 message MusicNotification {

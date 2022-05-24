@@ -75,7 +75,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             ?: "tv.danmaku.bili.MainActivityV2" from mClassLoader
     }
     val mainActivityClass by Weak { "tv.danmaku.bili.MainActivityV2" from mClassLoader }
-    val homeUserCenterClass by Weak { mHookInfo.settings.homeUserCenter from mClassLoader }
+    val homeUserCenterClass by Weak { if (mHookInfo.settings.homeUserCenterCount == 1) mHookInfo.settings.homeUserCenterList.first().class_ from mClassLoader else null }
     val musicNotificationHelperClass by Weak { mHookInfo.musicNotification.helper from mClassLoader }
     val liveNotificationHelperClass by Weak { mHookInfo.musicNotification.liveHelper from mClassLoader }
     val notificationBuilderClass by Weak { mHookInfo.musicNotification.builder.class_ from mClassLoader }
@@ -159,7 +159,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     fun themeReset() = mHookInfo.themeProcessor.methodsList.map { it.orNull }
 
-    fun addSetting() = mHookInfo.settings.addSetting.orNull
+    fun homeCenters() = mHookInfo.settings.homeUserCenterList.map {
+        it.class_ from mClassLoader to it.addSetting.orNull
+    }
 
     fun requestField() = mHookInfo.okHttp.request.orNull
 
@@ -713,7 +715,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 }
                 val contextIndex = dexHelper.encodeClassIndex(Context::class.java)
                 val listIndex = dexHelper.encodeClassIndex(List::class.java)
-                val homeUserCenterClass = dexHelper.findMethodUsingString(
+                dexHelper.findMethodUsingString(
                     "main.my-information.noportrait.0.show",
                     false,
                     -1,
@@ -723,40 +725,42 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     null,
                     null,
                     null,
-                    true
-                ).asSequence().firstNotNullOfOrNull {
-                    dexHelper.decodeMethodIndex(it)
-                }?.declaringClass ?: return@settings
-                val homeUserCenterIndex = dexHelper.encodeClassIndex(homeUserCenterClass)
-                val addSettingMethod = dexHelper.findMethodUsingString(
-                    "activity://main/preference",
-                    true,
-                    -1,
-                    -1,
-                    null,
-                    homeUserCenterIndex,
-                    null,
-                    longArrayOf(contextIndex, listIndex),
-                    null,
-                    true
-                ).asSequence().firstNotNullOfOrNull {
-                    dexHelper.decodeMethodIndex(it)
-                } ?: dexHelper.findMethodUsingString(
-                    "bilibili://main/preference",
-                    true,
-                    -1,
-                    -1,
-                    null,
-                    homeUserCenterIndex,
-                    null,
-                    longArrayOf(contextIndex, listIndex),
-                    null,
-                    true
-                ).asSequence().firstNotNullOfOrNull {
-                    dexHelper.decodeMethodIndex(it)
-                } ?: return@settings
-                homeUserCenter = class_ { name = homeUserCenterClass.name }
-                addSetting = method { name = addSettingMethod.name }
+                    false
+                ).asSequence().mapNotNull { dexHelper.decodeMethodIndex(it)?.declaringClass }
+                    .forEach { homeUserCenterClass ->
+                        val homeUserCenterIndex = dexHelper.encodeClassIndex(homeUserCenterClass)
+                        val addSettingMethod = dexHelper.findMethodUsingString(
+                            "activity://main/preference",
+                            true,
+                            -1,
+                            -1,
+                            null,
+                            homeUserCenterIndex,
+                            null,
+                            longArrayOf(contextIndex, listIndex),
+                            null,
+                            true
+                        ).asSequence().firstNotNullOfOrNull {
+                            dexHelper.decodeMethodIndex(it)
+                        } ?: dexHelper.findMethodUsingString(
+                            "bilibili://main/preference",
+                            true,
+                            -1,
+                            -1,
+                            null,
+                            homeUserCenterIndex,
+                            null,
+                            longArrayOf(contextIndex, listIndex),
+                            null,
+                            true
+                        ).asSequence().firstNotNullOfOrNull {
+                            dexHelper.decodeMethodIndex(it)
+                        } ?: return@settings
+                        homeUserCenter += homeUserCenter {
+                            class_ = class_ { name = homeUserCenterClass.name }
+                            addSetting = method { name = addSettingMethod.name }
+                        }
+                    }
             }
             drawer = drawer {
                 val navigationViewClass =

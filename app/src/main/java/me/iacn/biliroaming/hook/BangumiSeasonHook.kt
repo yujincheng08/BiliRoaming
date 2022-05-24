@@ -145,6 +145,8 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private val bangumiSearchPageClass by Weak {
         "com.bilibili.bangumi.data.page.search.BangumiSearchPage".findClassOrNull(
             mClassLoader
+        ) ?: "com.bilibili.search.result.bangumi.ogv.BangumiSearchPage".findClassOrNull(
+            mClassLoader
         )
     }
     private val biliSearchOgvResultClass by Weak {
@@ -344,7 +346,13 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             val searchResultFragment =
                 "com.bilibili.bangumi.ui.page.search.BangumiSearchResultFragment".findClassOrNull(
                     mClassLoader
-                ) ?: "com.bilibili.search.ogv.OgvSearchResultFragment".findClassOrNull(mClassLoader)
+                )
+                    ?: "com.bilibili.search.result.bangumi.ogv.BangumiSearchResultFragment".findClassOrNull(
+                        mClassLoader
+                    )
+                    ?: "com.bilibili.search.ogv.OgvSearchResultFragment".findClassOrNull(
+                        mClassLoader
+                    )
             searchResultFragment?.run {
                 hookBeforeMethod(
                     "setUserVisibleCompat",
