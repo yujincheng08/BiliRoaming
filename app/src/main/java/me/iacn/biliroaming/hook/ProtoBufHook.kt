@@ -9,6 +9,7 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val removeRelatePromote = sPrefs.getBoolean("remove_video_relate_promote", false)
         val removeRelateOnlyAv = sPrefs.getBoolean("remove_video_relate_only_av", false)
         val removeCmdDms = sPrefs.getBoolean("remove_video_cmd_dms", false)
+        val purifySearch = sPrefs.getBoolean("purify_search", false)
 
         if (hidden && purifyCity) {
             listOf(
@@ -58,6 +59,15 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     callMethod("clearAttention")
                     callMethod("clearCommandDms")
                 }
+            }
+        }
+        if (hidden && purifySearch) {
+            "com.bapis.bilibili.app.interfaces.v1.SearchMoss".hookAfterMethod(
+                mClassLoader,
+                "defaultWords",
+                "com.bapis.bilibili.app.interfaces.v1.DefaultWordsReq"
+            ) { param ->
+                param.result = null
             }
         }
     }
