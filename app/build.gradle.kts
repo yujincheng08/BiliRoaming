@@ -245,8 +245,8 @@ configurations.all {
 
 dependencies {
     compileOnly("de.robv.android.xposed:api:82")
-    implementation("com.google.protobuf:protobuf-kotlin-lite:3.19.4")
-    compileOnly("com.google.protobuf:protoc:3.19.4")
+    implementation("com.google.protobuf:protobuf-kotlin-lite:3.20.1")
+    compileOnly("com.google.protobuf:protoc:3.20.1")
     implementation("org.jetbrains.kotlin:kotlin-stdlib:${rootProject.extra["kotlinVersion"]}")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.6.1")
