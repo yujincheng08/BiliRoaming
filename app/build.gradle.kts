@@ -67,12 +67,8 @@ android {
                     "-fno-stack-protector",
                     "-fomit-frame-pointer",
                     "-Wno-builtin-macro-redefined",
-                    "-ffunction-sections",
-                    "-fdata-sections",
                     "-Wno-unused-value",
-                    "-Wl,--gc-sections",
                     "-D__FILE__=__FILE_NAME__",
-                    "-Wl,--exclude-libs,ALL",
                 )
                 cppFlags("-std=c++20", *flags)
                 cFlags("-std=c18", *flags)
@@ -110,27 +106,47 @@ android {
                     "config"
                 )
         }
+        debug {
+            externalNativeBuild {
+                cmake {
+                    arguments.addAll(
+                        arrayOf(
+                            "-DCMAKE_CXX_FLAGS_DEBUG=-Og",
+                            "-DCMAKE_C_FLAGS_DEBUG=-Og",
+                        )
+                    )
+                }
+            }
+        }
         release {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles("proguard-rules.pro")
             externalNativeBuild {
                 cmake {
-                    cppFlags += "-flto"
+                    val flags =arrayOf(
+                        "-flto",
+                        "-ffunction-sections",
+                        "-fdata-sections",
+                        "-Wl,--gc-sections",
+                        "-fno-unwind-tables",
+                        "-fno-asynchronous-unwind-tables",
+                        "-Wl,--exclude-libs,ALL",
+                    )
+                    cppFlags.addAll(flags)
+                    cFlags.addAll(flags)
                     val configFlags = arrayOf(
                         "-Oz",
                         "-DNDEBUG"
                     ).joinToString(" ")
                     arguments(
+                        "-DCMAKE_BUILD_TYPE=Release",
                         "-DCMAKE_CXX_FLAGS_RELEASE=$configFlags",
-                        "-DCMAKE_CXX_FLAGS_RELWITHDEBINFO=$configFlags",
                         "-DCMAKE_C_FLAGS_RELEASE=$configFlags",
-                        "-DCMAKE_C_FLAGS_RELWITHDEBINFO=$configFlags",
                         "-DDEBUG_SYMBOLS_PATH=${project.buildDir.absolutePath}/symbols/$name",
                     )
                 }
             }
-
         }
     }
 
@@ -179,6 +195,7 @@ android {
     externalNativeBuild {
         cmake {
             path("src/main/jni/CMakeLists.txt")
+            version = "3.22.1+"
         }
     }
     namespace = "me.iacn.biliroaming"
