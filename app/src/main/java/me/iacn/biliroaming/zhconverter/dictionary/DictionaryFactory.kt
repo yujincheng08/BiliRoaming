@@ -20,7 +20,7 @@ object DictionaryFactory {
     }
 
     fun loadDictionary(mappingFile: String, reverse: Boolean): BasicDictionary {
-        val charMap = HashMap<Char, Char>(256)
+        val charMap = HashMap<Char, Char>(4096)
         val dict = Trie<String>()
         var maxLen = 2
         val dictFile = File(mappingFile).inputStream()
