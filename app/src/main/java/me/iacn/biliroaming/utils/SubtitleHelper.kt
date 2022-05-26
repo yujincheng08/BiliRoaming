@@ -21,7 +21,7 @@ object SubtitleHelper {
     @Suppress("BlockingMethodInNonBlockingContext")
     suspend fun checkDictUpdate(): String? {
         val lastCheckTime = sPrefs.getLong("subtitle_dict_last_check_time", 0)
-        if (System.currentTimeMillis() - lastCheckTime < checkInterval && !dictExist)
+        if (System.currentTimeMillis() - lastCheckTime < checkInterval && dictExist)
             return null
         val url = moduleRes.getString(R.string.subtitle_dict_releases_url)
         val json = fetchJsonArray(url) ?: return null
