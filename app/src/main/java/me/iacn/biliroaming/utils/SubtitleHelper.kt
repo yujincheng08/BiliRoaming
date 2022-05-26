@@ -37,8 +37,7 @@ object SubtitleHelper {
                 val dictUrl = dictAsset.getString("browser_download_url")
                 val tmpDictFile = File(currentContext.filesDir, "t2cn.txt.tmp")
                 tmpDictFile.runCatching {
-                    val dictText = withContext(Dispatchers.IO) { URL(dictUrl).readText() }
-                    writeText(dictText)
+                    withContext(Dispatchers.IO) { writeText(URL(dictUrl).readText()) }
                 }.onSuccess {
                     val dictFile = File(dictFilePath).apply { delete() }
                     if (tmpDictFile.renameTo(dictFile)) {
