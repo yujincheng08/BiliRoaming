@@ -107,10 +107,12 @@ class GenerateSubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     }
                 }
                 val converted = if (dictDownloaded) {
-                    runCatchingOrNull {
+                    runCatching {
                         val responseText = URL(subUrl).readText()
                         SubtitleHelper.convert(responseText)
-                    } ?: SubtitleHelper.errorResponse()
+                    }.onFailure {
+                        Log.e(it)
+                    }.getOrNull() ?: SubtitleHelper.errorResponse()
                 } else SubtitleHelper.errorResponse()
 
                 val responseBody = instance.responseBodyClass

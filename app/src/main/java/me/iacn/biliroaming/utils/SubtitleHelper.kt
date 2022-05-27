@@ -23,6 +23,7 @@ object SubtitleHelper {
         val lastCheckTime = sPrefs.getLong("subtitle_dict_last_check_time", 0)
         if (System.currentTimeMillis() - lastCheckTime < checkInterval && dictExist)
             return null
+        sPrefs.edit().putLong("subtitle_dict_last_check_time", System.currentTimeMillis()).apply()
         val url = moduleRes.getString(R.string.subtitle_dict_releases_url)
         val json = fetchJsonArray(url) ?: return null
         for (item in json) {
@@ -41,18 +42,17 @@ object SubtitleHelper {
                 }.onSuccess {
                     val dictFile = File(dictFilePath).apply { delete() }
                     if (tmpDictFile.renameTo(dictFile)) {
-                        sPrefs.edit().apply {
-                            putLong("subtitle_dict_last_check_time", System.currentTimeMillis())
-                            putString("subtitle_dict_latest_version", tagName)
-                        }.apply()
+                        sPrefs.edit().putString("subtitle_dict_latest_version", tagName).apply()
                         return dictFilePath
                     }
                     return null
                 }.onFailure {
+                    Log.e(it)
                     tmpDictFile.delete()
                     return null
                 }
             }
+            break
         }
         return null
     }

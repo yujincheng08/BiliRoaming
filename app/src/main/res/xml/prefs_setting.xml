@@ -362,8 +362,8 @@
         </Preference>
 
         <Preference
-            android:key="subtitle_fallback"
-            android:title="@string/subtitle_fallback_title">
+            android:key="subtitle_feedback"
+            android:title="@string/subtitle_feedback_title">
             <intent
                 android:action="android.intent.action.VIEW"
                 android:data="@string/subtitle_dict_repo_url" />

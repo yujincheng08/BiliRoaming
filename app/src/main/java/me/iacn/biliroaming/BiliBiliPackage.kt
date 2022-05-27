@@ -435,20 +435,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     ).asSequence().firstNotNullOfOrNull {
                         dexHelper.decodeMethodIndex(it)
                     }?.declaringClass ?: return@okHttp
-                val responseBuilderClass = dexHelper.findMethodUsingString(
-                    "code < 0: ",
-                    false,
-                    -1,
-                    -1,
-                    null,
-                    -1,
-                    null,
-                    null,
-                    null,
-                    true
-                ).asSequence().firstNotNullOfOrNull {
-                    dexHelper.decodeMethodIndex(it)
-                }?.declaringClass ?: return@okHttp
                 val responseBodyClass = "okhttp3.ResponseBody".from(classloader)
                     ?: dexHelper.findMethodUsingString(
                         "Cannot buffer entire body for content length: ",
@@ -530,7 +516,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                         ?: return@field
                 }
                 classRequest = class_ { name = requestClass.name }
-                responseBuilder = class_ { name = responseBuilderClass.name }
+                responseBuilder = class_ {
+                    name = responseClass.declaredConstructors.firstOrNull()
+                        ?.parameterTypes?.firstOrNull()?.name ?: return@okHttp
+                }
                 responseBody = class_ { name = responseBodyClass.name }
                 create = method {
                     name = responseBodyClass.methods.find {

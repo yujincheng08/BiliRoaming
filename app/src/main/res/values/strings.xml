@@ -208,7 +208,7 @@
     <string name="remove_video_cmd_dms_summary">移除视频播放时浮窗出现的三连关注、关联视频、投票弹幕、评分弹幕等</string>
     <string name="generate_subtitle_title">生成简中字幕</string>
     <string name="generate_subtitle_summary">根据繁体字幕自动生成简中字幕</string>
-    <string name="subtitle_fallback_title">字幕转换错误反馈</string>
+    <string name="subtitle_feedback_title">字幕转换错误反馈</string>
     <string name="subtitle_dict_repo_url">https://github.com/BBSub/ZhConvertDict</string>
     <string name="subtitle_dict_releases_url">https://api.github.com/repos/BBSub/ZhConvertDict/releases</string>
     <string name="subtitle_append_info">请注意，站内宣传漫游或脚本会被拉黑</string>
