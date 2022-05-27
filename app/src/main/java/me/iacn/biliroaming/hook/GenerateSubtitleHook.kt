@@ -7,6 +7,7 @@ import kotlinx.coroutines.future.future
 import kotlinx.coroutines.launch
 import me.iacn.biliroaming.*
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
+import me.iacn.biliroaming.XposedInit.Companion.moduleRes
 import me.iacn.biliroaming.utils.*
 import java.lang.reflect.Method
 import java.net.URL
@@ -112,8 +113,9 @@ class GenerateSubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         SubtitleHelper.convert(responseText)
                     }.onFailure {
                         Log.e(it)
-                    }.getOrNull() ?: SubtitleHelper.errorResponse()
-                } else SubtitleHelper.errorResponse()
+                    }.getOrNull()
+                        ?: SubtitleHelper.errorResponse(moduleRes.getString(R.string.subtitle_convert_failed))
+                } else SubtitleHelper.errorResponse(moduleRes.getString(R.string.subtitle_dict_download_failed))
 
                 val responseBody = instance.responseBodyClass
                     ?.callStaticMethod(

@@ -94,14 +94,14 @@ object SubtitleHelper {
         ChineseUtils.reloadDictionary("t2cn")
     }
 
-    fun errorResponse(): String {
+    fun errorResponse(content: String): String {
         return JSONObject().apply {
             put("body", JSONArray().apply {
                 put(JSONObject().apply {
                     put("from", 0)
                     put("location", 2)
                     put("to", 9999)
-                    put("content", moduleRes.getString(R.string.subtitle_convert_failed))
+                    put("content", content)
                 })
             })
         }.toString()
