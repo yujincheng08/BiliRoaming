@@ -123,7 +123,7 @@ class GenerateSubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         mediaType,
                         converted
                     ) ?: return@hookBeforeMethod
-                val responseBuildFields = instance.responseBuildFields()
+                val responseBuildFields = instance.responseBuildFields
                     .takeIf { it.isNotEmpty() } ?: return@hookBeforeMethod
 
                 instance.responseBuilderClass?.new()

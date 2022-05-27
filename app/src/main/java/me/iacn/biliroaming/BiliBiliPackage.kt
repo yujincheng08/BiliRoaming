@@ -151,6 +151,19 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         biliAccounts?.callMethodOrNullAs<String>(mHookInfo.biliAccounts.getAccessKey.orNull)
     }
 
+    val responseBuildFields by lazy {
+        buildList {
+            val findBuildField = { type: Class<*>? ->
+                responseBuilderClass?.findFirstFieldByExactTypeOrNull(type)?.name
+            }
+            findBuildField(requestClass)?.also { add(it) } ?: return@buildList
+            findBuildField(protocolClass)?.also { add(it) } ?: return@buildList
+            findBuildField(Int::class.javaPrimitiveType)?.also { add(it) } ?: return@buildList
+            findBuildField(String::class.java)?.also { add(it) } ?: return@buildList
+            findBuildField(responseBodyClass)?.also { add(it) } ?: return@buildList
+        }
+    }
+
     fun fastJsonParse() = mHookInfo.fastJson.parse.orNull
 
     fun colorArray() = mHookInfo.themeHelper.colorArray.orNull
@@ -242,17 +255,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     fun executeCall() = mHookInfo.okHttp.execute.orNull
 
     fun realCallRequestField() = mHookInfo.okHttp.realCallRequest.orNull
-
-    fun responseBuildFields() = buildList {
-        val findBuildField = { type: Class<*>? ->
-            responseBuilderClass?.findFirstFieldByExactTypeOrNull(type)?.name
-        }
-        findBuildField(requestClass)?.also { add(it) } ?: return@buildList
-        findBuildField(protocolClass)?.also { add(it) } ?: return@buildList
-        findBuildField(Int::class.javaPrimitiveType)?.also { add(it) } ?: return@buildList
-        findBuildField(String::class.java)?.also { add(it) } ?: return@buildList
-        findBuildField(responseBodyClass)?.also { add(it) } ?: return@buildList
-    }
 
     private fun readHookInfo(context: Context): Configs.HookInfo {
         try {
