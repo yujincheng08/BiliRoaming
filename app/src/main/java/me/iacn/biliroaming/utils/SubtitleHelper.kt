@@ -19,10 +19,10 @@ object SubtitleHelper {
     val dictExist: Boolean get() = File(dictFilePath).isFile
 
     suspend fun checkDictUpdate(): String? {
-        val lastCheckTime = sPrefs.getLong("subtitle_dict_last_check_time", 0)
+        val lastCheckTime = sCaches.getLong("subtitle_dict_last_check_time", 0)
         if (System.currentTimeMillis() - lastCheckTime < checkInterval && dictExist)
             return null
-        sPrefs.edit().putLong("subtitle_dict_last_check_time", System.currentTimeMillis()).apply()
+        sCaches.edit().putLong("subtitle_dict_last_check_time", System.currentTimeMillis()).apply()
         val url = moduleRes.getString(R.string.subtitle_dict_releases_url)
         val json = fetchJsonArray(url) ?: return null
         for (item in json) {
@@ -30,7 +30,7 @@ object SubtitleHelper {
                 it.startsWith("t2cn")
             } ?: continue
             item.optBoolean("draft", true).takeIf { !it } ?: continue
-            val latestVer = sPrefs.getString("subtitle_dict_latest_version", null) ?: ""
+            val latestVer = sCaches.getString("subtitle_dict_latest_version", null) ?: ""
             if (latestVer != tagName || !dictExist) {
                 val assets = item.optJSONArray("assets") ?: return null
                 val dictAsset = assets.optJSONObject(0) ?: return null
@@ -41,7 +41,7 @@ object SubtitleHelper {
                 }.onSuccess {
                     val dictFile = File(dictFilePath).apply { delete() }
                     if (tmpDictFile.renameTo(dictFile)) {
-                        sPrefs.edit().putString("subtitle_dict_latest_version", tagName).apply()
+                        sCaches.edit().putString("subtitle_dict_latest_version", tagName).apply()
                         return dictFilePath
                     }
                     return null
