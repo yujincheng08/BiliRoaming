@@ -11,6 +11,7 @@ import org.json.JSONObject
 import java.io.File
 import java.net.URL
 import java.util.concurrent.TimeUnit
+import java.util.zip.ZipInputStream
 
 object SubtitleHelper {
     private val checkInterval = TimeUnit.MINUTES.toMillis(10)
@@ -95,13 +96,15 @@ object SubtitleHelper {
 
     fun prepareBuiltInDict(): Boolean {
         val dictStream = SubtitleHelper::class.java.classLoader
-            ?.getResourceAsStream("assets/t2cn.txt")
+            ?.getResourceAsStream("assets/t2cn.txt.zip")
             ?: return false
         val dictFile = File(dictFilePath)
         dictFile.runCatching {
             delete()
-            dictStream.use {
-                it.copyTo(dictFile.outputStream())
+            ZipInputStream(dictStream).also {
+                it.nextEntry
+            }.use {
+                it.copyTo(outputStream())
             }
         }.onSuccess { return true }.onFailure {
             dictFile.delete()
