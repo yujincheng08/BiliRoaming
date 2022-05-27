@@ -213,5 +213,4 @@
     <string name="subtitle_dict_releases_url">https://api.github.com/repos/BBSub/ZhConvertDict/releases</string>
     <string name="subtitle_append_info">请注意，站内宣传漫游或脚本会被拉黑</string>
     <string name="subtitle_convert_failed">字幕转换失败，请重试</string>
-    <string name="subtitle_dict_download_failed">转换字典下载失败，请重试</string>
 </resources>

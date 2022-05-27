@@ -18,7 +18,6 @@ object SubtitleHelper {
     val dictFilePath: String by lazy { File(currentContext.filesDir, "t2cn.txt").absolutePath }
     val dictExist: Boolean get() = File(dictFilePath).isFile
 
-    @Suppress("BlockingMethodInNonBlockingContext")
     suspend fun checkDictUpdate(): String? {
         val lastCheckTime = sPrefs.getLong("subtitle_dict_last_check_time", 0)
         if (System.currentTimeMillis() - lastCheckTime < checkInterval && dictExist)
@@ -92,6 +91,23 @@ object SubtitleHelper {
 
     fun reloadDict() {
         ChineseUtils.reloadDictionary("t2cn")
+    }
+
+    fun prepareBuiltInDict(): Boolean {
+        val dictStream = SubtitleHelper::class.java.classLoader
+            ?.getResourceAsStream("assets/t2cn.txt")
+            ?: return false
+        val dictFile = File(dictFilePath)
+        dictFile.runCatching {
+            delete()
+            dictStream.use {
+                it.copyTo(dictFile.outputStream())
+            }
+        }.onSuccess { return true }.onFailure {
+            dictFile.delete()
+            return false
+        }
+        return false
     }
 
     fun errorResponse(content: String): String {

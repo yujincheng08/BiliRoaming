@@ -1,9 +1,7 @@
 package me.iacn.biliroaming.hook
 
 import android.net.Uri
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.future.future
 import kotlinx.coroutines.launch
 import me.iacn.biliroaming.*
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
@@ -11,7 +9,6 @@ import me.iacn.biliroaming.XposedInit.Companion.moduleRes
 import me.iacn.biliroaming.utils.*
 import java.lang.reflect.Method
 import java.net.URL
-import java.util.concurrent.TimeUnit
 
 class GenerateSubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
@@ -90,24 +87,10 @@ class GenerateSubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         "application/json; charset=UTF-8"
                     ) ?: return@hookBeforeMethod
 
-                var dictDownloaded = false
-                if (!SubtitleHelper.dictExist) {
-                    runCatchingOrNull {
-                        scope.future(Dispatchers.IO) {
-                            SubtitleHelper.checkDictUpdate()
-                        }.get(60, TimeUnit.SECONDS)
-                    }?.let { dictDownloaded = true }
-                } else {
-                    dictDownloaded = true
-                    runCatchingOrNull {
-                        scope.launch {
-                            SubtitleHelper.checkDictUpdate()?.let {
-                                SubtitleHelper.reloadDict()
-                            }
-                        }
-                    }
-                }
-                val converted = if (dictDownloaded) {
+                val dictReady = if (!SubtitleHelper.dictExist) {
+                    SubtitleHelper.prepareBuiltInDict()
+                } else true
+                val converted = if (dictReady) {
                     runCatching {
                         val responseText = URL(subUrl).readText()
                         SubtitleHelper.convert(responseText)
@@ -115,7 +98,15 @@ class GenerateSubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         Log.e(it)
                     }.getOrNull()
                         ?: SubtitleHelper.errorResponse(moduleRes.getString(R.string.subtitle_convert_failed))
-                } else SubtitleHelper.errorResponse(moduleRes.getString(R.string.subtitle_dict_download_failed))
+                } else SubtitleHelper.errorResponse(moduleRes.getString(R.string.subtitle_convert_failed))
+
+                scope.launch {
+                    runCatchingOrNull {
+                        SubtitleHelper.checkDictUpdate()?.let {
+                            SubtitleHelper.reloadDict()
+                        }
+                    }
+                }
 
                 val responseBody = instance.responseBodyClass
                     ?.callStaticMethod(
