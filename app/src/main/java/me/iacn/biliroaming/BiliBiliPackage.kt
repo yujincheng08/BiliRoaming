@@ -151,19 +151,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         biliAccounts?.callMethodOrNullAs<String>(mHookInfo.biliAccounts.getAccessKey.orNull)
     }
 
-    val responseBuildFields by lazy {
-        buildList {
-            val findBuildField = { type: Class<*>? ->
-                responseBuilderClass?.findFirstFieldByExactTypeOrNull(type)?.name
-            }
-            findBuildField(requestClass)?.also { add(it) } ?: return@buildList
-            findBuildField(protocolClass)?.also { add(it) } ?: return@buildList
-            findBuildField(Int::class.javaPrimitiveType)?.also { add(it) } ?: return@buildList
-            findBuildField(String::class.java)?.also { add(it) } ?: return@buildList
-            findBuildField(responseBodyClass)?.also { add(it) } ?: return@buildList
-        }
-    }
-
     fun fastJsonParse() = mHookInfo.fastJson.parse.orNull
 
     fun colorArray() = mHookInfo.themeHelper.colorArray.orNull
@@ -255,6 +242,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     fun executeCall() = mHookInfo.okHttp.execute.orNull
 
     fun realCallRequestField() = mHookInfo.okHttp.realCallRequest.orNull
+
+    fun responseBuildFields() = mHookInfo.okHttp.responseBuildFieldsList.map { it.orNull }
 
     private fun readHookInfo(context: Context): Configs.HookInfo {
         try {
@@ -518,10 +507,21 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                         ?: return@field
                 }
                 classRequest = class_ { name = requestClass.name }
-                responseBuilder = class_ {
-                    name = responseClass.declaredConstructors.firstOrNull()
-                        ?.parameterTypes?.firstOrNull()?.name ?: return@okHttp
-                }
+                val responseBuilderClass = responseClass.declaredConstructors.firstOrNull()
+                    ?.parameterTypes?.firstOrNull() ?: return@okHttp
+                responseBuilder = class_ { name = responseBuilderClass.name }
+                buildList {
+                    val findField = { type: Class<*>? ->
+                        responseBuilderClass.findFirstFieldByExactTypeOrNull(type)?.name
+                    }
+                    findField(requestClass)?.also { add(it) } ?: return@buildList
+                    findField(protocolClass)?.also { add(it) } ?: return@buildList
+                    findField(Int::class.javaPrimitiveType)?.also { add(it) } ?: return@buildList
+                    findField(String::class.java)?.also { add(it) } ?: return@buildList
+                    findField(responseBodyClass)?.also { add(it) } ?: return@buildList
+                }.takeIf { it.size == 5 }?.map { field { name = it } }?.also {
+                    responseBuildFields += it
+                } ?: return@okHttp
                 responseBody = class_ { name = responseBodyClass.name }
                 create = method {
                     name = responseBodyClass.methods.find {

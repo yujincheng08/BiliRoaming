@@ -23,14 +23,15 @@ message OkHttp {
   optional Field url = 2;
   optional Class class_request = 3;
   optional Class response_builder = 4;
-  optional Class response_body = 5;
-  optional Method create = 6;
-  optional Class media_type = 7;
-  optional Method get = 8;
-  optional Class real_call = 9;
-  optional Method execute = 10;
-  optional Field real_call_request = 11;
-  optional Class protocol = 12;
+  repeated Field response_build_fields = 5;
+  optional Class response_body = 6;
+  optional Method create = 7;
+  optional Class media_type = 8;
+  optional Method get = 9;
+  optional Class real_call = 10;
+  optional Method execute = 11;
+  optional Field real_call_request = 12;
+  optional Class protocol = 13;
 }
 
 message FastJson {
