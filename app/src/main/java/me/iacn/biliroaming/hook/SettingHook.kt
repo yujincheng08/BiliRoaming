@@ -49,13 +49,16 @@ class SettingHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
         instance.homeCenters().forEach { (c, m) ->
             c?.hookBeforeAllMethods(m) { param ->
-                val lastGroup = (param.args[1] as MutableList<*>).lastOrNull()
+                @Suppress("UNCHECKED_CAST")
+                val list = param.args[1] as? MutableList<Any>
+                    ?: param.args[1]?.getObjectFieldOrNullAs<MutableList<Any>>("moreSectionList")
                     ?: return@hookBeforeAllMethods
 
-                val itemList =
-                    if (lastGroup.javaClass != instance.menuGroupItemClass) lastGroup.getObjectFieldAs<MutableList<Any>?>(
+                val itemList = list.lastOrNull()?.let {
+                    if (it.javaClass != instance.menuGroupItemClass) it.getObjectFieldOrNullAs<MutableList<Any>>(
                         "itemList"
-                    ) else param.args[1] as MutableList<Any>
+                    ) else list
+                } ?: list
 
                 val item = instance.menuGroupItemClass?.new() ?: return@hookBeforeAllMethods
                 item.setIntField("id", SETTING_ID)
@@ -65,8 +68,8 @@ class SettingHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         "https://i0.hdslb.com/bfs/album/276769577d2a5db1d9f914364abad7c5253086f6.png"
                     )
                     .setObjectField("uri", SETTING_URI)
-
-                itemList?.forEach {
+                    .setIntField("visible", 1)
+                itemList.forEach {
                     if (try {
                             it.getIntField("id") == SETTING_ID
                         } catch (t: Throwable) {
@@ -74,7 +77,7 @@ class SettingHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         }
                     ) return@hookBeforeAllMethods
                 }
-                itemList?.add(item)
+                itemList.add(item)
             }
         }
 
