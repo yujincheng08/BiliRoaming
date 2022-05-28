@@ -24,35 +24,27 @@ object SubtitleHelper {
         if (System.currentTimeMillis() - lastCheckTime < checkInterval && dictExist)
             return null
         sCaches.edit().putLong("subtitle_dict_last_check_time", System.currentTimeMillis()).apply()
-        val url = moduleRes.getString(R.string.subtitle_dict_releases_url)
-        val json = fetchJsonArray(url) ?: return null
-        for (item in json) {
-            val tagName = item.optString("tag_name").takeIf {
-                it.startsWith("t2cn")
-            } ?: continue
-            item.optBoolean("draft", true).takeIf { !it } ?: continue
-            val latestVer = sCaches.getString("subtitle_dict_latest_version", null) ?: ""
-            if (latestVer != tagName || !dictExist) {
-                val assets = item.optJSONArray("assets") ?: return null
-                val dictAsset = assets.optJSONObject(0) ?: return null
-                val dictUrl = dictAsset.getString("browser_download_url")
-                val tmpDictFile = File(currentContext.filesDir, "t2cn.txt.tmp")
-                tmpDictFile.runCatching {
-                    withContext(Dispatchers.IO) { writeText(URL(dictUrl).readText()) }
-                }.onSuccess {
-                    val dictFile = File(dictFilePath).apply { delete() }
-                    if (tmpDictFile.renameTo(dictFile)) {
-                        sCaches.edit().putString("subtitle_dict_latest_version", tagName).apply()
-                        return dictFilePath
-                    }
-                    return null
-                }.onFailure {
-                    Log.e(it)
-                    tmpDictFile.delete()
-                    return null
+        val url = moduleRes.getString(R.string.subtitle_dict_latest_url)
+        val json = fetchJson(url) ?: return null
+        val tagName = json.optString("tag_name")
+        val latestVer = sCaches.getString("subtitle_dict_latest_version", null) ?: ""
+        if (latestVer != tagName || !dictExist) {
+            val dictUrl = json.optJSONArray("assets")
+                ?.optJSONObject(0)?.optString("browser_download_url")
+                .takeUnless { it.isNullOrEmpty() } ?: return null
+            val tmpDictFile = File(currentContext.filesDir, "t2cn.txt.tmp")
+            tmpDictFile.runCatching {
+                withContext(Dispatchers.IO) { writeText(URL(dictUrl).readText()) }
+            }.onSuccess {
+                val dictFile = File(dictFilePath).apply { delete() }
+                if (tmpDictFile.renameTo(dictFile)) {
+                    sCaches.edit().putString("subtitle_dict_latest_version", tagName).apply()
+                    return dictFilePath
                 }
+            }.onFailure {
+                Log.e(it)
+                tmpDictFile.delete()
             }
-            break
         }
         return null
     }
