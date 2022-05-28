@@ -237,9 +237,9 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     tryThailand =
                         lastSeasonInfo.containsKey("area") && lastSeasonInfo["area"] == "th"
                 }
-                if (tryThailand) {
+                val subtitles = if (tryThailand) {
                     Log.d("Getting thailand subtitles")
-                    val subtitles = if (lastSeasonInfo.containsKey("sb$oid")) {
+                    if (lastSeasonInfo.containsKey("sb$oid")) {
                         Log.d("Got from season")
                         JSONArray(lastSeasonInfo["sb$oid"])
                     } else {
@@ -251,36 +251,43 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         Log.d("Got from subtitle api")
                         data.optJSONArray("subtitles").orEmpty()
                     }
-                    if (subtitles.length() == 0) return@hookAfterMethod
+                } else {
+                    lastSeasonInfo.remove("sb")?.let { JSONArray(it) } ?: return@hookAfterMethod
+                }
 
-                    val newRes = param.result?.let {
-                        DmViewReply.parseFrom(
-                            param.result.callMethodAs<ByteArray>("toByteArray")
-                        ).copy {
-                            buildSubtitles(subtitles)
-                        }
-                    } ?: dmViewReply {
+                if (subtitles.length() == 0) return@hookAfterMethod
+
+                val newRes = param.result?.let {
+                    DmViewReply.parseFrom(
+                        param.result.callMethodAs<ByteArray>("toByteArray")
+                    ).copy {
                         buildSubtitles(subtitles)
                     }
+                } ?: dmViewReply {
+                    buildSubtitles(subtitles)
+                }
+                newRes.let {
                     param.result = (param.method as Method).returnType.callStaticMethod(
                         "parseFrom",
-                        newRes.toByteArray()
+                        it.toByteArray()
                     )
                 }
             }
     }
 
     private fun DmViewReplyKt.Dsl.buildSubtitles(subtitles: JSONArray) {
-        subtitle = videoSubtitle {
-            for (subtitle in subtitles) {
-                this.subtitles +=
-                    subtitleItem {
-                        id = subtitle.optLong("id")
-                        idStr = subtitle.optLong("id").toString()
-                        subtitleUrl = subtitle.optString("url")
-                        lan = subtitle.optString("key")
-                        lanDoc = subtitle.optString("title")
-                    }
+        subtitle = subtitle.copy {
+            videoSubtitle {
+                for (subtitle in subtitles) {
+                    this.subtitles +=
+                        subtitleItem {
+                            id = subtitle.optLong("id")
+                            idStr = subtitle.optLong("id").toString()
+                            subtitleUrl = subtitle.optString("url")
+                            lan = subtitle.optString("key")
+                            lanDoc = subtitle.optString("title")
+                        }
+                }
             }
         }
     }
@@ -444,6 +451,9 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 if (result != null && result !is String) {
                     jsonContent = jsonContent.getJSONObject("result")
                 }
+            }
+            jsonContent.optJSONArray("subtitles")?.let {
+                lastSeasonInfo["sb"] = it.toString()
             }
             val videoCodeCid = jsonContent.optInt("video_codecid")
             val serializedResponse = playViewReply {
