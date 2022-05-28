@@ -730,6 +730,22 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     .forEach { homeUserCenterClass ->
                         val homeUserCenterIndex = dexHelper.encodeClassIndex(homeUserCenterClass)
                         val addSettingMethod = dexHelper.findMethodUsingString(
+                            "bilibili://main/scan",
+                            true,
+                            -1,
+                            -1,
+                            null,
+                            homeUserCenterIndex,
+                            null,
+                            longArrayOf(contextIndex),
+                            null,
+                            false
+                        ).asSequence().mapNotNull {
+                            dexHelper.decodeMethodIndex(it) as? Method
+                        }.firstOrNull {
+                            it.parameterTypes.size == 2 &&
+                                    it.parameterTypes[1] != List::class.java
+                        } ?: dexHelper.findMethodUsingString(
                             "activity://main/preference",
                             true,
                             -1,
