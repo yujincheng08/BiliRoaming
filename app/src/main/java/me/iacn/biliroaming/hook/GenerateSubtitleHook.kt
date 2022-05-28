@@ -2,6 +2,7 @@ package me.iacn.biliroaming.hook
 
 import android.net.Uri
 import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.future.future
 import kotlinx.coroutines.launch
 import me.iacn.biliroaming.*
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
@@ -9,6 +10,7 @@ import me.iacn.biliroaming.XposedInit.Companion.moduleRes
 import me.iacn.biliroaming.utils.*
 import java.lang.reflect.Method
 import java.net.URL
+import java.util.concurrent.TimeUnit
 
 class GenerateSubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
@@ -88,7 +90,11 @@ class GenerateSubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     ) ?: return@hookBeforeMethod
 
                 val dictReady = if (!SubtitleHelper.dictExist) {
-                    SubtitleHelper.prepareBuiltInDict()
+                    runCatchingOrNull {
+                        scope.future {
+                            SubtitleHelper.checkDictUpdate()
+                        }.get(60, TimeUnit.SECONDS)
+                    } != null
                 } else true
                 val converted = if (dictReady) {
                     runCatching {
@@ -98,7 +104,7 @@ class GenerateSubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         Log.e(it)
                     }.getOrNull()
                         ?: SubtitleHelper.errorResponse(moduleRes.getString(R.string.subtitle_convert_failed))
-                } else SubtitleHelper.errorResponse(moduleRes.getString(R.string.subtitle_convert_failed))
+                } else SubtitleHelper.errorResponse(moduleRes.getString(R.string.subtitle_dict_download_failed))
 
                 scope.launch {
                     runCatchingOrNull {
