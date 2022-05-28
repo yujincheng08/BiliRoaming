@@ -288,27 +288,32 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         Log.toast("自定义我的页面，【标题项目】不能只保留【创作中心】，因此不删除任何标题项目，请修改你的漫游设置。", true)
                     }
                     if (platform == "android_hd") {
-                        result.getObjectFieldOrNullAs<MutableList<*>?>("padSectionList")?.removeAll { items ->
-                            // 分析内容
-                            val title = items?.getObjectFieldAs<String>("title")
-                            val uri = items?.getObjectFieldAs<String>("uri")
-                            val id = items?.getObjectField("id").toString()
+                        listOf(result.getObjectFieldOrNullAs<MutableList<*>?>("padSectionList"),
+                               result.getObjectFieldOrNullAs<MutableList<*>?>("recommendSectionList"),
+                               result.getObjectFieldOrNullAs<MutableList<*>?>("moreSectionList")
+                        ).forEach { it ->
+                            it?.removeAll { items ->
+                                // 分析内容
+                                val title = items?.getObjectFieldAs<String>("title")
+                                val uri = items?.getObjectFieldAs<String>("uri")
+                                val id = items?.getObjectField("id").toString()
 
-                            // 修改成自定义按钮
-                            if (sPrefs.getBoolean("add_custom_button", false) && id == sPrefs.getString("custom_button_id", "")){
-                                val icon = items?.getObjectFieldAs<String>("icon").toString()
-                                items?.setObjectField("title", sPrefs.getString("custom_button_title", title))
-                                    ?.setObjectField("uri", sPrefs.getString("custom_button_uri", uri))
-                                    ?.setObjectField("icon", sPrefs.getString("custom_button_icon", icon))
-                                return@removeAll false
+                                // 修改成自定义按钮
+                                if (sPrefs.getBoolean("add_custom_button", false) && id == sPrefs.getString("custom_button_id", "")){
+                                    val icon = items?.getObjectFieldAs<String>("icon").toString()
+                                    items?.setObjectField("title", sPrefs.getString("custom_button_title", title))
+                                        ?.setObjectField("uri", sPrefs.getString("custom_button_uri", uri))
+                                        ?.setObjectField("icon", sPrefs.getString("custom_button_icon", icon))
+                                    return@removeAll false
+                                }
+
+                                val showing = id !in hides
+                                // 将结果写入 drawerItems
+                                drawerItems.add(BottomItem(title, uri, id, showing))
+                                // 去除红点
+                                if (sPrefs.getBoolean("purify_drawer_reddot", false)) items?.setIntField("redDot",0)
+                                showing.not()
                             }
-
-                            val showing = id !in hides
-                            // 将结果写入 drawerItems
-                            drawerItems.add(BottomItem(title, uri, id, showing))
-                            // 去除红点
-                            if (sPrefs.getBoolean("purify_drawer_reddot", false)) items?.setIntField("redDot",0)
-                            showing.not()
                         }
                     } else {
                         result.getObjectFieldOrNullAs<MutableList<*>?>("sectionListV2")?.forEach { sections ->
