@@ -1,0 +1,209 @@
+<resources>
+    <string name="app_name">嗶哩漫遊</string>
+    <string name="xposed_description">解鎖B站港澳台番劇限制</string>
+    <string name="about">關於</string>
+
+
+
+    <string name="running_status_enable">已啟用</string>
+    <string name="running_status_disable">未啟用</string>
+    <string name="not_running_summary">嗶哩漫遊未啟動</string>
+    <string name="runtime_xposed">執行環境：Xposed</string>
+    <string name="runtime_taichi">執行環境：太極</string>
+    <string name="main_func_title">解鎖番劇限制</string>
+    <string name="main_func_summary">使用戶可以觀看區域外版權番劇</string>
+    <string name="hide_icon_title">隱藏桌面圖示</string>
+    <string name="hide_icon_summary">不顯示本程式在啟動器中的圖示</string>
+    <string name="custom_theme_title">自訂主題色</string>
+    <string name="custom_theme_summary">新增自訂主題顏色的功能（需從我的右上角調色盤圖示進入）</string>
+    <string name="teenagers_mode_dialog_title">關閉青少年模式跳出視窗</string>
+    <string name="teenagers_mode_dialog_summary">仍可從側滑選單進入青少年模式</string>
+    <string name="allow_download_title">允許下載版權番劇</string>
+    <string name="allow_download_summary">使版權番劇可以快取（同時修復概念版不能投影的問題）</string>
+    <string name="cdn_category">加速CDN設定</string>
+    <string name="hidden_title">啟用隱藏功能</string>
+    <string name="hidden_summary">打開後可以使用隱藏功能</string>
+    <string name="purify_game_title">淨化遊戲中心</string>
+    <string name="purify_game_summary">去除首頁右上角遊戲中心</string>
+    <string name="hidden_group">隱藏功能</string>
+    <string name="show_info_summary">顯示解鎖版權、允許下載等狀態訊息</string>
+    <string name="show_info_title">提示模組執行訊息</string>
+    <string name="main_category">解鎖番劇限制</string>
+    <string name="miscellaneous_category">雜項</string>
+    <string name="setting_category">設定</string>
+    <string name="mini_program_title">去你大爺的小程式</string>
+    <string name="mini_program_summary">不再以小程式的方式分享到QQ或者微信（同時複製分享連結變為av號）</string>
+
+
+    <string name="update_summary">點擊打開最新版下載網址</string>
+
+
+
+    <string name="group_title">QQ頻道</string>
+    <string name="group_summary">點擊加入QQ頻道</string>
+    <string name="tg_title">TG頻道</string>
+    <string name="tg_summary">點擊加入TG頻道</string>
+
+    <string name="upos_title">UPOS伺服器設定</string>
+    <string name="upos_summary">設定解鎖番劇的伺服器，可加快影片載入速度；當所選 UPOS 不能用時，會回退到 MCDN。</string>
+    <string name="purify_splash_title">淨化啟動頁面</string>
+    <string name="purify_splash_summary">去除啟動程式時的推廣</string>
+    <string name="custom_splash_title">取代啟動圖</string>
+    <string name="custom_splash_summary">取代啟動圖為自訂圖片（僅支援6.6.0及以上版本，不選擇圖片則隱藏）</string>
+    <string name="custom_splash_logo_title">取代啟動Logo</string>
+    <string name="custom_splash_logo_summary">取代啟動Logo為自訂圖片（僅支援6.6.0及以上版本，不選擇圖片則隱藏，延遲生效）</string>
+    <string name="beautify_category">美化</string>
+    <string name="auto_like_title">自動按讚影片</string>
+    <string name="auto_like_summary">進入影片詳情頁時自動按讚</string>
+    <string name="feature_title">功能設定</string>
+    <string name="feature_summary">打開嗶哩嗶哩，進入【我的】頁面，點擊【嗶哩漫遊設定】；舊版本打開側邊欄，長按【設定】</string>
+    <string name="feature_dialog">當嗶哩漫遊被正確啟動後，打開嗶哩嗶哩，進入【我的】頁面，就能看到【嗶哩漫遊設定】；使用舊版本則打開側邊欄，長按【設定】。如果不知道如何啟動模組，請直接使用Xpatch版。</string>
+    <string name="help_title">幫助</string>
+    <string name="help_summary">點擊查看啟動方法、常見問題等</string>
+
+    <string name="purify_search_title">淨化搜尋頁面</string>
+    <string name="purify_search_summary">去除搜尋頁面的熱搜和推薦</string>
+    <string name="demo">範例</string>
+    <string name="runtime_app_fuck">執行環境：應用轉生</string>
+    <string name="not_support">目前版本用戶端不支援此功能</string>
+    <string name="os_not_support">目前系統版本不支援此功能</string>
+    <string name="enable_av_title">顯示AV號</string>
+    <string name="enable_av_summary">影片詳情頁顯示為AV號</string>
+
+    <string name="setting_title">打開模組設定</string>
+    <string name="setting_summary">啟動用戶端並打開模組設定</string>
+    <string name="custom_download_thread_title">自訂同時快取數</string>
+    <string name="custom_download_thread_summary">自訂最多可以同時下載的影片個數（超過一個需要大會員）</string>
+    <string name="save_log_title">儲存日誌到文件</string>
+    <string name="save_log_summary">啟用後，將儲存日誌到文件%s</string>
+    <string name="fix_download_title">解除版權番劇下載限速</string>
+    <string name="fix_download_summary">提高版權番劇的下載速度，但是會導致影音分離</string>
+    <string name="customize_home_tab_title">淨化首頁標籤</string>
+    <string name="customize_home_tab_summary">請勿全部選擇，會使用之前的的標籤</string>
+    <string name="music_notification_title">原生音樂通知樣式</string>
+    <string name="music_notification_summary">強制音樂通知欄為模組自製的原生樣式</string>
+    <string name="custom_server_title">設定解析伺服器</string>
+    <string name="custom_server_summary">使用設定的伺服器解析區域限制番劇的播放地址；如不知如何設定，請查看說明文件</string>
+    <string name="drawer_title">移動我的頁面到側邊欄</string>
+    <string name="drawer_summary">移動後，可以點擊首頁的大頭貼或者在空白地方左劃打開側邊欄\n關閉時，需要重啟兩次用戶端才能還原。如果無法還原，請重啟手機。</string>
+    <string name="full_splash_title">強制全螢幕啟動圖</string>
+    <string name="full_splash_summary">去兩頭留中間形式全螢幕，無論是否自訂啟動圖</string>
+    <!--    <string name="get_cover_title">長按儲存封面</string>-->
+    <!--    <string name="get_cover_summary">開啟後，長按播放器可儲存影片、直播間、番劇封面</string>-->
+    <string name="purify_city_title">淨化同城標籤</string>
+    <string name="purify_city_summary">去除動態頁面的同城標籤</string>
+    <string name="setting">設定</string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <string name="test_upos_title">UPOS伺服器測速</string>
+    <string name="test_upos_summary">選擇最快的UPOS以獲得最好體驗</string>
+    <string name="search_area_title">開啟其它地區番劇搜尋</string>
+    <string name="search_area_summary">在搜尋頁面新增其它地區番劇搜尋結果，需要解析伺服器支援</string>
+    <string name="customize_bottom_bar_title">自訂底欄</string>
+    <string name="customize_bottom_bar_summary">至少保留一個元素（重啟兩次生效）</string>
+    <string name="customize_accessKey_title">自訂存取金鑰</string>
+    <string name="customize_accessKey_summary">自訂發往解析伺服器的存取金鑰（除錯功能，除非明白自己在做什麼，否則保持空白）</string>
+    <string name="export_video_title">匯出影片</string>
+    <string name="export_video_summary">只支援預設下載位置</string>
+    <string name="customize_home_recommend_title">淨化首頁推薦內容</string>
+    <string name="customize_home_recommend_summary">去除首頁推薦頁面的指定內容（某些舊版可能無效）</string>
+    <string name="pref_backup">備份和還原</string>
+    <string name="pref_export_title">匯出配置</string>
+    <string name="pref_import_title">匯入配置</string>
+    <string name="hide_low_play_count_recommend_title">隱藏首頁低播放量影片</string>
+    <string name="hide_low_play_count_recommend_summary">隱藏首頁推送低於指定播放量的影片</string>
+    <string name="add_bangumi_title">新增其他地區番劇</string>
+    <string name="add_bangumi_summary">在首頁標籤新增大陸/港澳台番劇分頁</string>
+    <string name="add_movie_title">新增其他地區影視</string>
+    <string name="add_movie_summary">在首頁標籤新增大陸/港澳台影視分頁</string>
+    <string name="custom_subtitle_title">自訂字幕樣式</string>
+    <string name="custom_subtitle_summary">開啟後能自訂CC字幕樣式，但透明度跟隨彈幕透明度</string>
+    <string name="customize_space_title">淨化使用者空間</string>
+    <string name="customize_space_summary">選擇要封鎖的項目（全選會讓你什麼也看不到）</string>
+    <string name="comment_copy_summary">禁用長按評論/動態/影片簡介複製到剪貼簿（減少誤觸）</string>
+    <string name="comment_copy_title">去除長按複製</string>
+    <string name="comment_copy_enhance_title">長按自由複製</string>
+    <string name="comment_copy_enhance_summary">長按評論/動態/影片簡介時彈出自由選擇對話框，需要開啟「去除長按複製」</string>
+    <string name="revert_live_room_feed_title">強制舊版直播間樣式</string>
+    <string name="revert_live_room_feed_summary">強制直播間使用舊版樣式</string>
+    <string name="block_video_ad_title">封鎖影片下方推薦</string>
+    <string name="block_video_ad_summary">封鎖影片下方推薦欄</string>
+    <string name="hide_long_duration_recommend_title">隱藏首頁影片時長大於</string>
+    <string name="hide_short_duration_recommend_title">隱藏首頁影片時長小於</string>
+    <string name="hide_duration_recommend_summary">隱藏首頁推送指定時長的影片（秒）</string>
+    <string name="home_filter_title">首頁推送過濾器</string>
+    <string name="home_filter_summary">過濾首頁推送的內容（重啟兩次生效）</string>
+    <string name="keywords_filter_recommend_summary">過濾首頁推送中包含指定關鍵字的內容</string>
+    <string name="search_area_movie_title">開啟其它地區影劇搜尋</string>
+    <string name="search_area_movie_summary">在搜尋頁面新增其它地區影劇搜尋結果，需要解析伺服器支援</string>
+    <string name="force_th_comment_title">強制開啟泰區評論彈幕</string>
+    <string name="force_th_comment_summary">強制開啟串台的泰區評論彈幕（僅除錯使用）</string>
+    <string name="share_log_title">分享日誌</string>
+    <string name="share_log_summary">可能在舊版無效</string>
+    <string name="replace_story_video_title">取代豎版影片</string>
+    <string name="replace_story_video_summary">取代豎版影片為正常影片</string>
+    <string name="customize_drawer_title">自訂我的頁面</string>
+    <string name="customize_drawer_summary">自訂【我的】頁面（重啟後生效）</string>
+    <string name="purify_drawer_reddot_title">淨化我的頁面紅點</string>
+    <string name="purify_drawer_reddot_summary">淨化【我的】頁面下方項目紅點</string>
+    <string name="drawer_style_switch_title">修改我的頁面樣式開關</string>
+    <string name="drawer_style_switch_summary">修改【我的】頁面樣式</string>
+    <string name="drawer_style_title">修改我的頁面樣式</string>
+    <string name="drawer_style_summary">開啟改為列表，關閉改為按鈕</string>
+    <string name="purify_share_title">淨化分享</string>
+    <string name="purify_share_summary">把分享連結中的 b23.tv 短連結換成正常連結</string>
+    <string name="custom_link_title">開啟自訂連結</string>
+    <string name="custom_link_summary">僅支援 bilibili:// 開頭的格式</string>
+    <string name="add_custom_button_title">在【我的】頁面新增自訂按鈕</string>
+    <string name="add_custom_button_summary">指定修改其中一個項目</string>
+    <string name="add_korea_title">新增其他地區韓綜</string>
+    <string name="add_korea_summary">在首頁標籤新增港澳台韓綜分頁</string>
+    <string name="fix_space_title">修復UP主空間</string>
+    <string name="fix_space_summary">修復部份被封鎖的UP主空間</string>
+    <string name="customize_dynamic_title">淨化動態</string>
+    <string name="customize_dynamic_summary">支援移除話題及最常訪問，支援按類型和關鍵字過濾動態</string>
+    <string name="customize_dynamic_all_rm_topic_title">移除熱門話題（綜合）</string>
+    <string name="customize_dynamic_all_rm_up_title">移除最常訪問（綜合）</string>
+    <string name="customize_dynamic_video_rm_up_title">移除最常訪問（影片）</string>
+    <string name="customize_dynamic_by_type">按類型</string>
+    <string name="customize_dynamic_by_keyword">按關鍵字</string>
+
+
+
+    <string name="keyword_group_name_title">標題</string>
+    <string name="keyword_group_name_rcmd_reason">推薦原因</string>
+    <string name="keyword_group_name_category">分區</string>
+    <string name="keyword_group_name_channel">頻道</string>
+    <string name="keyword_group_add">新增</string>
+    <string name="keyword_group_delete">刪除</string>
+    <string name="keyword_group_clear">刪除所有</string>
+    <string name="prefs_save_success_and_reboot">儲存成功 重啟後生效</string>
+    <string name="remove_video_relate_promote_title">移除影片下方的相關推廣</string>
+    <string name="remove_video_relate_promote_summary">移除影片下方的相關推廣，例如遊戲、課程、會員購、創作推廣等</string>
+    <string name="remove_video_relate_only_av_title">僅展示UP主投稿影片</string>
+    <string name="remove_video_relate_only_av_summary">上個選項的基礎上，僅展示UP主投稿影片，移除番劇等內容</string>
+    <string name="remove_video_cmd_dms_title">移除互動浮窗</string>
+    <string name="remove_video_cmd_dms_summary">移除影片播放時浮窗出現的三連關注、關聯影片、投票彈幕、評分彈幕等</string>
+</resources>

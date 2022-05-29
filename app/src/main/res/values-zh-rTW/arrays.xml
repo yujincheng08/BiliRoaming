@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="upos_entries">
+        <item>不取代</item>
+        <item>cos（騰訊）</item>
+        <item>cosb（騰訊）</item>
+        <item>coso1（騰訊）</item>
+        <item>coso2（騰訊）</item>
+        <item>bos（騰訊）</item>
+        <item>ks3（金山）</item>
+        <item>ks3b（金山）</item>
+        <item>ks3c（金山）</item>
+        <item>ks32（金山）</item>
+        <item>kodo（七牛）</item>
+        <item>kodob（七牛）</item>
+        <item>hw（華為）</item>
+        <item>hwb（華為）</item>
+        <item>uphw（華為）</item>
+        <item>js（華為）</item>
+        <item>hk（香港）</item>
+        <item>akamai（海外，不能免流）</item>
+    </string-array>
+
+    <string-array name="tab_entries">
+        <item>直播</item>
+        <item>推薦</item>
+        <item>熱門</item>
+        <item>番劇</item>
+        <item>影視</item>
+        <item>韓綜</item>
+        <item>熱點</item>
+        <item>其它</item>
+    </string-array>
+
+    <string-array name="home_recommend_entries">
+        <item>廣告</item>
+        <item>遊戲</item>
+        <item>橫幅（輪播圖）</item>
+        <item>通知（追番更新、活動提示）</item>
+        <item>文章</item>
+        <item>動態</item>
+        <item>豎版影片</item>
+        <item>直播</item>
+        <item>內聯影片</item>
+        <item>番劇、電影、電視劇、紀錄片……</item>
+        <item>大卡（單列顯示的）</item>
+        <item>中卡</item>
+        <item>小卡（雙列顯示的）</item>
+    </string-array>
+
+    <string-array name="space_entries">
+        <item>分頁：首頁</item>
+        <item>分頁：動態</item>
+        <item>分頁：投稿</item>
+        <item>分頁：商品</item>
+        <item>分頁：追番</item>
+        <item>分頁：課堂</item>
+        <item>直播</item>
+        <item>充電</item>
+        <item>大航海</item>
+        <item>推廣櫥窗</item>
+        <item>影片</item>
+        <item>專欄</item>
+        <item>音訊</item>
+        <item>最近追番</item>
+        <item>最近投幣</item>
+        <item>最近按讚</item>
+        <item>最近追漫</item>
+        <item>玩的遊戲</item>
+        <item>課堂</item>
+        <item>粉絲裝扮</item>
+        <item>收藏夾</item>
+        <item>comic list</item>
+        <item>ugc season list</item>
+        <item>數字藏品展現</item>
+        <item>NFT大頭貼</item>
+    </string-array>
+
+    <string-array name="block_video_ad">
+        <item>UP主推薦廣告</item>
+        <item>相關遊戲</item>
+    </string-array>
+
+    <string-array name="dynamic_entries">
+        <item>轉發</item>
+        <item>投稿影片</item>
+        <item>番劇、電影等</item>
+        <item>付費內容 1</item>
+        <item>付費內容 2</item>
+        <item>摺疊</item>
+        <item>文字</item>
+        <item>圖文</item>
+        <item>文章</item>
+        <item>音訊</item>
+        <item>通用 方形</item>
+        <item>通用 豎形</item>
+        <item>直播</item>
+        <item>播放列表</item>
+        <item>廣告</item>
+        <item>小程式</item>
+        <item>訂閱</item>
+        <item>新訂閱</item>
+        <item>直播推薦</item>
+        <item>橫幅</item>
+        <item>合集</item>
+        <item>故事</item>
+        <item>話題推薦</item>
+        <item>付費更新</item>
+        <item>話題集合</item>
+    </string-array>
+</resources>
