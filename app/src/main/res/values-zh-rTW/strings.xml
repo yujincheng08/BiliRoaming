@@ -13,13 +13,13 @@
     <string name="main_func_title">解鎖番劇限制</string>
     <string name="main_func_summary">使用戶可以觀看區域外版權番劇</string>
     <string name="hide_icon_title">隱藏桌面圖示</string>
-    <string name="hide_icon_summary">不顯示本應用在啟動器中的圖示</string>
+    <string name="hide_icon_summary">不顯示本程式在啟動器中的圖示</string>
     <string name="custom_theme_title">自訂主題色</string>
     <string name="custom_theme_summary">新增自訂主題顏色的功能（需從我的右上角調色盤圖示進入）</string>
     <string name="teenagers_mode_dialog_title">關閉青少年模式跳出視窗</string>
     <string name="teenagers_mode_dialog_summary">仍可從側滑選單進入青少年模式</string>
     <string name="allow_download_title">允許下載版權番劇</string>
-    <string name="allow_download_summary">使版權番劇可以快取（同時修復概念版不能投屏的問題）</string>
+    <string name="allow_download_summary">使版權番劇可以快取（同時修復概念版不能投影的問題）</string>
     <string name="cdn_category">加速CDN設定</string>
     <string name="hidden_title">啟用隱藏功能</string>
     <string name="hidden_summary">打開後可以使用隱藏功能</string>
@@ -45,9 +45,9 @@
     <string name="tg_summary">點擊加入TG頻道</string>
 
     <string name="upos_title">UPOS伺服器設定</string>
-    <string name="upos_summary">設定解鎖番劇的伺服器，可加快視頻載入速度；當所選 UPOS 不能用時，會回退到 MCDN。</string>
-    <string name="purify_splash_title">淨化開屏頁面</string>
-    <string name="purify_splash_summary">去除啟動用戶端時的推廣</string>
+    <string name="upos_summary">設定解鎖番劇的伺服器，可加快影片載入速度；當所選 UPOS 不能用時，會回退到 MCDN。</string>
+    <string name="purify_splash_title">淨化啟動頁面</string>
+    <string name="purify_splash_summary">去除啟動程式時的推廣</string>
     <string name="custom_splash_title">取代啟動圖</string>
     <string name="custom_splash_summary">取代啟動圖為自訂圖片（僅支援6.6.0及以上版本，不選擇圖片則隱藏）</string>
     <string name="custom_splash_logo_title">取代啟動Logo</string>
@@ -56,8 +56,8 @@
     <string name="auto_like_title">自動按讚影片</string>
     <string name="auto_like_summary">進入影片詳情頁時自動按讚</string>
     <string name="feature_title">功能設定</string>
-    <string name="feature_summary">打開嗶哩嗶哩用戶端，進入【我的】頁面，點擊【嗶哩漫遊設定】；舊版本打開側邊欄，長按【設定】</string>
-    <string name="feature_dialog">當嗶哩漫遊被正確啟動後，打開嗶哩嗶哩用戶端，進入【我的】頁面，就能看到【嗶哩漫遊設定】；使用舊版本用戶端則打開側邊欄，長按【設定】。如果不知道如何啟動外掛程式，請直接使用Xpatch版。</string>
+    <string name="feature_summary">打開嗶哩嗶哩，進入【我的】頁面，點擊【嗶哩漫遊設定】；舊版本打開側邊欄，長按【設定】</string>
+    <string name="feature_dialog">當嗶哩漫遊被正確啟動後，打開嗶哩嗶哩，進入【我的】頁面，就能看到【嗶哩漫遊設定】；使用舊版本則打開側邊欄，長按【設定】。如果不知道如何啟動模組，請直接使用Xpatch版。</string>
     <string name="help_title">幫助</string>
     <string name="help_summary">點擊查看啟動方法、常見問題等</string>
 
@@ -85,7 +85,7 @@
     <string name="custom_server_title">設定解析伺服器</string>
     <string name="custom_server_summary">使用設定的伺服器解析區域限制番劇的播放地址；如不知如何設定，請查看說明文件</string>
     <string name="drawer_title">移動我的頁面到側邊欄</string>
-    <string name="drawer_summary">移動後，可以點擊首頁的大頭貼或者在空白地方左劃打開側邊欄\n關閉時，需要重啟兩次用戶端才能復原。如果無法還原，請重啟手機。</string>
+    <string name="drawer_summary">移動後，可以點擊首頁的大頭貼或者在空白地方左劃打開側邊欄\n關閉時，需要重啟兩次用戶端才能還原。如果無法還原，請重啟手機。</string>
     <string name="full_splash_title">強制全螢幕啟動圖</string>
     <string name="full_splash_summary">去兩頭留中間形式全螢幕，無論是否自訂啟動圖</string>
     <!--    <string name="get_cover_title">長按儲存封面</string>-->
@@ -123,8 +123,8 @@
     <string name="search_area_summary">在搜尋頁面新增其它地區番劇搜尋結果，需要解析伺服器支援</string>
     <string name="customize_bottom_bar_title">自訂底欄</string>
     <string name="customize_bottom_bar_summary">至少保留一個元素（重啟兩次生效）</string>
-    <string name="customize_accessKey_title">自訂訪問金鑰</string>
-    <string name="customize_accessKey_summary">自訂發往解析伺服器的訪問金鑰（除錯功能，除非明白自己在做什麼，否則保持空白）</string>
+    <string name="customize_accessKey_title">自訂存取金鑰</string>
+    <string name="customize_accessKey_summary">自訂發往解析伺服器的存取金鑰（除錯功能，除非明白自己在做什麼，否則保持空白）</string>
     <string name="export_video_title">匯出影片</string>
     <string name="export_video_summary">只支援預設下載位置</string>
     <string name="customize_home_recommend_title">淨化首頁推薦內容</string>
@@ -141,7 +141,7 @@
     <string name="custom_subtitle_title">自訂字幕樣式</string>
     <string name="custom_subtitle_summary">開啟後能自訂CC字幕樣式，但透明度跟隨彈幕透明度</string>
     <string name="customize_space_title">淨化使用者空間</string>
-    <string name="customize_space_summary">選擇要封鎖的元素（全選會讓你什麼也看不到）</string>
+    <string name="customize_space_summary">選擇要封鎖的項目（全選會讓你什麼也看不到）</string>
     <string name="comment_copy_summary">禁用長按評論/動態/影片簡介複製到剪貼簿（減少誤觸）</string>
     <string name="comment_copy_title">去除長按複製</string>
     <string name="comment_copy_enhance_title">長按自由複製</string>
@@ -181,7 +181,7 @@
     <string name="add_korea_title">新增其他地區韓綜</string>
     <string name="add_korea_summary">在首頁標籤新增港澳台韓綜分頁</string>
     <string name="fix_space_title">修復UP主空間</string>
-    <string name="fix_space_summary">修復部分被封鎖的UP主空間</string>
+    <string name="fix_space_summary">修復部份被封鎖的UP主空間</string>
     <string name="customize_dynamic_title">淨化動態</string>
     <string name="customize_dynamic_summary">支援移除話題及最常訪問，支援按類型和關鍵字過濾動態</string>
     <string name="customize_dynamic_all_rm_topic_title">移除熱門話題（綜合）</string>
