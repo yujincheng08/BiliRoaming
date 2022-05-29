@@ -14,7 +14,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.widget.*
-import me.iacn.biliroaming.XposedInit.Companion.moduleRes
 import me.iacn.biliroaming.utils.Log
 import me.iacn.biliroaming.utils.addBackgroundRipple
 import me.iacn.biliroaming.utils.children
@@ -91,8 +90,8 @@ class DynamicFilterDialog(val activity: Activity, prefs: SharedPreferences) :
             )
         }
         root.addView(gridLayout)
-        val dynamicTypes = moduleRes.getStringArray(R.array.dynamic_entries).zip(
-            moduleRes.getStringArray(R.array.dynamic_values)
+        val dynamicTypes = context.resources.getStringArray(R.array.dynamic_entries).zip(
+            context.resources.getStringArray(R.array.dynamic_values)
         )
         val colSpec = fun(colWeight: Float) = GridLayout.spec(GridLayout.UNDEFINED, colWeight)
         val rowSpec = { GridLayout.spec(GridLayout.UNDEFINED) }
@@ -186,7 +185,7 @@ class DynamicFilterDialog(val activity: Activity, prefs: SharedPreferences) :
             context.resources.displayMetrics
         ).roundToInt()
 
-    private inline fun string(resId: Int) = moduleRes.getString(resId)
+    private inline fun string(resId: Int) = context.resources.getString(resId)
 
     private fun keywordTypeHeader(
         group: ViewGroup,

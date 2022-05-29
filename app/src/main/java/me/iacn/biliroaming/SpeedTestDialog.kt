@@ -55,7 +55,7 @@ class SpeedTestAdapter(context: Context) : ArrayAdapter<SpeedTestResult>(context
         holder.value = getItem(position)?.value
         holder.nameView.text = holder.name
         holder.speedView.text =
-            moduleRes.getString(R.string.speed_formatter).format(getItem(position)?.speed)
+            context.resources.getString(R.string.speed_formatter).format(getItem(position)?.speed)
         return view
     }
 
@@ -87,8 +87,8 @@ class SpeedTestDialog(private val pref: ListPreference, activity: Activity) :
         val layout = moduleRes.getLayout(R.layout.cdn_speedtest_item)
         val inflater = LayoutInflater.from(context)
         view.addHeaderView(inflater.inflate(layout, null).apply {
-            findViewById<TextView>(R.id.upos_name).text = moduleRes.getString(R.string.upos)
-            findViewById<TextView>(R.id.upos_speed).text = moduleRes.getString(R.string.speed)
+            findViewById<TextView>(R.id.upos_name).text = context.resources.getString(R.string.upos)
+            findViewById<TextView>(R.id.upos_speed).text = context.resources.getString(R.string.speed)
         }, null, false)
 
         view.setPadding(50, 20, 50, 20)
@@ -120,8 +120,8 @@ class SpeedTestDialog(private val pref: ListPreference, activity: Activity) :
                 dialog.setTitle("测速失败")
                 return@launch
             }
-            moduleRes.getStringArray(R.array.upos_entries)
-                .zip(moduleRes.getStringArray(R.array.upos_values)).asFlow().map {
+            context.resources.getStringArray(R.array.upos_entries)
+                .zip(context.resources.getStringArray(R.array.upos_values)).asFlow().map {
                     scope.launch {
                         val item = SpeedTestResult(it.first, it.second, "...")
                         adapter.add(item)
