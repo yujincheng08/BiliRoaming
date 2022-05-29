@@ -127,13 +127,11 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     || needForceProxy(response)
                 ) {
                     try {
-                        val serializedRequest = request.callMethodAs<ByteArray>("toByteArray")
-                        val req = PlayViewReq.parseFrom(serializedRequest)
-                        val content = getPlayUrl(reconstructQuery(req))
+                        val content = getPlayUrl(reconstructQuery(request))
                         countDownLatch?.countDown()
                         content?.let {
                             Log.toast("已从代理服务器获取播放地址\n如加载缓慢或黑屏，可去漫游设置中测速并设置 UPOS")
-                            param.result = reconstructResponse(response, req, it, isDownload)
+                            param.result = reconstructResponse(response, it, isDownload)
                         } ?: run {
                             Log.w("Failed to get play url")
                             Log.toast("获取播放地址失败")
@@ -191,13 +189,11 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     ).new()
                 if (needProxy(response)) {
                     try {
-                        val serializedRequest = request.callMethodAs<ByteArray>("toByteArray")
-                        val req = PlayViewReq.parseFrom(serializedRequest)
-                        val content = getPlayUrl(reconstructQuery(req))
+                        val content = getPlayUrl(reconstructQuery(request))
                         countDownLatch?.countDown()
                         content?.let {
                             Log.toast("已从代理服务器获取播放地址\n如加载缓慢或黑屏，可去漫游设置中测速并设置 UPOS")
-                            param.result = reconstructResponse(response, req, it, isDownload)
+                            param.result = reconstructResponse(response, it, isDownload)
                         } ?: throw CustomServerException(mapOf("未知错误" to "请检查哔哩漫游设置中解析服务器设置。"))
                     } catch (e: CustomServerException) {
                         var messages = ""
@@ -241,12 +237,12 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     tryThailand =
                         lastSeasonInfo.containsKey("area") && lastSeasonInfo["area"] == "th"
                 }
-                val subtitles = if (tryThailand) {
+                if (tryThailand) {
                     Log.d("Getting thailand subtitles")
-                    lastSeasonInfo["sb$oid"]?.let {
+                    val subtitles = if (lastSeasonInfo.containsKey("sb$oid")) {
                         Log.d("Got from season")
                         JSONArray(lastSeasonInfo["sb$oid"])
-                    } ?: run {
+                    } else {
                         val result = getThailandSubtitles(
                             lastSeasonInfo[oid] ?: lastSeasonInfo["epid"]
                         )?.toJSONObject() ?: return@hookAfterMethod
@@ -255,46 +251,36 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         Log.d("Got from subtitle api")
                         data.optJSONArray("subtitles").orEmpty()
                     }
-                } else {
-                    lastSeasonInfo["sb$oid"]?.let {
-                        Log.d("Got from playurl")
-                        JSONArray(it)
-                    } ?: return@hookAfterMethod
-                }
+                    if (subtitles.length() == 0) return@hookAfterMethod
 
-                if (subtitles.length() == 0) return@hookAfterMethod
-
-                val newRes = param.result?.let {
-                    DmViewReply.parseFrom(
-                        param.result.callMethodAs<ByteArray>("toByteArray")
-                    ).copy {
+                    val newRes = param.result?.let {
+                        DmViewReply.parseFrom(
+                            param.result.callMethodAs<ByteArray>("toByteArray")
+                        ).copy {
+                            buildSubtitles(subtitles)
+                        }
+                    } ?: dmViewReply {
                         buildSubtitles(subtitles)
                     }
-                } ?: dmViewReply {
-                    buildSubtitles(subtitles)
-                }
-                newRes.let {
                     param.result = (param.method as Method).returnType.callStaticMethod(
                         "parseFrom",
-                        it.toByteArray()
+                        newRes.toByteArray()
                     )
                 }
             }
     }
 
     private fun DmViewReplyKt.Dsl.buildSubtitles(subtitles: JSONArray) {
-        subtitle = subtitle.copy {
-            videoSubtitle {
-                for (subtitle in subtitles) {
-                    this.subtitles +=
-                        subtitleItem {
-                            id = subtitle.optLong("id")
-                            idStr = subtitle.optLong("id").toString()
-                            subtitleUrl = subtitle.optString("url")
-                            lan = subtitle.optString("key")
-                            lanDoc = subtitle.optString("title")
-                        }
-                }
+        subtitle = videoSubtitle {
+            for (subtitle in subtitles) {
+                this.subtitles +=
+                    subtitleItem {
+                        id = subtitle.optLong("id")
+                        idStr = subtitle.optLong("id").toString()
+                        subtitleUrl = subtitle.optString("url")
+                        lan = subtitle.optString("key")
+                        lanDoc = subtitle.optString("title")
+                    }
             }
         }
     }
@@ -432,7 +418,9 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         return PlayViewReply.parseFrom(serializedRequest).business.isPreview
     }
 
-    private fun reconstructQuery(req: PlayViewReq): String? {
+    private fun reconstructQuery(request: Any): String? {
+        val serializedRequest = request.callMethodAs<ByteArray>("toByteArray")
+        val req = PlayViewReq.parseFrom(serializedRequest)
         // CANNOT use reflection for compatibility with Xpatch
         return Uri.Builder().run {
             appendQueryParameter("ep_id", req.epId.toString())
@@ -447,12 +435,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
 
-    private fun reconstructResponse(
-        response: Any,
-        req: PlayViewReq,
-        content: String,
-        isDownload: Boolean
-    ): Any {
+    private fun reconstructResponse(response: Any, content: String, isDownload: Boolean): Any {
         try {
             var jsonContent = content.toJSONObject()
             if (jsonContent.has("result")) {
@@ -461,9 +444,6 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 if (result != null && result !is String) {
                     jsonContent = jsonContent.getJSONObject("result")
                 }
-            }
-            jsonContent.optJSONArray("subtitles")?.let {
-                lastSeasonInfo["sb${req.cid}"] = it.toString()
             }
             val videoCodeCid = jsonContent.optInt("video_codecid")
             val serializedResponse = playViewReply {

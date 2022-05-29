@@ -14,7 +14,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.widget.*
-import me.iacn.biliroaming.XposedInit.Companion.moduleRes
 import me.iacn.biliroaming.utils.Log
 import me.iacn.biliroaming.utils.addBackgroundRipple
 import me.iacn.biliroaming.utils.children
@@ -34,6 +33,20 @@ class DynamicFilterDialog(val activity: Activity, prefs: SharedPreferences) :
             )
         }
         scrollView.addView(root)
+
+        val rmCityTabTitle = string(R.string.purify_city_title)
+        val rmCityTabSwitch = switchPrefsItem(rmCityTabTitle).let {
+            root.addView(it.first)
+            it.second
+        }
+        rmCityTabSwitch.isChecked = prefs.getBoolean("purify_city", false)
+
+        val rmCampusTabTitle = string(R.string.purify_campus_title)
+        val rmCampusTabSwitch = switchPrefsItem(rmCampusTabTitle).let {
+            root.addView(it.first)
+            it.second
+        }
+        rmCampusTabSwitch.isChecked = prefs.getBoolean("purify_campus", false)
 
         val rmTopicOfAllTitle = string(R.string.customize_dynamic_all_rm_topic_title)
         val rmTopicOfAllSwitch = switchPrefsItem(rmTopicOfAllTitle).let {
@@ -77,8 +90,8 @@ class DynamicFilterDialog(val activity: Activity, prefs: SharedPreferences) :
             )
         }
         root.addView(gridLayout)
-        val dynamicTypes = moduleRes.getStringArray(R.array.dynamic_entries).zip(
-            moduleRes.getStringArray(R.array.dynamic_values)
+        val dynamicTypes = context.resources.getStringArray(R.array.dynamic_entries).zip(
+            context.resources.getStringArray(R.array.dynamic_values)
         )
         val colSpec = fun(colWeight: Float) = GridLayout.spec(GridLayout.UNDEFINED, colWeight)
         val rowSpec = { GridLayout.spec(GridLayout.UNDEFINED) }
@@ -146,6 +159,8 @@ class DynamicFilterDialog(val activity: Activity, prefs: SharedPreferences) :
                 .toSet()
 
             prefs.edit().apply {
+                putBoolean("purify_city", rmCityTabSwitch.isChecked)
+                putBoolean("purify_campus", rmCampusTabSwitch.isChecked)
                 putBoolean("customize_dynamic_all_rm_topic", rmTopicOfAllSwitch.isChecked)
                 putBoolean("customize_dynamic_all_rm_up", rmUpOfAllSwitch.isChecked)
                 putBoolean("customize_dynamic_video_rm_up", rmUpOfVideoSwitch.isChecked)
@@ -170,7 +185,7 @@ class DynamicFilterDialog(val activity: Activity, prefs: SharedPreferences) :
             context.resources.displayMetrics
         ).roundToInt()
 
-    private inline fun string(resId: Int) = moduleRes.getString(resId)
+    private inline fun string(resId: Int) = context.resources.getString(resId)
 
     private fun keywordTypeHeader(
         group: ViewGroup,
