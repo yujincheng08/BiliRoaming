@@ -16,7 +16,7 @@ class DynamicHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
     private val purifyUidList by lazy {
         sPrefs.getStringSet("customize_dynamic_keyword_uid", null)
-            ?.mapNotNull { it.toLongOrNull() } ?: setOf()
+            ?.mapNotNull { it.toLongOrNull() } ?: listOf()
     }
     private val removeTopicOfAll by lazy {
         sPrefs.getBoolean("customize_dynamic_all_rm_topic", false)

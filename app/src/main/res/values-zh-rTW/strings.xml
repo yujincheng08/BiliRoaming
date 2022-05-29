@@ -2,8 +2,8 @@
     <string name="app_name">嗶哩漫遊</string>
     <string name="xposed_description">解鎖B站港澳台番劇限制</string>
     <string name="about">關於</string>
-
-
+    <string name="version">版本</string>
+    <string name="author">作者</string>
 
     <string name="running_status_enable">已啟用</string>
     <string name="running_status_disable">未啟用</string>
@@ -34,7 +34,7 @@
     <string name="mini_program_title">去你大爺的小程式</string>
     <string name="mini_program_summary">不再以小程式的方式分享到QQ或者微信（同時複製分享連結變為av號）</string>
 
-
+    <string name="update_title">更新</string>
     <string name="update_summary">點擊打開最新版下載網址</string>
 
 
@@ -90,8 +90,8 @@
     <string name="full_splash_summary">去兩頭留中間形式全螢幕，無論是否自訂啟動圖</string>
     <!--    <string name="get_cover_title">長按儲存封面</string>-->
     <!--    <string name="get_cover_summary">開啟後，長按播放器可儲存影片、直播間、番劇封面</string>-->
-    <string name="purify_city_title">淨化同城標籤</string>
-    <string name="purify_city_summary">去除動態頁面的同城標籤</string>
+    <string name="purify_city_title">移除同城標籤</string>
+    <string name="purify_campus_title">移除校園標籤</string>
     <string name="setting">設定</string>
 
 
@@ -116,7 +116,7 @@
 
 
 
-
+    <string name="speed">速度</string>
     <string name="test_upos_title">UPOS伺服器測速</string>
     <string name="test_upos_summary">選擇最快的UPOS以獲得最好體驗</string>
     <string name="search_area_title">開啟其它地區番劇搜尋</string>
@@ -183,14 +183,14 @@
     <string name="fix_space_title">修復UP主空間</string>
     <string name="fix_space_summary">修復部份被封鎖的UP主空間</string>
     <string name="customize_dynamic_title">淨化動態</string>
-    <string name="customize_dynamic_summary">支援移除話題及最常訪問，支援按類型和關鍵字過濾動態</string>
+    <string name="customize_dynamic_summary">支援移除同城及校園標籤，支援移除話題及最常訪問，支援按類型和關鍵字過濾動態</string>
     <string name="customize_dynamic_all_rm_topic_title">移除熱門話題（綜合）</string>
     <string name="customize_dynamic_all_rm_up_title">移除最常訪問（綜合）</string>
     <string name="customize_dynamic_video_rm_up_title">移除最常訪問（影片）</string>
     <string name="customize_dynamic_by_type">按類型</string>
     <string name="customize_dynamic_by_keyword">按關鍵字</string>
-
-
+    <string name="keyword_group_name_content">内容</string>
+    <string name="keyword_group_name_up">UP主</string>
 
     <string name="keyword_group_name_title">標題</string>
     <string name="keyword_group_name_rcmd_reason">推薦原因</string>
