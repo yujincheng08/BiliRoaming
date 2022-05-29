@@ -35,6 +35,20 @@ class DynamicFilterDialog(val activity: Activity, prefs: SharedPreferences) :
         }
         scrollView.addView(root)
 
+        val rmCityTabTitle = string(R.string.purify_city_title)
+        val rmCityTabSwitch = switchPrefsItem(rmCityTabTitle).let {
+            root.addView(it.first)
+            it.second
+        }
+        rmCityTabSwitch.isChecked = prefs.getBoolean("purify_city", false)
+
+        val rmCampusTabTitle = string(R.string.purify_campus_title)
+        val rmCampusTabSwitch = switchPrefsItem(rmCampusTabTitle).let {
+            root.addView(it.first)
+            it.second
+        }
+        rmCampusTabSwitch.isChecked = prefs.getBoolean("purify_campus", false)
+
         val rmTopicOfAllTitle = string(R.string.customize_dynamic_all_rm_topic_title)
         val rmTopicOfAllSwitch = switchPrefsItem(rmTopicOfAllTitle).let {
             root.addView(it.first)
@@ -146,6 +160,8 @@ class DynamicFilterDialog(val activity: Activity, prefs: SharedPreferences) :
                 .toSet()
 
             prefs.edit().apply {
+                putBoolean("purify_city", rmCityTabSwitch.isChecked)
+                putBoolean("purify_campus", rmCampusTabSwitch.isChecked)
                 putBoolean("customize_dynamic_all_rm_topic", rmTopicOfAllSwitch.isChecked)
                 putBoolean("customize_dynamic_all_rm_up", rmUpOfAllSwitch.isChecked)
                 putBoolean("customize_dynamic_video_rm_up", rmUpOfVideoSwitch.isChecked)

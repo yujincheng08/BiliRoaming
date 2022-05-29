@@ -10,8 +10,9 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val removeRelateOnlyAv = sPrefs.getBoolean("remove_video_relate_only_av", false)
         val removeCmdDms = sPrefs.getBoolean("remove_video_cmd_dms", false)
         val purifySearch = sPrefs.getBoolean("purify_search", false)
+        val purifyCampus = sPrefs.getBoolean("purify_campus", false)
 
-        if (hidden && purifyCity) {
+        if (hidden && (purifyCity || purifyCampus)) {
             listOf(
                 "com.bapis.bilibili.app.dynamic.v1.DynTabReply",
                 "com.bapis.bilibili.app.dynamic.v2.DynTabReply"
@@ -20,8 +21,9 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     mClassLoader,
                     "getDynTabList"
                 ) { param ->
-                    param.result = (param.result as List<*>).filter {
-                        it?.callMethodAs<Long>("getCityId") == 0L
+                    param.result = (param.result as List<*>).filterNot {
+                        purifyCity && it?.callMethodAs<Long>("getCityId") != 0L
+                                || purifyCampus && it?.callMethodAs<String>("getAnchor") == "campus"
                     }
                 }
             }
