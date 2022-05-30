@@ -17,12 +17,6 @@ body:
       required: true
   - type: textarea
     attributes:
-      label: 功能简述
-      description: 想要个怎样的功能
-    validations:
-      required: true
-  - type: textarea
-    attributes:
       label: 功能逻辑
       description: 如何互交、如何使用等
     validations:
