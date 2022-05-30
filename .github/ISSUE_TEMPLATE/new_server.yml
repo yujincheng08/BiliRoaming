@@ -4,18 +4,21 @@ labels: [server]
 title: "[Server] "
 body:
   - type: input
+    id: contact
     attributes:
       label: 联系方式
       description: Telegram、Github 账号等联系方式
     validations:
       required: true
   - type: input
+    id: domain
     attributes:
       label: 域名
       description: 服务器域名
     validations:
       required: true
   - type: checkboxes
+    id: areas
     attributes:
       label: 支持地区
       description: 服务器支持解析的地区
@@ -25,6 +28,7 @@ body:
         - label: 台湾
         - label: 东南亚
   - type: input
+    id: sponsor
     attributes:
       label: 赞助地址
       description: 爱发电等

@@ -4,24 +4,28 @@ labels: [enhancement]
 title: "[Feature] "
 body:
   - type: textarea
+    id: reason
     attributes:
       label: 原因
       description: 为什么想要这个功能
     validations:
       required: true
   - type: textarea
+    id: desc
     attributes:
       label: 功能简述
       description: 想要个怎样的功能
     validations:
       required: true
   - type: textarea
+    id: logic
     attributes:
       label: 功能逻辑
       description: 如何互交、如何使用等
     validations:
       required: true
   - type: textarea
+    id: ref
     attributes:
       label: 实现参考
       description: 该功能可能的实现方式，或者其他已经实现该功能的应用等
