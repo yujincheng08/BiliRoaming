@@ -43,14 +43,12 @@ body:
   - type: input
     attributes:
       label: 安卓版本
-      render: shell
-      placeholder: 12
+      placeholder: "12"
     validations:
       required: true
   - type: input
     attributes:
       label: 哔哩漫游版本
-      render: shell
       placeholder: 1.6.2
     validations:
       required: true
@@ -62,20 +60,17 @@ body:
         - 概念版
         - HD 版
         - play 版
-      render: shell
       description: 目前仅支持粉版、概念版、HD 版和 play 版
   - type: input
     attributes:
       label: 哔哩哔哩版本号
-      render: shell
       description: 非最新版本可能不受理
-      render: 6.74.0
+      placeholder: 6.74.0
     validations:
       required: true
   - type: input
     attributes:
       label: 使用的框架和版本
-      render: shell
       placeholder: LSPosed 1.8.2
     validations:
       required: true

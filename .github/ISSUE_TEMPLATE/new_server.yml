@@ -20,12 +20,10 @@ body:
       label: 支持地区
       description: 服务器支持解析的地区
       options:
-        - 中国大陆
-        - 港澳
-        - 台湾
-        - 东南亚
-    validations:
-      required: true
+        - label: 中国大陆
+        - label: 港澳
+        - label: 台湾
+        - label: 东南亚
   - type: input
     attributes:
       label: 赞助地址
