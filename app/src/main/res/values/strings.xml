@@ -166,6 +166,7 @@
     <string name="replace_story_video_summary">替换竖版视频为正常视频</string>
     <string name="customize_drawer_title">自定义我的页面</string>
     <string name="customize_drawer_summary">自定义【我的】页面（重启后生效）</string>
+    <string name="customize_drawer_error">自定义我的页面，【标题项目】不能只保留【创作中心】或【游戏中心】，因此不删除【更多服务】，请修改你的漫游设置。</string>
     <string name="purify_drawer_reddot_title">净化我的页面红点</string>
     <string name="purify_drawer_reddot_summary">净化【我的】页面下方项目红点</string>
     <string name="drawer_style_switch_title">修改我的页面样式开关</string>
