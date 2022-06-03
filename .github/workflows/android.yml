@@ -99,6 +99,7 @@ jobs:
             Snapshot apk is attached
             ●增加番剧字幕繁简化功能
             ●增加魔法刻录功能
+            ●增加其他功能
             ▲不支持 太极\/应用转生\/Edxposed
         run: |
           ESCAPED=`python3 -c 'import json,os,urllib.parse; print(urllib.parse.quote(json.dumps(os.environ["COMMIT_MESSAGE"])))'`
