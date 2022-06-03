@@ -166,6 +166,7 @@
     <string name="replace_story_video_summary">取代豎版影片為正常影片</string>
     <string name="customize_drawer_title">自訂我的頁面</string>
     <string name="customize_drawer_summary">自訂【我的】頁面（重啟後生效）</string>
+    <string name="customize_drawer_error">自訂我的頁面，【標題項目】不能只保留【創作中心】或【遊戲中心】，因此不刪除【更多服務】，請修改你的漫遊設定。</string>
     <string name="purify_drawer_reddot_title">淨化我的頁面紅點</string>
     <string name="purify_drawer_reddot_summary">淨化【我的】頁面下方項目紅點</string>
     <string name="drawer_style_switch_title">修改我的頁面樣式開關</string>
