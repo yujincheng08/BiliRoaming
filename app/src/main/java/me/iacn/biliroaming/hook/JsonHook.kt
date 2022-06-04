@@ -380,7 +380,7 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                     deleteTitle = true // 取消标记
                             }
                             if ((title == "更多服务" || title == "更多服務") && !deleteTitle) {
-                                Log.toast("自定义我的页面，【标题项目】不能只保留【创作中心】或【游戏中心】，因此不删除【更多服务】，请修改你的漫游设置"), true)
+                                Log.toast("自定义我的页面，【标题项目】不能只保留【创作中心】或【游戏中心】，因此不删除【更多服务】，请修改你的漫游设置", true)
                                 return@removeAll false
                             }
                             title in hides
