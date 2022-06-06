@@ -319,12 +319,6 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 accountMineClass -> {
                     drawerItems.clear()
                     val hides = sPrefs.getStringSet("hided_drawer_items", mutableSetOf())!!
-                    var deleteUpper = false
-                    if (("创作中心" !in hides && "推荐服务" in hides && "更多服务" in hides) ||
-                        ("創作中心" !in hides && "推薦服務" in hides && "更多服務" in hides)) {
-                        deleteUpper = true
-                        Log.toast("自定义我的页面，【标题项目】不能只保留【创作中心】，因此不删除任何标题项目，请修改你的漫游设置。", true)
-                    }
                     if (platform == "android_hd") {
                         listOf(result.getObjectFieldOrNullAs<MutableList<*>?>("padSectionList"),
                                result.getObjectFieldOrNullAs<MutableList<*>?>("recommendSectionList"),
@@ -414,10 +408,20 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             }
                         }
                         // 删除标题组
-                        if (!deleteUpper) {
-                            result.getObjectFieldOrNullAs<MutableList<*>?>("sectionListV2")?.removeAll { sections ->
-                                sections?.getObjectFieldOrNull("title").toString() in hides
+                        var deleteTitle = true
+                        result.getObjectFieldOrNullAs<MutableList<*>?>("sectionListV2")?.removeAll { sections ->
+                            val title = sections?.getObjectFieldOrNull("title").toString()
+                            if (title !in hides) {
+                                if (title == "创作中心" || title == "游戏中心" || title == "創作中心" || title == "遊戲中心")
+                                    deleteTitle = false // 标记
+                                else if (title == "推荐服务" || title == "推薦服務")
+                                    deleteTitle = true // 取消标记
                             }
+                            if ((title == "更多服务" || title == "更多服務") && !deleteTitle) {
+                                Log.toast("自定义我的页面，【标题项目】不能只保留【创作中心】或【游戏中心】，因此不删除【更多服务】，请修改你的漫游设置", true)
+                                return@removeAll false
+                            }
+                            title in hides
                         }
                     }
                     accountMineClass.findFieldOrNull("vipSectionRight")?.set(result, null)
