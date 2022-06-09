@@ -39,14 +39,14 @@ val appVerCode: String by rootProject
 val appVerName: String by rootProject
 
 android {
-    compileSdk = 32
-    buildToolsVersion = "32.0.0"
+    compileSdk = 33
+    buildToolsVersion = "33.0.0"
     ndkVersion = "24.0.8215888"
 
     defaultConfig {
         applicationId = "me.iacn.biliroaming"
         minSdk = 24
-        targetSdk = 32  // Target Android Sv2
+        targetSdk = 33  // Target Android T
         versionCode = appVerCode.toInt()
         versionName = appVerName
 

@@ -41,7 +41,7 @@ class CoverHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
         val gestureDetector =
             GestureDetector(activity, object : GestureDetector.SimpleOnGestureListener() {
-                override fun onLongPress(e: MotionEvent?) {
+                override fun onLongPress(e: MotionEvent) {
                     var url: String? = null
                     var filename: String? = null
                     var title: String? = null
