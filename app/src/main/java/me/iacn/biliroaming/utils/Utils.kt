@@ -57,8 +57,8 @@ fun bv2av(bv: String): Long {
 }
 
 fun getPackageVersion(packageName: String) = try {
+    @Suppress("DEPRECATION")
     systemContext.packageManager.getPackageInfo(packageName, 0).run {
-        @Suppress("DEPRECATION")
         String.format("${packageName}@%s(%s)", versionName, getVersionCode(packageName))
     }
 } catch (e: Throwable) {
@@ -94,6 +94,7 @@ val is64
     get() = currentContext.applicationInfo.nativeLibraryDir.contains("64")
 
 val platform by lazy {
+    @Suppress("DEPRECATION")
     currentContext.packageManager.getApplicationInfo(packageName, GET_META_DATA).metaData.getString(
         "MOBI_APP"
     )
@@ -147,6 +148,7 @@ fun signQuery(query: String?, extraMap: Map<String, String> = emptyMap()): Strin
     return instance.libBiliClass?.callStaticMethod(instance.signQueryName(), queryMap).toString()
 }
 
+@SuppressLint("DiscouragedApi")
 fun getId(name: String) = instance.ids[name]
     ?: currentContext.resources.getIdentifier(name, "id", currentContext.packageName)
 
@@ -262,11 +264,6 @@ val ViewGroup.children: Sequence<View>
 
 fun View.addBackgroundRipple() = with(TypedValue()) {
     context.theme.resolveAttribute(android.R.attr.selectableItemBackground, this, true)
-    setBackgroundResource(resourceId)
-}
-
-fun View.addBackgroundCircleRipple() = with(TypedValue()) {
-    context.theme.resolveAttribute(android.R.attr.selectableItemBackgroundBorderless, this, true)
     setBackgroundResource(resourceId)
 }
 
