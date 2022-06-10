@@ -160,6 +160,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         )
     }
 
+    @SuppressLint("SetTextI18n")
     override fun startHook() {
         if (!sPrefs.getBoolean("main_func", false)) return
         Log.d("startHook: BangumiSeason")
@@ -185,7 +186,6 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 sPrefs.getBoolean("force_th_comment", false)
             ) return@hookAfterMethod
             (param.args[0] as? View)?.run {
-                @SuppressLint("SetTextI18n")
                 findViewById<TextView>(getId("info"))?.text = "由于泰区番剧评论会串到其他正常视频中，\n因而禁用泰区评论，还望理解。"
                 findViewById<ImageView>(getId("forbid_icon"))?.run {
                     MainScope().launch {

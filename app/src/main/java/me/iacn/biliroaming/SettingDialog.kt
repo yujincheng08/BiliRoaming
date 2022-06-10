@@ -48,6 +48,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         private lateinit var biliprefs: SharedPreferences
         private var counter: Int = 0
 
+        @Deprecated("Deprecated in Java")
         override fun onCreate(savedInstanceState: Bundle?) {
             super.onCreate(savedInstanceState)
             preferenceManager.sharedPreferencesName = "biliroaming"
@@ -87,6 +88,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             checkUpdate()
         }
 
+        @Deprecated("Deprecated in Java")
         override fun onDestroy() {
             super.onDestroy()
             scope.cancel()
@@ -213,6 +215,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             CustomSubtitleDialog(activity, prefs).show()
         }
 
+        @Deprecated("Deprecated in Java")
         override fun onPreferenceChange(preference: Preference, newValue: Any): Boolean {
             when (preference.key) {
                 "custom_splash" -> {
@@ -245,6 +248,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             return true
         }
 
+        @Deprecated("Deprecated in Java")
         override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
             when (requestCode) {
                 SPLASH_SELECTION, LOGO_SELECTION -> {
@@ -666,6 +670,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             return true
         }
 
+        @Deprecated("Deprecated in Java")
         override fun onPreferenceClick(preference: Preference) = when (preference.key) {
             "version" -> onVersionClick()
             "update" -> onUpdateClick()
