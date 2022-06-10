@@ -206,8 +206,8 @@
     <string name="remove_video_relate_only_av_summary">上個選項的基礎上，僅展示UP主投稿影片，移除番劇等內容</string>
     <string name="remove_video_cmd_dms_title">移除互動浮窗</string>
     <string name="remove_video_cmd_dms_summary">移除影片播放時浮窗出現的三連關注、關聯影片、投票彈幕、評分彈幕等</string>
-    <string name="share_pictures_title">分享圖片到其他應用</string>
-    <string name="share_pictures_summary">在分享菜單添加按鈕</string>
-    <string name="share_posters_title">分享海報到其他應用</string>
+    <string name="share_pictures_title">分享圖片到其他程式</string>
+    <string name="share_pictures_summary">在分享選單新增按鈕</string>
+    <string name="share_posters_title">分享海報到其他程式</string>
     <string name="share_posters_summary">長按海報分享</string>
 </resources>
