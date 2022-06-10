@@ -135,6 +135,16 @@
             android:summary="@string/fix_space_summary"
             android:title="@string/fix_space_title" />
 
+        <SwitchPreference
+            android:key="share_pictures"
+            android:summary="@string/share_pictures_summary"
+            android:title="@string/share_pictures_title" />
+
+        <SwitchPreference
+            android:key="share_posters"
+            android:summary="@string/share_posters_summary"
+            android:title="@string/share_posters_title" />
+
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/pref_backup">
         <Preference

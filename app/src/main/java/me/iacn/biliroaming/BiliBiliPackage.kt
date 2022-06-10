@@ -6,6 +6,7 @@ import android.app.AndroidAppHelper
 import android.app.Notification
 import android.content.Context
 import android.graphics.Bitmap
+import android.net.Uri
 import android.os.Bundle
 import android.text.style.ClickableSpan
 import android.text.style.LineBackgroundSpan
@@ -14,11 +15,13 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import dalvik.system.BaseDexClassLoader
+import me.iacn.biliroaming.hook.ShareMenuHook
 import me.iacn.biliroaming.utils.*
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.InputStream
+import java.lang.IllegalStateException
 import java.lang.reflect.Constructor
 import java.lang.reflect.Method
 import java.lang.reflect.Modifier
@@ -123,6 +126,31 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val biliAccountsClass by Weak { mHookInfo.biliAccounts.class_ from mClassLoader }
     val networkExceptionClass by Weak { "com.bilibili.lib.moss.api.NetworkException" from mClassLoader }
     val brotliInputStreamClass by Weak { mHookInfo.brotliInputStream from mClassLoader }
+
+    val superMenuClass by Weak { "com.bilibili.app.comm.supermenu.SuperMenu" from mClassLoader }
+    val menuItemImplClass by Weak { "com.bilibili.app.comm.supermenu.core.MenuItemImpl" from mClassLoader }
+    val shareHelperCallbackClass by Weak { "com.bilibili.lib.sharewrapper.ShareHelperV2\$Callback" from mClassLoader }
+    val menuItemClickListenerV2Class by Weak { "com.bilibili.app.comm.supermenu.core.listeners.OnMenuItemClickListenerV2" from mClassLoader }
+    val iMenuItemClass by Weak { "com.bilibili.app.comm.supermenu.core.IMenuItem" from mClassLoader }
+    val posterShareDialogClass by Weak { "com.bilibili.app.comm.supermenu.share.pic.ui.PosterShareDialog" from mClassLoader }
+    val posterShareCoreViewClass by Weak { "com.bilibili.app.comm.supermenu.share.pic.ui.PosterShareCoreView" from mClassLoader }
+    val posterDataClass by Weak { "com.bilibili.app.comm.supermenu.share.pic.PosterData" from mClassLoader }
+    private val getUriForFileMethod = ("androidx.core.content.FileProvider" from mClassLoader)?.let {
+        it.declaredMethods.find {
+            it.returnType.name == Uri::class.java.name &&
+                    it.parameterTypes.size == 3 &&
+                    it.parameterTypes[0].name == Context::class.java.name &&
+                    it.parameterTypes[1].name == String::class.java.name &&
+                    it.parameterTypes[2].name == File::class.java.name
+        }
+    }
+
+    val hasFileProvider = getUriForFileMethod != null
+
+    fun getUriForFile(ctx: Context, file: File): Uri {
+        if (getUriForFileMethod == null) throw IllegalStateException("No FileProvider found!")
+        return getUriForFileMethod.invoke(null, ctx, "tv.danmaku.bili.fileprovider", file) as Uri
+    }
 
     val ids: Map<String, Int> by lazy {
         mHookInfo.mapIds.idsMap

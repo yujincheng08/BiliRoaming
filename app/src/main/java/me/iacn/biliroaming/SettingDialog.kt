@@ -140,6 +140,8 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             val supportStoryVideo = instance.storyVideoActivityClass != null
             val supportPurifyShare = instance.shareClickResultClass != null
             val supportDownloadThread = versionCode < 6630000
+            val supportSharePictures = instance.hasFileProvider && instance.superMenuClass != null
+            val supportSharePosters = instance.hasFileProvider && instance.posterShareCoreViewClass != null
             if (!supportDrawer)
                 disablePreference("drawer")
             if (!supportSplashHook) {
@@ -180,6 +182,12 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             }
             if (!supportDownloadThread) {
                 disablePreference("custom_download_thread")
+            }
+            if (!supportSharePictures) {
+                disablePreference("share_pictures")
+            }
+            if (!supportSharePosters) {
+                disablePreference("share_posters")
             }
         }
 
