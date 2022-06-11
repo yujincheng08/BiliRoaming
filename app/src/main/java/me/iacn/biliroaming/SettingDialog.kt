@@ -67,7 +67,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("custom_splash")?.onPreferenceChangeListener = this
             findPreference("custom_splash_logo")?.onPreferenceChangeListener = this
             findPreference("save_log")?.summary =
-                context.resources.getString(R.string.save_log_summary).format(logFile.absolutePath)
+                context.getString(R.string.save_log_summary).format(logFile.absolutePath)
             findPreference("custom_server")?.onPreferenceClickListener = this
             findPreference("test_upos")?.onPreferenceClickListener = this
             findPreference("customize_bottom_bar")?.onPreferenceClickListener = this
@@ -93,7 +93,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         }
 
         private fun checkUpdate() {
-            val url = URL(context.resources.getString(R.string.version_url))
+            val url = URL(context.getString(R.string.version_url))
             scope.launch {
                 val result = fetchJson(url) ?: return@launch
                 val newestVer = result.optString("name")
@@ -104,9 +104,9 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                             activity
                         ).apply {
                             key = "update"
-                            title = context.resources.getString(R.string.update_title)
+                            title = context.getString(R.string.update_title)
                             summary = result.optString("body").substringAfterLast("更新日志\r\n").run {
-                                ifEmpty { context.resources.getString(R.string.update_summary) }
+                                ifEmpty { context.getString(R.string.update_summary) }
                             }
                             onPreferenceClickListener = this@PrefsFragment
                             order = 1
@@ -154,7 +154,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             if (!supportMusicNotificationHook) {
                 disablePreference(
                     "music_notification",
-                    context.resources.getString(R.string.os_not_support)
+                    context.getString(R.string.os_not_support)
                 )
             }
             if (!supportMain) {
@@ -187,7 +187,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
 
         private fun disablePreference(
             name: String,
-            message: String = context.resources.getString(R.string.not_support)
+            message: String = context.getString(R.string.not_support)
         ) {
             findPreference(name)?.run {
                 isEnabled = false
@@ -322,7 +322,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         }
 
         private fun onUpdateClick(): Boolean {
-            val uri = Uri.parse(context.resources.getString(R.string.update_url))
+            val uri = Uri.parse(context.getString(R.string.update_url))
             val intent = Intent(Intent.ACTION_VIEW, uri)
             startActivity(intent)
             return true
@@ -355,7 +355,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     }
                 }
                 setNegativeButton("获取公共解析服务器") { _, _ ->
-                    val uri = Uri.parse(context.resources.getString(R.string.server_url))
+                    val uri = Uri.parse(context.getString(R.string.server_url))
                     val intent = Intent(Intent.ACTION_VIEW, uri)
                     startActivity(intent)
                 }
@@ -377,7 +377,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     if (it.isEmpty() || ids.contains(it)) return@forEach
                     bottomItems.add(JsonHook.BottomItem("未知", null, it, false))
                 }
-                setTitle(context.resources.getString(R.string.customize_bottom_bar_title))
+                setTitle(context.getString(R.string.customize_bottom_bar_title))
                 setPositiveButton(android.R.string.ok) { _, _ ->
                     val hideItems = mutableSetOf<String>()
                     bottomItems.forEach {
@@ -475,7 +475,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 return true
             }
             AlertDialog.Builder(activity)
-                .setTitle(context.resources.getString(R.string.share_log_title))
+                .setTitle(context.getString(R.string.share_log_title))
                 .setItems(arrayOf("log.txt", "old_log.txt (崩溃相关发这个)")) { _, witch ->
                     val toShareLog = when (witch) {
                         0 -> logFile
@@ -493,7 +493,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                             putExtra(Intent.EXTRA_STREAM, uri)
                             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                             setDataAndType(uri, "text/log")
-                        }, context.resources.getString(R.string.share_log_title)))
+                        }, context.getString(R.string.share_log_title)))
                     } else {
                         Log.toast("日志文件不存在", force = true)
                     }
@@ -510,7 +510,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     if (it.isEmpty() || ids.contains(it)) return@forEach
                     JsonHook.drawerItems.add(JsonHook.BottomItem("未知", null, it, false))
                 }
-                setTitle(context.resources.getString(R.string.customize_drawer_title))
+                setTitle(context.getString(R.string.customize_drawer_title))
                 setPositiveButton(android.R.string.ok) { _, _ ->
                     val hideItems = mutableSetOf<String>()
                     JsonHook.drawerItems.forEach {
@@ -542,7 +542,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             tv.setText(sPrefs.getString("custom_link", ""))
             tv.hint = "bilibili://user_center/vip"
             AlertDialog.Builder(activity).run {
-                setTitle(context.resources.getString(R.string.custom_link_summary))
+                setTitle(context.getString(R.string.custom_link_summary))
                 setView(tv)
                 setPositiveButton(android.R.string.ok) { _, _ ->
                     if (tv.text.toString().startsWith("bilibili://")) {
