@@ -182,6 +182,11 @@
             android:title="@string/customize_bottom_bar_title" />
         <SwitchPreference
             android:dependency="hidden"
+            android:key="add_channel"
+            android:summary="@string/add_channel_summary"
+            android:title="@string/add_channel_title" />
+        <SwitchPreference
+            android:dependency="hidden"
             android:key="purify_game"
             android:summary="@string/purify_game_summary"
             android:title="@string/purify_game_title" />
@@ -305,6 +310,21 @@
             android:key="remove_video_cmd_dms"
             android:summary="@string/remove_video_cmd_dms_summary"
             android:title="@string/remove_video_cmd_dms_title" />
+        <SwitchPreference
+            android:dependency="hidden"
+            android:key="auto_generate_subtitle"
+            android:summary="@string/auto_generate_subtitle_summary"
+            android:title="@string/auto_generate_subtitle_title" />
+        <SwitchPreference
+            android:dependency="hidden"
+            android:key="skin"
+            android:summary="@string/skin_summary"
+            android:title="@string/skin_title" />
+        <SwitchPreference
+            android:dependency="hidden"
+            android:key="skin_import"
+            android:summary="@string/skin_summary"
+            android:title="@string/skin_import_title" />
     </PreferenceCategory>
 
     <PreferenceCategory
