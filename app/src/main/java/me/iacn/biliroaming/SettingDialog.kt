@@ -99,7 +99,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             scope.launch {
                 val result = fetchJson(url) ?: return@launch
                 val newestVer = result.optString("name")
-                if (newestVer.isNotEmpty() && BuildConfig.VERSION_NAME != newestVer) {
+                if (newestVer.isNotEmpty() && BuildConfig.VERSION_NAME.length != 10 && BuildConfig.VERSION_NAME != newestVer) {
                     findPreference("version").summary = "${BuildConfig.VERSION_NAME}（最新版$newestVer）"
                     (findPreference("about") as PreferenceCategory).addPreference(
                         Preference(
