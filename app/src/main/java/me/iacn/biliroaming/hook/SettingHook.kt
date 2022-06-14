@@ -30,10 +30,6 @@ class SettingHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
         }
 
-        // 阻止重建 PrefsFragment，因为系统恢复状态时用的 MainActivity 的 Classloader
-        // 并没有加载 PrefsFragment 类，当 Configuration 改变等情况下，需要恢复状态
-        // 并实例化 PrefsFragment 时，会因为类找不到而触发 android.app.Fragment$InstantiationException
-        // 这里不影响 APP 的 Fragment 重建，因为 APP 没有用原生的 Fragment，非原生的状态另外的键保存的
         instance.mainActivityClass?.hookBeforeMethod(
             "onCreate",
             Bundle::class.java
