@@ -189,6 +189,7 @@
     <string name="skin_summary">重啟後，要等待十幾秒下載資源，然後再重啟（同時開啟時的優先度：導入＞填寫）</string>
     <string name="customize_dynamic_title">淨化動態</string>
     <string name="customize_dynamic_summary">支援移除同城及校園標籤，支援移除話題及最常訪問，支援按類型和關鍵字過濾動態</string>
+    <string name="customize_dynamic_prefer_video_tab">首選影片標籤</string>
     <string name="customize_dynamic_all_rm_topic_title">移除熱門話題（綜合）</string>
     <string name="customize_dynamic_all_rm_up_title">移除最常訪問（綜合）</string>
     <string name="customize_dynamic_video_rm_up_title">移除最常訪問（影片）</string>
