@@ -135,6 +135,11 @@
             android:summary="@string/fix_space_summary"
             android:title="@string/fix_space_title" />
 
+        <SwitchPreference
+            android:key="generate_subtitle"
+            android:summary="@string/generate_subtitle_summary"
+            android:title="@string/generate_subtitle_title" />
+
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/pref_backup">
         <Preference
@@ -359,6 +364,14 @@
             <intent
                 android:action="android.intent.action.VIEW"
                 android:data="@string/tg_url" />
+        </Preference>
+
+        <Preference
+            android:key="subtitle_feedback"
+            android:title="@string/subtitle_feedback_title">
+            <intent
+                android:action="android.intent.action.VIEW"
+                android:data="@string/subtitle_dict_repo_url" />
         </Preference>
 
     </PreferenceCategory>
