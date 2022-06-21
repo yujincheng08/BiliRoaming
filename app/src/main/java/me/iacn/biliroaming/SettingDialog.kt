@@ -99,7 +99,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             scope.launch {
                 val result = fetchJson(url) ?: return@launch
                 val newestVer = result.optString("name")
-                if (newestVer.isNotEmpty() && BuildConfig.VERSION_NAME != newestVer) {
+                if (newestVer.isNotEmpty() && BuildConfig.VERSION_NAME.length != 10 && BuildConfig.VERSION_NAME != newestVer) {
                     findPreference("version").summary = "${BuildConfig.VERSION_NAME}（最新版$newestVer）"
                     (findPreference("about") as PreferenceCategory).addPreference(
                         Preference(
@@ -120,6 +120,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         private fun checkCompatibleVersion() {
             val versionCode = getVersionCode(packageName)
             var supportMusicNotificationHook = true
+            var supportAddChannel = false
             var supportCustomizeTab = true
             val supportFullSplash = try {
                 instance.splashInfoClass?.getMethod("getMode") != null
@@ -130,6 +131,15 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             var supportDrawer = instance.homeUserCenterClass != null
             var supportDrawerStyle = true
             when (platform) {
+                "android_i" -> {
+                    if (versionCode >= 3000000) supportAddChannel = true
+                }
+                "android_b" -> {
+                    if (versionCode >= 6270000) supportAddChannel = true
+                }
+                "android" -> {
+                    if (versionCode >= 6270000) supportAddChannel = true
+                }
                 "android_hd" -> {
                     supportCustomizeTab = false
                     supportDrawer = false
@@ -164,6 +174,9 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             }
             if (!supportTeenagersMode) {
                 disablePreference("teenagers_mode_dialog")
+            }
+            if (!supportAddChannel) {
+                disablePreference("add_channel")
             }
             if (!supportCustomizeTab) {
                 disablePreference("customize_home_tab_title")
