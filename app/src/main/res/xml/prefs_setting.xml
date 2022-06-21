@@ -8,8 +8,8 @@
             android:summary="@string/main_func_summary"
             android:title="@string/main_func_title" />
 
-        <
-                android:defaultValue="true"
+        <SwitchPreference
+            android:defaultValue="true"
             android:dependency="main_func"
             android:key="allow_download"
             android:summary="@string/allow_download_summary"
