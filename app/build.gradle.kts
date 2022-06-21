@@ -266,8 +266,8 @@ dependencies {
     implementation("com.google.protobuf:protobuf-kotlin-lite:3.21.1")
     compileOnly("com.google.protobuf:protoc:3.21.1")
     implementation("org.jetbrains.kotlin:kotlin-stdlib:${rootProject.extra["kotlinVersion"]}")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.2")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.6.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.6.3")
     implementation("androidx.documentfile:documentfile:1.0.1")
     implementation("dev.rikka.ndk.thirdparty:cxx:1.2.0")
 }
