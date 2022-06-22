@@ -19,12 +19,11 @@ open class BasicDictionary(
 ) {
 
     open fun convert(ch: Char): Char {
-        return chars[ch] ?: return ch
+        return chars[ch] ?: ch
     }
 
-    @Throws(IOException::class)
     private fun convert(reader: Reader, writer: Writer) {
-        val `in` = PushbackReader(BufferedReader(reader), maxLen)
+        val `in` = PushbackReader(reader.buffered(), maxLen)
         val buf = CharArray(maxLen)
         var len: Int
 
@@ -45,15 +44,9 @@ open class BasicDictionary(
     }
 
     open fun convert(str: String): String {
-        val ret: String
-        val `in`: Reader = StringReader(str)
-        val out: Writer = StringWriter()
-        try {
-            convert(`in`, out)
-        } catch (e: IOException) {
-            e.printStackTrace()
-        }
-        ret = out.toString()
-        return ret
+        val `in` = StringReader(str)
+        val out = StringWriter()
+        convert(`in`, out)
+        return out.toString()
     }
 }

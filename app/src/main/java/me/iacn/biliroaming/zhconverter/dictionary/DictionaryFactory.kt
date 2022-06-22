@@ -4,18 +4,15 @@ import me.iacn.biliroaming.zhconverter.Trie
 import java.io.File
 
 object DictionaryFactory {
-    private const val SHARP = "#"
-    private const val EQUAL = "="
+    private const val SHARP = '#'
+    private const val EQUAL = '='
 
-    /**
-     * 一个简单的字符串分割，避免直接使用String#split的正则
-     */
-    private fun split(content: String, split: String): Array<String> {
-        val index = content.indexOf(split)
+    private fun String.liteSplit(delimiter: Char): Array<String> {
+        val index = indexOf(delimiter)
         return if (index < 0) {
-            arrayOf(content)
+            arrayOf(this)
         } else {
-            arrayOf(content.substring(0, index), content.substring(index + 1))
+            arrayOf(substring(0, index), substring(index + 1))
         }
     }
 
@@ -24,34 +21,25 @@ object DictionaryFactory {
         val dict = Trie<String>()
         var maxLen = 2
         val dictFile = File(mappingFile).inputStream()
-        dictFile.bufferedReader().use {
-            var line: String?
-            var pair: Array<String>
-            while (true) {
-                line = it.readLine() ?: break
-                if (line.isBlank() || line.trimStart().startsWith(SHARP)) {
-                    continue
-                }
-                pair = split(line, EQUAL)
-                if (pair.size < 2) {
-                    continue
-                }
-                if (reverse) {
-                    if (pair[0].length == 1 && pair[1].length == 1) {
-                        charMap[pair[1][0]] = pair[0][0]
+        dictFile.bufferedReader().useLines { lines ->
+            lines.filterNot { it.isBlank() || it.trimStart().startsWith(SHARP) }
+                .map { it.liteSplit(EQUAL) }.filter { it.size == 2 }.forEach { pair ->
+                    if (reverse) {
+                        if (pair[0].length == 1 && pair[1].length == 1) {
+                            charMap[pair[1][0]] = pair[0][0]
+                        } else {
+                            maxLen = pair[0].length.coerceAtLeast(maxLen)
+                            dict.add(pair[1], pair[0])
+                        }
                     } else {
-                        maxLen = pair[0].length.coerceAtLeast(maxLen)
-                        dict.add(pair[1], pair[0])
-                    }
-                } else {
-                    if (pair[0].length == 1 && pair[1].length == 1) {
-                        charMap[pair[0][0]] = pair[1][0]
-                    } else {
-                        maxLen = pair[0].length.coerceAtLeast(maxLen)
-                        dict.add(pair[0], pair[1])
+                        if (pair[0].length == 1 && pair[1].length == 1) {
+                            charMap[pair[0][0]] = pair[1][0]
+                        } else {
+                            maxLen = pair[0].length.coerceAtLeast(maxLen)
+                            dict.add(pair[0], pair[1])
+                        }
                     }
                 }
-            }
         }
         return BasicDictionary(charMap, dict, maxLen)
     }

@@ -14,9 +14,7 @@ class TrieNode<V>(var key: Char) {
         return node
     }
 
-    fun child(k: Char): TrieNode<V>? {
-        return children[k]
-    }
+    fun child(k: Char) = children[k]
 
     override fun toString(): String {
         return buildString {

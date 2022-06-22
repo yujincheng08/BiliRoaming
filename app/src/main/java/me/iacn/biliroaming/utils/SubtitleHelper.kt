@@ -10,10 +10,10 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
 import java.net.URL
-import java.util.concurrent.TimeUnit
+import java.util.zip.GZIPInputStream
 
 object SubtitleHelper {
-    private val checkInterval = TimeUnit.MINUTES.toMillis(10)
+    private const val checkInterval = 60 * 1000
 
     val dictFilePath: String by lazy { File(currentContext.filesDir, "t2cn.txt").absolutePath }
     val dictExist: Boolean get() = File(dictFilePath).isFile
@@ -28,18 +28,25 @@ object SubtitleHelper {
         val tagName = json.optString("tag_name")
         val latestVer = sCaches.getString("subtitle_dict_latest_version", null) ?: ""
         if (latestVer != tagName || !dictExist) {
-            val dictUrl = json.optJSONArray("assets")
+            var dictUrl = json.optJSONArray("assets")
                 ?.optJSONObject(0)?.optString("browser_download_url")
                 .takeUnless { it.isNullOrEmpty() } ?: return null
+            dictUrl = "https://ghproxy.com/$dictUrl"
             val tmpDictFile = File(currentContext.filesDir, "t2cn.txt.tmp")
-            tmpDictFile.runCatching {
-                withContext(Dispatchers.IO) { writeText(URL(dictUrl).readText()) }
+            runCatching {
+                withContext(Dispatchers.IO) {
+                    tmpDictFile.outputStream().use { o ->
+                        GZIPInputStream(URL(dictUrl).openStream())
+                            .use { it.copyTo(o) }
+                    }
+                }
             }.onSuccess {
                 val dictFile = File(dictFilePath).apply { delete() }
                 if (tmpDictFile.renameTo(dictFile)) {
                     sCaches.edit().putString("subtitle_dict_latest_version", tagName).apply()
                     return dictFilePath
                 }
+                tmpDictFile.delete()
             }.onFailure {
                 Log.e(it)
                 tmpDictFile.delete()
@@ -72,10 +79,7 @@ object SubtitleHelper {
         for (line in subBody) {
             line.put("content", lines[count++].replace("||", "\n"))
         }
-        subBody = appendInfo(
-            subBody,
-            moduleRes.getString(R.string.subtitle_append_info)
-        )
+        subBody = subBody.appendInfo(moduleRes.getString(R.string.subtitle_append_info))
         return subJson.apply {
             put("body", subBody)
         }.toString()
@@ -98,16 +102,16 @@ object SubtitleHelper {
         }.toString()
     }
 
-    private fun appendInfo(body: JSONArray, content: String): JSONArray {
-        if (body.length() == 0) return body
-        val firstLine = body.optJSONObject(0)
-            ?: return body
-        val lastLine = body.optJSONObject(body.length() - 1)
-            ?: return body
+    private fun JSONArray.appendInfo(content: String): JSONArray {
+        if (length() == 0) return this
+        val firstLine = optJSONObject(0)
+            ?: return this
+        val lastLine = optJSONObject(length() - 1)
+            ?: return this
         val firstFrom = firstLine.optDouble("from")
-            .takeIf { !it.isNaN() } ?: return body
+            .takeIf { !it.isNaN() } ?: return this
         val lastTo = lastLine.optDouble("to")
-            .takeIf { !it.isNaN() } ?: return body
+            .takeIf { !it.isNaN() } ?: return this
         val minDuration = 1.0
         val maxDuration = 5.0
         val interval = 0.3
@@ -125,10 +129,10 @@ object SubtitleHelper {
         return if (appendStart) {
             JSONArray().apply {
                 put(info)
-                for (jo in body) {
+                for (jo in this@appendInfo) {
                     put(jo)
                 }
             }
-        } else body.apply { put(info) }
+        } else apply { put(info) }
     }
 }

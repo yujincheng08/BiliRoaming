@@ -6,7 +6,7 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
 class DictionaryContainer {
-    private val dictionaryMap = HashMap<String, BasicDictionary>(8, 1F)
+    private val dictionaryMap = HashMap<String, BasicDictionary>(2, 1F)
 
     private var reloadLatch: CountDownLatch? = null
 
@@ -23,7 +23,7 @@ class DictionaryContainer {
             if (dict != null) return dict
             dict = when (key) {
                 "t2cn" -> DictionaryFactory.loadDictionary(SubtitleHelper.dictFilePath, false)
-                else -> throw IllegalArgumentException("暂不支持转化方式$key")
+                else -> throw IllegalArgumentException("$key not supported")
             }
             dictionaryMap[key] = dict
             return dict
@@ -35,7 +35,7 @@ class DictionaryContainer {
             reloadLatch = CountDownLatch(1)
             val dict = when (key) {
                 "t2cn" -> DictionaryFactory.loadDictionary(SubtitleHelper.dictFilePath, false)
-                else -> throw IllegalArgumentException("暂不支持转化方式$key")
+                else -> throw IllegalArgumentException("$key not supported")
             }
             dictionaryMap[key] = dict
             reloadLatch?.countDown()
