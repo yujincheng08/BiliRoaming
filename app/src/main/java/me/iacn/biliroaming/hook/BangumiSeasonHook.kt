@@ -290,16 +290,11 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                 Log.w("请求解析服务器发生错误: ${messages.trim()}")
                                 return@hookBeforeAllConstructors
                             }
-                            val projectionPlayUrlClass =
-                                "com.bilibili.lib.projection.internal.api.model.ProjectionPlayUrl".findClassOrNull(
-                                    mClassLoader
-                                )
-                            val data = instance.fastJsonClass?.callStaticMethod(
+                            body.setObjectField(dataField, instance.fastJsonClass?.callStaticMethod(
                                 instance.fastJsonParse(),
                                 json,
-                                projectionPlayUrlClass
-                            )
-                            body.setObjectField(dataField, data)
+                                instance.projectionPlayUrlClass
+                            ))
                             body.setIntField("code", 0)
                             return@hookBeforeAllConstructors
                         }
