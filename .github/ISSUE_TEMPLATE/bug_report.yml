@@ -69,6 +69,8 @@ body:
         - HD 版
         - play 版
       description: 目前仅支持粉版、概念版、HD 版和 play 版
+    validations:
+      required: true
   - type: input
     id: client-ver
     attributes:
