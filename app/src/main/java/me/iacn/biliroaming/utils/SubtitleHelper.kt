@@ -1,8 +1,5 @@
 package me.iacn.biliroaming.utils
 
-import kotlinx.coroutines.Dispatchers
-
-import kotlinx.coroutines.withContext
 import me.iacn.biliroaming.R
 import me.iacn.biliroaming.XposedInit.Companion.moduleRes
 import me.iacn.biliroaming.zhconverter.ChineseUtils
@@ -10,6 +7,8 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
 import java.net.URL
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 import java.util.zip.GZIPInputStream
 
 object SubtitleHelper {
@@ -17,35 +16,39 @@ object SubtitleHelper {
 
     val dictFilePath: String by lazy { File(currentContext.filesDir, "t2cn.txt").absolutePath }
     val dictExist: Boolean get() = File(dictFilePath).isFile
+    val executor: ExecutorService by lazy { Executors.newFixedThreadPool(1) }
 
-    suspend fun checkDictUpdate(): String? {
+    fun checkDictUpdate(): String? {
         val lastCheckTime = sCaches.getLong("subtitle_dict_last_check_time", 0)
         if (System.currentTimeMillis() - lastCheckTime < checkInterval && dictExist)
             return null
         sCaches.edit().putLong("subtitle_dict_last_check_time", System.currentTimeMillis()).apply()
         val url = moduleRes.getString(R.string.subtitle_dict_latest_url)
-        val json = fetchJson(url) ?: return null
+        val json = runCatchingOrNull {
+            JSONObject(URL(url).readText())
+        } ?: return null
         val tagName = json.optString("tag_name")
         val latestVer = sCaches.getString("subtitle_dict_latest_version", null) ?: ""
         if (latestVer != tagName || !dictExist) {
+            val sha256sum = json.optString("body")
+                .takeUnless { it.isNullOrEmpty() } ?: return null
             var dictUrl = json.optJSONArray("assets")
                 ?.optJSONObject(0)?.optString("browser_download_url")
                 .takeUnless { it.isNullOrEmpty() } ?: return null
             dictUrl = "https://ghproxy.com/$dictUrl"
             val tmpDictFile = File(currentContext.filesDir, "t2cn.txt.tmp")
             runCatching {
-                withContext(Dispatchers.IO) {
-                    tmpDictFile.outputStream().use { o ->
-                        GZIPInputStream(URL(dictUrl).openStream())
-                            .use { it.copyTo(o) }
-                    }
+                tmpDictFile.outputStream().use { o ->
+                    GZIPInputStream(URL(dictUrl).openStream())
+                        .use { it.copyTo(o) }
                 }
             }.onSuccess {
                 val dictFile = File(dictFilePath).apply { delete() }
-                if (tmpDictFile.renameTo(dictFile)) {
+                if (tmpDictFile.renameTo(dictFile) && dictFile.sha256sum == sha256sum) {
                     sCaches.edit().putString("subtitle_dict_latest_version", tagName).apply()
                     return dictFilePath
                 }
+                dictFile.delete()
                 tmpDictFile.delete()
             }.onFailure {
                 Log.e(it)

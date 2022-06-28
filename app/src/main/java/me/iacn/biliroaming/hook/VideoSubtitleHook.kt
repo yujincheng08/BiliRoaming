@@ -1,20 +1,17 @@
 package me.iacn.biliroaming.hook
 
 import android.net.Uri
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.future.future
-import kotlinx.coroutines.launch
 import me.iacn.biliroaming.*
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.utils.*
 import java.lang.reflect.Method
 import java.net.URL
+import java.util.concurrent.Callable
 import java.util.concurrent.TimeUnit
 
 class VideoSubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     private val fakeConvertApi = "https://subtitle.biliroaming.114514"
-    private val scope = MainScope()
 
     override fun startHook() {
         if (!sPrefs.getBoolean("auto_generate_subtitle", false)) return
@@ -90,10 +87,10 @@ class VideoSubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
                 val dictReady = if (!SubtitleHelper.dictExist) {
                     runCatchingOrNull {
-                        scope.future {
+                        SubtitleHelper.executor.submit(Callable {
                             SubtitleHelper.checkDictUpdate()
-                        }.get(60, TimeUnit.SECONDS)
-                    } != null
+                        }).get(60, TimeUnit.SECONDS)
+                    } != null || SubtitleHelper.dictExist
                 } else true
                 val converted = if (dictReady) {
                     runCatching {
@@ -105,8 +102,8 @@ class VideoSubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         ?: SubtitleHelper.errorResponse(XposedInit.moduleRes.getString(R.string.subtitle_convert_failed))
                 } else SubtitleHelper.errorResponse(XposedInit.moduleRes.getString(R.string.subtitle_dict_download_failed))
 
-                scope.launch {
-                    runCatchingOrNull {
+                runCatchingOrNull {
+                    SubtitleHelper.executor.execute {
                         SubtitleHelper.checkDictUpdate()?.let {
                             SubtitleHelper.reloadDict()
                         }
