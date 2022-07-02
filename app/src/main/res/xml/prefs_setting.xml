@@ -141,7 +141,6 @@
             android:title="@string/fix_space_title" />
 
         <SwitchPreference
-            android:defaultValue="true"
             android:key="generate_subtitle"
             android:summary="@string/generate_subtitle_summary"
             android:title="@string/generate_subtitle_title" />
