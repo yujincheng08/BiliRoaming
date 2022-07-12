@@ -135,6 +135,11 @@
             android:summary="@string/fix_space_summary"
             android:title="@string/fix_space_title" />
 
+        <SwitchPreference
+            android:key="play_arc_conf"
+            android:summary="@string/play_arc_conf_summary"
+            android:title="@string/play_arc_conf_title" />
+
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/pref_backup">
         <Preference
