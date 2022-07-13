@@ -152,7 +152,7 @@ class HomeFilterDialog(val activity: Activity, prefs: SharedPreferences) :
             context.resources.displayMetrics
         ).roundToInt()
 
-    private inline fun string(resId: Int) = context.resources.getString(resId)
+    private inline fun string(resId: Int) = context.getString(resId)
 
     private fun textInputItem(
         name: String,
