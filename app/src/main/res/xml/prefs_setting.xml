@@ -141,6 +141,11 @@
             android:title="@string/fix_space_title" />
 
         <SwitchPreference
+            android:key="play_arc_conf"
+            android:summary="@string/play_arc_conf_summary"
+            android:title="@string/play_arc_conf_title" />
+  
+        <SwitchPreference
             android:key="generate_subtitle"
             android:summary="@string/generate_subtitle_summary"
             android:title="@string/generate_subtitle_title" />
