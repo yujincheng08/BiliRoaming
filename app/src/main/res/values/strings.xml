@@ -195,6 +195,7 @@
     <string name="customize_dynamic_all_rm_topic_title">移除热门话题（综合）</string>
     <string name="customize_dynamic_all_rm_up_title">移除最常访问（综合）</string>
     <string name="customize_dynamic_video_rm_up_title">移除最常访问（视频）</string>
+    <string name="customize_dynamic_filter_apply_to_video">过滤设置同时作用于视频分区</string>
     <string name="customize_dynamic_by_type">按类型</string>
     <string name="customize_dynamic_by_keyword">按关键字</string>
     <string name="keyword_group_name_content">内容</string>

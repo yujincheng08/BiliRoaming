@@ -30,7 +30,9 @@ class DynamicHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private val preferVideoTab by lazy {
         sPrefs.getBoolean("prefer_video_tab", false)
     }
-
+    private val filterApplyToVideo by lazy {
+        sPrefs.getBoolean("filter_apply_to_video", false)
+    }
     private val needFilterDynamic = purifyTypes.isNotEmpty() || purifyContents.isNotEmpty()
             || purifyUpNames.isNotEmpty() || purifyUidList.isNotEmpty()
 
@@ -52,7 +54,7 @@ class DynamicHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
             }
         }
-        if (hidden && (needFilterDynamic || removeUpOfVideo)) {
+        if (hidden && ((filterApplyToVideo && needFilterDynamic) || removeUpOfVideo)) {
             "com.bapis.bilibili.app.dynamic.v2.DynamicMoss".hookAfterMethod(
                 mClassLoader,
                 "dynVideo",
@@ -61,7 +63,7 @@ class DynamicHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 param.result?.let {
                     if (removeUpOfVideo)
                         it.callMethod("clearVideoUpList")
-                    if (needFilterDynamic)
+                    if (filterApplyToVideo && needFilterDynamic)
                         filterDynamic(it)
                 }
             }
