@@ -182,6 +182,8 @@
     <string name="add_korea_summary">在首页标签添加港澳台韩综分页</string>
     <string name="fix_space_title">修复UP主空间</string>
     <string name="fix_space_summary">修复部分被屏蔽的UP主空间</string>
+    <string name="play_arc_conf_title">强制允许后台播放和投屏</string>
+    <string name="play_arc_conf_summary">去除“因版权原因，暂不支持后台播放”“由于版权方限制暂不支持投屏”之类的限制</string>
     <string name="customize_dynamic_title">净化动态</string>
     <string name="customize_dynamic_summary">支持移除同城及校园标签，支持移除话题及最常访问，支持按类型和关键字过滤动态</string>
     <string name="customize_dynamic_all_rm_topic_title">移除热门话题（综合）</string>
