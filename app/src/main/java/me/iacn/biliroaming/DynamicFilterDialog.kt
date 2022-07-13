@@ -34,6 +34,12 @@ class DynamicFilterDialog(val activity: Activity, prefs: SharedPreferences) :
         }
         scrollView.addView(root)
 
+        val preferVideoTabTitle = string(R.string.customize_dynamic_prefer_video_tab)
+        val preferVideoTabSwitch = switchPrefsItem(preferVideoTabTitle).let {
+            root.addView(it.first)
+            it.second
+        }
+        preferVideoTabSwitch.isChecked = prefs.getBoolean("prefer_video_tab", false)
         val rmCityTabTitle = string(R.string.purify_city_title)
         val rmCityTabSwitch = switchPrefsItem(rmCityTabTitle).let {
             root.addView(it.first)
@@ -69,8 +75,8 @@ class DynamicFilterDialog(val activity: Activity, prefs: SharedPreferences) :
         }
         rmUpOfVideoSwitch.isChecked = prefs.getBoolean("customize_dynamic_video_rm_up", false)
 
-        val byTypeTitle = TextView(context).apply {
-            text = string(R.string.customize_dynamic_by_type)
+        fun categoryTitle(title: String) = TextView(context).apply {
+            text = title
             typeface = Typeface.DEFAULT_BOLD
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 18F)
             layoutParams = LinearLayout.LayoutParams(
@@ -80,6 +86,8 @@ class DynamicFilterDialog(val activity: Activity, prefs: SharedPreferences) :
                 topMargin = 10.dp
             }
         }
+
+        val byTypeTitle = categoryTitle(string(R.string.customize_dynamic_by_type))
         root.addView(byTypeTitle)
 
         val gridLayout = GridLayout(context).apply {
@@ -111,17 +119,7 @@ class DynamicFilterDialog(val activity: Activity, prefs: SharedPreferences) :
             gridLayout.addView(textView)
         }
 
-        val byKeywordTitle = TextView(context).apply {
-            text = string(R.string.customize_dynamic_by_keyword)
-            typeface = Typeface.DEFAULT_BOLD
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 18F)
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                topMargin = 10.dp
-            }
-        }
+        val byKeywordTitle = categoryTitle(string(R.string.customize_dynamic_by_keyword))
         root.addView(byKeywordTitle)
 
         val contentGroup = root.addKeywordGroup(string(R.string.keyword_group_name_content))
@@ -159,6 +157,7 @@ class DynamicFilterDialog(val activity: Activity, prefs: SharedPreferences) :
                 .toSet()
 
             prefs.edit().apply {
+                putBoolean("prefer_video_tab", preferVideoTabSwitch.isChecked)
                 putBoolean("purify_city", rmCityTabSwitch.isChecked)
                 putBoolean("purify_campus", rmCampusTabSwitch.isChecked)
                 putBoolean("customize_dynamic_all_rm_topic", rmTopicOfAllSwitch.isChecked)
@@ -185,7 +184,7 @@ class DynamicFilterDialog(val activity: Activity, prefs: SharedPreferences) :
             context.resources.displayMetrics
         ).roundToInt()
 
-    private inline fun string(resId: Int) = context.resources.getString(resId)
+    private inline fun string(resId: Int) = context.getString(resId)
 
     private fun keywordTypeHeader(
         group: ViewGroup,

@@ -67,7 +67,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("custom_splash")?.onPreferenceChangeListener = this
             findPreference("custom_splash_logo")?.onPreferenceChangeListener = this
             findPreference("save_log")?.summary =
-                context.resources.getString(R.string.save_log_summary).format(logFile.absolutePath)
+                context.getString(R.string.save_log_summary).format(logFile.absolutePath)
             findPreference("custom_server")?.onPreferenceClickListener = this
             findPreference("test_upos")?.onPreferenceClickListener = this
             findPreference("customize_bottom_bar")?.onPreferenceClickListener = this
@@ -82,6 +82,8 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("custom_link")?.onPreferenceClickListener = this
             findPreference("add_custom_button")?.onPreferenceClickListener = this
             findPreference("customize_dynamic")?.onPreferenceClickListener = this
+            findPreference("skin")?.onPreferenceClickListener = this
+            findPreference("skin_import")?.onPreferenceClickListener = this
             checkCompatibleVersion()
             checkUpdate()
         }
@@ -93,20 +95,20 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         }
 
         private fun checkUpdate() {
-            val url = URL(context.resources.getString(R.string.version_url))
+            val url = URL(context.getString(R.string.version_url))
             scope.launch {
                 val result = fetchJson(url) ?: return@launch
                 val newestVer = result.optString("name")
-                if (newestVer.isNotEmpty() && BuildConfig.VERSION_NAME != newestVer) {
+                if (newestVer.isNotEmpty() && BuildConfig.VERSION_NAME.length != 10 && BuildConfig.VERSION_NAME != newestVer) {
                     findPreference("version").summary = "${BuildConfig.VERSION_NAME}（最新版$newestVer）"
                     (findPreference("about") as PreferenceCategory).addPreference(
                         Preference(
                             activity
                         ).apply {
                             key = "update"
-                            title = context.resources.getString(R.string.update_title)
+                            title = context.getString(R.string.update_title)
                             summary = result.optString("body").substringAfterLast("更新日志\r\n").run {
-                                ifEmpty { context.resources.getString(R.string.update_summary) }
+                                ifEmpty { context.getString(R.string.update_summary) }
                             }
                             onPreferenceClickListener = this@PrefsFragment
                             order = 1
@@ -118,6 +120,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         private fun checkCompatibleVersion() {
             val versionCode = getVersionCode(packageName)
             var supportMusicNotificationHook = true
+            var supportAddChannel = false
             var supportCustomizeTab = true
             val supportFullSplash = try {
                 instance.splashInfoClass?.getMethod("getMode") != null
@@ -128,6 +131,15 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             var supportDrawer = instance.homeUserCenterClass != null
             var supportDrawerStyle = true
             when (platform) {
+                "android_i" -> {
+                    if (versionCode >= 3000000) supportAddChannel = true
+                }
+                "android_b" -> {
+                    if (versionCode >= 6270000) supportAddChannel = true
+                }
+                "android" -> {
+                    if (versionCode >= 6270000) supportAddChannel = true
+                }
                 "android_hd" -> {
                     supportCustomizeTab = false
                     supportDrawer = false
@@ -154,7 +166,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             if (!supportMusicNotificationHook) {
                 disablePreference(
                     "music_notification",
-                    context.resources.getString(R.string.os_not_support)
+                    context.getString(R.string.os_not_support)
                 )
             }
             if (!supportMain) {
@@ -162,6 +174,9 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             }
             if (!supportTeenagersMode) {
                 disablePreference("teenagers_mode_dialog")
+            }
+            if (!supportAddChannel) {
+                disablePreference("add_channel")
             }
             if (!supportCustomizeTab) {
                 disablePreference("customize_home_tab_title")
@@ -187,7 +202,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
 
         private fun disablePreference(
             name: String,
-            message: String = context.resources.getString(R.string.not_support)
+            message: String = context.getString(R.string.not_support)
         ) {
             findPreference(name)?.run {
                 isEnabled = false
@@ -302,6 +317,20 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                         Log.toast("${e.message}")
                     }
                 }
+                SKIN_IMPORT -> {
+                    val file = File(currentContext.filesDir, "skin.json")
+                    val uri = data?.data
+                    if (resultCode == RESULT_CANCELED || uri == null) return
+                    try {
+                        file.outputStream().use { out ->
+                            activity.contentResolver.openInputStream(uri)?.copyTo(out)
+                        }
+                    } catch (e: Exception) {
+                        Log.e(e)
+                        Log.toast(e.message ?: "未知错误", true)
+                    }
+                    Log.toast("保存成功 重启两次后生效", true)
+                }
             }
 
             super.onActivityResult(requestCode, resultCode, data)
@@ -322,7 +351,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         }
 
         private fun onUpdateClick(): Boolean {
-            val uri = Uri.parse(context.resources.getString(R.string.update_url))
+            val uri = Uri.parse(context.getString(R.string.update_url))
             val intent = Intent(Intent.ACTION_VIEW, uri)
             startActivity(intent)
             return true
@@ -355,7 +384,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     }
                 }
                 setNegativeButton("获取公共解析服务器") { _, _ ->
-                    val uri = Uri.parse(context.resources.getString(R.string.server_url))
+                    val uri = Uri.parse(context.getString(R.string.server_url))
                     val intent = Intent(Intent.ACTION_VIEW, uri)
                     startActivity(intent)
                 }
@@ -377,7 +406,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     if (it.isEmpty() || ids.contains(it)) return@forEach
                     bottomItems.add(JsonHook.BottomItem("未知", null, it, false))
                 }
-                setTitle(context.resources.getString(R.string.customize_bottom_bar_title))
+                setTitle(context.getString(R.string.customize_bottom_bar_title))
                 setPositiveButton(android.R.string.ok) { _, _ ->
                     val hideItems = mutableSetOf<String>()
                     bottomItems.forEach {
@@ -423,6 +452,19 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             intent.addCategory(Intent.CATEGORY_OPENABLE)
             try {
                 startActivityForResult(Intent.createChooser(intent, "选择配置文件"), PREF_IMPORT)
+            } catch (ex: ActivityNotFoundException) {
+                Log.toast("请安装文件管理器")
+            }
+            return true
+        }
+
+        private fun onSkinImportClick(isChecked: Boolean): Boolean {
+            if (!isChecked) return true
+            val intent = Intent(Intent.ACTION_GET_CONTENT)
+            intent.type = "application/*"
+            intent.addCategory(Intent.CATEGORY_OPENABLE)
+            try {
+                startActivityForResult(Intent.createChooser(intent, "选择文件"), SKIN_IMPORT)
             } catch (ex: ActivityNotFoundException) {
                 Log.toast("请安装文件管理器")
             }
@@ -475,7 +517,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 return true
             }
             AlertDialog.Builder(activity)
-                .setTitle(context.resources.getString(R.string.share_log_title))
+                .setTitle(context.getString(R.string.share_log_title))
                 .setItems(arrayOf("log.txt", "old_log.txt (崩溃相关发这个)")) { _, witch ->
                     val toShareLog = when (witch) {
                         0 -> logFile
@@ -493,7 +535,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                             putExtra(Intent.EXTRA_STREAM, uri)
                             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                             setDataAndType(uri, "text/log")
-                        }, context.resources.getString(R.string.share_log_title)))
+                        }, context.getString(R.string.share_log_title)))
                     } else {
                         Log.toast("日志文件不存在", force = true)
                     }
@@ -510,7 +552,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     if (it.isEmpty() || ids.contains(it)) return@forEach
                     JsonHook.drawerItems.add(JsonHook.BottomItem("未知", null, it, false))
                 }
-                setTitle(context.resources.getString(R.string.customize_drawer_title))
+                setTitle(context.getString(R.string.customize_drawer_title))
                 setPositiveButton(android.R.string.ok) { _, _ ->
                     val hideItems = mutableSetOf<String>()
                     JsonHook.drawerItems.forEach {
@@ -542,7 +584,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             tv.setText(sPrefs.getString("custom_link", ""))
             tv.hint = "bilibili://user_center/vip"
             AlertDialog.Builder(activity).run {
-                setTitle(context.resources.getString(R.string.custom_link_summary))
+                setTitle(context.getString(R.string.custom_link_summary))
                 setView(tv)
                 setPositiveButton(android.R.string.ok) { _, _ ->
                     if (tv.text.toString().startsWith("bilibili://")) {
@@ -565,7 +607,28 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             return true
         }
 
-        private fun onAddCustomButtonClick(): Boolean {
+        private fun onSkinClick(isChecked: Boolean): Boolean {
+            if (!isChecked) return true
+            val tv = EditText(activity)
+            tv.setText(sPrefs.getString("skin_json", "").toString())
+            AlertDialog.Builder(activity).run {
+                setTitle(R.string.skin_title)
+                setView(tv)
+                setPositiveButton(android.R.string.ok) { _, _ ->
+                    sPrefs.edit()
+                        .putString("skin_json", tv.text.toString())
+                        .apply()
+                    Log.toast("保存成功 重启两次后生效")
+                }
+                setNegativeButton(android.R.string.cancel, null)
+                setCancelable(false)
+                show()
+            }
+            return true
+        }
+
+        private fun onAddCustomButtonClick(isChecked: Boolean): Boolean {
+            if (!isChecked) return true
             AlertDialog.Builder(activity).run {
                 val layout = moduleRes.getLayout(R.layout.custom_button)
                 val inflater = LayoutInflater.from(context)
@@ -622,8 +685,10 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             "share_log" -> onShareLogClick()
             "customize_drawer" -> onCustomizeDrawerClick()
             "custom_link" -> onCustomLinkClick()
-            "add_custom_button" -> onAddCustomButtonClick()
+            "add_custom_button" -> onAddCustomButtonClick((preference as SwitchPreference).isChecked)
             "customize_dynamic" -> onCustomDynamicClick()
+            "skin" -> onSkinClick((preference as SwitchPreference).isChecked)
+            "skin_import" -> onSkinImportClick((preference as SwitchPreference).isChecked)
             else -> false
         }
     }
@@ -699,6 +764,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         const val PREF_IMPORT = 2
         const val PREF_EXPORT = 3
         const val VIDEO_EXPORT = 4
+        const val SKIN_IMPORT = 5
     }
 
 }
