@@ -38,8 +38,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         instance = this
     }
 
-    lateinit var globalDexHelper: DexHelper
-
     @OptIn(ExperimentalTime::class)
     private val mHookInfo: Configs.HookInfo = run {
         val (result, time) = measureTimedValue { readHookInfo(mContext) }
@@ -98,12 +96,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     }
     val pegasusFeedClass by Weak { mHookInfo.pegasusFeed.class_ from mClassLoader }
     val okhttpResponseClass by Weak { mHookInfo.okhttpResponse from mClassLoader }
-    val requestClass by Weak { mHookInfo.okHttp.classRequest from mClassLoader }
-    val responseBuilderClass by Weak { mHookInfo.okHttp.responseBuilder from mClassLoader }
-    val responseBodyClass by Weak { mHookInfo.okHttp.responseBody from mClassLoader }
-    val mediaTypeClass by Weak { mHookInfo.okHttp.mediaType from mClassLoader }
-    val realCallClass by Weak { mHookInfo.okHttp.realCall from mClassLoader }
-    val protocolClass by Weak { mHookInfo.okHttp.protocol from mClassLoader }
     val subtitleSpanClass by Weak { mHookInfo.subtitleSpan from mClassLoader }
     val chronosSwitchClass by Weak { mHookInfo.chronosSwitch from mClassLoader }
     val biliSpaceClass by Weak { "com.bilibili.app.authorspace.api.BiliSpace" from mClassLoader }
@@ -127,19 +119,19 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val playerOnSeekCompleteClass by Weak { mHookInfo.playerCoreService.seekCompleteListener from mClassLoader }
     val kanbanCallbackClass by Weak { mHookInfo.kanBan.class_ from mClassLoader }
     val toastHelperClass by Weak { mHookInfo.toastHelper.class_ from mClassLoader }
-    val upgradeUtilsClass by Weak { mHookInfo.appUpgrade.upgradeUtils from mClassLoader }
-    val writeChannelMethod get() = mHookInfo.appUpgrade.writeChannel.orNull
-    val helpFragmentClass by Weak { mHookInfo.appUpgrade.helpFragment from mClassLoader }
-    val userFragmentClass by Weak { mHookInfo.darkSwitch.userFragment from mClassLoader }
-    val themeUtilsClass by Weak { mHookInfo.darkSwitch.themeUtils from mClassLoader }
-    val switchDarkModeMethod get() = mHookInfo.darkSwitch.switchDarkMode.orNull
-    val isDarkFollowSystemMethod get() = mHookInfo.darkSwitch.isDarkFollowSystem.orNull
     val videoDetailCallbackClass by Weak { mHookInfo.videoDetailCallback from mClassLoader }
     val biliAccountsClass by Weak { mHookInfo.biliAccounts.class_ from mClassLoader }
     val networkExceptionClass by Weak { "com.bilibili.lib.moss.api.NetworkException" from mClassLoader }
     val brotliInputStreamClass by Weak { mHookInfo.brotliInputStream from mClassLoader }
+    val projectionPlayUrlClass by Weak { "com.bilibili.lib.projection.internal.api.model.ProjectionPlayUrl" from mClassLoader }
     val arcConfClass by Weak { "com.bapis.bilibili.app.playurl.v1.ArcConf" from mClassLoader }
     val arcConfExtraContentClass by Weak { "com.bapis.bilibili.app.playurl.v1.ExtraContent" from mClassLoader }
+    val requestClass by Weak { mHookInfo.okHttp.classRequest from mClassLoader }
+    val responseBuilderClass by Weak { mHookInfo.okHttp.responseBuilder from mClassLoader }
+    val responseBodyClass by Weak { mHookInfo.okHttp.responseBody from mClassLoader }
+    val mediaTypeClass by Weak { mHookInfo.okHttp.mediaType from mClassLoader }
+    val realCallClass by Weak { mHookInfo.okHttp.realCall from mClassLoader }
+    val protocolClass by Weak { mHookInfo.okHttp.protocol from mClassLoader }
 
     val ids: Map<String, Int> by lazy {
         mHookInfo.mapIds.idsMap
@@ -164,11 +156,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     fun fastJsonParse() = mHookInfo.fastJson.parse.orNull
 
-    fun createResponseBody() = mHookInfo.okHttp.create.orNull
-    fun getMediaType() = mHookInfo.okHttp.get.orNull
-    fun executeCall() = mHookInfo.okHttp.execute.orNull
-    fun realCallRequestField() = mHookInfo.okHttp.realCallRequest.orNull
-    fun responseBuildFields() = mHookInfo.okHttp.responseBuildFieldsList.map { it.orNull }
 
     fun colorArray() = mHookInfo.themeHelper.colorArray.orNull
 
@@ -252,6 +239,16 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     fun cancelShowToast() = mHookInfo.toastHelper.cancel.orNull
 
+    fun createResponseBody() = mHookInfo.okHttp.create.orNull
+
+    fun getMediaType() = mHookInfo.okHttp.get.orNull
+
+    fun executeCall() = mHookInfo.okHttp.execute.orNull
+
+    fun realCallRequestField() = mHookInfo.okHttp.realCallRequest.orNull
+
+    fun responseBuildFields() = mHookInfo.okHttp.responseBuildFieldsList.map { it.orNull }
+
     private fun readHookInfo(context: Context): Configs.HookInfo {
         try {
             val hookInfoFile = File(context.cacheDir, Constant.HOOK_INFO_FILE_NAME)
@@ -276,18 +273,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                         && BuildConfig.VERSION_CODE == info.moduleVersionCode
                         && BuildConfig.VERSION_NAME == info.moduleVersionName
                         && info.biliAccounts.getAccessKey.orNull != null
-                    ) {
-                        if (BuildConfig.DEBUG) {
-                            try {
-                                System.loadLibrary("biliroaming")
-                                context.classLoader.findDexClassLoader(::findRealClassloader)?.let {
-                                    globalDexHelper = DexHelper(it)
-                                }
-                            } catch (_: Throwable) {
-                            }
-                        }
+                    )
                         return info
-                    }
                 }
             }
             Log.d("Read hook info completed: take $t ms")
@@ -347,7 +334,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
             val dexHelper =
                 DexHelper(classloader.findDexClassLoader(::findRealClassloader) ?: return@hookInfo)
-            if (BuildConfig.DEBUG) instance.globalDexHelper = dexHelper
             lastUpdateTime = max(
                 context.packageManager.getPackageInfo(
                     AndroidAppHelper.currentPackageName(),
@@ -376,104 +362,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                                 && it.type == Int::class.javaPrimitiveType
                     }
                 }.forEach { ids[it.name] = it.get(null) as Int }
-            }
-            appUpgrade = appUpgrade {
-                val writeChannelMethod = dexHelper.findMethodUsingString(
-                    "Channel info has already exist.",
-                    false,
-                    -1,
-                    -1,
-                    null,
-                    -1,
-                    null,
-                    null,
-                    null,
-                    true
-                ).asSequence().firstNotNullOfOrNull {
-                    dexHelper.decodeMethodIndex(it)
-                } ?: return@appUpgrade
-                writeChannel = method { name = writeChannelMethod.name }
-                upgradeUtils = class_ { name = writeChannelMethod.declaringClass.name }
-                val helpFragmentClass = "com.bilibili.app.preferences.fragment.HelpFragment"
-                    .from(classloader) ?: dexHelper.findMethodUsingString(
-                    "url_join_us",
-                    false,
-                    -1,
-                    -1,
-                    null,
-                    -1,
-                    null,
-                    null,
-                    null,
-                    true
-                ).asSequence().firstNotNullOfOrNull {
-                    dexHelper.decodeMethodIndex(it)
-                }?.declaringClass ?: return@appUpgrade
-                helpFragment = class_ { name = helpFragmentClass.name }
-            }
-            darkSwitch = darkSwitch {
-                val userFragmentClass = "tv.danmaku.bili.ui.main2.mine.HomeUserCenterFragment"
-                    .from(classloader) ?: dexHelper.findMethodUsingString(
-                    "key_global_link_entrance_shown",
-                    false,
-                    -1,
-                    -1,
-                    null,
-                    -1,
-                    null,
-                    null,
-                    null,
-                    true
-                ).asSequence().firstNotNullOfOrNull {
-                    dexHelper.decodeMethodIndex(it)
-                }?.declaringClass ?: return@darkSwitch
-                val userFragmentIndex = dexHelper.encodeClassIndex(userFragmentClass)
-                val switchDarkModeIndex = dexHelper.findMethodUsingString(
-                    "default",
-                    false,
-                    -1,
-                    1,
-                    "VZ",
-                    userFragmentIndex,
-                    null,
-                    null,
-                    null,
-                    true
-                ).firstOrNull() ?: return@darkSwitch
-                val switchDarkModeMethod =
-                    dexHelper.decodeMethodIndex(switchDarkModeIndex) ?: return@darkSwitch
-                var isDarkFollowSystemMethod: Method? = null
-                var themeUtilsClass = "com.bilibili.lib.ui.util.MultipleThemeUtils"
-                    .from(classloader)?.also {
-                        isDarkFollowSystemMethod = it.runCatchingOrNull {
-                            getDeclaredMethod("isNightFollowSystem", Context::class.java)
-                        }
-                    }
-                isDarkFollowSystemMethod ?: run {
-                    val contextIndex = dexHelper.encodeClassIndex(Context::class.java)
-                    isDarkFollowSystemMethod = dexHelper.findMethodInvoking(
-                        switchDarkModeIndex,
-                        -1,
-                        1,
-                        "ZL",
-                        -1,
-                        longArrayOf(contextIndex),
-                        null,
-                        null,
-                        true
-                    ).asSequence().firstNotNullOfOrNull {
-                        dexHelper.decodeMethodIndex(it)
-                    } as? Method
-                    themeUtilsClass = isDarkFollowSystemMethod?.declaringClass
-                }
-                userFragment = class_ { name = userFragmentClass.name }
-                switchDarkMode = method { name = switchDarkModeMethod.name }
-                themeUtilsClass?.let {
-                    themeUtils = class_ { name = it.name }
-                }
-                isDarkFollowSystemMethod?.let {
-                    isDarkFollowSystem = method { name = it.name }
-                }
             }
 
             bangumiApiResponse = class_ {
@@ -1786,7 +1674,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 }?.declaringClass?.name ?: return@class_
             }
 
-            if (!BuildConfig.DEBUG) dexHelper.close()
+            dexHelper.close()
         }
 
         @Volatile
