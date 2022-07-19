@@ -109,10 +109,6 @@ val platform by lazy {
 
 val logDir by lazy { File(currentContext.externalCacheDir, "log").also { it.mkdirs() } }
 
-val logFile by lazy { File(currentContext.externalCacheDir, "log.txt") }
-
-val oldLogFile by lazy { File(currentContext.externalCacheDir, "old_log.txt") }
-
 val simpleDateFormat = SimpleDateFormat.getDateTimeInstance()
 
 @Suppress("DEPRECATION")
