@@ -16,6 +16,7 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.future.future
 import me.iacn.biliroaming.hook.*
 import me.iacn.biliroaming.utils.*
+import java.io.File
 import java.util.concurrent.CompletableFuture
 
 
@@ -49,6 +50,7 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
             @Suppress("DEPRECATION")
             when {
                 !lpparam.processName.contains(":") -> {
+                    clearOldLog()
                     if (shouldSaveLog) {
                         startLog()
                     }
@@ -150,13 +152,7 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
     }
 
     private fun startLog() = try {
-        if (logFile.exists()) {
-            if (oldLogFile.exists()) {
-                oldLogFile.delete()
-            }
-            logFile.renameTo(oldLogFile)
-        }
-        logFile.delete()
+        val logFile = File(logDir, "${System.currentTimeMillis()}.log")
         logFile.createNewFile()
         Runtime.getRuntime().exec(
             arrayOf(
@@ -170,6 +166,20 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
     } catch (e: Throwable) {
         Log.e(e)
         null
+    }
+
+    private fun clearOldLog() {
+        File(currentContext.externalCacheDir, "log.txt").delete()
+        File(currentContext.externalCacheDir, "old_log.txt").delete()
+        val outdated = System.currentTimeMillis() - 12L * 60 * 60 * 1000
+        if (shouldSaveLog.not()) {
+            logDir.listFiles()?.forEach { it.delete() }
+            return
+        }
+        logDir.listFiles()?.forEach {
+            if ((it.nameWithoutExtension.toLongOrNull() ?: 0) < outdated)
+                it.delete()
+        }
     }
 
     companion object {

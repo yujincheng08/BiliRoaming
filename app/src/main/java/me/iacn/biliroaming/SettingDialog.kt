@@ -6,6 +6,7 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Activity.RESULT_CANCELED
 import android.app.AlertDialog
+import android.app.Dialog
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
@@ -25,6 +26,7 @@ import android.widget.TextView
 import androidx.documentfile.provider.DocumentFile
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.XposedInit.Companion.modulePath
@@ -36,6 +38,7 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.net.URL
+import kotlin.math.log
 import kotlin.system.exitProcess
 
 
@@ -67,7 +70,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("custom_splash")?.onPreferenceChangeListener = this
             findPreference("custom_splash_logo")?.onPreferenceChangeListener = this
             findPreference("save_log")?.summary =
-                context.getString(R.string.save_log_summary).format(logFile.absolutePath)
+                context.getString(R.string.save_log_summary).format(logDir.absolutePath)
             findPreference("custom_server")?.onPreferenceClickListener = this
             findPreference("test_upos")?.onPreferenceClickListener = this
             findPreference("customize_bottom_bar")?.onPreferenceClickListener = this
@@ -470,33 +473,58 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         }
 
         private fun onShareLogClick(): Boolean {
-            if ((logFile.exists().not() && oldLogFile.exists().not()) || shouldSaveLog.not()) {
+            if (logDir.listFiles()?.isNotEmpty() == false || shouldSaveLog.not()) {
                 Log.toast("没有保存过日志", force = true)
                 return true
             }
+            val logs = (logDir.listFiles() ?: emptyArray()).sortedDescending()
+            val names =  logs.map { simpleDateFormat.format(it.nameWithoutExtension.toLongOrNull() ?: 0) }.toTypedArray()
             AlertDialog.Builder(activity)
                 .setTitle(context.getString(R.string.share_log_title))
-                .setItems(arrayOf("log.txt", "old_log.txt (崩溃相关发这个)")) { _, witch ->
-                    val toShareLog = when (witch) {
-                        0 -> logFile
-                        else -> oldLogFile
-                    }
-                    if (toShareLog.exists()) {
-                        toShareLog.copyTo(
-                            File(activity.cacheDir, "boxing/log.txt"),
-                            overwrite = true
-                        )
-                        val uri =
-                            Uri.parse("content://${activity.packageName}.fileprovider/internal/log.txt")
-                        activity.startActivity(Intent.createChooser(Intent().apply {
-                            action = Intent.ACTION_SEND
-                            putExtra(Intent.EXTRA_STREAM, uri)
-                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                            setDataAndType(uri, "text/log")
-                        }, context.getString(R.string.share_log_title)))
-                    } else {
+                .setItems(names) { dialog1, witch ->
+                    dialog1 as Dialog
+                    val toShareLog = logs[witch]
+                    if (toShareLog.exists().not()) {
                         Log.toast("日志文件不存在", force = true)
+                        return@setItems
                     }
+                    AlertDialog.Builder(activity)
+                        .setTitle(names[witch])
+                        .setMessage("${logs[witch].name}\n如果要提供崩溃日志 先检查是否包含崩溃记录")
+                        .setNegativeButton("返回") { _, _ -> dialog1.show() }
+                        .setPositiveButton("分享") { _, _ ->
+                            toShareLog.copyTo(
+                                File(activity.cacheDir, "boxing/log.txt"),
+                                overwrite = true
+                            )
+                            val uri =
+                                Uri.parse(
+                                    "content://${activity.packageName}.fileprovider/internal/log.txt")
+                            activity.startActivity(Intent.createChooser(Intent().apply {
+                                action = Intent.ACTION_SEND
+                                putExtra(Intent.EXTRA_STREAM, uri)
+                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                setDataAndType(uri, "text/log")
+                            }, context.getString(R.string.share_log_title)))
+                        }.setNeutralButton("检查是否包含崩溃记录") { dialog2, _ ->
+                            dialog2 as Dialog
+                            var has = false
+                            toShareLog.forEachLine {
+                                if ("- beginning of crash" in it) has = true
+                            }
+                            dialog2.findViewById<TextView>(android.R.id.message).apply {
+                                if (has)
+                                    append("\n包含崩溃记录")
+                                else
+                                    append("\n不包含崩溃记录")
+                            }
+                            MainScope().launch {
+                                while (dialog2.isShowing)
+                                    delay(100)
+                                dialog2.show()
+                            }
+                        }
+                        .show()
                 }
                 .show()
             return true

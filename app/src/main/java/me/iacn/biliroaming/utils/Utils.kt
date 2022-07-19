@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.pm.PackageManager.GET_META_DATA
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.icu.text.SimpleDateFormat
 import android.util.TypedValue
 import android.view.View
 import android.view.ViewGroup
@@ -106,9 +107,13 @@ val platform by lazy {
         }
 }
 
+val logDir by lazy { File(currentContext.externalCacheDir, "log").also { it.mkdirs() } }
+
 val logFile by lazy { File(currentContext.externalCacheDir, "log.txt") }
 
 val oldLogFile by lazy { File(currentContext.externalCacheDir, "old_log.txt") }
+
+val simpleDateFormat = SimpleDateFormat.getDateTimeInstance()
 
 @Suppress("DEPRECATION")
 val sPrefs
