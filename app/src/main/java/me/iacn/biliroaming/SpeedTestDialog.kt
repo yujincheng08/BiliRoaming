@@ -55,7 +55,7 @@ class SpeedTestAdapter(context: Context) : ArrayAdapter<SpeedTestResult>(context
         holder.value = getItem(position)?.value
         holder.nameView.text = holder.name
         holder.speedView.text =
-            context.resources.getString(R.string.speed_formatter).format(getItem(position)?.speed)
+            context.getString(R.string.speed_formatter).format(getItem(position)?.speed)
         return view
     }
 
@@ -87,8 +87,8 @@ class SpeedTestDialog(private val pref: ListPreference, activity: Activity) :
         val layout = moduleRes.getLayout(R.layout.cdn_speedtest_item)
         val inflater = LayoutInflater.from(context)
         view.addHeaderView(inflater.inflate(layout, null).apply {
-            findViewById<TextView>(R.id.upos_name).text = context.resources.getString(R.string.upos)
-            findViewById<TextView>(R.id.upos_speed).text = context.resources.getString(R.string.speed)
+            findViewById<TextView>(R.id.upos_name).text = context.getString(R.string.upos)
+            findViewById<TextView>(R.id.upos_speed).text = context.getString(R.string.speed)
         }, null, false)
 
         view.setPadding(50, 20, 50, 20)
