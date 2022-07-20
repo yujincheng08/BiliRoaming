@@ -41,7 +41,7 @@ val appVerName: String by rootProject
 android {
     compileSdk = 33
     buildToolsVersion = "33.0.0"
-    ndkVersion = "24.0.8215888"
+    ndkVersion = "25.0.8775105"
 
     defaultConfig {
         applicationId = "me.iacn.biliroaming"
