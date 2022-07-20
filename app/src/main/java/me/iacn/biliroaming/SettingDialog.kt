@@ -26,7 +26,6 @@ import android.widget.TextView
 import androidx.documentfile.provider.DocumentFile
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.XposedInit.Companion.modulePath
@@ -38,7 +37,6 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.net.URL
-import kotlin.math.log
 import kotlin.system.exitProcess
 
 
@@ -506,25 +504,22 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                                 setDataAndType(uri, "text/log")
                             }, context.getString(R.string.share_log_title)))
-                        }.setNeutralButton("检查是否包含崩溃记录") { dialog2, _ ->
+                        }.setNeutralButton("检查是否包含崩溃记录", null)
+                        .show().let { dialog2 ->
                             dialog2 as Dialog
-                            var has = false
-                            toShareLog.forEachLine {
-                                if ("- beginning of crash" in it) has = true
-                            }
-                            dialog2.findViewById<TextView>(android.R.id.message).apply {
-                                if (has)
-                                    append("\n包含崩溃记录")
-                                else
-                                    append("\n不包含崩溃记录")
-                            }
-                            MainScope().launch {
-                                while (dialog2.isShowing)
-                                    delay(100)
-                                dialog2.show()
+                            dialog2.getButton(AlertDialog.BUTTON_NEUTRAL).setOnClickListener {
+                                var has = false
+                                toShareLog.forEachLine {
+                                    if ("- beginning of crash" in it) has = true
+                                }
+                                dialog2.findViewById<TextView>(android.R.id.message).apply {
+                                    if (has)
+                                        append("\n包含崩溃记录")
+                                    else
+                                        append("\n不包含崩溃记录")
+                                }
                             }
                         }
-                        .show()
                 }
                 .show()
             return true
