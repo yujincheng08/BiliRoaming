@@ -98,7 +98,7 @@ jobs:
             See commit detail [here](${{ github.event.head_commit.url }})
             Snapshot apk is attached
             ●增加番剧字幕繁转简\&魔法刻录\&更多功能
-            ▲不支持 太极\/应用转生\/Edxposed
+            ▲不支持 太极\/应用转生\/EdXposed
         run: |
           ESCAPED=`python3 -c 'import json,os,urllib.parse; print(urllib.parse.quote(json.dumps(os.environ["COMMIT_MESSAGE"])))'`
           curl -v "https://api.telegram.org/bot${BOT_TOKEN}/sendMediaGroup?chat_id=${CHANNEL_ID}&media=%5B%7B%22type%22:%22document%22,%20%22media%22:%22attach://release%22,%22parse_mode%22:%22MarkdownV2%22,%22caption%22:${ESCAPED}%7D%5D"  -F release="@$FILE"
