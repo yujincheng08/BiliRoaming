@@ -73,6 +73,7 @@ jobs:
           alias: ${{ secrets.ALIAS }}
           keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
+
       - name: Download bilibili apk
         run: wget -nv -O Bilibili.apk https://dl.hdslb.com/mobile/latest/android64/iBiliPlayer-bili.apk
       - name: Download jar patcher
@@ -81,6 +82,7 @@ jobs:
         run: |
           java -jar lspatch.jar Bilibili.apk -m ${{ steps.sign.outputs.signedReleaseFile }} --v1 false
           patched_apk=`echo Bilibili-*.apk`
+
       - name: Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
@@ -88,6 +90,7 @@ jobs:
           files: |
               ${{ steps.sign.outputs.signedReleaseFile }}
               $patched_apk
+
       - name: Post to channel
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
         env:
