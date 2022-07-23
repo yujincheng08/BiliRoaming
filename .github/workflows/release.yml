@@ -74,21 +74,12 @@ jobs:
           keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
-      - name: Download bilibili apk
-        run: wget -nv -O Bilibili.apk https://dl.hdslb.com/mobile/latest/android64/iBiliPlayer-bili.apk
-      - name: Download jar patcher
-        run: wget -nv -O lspatch.jar https://github.com/LSPosed/LSPatch/releases/download/v0.3.1/lspatch.jar
-      - name: Apply patch
-        run: |
-          java -jar lspatch.jar Bilibili.apk -m ${{ steps.sign.outputs.signedReleaseFile }} --v1 false
-
       - name: Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
               ${{ steps.sign.outputs.signedReleaseFile }}
-              ${{ github.workspace }}/Bilibili-308-lspatched.apk
 
       - name: Post to channel
         if: startsWith(github.ref, 'refs/tags/')
