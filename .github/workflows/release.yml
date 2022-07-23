@@ -82,6 +82,7 @@ jobs:
         run: |
           java -jar lspatch.jar Bilibili.apk -m ${{ steps.sign.outputs.signedReleaseFile }} --v1 false
           patched_apk=`echo Bilibili-*.apk`
+          echo "PATCHED_APK=$patched_apk" >> $GITHUB_ENV
 
       - name: Release
         uses: softprops/action-gh-release@v1
@@ -89,10 +90,10 @@ jobs:
         with:
           files: |
               ${{ steps.sign.outputs.signedReleaseFile }}
-              $patched_apk
+              $PATCHED_APK
 
       - name: Post to channel
-        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
+        if: startsWith(github.ref, 'refs/tags/')
         env:
           CHANNEL_ID: ${{ secrets.TELEGRAM_TO }}
           BOT_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
