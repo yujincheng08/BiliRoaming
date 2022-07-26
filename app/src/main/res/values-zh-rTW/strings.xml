@@ -182,8 +182,8 @@
     <string name="add_korea_summary">在首頁標籤新增港澳台韓綜分頁</string>
     <string name="fix_space_title">修復UP主空間</string>
     <string name="fix_space_summary">修復部份被封鎖的UP主空間</string>
-    <string name="play_arc_conf_title">強制允許後台播放和投屏</string>
-    <string name="play_arc_conf_summary">去除“因版權原因，暫不支持後台播放”“由於版權方限制暫不支持投屏”之類的限制</string>
+    <string name="play_arc_conf_title">解除播放限制</string>
+    <string name="play_arc_conf_summary">解除部份影片禁止後台播放、小窗播放、投屏等限制</string>
     <string name="customize_dynamic_title">淨化動態</string>
     <string name="customize_dynamic_summary">支援移除同城及校園標籤，支援移除話題及最常訪問，支援按類型和關鍵字過濾動態</string>
     <string name="customize_dynamic_prefer_video_tab">首選影片標籤</string>
