@@ -12,6 +12,7 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val purifySearch = sPrefs.getBoolean("purify_search", false)
         val purifyCampus = sPrefs.getBoolean("purify_campus", false)
         val unlockPlayActions = sPrefs.getBoolean("play_arc_conf", false)
+        val blockWordSearch = sPrefs.getBoolean("block_word_search", false)
 
         if (hidden && (purifyCity || purifyCampus)) {
             listOf(
@@ -91,6 +92,38 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     }
                 }
             }
+        }
+        if (hidden && blockWordSearch) {
+            "com.bapis.bilibili.main.community.reply.v1.MainListReply".from(mClassLoader)?.run {
+                hookAfterMethod("getUpTop") {
+                    removeCommentSearchUrls(listOf(it.result))
+                }
+                hookAfterMethod("getVoteTop") {
+                    removeCommentSearchUrls(listOf(it.result))
+                }
+                hookAfterMethod("getRepliesList") {
+                    removeCommentSearchUrls(it.result as List<*>?)
+                }
+                hookAfterMethod("getTopRepliesList") {
+                    removeCommentSearchUrls(it.result as List<*>?)
+                }
+            }
+        }
+    }
+
+    private fun removeCommentSearchUrls(replies: List<*>?) {
+        replies?.forEach { r ->
+            r?.callMethod("getContent")
+                ?.callMethodAs<LinkedHashMap<String, Any>?>("getMutableUrlsMap")?.let { m ->
+                    val iterator = m.iterator()
+                    while (iterator.hasNext()) {
+                        iterator.next().value.callMethod("getExtra")
+                            ?.callMethodAs<Boolean>("getIsWordSearch")
+                            ?.takeIf { it }?.run {
+                                iterator.remove()
+                            }
+                    }
+                }
         }
     }
 }
