@@ -117,9 +117,10 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 ?.callMethodAs<LinkedHashMap<String, Any>?>("getMutableUrlsMap")?.let { m ->
                     val iterator = m.iterator()
                     while (iterator.hasNext()) {
-                        iterator.next().value.callMethod("getExtra")
-                            ?.callMethodAs<Boolean>("getIsWordSearch")
-                            ?.takeIf { it }?.run {
+                        iterator.next().value.callMethodAs<String?>("getAppUrlSchema")
+                            ?.takeIf {
+                                it.startsWith("bilibili://search?from=appcommentline_search")
+                            }?.run {
                                 iterator.remove()
                             }
                     }
