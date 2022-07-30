@@ -33,7 +33,6 @@ class DynamicHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private val filterApplyToVideo by lazy {
         sPrefs.getBoolean("filter_apply_to_video", false)
     }
-
     private val needFilterDynamic = purifyTypes.isNotEmpty() || purifyContents.isNotEmpty()
             || purifyUpNames.isNotEmpty() || purifyUidList.isNotEmpty()
 

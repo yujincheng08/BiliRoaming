@@ -19,6 +19,7 @@ import me.iacn.biliroaming.Constant.TYPE_SEASON_ID
 import me.iacn.biliroaming.network.BiliRoamingApi
 import me.iacn.biliroaming.network.BiliRoamingApi.getAreaSearchBangumi
 import me.iacn.biliroaming.network.BiliRoamingApi.getContent
+import me.iacn.biliroaming.network.BiliRoamingApi.getPlayUrl
 import me.iacn.biliroaming.network.BiliRoamingApi.getSeason
 import me.iacn.biliroaming.network.BiliRoamingApi.getSpace
 import me.iacn.biliroaming.utils.*
@@ -267,6 +268,36 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         addAreaTags(data)
                     }
                     url ?: return@hookBeforeAllConstructors
+                    if (url.startsWith("https://api.bilibili.com/x/tv/playurl") && lastSeasonInfo.containsKey("area") && lastSeasonInfo["area"] != "th") {
+                        if (body.getIntField("code") == FAIL_CODE) {
+                            val parsed = Uri.parse(url)
+                            val cid = parsed.getQueryParameter("cid")
+                            val fnval = parsed.getQueryParameter("fnval")
+                            val objectId = parsed.getQueryParameter("object_id")
+                            val qn = parsed.getQueryParameter("qn")
+                            val params =
+                                "cid=$cid&ep_id=$objectId&fnval=$fnval&fnver=0&fourk=1&platform=android&qn=$qn"
+                            val json = try {
+                                lastSeasonInfo["area"]?.let { lastArea ->
+                                    getPlayUrl(params, arrayOf(lastArea))
+                                }
+                            } catch (e: BiliRoamingApi.CustomServerException) {
+                                var messages = ""
+                                for (error in e.errors) {
+                                    messages += "${error.key}: ${error.value}\n"
+                                }
+                                Log.w("请求解析服务器发生错误: ${messages.trim()}")
+                                return@hookBeforeAllConstructors
+                            }
+                            body.setObjectField(dataField, instance.fastJsonClass?.callStaticMethod(
+                                instance.fastJsonParse(),
+                                json,
+                                instance.projectionPlayUrlClass
+                            ))
+                            body.setIntField("code", 0)
+                            return@hookBeforeAllConstructors
+                        }
+                    }
                     if (url.startsWith("https://app.bilibili.com/x/v2/search/type") || url.startsWith(
                             "https://appintl.biliapi.net/intl/gateway/app/search/type"
                         ) || url.startsWith("https://app.bilibili.com/x/intl/search/type")
