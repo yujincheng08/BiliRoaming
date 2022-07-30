@@ -364,7 +364,7 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                         }
                                         if (title == "null") return@removeAll false
                                         val uri = items?.getObjectFieldAs<String>("uri")
-                                        val id = items?.getObjectFieldAs<Int>("id").toString()
+                                        val id = items?.getObjectField("id").toString()
 
                                         // 修改成自定义按钮
                                         if (sPrefs.getBoolean("add_custom_button", false) && id == sPrefs.getString("custom_button_id", "")){

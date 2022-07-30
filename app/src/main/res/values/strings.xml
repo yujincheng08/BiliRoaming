@@ -215,6 +215,8 @@
     <string name="remove_video_relate_only_av_summary">上个选项的基础上，仅展示UP主投稿视频，移除番剧等内容</string>
     <string name="remove_video_cmd_dms_title">移除互动浮窗</string>
     <string name="remove_video_cmd_dms_summary">移除视频播放时浮窗出现的三连关注、关联视频、投票弹幕、评分弹幕等</string>
+    <string name="block_word_search_title">屏蔽评论关键字搜索功能</string>
+    <string name="block_word_search_summary">屏蔽视频评论蓝色关键字点击触发跳转搜索功能</string>
     <string name="generate_subtitle_title">生成简中字幕</string>
     <string name="generate_subtitle_summary">根据繁体字幕自动生成简中字幕</string>
     <string name="subtitle_dict_latest_url" translatable="false">https://api.github.com/repos/BBSub/ZhConvertDict/releases/latest</string>

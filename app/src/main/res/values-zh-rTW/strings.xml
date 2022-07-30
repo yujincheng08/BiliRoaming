@@ -215,9 +215,10 @@
     <string name="remove_video_relate_only_av_summary">上個選項的基礎上，僅展示UP主投稿影片，移除番劇等內容</string>
     <string name="remove_video_cmd_dms_title">移除互動浮窗</string>
     <string name="remove_video_cmd_dms_summary">移除影片播放時浮窗出現的三連關注、關聯影片、投票彈幕、評分彈幕等</string>
+    <string name="block_word_search_title">封鎖評論關鍵字搜尋功能</string>
+    <string name="block_word_search_summary">封鎖影片評論藍色關鍵字點擊觸發跳轉搜尋功能</string>
     <string name="generate_subtitle_title">生成簡中字幕</string>
     <string name="generate_subtitle_summary">根據繁體字幕自動生成簡中字幕</string>
-
     <string name="subtitle_append_info">請注意，站內宣傳漫遊或腳本會被拉黑</string>
     <string name="subtitle_convert_failed">字幕轉換失敗，請重試</string>
     <string name="subtitle_dict_download_failed">轉換字典下載失敗，請重試</string>

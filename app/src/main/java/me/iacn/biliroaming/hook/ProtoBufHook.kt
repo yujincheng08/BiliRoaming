@@ -11,6 +11,7 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val removeCmdDms = sPrefs.getBoolean("remove_video_cmd_dms", false)
         val purifySearch = sPrefs.getBoolean("purify_search", false)
         val purifyCampus = sPrefs.getBoolean("purify_campus", false)
+        val blockWordSearch = sPrefs.getBoolean("block_word_search", false)
 
         if (hidden && (purifyCity || purifyCampus)) {
             listOf(
@@ -71,6 +72,39 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             ) { param ->
                 param.result = null
             }
+        }
+        if (hidden && blockWordSearch) {
+            "com.bapis.bilibili.main.community.reply.v1.MainListReply".from(mClassLoader)?.run {
+                hookAfterMethod("getUpTop") {
+                    removeCommentSearchUrls(listOf(it.result))
+                }
+                hookAfterMethod("getVoteTop") {
+                    removeCommentSearchUrls(listOf(it.result))
+                }
+                hookAfterMethod("getRepliesList") {
+                    removeCommentSearchUrls(it.result as List<*>?)
+                }
+                hookAfterMethod("getTopRepliesList") {
+                    removeCommentSearchUrls(it.result as List<*>?)
+                }
+            }
+        }
+    }
+
+    private fun removeCommentSearchUrls(replies: List<*>?) {
+        replies?.forEach { r ->
+            r?.callMethod("getContent")
+                ?.callMethodAs<LinkedHashMap<String, Any>?>("getMutableUrlsMap")?.let { m ->
+                    val iterator = m.iterator()
+                    while (iterator.hasNext()) {
+                        iterator.next().value.callMethodAs<String?>("getAppUrlSchema")
+                            ?.takeIf {
+                                it.startsWith("bilibili://search?from=appcommentline_search")
+                            }?.run {
+                                iterator.remove()
+                            }
+                    }
+                }
         }
     }
 }

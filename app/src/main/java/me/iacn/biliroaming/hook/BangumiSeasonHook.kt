@@ -177,8 +177,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             updateSeasonInfo(param.args, paramMap)
         }
 
-        "com.bilibili.bangumi.ui.page.detail.BangumiCommentInvalidFragmentV2".hookAfterMethod(
-            mClassLoader,
+        instance.commentInvalidFragmentClass?.hookAfterMethod(
             "onViewCreated",
             View::class.java,
             Bundle::class.java
