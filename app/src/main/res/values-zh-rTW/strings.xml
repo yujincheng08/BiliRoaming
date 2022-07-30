@@ -203,6 +203,9 @@
     <string name="keyword_group_add">新增</string>
     <string name="keyword_group_delete">刪除</string>
     <string name="keyword_group_clear">刪除所有</string>
+    <string name="skin_title">填寫自製主題</string>
+    <string name="skin_import_title">匯入自製主題</string>
+    <string name="skin_summary">重啟後，要等待十幾秒下載資源，然後再重啟（同時開啟時的優先度：匯入＞填寫）</string>
     <string name="prefs_save_success_and_reboot">儲存成功 重啟後生效</string>
     <string name="remove_video_relate_promote_title">移除影片下方的相關推廣</string>
     <string name="remove_video_relate_promote_summary">移除影片下方的相關推廣，例如遊戲、課程、會員購、創作推廣等</string>
