@@ -235,6 +235,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     fun cancelShowToast() = mHookInfo.toastHelper.cancel.orNull
 
+    fun setInvalidTips() = commentInvalidFragmentClass?.declaredMethods?.find { m ->
+        m.parameterTypes.let { it.size == 2 && it[0] == commentInvalidFragmentClass && it[1].name == "kotlin.Pair" }
+    }?.name
+
     private fun readHookInfo(context: Context): Configs.HookInfo {
         try {
             val hookInfoFile = File(context.cacheDir, Constant.HOOK_INFO_FILE_NAME)
