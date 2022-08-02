@@ -243,6 +243,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     fun cancelShowToast() = mHookInfo.toastHelper.cancel.orNull
 
+    fun setInvalidTips() = commentInvalidFragmentClass?.declaredMethods?.find { m ->
+        m.parameterTypes.let { it.size == 2 && it[0] == commentInvalidFragmentClass && it[1].name == "kotlin.Pair" }
+    }?.name
+
     fun createResponseBody() = mHookInfo.okHttp.create.orNull
 
     fun getMediaType() = mHookInfo.okHttp.get.orNull
@@ -252,6 +256,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     fun realCallRequestField() = mHookInfo.okHttp.realCallRequest.orNull
 
     fun responseBuildFields() = mHookInfo.okHttp.responseBuildFieldsList.map { it.orNull }
+
 
     private fun readHookInfo(context: Context): Configs.HookInfo {
         try {
