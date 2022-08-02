@@ -176,30 +176,24 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             updateSeasonInfo(param.args, paramMap)
         }
 
-        val invalidTipsHook = fun(param: MethodHookParam) {
+        val invalidTipsHook: Hooker = { param ->
             val view = param.args[0]?.let {
                 if (it is View) it else it.callMethod("getView") as View?
             }
-            if (lastSeasonInfo["allow_comment"] != "0" ||
-                sPrefs.getBoolean("force_th_comment", false)
-            ) return
-            view?.findViewById<TextView>(getId("info"))?.text =
-                "由于泰区番剧评论会串到其他正常视频中，\n因而禁用泰区评论，还望理解。"
-            view?.findViewById<ImageView>(getId("forbid_icon"))?.run {
-                MainScope().launch {
-                    @Suppress("BlockingMethodInNonBlockingContext") val bitmap =
+            if (lastSeasonInfo["allow_comment"] == "0" &&
+                !sPrefs.getBoolean("force_th_comment", false)
+            ) {
+                view?.findViewById<TextView>(getId("info"))?.text =
+                    "由于泰区番剧评论会串到其他正常视频中，\n因而禁用泰区评论，还望理解。"
+                view?.findViewById<ImageView>(getId("forbid_icon"))?.run {
+                    MainScope().launch {
                         withContext(Dispatchers.IO) {
-                            val connection =
-                                URL("https://i0.hdslb.com/bfs/album/08d5ce2fef8da8adf91024db4a69919b8d02fd5c.png").openConnection()
-                            connection.connect()
-                            val input: InputStream = connection.getInputStream()
-                            BitmapFactory.decodeStream(input)
-                        }
-                    setImageBitmap(bitmap)
+                            URL("https://i0.hdslb.com/bfs/album/08d5ce2fef8da8adf91024db4a69919b8d02fd5c.png")
+                                .openStream().let { BitmapFactory.decodeStream(it) }
+                        }.let { setImageBitmap(it) }
+                    }
                 }
             }
-            // Do not remove, Fuck Jetbrains
-            return
         }
         instance.commentInvalidFragmentClass?.run {
             hookAfterMethod(
