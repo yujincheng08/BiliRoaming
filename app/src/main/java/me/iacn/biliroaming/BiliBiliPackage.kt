@@ -130,6 +130,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         "com.bilibili.bangumi.ui.page.detail.BangumiCommentInvalidFragmentV2".from(mClassLoader)
             ?: "com.bilibili.bangumi.ui.page.detail.OGVCommentFragment".from(mClassLoader)
     }
+    val basicIndexItemClass by Weak { "com.bilibili.pegasus.api.model.BasicIndexItem" from mClassLoader }
     val requestClass by Weak { mHookInfo.okHttp.classRequest from mClassLoader }
     val responseBuilderClass by Weak { mHookInfo.okHttp.responseBuilder from mClassLoader }
     val responseBodyClass by Weak { mHookInfo.okHttp.responseBody from mClassLoader }
