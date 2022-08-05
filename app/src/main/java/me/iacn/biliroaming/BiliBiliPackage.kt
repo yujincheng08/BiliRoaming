@@ -129,6 +129,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         "com.bilibili.bangumi.ui.page.detail.BangumiCommentInvalidFragmentV2".from(mClassLoader)
             ?: "com.bilibili.bangumi.ui.page.detail.OGVCommentFragment".from(mClassLoader)
     }
+    val basicIndexItemClass by Weak { "com.bilibili.pegasus.api.model.BasicIndexItem" from mClassLoader }
 
     val ids: Map<String, Int> by lazy {
         mHookInfo.mapIds.idsMap
