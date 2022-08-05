@@ -1,13 +1,13 @@
-name: Android CI
+name: Release
 
 on:
   push:
-    branches: [ master ]
+    tags:
+      - 'v*.*.*'
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    if: ${{ !startsWith(github.event.head_commit.message, '[skip ci]') }}
 
     steps:
       - uses: actions/checkout@v2
@@ -19,7 +19,7 @@ jobs:
           java-version: 11
       - name: Retrieve version
         run: |
-          echo VERSION=$(echo ${{ github.event.head_commit.id }} | head -c 10) >> $GITHUB_ENV
+          echo VERSION=`awk -F "=" '$1 == "appVerName" {print $2}' gradle.properties` >> $GITHUB_ENV
       - name: Cache gradle dep
         uses: actions/cache@v2
         with:
@@ -73,49 +73,25 @@ jobs:
           alias: ${{ secrets.ALIAS }}
           keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
-      - name: Upload built apk
-        if: success()
-        uses: actions/upload-artifact@v2
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
         with:
-          name: snapshot
-          path: |
+          files: |
               ${{ steps.sign.outputs.signedReleaseFile }}
-              ${{ github.workspace }}/app/build/outputs/apk
-              ${{ github.workspace }}/app/build/outputs/mapping
+
       - name: Post to channel
-        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
+        if: startsWith(github.ref, 'refs/tags/')
         env:
           CHANNEL_ID: ${{ secrets.TELEGRAM_TO }}
           BOT_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           FILE: ${{ steps.sign.outputs.signedReleaseFile }}
           COMMIT_MESSAGE: |+
             \#哔哩漫游 \#Plus
-            哔哩漫游Plus
-            New push to github\!
-            ```
-            ${{ github.event.head_commit.message }}
-            ```by `${{ github.event.head_commit.author.name }}`
-            See commit detail [here](${{ github.event.head_commit.url }})
-            Snapshot apk is attached
+            哔哩漫游Plus正式版
             ●增加番剧字幕繁转简\&魔法刻录\&更多功能
             ▲不支持 太极\/应用转生\/EdXposed
         run: |
           ESCAPED=`python3 -c 'import json,os,urllib.parse; print(urllib.parse.quote(json.dumps(os.environ["COMMIT_MESSAGE"])))'`
           curl -v "https://api.telegram.org/bot${BOT_TOKEN}/sendMediaGroup?chat_id=${CHANNEL_ID}&media=%5B%7B%22type%22:%22document%22,%20%22media%22:%22attach://release%22,%22parse_mode%22:%22MarkdownV2%22,%22caption%22:${ESCAPED}%7D%5D"  -F release="@$FILE"
-
-  skipped:
-    runs-on: ubuntu-latest
-    if: ${{ startsWith(github.event.head_commit.message, '[skip ci]') }}
-    steps:
-      - uses: actions/checkout@v2
-      - name: Send commit to telegram
-        uses: appleboy/telegram-action@master
-        with:
-          to: ${{ secrets.TELEGRAM_TO }}
-          token: ${{ secrets.TELEGRAM_TOKEN }}
-          format: markdown
-          message: |+
-            New push to github!
-            *${{ github.event.head_commit.message }}* by ${{ github.event.head_commit.author.name }}
-            See commit detail [here](${{ github.event.head_commit.url }})
-            This push skipped building
