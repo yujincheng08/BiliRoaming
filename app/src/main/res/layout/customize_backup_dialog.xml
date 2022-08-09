@@ -17,6 +17,7 @@
         android:layout_gravity="start"
         android:singleLine="true"
         android:text="复制当前账号访问秘钥"
+        android:visibility="gone"
         tools:ignore="HardcodedText" />
 
     <TextView

@@ -20,6 +20,7 @@ import android.os.Bundle
 import android.preference.*
 import android.provider.MediaStore
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.Button
@@ -494,9 +495,13 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     it.setText(prefs.getString("${it.tag}_accessKey", ""))
                     it.hint = ""
                 }
-                view.findViewById<Button>(R.id.copy_key).setOnClickListener {
-                    ClipData.newPlainText("", instance.accessKey ?: "").let {
-                        activity.getSystemService(ClipboardManager::class.java).setPrimaryClip(it)
+                view.findViewById<Button>(R.id.copy_key).run {
+                    visibility = View.VISIBLE
+                    setOnClickListener {
+                        ClipData.newPlainText("", instance.accessKey ?: "").let {
+                            activity.getSystemService(ClipboardManager::class.java)
+                                .setPrimaryClip(it)
+                        }
                     }
                 }
                 setTitle(R.string.customize_accessKey_title)
