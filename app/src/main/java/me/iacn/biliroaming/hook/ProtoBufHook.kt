@@ -11,6 +11,7 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val removeCmdDms = sPrefs.getBoolean("remove_video_cmd_dms", false)
         val purifySearch = sPrefs.getBoolean("purify_search", false)
         val purifyCampus = sPrefs.getBoolean("purify_campus", false)
+        val unlockPlayActions = sPrefs.getBoolean("play_arc_conf", false)
         val blockWordSearch = sPrefs.getBoolean("block_word_search", false)
 
         if (hidden && (purifyCity || purifyCampus)) {
@@ -71,6 +72,25 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 "com.bapis.bilibili.app.interfaces.v1.DefaultWordsReq"
             ) { param ->
                 param.result = null
+            }
+        }
+        if (unlockPlayActions) {
+            "com.bapis.bilibili.app.playurl.v1.PlayURLMoss".hookAfterMethod(
+                mClassLoader,
+                "playView",
+                "com.bapis.bilibili.app.playurl.v1.PlayViewReq"
+            ) { param ->
+                param.result?.callMethod("getPlayArc")?.run {
+                    listOf(
+                        callMethod("getBackgroundPlayConf"),
+                        callMethod("getCastConf"),
+                        callMethod("getSmallWindowConf")
+                    ).forEach {
+                        it?.callMethod("setDisabled", false)
+                        it?.callMethod("setIsSupport", true)
+                        it?.callMethod("clearExtraContent")
+                    }
+                }
             }
         }
         if (hidden && blockWordSearch) {
