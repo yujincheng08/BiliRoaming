@@ -164,6 +164,8 @@
     <string name="force_th_comment_summary">强制开启串台的泰区评论弹幕（仅调试使用）</string>
     <string name="share_log_title">分享日志</string>
     <string name="share_log_summary">可能在旧版无效</string>
+    <string name="enable_download_subtitle_title">启用番剧字幕下载功能</string>
+    <string name="enable_download_subtitle_summary">需开启解除番剧限制选项，此功能才会生效</string>
     <string name="replace_story_video_title">替换竖版视频</string>
     <string name="replace_story_video_summary">替换竖版视频为正常视频</string>
     <string name="customize_drawer_title">自定义我的页面</string>

@@ -41,8 +41,9 @@ class VideoSubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private val useLocalDict = true
 
     override fun startHook() {
-        if (sPrefs.getBoolean("main_func", false))
-            enableSubtitleDownloadHook()
+        if (sPrefs.getBoolean("main_func", false)
+            && sPrefs.getBoolean("enable_download_subtitle", false)
+        ) enableSubtitleDownloadHook()
         if (!sPrefs.getBoolean("auto_generate_subtitle", false)) return
 
         "com.bapis.bilibili.community.service.dm.v1.DMMoss".from(mClassLoader)
@@ -255,9 +256,13 @@ class VideoSubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             ).roundToInt()
 
         fun onEpPlay() {
-            MainScope().launch {
-                activityRef.get()?.let {
-                    subDownloadButtonHook(it)
+            if (sPrefs.getBoolean("main_func", false)
+                && sPrefs.getBoolean("enable_download_subtitle", false)
+            ) {
+                MainScope().launch {
+                    activityRef.get()?.let {
+                        subDownloadButtonHook(it)
+                    }
                 }
             }
         }

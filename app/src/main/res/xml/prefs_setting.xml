@@ -135,6 +135,12 @@
             android:title="@string/custom_link_title" />
 
         <SwitchPreference
+            android:dependency="main_func"
+            android:key="enable_download_subtitle"
+            android:summary="@string/enable_download_subtitle_summary"
+            android:title="@string/enable_download_subtitle_title" />
+
+        <SwitchPreference
             android:defaultValue="true"
             android:key="fix_space"
             android:summary="@string/fix_space_summary"
