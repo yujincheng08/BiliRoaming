@@ -14,7 +14,7 @@ class VideoSubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     private val fakeConvertApi = "https://subtitle.biliroaming.114514"
     private val convertApi = "https://www.kofua.top/bsub/%s"
-    private val useLocalDict = false
+    private val useLocalDict = true
 
     override fun startHook() {
         if (!sPrefs.getBoolean("auto_generate_subtitle", false)) return
@@ -33,8 +33,8 @@ class VideoSubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 val subtitles = dmViewReply.subtitle.subtitlesList
                 if (subtitles.isEmpty()) return@hookAfterMethodWithPriority
                 val lanCodes = subtitles.map { it.lan }
-                val genCN = ("tw" in lanCodes || "zh-Hant" in lanCodes) && "zh-CN" !in lanCodes
-                val origin = if (genCN) if ("tw" in lanCodes) "tw" else "zh-Hant" else ""
+                val genCN = "zh-Hant" in lanCodes && "zh-CN" !in lanCodes
+                val origin = if (genCN) "zh-Hant" else ""
                 val converter = if (genCN) "t2cn" else ""
                 val target = if (genCN) "zh-CN" else ""
                 val targetDoc = if (genCN) "简中（生成）" else ""
