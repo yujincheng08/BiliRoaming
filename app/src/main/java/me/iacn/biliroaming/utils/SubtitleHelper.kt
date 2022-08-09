@@ -138,4 +138,65 @@ object SubtitleHelper {
             }
         } else apply { put(info) }
     }
+    
+    private const val furrySubInfoT = "「字幕由 富睿字幕組 搬運」\n（禁止在B站宣傳漫遊相關内容，否則拉黑）"
+    private const val furrySubInfoS = "「字幕由 富睿字幕组 搬运」\n（禁止在B站宣传漫游相关内容，否则拉黑）"
+    private const val furrySubInfoS2 =
+        "「字幕由 富睿字幕组 搬运」\n（禁止在B站宣传漫游相关内容，否则拉黑）\n（禁止在泰区评论，禁止在B站任何地方讨论泰区相关内容）"
+    private val mineSubInfo by lazy { moduleRes.getString(R.string.subtitle_append_info) }
+
+    fun JSONArray.removeSubAppendedInfo() = apply {
+        (5 downTo 0).forEach { idx ->
+            optJSONObject(idx)?.let {
+                val content = it.optString("content")
+                if (content == furrySubInfoT || content == furrySubInfoS || content == furrySubInfoS2 || content == mineSubInfo) {
+                    remove(idx)
+                } else if (content.contains(furrySubInfoT)
+                    || content.contains(furrySubInfoS)
+                    || content.contains(furrySubInfoS2)
+                ) {
+                    val newContent = content
+                        .replace("\n$furrySubInfoT", "")
+                        .replace("$furrySubInfoT\n", "")
+                        .replace("\n$furrySubInfoS2", "")
+                        .replace("$furrySubInfoS2\n", "")
+                        .replace("\n$furrySubInfoS", "")
+                        .replace("$furrySubInfoS\n", "")
+                    it.put("content", newContent)
+                }
+            }
+        }
+        val lastIdx = length() - 1
+        optJSONObject(lastIdx)?.let {
+            val content = it.optString("content")
+            if (content == mineSubInfo) {
+                remove(lastIdx)
+            }
+        }
+    }
+
+    fun JSONArray.convertToSrt(): String {
+        fun timeFormat(time: Double): String {
+            val ms = (1000 * (time - time.toInt())).toInt()
+            val seconds = time.toInt()
+            val sec = seconds % 60
+            val minutes = seconds / 60
+            val min = minutes % 60
+            val hour = minutes / 60
+            return "%02d:%02d:%02d,%03d".format(hour, min, sec, ms)
+        }
+
+        var lineCount = 1
+        val result = StringBuilder()
+        for (o in this) {
+            val content = o.optString("content")
+            val from = o.optDouble("from")
+            val to = o.optDouble("to")
+            result.appendLine(lineCount++)
+            result.appendLine(timeFormat(from) + " --> " + timeFormat(to))
+            result.appendLine(content)
+            result.appendLine()
+        }
+        return result.toString()
+    }
 }
