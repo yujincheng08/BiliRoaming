@@ -272,6 +272,12 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     private fun DmViewReplyKt.Dsl.buildSubtitles(subtitles: JSONArray) {
         subtitle = videoSubtitle {
+            val lanCodes = mutableSetOf<String>()
+            for (s in subtitles) {
+                lanCodes.add(s.optString("key"))
+            }
+            this.subtitles.forEach { lanCodes.add(it.lan) }
+            val replaceHans = "zh-Hans" !in lanCodes
             for (subtitle in subtitles) {
                 this.subtitles +=
                     subtitleItem {
@@ -279,6 +285,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         idStr = subtitle.optLong("id").toString()
                         subtitleUrl = subtitle.optString("url")
                         lan = subtitle.optString("key")
+                            .let { if (it == "cn" && replaceHans) "zh-Hans" else it }
                         lanDoc = subtitle.optString("title")
                     }
             }
