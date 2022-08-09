@@ -1,8 +1,5 @@
 package me.iacn.biliroaming.hook
 
-import android.app.Activity
-import android.net.Uri
-import android.os.Bundle
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.utils.*
 
