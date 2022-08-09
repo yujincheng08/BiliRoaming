@@ -570,6 +570,16 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     private fun fixBangumi(jsonResult: JSONObject?, code: Int, url: String?) =
         if (isBangumiWithWatchPermission(jsonResult, code)) {
+            lastSeasonInfo.clear()
+            lastSeasonInfo["title"] = jsonResult?.optString("title")
+            for (module in jsonResult?.optJSONArray("modules").orEmpty()) {
+                val data = module.optJSONObject("data")
+                val moduleEpisodes = data?.optJSONArray("episodes")
+                for (episode in moduleEpisodes.orEmpty()) {
+                    val id = episode.optString("id")
+                    lastSeasonInfo["ep_title_$id"] = episode.optString("ep_index")
+                }
+            }
             jsonResult?.also { allowDownload(it); fixEpisodesStatus(it) }
         } else {
             url?.let { Uri.parse(it) }?.run {
@@ -608,6 +618,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         lastSeasonInfo[cid] = epId
                         lastSeasonInfo["ep_ids"] = lastSeasonInfo["ep_ids"]?.let { "$it;$epId" }
                             ?: epId
+                        lastSeasonInfo["ep_title_$epId"] = episode.optString("index")
                         episode.optJSONArray("subtitles")?.let {
                             if (it.length() > 0) {
                                 lastSeasonInfo["sb$cid"] = it.toString()
