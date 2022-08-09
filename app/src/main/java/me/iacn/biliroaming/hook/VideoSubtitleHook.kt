@@ -13,6 +13,8 @@ import java.util.concurrent.TimeUnit
 class VideoSubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     private val fakeConvertApi = "https://subtitle.biliroaming.114514"
+    private val convertApi = "https://www.kofua.top/bsub/%s"
+    private val useLocalDict = false
 
     override fun startHook() {
         if (!sPrefs.getBoolean("auto_generate_subtitle", false)) return
@@ -33,6 +35,7 @@ class VideoSubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 val lanCodes = subtitles.map { it.lan }
                 val genCN = ("tw" in lanCodes || "zh-Hant" in lanCodes) && "zh-CN" !in lanCodes
                 val origin = if (genCN) if ("tw" in lanCodes) "tw" else "zh-Hant" else ""
+                val converter = if (genCN) "t2cn" else ""
                 val target = if (genCN) "zh-CN" else ""
                 val targetDoc = if (genCN) "简中（生成）" else ""
                 val targetDocBrief = if (genCN) "简中" else ""
@@ -40,8 +43,10 @@ class VideoSubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
                 val origSub = subtitles.first { it.lan == origin }
                 var origSubId = origSub.id
-                val targetSubUrl = Uri.parse(fakeConvertApi).buildUpon()
+                val api = if (!useLocalDict) convertApi.format(converter) else fakeConvertApi
+                val targetSubUrl = Uri.parse(api).buildUpon()
                     .appendQueryParameter("sub_url", origSub.subtitleUrl)
+                    .appendQueryParameter("sub_id", origSubId.toString())
                     .build().toString()
 
                 val newSub = subtitleItem {
@@ -63,6 +68,7 @@ class VideoSubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     .callStaticMethod("parseFrom", newRes.toByteArray())
             }
 
+        if (!useLocalDict) return
         instance.realCallClass?.hookBeforeMethod(instance.executeCall()) { param ->
             val request = param.thisObject.getObjectField(instance.realCallRequestField())
                 ?: return@hookBeforeMethod
@@ -74,7 +80,7 @@ class VideoSubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         .buildUpon()
                         .apply {
                             uri.queryParameterNames.forEach {
-                                if (it != "sub_url")
+                                if (it != "sub_url" && it != "sub_id")
                                     appendQueryParameter(it, uri.getQueryParameter(it))
                             }
                         }.build().toString()
