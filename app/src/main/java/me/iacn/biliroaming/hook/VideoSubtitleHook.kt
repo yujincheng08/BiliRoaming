@@ -1,6 +1,7 @@
 package me.iacn.biliroaming.hook
 
 import android.net.Uri
+import de.robv.android.xposed.callbacks.XCallback
 import me.iacn.biliroaming.*
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.utils.*
@@ -17,24 +18,25 @@ class VideoSubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         if (!sPrefs.getBoolean("auto_generate_subtitle", false)) return
 
         "com.bapis.bilibili.community.service.dm.v1.DMMoss".from(mClassLoader)
-            ?.hookAfterMethod(
+            ?.hookAfterMethodWithPriority(
                 "dmView",
-                "com.bapis.bilibili.community.service.dm.v1.DmViewReq"
+                XCallback.PRIORITY_HIGHEST,
+                "com.bapis.bilibili.community.service.dm.v1.DmViewReq",
             ) { param ->
                 val dmViewReply = param.result?.let {
                     API.DmViewReply.parseFrom(
                         it.callMethodAs<ByteArray>("toByteArray")
                     )
-                } ?: return@hookAfterMethod
+                } ?: return@hookAfterMethodWithPriority
                 val subtitles = dmViewReply.subtitle.subtitlesList
-                if (subtitles.isEmpty()) return@hookAfterMethod
+                if (subtitles.isEmpty()) return@hookAfterMethodWithPriority
                 val lanCodes = subtitles.map { it.lan }
-                val genCN = "zh-Hant" in lanCodes && "zh-CN" !in lanCodes
-                val origin = if (genCN) "zh-Hant" else ""
+                val genCN = ("tw" in lanCodes || "zh-Hant" in lanCodes) && "zh-CN" !in lanCodes
+                val origin = if (genCN) if ("tw" in lanCodes) "tw" else "zh-Hant" else ""
                 val target = if (genCN) "zh-CN" else ""
                 val targetDoc = if (genCN) "简中（生成）" else ""
                 val targetDocBrief = if (genCN) "简中" else ""
-                if (!genCN) return@hookAfterMethod
+                if (!genCN) return@hookAfterMethodWithPriority
 
                 val origSub = subtitles.first { it.lan == origin }
                 var origSubId = origSub.id
