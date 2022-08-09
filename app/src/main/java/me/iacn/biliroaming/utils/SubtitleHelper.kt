@@ -146,6 +146,7 @@ object SubtitleHelper {
     private val mineSubInfo by lazy { moduleRes.getString(R.string.subtitle_append_info) }
 
     fun JSONArray.removeSubAppendedInfo() = apply {
+        var maybeHasSame = false
         (5 downTo 0).forEach { idx ->
             optJSONObject(idx)?.let {
                 val content = it.optString("content")
@@ -155,6 +156,7 @@ object SubtitleHelper {
                     || content.contains(furrySubInfoS)
                     || content.contains(furrySubInfoS2)
                 ) {
+                    maybeHasSame = true
                     val newContent = content
                         .replace("\n$furrySubInfoT", "")
                         .replace("$furrySubInfoT\n", "")
@@ -166,12 +168,62 @@ object SubtitleHelper {
                 }
             }
         }
+        if (maybeHasSame) {
+            var end = -1
+            var start = -1
+            var content = ""
+            var from = 0.0
+            var to = 0.0
+            (5 downTo 0).forEach { idx ->
+                optJSONObject(idx)?.let {
+                    val f = it.optDouble("from")
+                    val t = it.optDouble("to")
+                    val c = it.optString("content")
+                    if (end == -1) {
+                        end = idx; content = c; to = t; from = f
+                    } else {
+                        if (c != content) {
+                            if (start != -1) {
+                                for (i in start + 1..end)
+                                    remove(i)
+                                optJSONObject(start)?.put("to", to)
+                            }
+                            end = idx; content = c; to = t; from = f; start = -1
+                        } else if (t == from) {
+                            start = idx; from = t
+                            if (start == 0) {
+                                for (i in 1..end)
+                                    remove(i)
+                                optJSONObject(0)?.put("to", to)
+                            }
+                        }
+                    }
+                }
+            }
+        }
         val lastIdx = length() - 1
         optJSONObject(lastIdx)?.let {
             val content = it.optString("content")
             if (content == mineSubInfo) {
                 remove(lastIdx)
             }
+        }
+    }
+
+    fun JSONArray.reSort() = apply {
+        for (o in this) {
+            val content = o.getString("content")
+            val from = o.getDouble("from")
+            val location = o.getInt("location")
+            val to = o.getDouble("to")
+            o.remove("content")
+            o.remove("from")
+            o.remove("location")
+            o.remove("to")
+            o.put("content", content)
+            o.put("from", from)
+            o.put("location", location)
+            o.put("to", to)
         }
     }
 

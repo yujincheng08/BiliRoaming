@@ -24,6 +24,7 @@ import me.iacn.biliroaming.*
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.utils.*
 import me.iacn.biliroaming.utils.SubtitleHelper.convertToSrt
+import me.iacn.biliroaming.utils.SubtitleHelper.reSort
 import me.iacn.biliroaming.utils.SubtitleHelper.removeSubAppendedInfo
 import org.json.JSONObject
 import java.lang.ref.WeakReference
@@ -218,26 +219,12 @@ class VideoSubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         ?: return@forEach
                     thiz.contentResolver.openOutputStream(subFileDoc.uri, "wt")?.use { os ->
                         runCatching {
-                            val json = URL(url).openStream().bufferedReader().use { it.readText() }
-                            val jsonObj = JSONObject(json)
-                            val body = jsonObj.getJSONArray("body").removeSubAppendedInfo()
-                            for (o in body) {
-                                val content = o.getString("content")
-                                val from = o.getDouble("from")
-                                val location = o.getInt("location")
-                                val to = o.getDouble("to")
-                                o.remove("content")
-                                o.remove("from")
-                                o.remove("location")
-                                o.remove("to")
-                                o.put("content", content)
-                                o.put("from", from)
-                                o.put("location", location)
-                                o.put("to", to)
-                            }
-                            jsonObj.put("body", body)
+                            val json = JSONObject(URL(url).readText())
+                            val body = json.getJSONArray("body")
+                                .removeSubAppendedInfo().reSort()
+                            json.put("body", body)
                             if (exportJson) {
-                                val prettyJson = jsonObj.toString(2)
+                                val prettyJson = json.toString(2)
                                 os.write(prettyJson.toByteArray())
                             } else {
                                 os.write(body.convertToSrt().toByteArray())
