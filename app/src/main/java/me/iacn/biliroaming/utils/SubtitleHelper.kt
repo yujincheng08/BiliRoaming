@@ -184,7 +184,7 @@ object SubtitleHelper {
                     } else {
                         if (c != content) {
                             if (start != -1) {
-                                for (i in start + 1..end)
+                                for (i in end downTo start + 1)
                                     remove(i)
                                 optJSONObject(start)?.put("to", to)
                             }
@@ -192,7 +192,7 @@ object SubtitleHelper {
                         } else if (t == from) {
                             start = idx; from = t
                             if (start == 0) {
-                                for (i in 1..end)
+                                for (i in end downTo 1)
                                     remove(i)
                                 optJSONObject(0)?.put("to", to)
                             }
