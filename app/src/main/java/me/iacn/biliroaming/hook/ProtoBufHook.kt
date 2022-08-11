@@ -74,6 +74,25 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 param.result = null
             }
         }
+        if (unlockPlayActions) {
+            "com.bapis.bilibili.app.playurl.v1.PlayURLMoss".hookAfterMethod(
+                mClassLoader,
+                "playView",
+                "com.bapis.bilibili.app.playurl.v1.PlayViewReq"
+            ) { param ->
+                param.result?.callMethod("getPlayArc")?.run {
+                    listOf(
+                        callMethod("getBackgroundPlayConf"),
+                        callMethod("getCastConf"),
+                        callMethod("getSmallWindowConf")
+                    ).forEach {
+                        it?.callMethod("setDisabled", false)
+                        it?.callMethod("setIsSupport", true)
+                        it?.callMethod("clearExtraContent")
+                    }
+                }
+            }
+        }
         if (hidden && blockWordSearch) {
             "com.bapis.bilibili.main.community.reply.v1.Content".hookAfterMethod(
                 mClassLoader,
