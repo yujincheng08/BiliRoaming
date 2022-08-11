@@ -138,6 +138,8 @@
     <string name="add_bangumi_summary">在首页标签添加大陆/港澳台番剧分页</string>
     <string name="add_movie_title">添加其他地区影视</string>
     <string name="add_movie_summary">在首页标签添加大陆/港澳台影视分页</string>
+    <string name="add_channel_title">添加频道按钮</string>
+    <string name="add_channel_summary">在底栏添加频道按钮（重启两次生效）</string>
     <string name="custom_subtitle_title">自定义字幕样式</string>
     <string name="custom_subtitle_summary">开启后能自定义CC字幕样式，但透明度跟随弹幕透明度</string>
     <string name="customize_space_title">净化用户空间</string>
@@ -162,6 +164,8 @@
     <string name="force_th_comment_summary">强制开启串台的泰区评论弹幕（仅调试使用）</string>
     <string name="share_log_title">分享日志</string>
     <string name="share_log_summary">可能在旧版无效</string>
+    <string name="enable_download_subtitle_title">启用番剧字幕下载功能</string>
+    <string name="enable_download_subtitle_summary">需开启解除番剧限制选项，此功能才会生效</string>
     <string name="replace_story_video_title">替换竖版视频</string>
     <string name="replace_story_video_summary">替换竖版视频为正常视频</string>
     <string name="customize_drawer_title">自定义我的页面</string>
@@ -182,8 +186,11 @@
     <string name="add_korea_summary">在首页标签添加港澳台韩综分页</string>
     <string name="fix_space_title">修复UP主空间</string>
     <string name="fix_space_summary">修复部分被屏蔽的UP主空间</string>
-    <string name="play_arc_conf_title">强制允许后台播放和投屏</string>
-    <string name="play_arc_conf_summary">去除“因版权原因，暂不支持后台播放”“由于版权方限制暂不支持投屏”之类的限制</string>
+    <string name="play_arc_conf_title">解除播放限制</string>
+    <string name="play_arc_conf_summary">解除部分视频禁止后台播放、小窗播放、投屏等限制</string>
+    <string name="skin_title">填写自制主题</string>
+    <string name="skin_import_title">导入自制主题</string>
+    <string name="skin_summary">重启后，要等待十几秒下载资源，然后再重启（同时开启时的优先度：导入＞填写）</string>
     <string name="customize_dynamic_title">净化动态</string>
     <string name="customize_dynamic_summary">支持移除同城及校园标签，支持移除话题及最常访问，支持按类型和关键字过滤动态</string>
     <string name="customize_dynamic_prefer_video_tab">首选视频标签</string>
@@ -212,4 +219,10 @@
     <string name="remove_video_cmd_dms_summary">移除视频播放时浮窗出现的三连关注、关联视频、投票弹幕、评分弹幕等</string>
     <string name="block_word_search_title">屏蔽评论关键字搜索功能</string>
     <string name="block_word_search_summary">屏蔽视频评论蓝色关键字点击触发跳转搜索功能</string>
+    <string name="generate_subtitle_title">生成简中字幕</string>
+    <string name="generate_subtitle_summary">根据繁体字幕自动生成简中字幕</string>
+    <string name="subtitle_dict_latest_url" translatable="false">https://api.github.com/repos/BBSub/ZhConvertDict/releases/latest</string>
+    <string name="subtitle_append_info">请注意，站内宣传漫游或脚本会被拉黑</string>
+    <string name="subtitle_convert_failed">字幕转换失败，请重试</string>
+    <string name="subtitle_dict_download_failed">转换字典下载失败，请重试</string>
 </resources>

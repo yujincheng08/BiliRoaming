@@ -207,6 +207,9 @@ fun DocumentFile.copyTo(context: Context, targetDir: DocumentFile) {
 fun DocumentFile.findOrCreateDir(displayName: String) = this.findFile(displayName)
     ?: this.createDirectory(displayName)
 
+fun DocumentFile.findOrCreateFile(mimeType: String, displayName: String) =
+    this.findFile(displayName) ?: this.createFile(mimeType, displayName)
+
 val shouldSaveLog
     get() = sPrefs.getBoolean("save_log", false) || sPrefs.getBoolean("show_hint", true)
 

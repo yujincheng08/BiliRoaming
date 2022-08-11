@@ -7,6 +7,8 @@ import android.app.Activity
 import android.app.Activity.RESULT_CANCELED
 import android.app.AlertDialog
 import android.content.ActivityNotFoundException
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
@@ -18,8 +20,10 @@ import android.os.Bundle
 import android.preference.*
 import android.provider.MediaStore
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
+import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import androidx.documentfile.provider.DocumentFile
@@ -82,6 +86,8 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("custom_link")?.onPreferenceClickListener = this
             findPreference("add_custom_button")?.onPreferenceClickListener = this
             findPreference("customize_dynamic")?.onPreferenceClickListener = this
+            findPreference("skin")?.onPreferenceClickListener = this
+            findPreference("skin_import")?.onPreferenceClickListener = this
             checkCompatibleVersion()
             checkUpdate()
         }
@@ -97,7 +103,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             scope.launch {
                 val result = fetchJson(url) ?: return@launch
                 val newestVer = result.optString("name")
-                if (newestVer.isNotEmpty() && BuildConfig.VERSION_NAME != newestVer) {
+                if (newestVer.isNotEmpty() && BuildConfig.VERSION_NAME.length != 10 && BuildConfig.VERSION_NAME != newestVer) {
                     findPreference("version").summary = "${BuildConfig.VERSION_NAME}（最新版$newestVer）"
                     (findPreference("about") as PreferenceCategory).addPreference(
                         Preference(
@@ -118,6 +124,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         private fun checkCompatibleVersion() {
             val versionCode = getVersionCode(packageName)
             var supportMusicNotificationHook = true
+            var supportAddChannel = false
             var supportCustomizeTab = true
             val supportFullSplash = try {
                 instance.splashInfoClass?.getMethod("getMode") != null
@@ -128,6 +135,15 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             var supportDrawer = instance.homeUserCenterClass != null
             var supportDrawerStyle = true
             when (platform) {
+                "android_i" -> {
+                    if (versionCode >= 3000000) supportAddChannel = true
+                }
+                "android_b" -> {
+                    if (versionCode >= 6270000) supportAddChannel = true
+                }
+                "android" -> {
+                    if (versionCode >= 6270000) supportAddChannel = true
+                }
                 "android_hd" -> {
                     supportCustomizeTab = false
                     supportDrawer = false
@@ -162,6 +178,9 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             }
             if (!supportTeenagersMode) {
                 disablePreference("teenagers_mode_dialog")
+            }
+            if (!supportAddChannel) {
+                disablePreference("add_channel")
             }
             if (!supportCustomizeTab) {
                 disablePreference("customize_home_tab_title")
@@ -302,6 +321,20 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                         Log.toast("${e.message}")
                     }
                 }
+                SKIN_IMPORT -> {
+                    val file = File(currentContext.filesDir, "skin.json")
+                    val uri = data?.data
+                    if (resultCode == RESULT_CANCELED || uri == null) return
+                    try {
+                        file.outputStream().use { out ->
+                            activity.contentResolver.openInputStream(uri)?.copyTo(out)
+                        }
+                    } catch (e: Exception) {
+                        Log.e(e)
+                        Log.toast(e.message ?: "未知错误", true)
+                    }
+                    Log.toast("保存成功 重启两次后生效", true)
+                }
             }
 
             super.onActivityResult(requestCode, resultCode, data)
@@ -429,6 +462,19 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             return true
         }
 
+        private fun onSkinImportClick(isChecked: Boolean): Boolean {
+            if (!isChecked) return true
+            val intent = Intent(Intent.ACTION_GET_CONTENT)
+            intent.type = "application/*"
+            intent.addCategory(Intent.CATEGORY_OPENABLE)
+            try {
+                startActivityForResult(Intent.createChooser(intent, "选择文件"), SKIN_IMPORT)
+            } catch (ex: ActivityNotFoundException) {
+                Log.toast("请安装文件管理器")
+            }
+            return true
+        }
+
         private fun onExportVideoClick(): Boolean {
             VideoExportDialog(activity, this).show()
             return true
@@ -448,6 +494,15 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 editTexts.forEach {
                     it.setText(prefs.getString("${it.tag}_accessKey", ""))
                     it.hint = ""
+                }
+                view.findViewById<Button>(R.id.copy_key).run {
+                    visibility = View.VISIBLE
+                    setOnClickListener {
+                        ClipData.newPlainText("", instance.accessKey ?: "").let {
+                            activity.getSystemService(ClipboardManager::class.java)
+                                .setPrimaryClip(it)
+                        }
+                    }
                 }
                 setTitle(R.string.customize_accessKey_title)
                 setView(view)
@@ -565,7 +620,28 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             return true
         }
 
-        private fun onAddCustomButtonClick(): Boolean {
+        private fun onSkinClick(isChecked: Boolean): Boolean {
+            if (!isChecked) return true
+            val tv = EditText(activity)
+            tv.setText(sPrefs.getString("skin_json", "").toString())
+            AlertDialog.Builder(activity).run {
+                setTitle(R.string.skin_title)
+                setView(tv)
+                setPositiveButton(android.R.string.ok) { _, _ ->
+                    sPrefs.edit()
+                        .putString("skin_json", tv.text.toString())
+                        .apply()
+                    Log.toast("保存成功 重启两次后生效")
+                }
+                setNegativeButton(android.R.string.cancel, null)
+                setCancelable(false)
+                show()
+            }
+            return true
+        }
+
+        private fun onAddCustomButtonClick(isChecked: Boolean): Boolean {
+            if (!isChecked) return true
             AlertDialog.Builder(activity).run {
                 val layout = moduleRes.getLayout(R.layout.custom_button)
                 val inflater = LayoutInflater.from(context)
@@ -622,8 +698,10 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             "share_log" -> onShareLogClick()
             "customize_drawer" -> onCustomizeDrawerClick()
             "custom_link" -> onCustomLinkClick()
-            "add_custom_button" -> onAddCustomButtonClick()
+            "add_custom_button" -> onAddCustomButtonClick((preference as SwitchPreference).isChecked)
             "customize_dynamic" -> onCustomDynamicClick()
+            "skin" -> onSkinClick((preference as SwitchPreference).isChecked)
+            "skin_import" -> onSkinImportClick((preference as SwitchPreference).isChecked)
             else -> false
         }
     }
@@ -699,6 +777,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         const val PREF_IMPORT = 2
         const val PREF_EXPORT = 3
         const val VIDEO_EXPORT = 4
+        const val SKIN_IMPORT = 5
     }
 
 }

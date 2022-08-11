@@ -9,6 +9,16 @@
     android:paddingStart="25dp"
     android:paddingEnd="20dp">
 
+    <Button
+        android:id="@+id/copy_key"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_columnSpan="2"
+        android:layout_gravity="start"
+        android:singleLine="true"
+        android:text="复制当前账号访问秘钥"
+        android:visibility="gone"
+        tools:ignore="HardcodedText" />
 
     <TextView
         android:layout_width="0dp"

@@ -138,6 +138,8 @@
     <string name="add_bangumi_summary">在首頁標籤新增大陸/港澳台番劇分頁</string>
     <string name="add_movie_title">新增其他地區影視</string>
     <string name="add_movie_summary">在首頁標籤新增大陸/港澳台影視分頁</string>
+    <string name="add_channel_title">添加頻道按鈕</string>
+    <string name="add_channel_summary">在底欄添加頻道按鈕（重啟兩次生效）</string>
     <string name="custom_subtitle_title">自訂字幕樣式</string>
     <string name="custom_subtitle_summary">開啟後能自訂CC字幕樣式，但透明度跟隨彈幕透明度</string>
     <string name="customize_space_title">淨化使用者空間</string>
@@ -162,6 +164,8 @@
     <string name="force_th_comment_summary">強制開啟串台的泰區評論彈幕（僅除錯使用）</string>
     <string name="share_log_title">分享日誌</string>
     <string name="share_log_summary">可能在舊版無效</string>
+    <string name="enable_download_subtitle_title">啟用番劇字幕下載功能</string>
+    <string name="enable_download_subtitle_summary">需開啟解除番劇限制選項，此功能才會生效</string>
     <string name="replace_story_video_title">取代豎版影片</string>
     <string name="replace_story_video_summary">取代豎版影片為正常影片</string>
     <string name="customize_drawer_title">自訂我的頁面</string>
@@ -182,8 +186,11 @@
     <string name="add_korea_summary">在首頁標籤新增港澳台韓綜分頁</string>
     <string name="fix_space_title">修復UP主空間</string>
     <string name="fix_space_summary">修復部份被封鎖的UP主空間</string>
-    <string name="play_arc_conf_title">強制允許後台播放和投屏</string>
-    <string name="play_arc_conf_summary">去除“因版權原因，暫不支持後台播放”“由於版權方限制暫不支持投屏”之類的限制</string>
+    <string name="play_arc_conf_title">解除播放限制</string>
+    <string name="play_arc_conf_summary">解除部份影片禁止後台播放、小窗播放、投屏等限制</string>
+    <string name="skin_title">填寫自製主題</string>
+    <string name="skin_import_title">導入自製主題</string>
+    <string name="skin_summary">重啟後，要等待十幾秒下載資源，然後再重啟（同時開啟時的優先度：導入＞填寫）</string>
     <string name="customize_dynamic_title">淨化動態</string>
     <string name="customize_dynamic_summary">支援移除同城及校園標籤，支援移除話題及最常訪問，支援按類型和關鍵字過濾動態</string>
     <string name="customize_dynamic_prefer_video_tab">首選影片標籤</string>
@@ -212,4 +219,9 @@
     <string name="remove_video_cmd_dms_summary">移除影片播放時浮窗出現的三連關注、關聯影片、投票彈幕、評分彈幕等</string>
     <string name="block_word_search_title">封鎖評論關鍵字搜尋功能</string>
     <string name="block_word_search_summary">封鎖影片評論藍色關鍵字點擊觸發跳轉搜尋功能</string>
+    <string name="generate_subtitle_title">生成簡中字幕</string>
+    <string name="generate_subtitle_summary">根據繁體字幕自動生成簡中字幕</string>
+    <string name="subtitle_append_info">請注意，站內宣傳漫遊或腳本會被拉黑</string>
+    <string name="subtitle_convert_failed">字幕轉換失敗，請重試</string>
+    <string name="subtitle_dict_download_failed">轉換字典下載失敗，請重試</string>
 </resources>

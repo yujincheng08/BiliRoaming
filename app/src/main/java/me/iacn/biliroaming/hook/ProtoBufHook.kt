@@ -11,6 +11,7 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val removeCmdDms = sPrefs.getBoolean("remove_video_cmd_dms", false)
         val purifySearch = sPrefs.getBoolean("purify_search", false)
         val purifyCampus = sPrefs.getBoolean("purify_campus", false)
+        val unlockPlayActions = sPrefs.getBoolean("play_arc_conf", false)
         val blockWordSearch = sPrefs.getBoolean("block_word_search", false)
 
         if (hidden && (purifyCity || purifyCampus)) {
