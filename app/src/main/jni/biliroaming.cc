@@ -385,8 +385,9 @@ Java_me_iacn_biliroaming_utils_DexHelper_load(JNIEnv *env, jobject thiz,
         const auto *dex_file = dex_files[dex_file_length];
         LOGD("Got dex file %d", dex_file_length);
         if (!dex_file) {
-          LOGW("Skip empty dex file %d", dex_file_length);
-          continue;
+          LOGD("Skip empty dex file");
+          dex_images.clear();
+          break;
         }
         if (dex::Reader::IsCompact(dex_file->begin_)) {
           LOGD("skip compact dex");
