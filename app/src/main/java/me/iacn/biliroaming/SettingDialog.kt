@@ -127,11 +127,15 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             val supportMain = !isBuiltIn || !is64 || Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
             var supportDrawer = instance.homeUserCenterClass != null
             var supportDrawerStyle = true
+            var supportRevertLive = false
             when (platform) {
                 "android_hd" -> {
                     supportCustomizeTab = false
                     supportDrawer = false
                     supportDrawerStyle = false
+                }
+                "android" -> {
+                    if (versionCode < 6830000) supportRevertLive = true
                 }
             }
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
@@ -182,6 +186,9 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             }
             if (!supportDownloadThread) {
                 disablePreference("custom_download_thread")
+            }
+            if (!supportRevertLive) {
+                disablePreference("revert_live_room_feed")
             }
         }
 
