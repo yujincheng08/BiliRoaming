@@ -144,14 +144,12 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 }
                 "android" -> {
                     if (versionCode >= 6270000) supportAddChannel = true
+                    if (versionCode < 6830000) supportRevertLive = true
                 }
                 "android_hd" -> {
                     supportCustomizeTab = false
                     supportDrawer = false
                     supportDrawerStyle = false
-                }
-                "android" -> {
-                    if (versionCode < 6830000) supportRevertLive = true
                 }
             }
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
