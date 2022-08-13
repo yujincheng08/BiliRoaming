@@ -584,7 +584,7 @@ object BiliRoamingApi {
             put("message", input.optInt("message"))
             put("timelength", videoInfo?.optInt("timelength"))
             put("quality", videoInfo?.optInt("quality"))
-            put("accept_format", "hdflv2,flv,flv720,flv480,mp4")
+            put("accept_format", "hdflv2_4k,hdflv2_hdr,hdflv2_dolby,hdflv2,flv,flv720,flv480,mp4")
         }
 
         val acceptQuality = JSONArray()
