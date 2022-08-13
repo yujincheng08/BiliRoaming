@@ -115,6 +115,7 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                     CustomThemeHook(lpparam.classLoader).insertColorForWebProcess()
                     startHook(WebViewHook(lpparam.classLoader))
                     startHook(PurifyShareHook(lpparam.classLoader))
+                    startHook(WebViewActivityHook(lpparam.classLoader))
                 }
                 lpparam.processName.endsWith(":download") -> {
                     BiliBiliPackage(lpparam.classLoader, param.args[0] as Context)

@@ -212,4 +212,6 @@
     <string name="remove_video_cmd_dms_summary">移除视频播放时浮窗出现的三连关注、关联视频、投票弹幕、评分弹幕等</string>
     <string name="block_word_search_title">屏蔽评论关键字搜索功能</string>
     <string name="block_word_search_summary">屏蔽视频评论蓝色关键字点击触发跳转搜索功能</string>
+    <string name="force_browser_title">在外部浏览器打开链接</string>
+    <string name="force_browser_summary">只针对 MWebActivity</string>
 </resources>
