@@ -330,6 +330,9 @@
             android:key="skin_import"
             android:summary="@string/skin_summary"
             android:title="@string/skin_import_title" />
+            android:key="block_word_search"
+            android:summary="@string/block_word_search_summary"
+            android:title="@string/block_word_search_title" />
     </PreferenceCategory>
 
     <PreferenceCategory

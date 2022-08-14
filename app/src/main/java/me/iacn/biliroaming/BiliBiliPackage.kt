@@ -125,6 +125,11 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val brotliInputStreamClass by Weak { mHookInfo.brotliInputStream from mClassLoader }
     val arcConfClass by Weak { "com.bapis.bilibili.app.playurl.v1.ArcConf" from mClassLoader }
     val arcConfExtraContentClass by Weak { "com.bapis.bilibili.app.playurl.v1.ExtraContent" from mClassLoader }
+    val commentInvalidFragmentClass by Weak {
+        "com.bilibili.bangumi.ui.page.detail.BangumiCommentInvalidFragmentV2".from(mClassLoader)
+            ?: "com.bilibili.bangumi.ui.page.detail.OGVCommentFragment".from(mClassLoader)
+    }
+    val basicIndexItemClass by Weak { "com.bilibili.pegasus.api.model.BasicIndexItem" from mClassLoader }
 
     val ids: Map<String, Int> by lazy {
         mHookInfo.mapIds.idsMap
@@ -230,6 +235,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     fun showToast() = mHookInfo.toastHelper.show.orNull
 
     fun cancelShowToast() = mHookInfo.toastHelper.cancel.orNull
+
+    fun setInvalidTips() = commentInvalidFragmentClass?.declaredMethods?.find { m ->
+        m.parameterTypes.let { it.size == 2 && it[0] == commentInvalidFragmentClass && it[1].name == "kotlin.Pair" }
+    }?.name
 
     private fun readHookInfo(context: Context): Configs.HookInfo {
         try {
