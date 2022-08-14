@@ -152,6 +152,9 @@ fun signQuery(query: String?, extraMap: Map<String, String> = emptyMap()): Strin
 fun getId(name: String) = instance.ids[name]
     ?: currentContext.resources.getIdentifier(name, "id", currentContext.packageName)
 
+fun getResId(name: String, type: String) =
+    currentContext.resources.getIdentifier(name, type, currentContext.packageName)
+
 fun getBitmapFromURL(src: String?, callback: (Bitmap?) -> Unit) {
     Thread {
         callback(try {
