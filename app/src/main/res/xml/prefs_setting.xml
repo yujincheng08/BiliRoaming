@@ -24,6 +24,11 @@
             android:key="custom_server"
             android:summary="@string/custom_server_summary"
             android:title="@string/custom_server_title" />
+
+        <SwitchPreference
+            android:dependency="main_func"
+            android:key="allow_mini_play"
+            android:title="@string/allow_mini_play_title" />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/cdn_category">
