@@ -109,6 +109,7 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                     startHook(DynamicHook(lpparam.classLoader))
                     startHook(ProtoBufHook(lpparam.classLoader))
                     startHook(PlayArcConfHook(lpparam.classLoader))
+                    startHook(TryWatchVipQualityHook(lpparam.classLoader))
                     startHook(AllowMiniPlayHook(lpparam.classLoader))
                 }
                 lpparam.processName.endsWith(":web") -> {

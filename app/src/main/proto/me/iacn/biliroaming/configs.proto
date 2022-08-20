@@ -242,4 +242,5 @@ message HookInfo {
   optional KanBan kan_ban = 67;
   optional ToastHelper toast_helper = 68;
   optional Class brotli_input_stream = 69;
+  optional Method can_try_watch_vip_quality = 70;
 }
