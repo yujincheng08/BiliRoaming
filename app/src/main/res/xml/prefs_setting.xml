@@ -290,6 +290,11 @@
             android:key="block_upper_recommend_ad"
             android:summary="@string/block_video_ad_summary"
             android:title="@string/block_video_ad_title" />
+        <SwitchPreference
+            android:dependency="hidden"
+            android:key="disable_try_watch_vip_quality"
+            android:summary="@string/disable_try_watch_vip_quality_desc"
+            android:title="@string/disable_try_watch_vip_quality_title" />
         <Preference
             android:dependency="hidden"
             android:key="customize_dynamic"
