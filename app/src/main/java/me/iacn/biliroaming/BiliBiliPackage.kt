@@ -1560,7 +1560,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     dexHelper.decodeMethodIndex(it)
                 }?.declaringClass?.name ?: return@class_
             }
-            canTryWatchVipQuality = method m@{
+            canTryWatchVipQuality = method {
                 name = dexHelper.findMethodUsingString(
                     "user is vip, cannot trywatch",
                     false,
@@ -1574,7 +1574,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     true
                 ).firstOrNull()?.let {
                     dexHelper.decodeMethodIndex(it)
-                }?.name ?: return@m
+                }?.name ?: return@method
             }
 
             dexHelper.close()
