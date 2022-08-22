@@ -57,6 +57,8 @@ message PlayAbilityConf {
   optional bool selections_disable = 0x14;
   optional bool next_disable = 0x15;
   optional bool edit_dm_disable = 0x16;
+  optional bool freya_enter_disable = 0x1b;
+  optional bool freya_full_disable = 0x1d;
 }
 
 message StreamLimit {

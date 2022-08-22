@@ -212,4 +212,7 @@
     <string name="remove_video_cmd_dms_summary">移除影片播放時浮窗出現的三連關注、關聯影片、投票彈幕、評分彈幕等</string>
     <string name="block_word_search_title">封鎖評論關鍵字搜尋功能</string>
     <string name="block_word_search_summary">封鎖影片評論藍色關鍵字點擊觸發跳轉搜尋功能</string>
+    <string name="disable_try_watch_vip_quality_title">禁用免費試看帶會員清晰度</string>
+    <string name="disable_try_watch_vip_quality_desc">鼠鼠我呀，真的不想每30天點一次不再試看呢</string>
+    <string name="allow_mini_play_title">允許解鎖的番劇小窗播放</string>
 </resources>

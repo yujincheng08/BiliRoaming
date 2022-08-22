@@ -24,6 +24,11 @@
             android:key="custom_server"
             android:summary="@string/custom_server_summary"
             android:title="@string/custom_server_title" />
+
+        <SwitchPreference
+            android:dependency="main_func"
+            android:key="allow_mini_play"
+            android:title="@string/allow_mini_play_title" />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/cdn_category">
@@ -295,6 +300,11 @@
             android:key="block_upper_recommend_ad"
             android:summary="@string/block_video_ad_summary"
             android:title="@string/block_video_ad_title" />
+        <SwitchPreference
+            android:dependency="hidden"
+            android:key="disable_try_watch_vip_quality"
+            android:summary="@string/disable_try_watch_vip_quality_desc"
+            android:title="@string/disable_try_watch_vip_quality_title" />
         <Preference
             android:dependency="hidden"
             android:key="customize_dynamic"

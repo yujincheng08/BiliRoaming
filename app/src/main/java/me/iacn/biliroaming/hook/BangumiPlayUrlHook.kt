@@ -451,6 +451,8 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     dislikeDisable = true
                     likeDisable = true
                     elecDisable = true
+                    freyaEnterDisable = true
+                    freyaFullDisable = true
                 }
 
                 val qualityMap = jsonContent.optJSONArray("accept_quality")?.let {
