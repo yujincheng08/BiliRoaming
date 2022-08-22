@@ -11,7 +11,7 @@ class TryWatchVipQualityHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
         Log.d("startHook: TryWatchVipQualityHook")
         instance.playerQualityServiceClass?.hookBeforeMethod(
-            instance.canTryWatchVipQuality().also { Log.d("TryWatchVipQualityHook method name: $it") },
+            instance.canTryWatchVipQuality()
         ) {
             it.result = false
         }
