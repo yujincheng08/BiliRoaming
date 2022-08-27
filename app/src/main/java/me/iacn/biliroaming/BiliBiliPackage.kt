@@ -190,7 +190,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     fun openDrawer() = mHookInfo.drawer.open.orNull
 
-    fun closeDrawer() = mHookInfo.drawer.open.orNull
+    fun closeDrawer() = mHookInfo.drawer.close.orNull
 
     fun isDrawerOpen() = mHookInfo.drawer.isOpen.orNull
 
