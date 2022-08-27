@@ -426,23 +426,27 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         ) {
             "com.bapis.bilibili.polymer.app.search.v1.SearchAllResponse".from(mClassLoader)
                 ?.hookAfterMethod("getNavList") { param ->
+                    @Suppress("UNCHECKED_CAST")
+                    val navList = param.result as List<Any>
                     val navClass = navClass ?: return@hookAfterMethod
                     val currentArea = runCatching {
                         XposedInit.country.get(5L, TimeUnit.SECONDS)
                     }.getOrNull()
-                    for (area in AREA_TYPES) {
-                        if (area.value.area == currentArea)
-                            continue
+                    val areaTypes = AREA_TYPES.filter { it.value.area != currentArea }
+                    val navTypes = navList.map { it.callMethodAs<Int>("getType") }
+                    for (area in areaTypes) {
                         if (!sPrefs.getString(area.value.area + "_server", null).isNullOrBlank() &&
                             sPrefs.getBoolean("search_area_" + area.value.type_str, false)
                         ) {
-                            val nav = navClass.new().apply {
-                                callMethod("setName", area.value.text)
-                                callMethod("setPages", 0)
-                                callMethod("setTotal", 0)
-                                callMethod("setType", area.key)
+                            if (!navTypes.contains(area.key)) {
+                                val nav = navClass.new().apply {
+                                    callMethod("setName", area.value.text)
+                                    callMethod("setPages", 0)
+                                    callMethod("setTotal", 0)
+                                    callMethod("setType", area.key)
+                                }
+                                param.thisObject.callMethod("addNav", 1, nav)
                             }
-                            param.thisObject.callMethod("addNav", 1, nav)
                         }
                     }
                 }
@@ -509,8 +513,12 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         area: String,
         type: String
     ): Any? {
-        val query = mapOf("pn" to pn, "ps" to ps, "keyword" to keyword)
-            .map { "${it.key}=${it.value}" }.joinToString("&")
+        val query = mapOf(
+            "access_key" to (instance.accessKey ?: ""),
+            "pn" to pn,
+            "ps" to ps,
+            "keyword" to keyword,
+        ).map { "${it.key}=${it.value}" }.joinToString("&")
         val content = getAreaSearchBangumi(query, area, type) ?: return null
         val jsonContent = content.toJSONObject()
         checkErrorToast(jsonContent, true)
