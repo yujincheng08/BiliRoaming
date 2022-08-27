@@ -538,20 +538,12 @@ message WatchButton {
 message ReasonStyle {
   optional string text = 0x1;
   optional string text_color = 0x2;
-  optional string bg_color = 0x3;
-  optional string border_color = 0x4;
-  optional string icon_url = 0x5;
-  optional string text_color_night = 0x6;
+  optional string text_color_night = 0x3;
+  optional string bg_color = 0x4;
+  optional string border_color_night = 0x5;
+  optional string border_color = 0x6;
   optional string bg_color_night = 0x7;
-  optional string border_color_night = 0x8;
-  optional string icon_night_url = 0x9;
-  optional int32 by_style = 0xa;
-  optional string uri = 0xb;
-  optional string icon_bg_url = 0xc;
-  optional string event = 0xd;
-  optional string event_v2 = 0xe;
-  optional int32 right_icon_type = 0xf;
-  optional string left_icon_type = 0x10;
+  optional int32 bg_style = 0x8;
 }
 
 message Episode {
