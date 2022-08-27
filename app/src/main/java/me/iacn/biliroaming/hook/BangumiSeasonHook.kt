@@ -13,6 +13,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import kotlinx.coroutines.*
 import me.iacn.biliroaming.*
+import me.iacn.biliroaming.API.*
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.Constant.TYPE_EPISODE_ID
 import me.iacn.biliroaming.Constant.TYPE_SEASON_ID
@@ -22,7 +23,6 @@ import me.iacn.biliroaming.network.BiliRoamingApi.getContent
 import me.iacn.biliroaming.network.BiliRoamingApi.getSeason
 import me.iacn.biliroaming.network.BiliRoamingApi.getSpace
 import me.iacn.biliroaming.utils.*
-import org.json.JSONArray
 import org.json.JSONObject
 import java.io.InputStream
 import java.lang.reflect.Method
@@ -162,16 +162,8 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         )
     }
 
-    private val navClass by Weak { "com.bapis.bilibili.polymer.app.search.v1.Nav" from mClassLoader }
+    private val searchAllRespClass by Weak { "com.bapis.bilibili.polymer.app.search.v1.SearchAllResponse" from mClassLoader }
     private val searchByTypeRespClass by Weak { "com.bapis.bilibili.polymer.app.search.v1.SearchByTypeResponse" from mClassLoader }
-    private val itemClass by Weak { "com.bapis.bilibili.polymer.app.search.v1.Item" from mClassLoader }
-    private val bangumiCardClass by Weak { "com.bapis.bilibili.polymer.app.search.v1.SearchBangumiCard" from mClassLoader }
-    private val reasonStyleClass by Weak { "com.bapis.bilibili.polymer.app.search.v1.ReasonStyle" from mClassLoader }
-    private val episodeClass by Weak { "com.bapis.bilibili.polymer.app.search.v1.Episode" from mClassLoader }
-    private val episodeNewClass by Weak { "com.bapis.bilibili.polymer.app.search.v1.EpisodeNew" from mClassLoader }
-    private val followButtonClass by Weak { "com.bapis.bilibili.polymer.app.search.v1.FollowButton" from mClassLoader }
-    private val watchButtonClass by Weak { "com.bapis.bilibili.polymer.app.search.v1.WatchButton" from mClassLoader }
-    private val paginationReplyClass by Weak { "com.bapis.bilibili.pagination.PaginationReply" from mClassLoader }
 
     @SuppressLint("SetTextI18n")
     override fun startHook() {
@@ -332,7 +324,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             ?.hookAfterMethod("view", "com.bapis.bilibili.app.view.v1.ViewReq") { param ->
                 param.result?.let { return@hookAfterMethod }
                 val serializedRequest = param.args[0].callMethodAs<ByteArray>("toByteArray")
-                val req = API.ViewReq.parseFrom(serializedRequest)
+                val req = ViewReq.parseFrom(serializedRequest)
                 val reply = fixViewProto(req)
                 val serializedReply = reply?.toByteArray() ?: return@hookAfterMethod
                 param.result = (param.method as Method).returnType.callStaticMethod(
@@ -424,235 +416,252 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             (sPrefs.getBoolean("search_area_bangumi", false)
                     || sPrefs.getBoolean("search_area_movie", false))
         ) {
-            "com.bapis.bilibili.polymer.app.search.v1.SearchAllResponse".from(mClassLoader)
-                ?.hookAfterMethod("getNavList") { param ->
-                    @Suppress("UNCHECKED_CAST")
-                    val navList = param.result as List<Any>
-                    val navClass = navClass ?: return@hookAfterMethod
-                    val currentArea = runCatching {
-                        XposedInit.country.get(5L, TimeUnit.SECONDS)
-                    }.getOrNull()
-                    val areaTypes = AREA_TYPES.filter { it.value.area != currentArea }
-                    val navTypes = navList.map { it.callMethodAs<Int>("getType") }
-                    for (area in areaTypes) {
-                        if (!sPrefs.getString(area.value.area + "_server", null).isNullOrBlank() &&
-                            sPrefs.getBoolean("search_area_" + area.value.type_str, false)
-                        ) {
-                            if (!navTypes.contains(area.key)) {
-                                val nav = navClass.new().apply {
-                                    callMethod("setName", area.value.text)
-                                    callMethod("setPages", 0)
-                                    callMethod("setTotal", 0)
-                                    callMethod("setType", area.key)
+            val mossResponseHandlerClass = instance.mossResponseHandlerClass ?: return
+            val searchMossClass =
+                "com.bapis.bilibili.polymer.app.search.v1.SearchMoss".from(mClassLoader) ?: return
+            searchMossClass.hookBeforeMethod(
+                "searchAll",
+                "com.bapis.bilibili.polymer.app.search.v1.SearchAllRequest",
+                mossResponseHandlerClass
+            ) { param ->
+                val searchAllRespClass = searchAllRespClass ?: return@hookBeforeMethod
+                val handler = param.args[1]
+                param.args[1] = Proxy.newProxyInstance(
+                    handler.javaClass.classLoader,
+                    arrayOf(mossResponseHandlerClass)
+                ) { _, m, args ->
+                    if (m.name == "onNext") {
+                        val v = args[0]
+                        if (v != null) {
+                            val response = SearchAllResponse.parseFrom(
+                                v.callMethodAs<ByteArray>("toByteArray")
+                            )
+                            val currentArea = runCatching {
+                                XposedInit.country.get(5L, TimeUnit.SECONDS)
+                            }.getOrNull()
+                            val newResponse = response.copy {
+                                val list = nav.toMutableList()
+                                for (area in AREA_TYPES) {
+                                    if (area.value.area == currentArea)
+                                        continue
+                                    if (!sPrefs.getString(area.value.area + "_server", null)
+                                            .isNullOrBlank() && sPrefs.getBoolean(
+                                            "search_area_" + area.value.type_str,
+                                            false
+                                        )
+                                    ) {
+                                        val nav = searchNav {
+                                            name = area.value.text
+                                            total = 0
+                                            pages = 0
+                                            type = area.key
+                                        }
+                                        list.add(1, nav)
+                                    }
                                 }
-                                param.thisObject.callMethod("addNav", 1, nav)
+                                nav.clear()
+                                nav.addAll(list)
                             }
+                            args[0] = searchAllRespClass.callStaticMethod(
+                                "parseFrom",
+                                newResponse.toByteArray()
+                            )
                         }
+                        m.invoke(handler, *args)
+                    } else if (args == null) {
+                        m.invoke(handler)
+                    } else {
+                        m.invoke(handler, *args)
                     }
                 }
-            val mossResponseHandlerClass =
-                "com.bilibili.lib.moss.api.MossResponseHandler".from(mClassLoader) ?: return
-            "com.bapis.bilibili.polymer.app.search.v1.SearchMoss".from(mClassLoader)
-                ?.hookBeforeMethod(
-                    "searchByType",
-                    "com.bapis.bilibili.polymer.app.search.v1.SearchByTypeRequest",
-                    mossResponseHandlerClass
-                ) { param ->
-                    val request = param.args[0]
-                    val key = request.callMethodAs<Int>("getType")
-                    val areaType = AREA_TYPES[key]
-                    if (areaType == null || runCatching {
-                            XposedInit.country.get(5L, TimeUnit.SECONDS)
-                        }.getOrNull() == areaType.area)
-                        return@hookBeforeMethod
-                    val type = areaType.type
-                    val area = areaType.area
-                    val pagination = request.callMethod("getPagination")
+            }
+            searchMossClass.hookBeforeMethod(
+                "searchByType",
+                "com.bapis.bilibili.polymer.app.search.v1.SearchByTypeRequest",
+                mossResponseHandlerClass
+            ) { param ->
+                val request = SearchByTypeRequest.parseFrom(
+                    param.args[0].callMethodAs<ByteArray>("toByteArray")
+                )
+                val searchByTypeRespClass = searchByTypeRespClass ?: return@hookBeforeMethod
+                val key = request.type
+                val areaType = AREA_TYPES[key] ?: return@hookBeforeMethod
+                val type = areaType.type
+                val area = areaType.area
+                val handler = param.args[1]
+                val onNextMethod = handler.javaClass.methods.find { it.name == "onNext" }
+                    ?: return@hookBeforeMethod
+                val onCompletedMethod =
+                    handler.javaClass.methods.find { it.name == "onCompleted" }
                         ?: return@hookBeforeMethod
-                    val pn = pagination.callMethodAs<String>("getNext").ifEmpty { "1" }
-                    val ps = pagination.callMethodAs<Int>("getPageSize")
-                    val keyword = request.callMethodAs<String>("getKeyword")
-                    val handler = param.args[1]
-                    val onNextMethod = handler.javaClass.methods.find { it.name == "onNext" }
-                        ?: return@hookBeforeMethod
-                    val onCompletedMethod =
-                        handler.javaClass.methods.find { it.name == "onCompleted" }
-                            ?: return@hookBeforeMethod
-                    param.args[1] = Proxy.newProxyInstance(
-                        handler.javaClass.classLoader,
-                        arrayOf(mossResponseHandlerClass)
-                    ) { _, m, args ->
-                        if (m.name == "onNext") {
-                            val result = retrieveAreaSearchV3(pn, ps, keyword, area, type)
-                            if (request != null)
-                                args[0] = result
-                            m.invoke(handler, *args)
-                        } else if (m.name == "onError") {
-                            val result = retrieveAreaSearchV3(pn, ps, keyword, area, type)
-                            if (result != null) {
-                                onNextMethod.invoke(handler, result)
-                                onCompletedMethod.invoke(handler)
-                            } else {
-                                m.invoke(handler, *args)
-                            }
-                            null
-                        } else if (args == null) {
-                            m.invoke(handler)
+                param.args[1] = Proxy.newProxyInstance(
+                    handler.javaClass.classLoader,
+                    arrayOf(mossResponseHandlerClass)
+                ) { _, m, args ->
+                    if (m.name == "onNext") {
+                        val result = retrieveAreaSearchV3(request, area, type)
+                        if (result != null)
+                            args[0] = searchByTypeRespClass
+                                .callStaticMethod("parseFrom", result.toByteArray())
+                        m.invoke(handler, *args)
+                    } else if (m.name == "onError") {
+                        val result = retrieveAreaSearchV3(request, area, type)
+                        if (result != null) {
+                            val newRes = searchByTypeRespClass
+                                .callStaticMethod("parseFrom", result.toByteArray())
+                            onNextMethod.invoke(handler, newRes)
+                            onCompletedMethod.invoke(handler)
                         } else {
                             m.invoke(handler, *args)
                         }
+                        null
+                    } else if (args == null) {
+                        m.invoke(handler)
+                    } else {
+                        m.invoke(handler, *args)
                     }
                 }
+            }
         }
     }
 
     private fun retrieveAreaSearchV3(
-        pn: String,
-        ps: Int,
-        keyword: String,
+        request: SearchByTypeRequest,
         area: String,
         type: String
-    ): Any? {
+    ): SearchByTypeResponse? {
+        val pn = request.pagination.next.ifEmpty { "1" }
+        val ps = request.pagination.pageSize
+        val keyword = request.keyword
         val query = mapOf(
             "access_key" to (instance.accessKey ?: ""),
+            "fnval" to request.playerArgs.fnval,
+            "fnver" to request.playerArgs.fnver,
+            "qn" to request.playerArgs.qn,
             "pn" to pn,
             "ps" to ps,
             "keyword" to keyword,
         ).map { "${it.key}=${it.value}" }.joinToString("&")
-        val content = getAreaSearchBangumi(query, area, type) ?: return null
-        val jsonContent = content.toJSONObject()
+        val jsonContent = getAreaSearchBangumi(query, area, type)?.toJSONObject()
+            ?: return null
         checkErrorToast(jsonContent, true)
         val newData = jsonContent.optJSONObject("data") ?: return null
 
-        val searchByTypeRespClass = searchByTypeRespClass ?: return null
-        val itemClass = itemClass ?: return null
-        val bangumiCardClass = bangumiCardClass ?: return null
-        val reasonStyleClass = reasonStyleClass ?: return null
-        val episodeClass = episodeClass ?: return null
-        val episodeNewClass = episodeNewClass ?: return null
-        val followButtonClass = followButtonClass ?: return null
-        val watchButtonClass = watchButtonClass ?: return null
-        val paginationReplyClass = paginationReplyClass ?: return null
-
-        fun badgesFromJsonArray(jsonArray: JSONArray): List<Any> {
-            val badges = mutableListOf<Any>()
-            for (json in jsonArray) {
-                val badge = reasonStyleClass.new().apply {
-                    callMethod("setBgColor", json.optString("bg_color"))
-                    callMethod("setBgColorNight", json.optString("bg_color_night"))
-                    callMethod("setBgStyle", json.optInt("bg_style"))
-                    callMethod("setBorderColor", json.optString("border_color"))
-                    callMethod("setBorderColorNight", json.optString("border_color_night"))
-                    callMethod("setText", json.optString("text"))
-                    callMethod("setTextColor", json.optString("text_color"))
-                    callMethod("setTextColorNight", json.optString("text_color_night"))
-                }
-                badges.add(badge)
-            }
-            return badges
+        fun ReasonStyleKt.Dsl.reconstructFrom(json: JSONObject) = json.run {
+            text = optString("text")
+            textColor = optString("text_color")
+            textColorNight = optString("text_color_night")
+            bgColor = optString("bg_color")
+            bgColorNight = optString("bg_color_night")
+            borderColor = optString("border_color")
+            borderColorNight = optString("border_color_night")
+            bgStyle = optInt("bg_style")
         }
 
-        fun episodesFromJsonArray(jsonArray: JSONArray): List<Any> {
-            val episodes = mutableListOf<Any>()
-            for (json in jsonArray) {
-                val badges = badgesFromJsonArray(json.optJSONArray("badges").orEmpty())
-                val episode = episodeClass.new().apply {
-                    callMethod("setIndex", json.optString("index"))
-                    callMethod("setParam", json.optString("param"))
-                    callMethod("setPosition", json.optInt("position"))
-                    callMethod("setUri", json.optString("uri"))
-                    callMethod("addAllBadges", badges)
-                }
-                episodes.add(episode)
-            }
-            return episodes
+        fun EpisodeKt.Dsl.reconstructFrom(json: JSONObject) = json.run {
+            uri = optString("uri")
+            param = optString("param")
+            index = optString("index")
+            for (badge in optJSONArray("badges").orEmpty())
+                badges += reasonStyle { reconstructFrom(badge) }
+            position = optInt("position")
         }
 
-        fun episodesNewFromJsonArray(jsonArray: JSONArray): List<Any> {
-            val episodesNew = mutableListOf<Any>()
-            for (json in jsonArray) {
-                val badges = badgesFromJsonArray(json.optJSONArray("badges").orEmpty())
-                val episodeNew = episodeNewClass.new().apply {
-                    callMethod("setIsNew", json.optInt("is_new"))
-                    callMethod("setParam", json.optString("param"))
-                    callMethod("setPosition", json.optInt("position"))
-                    callMethod("setTitle", json.optString("title"))
-                    callMethod("setUri", json.optString("uri"))
-                    callMethod("addAllBadges", badges)
-                }
-                episodesNew.add(episodeNew)
-            }
-            return episodesNew
+        fun EpisodeNewKt.Dsl.reconstructFrom(json: JSONObject) = json.run {
+            title = optString("title")
+            uri = optString("uri")
+            param = optString("param")
+            isNew = optInt("is_new")
+            for (badge in optJSONArray("badges").orEmpty())
+                badges += reasonStyle { reconstructFrom(badge) }
+            this@reconstructFrom.type = optInt("type")
+            position = optInt("position")
+            cover = optString("cover")
+            label = optString("label")
         }
 
-        fun followButtonFromJson(json: JSONObject) = followButtonClass.new().apply {
-            val texts = json.optJSONObject("texts")?.let { o ->
+        fun WatchButtonKt.Dsl.reconstructFrom(json: JSONObject) = json.run {
+            title = optString("title")
+            link = optString("link")
+        }
+
+        fun CheckMoreKt.Dsl.reconstructFrom(json: JSONObject) = json.run {
+            content = optString("content")
+            uri = optString("uri")
+        }
+
+        fun FollowButtonKt.Dsl.reconstructFrom(json: JSONObject) = json.run {
+            icon = optString("icon")
+            optJSONObject("texts")?.let { o ->
                 o.keys().asSequence().associateWith { o.opt(it)?.toString() ?: "" }
-            } ?: mapOf()
-            callMethod("setIcon", json.optString("icon"))
-            callMethod("setStatusReport", json.optString("status_report"))
-            callMethodAs<MutableMap<String, String>>("getMutableTextsMap").putAll(texts)
+            }?.let { texts.putAll(it) }
+            statusReport = optString("status_report")
         }
 
-        fun watchButtonFromJson(json: JSONObject) = watchButtonClass.new().apply {
-            callMethod("setTitle", json.optString("title"))
-            callMethod("setLink", json.optString("link"))
+        fun SearchBangumiCardKt.Dsl.reconstructFrom(json: JSONObject) = json.run {
+            title = optString("title")
+            cover = optString("cover")
+            mediaType = optInt("media_type")
+            playState = optInt("play_state")
+            this@reconstructFrom.area = optString("area")
+            style = optString("style")
+            styles = optString("styles")
+            cv = optString("cv")
+            rating = optDouble("rating")
+            vote = optInt("vote")
+            target = optString("target")
+            staff = optString("staff")
+            prompt = optString("prompt")
+            ptime = optLong("ptime")
+            seasonTypeName = optString("season_type_name")
+            for (episode in optJSONArray("episodes").orEmpty())
+                episodes += episode { reconstructFrom(episode) }
+            isSelection = optInt("is_selection")
+            isAtten = optInt("is_atten")
+            label = optString("label")
+            seasonId = optLong("season_id")
+            outName = optString("out_name")
+            outIcon = optString("out_icon")
+            outUrl = optString("out_url")
+            for (badge in optJSONArray("badges").orEmpty())
+                badges += reasonStyle { reconstructFrom(badge) }
+            isOut = optInt("is_out")
+            for (episodeNew in optJSONArray("episodes_new").orEmpty())
+                episodesNew += episodeNew { reconstructFrom(episodeNew) }
+            optJSONObject("watch_button")?.let {
+                watchButton = watchButton { reconstructFrom(it) }
+            }
+            selectionStyle = optString("selection_style")
+            optJSONObject("check_more")?.let {
+                checkMore = checkMore { reconstructFrom(it) }
+            }
+            optJSONObject("follow_button")?.let {
+                followButton = followButton { reconstructFrom(it) }
+            }
         }
 
-        val items = mutableListOf<Any>()
-        for (json in newData.getJSONArray("items")) {
-            if (json.optInt("Offset", -1) != -1)
-                json.remove("follow_button")
-            val badges = badgesFromJsonArray(json.optJSONArray("badges").orEmpty())
-            val episodes = episodesFromJsonArray(json.optJSONArray("episodes").orEmpty())
-            val episodesNew = episodesNewFromJsonArray(json.optJSONArray("episodes_new").orEmpty())
-            val followButton = json.optJSONObject("follow_button")?.let { followButtonFromJson(it) }
-            val watchButton = json.optJSONObject("watch_button")?.let { watchButtonFromJson(it) }
-            val bangumi = bangumiCardClass.new().apply {
-                callMethod("setArea", json.optString("area"))
-                callMethod("setCover", json.optString("cover"))
-                callMethod("setCv", json.optString("cv"))
-                callMethod("setIsAtten", json.optInt("is_atten"))
-                callMethod("setIsSelection", json.optInt("is_selection"))
-                callMethod("setLabel", json.optString("label"))
-                callMethod("setMediaType", json.optInt("media_type"))
-                callMethod("setPtime", json.optLong("ptime"))
-                callMethod("setRating", json.optDouble("rating"))
-                callMethod("setSeasonId", json.optLong("season_id"))
-                callMethod("setSeasonTypeName", json.optString("season_type_name"))
-                callMethod("setSelectionStyle", json.optString("selection_style"))
-                callMethod("setStaff", json.optString("staff"))
-                callMethod("setStyle", json.optString("style"))
-                callMethod("setStyles", json.optString("styles"))
-                callMethod("setTitle", json.optString("title"))
-                callMethod("setVote", json.optInt("vote"))
-                callMethod("addAllBadges", badges)
-                callMethod("addAllEpisodes", episodes)
-                callMethod("addAllEpisodesNew", episodesNew)
-                followButton?.let { callMethod("setFollowButton", it) }
-                watchButton?.let { callMethod("setWatchButton", it) }
-            }
-            val item = itemClass.new().apply {
-                callMethod("setGoto", json.optString("goto"))
-                callMethod("setParam", json.optString("param"))
-                callMethod("setUri", json.optString("uri"))
-                callMethod("setBangumi", bangumi)
-            }
-            items.add(item)
+        fun SearchItemKt.Dsl.reconstructFrom(json: JSONObject) = json.run {
+            uri = optString("uri")
+            param = optString("param")
+            goto = optString("goto")
+            linkType = optString("link_type")
+            position = optInt("position")
+            trackId = optString("track_id")
+            bangumi = searchBangumiCard { reconstructFrom(json) }
         }
 
         val pages = newData.optInt("pages")
         var page = pn.toIntOrNull() ?: 1
-        val response = searchByTypeRespClass.new().apply {
-            callMethod("setPages", pages)
-            callMethod("setKeyword", keyword)
-            callMethod("addAllItems", items)
-            if (page < pages) {
-                val pagination = paginationReplyClass.new().apply {
-                    callMethod("setNext", (++page).toString())
-                }
-                callMethod("setPagination", pagination)
+        val response = searchByTypeResponse {
+            this.pages = pages
+            this.keyword = keyword
+            for (json in newData.getJSONArray("items")) {
+                if (json.optInt("Offset", -1) != -1)
+                    json.remove("follow_button")
+                items += searchItem { reconstructFrom(json) }
             }
+            if (page < pages)
+                pagination = paginationReply { next = (++page).toString() }
         }
         return response
     }
@@ -862,7 +871,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
     }
 
-    private fun fixViewProto(req: API.ViewReq): API.ViewReply? {
+    private fun fixViewProto(req: ViewReq): ViewReply? {
         val av = when {
             req.hasAid() -> req.aid.toString()
             req.hasBvid() -> bv2av(req.bvid).toString()
