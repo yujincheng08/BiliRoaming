@@ -823,7 +823,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                         ).name ?: throw Throwable()
                     }
                     close = method {
-                        drawerLayoutClass.getMethod(
+                        name = drawerLayoutClass.getMethod(
                             "closeDrawer",
                             View::class.java,
                             Boolean::class.javaPrimitiveType
