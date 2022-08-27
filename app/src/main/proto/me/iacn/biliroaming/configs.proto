@@ -187,6 +187,10 @@ message MusicNotification {
   optional Class player_service = 6;
   optional Class media_session_callback = 7;
   optional Class live_helper = 8;
+  optional Class music_background_player = 9;
+  optional Field music_wrapper_player = 10;
+  optional Field music_player = 11;
+  optional Field music_player_service = 12;
 }
 
 message BiliAccounts {
