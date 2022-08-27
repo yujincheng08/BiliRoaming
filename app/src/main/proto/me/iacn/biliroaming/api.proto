@@ -640,3 +640,39 @@ message SearchAllRequest {
   optional PlayerArgs player_args = 0xb;
 }
 
+message SearchNav {
+  optional string name = 0x1;
+  optional int32 total = 0x2;
+  optional int32 pages = 0x3;
+  optional int32 type = 0x4;
+}
+
+message EasterEgg {
+
+}
+
+message PaginationReply {
+  optional string next = 0x1;
+  optional string prev = 0x2;
+}
+
+message DisplayOption {
+  optional int32 search_page_visual_option = 1;
+  optional int32 video_title_row = 2;
+}
+
+message SearchAllResponse {
+  optional string keyword = 0x1;
+  optional string tid_list = 0x2;
+  repeated SearchNav nav = 0x3;
+  repeated SearchItem item = 0x4;
+  optional EasterEgg easter_egg = 0x5;
+  optional string exp_str = 0x6;
+  repeated string extra_word_list = 0x7;
+  optional string org_extra_word = 0x8;
+  optional int64 select_bar_type = 0x9;
+  optional int64 new_search_exp_num = 0xa;
+  optional PaginationReply pagination = 0xb;
+  optional DisplayOption app_display_option = 0xc;
+  map<string, string> annotation = 0xd;
+}
