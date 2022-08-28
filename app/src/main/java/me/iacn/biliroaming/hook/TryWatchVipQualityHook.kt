@@ -10,10 +10,12 @@ class TryWatchVipQualityHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         if (!sPrefs.getBoolean("disable_try_watch_vip_quality", false)) return
 
         Log.d("startHook: TryWatchVipQualityHook")
-        instance.playerQualityServiceClass?.hookBeforeMethod(
-            instance.canTryWatchVipQuality()
-        ) {
-            it.result = false
+        instance.canTryWatchVipQuality()?.let { m ->
+            instance.playerQualityServiceClass?.hookBeforeMethod(
+                m
+            ) {
+                it.result = false
+            }
         }
     }
 }
