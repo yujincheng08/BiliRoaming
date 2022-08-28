@@ -145,6 +145,12 @@
             android:summary="@string/play_arc_conf_summary"
             android:title="@string/play_arc_conf_title" />
 
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="force_browser"
+            android:summary="@string/force_browser_summary"
+            android:title="@string/force_browser_title" />
+
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/pref_backup">
         <Preference

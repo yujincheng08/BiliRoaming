@@ -22,9 +22,14 @@ class StartActivityHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 )
                 intent.data = Uri.parse(intent.dataString?.replace("bilibili://story/", "bilibili://video/"))
             }
-            if (intent.component?.className == "com.bilibili.video.story.StoryVideoActivity") {
-                Log.e("after intent: $intent")
+            if (sPrefs.getBoolean("force_browser", false)) {
+                if (intent.component?.className?.endsWith("MWebActivity") == true) {
+                    param.args[4] = Intent(Intent.ACTION_VIEW).apply {
+                        data = intent.data
+                    }
+                }
             }
+
         }
     }
 }
