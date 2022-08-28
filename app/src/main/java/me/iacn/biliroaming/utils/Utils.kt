@@ -297,3 +297,11 @@ fun migrateHomeFilterPrefsIfNeeded() {
         }.commit()
     }
 }
+
+fun getRetrofitUrl(response: Any): String? {
+    val requestField = instance.requestField() ?: return null
+    val urlField = instance.urlField() ?: return null
+    val request = response.getObjectField(requestField)
+    return request?.getObjectField(urlField)?.toString()
+}
+

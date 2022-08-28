@@ -29,6 +29,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     companion object {
         // DASH, HDR, 4K, DOBLY AUDO, DOBLY VISION, 8K, AV1
         const val MAX_FNVAL = 16 or 64 or 128 or 256 or 512 or 1024 or 2048
+        const val FAIL_CODE = -404
     }
 
     override fun startHook() {
@@ -99,6 +100,49 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 Log.w("请求解析服务器发生错误: ${messages.trim()}")
                 Log.toast("请求解析服务器发生错误: ${messages.trim()}")
             }
+        }
+
+        instance.retrofitResponseClass?.hookBeforeAllConstructors { param ->
+            val url = getRetrofitUrl(param.args[0]) ?: return@hookBeforeAllConstructors
+            val body = param.args[1] ?: return@hookBeforeAllConstructors
+            val dataField =
+                if (instance.generalResponseClass?.isInstance(body) == true) "data" else instance.responseDataField()
+            if (!url.startsWith("https://api.bilibili.com/x/tv/playurl") || !lastSeasonInfo.containsKey(
+                    "area"
+                ) || lastSeasonInfo["area"] == "th" || body.getIntField("code") != FAIL_CODE
+            ) return@hookBeforeAllConstructors
+            val parsed = Uri.parse(url)
+            val cid = parsed.getQueryParameter("cid")
+            val fnval = parsed.getQueryParameter("fnval")
+            val objectId = parsed.getQueryParameter("object_id")
+            val qn = parsed.getQueryParameter("qn")
+            val params =
+                "cid=$cid&ep_id=$objectId&fnval=$fnval&fnver=0&fourk=1&platform=android&qn=$qn"
+            val json = try {
+                lastSeasonInfo["area"]?.let { lastArea ->
+                    getPlayUrl(params, arrayOf(lastArea))
+                }
+            } catch (e: CustomServerException) {
+                var messages = ""
+                for (error in e.errors) {
+                    messages += "${error.key}: ${error.value}\n"
+                }
+                Log.w("请求解析服务器发生错误: ${messages.trim()}")
+                Log.toast("请求解析服务器发生错误: ${messages.trim()}")
+                return@hookBeforeAllConstructors
+            } ?: run {
+                Log.toast("获取播放地址失败")
+                return@hookBeforeAllConstructors
+            }
+            Log.toast("已从代理服务器获取播放地址\n如加载缓慢或黑屏，可去漫游设置中测速并设置 UPOS")
+            body.setObjectField(
+                dataField, instance.fastJsonClass?.callStaticMethod(
+                    instance.fastJsonParse(),
+                    json,
+                    instance.projectionPlayUrlClass
+                )
+            )
+            body.setIntField("code", 0)
         }
 
         "com.bapis.bilibili.pgc.gateway.player.v1.PlayURLMoss".findClassOrNull(mClassLoader)?.run {

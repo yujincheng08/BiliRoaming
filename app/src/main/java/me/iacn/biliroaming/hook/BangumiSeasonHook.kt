@@ -228,7 +228,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             Log.toast("Android O以下系统不支持64位Xpatch版，请使用32位版")
         } else {
             instance.retrofitResponseClass?.hookBeforeAllConstructors { param ->
-                val url = getUrl(param.args[0])
+                val url = getRetrofitUrl(param.args[0])
                 val body = param.args[1] ?: return@hookBeforeAllConstructors
                 if (url?.startsWith("https://api.bilibili.com/pgc/view/v2/app/season") == true &&
                     body.javaClass == instance.okioWrapperClass
@@ -1055,13 +1055,6 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         for (episode in result?.optJSONArray("episodes").orEmpty()) {
             if (episode.optInt("status") == 13) episode.put("status", 2)
         }
-    }
-
-    private fun getUrl(response: Any): String? {
-        val requestField = instance.requestField() ?: return null
-        val urlField = instance.urlField() ?: return null
-        val request = response.getObjectField(requestField)
-        return request?.getObjectField(urlField)?.toString()
     }
 
     private fun setErrorMessage(activity: Activity) {
