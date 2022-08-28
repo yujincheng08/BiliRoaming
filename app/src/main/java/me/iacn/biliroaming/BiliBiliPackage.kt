@@ -127,10 +127,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val arcConfClass by Weak { "com.bapis.bilibili.app.playurl.v1.ArcConf" from mClassLoader }
     val arcConfExtraContentClass by Weak { "com.bapis.bilibili.app.playurl.v1.ExtraContent" from mClassLoader }
     val commentInvalidFragmentClass by Weak {
-        "com.bilibili.bangumi.ui.page.detail.BangumiCommentInvalidFragmentV2".from(mClassLoader)
-            ?: "com.bilibili.bangumi.ui.page.detail.OGVCommentFragment".from(mClassLoader)
+        "com.bilibili.bangumi.ui.page.detail.OGVCommentFragment".from(mClassLoader)
+            ?: "com.bilibili.bangumi.ui.page.detail.BangumiCommentInvalidFragmentV2"
+                .from(mClassLoader)
     }
-    val basicIndexItemClass by Weak { "com.bilibili.pegasus.api.model.BasicIndexItem" from mClassLoader }
     val playerQualityServiceClass by Weak { "com.bilibili.playerbizcommon.features.quality.PlayerQualityService" from mClassLoader }
     val mossResponseHandlerClass by Weak { "com.bilibili.lib.moss.api.MossResponseHandler" from mClassLoader }
     val projectionPlayUrlClass by Weak { "com.bilibili.lib.projection.internal.api.model.ProjectionPlayUrl" from mClassLoader }
