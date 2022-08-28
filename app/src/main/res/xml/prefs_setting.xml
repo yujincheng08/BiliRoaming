@@ -75,6 +75,10 @@
             android:key="custom_subtitle"
             android:summary="@string/custom_subtitle_summary"
             android:title="@string/custom_subtitle_title" />
+        <SwitchPreference
+            android:key="disable_story_full"
+            android:summary="@string/disable_story_full_summary"
+            android:title="@string/disable_story_full_title" />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/miscellaneous_category">
