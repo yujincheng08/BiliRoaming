@@ -152,6 +152,9 @@ fun signQuery(query: String?, extraMap: Map<String, String> = emptyMap()): Strin
 fun getId(name: String) = instance.ids[name]
     ?: currentContext.resources.getIdentifier(name, "id", currentContext.packageName)
 
+fun getResId(name: String, type: String) =
+    currentContext.resources.getIdentifier(name, type, currentContext.packageName)
+
 fun getBitmapFromURL(src: String?, callback: (Bitmap?) -> Unit) {
     Thread {
         callback(try {
@@ -294,3 +297,11 @@ fun migrateHomeFilterPrefsIfNeeded() {
         }.commit()
     }
 }
+
+fun getRetrofitUrl(response: Any): String? {
+    val requestField = instance.requestField() ?: return null
+    val urlField = instance.urlField() ?: return null
+    val request = response.getObjectField(requestField)
+    return request?.getObjectField(urlField)?.toString()
+}
+

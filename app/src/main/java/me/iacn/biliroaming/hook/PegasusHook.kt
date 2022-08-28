@@ -47,7 +47,7 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         "bangumi" to arrayListOf("bangumi", "special", "pgc"),
         "game" to arrayListOf("game"),
         "picture" to arrayListOf("picture"),
-        "vertical" to arrayListOf("vertical"),
+        "vertical" to arrayListOf("vertical","story"),
         "banner" to arrayListOf("banner"),
         "live" to arrayListOf("live"),
         "inline" to arrayListOf("inline"),
