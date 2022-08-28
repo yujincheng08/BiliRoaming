@@ -540,9 +540,9 @@ message ReasonStyle {
   optional string text_color = 0x2;
   optional string text_color_night = 0x3;
   optional string bg_color = 0x4;
-  optional string border_color_night = 0x5;
+  optional string bg_color_night = 0x5;
   optional string border_color = 0x6;
-  optional string bg_color_night = 0x7;
+  optional string border_color_night = 0x7;
   optional int32 bg_style = 0x8;
 }
 
@@ -562,6 +562,8 @@ message EpisodeNew {
   repeated ReasonStyle badges = 0x5;
   optional int32 type = 0x6;
   optional int32 position = 0x7;
+  optional string cover = 0x8;
+  optional string label = 0x9;
 }
 
 message SearchBangumiCard {
@@ -605,6 +607,7 @@ message SearchItem {
   optional int32 position = 0x5;
   optional string track_id = 0x6;
   oneof card_item {
+    SearchVideoCard av = 0x25;
     SearchBangumiCard bangumi = 0x26;
   }
 }
@@ -615,15 +618,15 @@ message SearchByTypeResponse {
   optional string exp_str = 0x3;
   optional string keyword = 0x4;
   optional int32 result_is_recommend = 0x5;
-  repeated SearchItem item = 0x6;
-  optional Pagination pagination = 0x7;
+  repeated SearchItem items = 0x6;
+  optional PaginationReply pagination = 0x7;
 }
 
 enum Sort {
-    SORT_DEFAULT = 0x0;
-    SORT_VIEW_COUNT = 0x1;
-    SORT_PUBLISH_TIME = 0x2;
-    SORT_DANMAKU_COUNT = 0x3;
+  SORT_DEFAULT = 0x0;
+  SORT_VIEW_COUNT = 0x1;
+  SORT_PUBLISH_TIME = 0x2;
+  SORT_DANMAKU_COUNT = 0x3;
 }
 
 message SearchAllRequest {
@@ -648,7 +651,18 @@ message SearchNav {
 }
 
 message EasterEgg {
-
+  optional int32 id = 0x1;
+  optional int32 show_count = 0x2;
+  optional int32 type = 0x3;
+  optional string url = 0x4;
+  optional int32 close_count = 0x5;
+  optional int32 mask_transparency = 0x6;
+  optional string mask_color = 0x7;
+  optional int32 pic_type = 0x8;
+  optional int32 show_time = 0x9;
+  optional string source_url = 0xa;
+  optional string source_md5 = 0xb;
+  optional int32 source_size = 0xc;
 }
 
 message PaginationReply {
@@ -657,13 +671,13 @@ message PaginationReply {
 }
 
 message DisplayOption {
-  optional int32 search_page_visual_option = 1;
-  optional int32 video_title_row = 2;
+  optional int32 video_title_row = 0x1;
+  optional int32 search_page_visual_option = 0x2;
 }
 
 message SearchAllResponse {
   optional string keyword = 0x1;
-  optional string tid_list = 0x2;
+  optional string track_id = 0x2;
   repeated SearchNav nav = 0x3;
   repeated SearchItem item = 0x4;
   optional EasterEgg easter_egg = 0x5;
@@ -675,4 +689,68 @@ message SearchAllResponse {
   optional PaginationReply pagination = 0xb;
   optional DisplayOption app_display_option = 0xc;
   map<string, string> annotation = 0xd;
+}
+
+message GotoIcon {
+  optional string icon_url = 0x1;
+  optional string icon_night_url = 0x2;
+  optional int32 icon_width = 0x3;
+  optional int32 icon_height = 0x4;
+}
+
+message CardBusinessBadge {
+  optional GotoIcon goto_icon = 0x1;
+  optional ReasonStyle badge_style = 0x2;
+}
+
+message FullTextResult {
+  optional int32 type = 0x1;
+  optional string show_text = 0x2;
+  optional int64 jump_start_progress = 0x3;
+  optional string jump_uri = 0x4;
+}
+
+message RcmdReason {
+  optional string content = 0x1;
+}
+
+message ThreePoint {
+  optional string type = 0x1;
+  optional string icon = 0x2;
+  optional string title = 0x3;
+}
+
+message SearchVideo {
+  optional string bvid = 0x1;
+  optional int64 cid = 0x2;
+  optional string share_subtitle = 0x3;
+  optional bool is_hot_label = 0x4;
+  optional int32 page = 0x5;
+  optional int32 page_count = 0x6;
+  optional string short_link = 0x7;
+}
+
+message SearchShare {
+  optional string type = 0x1;
+  optional SearchVideo video = 0x2;
+}
+
+message SearchVideoCard {
+  optional string title = 0x1;
+  optional string cover = 0x2;
+  optional RcmdReason rcmd_reason = 0x3;
+  repeated ReasonStyle new_rec_tags = 0x4;
+  repeated ThreePoint three_point = 0x5;
+  optional SearchShare share = 0x6;
+  optional CardBusinessBadge card_business_badge = 0x7;
+  optional int32 play = 0x8;
+  optional int32 danmaku = 0x9;
+  optional string author = 0xa;
+  optional string desc = 0xb;
+  optional string duration = 0xc;
+  repeated ReasonStyle badges = 0xd;
+  optional int64 mid = 0xe;
+  optional string show_card_desc1 = 0xf;
+  optional string show_card_desc2 = 0x10;
+  optional FullTextResult full_text = 0x11;
 }
