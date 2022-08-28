@@ -22,8 +22,7 @@ class StartActivityHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     intent.component?.packageName ?: packageName,
                     "com.bilibili.video.videodetail.VideoDetailsActivity"
                 )
-                intent.data =
-                    Uri.parse(intent.dataString?.replace("bilibili://story/", "bilibili://video/"))
+                intent.data = Uri.parse(uri.replace("bilibili://story/", "bilibili://video/"))
             }
             if (sPrefs.getBoolean("force_browser", false)) {
                 if (intent.component?.className?.endsWith("MWebActivity") == true) {
