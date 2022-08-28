@@ -162,7 +162,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         )
     }
 
-    private val searchAllRespClass by Weak { "com.bapis.bilibili.polymer.app.search.v1.SearchAllResponse" from mClassLoader }
+    private val navClass by Weak { "com.bapis.bilibili.polymer.app.search.v1.Nav" from mClassLoader }
     private val searchByTypeRespClass by Weak { "com.bapis.bilibili.polymer.app.search.v1.SearchByTypeResponse" from mClassLoader }
 
     @SuppressLint("SetTextI18n")
@@ -424,54 +424,18 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 "com.bapis.bilibili.polymer.app.search.v1.SearchAllRequest",
                 mossResponseHandlerClass
             ) { param ->
-                val searchAllRespClass = searchAllRespClass ?: return@hookBeforeMethod
                 val handler = param.args[1]
                 param.args[1] = Proxy.newProxyInstance(
                     handler.javaClass.classLoader,
                     arrayOf(mossResponseHandlerClass)
                 ) { _, m, args ->
                     if (m.name == "onNext") {
-                        val v = args[0]
-                        if (v != null) {
-                            val response = SearchAllResponse.parseFrom(
-                                v.callMethodAs<ByteArray>("toByteArray")
-                            )
-                            val currentArea = runCatching {
-                                XposedInit.country.get(5L, TimeUnit.SECONDS)
-                            }.getOrNull()
-                            val newResponse = response.copy {
-                                val list = nav.toMutableList()
-                                for (area in AREA_TYPES) {
-                                    if (area.value.area == currentArea)
-                                        continue
-                                    if (!sPrefs.getString(area.value.area + "_server", null)
-                                            .isNullOrBlank() && sPrefs.getBoolean(
-                                            "search_area_" + area.value.type_str,
-                                            false
-                                        )
-                                    ) {
-                                        val nav = searchNav {
-                                            name = area.value.text
-                                            total = 0
-                                            pages = 0
-                                            type = area.key
-                                        }
-                                        list.add(1, nav)
-                                    }
-                                }
-                                nav.clear()
-                                nav.addAll(list)
-                            }
-                            args[0] = searchAllRespClass.callStaticMethod(
-                                "parseFrom",
-                                newResponse.toByteArray()
-                            )
-                        }
-                        m.invoke(handler, *args)
+                        addAreaTagsV2(args[0])
+                        m(handler, *args)
                     } else if (args == null) {
-                        m.invoke(handler)
+                        m(handler)
                     } else {
-                        m.invoke(handler, *args)
+                        m(handler, *args)
                     }
                 }
             }
@@ -489,40 +453,51 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 val type = areaType.type
                 val area = areaType.area
                 val handler = param.args[1]
-                val onNextMethod = handler.javaClass.methods.find { it.name == "onNext" }
-                    ?: return@hookBeforeMethod
-                val onCompletedMethod =
-                    handler.javaClass.methods.find { it.name == "onCompleted" }
-                        ?: return@hookBeforeMethod
-                param.args[1] = Proxy.newProxyInstance(
-                    handler.javaClass.classLoader,
-                    arrayOf(mossResponseHandlerClass)
-                ) { _, m, args ->
-                    if (m.name == "onNext") {
-                        val result = retrieveAreaSearchV3(request, area, type)
-                        if (result != null)
-                            args[0] = searchByTypeRespClass
-                                .callStaticMethod("parseFrom", result.toByteArray())
-                        m.invoke(handler, *args)
-                    } else if (m.name == "onError") {
-                        val result = retrieveAreaSearchV3(request, area, type)
-                        if (result != null) {
-                            val newRes = searchByTypeRespClass
-                                .callStaticMethod("parseFrom", result.toByteArray())
-                            onNextMethod.invoke(handler, newRes)
-                            onCompletedMethod.invoke(handler)
-                        } else {
-                            m.invoke(handler, *args)
-                        }
-                        null
-                    } else if (args == null) {
-                        m.invoke(handler)
+                MainScope().launch(Dispatchers.IO) {
+                    val result = retrieveAreaSearchV3(request, area, type)
+                    if (result != null) {
+                        val newRes = searchByTypeRespClass
+                            .callStaticMethod("parseFrom", result.toByteArray())
+                        handler.callMethod("onNext", newRes)
+                        handler.callMethod("onCompleted")
                     } else {
-                        m.invoke(handler, *args)
+                        handler.callMethod("onError", null)
                     }
                 }
+                param.result = null
             }
         }
+    }
+
+    private fun addAreaTagsV2(v: Any?) {
+        v ?: return
+        val navClass = navClass ?: return
+        val navList = v.callMethodAs<List<Any>>("getNavList")
+            .map { SearchNav.parseFrom(it.callMethodAs<ByteArray>("toByteArray")) }
+            .toMutableList()
+        val currentArea = runCatching {
+            XposedInit.country.get(5L, TimeUnit.SECONDS)
+        }.getOrNull()
+        for (area in AREA_TYPES) {
+            if (area.value.area == currentArea)
+                continue
+            if (!sPrefs.getString(area.value.area + "_server", null).isNullOrBlank() &&
+                sPrefs.getBoolean("search_area_" + area.value.type_str, false)
+            ) {
+                val nav = searchNav {
+                    name = area.value.text
+                    total = 0
+                    pages = 0
+                    type = area.key
+                }
+                navList.add(1, nav)
+            }
+        }
+        v.callMethod("clearNav")
+        val newNavList = navList.map {
+            navClass.callStaticMethod("parseFrom", it.toByteArray())
+        }
+        v.callMethod("addAllNav", newNavList)
     }
 
     private fun retrieveAreaSearchV3(
