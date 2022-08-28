@@ -57,6 +57,8 @@ message PlayAbilityConf {
   optional bool selections_disable = 0x14;
   optional bool next_disable = 0x15;
   optional bool edit_dm_disable = 0x16;
+  optional bool freya_enter_disable = 0x1b;
+  optional bool freya_full_disable = 0x1d;
 }
 
 message StreamLimit {
@@ -456,16 +458,177 @@ message VideoSubtitle {
 
 message DmViewReply {
   optional bool d = 0x1;
-  VideoMask mask = 0x2;
+  optional VideoMask mask = 0x2;
   optional VideoSubtitle subtitle = 0x3;
   repeated string special_dms = 0x4;
   optional DanmakuFlagConfig ai_flag = 0x5;
   optional DanmuPlayerViewConfig player_config = 0x6;
   optional int32 send_box_style = 0x7;
   optional bool allow = 0x8;
-  bool check_box = 0x9;
+  optional bool check_box = 0x9;
   optional string check_box_show_msg = 0xa;
   optional string text_placeholder = 0xb;
   optional string input_place_holder = 0xc;
   repeated string report_filter_content = 0xd;
+}
+
+message Pagination {
+  optional int32 page_size = 0x1;
+  optional string next = 0x2;
+}
+
+message PlayerArgs {
+  optional int64 qn = 0x1;
+  optional int64 fnver = 0x2;
+  optional int64 fnval = 0x3;
+  optional int64 force_host = 0x4;
+  optional int64 voice_balance = 0x5;
+}
+
+enum UserType {
+  ALL = 0x0;
+  UP = 0x1;
+  NORMAL_USER = 0x2;
+  AUTHENTICATED_USER = 0x3;
+}
+
+enum UserSort {
+  USER_SORT_DEFAULT = 0x0;
+  USER_SORT_FANS_DESCEND = 0x1;
+  USER_SORT_FANS_ASCEND = 0x2;
+  USER_SORT_LEVEL_DESCEND = 0x3;
+  USER_SORT_LEVEL_ASCEND = 0x4;
+}
+
+enum CategorySort {
+  CATEGORY_SORT_DEFAULT = 0x0;
+  CATEGORY_SORT_PUBLISH_TIME = 0x1;
+  CATEGORY_SORT_CLICK_COUNT = 0x2;
+  CATEGORY_SORT_COMMENT_COUNT = 0x3;
+  CATEGORY_SORT_LIKE_COUNT = 0x4;
+}
+
+message SearchByTypeRequest {
+  optional int32 type = 0x1;
+  optional string keyword = 0x2;
+  optional CategorySort category_sort = 0x3;
+  optional int64 category_id = 0x4;
+  optional UserType user_type = 0x5;
+  optional UserSort user_sort = 0x6;
+  optional Pagination pagination = 0x7;
+  optional PlayerArgs player_args = 0x8;
+}
+
+message FollowButton {
+  optional string icon = 0x1;
+  map<string, string> texts = 0x2;
+  optional string status_report = 0x3;
+}
+
+message CheckMore {
+  optional string content = 0x1;
+  optional string uri = 0x2;
+}
+
+message WatchButton {
+  optional string title = 0x1;
+  optional string link = 0x2;
+}
+
+message ReasonStyle {
+  optional string text = 0x1;
+  optional string text_color = 0x2;
+  optional string text_color_night = 0x3;
+  optional string bg_color = 0x4;
+  optional string bg_color_night = 0x5;
+  optional string border_color = 0x6;
+  optional string border_color_night = 0x7;
+  optional int32 bg_style = 0x8;
+}
+
+message Episode {
+  optional string uri = 0x1;
+  optional string param = 0x2;
+  optional string index = 0x3;
+  repeated ReasonStyle badges = 0x4;
+  optional int32 position = 0x5;
+}
+
+message EpisodeNew {
+  optional string title = 0x1;
+  optional string uri = 0x2;
+  optional string param = 0x3;
+  optional int32 is_new = 0x4;
+  repeated ReasonStyle badges = 0x5;
+  optional int32 type = 0x6;
+  optional int32 position = 0x7;
+  optional string cover = 0x8;
+  optional string label = 0x9;
+}
+
+message SearchBangumiCard {
+  optional string title = 0x1;
+  optional string cover = 0x2;
+  optional int32 media_type = 0x3;
+  optional int32 play_state = 0x4;
+  optional string area = 0x5;
+  optional string style = 0x6;
+  optional string styles = 0x7;
+  optional string cv = 0x8;
+  optional double rating = 0x9;
+  optional int32 vote = 0xa;
+  optional string target = 0xb;
+  optional string staff = 0xc;
+  optional string prompt = 0xd;
+  optional int64 ptime = 0xe;
+  optional string season_type_name = 0xf;
+  repeated Episode episodes = 0x10;
+  optional int32 is_selection = 0x11;
+  optional int32 is_atten = 0x12;
+  optional string label = 0x13;
+  optional int64 season_id = 0x14;
+  optional string out_name = 0x15;
+  optional string out_icon = 0x16;
+  optional string out_url = 0x17;
+  repeated ReasonStyle badges = 0x18;
+  optional int32 is_out = 0x19;
+  repeated EpisodeNew episodes_new = 0x1a;
+  optional WatchButton watch_button = 0x1b;
+  optional string selection_style = 0x1c;
+  optional CheckMore check_more = 0x1d;
+  optional FollowButton follow_button = 0x1e;
+}
+
+message SearchItem {
+  optional string uri = 0x1;
+  optional string param = 0x2;
+  optional string goto = 0x3;
+  optional string link_type = 0x4;
+  optional int32 position = 0x5;
+  optional string track_id = 0x6;
+  oneof card_item {
+    SearchBangumiCard bangumi = 0x26;
+  }
+}
+
+message PaginationReply {
+  optional string next = 0x1;
+  optional string prev = 0x2;
+}
+
+message SearchByTypeResponse {
+  optional string track_id = 0x1;
+  optional int32 pages = 0x2;
+  optional string exp_str = 0x3;
+  optional string keyword = 0x4;
+  optional int32 result_is_recommend = 0x5;
+  repeated SearchItem items = 0x6;
+  optional PaginationReply pagination = 0x7;
+}
+
+message SearchNav {
+  optional string name = 0x1;
+  optional int32 total = 0x2;
+  optional int32 pages = 0x3;
+  optional int32 type = 0x4;
 }

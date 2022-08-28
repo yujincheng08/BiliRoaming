@@ -11,6 +11,7 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val removeCmdDms = sPrefs.getBoolean("remove_video_cmd_dms", false)
         val purifySearch = sPrefs.getBoolean("purify_search", false)
         val purifyCampus = sPrefs.getBoolean("purify_campus", false)
+        val blockWordSearch = sPrefs.getBoolean("block_word_search", false)
 
         if (hidden && (purifyCity || purifyCampus)) {
             listOf(
@@ -70,6 +71,24 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 "com.bapis.bilibili.app.interfaces.v1.DefaultWordsReq"
             ) { param ->
                 param.result = null
+            }
+        }
+        if (hidden && blockWordSearch) {
+            "com.bapis.bilibili.main.community.reply.v1.Content".hookAfterMethod(
+                mClassLoader,
+                "internalGetUrls"
+            ) { param ->
+                (param.result as LinkedHashMap<*, *>?)?.let { m ->
+                    val iterator = m.iterator()
+                    while (iterator.hasNext()) {
+                        iterator.next().value.callMethodAs<String?>("getAppUrlSchema")
+                            ?.takeIf {
+                                it.startsWith("bilibili://search?from=appcommentline_search")
+                            }?.run {
+                                iterator.remove()
+                            }
+                    }
+                }
             }
         }
     }

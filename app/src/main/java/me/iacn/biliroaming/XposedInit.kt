@@ -104,11 +104,13 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                     startHook(LiveRoomHook(lpparam.classLoader))
                     startHook(RecommendHook(lpparam.classLoader))
                     startHook(QualityHook(lpparam.classLoader))
-                    startHook(ReplaceStoryHook(lpparam.classLoader))
                     startHook(PurifyShareHook(lpparam.classLoader))
                     startHook(DynamicHook(lpparam.classLoader))
                     startHook(ProtoBufHook(lpparam.classLoader))
                     startHook(PlayArcConfHook(lpparam.classLoader))
+                    startHook(TryWatchVipQualityHook(lpparam.classLoader))
+                    startHook(AllowMiniPlayHook(lpparam.classLoader))
+                    startHook(StartActivityHook(lpparam.classLoader))
                 }
                 lpparam.processName.endsWith(":web") -> {
                     BiliBiliPackage(lpparam.classLoader, param.args[0] as Context)

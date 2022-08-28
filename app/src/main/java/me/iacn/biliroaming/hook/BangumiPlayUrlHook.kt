@@ -26,6 +26,11 @@ import java.util.concurrent.TimeUnit
 class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private var countDownLatch: CountDownLatch? = null
 
+    companion object {
+        // DASH, HDR, 4K, DOBLY AUDO, DOBLY VISION, 8K, AV1
+        const val MAX_FNVAL = 16 or 64 or 128 or 256 or 512 or 1024 or 2048
+    }
+
     override fun startHook() {
         if (!sPrefs.getBoolean("main_func", false)) return
         Log.d("startHook: BangumiPlayUrl")
@@ -36,13 +41,12 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 if (sPrefs.getBoolean("allow_download", false) &&
                     params.containsKey("ep_id") && params.containsKey("dl")
                 ) {
-                    if (sPrefs.getBoolean("fix_download", false) && params["qn"] != "0") {
+                    if (sPrefs.getBoolean("fix_download", false)) {
                         params["dl_fix"] = "1"
-                        if (params["fnval"] == "0")
-                            params["fnval"] = params["qn"]!!
-                    } else {
-                        params["dl_fix"] = "1"
-                        params["fnval"] = "0"
+                        params["qn"] = "0"
+                        if (params["fnval"] == "0" || params["fnval"] == "1")
+                            params["fnval"] = MAX_FNVAL.toString()
+                        params["fourk"] = "1"
                     }
                     params.remove("dl")
                 }
@@ -108,10 +112,11 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     && request.callMethodAs<Int>("getDownload") >= 1
                 ) {
                     if (!sPrefs.getBoolean("fix_download", false)
-                        || request.callMethodAs<Long>("getQn") == 0L
-                        || request.callMethodAs<Int>("getFnval") == 0
+                        || request.callMethodAs<Int>("getFnval") <= 1
                     ) {
-                        request.callMethod("setFnval", 0)
+                        request.callMethod("setQn", 0)
+                        request.callMethod("setFnval", MAX_FNVAL)
+                        request.callMethod("setFourk", true)
                     }
                     isDownload = true
                     request.callMethod("setDownload", 0)
@@ -158,14 +163,21 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 "com.bapis.bilibili.pgc.gateway.player.v2.PlayViewReq"
             ) { param ->
                 val request = param.args[0]
+                // if getDownload == 1 -> flv download
+                // if getDownload == 2 -> dash download
+                // if qn == 0, we are querying available quality
+                // else we are downloading
+                // if fnval == 0 -> flv download
+                // thus fix download will set qn = 0 and set fnval to max
                 if (sPrefs.getBoolean("allow_download", false)
                     && request.callMethodAs<Int>("getDownload") >= 1
                 ) {
                     if (!sPrefs.getBoolean("fix_download", false)
-                        || request.callMethodAs<Long>("getQn") == 0L
-                        || request.callMethodAs<Int>("getFnval") == 0
+                        || request.callMethodAs<Int>("getFnval") <= 1
                     ) {
-                        request.callMethod("setFnval", 0)
+                        request.callMethod("setQn", 0)
+                        request.callMethod("setFnval", MAX_FNVAL)
+                        request.callMethod("setFourk", true)
                     }
                     isDownload = true
                     request.callMethod("setDownload", 0)
@@ -451,6 +463,8 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     dislikeDisable = true
                     likeDisable = true
                     elecDisable = true
+                    freyaEnterDisable = true
+                    freyaFullDisable = true
                 }
 
                 val qualityMap = jsonContent.optJSONArray("accept_quality")?.let {

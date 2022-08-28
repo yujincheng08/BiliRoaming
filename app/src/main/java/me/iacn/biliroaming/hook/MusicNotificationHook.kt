@@ -161,14 +161,23 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
     }
 
+    private fun getCorePlayer(absMusicService: Any?) =
+        absMusicService?.getObjectField(notificationServiceField?.name)?.runCatchingOrNull {
+            when (javaClass) {
+                instance.backgroundPlayerClass -> getObjectField(playerServiceField?.name)
+                instance.musicBackgroundPlayerClass -> getObjectField(instance.musicWrapperPlayer())
+                    ?.getObjectField(instance.musicPlayer())
+                    ?.getObjectField(instance.musicPlayerService())
+                else -> null
+            }?.callMethod(corePlayerMethod?.name)
+        }
+
     override fun startHook() {
         if (!sPrefs.getBoolean("music_notification", false)) return
 
         Log.d("startHook: MusicNotification")
 
         updateMetadataMethod?.hookBeforeMethod { param ->
-            val notificationService =
-                param.thisObject.getObjectField(notificationServiceField?.name)
             metadataField?.isAccessible = true
             val bundle = metadataField?.get(param.thisObject)
                 ?.getObjectFieldAs<Bundle>(metadataBundleField?.name)
@@ -176,14 +185,7 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             val currentDuration = bundle.getLong(MediaMetadata.METADATA_KEY_DURATION)
             if (currentDuration != 0L) return@hookBeforeMethod
             param.args[0] = true
-            duration = when (notificationService?.javaClass) {
-                instance.backgroundPlayerClass ->
-                    notificationService?.getObjectField(playerServiceField?.name)
-                        ?.callMethod(corePlayerMethod?.name)?.callMethodAs<Int>(getDurationMethod)
-                        ?.toLong()
-                        ?: 0L
-                else -> 0L
-            }
+            duration = getCorePlayer(param.thisObject)?.callMethodAs<Long>(getDurationMethod) ?: 0L
             bundle.putLong(MediaMetadata.METADATA_KEY_DURATION, duration)
         }
 
@@ -198,29 +200,19 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             Long::class.javaPrimitiveType
         ) { param ->
             position = param.args[0] as Long
-            val playerHelper = absMusicService?.getObjectField(notificationServiceField?.name)
-            when (playerHelper?.javaClass) {
-                instance.backgroundPlayerClass ->
-                    playerHelper?.getObjectField(playerServiceField?.name)
-                        ?.callMethod(corePlayerMethod?.name)
-                        ?.callMethod(instance.seekTo(), position.toInt())
-            }
+            getCorePlayer(absMusicService)?.callMethod(instance.seekTo(), position.toInt())
             absMusicService?.let { s -> setStateMethod?.let { m -> m(s, lastState) } }
         }
 
         setStateMethod?.hookBeforeMethod { param ->
             lastState = param.args[0] as Int
-            val playerHelper = param.thisObject.getObjectField(notificationServiceField?.name)
-            when (playerHelper?.javaClass) {
-                instance.backgroundPlayerClass -> playerHelper?.getObjectField(playerServiceField?.name)
-                    ?.callMethod(corePlayerMethod?.name)?.run {
-                        position = callMethodAs<Int>(getCurrentPositionMethod).toLong()
-                        speed = try {
-                            callMethodAs(instance.defaultSpeed(), true)
-                        } catch (e: Throwable) {
-                            callMethodAs(instance.defaultSpeed())
-                        }
-                    }
+            getCorePlayer(param.thisObject)?.run {
+                position = callMethodAs<Int>(getCurrentPositionMethod).toLong()
+                speed = try {
+                    callMethodAs(instance.defaultSpeed(), true)
+                } catch (e: Throwable) {
+                    callMethodAs(instance.defaultSpeed())
+                }
             }
         }
 
