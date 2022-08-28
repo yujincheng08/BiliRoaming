@@ -444,12 +444,13 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 "com.bapis.bilibili.polymer.app.search.v1.SearchByTypeRequest",
                 mossResponseHandlerClass
             ) { param ->
+                val searchByTypeRespClass = searchByTypeRespClass ?: return@hookBeforeMethod
+                val key =
+                    param.args[0].callMethodOrNullAs<Int>("getType") ?: return@hookBeforeMethod
+                val areaType = AREA_TYPES[key] ?: return@hookBeforeMethod
                 val request = SearchByTypeRequest.parseFrom(
                     param.args[0].callMethodAs<ByteArray>("toByteArray")
                 )
-                val searchByTypeRespClass = searchByTypeRespClass ?: return@hookBeforeMethod
-                val key = request.type
-                val areaType = AREA_TYPES[key] ?: return@hookBeforeMethod
                 val type = areaType.type
                 val area = areaType.area
                 val handler = param.args[1]
