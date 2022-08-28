@@ -127,13 +127,14 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val arcConfClass by Weak { "com.bapis.bilibili.app.playurl.v1.ArcConf" from mClassLoader }
     val arcConfExtraContentClass by Weak { "com.bapis.bilibili.app.playurl.v1.ExtraContent" from mClassLoader }
     val commentInvalidFragmentClass by Weak {
-        "com.bilibili.bangumi.ui.page.detail.BangumiCommentInvalidFragmentV2".from(mClassLoader)
-            ?: "com.bilibili.bangumi.ui.page.detail.OGVCommentFragment".from(mClassLoader)
+        "com.bilibili.bangumi.ui.page.detail.OGVCommentFragment".from(mClassLoader)
+            ?: "com.bilibili.bangumi.ui.page.detail.BangumiCommentInvalidFragmentV2"
+                .from(mClassLoader)
     }
-    val basicIndexItemClass by Weak { "com.bilibili.pegasus.api.model.BasicIndexItem" from mClassLoader }
     val playerQualityServiceClass by Weak { "com.bilibili.playerbizcommon.features.quality.PlayerQualityService" from mClassLoader }
     val mossResponseHandlerClass by Weak { "com.bilibili.lib.moss.api.MossResponseHandler" from mClassLoader }
     val projectionPlayUrlClass by Weak { "com.bilibili.lib.projection.internal.api.model.ProjectionPlayUrl" from mClassLoader }
+    val playerFullStoryWidgetClass by Weak { mHookInfo.playerFullStoryWidget.class_ from mClassLoader }
 
     val ids: Map<String, Int> by lazy {
         mHookInfo.mapIds.idsMap
@@ -251,6 +252,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     fun musicPlayer() = mHookInfo.musicNotification.musicPlayer.orNull
 
     fun musicPlayerService() = mHookInfo.musicNotification.musicPlayerService.orNull
+
+    fun playerFullStoryWidget() = mHookInfo.playerFullStoryWidget.method.orNull
 
     private fun readHookInfo(context: Context): Configs.HookInfo {
         try {
@@ -1630,6 +1633,30 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 ).firstOrNull()?.let {
                     dexHelper.decodeMethodIndex(it)
                 }?.name ?: return@method
+            }
+            playerFullStoryWidget = playerFullStoryWidget {
+                val playerFullStoryWidgetClass = dexHelper.findMethodUsingString(
+                    "PlayerFullStoryWidget",
+                    true,
+                    -1,
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).firstOrNull()?.let {
+                    dexHelper.decodeMethodIndex(it)
+                }?.declaringClass ?: return@playerFullStoryWidget
+                class_ = class_ {
+                    name = playerFullStoryWidgetClass.name
+                }
+                method = method {
+                    name = playerFullStoryWidgetClass.declaredMethods.firstOrNull {
+                        it.isStatic && it.parameterTypes.size == 1 && it.parameterTypes[0] == playerFullStoryWidgetClass && it.returnType == Boolean::class.javaPrimitiveType
+                    }?.name ?: return@method
+                }
             }
 
             dexHelper.close()

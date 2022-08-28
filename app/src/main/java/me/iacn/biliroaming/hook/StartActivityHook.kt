@@ -4,6 +4,7 @@ import android.app.Instrumentation
 import android.content.ComponentName
 import android.content.Intent
 import android.net.Uri
+import me.iacn.biliroaming.utils.Log
 import me.iacn.biliroaming.utils.hookBeforeAllMethods
 import me.iacn.biliroaming.utils.packageName
 import me.iacn.biliroaming.utils.sPrefs
@@ -22,16 +23,20 @@ class StartActivityHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     intent.component?.packageName ?: packageName,
                     "com.bilibili.video.videodetail.VideoDetailsActivity"
                 )
-                intent.data =
-                    Uri.parse(intent.dataString?.replace("bilibili://story/", "bilibili://video/"))
+                intent.data = Uri.parse(uri.replace("bilibili://story/", "bilibili://video/"))
             }
             if (sPrefs.getBoolean("force_browser", false)) {
-                if (intent.component?.className?.endsWith("MWebActivity") == true) {
+                if (intent.component?.className?.endsWith("MWebActivity") == true &&
+                        intent.data?.authority?.matches(whileListDomain) == false) {
+                    Log.d("force_browser ${intent.data?.authority}")
                     param.args[4] = Intent(Intent.ACTION_VIEW).apply {
                         data = intent.data
                     }
                 }
             }
         }
+    }
+    companion object {
+        val whileListDomain = Regex(""".*bilibili\.com|.*b23\.tv""")
     }
 }
