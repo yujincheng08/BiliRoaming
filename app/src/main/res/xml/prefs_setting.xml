@@ -139,6 +139,9 @@
             android:key="play_arc_conf"
             android:summary="@string/play_arc_conf_summary"
             android:title="@string/play_arc_conf_title" />
+            android:key="generate_subtitle"
+            android:summary="@string/generate_subtitle_summary"
+            android:title="@string/generate_subtitle_title" />
 
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/pref_backup">
@@ -377,6 +380,14 @@
             <intent
                 android:action="android.intent.action.VIEW"
                 android:data="@string/tg_url" />
+        </Preference>
+
+        <Preference
+            android:key="subtitle_feedback"
+            android:title="@string/subtitle_feedback_title">
+            <intent
+                android:action="android.intent.action.VIEW"
+                android:data="@string/subtitle_dict_repo_url" />
         </Preference>
 
     </PreferenceCategory>

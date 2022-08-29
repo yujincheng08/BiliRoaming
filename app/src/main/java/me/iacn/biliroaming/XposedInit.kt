@@ -111,6 +111,7 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                     startHook(VideoSubtitleHook(lpparam.classLoader))
                     startHook(SkinHook(lpparam.classLoader))
                     startHook(PlayArcConfHook(lpparam.classLoader))
+                    startHook(GenerateSubtitleHook(lpparam.classLoader))
                 }
                 lpparam.processName.endsWith(":web") -> {
                     BiliBiliPackage(lpparam.classLoader, param.args[0] as Context)
