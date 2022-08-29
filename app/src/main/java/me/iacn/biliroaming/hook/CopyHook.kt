@@ -67,7 +67,8 @@ class CopyHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     private fun showCopyDialog(context: Context, text: CharSequence, param: MethodHookParam) {
-        AlertDialog.Builder(context).run {
+        val appDialogTheme = getResId("AppTheme.Dialog.Alert", "style")
+        AlertDialog.Builder(context, appDialogTheme).run {
             setTitle("自由复制内容")
             setMessage(text)
             setPositiveButton("分享") { _, _ ->
