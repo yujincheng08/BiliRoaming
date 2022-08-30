@@ -631,7 +631,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val response = searchByTypeResponse {
             this.pages = pages
             this.keyword = keyword
-            for (json in newData.getJSONArray("items")) {
+            for (json in newData.optJSONArray("items").orEmpty()) {
                 if (json.optInt("Offset", -1) != -1)
                     json.remove("follow_button")
                 items += searchItem { reconstructFrom(json) }
@@ -668,7 +668,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             val newData = jsonContent.optJSONObject("data") ?: return data
 
             val newItems = mutableListOf<Any>()
-            for (item in newData.getJSONArray("items")) {
+            for (item in newData.optJSONArray("items").orEmpty()) {
                 // 去除追番按钮
                 if (item.optInt("Offset", -1) != -1) {
                     item.remove("follow_button")
@@ -710,7 +710,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             val newData = jsonContent.optJSONObject("data") ?: return data
 
             // 去除追番按钮
-            for (item in newData.getJSONArray("items")) {
+            for (item in newData.optJSONArray("items").orEmpty()) {
                 if (item.optInt("Offset", -1) != -1) {
                     item.remove("follow_button")
                 }
