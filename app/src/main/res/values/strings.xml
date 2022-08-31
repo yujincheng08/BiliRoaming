@@ -219,4 +219,6 @@
     <string name="force_browser_summary">而不是使用内置浏览器</string>
     <string name="disable_story_full_title">关闭看一看按钮</string>
     <string name="disable_story_full_summary">横屏稿件半屏时不显示看一看按钮</string>
+    <string name="dialog_blur_background_summary">花里胡哨! (需要 Android 12+ 并开启 允许窗口级模糊处理)</string>
+    <string name="dialog_blur_background_title">全局 Dialog 背景模糊</string>
 </resources>

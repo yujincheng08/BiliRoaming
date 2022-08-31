@@ -79,6 +79,11 @@
             android:key="disable_story_full"
             android:summary="@string/disable_story_full_summary"
             android:title="@string/disable_story_full_title" />
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="dialog_blur_background"
+            android:summary="@string/dialog_blur_background_summary"
+            android:title="@string/dialog_blur_background_title" />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/miscellaneous_category">
