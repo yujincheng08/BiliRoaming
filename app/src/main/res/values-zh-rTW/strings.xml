@@ -217,4 +217,8 @@
     <string name="allow_mini_play_title">允許解鎖的番劇小窗播放</string>
     <string name="force_browser_title">在外部瀏覽器打開連結</string>
     <string name="force_browser_summary">而不是使用內建瀏覽器</string>
+    <string name="disable_story_full_title">關閉看一看按鈕</string>
+    <string name="disable_story_full_summary">橫向稿件在稿件詳情頁時不顯示看一看按鈕</string>
+    <string name="dialog_blur_background_summary">花裡胡哨! (需要 Android 12+ 並開啟 允許視窗級模糊處理)</string>
+    <string name="dialog_blur_background_title">全域 Dialog 背景模糊</string>
 </resources>
