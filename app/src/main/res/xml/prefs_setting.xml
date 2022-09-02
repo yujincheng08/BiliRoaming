@@ -340,6 +340,12 @@
             android:key="block_word_search"
             android:summary="@string/block_word_search_summary"
             android:title="@string/block_word_search_title" />
+
+        <SwitchPreference
+            android:dependency="hidden"
+            android:key="block_up_rcmd_ads"
+            android:summary="@string/block_up_rcmd_ads_summary"
+            android:title="@string/block_up_rcmd_ads_title" />
     </PreferenceCategory>
 
     <PreferenceCategory

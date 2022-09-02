@@ -221,4 +221,6 @@
     <string name="disable_story_full_summary">橫向稿件在稿件詳情頁時不顯示看一看按鈕</string>
     <string name="dialog_blur_background_summary">花裡胡哨! (需要 Android 12+ 並開啟 允許視窗級模糊處理)</string>
     <string name="dialog_blur_background_title">全域 Dialog 背景模糊</string>
+    <string name="block_up_rcmd_ads_title">封鎖UP主推薦廣告</string>
+    <string name="block_up_rcmd_ads_summary">封鎖影片播放過程中，浮窗出現的UP主推薦廣告</string>
 </resources>

@@ -221,4 +221,6 @@
     <string name="disable_story_full_summary">横屏稿件半屏时不显示看一看按钮</string>
     <string name="dialog_blur_background_summary">花里胡哨! (需要 Android 12+ 并开启 允许窗口级模糊处理)</string>
     <string name="dialog_blur_background_title">全局 Dialog 背景模糊</string>
+    <string name="block_up_rcmd_ads_title">屏蔽UP主推荐广告</string>
+    <string name="block_up_rcmd_ads_summary">屏蔽视频播放过程中，浮窗出现的UP主推荐广告</string>
 </resources>
