@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:columnCount="2"
+    android:orientation="horizontal"
+    android:paddingStart="25dp"
+    android:paddingEnd="20dp"
+    android:rowCount="6">
+
+
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="2"
+        android:singleLine="true"
+        android:text="弹幕服务器域名"
+        tools:ignore="HardcodedText" />
+
+    <EditText
+        android:id="@+id/danmaku_server_domain"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="5"
+        android:autofillHints="no"
+        android:hint="http://152.32.146.234:400"
+        android:inputType="textUri"
+        android:tag="server_domain"
+        tools:ignore="HardcodedText" />
+
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="4"
+        android:text="动画疯弹幕上限"
+        tools:ignore="HardcodedText" />
+
+    <EditText
+        android:id="@+id/baha_danmaku_limit"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="1"
+        android:autofillHints="yes"
+        android:hint="-1"
+        android:inputType="number"
+        android:tag="baha_danmaku_limit"
+        tools:ignore="HardcodedText" />
+
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="1"
+        android:text="NicoNico弹幕上限"
+        tools:ignore="HardcodedText" />
+
+    <EditText
+        android:id="@+id/nico_danmaku_limit"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="1"
+        android:autofillHints="yes"
+        android:hint="1000"
+        android:inputType="number"
+        android:tag="nico_danmaku_limit"
+        tools:ignore="HardcodedText" />
+
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="4"
+        android:text="机器翻译N站弹幕"
+        tools:ignore="HardcodedText" />
+
+    <Switch
+        android:id="@+id/translate_switch"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="1"
+        android:tag="translate_switch"
+        tools:ignore="HardcodedText" />
+
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="4"
+        android:text="弹幕翻译字数下限"
+        tools:ignore="HardcodedText" />
+
+    <EditText
+        android:id="@+id/translate_threshold"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="1"
+        android:autofillHints="yes"
+        android:hint="7"
+        android:inputType="number"
+        android:tag="translate_threshold"
+        tools:ignore="HardcodedText" />
+
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="4"
+        android:text="替换片假名为罗马字"
+        tools:ignore="HardcodedText" />
+
+    <Switch
+        android:id="@+id/translate_replace_katakana"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="1"
+        android:tag="translate_replace_katakana"
+        tools:ignore="HardcodedText" />
+</GridLayout>

@@ -215,4 +215,7 @@
     <string name="disable_try_watch_vip_quality_title">禁用免费试看带会员清晰度</string>
     <string name="disable_try_watch_vip_quality_desc">鼠鼠我呀，真的不想每30天点一次不再试看呢</string>
     <string name="allow_mini_play_title">允许解锁的番剧小窗播放</string>
+    <string name="load_outside_danmaku">允许加载外站弹幕</string>
+    <string name="load_outside_danmaku_desc">在播放番剧和视频时加载动画疯和NicoNico弹幕</string>
+
 </resources>

@@ -21,6 +21,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.EditText
+import android.widget.Switch
 import android.widget.TextView
 import androidx.documentfile.provider.DocumentFile
 import kotlinx.coroutines.MainScope
@@ -76,6 +77,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("export_video")?.onPreferenceClickListener = this
             findPreference("home_filter")?.onPreferenceClickListener = this
             findPreference("custom_subtitle")?.onPreferenceChangeListener = this
+            findPreference("load_outside_danmaku")?.onPreferenceChangeListener = this
             findPreference("customize_accessKey")?.onPreferenceClickListener = this
             findPreference("share_log")?.onPreferenceClickListener = this
             findPreference("customize_drawer")?.onPreferenceClickListener = this
@@ -223,6 +225,12 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                         showCustomSubtitle()
                     }
                 }
+                "load_outside_danmaku" -> {
+                    if (newValue as Boolean) {
+                        onLoadOutsideDanmakuClick()
+                    }
+                }
+
             }
             return true
         }
@@ -366,6 +374,54 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     val intent = Intent(Intent.ACTION_VIEW, uri)
                     startActivity(intent)
                 }
+                show()
+            }
+            return true
+        }
+
+
+        private fun onLoadOutsideDanmakuClick(): Boolean {
+            AlertDialog.Builder(activity).run {
+                val layout = moduleRes.getLayout(R.layout.load_outside_danmaku)
+                val inflater = LayoutInflater.from(context)
+                val view = inflater.inflate(layout, null)
+                val editTexts = arrayOf(
+                    view.findViewById<EditText>(R.id.danmaku_server_domain),
+                    view.findViewById(R.id.baha_danmaku_limit),
+                    view.findViewById(R.id.nico_danmaku_limit),
+                    view.findViewById(R.id.translate_threshold),
+                )
+                editTexts.forEach {
+                    it.setText(
+                        prefs.getString(
+                            it.tag.toString(),
+                            it.hint.toString()
+                        )
+                    )
+                }
+
+                val switches = arrayOf(
+                    view.findViewById<Switch>(R.id.translate_replace_katakana),
+                    view.findViewById(R.id.translate_replace_katakana),
+                )
+                switches.forEach { it.isChecked = prefs.getBoolean(it.tag.toString(), true) }
+                setPositiveButton(android.R.string.ok) { _, _ ->
+                    editTexts.forEach {
+                        val host = it.text.toString()
+                        if (host.isNotEmpty())
+                            prefs.edit().putString(
+                                it.tag.toString(),
+                                host
+                            ).apply()
+                        else
+                            prefs.edit().remove(it.tag.toString()).apply()
+                    }
+                    switches.forEach {
+                        prefs.edit().putBoolean(it.tag.toString(), it.isChecked).apply()
+                    }
+                }
+                setTitle("加载外站弹幕")
+                setView(view)
                 show()
             }
             return true

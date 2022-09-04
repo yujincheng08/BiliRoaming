@@ -144,6 +144,10 @@
             android:key="play_arc_conf"
             android:summary="@string/play_arc_conf_summary"
             android:title="@string/play_arc_conf_title" />
+        <SwitchPreference
+            android:key="load_outside_danmaku"
+            android:summary="@string/load_outside_danmaku_desc"
+            android:title="@string/load_outside_danmaku" />
 
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/pref_backup">
