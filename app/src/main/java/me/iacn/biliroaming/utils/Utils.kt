@@ -6,9 +6,13 @@ import android.content.Context
 import android.content.pm.PackageManager.GET_META_DATA
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.os.Build
 import android.util.TypedValue
 import android.view.View
 import android.view.ViewGroup
+import android.view.Window
+import android.view.WindowManager
+import androidx.annotation.RequiresApi
 import androidx.documentfile.provider.DocumentFile
 import com.google.protobuf.GeneratedMessageLite
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
@@ -296,4 +300,34 @@ fun migrateHomeFilterPrefsIfNeeded() {
             putBoolean("home_filter_prefs_migrated", true)
         }.commit()
     }
+}
+
+fun getRetrofitUrl(response: Any): String? {
+    val requestField = instance.requestField() ?: return null
+    val urlField = instance.urlField() ?: return null
+    val request = response.getObjectField(requestField)
+    return request?.getObjectField(urlField)?.toString()
+}
+
+fun Window.blurBackground() {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
+    addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND)
+    attributes.blurBehindRadius = 50
+    setBackgroundBlurRadius(50)
+    val blurEnableListener = { enable: Boolean ->
+        setDimAmount(if (enable) 0.1F else 0.6F)
+    }
+    decorView.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
+        @RequiresApi(Build.VERSION_CODES.S)
+        override fun onViewAttachedToWindow(v: View) {
+            windowManager.addCrossWindowBlurEnabledListener(blurEnableListener)
+        }
+
+        @RequiresApi(Build.VERSION_CODES.S)
+        override fun onViewDetachedFromWindow(v: View) {
+            windowManager.removeCrossWindowBlurEnabledListener(blurEnableListener)
+        }
+
+    })
+    addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
 }

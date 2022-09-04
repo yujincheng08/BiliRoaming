@@ -190,9 +190,17 @@
     <string name="remove_video_cmd_dms_summary">移除影片播放時浮窗出現的三連關注、關聯影片、投票彈幕、評分彈幕等</string>
     <string name="block_word_search_title">封鎖評論關鍵字搜尋功能</string>
     <string name="block_word_search_summary">封鎖影片評論藍色關鍵字點擊觸發跳轉搜尋功能</string>
-    <string name="disable_try_watch_vip_quality_title">禁用免費試看帶會員清晰度</string>
+    <string name="disable_try_watch_vip_quality_title">禁用免費試看大會員清晰度</string>
     <string name="disable_try_watch_vip_quality_desc">鼠鼠我呀，真的不想每30天點一次不再試看呢</string>
     <string name="allow_mini_play_title">允許解鎖的番劇小窗播放</string>
     <string name="load_outside_danmaku">允許加載外站彈幕</string>
     <string name="load_outside_danmaku_desc">在播放番劇和視頻時加載動畫瘋和NicoNico彈幕</string>
+    <string name="force_browser_title">在外部瀏覽器打開連結</string>
+    <string name="force_browser_summary">而不是使用內建瀏覽器</string>
+    <string name="disable_story_full_title">關閉看一看按鈕</string>
+    <string name="disable_story_full_summary">橫向稿件在稿件詳情頁時不顯示看一看按鈕</string>
+    <string name="dialog_blur_background_summary">花裡胡哨! (需要 Android 12+ 並開啟 允許視窗級模糊處理)</string>
+    <string name="dialog_blur_background_title">全域 Dialog 背景模糊</string>
+    <string name="block_up_rcmd_ads_title">封鎖UP主推薦廣告</string>
+    <string name="block_up_rcmd_ads_summary">封鎖影片播放過程中，浮窗出現的UP主推薦廣告</string>
 </resources>

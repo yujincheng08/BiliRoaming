@@ -43,6 +43,8 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             "com.bilibili.app.authorspace.api.BiliSpace".findClassOrNull(mClassLoader)
         val ogvApiResponseClass =
             "tv.danmaku.bili.ui.offline.api.OgvApiResponse".findClassOrNull(mClassLoader)
+        val dmAdvertClass =
+            "com.bilibili.ad.adview.videodetail.danmakuv2.model.DmAdvert".from(mClassLoader)
 
         instance.fastJsonClass?.hookAfterMethod(
             instance.fastJsonParse(),
@@ -454,6 +456,10 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         i.setIntField("isPlayable", 1)
                     }
                 }
+
+                dmAdvertClass -> if (sPrefs.getBoolean("hidden", false)
+                    && sPrefs.getBoolean("block_up_rcmd_ads", false)
+                ) result.setObjectField("ads", null)
             }
         }
 

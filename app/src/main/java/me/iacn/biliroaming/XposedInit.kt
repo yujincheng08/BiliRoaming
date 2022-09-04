@@ -104,7 +104,6 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                     startHook(LiveRoomHook(lpparam.classLoader))
                     startHook(RecommendHook(lpparam.classLoader))
                     startHook(QualityHook(lpparam.classLoader))
-                    startHook(ReplaceStoryHook(lpparam.classLoader))
                     startHook(PurifyShareHook(lpparam.classLoader))
                     startHook(DynamicHook(lpparam.classLoader))
                     startHook(ProtoBufHook(lpparam.classLoader))
@@ -112,12 +111,16 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                     startHook(TryWatchVipQualityHook(lpparam.classLoader))
                     startHook(AllowMiniPlayHook(lpparam.classLoader))
                     startHook(DanmakuHook(lpparam.classLoader))
+                    startHook(StartActivityHook(lpparam.classLoader))
+                    startHook(FullStoryHook(lpparam.classLoader))
+                    startHook(DialogBlurBackgroundHook(lpparam.classLoader))
                 }
                 lpparam.processName.endsWith(":web") -> {
                     BiliBiliPackage(lpparam.classLoader, param.args[0] as Context)
                     CustomThemeHook(lpparam.classLoader).insertColorForWebProcess()
                     startHook(WebViewHook(lpparam.classLoader))
                     startHook(PurifyShareHook(lpparam.classLoader))
+                    startHook(DialogBlurBackgroundHook(lpparam.classLoader))
                 }
                 lpparam.processName.endsWith(":download") -> {
                     BiliBiliPackage(lpparam.classLoader, param.args[0] as Context)

@@ -75,6 +75,15 @@
             android:key="custom_subtitle"
             android:summary="@string/custom_subtitle_summary"
             android:title="@string/custom_subtitle_title" />
+        <SwitchPreference
+            android:key="disable_story_full"
+            android:summary="@string/disable_story_full_summary"
+            android:title="@string/disable_story_full_title" />
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="dialog_blur_background"
+            android:summary="@string/dialog_blur_background_summary"
+            android:title="@string/dialog_blur_background_title" />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/miscellaneous_category">
@@ -148,6 +157,12 @@
             android:key="load_outside_danmaku"
             android:summary="@string/load_outside_danmaku_desc"
             android:title="@string/load_outside_danmaku" />
+
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="force_browser"
+            android:summary="@string/force_browser_summary"
+            android:title="@string/force_browser_title" />
 
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/pref_backup">
@@ -329,6 +344,12 @@
             android:key="block_word_search"
             android:summary="@string/block_word_search_summary"
             android:title="@string/block_word_search_title" />
+
+        <SwitchPreference
+            android:dependency="hidden"
+            android:key="block_up_rcmd_ads"
+            android:summary="@string/block_up_rcmd_ads_summary"
+            android:title="@string/block_up_rcmd_ads_title" />
     </PreferenceCategory>
 
     <PreferenceCategory
