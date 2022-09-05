@@ -18,9 +18,45 @@ message Field {
   optional string name = 1;
 }
 
-message OkHttp {
-  optional Field request = 1;
+message Request {
+  optional Class class = 1;
   optional Field url = 2;
+}
+
+message Response {
+  optional Class class = 1;
+  optional Field request = 2;
+}
+
+message ResponseBuilder {
+  optional Class class = 1;
+  repeated Field fields = 2;
+}
+
+message ResponseBody {
+  optional Class class = 1;
+  optional Method create = 2;
+}
+
+message MediaType {
+  optional Class class = 1;
+  optional Method get = 2;
+}
+
+message RealCall {
+  optional Class class = 1;
+  optional Method execute = 2;
+  optional Field request = 3;
+}
+
+message OkHttp {
+  optional Request request = 1;
+  optional Response response = 2;
+  optional ResponseBuilder response_builder = 3;
+  optional ResponseBody response_body = 4;
+  optional MediaType mediaType = 5;
+  optional RealCall real_call = 6;
+  optional Class protocol = 7;
 }
 
 message FastJson {
@@ -237,7 +273,6 @@ message HookInfo {
   optional GsonHelper gson_helper = 46;
   optional PlayerCoreService player_core_service = 47;
   optional PegasusFeed pegasus_feed = 49;
-  optional Class okhttp_response = 50;
   optional Class chronos_switch = 51;
   optional Class subtitle_span = 52;
   optional Class comment_long_click = 53;

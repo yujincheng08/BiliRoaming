@@ -331,3 +331,13 @@ fun Window.blurBackground() {
     })
     addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
 }
+
+@Suppress("NOTHING_TO_INLINE")
+inline infix fun Byte.and(other: Int) = toInt() and other
+
+fun ByteArray.readInt(offset: Int = 0): Int {
+    return this[offset + 0] and 0xFF shl 24 or
+            (this[offset + 1] and 0xFF shl 16) or
+            (this[offset + 2] and 0xFF shl 8) or
+            (this[offset + 3] and 0xFF shl 0)
+}

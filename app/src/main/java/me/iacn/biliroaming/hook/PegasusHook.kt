@@ -195,7 +195,7 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         Log.d("startHook: Pegasus")
         instance.pegasusFeedClass?.hookAfterMethod(
             instance.pegasusFeed(),
-            instance.okhttpResponseClass
+            instance.responseBodyClass
         ) { param ->
             param.result.getObjectField("data")?.getObjectFieldAs<ArrayList<Any>>("items")
                 ?.let { arr ->

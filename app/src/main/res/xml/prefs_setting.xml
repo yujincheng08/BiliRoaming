@@ -160,6 +160,11 @@
             android:summary="@string/force_browser_summary"
             android:title="@string/force_browser_title" />
 
+        <SwitchPreference
+            android:key="auto_generate_subtitle"
+            android:summary="@string/generate_subtitle_summary"
+            android:title="@string/generate_subtitle_title" />
+
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/pref_backup">
         <Preference
