@@ -402,9 +402,8 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                         )
                     )
                 }
-
                 val switches = arrayOf(
-                    view.findViewById<Switch>(R.id.translate_replace_katakana),
+                    view.findViewById<Switch>(R.id.translate_switch),
                     view.findViewById(R.id.translate_replace_katakana),
                 )
                 switches.forEach { it.isChecked = prefs.getBoolean(it.tag.toString(), true) }

@@ -26,7 +26,7 @@
         android:autofillHints="no"
         android:hint="http://152.32.146.234:400"
         android:inputType="textUri"
-        android:tag="server_domain"
+        android:tag="danmaku_server_domain"
         tools:ignore="HardcodedText" />
 
     <TextView

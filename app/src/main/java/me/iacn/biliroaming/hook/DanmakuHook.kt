@@ -160,6 +160,14 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             builder.appendQueryParameter("episode_id", episodeId)
         }
         builder.appendQueryParameter("aid", aid.toString())
+        builder.appendQueryParameter(
+            "baha_danmaku_limit",
+            sPrefs.getString("baha_danmaku_limit", "-1")
+        )
+        builder.appendQueryParameter(
+            "nico_danmaku_limit",
+            sPrefs.getString("nico_danmaku_limit", "1000")
+        )
         appendTranslateParameter(builder)
         while (true) {
             try {
