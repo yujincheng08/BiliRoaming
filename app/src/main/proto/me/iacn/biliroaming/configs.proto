@@ -234,11 +234,6 @@ message BiliCall {
   optional Field request = 4;
 }
 
-message FileFormatParser {
-  optional Class class = 1;
-  optional Method convert = 2;
-}
-
 message HookInfo {
   int64 last_update_time = 1;
   optional MapIds map_ids = 2;
@@ -288,5 +283,4 @@ message HookInfo {
   optional Method can_try_watch_vip_quality = 70;
   optional PlayerFullStoryWidget player_full_story_widget = 71;
   optional BiliCall bili_call = 72;
-  optional FileFormatParser file_format_parser = 73;
 }

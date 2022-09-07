@@ -5,10 +5,9 @@ import me.iacn.biliroaming.*
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.utils.*
 import java.lang.reflect.Method
+import java.lang.reflect.Proxy
 
 class GenerateSubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
-
-    private var subtitleParser: Any? = null
 
     override fun startHook() {
         if (!sPrefs.getBoolean("auto_generate_subtitle", false)) return
@@ -62,42 +61,41 @@ class GenerateSubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         ) { param ->
             val url = param.thisObject.getObjectField(instance.biliCallRequestField())
                 ?.getObjectField(instance.urlField())?.toString()
-            if (url?.contains("zh_converter=t2cn") == true)
-                subtitleParser = param.args[0]
-        }
-        instance.fileFormatParserClass?.hookBeforeMethod(
-            instance.convert(), instance.responseBodyClass
-        ) { param ->
-            if (param.thisObject !== subtitleParser)
+            if (url?.contains("zh_converter=t2cn") != true)
                 return@hookBeforeMethod
-            subtitleParser = null
-            val dictReady = if (!SubtitleHelper.dictExist) {
-                runCatchingOrNull {
-                    SubtitleHelper.downloadDict()
-                } == true
-            } else true
-            val converted = if (dictReady) {
-                runCatching {
-                    val responseText = param.args[0].callMethodAs<String>(instance.string())
-                    SubtitleHelper.convert(responseText)
-                }.onFailure {
-                    Log.e(it)
-                }.getOrNull()
-                    ?: SubtitleHelper.errorResponse(XposedInit.moduleRes.getString(R.string.subtitle_convert_failed))
-            } else SubtitleHelper.errorResponse(XposedInit.moduleRes.getString(R.string.subtitle_dict_download_failed))
+            val parser = param.args[0]
+            param.args[0] = Proxy.newProxyInstance(
+                parser.javaClass.classLoader,
+                arrayOf(instance.parserClass)
+            ) { _, m, args ->
+                val dictReady = if (!SubtitleHelper.dictExist) {
+                    runCatchingOrNull {
+                        SubtitleHelper.downloadDict()
+                    } == true
+                } else true
+                val converted = if (dictReady) {
+                    runCatching {
+                        val responseText = args[0].callMethodAs<String>(instance.string())
+                        SubtitleHelper.convert(responseText)
+                    }.onFailure {
+                        Log.e(it)
+                    }.getOrNull()
+                        ?: SubtitleHelper.errorResponse(XposedInit.moduleRes.getString(R.string.subtitle_convert_failed))
+                } else SubtitleHelper.errorResponse(XposedInit.moduleRes.getString(R.string.subtitle_dict_download_failed))
 
-            val mediaType = instance.mediaTypeClass
-                ?.callStaticMethod(
-                    instance.getMediaType(),
-                    "application/json; charset=UTF-8"
-                ) ?: return@hookBeforeMethod
-            val responseBody = instance.responseBodyClass
-                ?.callStaticMethod(
-                    instance.createResponseBody(),
-                    mediaType,
-                    converted
-                ) ?: return@hookBeforeMethod
-            param.args[0] = responseBody
+                val mediaType = instance.mediaTypeClass
+                    ?.callStaticMethod(
+                        instance.get(),
+                        "application/json; charset=UTF-8"
+                    ) ?: return@newProxyInstance m(parser, *args)
+                val responseBody = instance.responseBodyClass
+                    ?.callStaticMethod(
+                        instance.create(),
+                        mediaType,
+                        converted
+                    ) ?: return@newProxyInstance m(parser, *args)
+                m(parser, responseBody)
+            }
         }
     }
 }

@@ -138,7 +138,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val mediaTypeClass by Weak { mHookInfo.okHttp.mediaType.class_ from mClassLoader }
     val biliCallClass by Weak { mHookInfo.biliCall.class_ from mClassLoader }
     val parserClass by Weak { mHookInfo.biliCall.parser from mClassLoader }
-    val fileFormatParserClass by Weak { mHookInfo.fileFormatParser.class_ from mClassLoader }
 
     val ids: Map<String, Int> by lazy {
         mHookInfo.mapIds.idsMap
@@ -259,17 +258,15 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     fun playerFullStoryWidget() = mHookInfo.playerFullStoryWidget.method.orNull
 
-    fun createResponseBody() = mHookInfo.okHttp.responseBody.create.orNull
+    fun create() = mHookInfo.okHttp.responseBody.create.orNull
 
     fun string() = mHookInfo.okHttp.responseBody.string.orNull
 
-    fun getMediaType() = mHookInfo.okHttp.mediaType.get.orNull
+    fun get() = mHookInfo.okHttp.mediaType.get.orNull
 
     fun setParser() = mHookInfo.biliCall.setParser.orNull
 
     fun biliCallRequestField() = mHookInfo.biliCall.request.orNull
-
-    fun convert() = mHookInfo.fileFormatParser.convert.orNull
 
     private fun readHookInfo(context: Context): Configs.HookInfo {
         try {
@@ -1745,24 +1742,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 parser = class_ { name = setParserMethod.parameterTypes[0].name }
                 setParser = method { name = setParserMethod.name }
                 request = field { name = requestFiled.name }
-            }
-            fileFormatParser = fileFormatParser {
-                val convertMethod = dexHelper.findMethodUsingString(
-                    "chronos_file_",
-                    false,
-                    -1,
-                    -1,
-                    null,
-                    -1,
-                    null,
-                    null,
-                    null,
-                    true
-                ).asSequence().firstNotNullOfOrNull {
-                    dexHelper.decodeMethodIndex(it)
-                } ?: return@fileFormatParser
-                class_ = class_ { name = convertMethod.declaringClass.name }
-                convert = method { name = convertMethod.name }
             }
 
             dexHelper.close()

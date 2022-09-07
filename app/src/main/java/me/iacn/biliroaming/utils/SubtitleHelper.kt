@@ -5,7 +5,6 @@ import me.iacn.biliroaming.XposedInit.Companion.moduleRes
 import me.iacn.biliroaming.zhconverter.ChineseUtils
 import org.json.JSONArray
 import org.json.JSONObject
-import java.io.ByteArrayInputStream
 import java.io.File
 import java.net.URL
 import java.util.zip.GZIPInputStream
@@ -26,7 +25,7 @@ object SubtitleHelper {
             val dataSize = decoded.readInt()
             val gzippedDict = decoded.copyOfRange(4, 4 + dataSize)
             tmpDictFile.outputStream().use { o ->
-                GZIPInputStream(ByteArrayInputStream(gzippedDict))
+                GZIPInputStream(gzippedDict.inputStream())
                     .use { it.copyTo(o) }
             }
         }.onSuccess {
