@@ -5,11 +5,10 @@ import me.iacn.biliroaming.*
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.utils.*
 import java.lang.reflect.Method
-import java.net.URL
 
 class GenerateSubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
-    private val fakeConvertApi = "https://subtitle.biliroaming.114514"
+    private var subtitleParser: Any? = null
 
     override fun startHook() {
         if (!sPrefs.getBoolean("auto_generate_subtitle", false)) return
@@ -35,8 +34,8 @@ class GenerateSubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
                 val origSub = subtitles.first { it.lan == origin }
                 val origSubId = origSub.id
-                val targetSubUrl = Uri.parse(fakeConvertApi).buildUpon()
-                    .appendQueryParameter("sub_url", origSub.subtitleUrl)
+                val targetSubUrl = Uri.parse(origSub.subtitleUrl).buildUpon()
+                    .appendQueryParameter("zh_converter", "t2cn")
                     .build().toString()
 
                 val newSub = subtitleItem {
@@ -58,63 +57,47 @@ class GenerateSubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     .callStaticMethod("parseFrom", newRes.toByteArray())
             }
 
-        instance.realCallClass?.hookBeforeMethod(instance.executeCall()) { param ->
-            val requestField = instance.realCallRequestField() ?: return@hookBeforeMethod
-            val urlField = instance.urlField() ?: return@hookBeforeMethod
-            val request = param.thisObject.getObjectField(requestField) ?: return@hookBeforeMethod
-            val url = request.getObjectField(urlField)?.toString() ?: return@hookBeforeMethod
-            if (url.contains(fakeConvertApi)) {
-                val subUrl = Uri.parse(url).let { uri ->
-                    Uri.parse(uri.getQueryParameter("sub_url"))
-                        .buildUpon()
-                        .apply {
-                            uri.queryParameterNames.forEach {
-                                if (it != "sub_url")
-                                    appendQueryParameter(it, uri.getQueryParameter(it))
-                            }
-                        }.build().toString()
-                }
-                val protocol = instance.protocolClass?.fields?.get(0)?.get(null)
-                    ?: return@hookBeforeMethod
-                val mediaType = instance.mediaTypeClass
-                    ?.callStaticMethod(
-                        instance.getMediaType(),
-                        "application/json; charset=UTF-8"
-                    ) ?: return@hookBeforeMethod
+        instance.biliCallClass?.hookBeforeMethod(
+            instance.setParser(), instance.parserClass
+        ) { param ->
+            val url = param.thisObject.getObjectField(instance.biliCallRequestField())
+                ?.getObjectField(instance.urlField())?.toString()
+            if (url?.contains("zh_converter=t2cn") == true)
+                subtitleParser = param.args[0]
+        }
+        instance.fileFormatParserClass?.hookBeforeMethod(
+            instance.convert(), instance.responseBodyClass
+        ) { param ->
+            if (param.thisObject !== subtitleParser)
+                return@hookBeforeMethod
+            subtitleParser = null
+            val dictReady = if (!SubtitleHelper.dictExist) {
+                runCatchingOrNull {
+                    SubtitleHelper.downloadDict()
+                } == true
+            } else true
+            val converted = if (dictReady) {
+                runCatching {
+                    val responseText = param.args[0].callMethodAs<String>(instance.string())
+                    SubtitleHelper.convert(responseText)
+                }.onFailure {
+                    Log.e(it)
+                }.getOrNull()
+                    ?: SubtitleHelper.errorResponse(XposedInit.moduleRes.getString(R.string.subtitle_convert_failed))
+            } else SubtitleHelper.errorResponse(XposedInit.moduleRes.getString(R.string.subtitle_dict_download_failed))
 
-                val dictReady = if (!SubtitleHelper.dictExist) {
-                    runCatchingOrNull {
-                        SubtitleHelper.downloadDict()
-                    } == true
-                } else true
-                val converted = if (dictReady) {
-                    runCatching {
-                        val responseText = URL(subUrl).readText()
-                        SubtitleHelper.convert(responseText)
-                    }.onFailure {
-                        Log.e(it)
-                    }.getOrNull()
-                        ?: SubtitleHelper.errorResponse(XposedInit.moduleRes.getString(R.string.subtitle_convert_failed))
-                } else SubtitleHelper.errorResponse(XposedInit.moduleRes.getString(R.string.subtitle_dict_download_failed))
-
-                val responseBody = instance.responseBodyClass
-                    ?.callStaticMethod(
-                        instance.createResponseBody(),
-                        mediaType,
-                        converted
-                    ) ?: return@hookBeforeMethod
-                val responseBuildFields = instance.responseBuildFields()
-                    .takeIf { it.isNotEmpty() } ?: return@hookBeforeMethod
-
-                instance.responseBuilderClass?.new()
-                    ?.setObjectField(responseBuildFields[0], request)
-                    ?.setObjectField(responseBuildFields[1], protocol)
-                    ?.setIntField(responseBuildFields[2], 200)
-                    ?.setObjectField(responseBuildFields[3], "OK")
-                    ?.setObjectField(responseBuildFields[4], responseBody)
-                    ?.let { (param.method as Method).returnType.new(it) }
-                    ?.let { param.result = it }
-            }
+            val mediaType = instance.mediaTypeClass
+                ?.callStaticMethod(
+                    instance.getMediaType(),
+                    "application/json; charset=UTF-8"
+                ) ?: return@hookBeforeMethod
+            val responseBody = instance.responseBodyClass
+                ?.callStaticMethod(
+                    instance.createResponseBody(),
+                    mediaType,
+                    converted
+                ) ?: return@hookBeforeMethod
+            param.args[0] = responseBody
         }
     }
 }
