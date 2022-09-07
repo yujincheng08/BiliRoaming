@@ -126,11 +126,18 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         desc: String = "",
         page: Int = -1,
     ) {
-        val nicoReg = Regex("sm\\d+")
-        val nicoGroups = nicoReg.findAll(desc).toList()
-        if (nicoGroups.isNotEmpty()) {
+        val nicoGroups = Regex("sm\\d+").findAll(desc).toList()
+        val twitchVod = Regex("https://www.twitch.tv/videos/(\\d+)")
+            .find(desc)?.groups?.get(0)?.value
+
+        if (nicoGroups.isNotEmpty() || twitchVod != null) {
             val builder = buildCustomUrl("/protobuf/desc")
-            builder.appendQueryParameter("nicoid", nicoGroups[page].value)
+            if (nicoGroups.isNotEmpty()) {
+                builder.appendQueryParameter("nicoid", nicoGroups[page].value)
+            }
+            if (twitchVod != null) {
+                builder.appendQueryParameter("twitch_id", twitchVod)
+            }
             builder.appendQueryParameter("segmentIndex", segmentIndex.toString())
             appendTranslateParameter(builder)
             while (true) {
