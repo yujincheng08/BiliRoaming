@@ -60,7 +60,6 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         ) { methodHookParam ->
             aid = methodHookParam.args[0].callMethodAs("getAid")
             cid = methodHookParam.args[0].callMethodAs("getCid")
-
         }
         mClassLoader.loadClass("com.bapis.bilibili.community.service.dm.v1.DmSegMobileReq")
             .hookAfterMethod("setSegmentIndex", "long") { methodHookParam ->
@@ -69,13 +68,16 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         BiliBiliPackage.instance.retrofitResponseClass?.hookAfterAllConstructors { param ->
 
             val url = getUrl(param.args[0])
-            if (url?.startsWith("https://api.bilibili.com/pgc/view/app/season") == true) {
-                seasonId = Regex("season_id=(\\d+)").find(url)?.groups?.get(1)?.value ?: ""
-                episodeId = if (seasonId == "") {
-                    Regex("ep_id=(\\d+)").find(url)?.groups?.get(1)?.value ?: ""
-                } else {
-                    ""
-                }
+            seasonId = url?.let { Regex("season_id=(\\d+)").find(it)?.groups?.get(1)?.value } ?: ""
+            episodeId = if (seasonId == "") {
+                url?.let { Regex("ep_id=(\\d+)").find(it)?.groups?.get(1)?.value } ?: ""
+            } else {
+                ""
+            }
+            if (seasonId.isNotEmpty() || episodeId.isNotEmpty()) {
+                println(url)
+                desc = ""
+                pages.clear()
             }
         }
         mClassLoader.loadClass("com.bapis.bilibili.community.service.dm.v1.DmSegMobileReply")
