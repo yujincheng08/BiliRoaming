@@ -38,7 +38,6 @@
     <string name="update_summary">點擊打開最新版下載網址</string>
 
 
-
     <string name="group_title">QQ頻道</string>
     <string name="group_summary">點擊加入QQ頻道</string>
     <string name="tg_title">TG頻道</string>
@@ -93,27 +92,6 @@
     <string name="purify_city_title">移除同城標籤</string>
     <string name="purify_campus_title">移除校園標籤</string>
     <string name="setting">設定</string>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
     <string name="speed">速度</string>
@@ -215,6 +193,8 @@
     <string name="disable_try_watch_vip_quality_title">禁用免費試看大會員清晰度</string>
     <string name="disable_try_watch_vip_quality_desc">鼠鼠我呀，真的不想每30天點一次不再試看呢</string>
     <string name="allow_mini_play_title">允許解鎖的番劇小窗播放</string>
+    <string name="load_outside_danmaku">允許加載外站彈幕</string>
+    <string name="load_outside_danmaku_desc">在播放番劇和視頻時加載動畫瘋和NicoNico彈幕</string>
     <string name="force_browser_title">在外部瀏覽器打開連結</string>
     <string name="force_browser_summary">而不是使用內建瀏覽器</string>
     <string name="disable_story_full_title">關閉看一看按鈕</string>
