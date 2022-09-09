@@ -113,7 +113,6 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                     startHook(StartActivityHook(lpparam.classLoader))
                     startHook(FullStoryHook(lpparam.classLoader))
                     startHook(DialogBlurBackgroundHook(lpparam.classLoader))
-                    startHook(GenerateSubtitleHook(lpparam.classLoader))
                 }
                 lpparam.processName.endsWith(":web") -> {
                     BiliBiliPackage(lpparam.classLoader, param.args[0] as Context)

@@ -5,7 +5,7 @@ import android.graphics.BitmapFactory
 import android.graphics.BitmapFactory.Options
 import me.iacn.biliroaming.R
 import me.iacn.biliroaming.XposedInit.Companion.moduleRes
-import me.iacn.biliroaming.zhconverter.ChineseUtils
+import me.iacn.biliroaming.zhconverter.DictionaryFactory
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
@@ -14,10 +14,11 @@ import java.nio.ByteBuffer
 import java.util.zip.GZIPInputStream
 
 object SubtitleHelper {
-    val dictFilePath: String by lazy { File(currentContext.filesDir, "t2cn.txt").absolutePath }
-    val dictExist: Boolean get() = File(dictFilePath).isFile
+    private val dictFile by lazy { File(currentContext.filesDir, "t2cn.txt") }
+    private val dictionary by lazy { DictionaryFactory.loadDictionary(dictFile) }
     private const val dictUrl =
         "https://archive.biliimg.com/bfs/archive/566adec17e127bf92aed21832db0206ccecc8caa.png"
+    val dictExist get() = dictFile.isFile
 
     @Synchronized
     fun downloadDict(): Boolean {
@@ -32,14 +33,14 @@ object SubtitleHelper {
                 }
             }
             val bytes = ByteArray(buffer.int).also { buffer.get(it) }
-            File(dictFilePath).outputStream().use { o ->
+            dictFile.outputStream().use { o ->
                 GZIPInputStream(bytes.inputStream()).use { it.copyTo(o) }
             }
         }.onSuccess {
             return true
         }.onFailure {
             Log.e(it)
-            File(dictFilePath).delete()
+            dictFile.delete()
         }
         return false
     }
@@ -62,7 +63,7 @@ object SubtitleHelper {
                 """\{(\\)?\\an\d+\}|<font\s.*>|<(\\)?/font>|<i>|<(\\)?/i>|<b>|<(\\)?/b>|<u>|<(\\)?/u>""".toRegex()
             subText = subText.replace(noStyleRegex, "")
         }
-        val converted = ChineseUtils.t2cn(subText)
+        val converted = dictionary.convert(subText)
         val lines = converted.split('\n')
         var count = 0
         for (line in subBody) {

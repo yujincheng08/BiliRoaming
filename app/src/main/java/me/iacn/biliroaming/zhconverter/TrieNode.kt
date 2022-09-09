@@ -7,22 +7,10 @@ class TrieNode<V>(var key: Char) {
     var isLeaf = false
     var value: V? = null
 
-    fun addChild(k: Char): TrieNode<V> {
-        val node = TrieNode<V>(k)
-        node.level = level + 1
-        children[k] = node
-        return node
+    fun addChild(k: Char) = TrieNode<V>(k).also {
+        it.level = level + 1
+        children[k] = it
     }
 
     fun child(k: Char) = children[k]
-
-    override fun toString(): String {
-        return buildString {
-            append(key)
-            value?.let {
-                append(":")
-                append(it)
-            }
-        }
-    }
 }

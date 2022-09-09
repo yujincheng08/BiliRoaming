@@ -1,27 +1,12 @@
-package me.iacn.biliroaming.zhconverter.dictionary
+package me.iacn.biliroaming.zhconverter
 
-import me.iacn.biliroaming.zhconverter.Trie
 import java.io.*
 
-open class BasicDictionary(
-    /**
-     * chars
-     */
-    val chars: Map<Char, Char>,
-    /**
-     * dict
-     */
-    val dict: Trie<String>,
-    /**
-     * maxLen
-     */
-    val maxLen: Int
+class Dictionary(
+    private val chars: Map<Char, Char>,
+    private val dict: Trie<String>,
+    private val maxLen: Int
 ) {
-
-    open fun convert(ch: Char): Char {
-        return chars[ch] ?: ch
-    }
-
     private fun convert(reader: Reader, writer: Writer) {
         val `in` = PushbackReader(reader.buffered(), maxLen)
         val buf = CharArray(maxLen)
@@ -38,15 +23,14 @@ open class BasicDictionary(
             } else {
                 `in`.unread(buf, 0, len)
                 val ch = `in`.read().toChar()
-                writer.write(convert(ch).code)
+                writer.write((chars[ch] ?: ch).code)
             }
         }
     }
 
-    open fun convert(str: String): String {
-        val `in` = StringReader(str)
-        val out = StringWriter()
-        convert(`in`, out)
-        return out.toString()
+    fun convert(str: String): String {
+        return StringWriter().also {
+            convert(str.reader(), it)
+        }.toString()
     }
 }

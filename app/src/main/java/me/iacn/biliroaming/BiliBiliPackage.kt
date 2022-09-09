@@ -403,6 +403,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                         dexHelper.decodeMethodIndex(it)
                     }?.declaringClass?.name ?: return@class_
             }
+            var responseBodyClass: Class<*>? = null
             okHttp = okHttp {
                 val responseClass = "okhttp3.Response".from(classloader)
                     ?: dexHelper.findMethodUsingString(
@@ -449,7 +450,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     ).asSequence().firstNotNullOfOrNull {
                         dexHelper.decodeMethodIndex(it)
                     }?.declaringClass ?: return@okHttp
-                val responseBodyClass = "okhttp3.ResponseBody".from(classloader)
+                responseBodyClass = "okhttp3.ResponseBody".from(classloader)
                     ?: dexHelper.findMethodUsingString(
                         "Cannot buffer entire body for content length: ",
                         false,
@@ -493,14 +494,14 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     }
                 }
                 responseBody = responseBody {
-                    class_ = class_ { name = responseBodyClass.name }
+                    class_ = class_ { name = responseBodyClass!!.name }
                     create = method {
-                        name = responseBodyClass.methods.find {
+                        name = responseBodyClass!!.methods.find {
                             it.isStatic && it.parameterTypes.count() == 2 && it.parameterTypes[1] == String::class.java
                         }?.name ?: return@method
                     }
                     string = method {
-                        name = responseBodyClass.methods.find {
+                        name = responseBodyClass!!.methods.find {
                             it.parameterTypes.isEmpty() && it.returnType == String::class.java
                         }?.name ?: return@method
                     }
@@ -1408,9 +1409,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 } ?: return@class_
             }
             okio = okIO {
-                val responseClass =
-                    this@hookInfo.okHttp.responseBody.class_.from(classloader) ?: return@okIO
-                val responseClassIndex = dexHelper.encodeClassIndex(responseClass)
+                val responseClassIndex =
+                    dexHelper.encodeClassIndex(responseBodyClass ?: return@okIO)
                 val createMethodIndex = dexHelper.findMethodUsingString(
                     "source == null",
                     false,
