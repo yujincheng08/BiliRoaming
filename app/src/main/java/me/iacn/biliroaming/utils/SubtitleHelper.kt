@@ -27,7 +27,7 @@ object SubtitleHelper {
                 val options = Options().apply { inPreferredConfig = Bitmap.Config.RGB_565 }
                 val bitmap = BitmapFactory.decodeStream(it, null, options)
                 ByteBuffer.allocate(bitmap!!.byteCount).apply {
-                    bitmap.copyPixelsToBuffer(this)
+                    bitmap.let { b -> b.copyPixelsToBuffer(this); b.recycle() }
                     rewind()
                 }
             }
