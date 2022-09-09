@@ -69,9 +69,7 @@ class GenerateSubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 arrayOf(instance.parserClass)
             ) { _, m, args ->
                 val dictReady = if (!SubtitleHelper.dictExist) {
-                    runCatchingOrNull {
-                        SubtitleHelper.downloadDict()
-                    } == true
+                    SubtitleHelper.downloadDict()
                 } else true
                 val converted = if (dictReady) {
                     runCatching {

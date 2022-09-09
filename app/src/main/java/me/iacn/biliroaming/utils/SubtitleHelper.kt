@@ -1,5 +1,8 @@
 package me.iacn.biliroaming.utils
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.BitmapFactory.Options
 import me.iacn.biliroaming.R
 import me.iacn.biliroaming.XposedInit.Companion.moduleRes
 import me.iacn.biliroaming.zhconverter.ChineseUtils
@@ -7,37 +10,36 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
 import java.net.URL
+import java.nio.ByteBuffer
 import java.util.zip.GZIPInputStream
 
 object SubtitleHelper {
     val dictFilePath: String by lazy { File(currentContext.filesDir, "t2cn.txt").absolutePath }
     val dictExist: Boolean get() = File(dictFilePath).isFile
     private const val dictUrl =
-        "https://archive.biliimg.com/bfs/archive/cbd69cf0913e0b573b799a697b5e29b6b69b411e.png"
+        "https://archive.biliimg.com/bfs/archive/566adec17e127bf92aed21832db0206ccecc8caa.png"
 
     @Synchronized
     fun downloadDict(): Boolean {
         if (dictExist) return true
-        val tmpDictFile = File(currentContext.filesDir, "t2cn.txt.tmp")
         runCatching {
-            val decoded = URL(dictUrl).openStream().buffered()
-                .use { PNGDecoder(it).decode() }
-            val dataSize = decoded.readInt()
-            val gzippedDict = decoded.copyOfRange(4, 4 + dataSize)
-            tmpDictFile.outputStream().use { o ->
-                GZIPInputStream(gzippedDict.inputStream())
-                    .use { it.copyTo(o) }
+            val buffer = URL(dictUrl).openStream().buffered().use {
+                val options = Options().apply { inPreferredConfig = Bitmap.Config.RGB_565 }
+                val bitmap = BitmapFactory.decodeStream(it, null, options)
+                ByteBuffer.allocate(bitmap!!.byteCount).apply {
+                    bitmap.copyPixelsToBuffer(this)
+                    rewind()
+                }
+            }
+            val bytes = ByteArray(buffer.int).also { buffer.get(it) }
+            File(dictFilePath).outputStream().use { o ->
+                GZIPInputStream(bytes.inputStream()).use { it.copyTo(o) }
             }
         }.onSuccess {
-            val dictFile = File(dictFilePath).apply { delete() }
-            if (tmpDictFile.renameTo(dictFile)) {
-                return true
-            }
-            dictFile.delete()
-            tmpDictFile.delete()
+            return true
         }.onFailure {
             Log.e(it)
-            tmpDictFile.delete()
+            File(dictFilePath).delete()
         }
         return false
     }
