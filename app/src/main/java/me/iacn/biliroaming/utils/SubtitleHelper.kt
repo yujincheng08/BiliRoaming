@@ -5,17 +5,104 @@ import android.graphics.BitmapFactory
 import android.graphics.BitmapFactory.Options
 import me.iacn.biliroaming.R
 import me.iacn.biliroaming.XposedInit.Companion.moduleRes
-import me.iacn.biliroaming.zhconverter.DictionaryFactory
 import org.json.JSONArray
 import org.json.JSONObject
-import java.io.File
+import java.io.*
 import java.net.URL
 import java.nio.ByteBuffer
 import java.util.zip.GZIPInputStream
 
+class TrieNode<V>(val key: Char, val level: Int = 0) {
+    private val children = hashMapOf<Char, TrieNode<V>>()
+
+    val isLeaf get() = value != null
+    var value: V? = null
+
+    fun getOrAddChild(k: Char) = children.computeIfAbsent(k) { TrieNode(k, level + 1) }
+
+    fun child(k: Char) = children[k]
+}
+
+class Trie<T> {
+    private val root = TrieNode<T>(key = ' ')
+
+    fun add(w: String, value: T) {
+        if (w.isEmpty()) return
+        var p = root
+        for (c in w.toCharArray()) {
+            p = p.getOrAddChild(c)
+        }
+        p.value = value
+    }
+
+    fun bestMatch(sen: CharArray): TrieNode<T>? {
+        var node: TrieNode<T> = root
+        var leaf: TrieNode<T>? = null
+        for (c in sen) {
+            node = node.child(c) ?: break
+            if (node.isLeaf) leaf = node
+        }
+        return leaf
+    }
+}
+
+class Dictionary(
+    private val chars: Map<Char, Char>,
+    private val dict: Trie<String>,
+    private val maxLen: Int
+) {
+    private fun convert(reader: Reader, writer: Writer) {
+        val `in` = PushbackReader(reader.buffered(), maxLen)
+        val buf = CharArray(maxLen)
+        var len: Int
+
+        while (true) {
+            len = `in`.read(buf)
+            if (len == -1) break
+            val node = dict.bestMatch(buf)
+            if (node != null) {
+                val offset = node.level
+                node.value?.let { writer.write(it) }
+                `in`.unread(buf, offset, len - offset)
+            } else {
+                `in`.unread(buf, 0, len)
+                val ch = `in`.read().toChar()
+                writer.write((chars[ch] ?: ch).code)
+            }
+        }
+    }
+
+    fun convert(str: String) = StringWriter().also {
+        convert(str.reader(), it)
+    }.toString()
+
+    companion object {
+        private const val SHARP = '#'
+        private const val EQUAL = '='
+
+        fun loadDictionary(mappingFile: File): Dictionary {
+            val charMap = HashMap<Char, Char>(4096)
+            val dict = Trie<String>()
+            var maxLen = 2
+            mappingFile.bufferedReader().useLines { lines ->
+                lines.filterNot { it.isBlank() || it.trimStart().startsWith(SHARP) }
+                    .map { it.split(EQUAL, limit = 2) }.filter { it.size == 2 }.forEach { pair ->
+                        if (pair[0].length == 1 && pair[1].length == 1) {
+                            charMap[pair[0][0]] = pair[1][0]
+                        } else {
+                            maxLen = pair[0].length.coerceAtLeast(maxLen)
+                            dict.add(pair[0], pair[1])
+                        }
+                    }
+            }
+            return Dictionary(charMap, dict, maxLen)
+        }
+    }
+}
+
 object SubtitleHelper {
     private val dictFile by lazy { File(currentContext.filesDir, "t2cn.txt") }
-    private val dictionary by lazy { DictionaryFactory.loadDictionary(dictFile) }
+    private val dictionary by lazy { Dictionary.loadDictionary(dictFile) }
     private const val dictUrl =
         "https://archive.biliimg.com/bfs/archive/566adec17e127bf92aed21832db0206ccecc8caa.png"
     val dictExist get() = dictFile.isFile
@@ -60,7 +147,7 @@ object SubtitleHelper {
         ) {
             // !!! Do not remove symbol '\' for "\}", Android need it
             val noStyleRegex =
-                """\{(\\)?\\an\d+\}|<font\s.*>|<(\\)?/font>|<i>|<(\\)?/i>|<b>|<(\\)?/b>|<u>|<(\\)?/u>""".toRegex()
+                """\{(\\)?\\an\d+}|<font\s.*>|<(\\)?/font>|<i>|<(\\)?/i>|<b>|<(\\)?/b>|<u>|<(\\)?/u>""".toRegex()
             subText = subText.replace(noStyleRegex, "")
         }
         val converted = dictionary.convert(subText)
@@ -75,18 +162,16 @@ object SubtitleHelper {
         }.toString()
     }
 
-    fun errorResponse(content: String): String {
-        return JSONObject().apply {
-            put("body", JSONArray().apply {
-                put(JSONObject().apply {
-                    put("from", 0)
-                    put("location", 2)
-                    put("to", 9999)
-                    put("content", content)
-                })
+    fun errorResponse(content: String) = JSONObject().apply {
+        put("body", JSONArray().apply {
+            put(JSONObject().apply {
+                put("from", 0)
+                put("location", 2)
+                put("to", 9999)
+                put("content", content)
             })
-        }.toString()
-    }
+        })
+    }.toString()
 
     private fun JSONArray.appendInfo(content: String): JSONArray {
         if (length() == 0) return this
