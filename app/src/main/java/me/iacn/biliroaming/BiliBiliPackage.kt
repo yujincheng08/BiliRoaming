@@ -404,7 +404,21 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                         dexHelper.decodeMethodIndex(it)
                     }?.declaringClass?.name ?: return@class_
             }
-            var responseBodyClass: Class<*>? = null
+            val responseBodyClass = "okhttp3.ResponseBody".from(classloader)
+                ?: dexHelper.findMethodUsingString(
+                    "Cannot buffer entire body for content length: ",
+                    false,
+                    -1,
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).asSequence().firstNotNullOfOrNull {
+                    dexHelper.decodeMethodIndex(it)
+                }?.declaringClass
             okHttp = okHttp {
                 val responseClass = "okhttp3.Response".from(classloader)
                     ?: dexHelper.findMethodUsingString(
@@ -451,21 +465,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     ).asSequence().firstNotNullOfOrNull {
                         dexHelper.decodeMethodIndex(it)
                     }?.declaringClass ?: return@okHttp
-                responseBodyClass = "okhttp3.ResponseBody".from(classloader)
-                    ?: dexHelper.findMethodUsingString(
-                        "Cannot buffer entire body for content length: ",
-                        false,
-                        -1,
-                        -1,
-                        null,
-                        -1,
-                        null,
-                        null,
-                        null,
-                        true
-                    ).asSequence().firstNotNullOfOrNull {
-                        dexHelper.decodeMethodIndex(it)
-                    }?.declaringClass ?: return@okHttp
+                responseBodyClass ?: return@okHttp
                 val getMethod = dexHelper.findMethodUsingString(
                     "No subtype found for:",
                     true,
@@ -495,14 +495,14 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     }
                 }
                 responseBody = responseBody {
-                    class_ = class_ { name = responseBodyClass!!.name }
+                    class_ = class_ { name = responseBodyClass.name }
                     create = method {
-                        name = responseBodyClass!!.methods.find {
+                        name = responseBodyClass.methods.find {
                             it.isStatic && it.parameterTypes.count() == 2 && it.parameterTypes[1] == String::class.java
                         }?.name ?: return@method
                     }
                     string = method {
-                        name = responseBodyClass!!.methods.find {
+                        name = responseBodyClass.methods.find {
                             it.parameterTypes.isEmpty() && it.returnType == String::class.java
                         }?.name ?: return@method
                     }
@@ -1125,9 +1125,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     name = classesList.filter {
                         it.startsWith("android.support.v4.media.session")
                     }.firstOrNull { c ->
-                        c.findClass(classloader).declaredMethods.count {
+                        c.findClass(classloader).declaredMethods.any {
                             it.name == "onSeekTo"
-                        } > 0
+                        }
                     } ?: return@class_
                 }
                 val musicBackgroundPlayerClass = dexHelper.findMethodUsingString(
@@ -1223,9 +1223,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                             dexHelper.decodeFieldIndex(it)?.takeIf { f ->
                                 f.isStatic && f.isFinal && f.isPublic
                             }?.declaringClass?.takeIf { c ->
-                                c.declaredMethods.count { m ->
+                                c.declaredMethods.any { m ->
                                     m.returnType == gsonClass && m.isNotStatic
-                                } > 0
+                                }
                             }
                         } ?: return@gsonHelper
                 gsonConverter = class_ { name = gsonConverterClass.name }
@@ -1375,24 +1375,23 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     c.findClass(classloader).interfaces.contains(LineBackgroundSpan::class.java)
                 } ?: return@class_
             }
-            var commentSpanClass: Class<*>? = null
+            val commentSpanClass = "com.bilibili.app.comm.comment2.widget.CommentExpandableTextView"
+                .from(classloader) ?: dexHelper.findMethodUsingString(
+                "comment.catch_on_draw_exception",
+                false,
+                -1,
+                -1,
+                null,
+                -1,
+                null,
+                null,
+                null,
+                true
+            ).asSequence().firstNotNullOfOrNull {
+                dexHelper.decodeMethodIndex(it)
+            }?.declaringClass
             commentSpan = class_ {
-                commentSpanClass = "com.bilibili.app.comm.comment2.widget.CommentExpandableTextView"
-                    .from(classloader) ?: dexHelper.findMethodUsingString(
-                    "comment.catch_on_draw_exception",
-                    false,
-                    -1,
-                    -1,
-                    null,
-                    -1,
-                    null,
-                    null,
-                    null,
-                    true
-                ).asSequence().firstNotNullOfOrNull {
-                    dexHelper.decodeMethodIndex(it)
-                }?.declaringClass ?: return@class_
-                name = commentSpanClass!!.name
+                name = commentSpanClass?.name ?: return@class_
             }
             commentLongClick = class_ {
                 val viewIndex = dexHelper.encodeClassIndex(View::class.java)
