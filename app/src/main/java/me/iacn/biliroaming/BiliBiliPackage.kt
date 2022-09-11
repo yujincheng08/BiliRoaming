@@ -88,6 +88,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             ?: "tv.danmaku.bili.ui.splash.brand.model.BrandShowInfo" from mClassLoader
     }
     val commentCopyClass by Weak { mHookInfo.commentLongClick from mClassLoader }
+    val commentCopyNewClass by Weak { mHookInfo.commentLongClickNew from mClassLoader }
     val kotlinJsonClass by Weak { "kotlinx.serialization.json.Json" from mClassLoader }
     val gsonConverterClass by Weak { mHookInfo.gsonHelper.gsonConverter from mClassLoader }
     val playerCoreServiceV2Class by Weak { mHookInfo.playerCoreService.class_ from mClassLoader }
@@ -1374,6 +1375,25 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     c.findClass(classloader).interfaces.contains(LineBackgroundSpan::class.java)
                 } ?: return@class_
             }
+            var commentSpanClass: Class<*>? = null
+            commentSpan = class_ {
+                commentSpanClass = "com.bilibili.app.comm.comment2.widget.CommentExpandableTextView"
+                    .from(classloader) ?: dexHelper.findMethodUsingString(
+                    "comment.catch_on_draw_exception",
+                    false,
+                    -1,
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).asSequence().firstNotNullOfOrNull {
+                    dexHelper.decodeMethodIndex(it)
+                }?.declaringClass ?: return@class_
+                name = commentSpanClass!!.name
+            }
             commentLongClick = class_ {
                 val viewIndex = dexHelper.encodeClassIndex(View::class.java)
                 val onLongClickListenerIndex = dexHelper.encodeMethodIndex(
@@ -1393,19 +1413,36 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     null,
                     false
                 ).firstOrNull {
-                    dexHelper.decodeMethodIndex(it)
-                        ?.run {
-                            this !is Constructor<*> && isStatic && isPublic && (this as? Method)?.parameterTypes.let { t ->
-                                t?.get(
-                                    0
-                                ) == View::class.java && t[1] != CharSequence::class.java
-                            }
-                        } == true
+                    dexHelper.decodeMethodIndex(it)?.run {
+                        this !is Constructor<*> && isStatic && isPublic && (this as? Method)?.parameterTypes.let { t ->
+                            t?.get(0) == View::class.java && t[1] != CharSequence::class.java
+                        }
+                    } == true
                 }?.let {
                     dexHelper.findMethodInvoking(it, -1, 2, "VLL", -1, null, null, null, false)
-                        .map { m ->
-                            dexHelper.decodeMethodIndex(m)
-                        }.firstOrNull()?.declaringClass?.name
+                        .map { m -> dexHelper.decodeMethodIndex(m) }
+                        .firstOrNull()?.declaringClass?.name
+                } ?: return@class_
+            }
+            commentLongClickNew = class_ {
+                val setExpandLinesMethod = commentSpanClass?.declaredMethods?.find {
+                    it.parameterTypes.size == 1 && it.parameterTypes[0] == Int::class.javaPrimitiveType
+                } ?: return@class_
+                val setExpandLinesIndex = dexHelper.encodeMethodIndex(setExpandLinesMethod)
+                name = dexHelper.findMethodInvoked(
+                    setExpandLinesIndex,
+                    -1,
+                    1,
+                    "VL",
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).firstOrNull()?.let {
+                    dexHelper.findMethodInvoking(it, -1, 2, "VLL", -1, null, null, null, true)
+                        .map { m -> dexHelper.decodeMethodIndex(m) }
+                        .firstOrNull()?.declaringClass?.name
                 } ?: return@class_
             }
             okio = okIO {
@@ -1499,22 +1536,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                         }
                     }
                 }
-            }
-            commentSpan = class_ {
-                name = dexHelper.findMethodUsingString(
-                    "comment.catch_on_draw_exception",
-                    false,
-                    -1,
-                    -1,
-                    null,
-                    -1,
-                    null,
-                    null,
-                    null,
-                    true
-                ).asSequence().firstNotNullOfOrNull {
-                    dexHelper.decodeMethodIndex(it)
-                }?.declaringClass?.name ?: return@class_
             }
             dynDescHolderListener = class_ {
                 name = classesList.filter {
