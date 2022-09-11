@@ -283,4 +283,5 @@ message HookInfo {
   optional Method can_try_watch_vip_quality = 70;
   optional PlayerFullStoryWidget player_full_story_widget = 71;
   optional BiliCall bili_call = 72;
+  optional Class comment_long_click_new = 73;
 }

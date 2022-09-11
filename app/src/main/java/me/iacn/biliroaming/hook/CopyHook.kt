@@ -49,11 +49,10 @@ class CopyHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             } ?: Log.toast("找不到动态内容", true)
             true
         }
-        instance.commentCopyClass?.replaceMethod("onLongClick", View::class.java) { param ->
-            if (!sPrefs.getBoolean("comment_copy_enhance", false)) return@replaceMethod true
-            val messageId = getId("message")
-            if (param.args[0] is FrameLayout) return@replaceMethod param.invokeOriginalMethod()
-            (param.args[0] as? View)?.findViewById<View>(messageId)?.let {
+        val commentCopyHook = fun(param: MethodHookParam, idName: String): Any? {
+            if (!sPrefs.getBoolean("comment_copy_enhance", false)) return true
+            if (param.args[0] is FrameLayout) return param.invokeOriginalMethod()
+            (param.args[0] as? View)?.findViewById<View>(getId(idName))?.let {
                 if (instance.commentSpanTextViewClass?.isInstance(it) == true ||
                     instance.commentSpanEllipsisTextViewClass?.isInstance(it) == true
                 ) it else null
@@ -62,7 +61,13 @@ class CopyHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     showCopyDialog(view.context, text, param)
                 }
             } ?: Log.toast("找不到评论内容", true)
-            true
+            return true
+        }
+        instance.commentCopyClass?.replaceMethod("onLongClick", View::class.java) {
+            commentCopyHook(it, "message")
+        }
+        instance.commentCopyNewClass?.replaceMethod("onLongClick", View::class.java) {
+            commentCopyHook(it, "comment_message")
         }
     }
 
