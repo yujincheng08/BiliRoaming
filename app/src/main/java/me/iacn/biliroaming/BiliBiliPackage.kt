@@ -269,6 +269,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     fun biliCallRequestField() = mHookInfo.biliCall.request.orNull
 
+    fun onOperateClick() = mHookInfo.onOperateClick.orNull
+
+    fun getContentString() = mHookInfo.getContentString.orNull
+
     private fun readHookInfo(context: Context): Configs.HookInfo {
         try {
             val hookInfoFile = File(context.cacheDir, Constant.HOOK_INFO_FILE_NAME)
@@ -498,7 +502,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     class_ = class_ { name = responseBodyClass.name }
                     create = method {
                         name = responseBodyClass.methods.find {
-                            it.isStatic && it.parameterTypes.count() == 2 && it.parameterTypes[1] == String::class.java
+                            it.isStatic && it.parameterTypes.size == 2 && it.parameterTypes[1] == String::class.java
                         }?.name ?: return@method
                     }
                     string = method {
@@ -1762,6 +1766,26 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 parser = class_ { name = setParserMethod.parameterTypes[0].name }
                 setParser = method { name = setParserMethod.name }
                 request = field { name = requestFiled.name }
+            }
+            dexHelper.findMethodUsingString(
+                "im.chat-group.msg.repost.click",
+                false,
+                -1,
+                -1,
+                null,
+                -1,
+                null,
+                null,
+                null,
+                true
+            ).asSequence().firstNotNullOfOrNull {
+                dexHelper.decodeMethodIndex(it) as? Method
+            }?.let {
+                val getContentStringMethod = it.parameterTypes[1].declaredMethods.find { m ->
+                    m.returnType == String::class.java && m.parameterTypes.isEmpty()
+                } ?: return@let
+                onOperateClick = method { name = it.name }
+                getContentString = method { name = getContentStringMethod.name }
             }
 
             dexHelper.close()

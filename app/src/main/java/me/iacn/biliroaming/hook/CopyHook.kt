@@ -1,5 +1,6 @@
 package me.iacn.biliroaming.hook
 
+import android.app.Activity
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
@@ -10,6 +11,7 @@ import android.widget.FrameLayout
 import android.widget.TextView
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.utils.*
+import org.json.JSONObject
 
 class CopyHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
@@ -69,6 +71,35 @@ class CopyHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         instance.commentCopyNewClass?.replaceMethod("onLongClick", View::class.java) {
             commentCopyHook(it, "comment_message")
         }
+
+        if (!sPrefs.getBoolean("comment_copy_enhance", false)) return
+        "com.bilibili.bplus.im.conversation.ConversationActivity".from(mClassLoader)
+            ?.declaredMethods?.find {
+                it.name == instance.onOperateClick() && it.parameterTypes.size == 8
+            }?.hookBeforeMethod { param ->
+                if (param.args.last() == param.args.first()) {
+                    val activity = param.thisObject as Activity
+                    val json = param.args[1].callMethodOrNullAs(instance.getContentString()) ?: ""
+                    val text = runCatchingOrNull { json.toJSONObject() }?.run {
+                        optString("content").ifEmpty {
+                            buildString {
+                                appendLine(optString("title").trim())
+                                appendLine(optString("text").trim())
+                                optJSONArray("modules")?.run {
+                                    asSequence<JSONObject>().map {
+                                        it.optString("title") + "：" + it.optString("detail")
+                                    }.joinToString("\n").run {
+                                        append(this)
+                                    }
+                                }
+                            }.run { removeSuffix("\n") }
+                        }
+                    } ?: return@hookBeforeMethod
+                    showCopyDialog(activity, text, param)
+                    param.args[6].callMethodOrNull("dismiss")
+                    param.result = null
+                }
+            }
     }
 
     private fun showCopyDialog(context: Context, text: CharSequence, param: MethodHookParam) {

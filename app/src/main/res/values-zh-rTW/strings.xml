@@ -145,7 +145,7 @@
     <string name="comment_copy_summary">禁用長按評論/動態/影片簡介複製到剪貼簿（減少誤觸）</string>
     <string name="comment_copy_title">去除長按複製</string>
     <string name="comment_copy_enhance_title">長按自由複製</string>
-    <string name="comment_copy_enhance_summary">長按評論/動態/影片簡介時彈出自由選擇對話框，需要開啟「去除長按複製」</string>
+    <string name="comment_copy_enhance_summary">長按私信/評論/動態/影片簡介時彈出自由選擇對話框，需要開啟「去除長按複製」</string>
     <string name="revert_live_room_feed_title">強制舊版直播間樣式</string>
     <string name="revert_live_room_feed_summary">強制直播間使用舊版樣式</string>
     <string name="block_video_ad_title">封鎖影片下方推薦</string>
