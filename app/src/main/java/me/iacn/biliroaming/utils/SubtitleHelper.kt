@@ -24,7 +24,7 @@ class TrieNode<V>(val key: Char, val level: Int = 0) {
 }
 
 class Trie<T> {
-    private val root = TrieNode<T>(key = ' ')
+    private val root = TrieNode<T>(key = '\u0000')
 
     fun add(w: String, value: T) {
         if (w.isEmpty()) return
@@ -67,7 +67,7 @@ class Dictionary(
             } else {
                 `in`.unread(buf, 0, len)
                 val ch = `in`.read().toChar()
-                writer.write((chars[ch] ?: ch).code)
+                writer.write(chars.getOrDefault(ch, ch).code)
             }
         }
     }
@@ -86,12 +86,13 @@ class Dictionary(
             var maxLen = 2
             mappingFile.bufferedReader().useLines { lines ->
                 lines.filterNot { it.isBlank() || it.trimStart().startsWith(SHARP) }
-                    .map { it.split(EQUAL, limit = 2) }.filter { it.size == 2 }.forEach { pair ->
-                        if (pair[0].length == 1 && pair[1].length == 1) {
-                            charMap[pair[0][0]] = pair[1][0]
+                    .map { it.split(EQUAL, limit = 2) }.filter { it.size == 2 }.forEach { p ->
+                        val (k, v) = p[0] to p[1]
+                        if (k.length == 1 && v.length == 1) {
+                            charMap[k[0]] = v[0]
                         } else {
-                            maxLen = pair[0].length.coerceAtLeast(maxLen)
-                            dict.add(pair[0], pair[1])
+                            maxLen = k.length.coerceAtLeast(maxLen)
+                            dict.add(k, v)
                         }
                     }
             }
@@ -105,6 +106,10 @@ object SubtitleHelper {
     private val dictionary by lazy { Dictionary.loadDictionary(dictFile) }
     private const val dictUrl =
         "https://archive.biliimg.com/bfs/archive/566adec17e127bf92aed21832db0206ccecc8caa.png"
+    // !!! Do not remove symbol '\' for "\}", Android need it
+    @Suppress("RegExpRedundantEscape")
+    private val noStyleRegex =
+        Regex("""\{\\?\\an\d+\}|<font\s[^>]*>|<\\?/font>|<i>|<\\?/i>|<b>|<\\?/b>|<u>|<\\?/u>""")
     val dictExist get() = dictFile.isFile
 
     @Synchronized
@@ -134,27 +139,17 @@ object SubtitleHelper {
 
     fun convert(json: String): String {
         val subJson = JSONObject(json)
-        var subBody = subJson.getJSONArray("body")
-        var subText = buildString {
-            for (line in subBody) {
-                val content = line.optString("content").replace("\n", "||")
-                appendLine(content)
-            }
-        }
-        // Remove srt style, bilibili not support it
-        if (subText.contains("\\an") || subText.contains("<font")
-            || subText.contains("<i>") || subText.contains("<b>") || subText.contains("<u>")
-        ) {
-            // !!! Do not remove symbol '\' for "\}", Android need it
-            val noStyleRegex =
-                """\{(\\)?\\an\d+}|<font\s.*>|<(\\)?/font>|<i>|<(\\)?/i>|<b>|<(\\)?/b>|<u>|<(\\)?/u>""".toRegex()
-            subText = subText.replace(noStyleRegex, "")
+        var subBody = subJson.optJSONArray("body") ?: return json
+        val subText = subBody.asSequence<JSONObject>().map { it.optString("content") }.joinToString("\u0000").run {
+            // Remove srt style, bilibili not support it
+            if (contains("\\an") || contains("<font")
+                || contains("<i>") || contains("<b>") || contains("<u>")
+            ) replace(noStyleRegex, "") else this
         }
         val converted = dictionary.convert(subText)
-        val lines = converted.split('\n')
-        var count = 0
-        for (line in subBody) {
-            line.put("content", lines[count++].replace("||", "\n"))
+        val lines = converted.split('\u0000')
+        subBody.asSequence<JSONObject>().zip(lines.asSequence()).forEach { (obj, line) ->
+            obj.put("content", line)
         }
         subBody = subBody.appendInfo(moduleRes.getString(R.string.subtitle_append_info))
         return subJson.apply {
