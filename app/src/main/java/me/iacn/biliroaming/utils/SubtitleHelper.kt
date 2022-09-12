@@ -29,9 +29,8 @@ class Trie<T> {
     fun add(w: String, value: T) {
         if (w.isEmpty()) return
         var p = root
-        for (c in w.toCharArray()) {
+        for (c in w.toCharArray())
             p = p.getOrAddChild(c)
-        }
         p.value = value
     }
 
@@ -86,8 +85,7 @@ class Dictionary(
             var maxLen = 2
             mappingFile.bufferedReader().useLines { lines ->
                 lines.filterNot { it.isBlank() || it.trimStart().startsWith(SHARP) }
-                    .map { it.split(EQUAL, limit = 2) }.filter { it.size == 2 }.forEach { p ->
-                        val (k, v) = p[0] to p[1]
+                    .map { it.split(EQUAL, limit = 2) }.filter { it.size == 2 }.forEach { (k, v) ->
                         if (k.length == 1 && v.length == 1) {
                             charMap[k[0]] = v[0]
                         } else {
@@ -106,6 +104,7 @@ object SubtitleHelper {
     private val dictionary by lazy { Dictionary.loadDictionary(dictFile) }
     private const val dictUrl =
         "https://archive.biliimg.com/bfs/archive/566adec17e127bf92aed21832db0206ccecc8caa.png"
+
     // !!! Do not remove symbol '\' for "\}", Android need it
     @Suppress("RegExpRedundantEscape")
     private val noStyleRegex =
@@ -140,12 +139,13 @@ object SubtitleHelper {
     fun convert(json: String): String {
         val subJson = JSONObject(json)
         var subBody = subJson.optJSONArray("body") ?: return json
-        val subText = subBody.asSequence<JSONObject>().map { it.optString("content") }.joinToString("\u0000").run {
-            // Remove srt style, bilibili not support it
-            if (contains("\\an") || contains("<font")
-                || contains("<i>") || contains("<b>") || contains("<u>")
-            ) replace(noStyleRegex, "") else this
-        }
+        val subText = subBody.asSequence<JSONObject>().map { it.optString("content") }
+            .joinToString("\u0000").run {
+                // Remove srt style, bilibili not support it
+                if (contains("\\an") || contains("<font")
+                    || contains("<i>") || contains("<b>") || contains("<u>")
+                ) replace(noStyleRegex, "") else this
+            }
         val converted = dictionary.convert(subText)
         val lines = converted.split('\u0000')
         subBody.asSequence<JSONObject>().zip(lines.asSequence()).forEach { (obj, line) ->

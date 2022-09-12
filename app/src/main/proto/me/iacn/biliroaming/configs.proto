@@ -284,4 +284,6 @@ message HookInfo {
   optional PlayerFullStoryWidget player_full_story_widget = 71;
   optional BiliCall bili_call = 72;
   optional Class comment_long_click_new = 73;
+  optional Method on_operate_click = 74;
+  optional Method get_content_string = 75;
 }
