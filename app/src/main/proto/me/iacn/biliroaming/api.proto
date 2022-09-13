@@ -448,6 +448,8 @@ message SubtitleItem {
   optional string lan_doc = 0x4;
   optional string subtitle_url = 0x5;
   optional UserInfo author = 0x6;
+  optional int32 type = 0x7;
+  optional string lan_doc_brief = 0x8;
 }
 
 message VideoSubtitle {

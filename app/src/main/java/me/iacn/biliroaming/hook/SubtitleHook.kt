@@ -4,13 +4,24 @@ import android.graphics.BlurMaskFilter
 import android.graphics.Color
 import android.graphics.Rect
 import android.graphics.Typeface
+import android.net.Uri
 import android.text.SpannableString
 import android.text.style.AbsoluteSizeSpan
 import android.text.style.LineBackgroundSpan
 import android.text.style.MaskFilterSpan
 import android.text.style.StyleSpan
+import me.iacn.biliroaming.*
+import me.iacn.biliroaming.API.*
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
+import me.iacn.biliroaming.network.BiliRoamingApi
+import me.iacn.biliroaming.hook.BangumiSeasonHook.Companion.lastSeasonInfo
+import me.iacn.biliroaming.hook.BangumiPlayUrlHook.Companion.countDownLatch
 import me.iacn.biliroaming.utils.*
+import org.json.JSONArray
+import java.lang.reflect.Method
+import java.lang.reflect.Proxy
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import kotlin.math.roundToInt
 
 
@@ -95,9 +106,14 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     override fun startHook() {
-        if (!sPrefs.getBoolean("custom_subtitle", false)) return
-        Log.d("startHook: Subtitle")
+        if (sPrefs.getBoolean("custom_subtitle", false))
+            hookSubtitleStyle()
+        if (sPrefs.getBoolean("main_func", false)
+            || sPrefs.getBoolean("auto_generate_subtitle", false)
+        ) hookSubtitleList()
+    }
 
+    private fun hookSubtitleStyle() {
         instance.chronosSwitchClass?.hookAfterConstructor { param ->
             param.thisObject.javaClass.declaredFields.forEach {
                 if (it.type == Boolean::class.javaObjectType) {
@@ -139,5 +155,147 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 param.result = null
             }
         }
+    }
+
+    private fun hookSubtitleList() {
+        "com.bapis.bilibili.community.service.dm.v1.DMMoss".from(mClassLoader)?.hookAfterMethod(
+            "dmView", "com.bapis.bilibili.community.service.dm.v1.DmViewReq",
+        ) { param ->
+            var changed = false
+
+            val parseDmViewReply = { r: Any? ->
+                r?.let { DmViewReply.parseFrom(it.callMethodAs<ByteArray>("toByteArray")) }
+            }
+
+            var thSubtitles = listOf<SubtitleItem>()
+            if (sPrefs.getBoolean("main_func", false)) {
+                val oid = param.args[0].callMethod("getOid").toString()
+                var tryThailand = lastSeasonInfo.containsKey("watch_platform")
+                        && lastSeasonInfo["watch_platform"] == "1"
+                        && lastSeasonInfo.containsKey(oid)
+                        && (param.result == null || param.result.callMethod("getSubtitle")
+                    ?.callMethod("getSubtitlesCount") == 0)
+                if (!tryThailand && !lastSeasonInfo.containsKey("area")) {
+                    countDownLatch = CountDownLatch(1)
+                    try {
+                        countDownLatch?.await(5, TimeUnit.SECONDS)
+                    } catch (ignored: Throwable) {
+                    }
+                    tryThailand = lastSeasonInfo.containsKey("area")
+                            && lastSeasonInfo["area"] == "th"
+                }
+                if (tryThailand) {
+                    val subtitles = if (lastSeasonInfo.containsKey("sb$oid")) {
+                        JSONArray(lastSeasonInfo["sb$oid"])
+                    } else {
+                        val result = BiliRoamingApi.getThailandSubtitles(
+                            lastSeasonInfo[oid] ?: lastSeasonInfo["epid"]
+                        )?.toJSONObject()
+                        if (result != null && result.optInt("code") == 0) {
+                            result.optJSONObject("data")
+                                ?.optJSONArray("subtitles").orEmpty()
+                        } else JSONArray()
+                    }
+                    if (subtitles.length() != 0) {
+                        thSubtitles = subtitles.toSubtitles()
+                        changed = true
+                    }
+                }
+            }
+
+            var dmViewReply: DmViewReply? = null
+            var cnSubtitle: SubtitleItem? = null
+            if (sPrefs.getBoolean("auto_generate_subtitle", false)) {
+                dmViewReply = parseDmViewReply(param.result)
+                val subtitles = mutableListOf<SubtitleItem>()
+                dmViewReply?.subtitle?.subtitlesList?.let { subtitles.addAll(it) }
+                subtitles.addAll(thSubtitles)
+                if (subtitles.map { it.lan }.let { "zh-Hant" in it && "zh-CN" !in it }) {
+                    val origSub = subtitles.first { it.lan == "zh-Hant" }
+                    val targetSubUrl = Uri.parse(origSub.subtitleUrl).buildUpon()
+                        .appendQueryParameter("zh_converter", "t2cn")
+                        .build().toString()
+
+                    cnSubtitle = subtitleItem {
+                        lan = "zh-CN"
+                        lanDoc = "简中（生成）"
+                        lanDocBrief = "简中"
+                        subtitleUrl = targetSubUrl
+                        id = origSub.id + 1
+                        idStr = id.toString()
+                    }
+                    changed = true
+                }
+            }
+
+            if (changed) {
+                val newRes = (dmViewReply ?: parseDmViewReply(param.result)
+                ?: dmViewReply { }).copy {
+                    subtitle = subtitle.copy {
+                        subtitles.addAll(thSubtitles)
+                        cnSubtitle?.let { subtitles.add(it) }
+                    }
+                }
+
+                param.result = (param.method as Method).returnType
+                    .callStaticMethod("parseFrom", newRes.toByteArray())
+            }
+        }
+
+        if (!sPrefs.getBoolean("auto_generate_subtitle", false))
+            return
+        instance.biliCallClass?.hookBeforeMethod(
+            instance.setParser(), instance.parserClass
+        ) { param ->
+            val url = param.thisObject.getObjectField(instance.biliCallRequestField())
+                ?.getObjectField(instance.urlField())?.toString()
+            if (url?.contains("zh_converter=t2cn") != true)
+                return@hookBeforeMethod
+            val parser = param.args[0]
+            param.args[0] = Proxy.newProxyInstance(
+                parser.javaClass.classLoader,
+                arrayOf(instance.parserClass)
+            ) { _, m, args ->
+                val dictReady = if (!SubtitleHelper.dictExist) {
+                    SubtitleHelper.downloadDict()
+                } else true
+                val converted = if (dictReady) {
+                    runCatching {
+                        val responseText = args[0].callMethodAs<String>(instance.string())
+                        SubtitleHelper.convert(responseText)
+                    }.onFailure {
+                        Log.e(it)
+                    }.getOrNull()
+                        ?: SubtitleHelper.errorResponse(XposedInit.moduleRes.getString(R.string.subtitle_convert_failed))
+                } else SubtitleHelper.errorResponse(XposedInit.moduleRes.getString(R.string.subtitle_dict_download_failed))
+
+                val mediaType = instance.mediaTypeClass
+                    ?.callStaticMethod(
+                        instance.get(),
+                        "application/json; charset=UTF-8"
+                    ) ?: return@newProxyInstance m(parser, *args)
+                val responseBody = instance.responseBodyClass
+                    ?.callStaticMethod(
+                        instance.create(),
+                        mediaType,
+                        converted
+                    ) ?: return@newProxyInstance m(parser, *args)
+                m(parser, responseBody)
+            }
+        }
+    }
+
+    private fun JSONArray.toSubtitles(): List<SubtitleItem> {
+        val subList = mutableListOf<SubtitleItem>()
+        for (subtitle in this) {
+            subtitleItem {
+                id = subtitle.optLong("id")
+                idStr = subtitle.optLong("id").toString()
+                subtitleUrl = subtitle.optString("url")
+                lan = subtitle.optString("key")
+                lanDoc = subtitle.optString("title")
+            }.let { subList.add(it) }
+        }
+        return subList
     }
 }

@@ -7,29 +7,26 @@ import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.hook.BangumiSeasonHook.Companion.lastSeasonInfo
 import me.iacn.biliroaming.network.BiliRoamingApi.CustomServerException
 import me.iacn.biliroaming.network.BiliRoamingApi.getPlayUrl
-import me.iacn.biliroaming.network.BiliRoamingApi.getThailandSubtitles
 import me.iacn.biliroaming.utils.*
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 import java.io.ByteArrayInputStream
 import java.io.InputStream
-import java.lang.reflect.Method
 import java.net.HttpURLConnection
 import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
 
 /**
  * Created by iAcn on 2019/3/29
  * Email i@iacn.me
  */
 class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
-    private var countDownLatch: CountDownLatch? = null
 
     companion object {
         // DASH, HDR, 4K, DOBLY AUDO, DOBLY VISION, 8K, AV1
         const val MAX_FNVAL = 16 or 64 or 128 or 256 or 512 or 1024 or 2048
         const val FAIL_CODE = -404
+        var countDownLatch: CountDownLatch? = null
     }
 
     override fun startHook() {
@@ -264,79 +261,6 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 } else if (isDownload) {
                     param.result = fixDownloadProto(response)
                 }
-            }
-        }
-
-        "com.bapis.bilibili.community.service.dm.v1.DMMoss".findClassOrNull(mClassLoader)
-            ?.hookAfterMethod(
-                "dmView",
-                "com.bapis.bilibili.community.service.dm.v1.DmViewReq"
-            ) { param ->
-                val oid = param.args[0].callMethod("getOid").toString()
-                // TODO: For cached bangumi's, we don't know if they need to get subtitles from thailand api.
-                //       Actually, when watch_platform==1, it should use subtitles,
-                //       and if it does not contains any subtitle, it means it's from thailand.
-                //       However, for cached bangumi's, we don't know watch_platform.
-                //       One way is to get the information from entry.json and store that to
-                //       lastSeasonInfo as online bangumi's.
-                var tryThailand =
-                    lastSeasonInfo.containsKey("watch_platform") && lastSeasonInfo["watch_platform"] == "1"
-                            && lastSeasonInfo.containsKey(oid) &&
-                            (param.result == null || param.result.callMethod("getSubtitle")
-                                ?.callMethod("getSubtitlesCount") == 0)
-                if (!tryThailand && !lastSeasonInfo.containsKey("area")) {
-                    countDownLatch = CountDownLatch(1)
-                    try {
-                        countDownLatch?.await(5, TimeUnit.SECONDS)
-                    } catch (ignored: Throwable) {
-                    }
-                    tryThailand =
-                        lastSeasonInfo.containsKey("area") && lastSeasonInfo["area"] == "th"
-                }
-                if (tryThailand) {
-                    Log.d("Getting thailand subtitles")
-                    val subtitles = if (lastSeasonInfo.containsKey("sb$oid")) {
-                        Log.d("Got from season")
-                        JSONArray(lastSeasonInfo["sb$oid"])
-                    } else {
-                        val result = getThailandSubtitles(
-                            lastSeasonInfo[oid] ?: lastSeasonInfo["epid"]
-                        )?.toJSONObject() ?: return@hookAfterMethod
-                        if (result.optInt("code") != 0) return@hookAfterMethod
-                        val data = result.optJSONObject("data") ?: return@hookAfterMethod
-                        Log.d("Got from subtitle api")
-                        data.optJSONArray("subtitles").orEmpty()
-                    }
-                    if (subtitles.length() == 0) return@hookAfterMethod
-
-                    val newRes = param.result?.let {
-                        DmViewReply.parseFrom(
-                            param.result.callMethodAs<ByteArray>("toByteArray")
-                        ).copy {
-                            buildSubtitles(subtitles)
-                        }
-                    } ?: dmViewReply {
-                        buildSubtitles(subtitles)
-                    }
-                    param.result = (param.method as Method).returnType.callStaticMethod(
-                        "parseFrom",
-                        newRes.toByteArray()
-                    )
-                }
-            }
-    }
-
-    private fun DmViewReplyKt.Dsl.buildSubtitles(subtitles: JSONArray) {
-        subtitle = videoSubtitle {
-            for (subtitle in subtitles) {
-                this.subtitles +=
-                    subtitleItem {
-                        id = subtitle.optLong("id")
-                        idStr = subtitle.optLong("id").toString()
-                        subtitleUrl = subtitle.optString("url")
-                        lan = subtitle.optString("key")
-                        lanDoc = subtitle.optString("title")
-                    }
             }
         }
     }
