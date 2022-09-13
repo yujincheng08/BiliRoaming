@@ -137,6 +137,9 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 "android_i" -> {
                     if (versionCode < 6830000) supportRevertLive = true
                 }
+                "android_b" -> {
+                    if (versionCode < 6830000) supportRevertLive = true
+                }
                 "android" -> {
                     if (versionCode < 6830000) supportRevertLive = true
                 }
