@@ -273,6 +273,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     fun getContentString() = mHookInfo.getContentString.orNull
 
+    fun setLineToAllCount() = mHookInfo.setLineToAllCount.orNull
+
     private fun readHookInfo(context: Context): Configs.HookInfo {
         try {
             val hookInfoFile = File(context.cacheDir, Constant.HOOK_INFO_FILE_NAME)
@@ -1786,6 +1788,50 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 } ?: return@let
                 onOperateClick = method { name = it.name }
                 getContentString = method { name = getContentStringMethod.name }
+            }
+            setLineToAllCount = method {
+                val ellipsizingTextViewClass =
+                    "com.bilibili.bplus.followingcard.widget.EllipsizingTextView"
+                        .from(classloader) ?: return@method
+                name = ellipsizingTextViewClass.declaredMethods
+                    .find { it.name == "setLineToAllCount" }?.name
+                    ?: run {
+                        val setOnClickListenerIndex = dexHelper.encodeMethodIndex(
+                            View::class.java.getMethod(
+                                "setOnClickListener",
+                                View.OnClickListener::class.java
+                            )
+                        )
+                        val ellipsizingTextViewIndex =
+                            dexHelper.encodeClassIndex(ellipsizingTextViewClass)
+                        val viewGroupIndex = dexHelper.encodeClassIndex(ViewGroup::class.java)
+                        val listIndex = dexHelper.encodeClassIndex(List::class.java)
+                        dexHelper.findMethodInvoked(
+                            setOnClickListenerIndex,
+                            -1,
+                            -1,
+                            "LLL",
+                            -1,
+                            longArrayOf(viewGroupIndex, listIndex),
+                            null,
+                            null,
+                            false
+                        ).asSequence().firstNotNullOfOrNull {
+                            dexHelper.findMethodInvoking(
+                                it,
+                                -1,
+                                -1,
+                                "VI",
+                                ellipsizingTextViewIndex,
+                                null,
+                                null,
+                                null,
+                                true
+                            ).asSequence().firstNotNullOfOrNull { idx ->
+                                dexHelper.decodeMethodIndex(idx) as? Method
+                            }
+                        }
+                    }?.name ?: return@method
             }
 
             dexHelper.close()

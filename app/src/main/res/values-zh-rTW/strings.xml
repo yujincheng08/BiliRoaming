@@ -228,4 +228,10 @@
 
     <string name="generate_subtitle_title">生成簡中字幕</string>
     <string name="generate_subtitle_summary">根據繁體字幕自動生成簡體中文字幕</string>
+    <string name="text_fold_title">文本摺疊控制</string>
+    <string name="text_fold_summary">支持自訂評論及動態開始摺疊的文本行數</string>
+    <string name="text_fold_comment_max_lines_title">評論開始摺疊行數</string>
+    <string name="text_fold_dyn_max_lines_title">動態開始摺疊行數</string>
+    <string name="text_fold_dyn_lines_to_all_title">動態全文閱讀觸發行數</string>
+    <string name="text_fold_line">%1$s行</string>
 </resources>

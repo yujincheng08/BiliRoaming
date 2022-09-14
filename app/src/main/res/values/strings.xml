@@ -228,4 +228,10 @@
     <string name="subtitle_append_info" translatable="false">请注意，站内宣传漫游或脚本会被拉黑</string>
     <string name="generate_subtitle_title">生成简中字幕</string>
     <string name="generate_subtitle_summary">根据繁体字幕自动生成简体中文字幕</string>
+    <string name="text_fold_title">文本折叠控制</string>
+    <string name="text_fold_summary">支持自定义评论及动态开始折叠的文本行数</string>
+    <string name="text_fold_comment_max_lines_title">评论开始折叠行数</string>
+    <string name="text_fold_dyn_max_lines_title">动态开始折叠行数</string>
+    <string name="text_fold_dyn_lines_to_all_title">动态全文阅读触发行数</string>
+    <string name="text_fold_line">%1$s行</string>
 </resources>

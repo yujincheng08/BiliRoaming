@@ -82,6 +82,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("custom_link")?.onPreferenceClickListener = this
             findPreference("add_custom_button")?.onPreferenceClickListener = this
             findPreference("customize_dynamic")?.onPreferenceClickListener = this
+            findPreference("text_fold")?.onPreferenceClickListener = this
             checkCompatibleVersion()
             checkUpdate()
         }
@@ -620,6 +621,11 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             return true
         }
 
+        private fun onTextFoldClick(): Boolean {
+            TextFoldDialog(activity, prefs).show()
+            return true
+        }
+
         @Deprecated("Deprecated in Java")
         override fun onPreferenceClick(preference: Preference) = when (preference.key) {
             "version" -> onVersionClick()
@@ -637,6 +643,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             "custom_link" -> onCustomLinkClick()
             "add_custom_button" -> onAddCustomButtonClick()
             "customize_dynamic" -> onCustomDynamicClick()
+            "text_fold" -> onTextFoldClick()
             else -> false
         }
     }
