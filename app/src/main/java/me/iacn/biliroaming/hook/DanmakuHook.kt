@@ -1,15 +1,7 @@
 package me.iacn.biliroaming.hook
 
 import android.net.Uri
-import me.iacn.biliroaming.utils.Log
-import com.google.protobuf.CodedInputStream
-import de.robv.android.xposed.XC_MethodHook
-import de.robv.android.xposed.XposedBridge
 import me.iacn.biliroaming.BiliBiliPackage
-import me.iacn.biliroaming.Constant.TAG
-import me.iacn.biliroaming.hook.BangumiSeasonHook.Companion.lastSeasonInfo
-import me.iacn.biliroaming.network.BiliRoamingApi
-import me.iacn.biliroaming.network.BiliRoamingApi.getContent
 import me.iacn.biliroaming.utils.*
 import java.io.InputStream
 import java.net.HttpURLConnection
@@ -23,95 +15,92 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     var aid: Int = 0
     var cid: Int = 0
     var desc: String = ""
-    var pages = mutableListOf<Int>()
+    var pageIndex = 0
+    var duration: Long = 0
     var segmentIndex: Long = 0
     var seasonId: String = ""
     var episodeId: String = ""
 
-
     override fun startHook() {
-        if (!sPrefs.getBoolean("load_outside_danmaku", false)) {
-            return
-        }
-        val viewMossClass = mClassLoader.loadClass("com.bapis.bilibili.app.view.v1.ViewMoss")
+//        if (!sPrefs.getBoolean("load_outside_danmaku", false)) {
+//            return
+//        }
+        val versionCode = getVersionCode(packageName)
 
-        viewMossClass.hookAfterMethod(
-            "view",
-            "com.bapis.bilibili.app.view.v1.ViewReq"
-        ) { methodHookParam ->
-
-            pages.clear()
-            methodHookParam.result.callMethodAs<List<*>?>("getPagesList")?.forEach {
-                if (it != null) {
-                    it.callMethod("getPage")
-                        ?.let { it1 -> pages.add(it1.callMethodAs<Int>("getCid")) }
-                }
+        "com.bapis.bilibili.app.archive.v1.Arc".findClass(mClassLoader)
+            .hookAfterMethod("getAid") { methodHookParam ->
+                desc = (methodHookParam.thisObject.callMethod("getDesc") as String)
+                duration = (methodHookParam.thisObject.callMethod("getDuration") as Long)
+                episodeId = ""
+                seasonId = ""
             }
-            aid = methodHookParam.result.callMethod("getArc")
-                ?.callMethodAs<Int>("getAid") ?: 0
-            desc = methodHookParam.result.callMethod("getArc")
-                ?.callMethodAs<String>("getDesc") ?: ""
-            seasonId = ""
-            episodeId = ""
+        "com.bapis.bilibili.app.archive.v1.Page".findClass(mClassLoader).hookAfterMethod(
+            "getCid"
+        ) { methodHookParam ->
+            pageIndex = methodHookParam.thisObject.callMethod("getPage") as Int
         }
-        viewMossClass.hookAfterMethod(
+        BiliBiliPackage.instance.retrofitResponseClass?.hookAfterAllConstructors { methodHookParam ->
+            val url = getUrl(methodHookParam.args[0])
+            url?.let { Regex("season_id=([^0]\\d*)").find(it)?.groups?.get(1)?.value }?.let {
+                seasonId = it
+            }
+            url?.let { Regex("ep_id=([^0]\\d*)").find(it)?.groups?.get(1)?.value }?.let {
+                episodeId = it
+            }
+        }
+        mClassLoader.loadClass("com.bapis.bilibili.app.view.v1.ViewMoss").hookAfterMethod(
             "viewProgress",
             "com.bapis.bilibili.app.view.v1.ViewProgressReq"
         ) { methodHookParam ->
             aid = methodHookParam.args[0].callMethodAs("getAid")
             cid = methodHookParam.args[0].callMethodAs("getCid")
         }
-        mClassLoader.loadClass("com.bapis.bilibili.community.service.dm.v1.DmSegMobileReq")
-            .hookAfterMethod("setSegmentIndex", "long") { methodHookParam ->
-                segmentIndex = methodHookParam.args[0] as Long
-            }
-        BiliBiliPackage.instance.retrofitResponseClass?.hookAfterAllConstructors { param ->
-
-            val url = getUrl(param.args[0])
-            seasonId = url?.let { Regex("season_id=(\\d+)").find(it)?.groups?.get(1)?.value } ?: ""
-            episodeId = if (seasonId == "") {
-                url?.let { Regex("ep_id=(\\d+)").find(it)?.groups?.get(1)?.value } ?: ""
-            } else {
-                ""
-            }
-            if (seasonId.isNotEmpty() || episodeId.isNotEmpty()) {
-                println(url)
-                desc = ""
-                pages.clear()
-            }
-        }
-        mClassLoader.loadClass("com.bapis.bilibili.community.service.dm.v1.DmSegMobileReply")
-            .getDeclaredMethod("getElemsList")
-            .hookBeforeMethod(
-            ) { methodHookParam ->
-                Log.d("DanmakuHook: call " + methodHookParam.method + " aid:$aid,cid:$cid,pages:$pages,season:$seasonId,episodeId:$episodeId")
-
-                if (seasonId != "" || episodeId != "") {
-                    addSeasonDanmaku(
-                        methodHookParam.thisObject,
-                        segmentIndex,
-                        seasonId = seasonId,
-                        episodeId = episodeId,
-                        aid = aid
-                    )
-                } else {
-                    var i = 0
-                    while (i < pages.size) {
-                        if (pages[i] == cid) {
-                            addOutsideDescDanmaku(
-                                methodHookParam.thisObject,
-                                segmentIndex,
-                                desc,
-                                i
-                            )
-                            return@hookBeforeMethod
-                        }
-                        i += 1
-                    }
+        if (versionCode > 6520000) {
+            "tv.danmaku.chronos.wrapper.rpc.remote.RemoteServiceHandler".findClass(mClassLoader).methods.find { method ->
+                (method.parameterTypes.size == 4 && method.parameterTypes[0].name == "tv.danmaku.chronos.wrapper.rpc.remote.RemoteServiceHandler"
+                        && method.parameterTypes[1].name == "float" && method.parameterTypes[2].name == "long" && method.parameterTypes[3].name == "java.util.Map"
+                        //public static final void tv.danmaku.chronos.wrapper.rpc.remote.RemoteServiceHandler.X(tv.danmaku.chronos.wrapper.rpc.remote.RemoteServiceHandler,float,long,java.util.Map)
+                        )
+            }?.let { method ->
+                method.hookAfterMethod { methodHookParam ->
+                    segmentIndex = (methodHookParam.args[2] as Long) / 360000 + 1
                 }
             }
-    }
 
+            mClassLoader.loadClass("tv.danmaku.chronos.wrapper.ChronosGrpcClient\$a").declaredMethods
+                .find { method -> method.parameterTypes.size == 1 && method.parameterTypes[0].name == "okhttp3.Response" }
+                ?.hookAfterMethod { methodHookParam ->
+                    if (methodHookParam.args[0].getObjectField("a")?.toString()
+                            ?.contains("https://app.bilibili.com/bilibili.community.service.dm.v1.DM/DmSegMobile") == true
+                    ) {
+                        val dmSegment =
+                            mClassLoader.loadClass("com.bapis.bilibili.community.service.dm.v1.DmSegMobileReply")
+                                .callStaticMethod(
+                                    "parseFrom",
+                                    methodHookParam.result
+                                )
+                        if (dmSegment != null) {
+                            addDanmaku(dmSegment)
+                            methodHookParam.result = dmSegment.callMethod("toByteArray")
+                        }
+                    }
+
+                }
+
+        } else {
+            mClassLoader.loadClass("com.bapis.bilibili.community.service.dm.v1.DmSegMobileReq")
+                .hookAfterMethod("setSegmentIndex", "long") { methodHookParam ->
+                    segmentIndex = methodHookParam.args[0] as Long
+                }
+            mClassLoader.loadClass("com.bapis.bilibili.community.service.dm.v1.DmSegMobileReply")
+                .getDeclaredMethod("getElemsList")
+                .hookBeforeMethod(
+                ) { methodHookParam ->
+                    Log.d("DanmakuHook: call " + methodHookParam.method + " aid:$aid,cid:$cid,pageIndex:$pageIndex,season:$seasonId,episodeId:$episodeId")
+                    addDanmaku(methodHookParam.thisObject)
+                }
+        }
+    }
 
     private fun getUrl(response: Any): String? {
         val requestField = BiliBiliPackage.instance.requestField() ?: return null
@@ -120,25 +109,44 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         return request?.getObjectField(urlField)?.toString()
     }
 
-    fun addOutsideDescDanmaku(
+    fun addDanmaku(dmSegmentMobileReply: Any) {
+        if (seasonId != "" || episodeId != "") {
+            addSeasonDanmaku(
+                dmSegmentMobileReply,
+                segmentIndex,
+                seasonId = seasonId,
+                episodeId = episodeId,
+                aid = aid
+            )
+        } else {
+            addDescDanmaku(
+                dmSegmentMobileReply,
+                segmentIndex,
+                desc,
+                pageIndex
+            )
+        }
+    }
+
+    fun addDescDanmaku(
         dmSegmentMobileReply: Any,
         segmentIndex: Long,
-        desc: String = "",
-        page: Int = -1,
+        desc: String,
+        page: Int,
     ) {
         val nicoGroups = Regex("sm\\d+").findAll(desc).toList()
         val twitchVod = Regex("https://www.twitch.tv/videos/(\\d+)")
-            .find(desc)?.groups?.get(0)?.value
-
+            .find(desc)?.groups?.get(1)?.value
         if (nicoGroups.isNotEmpty() || twitchVod != null) {
             val builder = buildCustomUrl("/protobuf/desc")
             if (nicoGroups.isNotEmpty()) {
-                builder.appendQueryParameter("nicoid", nicoGroups[page].value)
+                builder.appendQueryParameter("nicoid", nicoGroups[page - 1].value)
             }
             if (twitchVod != null) {
                 builder.appendQueryParameter("twitch_id", twitchVod)
             }
             builder.appendQueryParameter("segmentIndex", segmentIndex.toString())
+            builder.appendQueryParameter("duration", duration.toString())
             appendTranslateParameter(builder)
             while (true) {
                 try {
@@ -184,7 +192,6 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 break
             } catch (e: SocketTimeoutException) {
                 Log.e("addSeasonDanmaku: " + e)
-                extendProtobufResponse(builder.toString(), dmSegmentMobileReply)
             }
         }
     }
@@ -221,9 +228,8 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
     }
 
-    fun extendProtobufResponse(urlString: String, dmSegmentMobileReply: Any) {
+    fun parseProtobufResponse(urlString: String): InputStream? {
         val url = URL(urlString)
-        Log.d("DanmakuHook: query:$urlString")
         val connection = url.openConnection() as HttpURLConnection
         connection.requestMethod = "GET"
         connection.connectTimeout = 10000
@@ -233,7 +239,7 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             "${if (BiliBiliPackage.instance.brotliInputStreamClass != null) "br," else ""}gzip,deflate"
         )
         connection.connect()
-        if (connection.responseCode == HttpURLConnection.HTTP_OK) {
+        return if (connection.responseCode == HttpURLConnection.HTTP_OK) {
             val inputStream = connection.inputStream
             val result = when (connection.contentEncoding?.lowercase()) {
                 "gzip" -> GZIPInputStream(inputStream)
@@ -241,14 +247,21 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 "deflate" -> InflaterInputStream(inputStream)
                 else -> inputStream
             }
-            val outsideDanmaku =
-                dmSegmentMobileReply.javaClass.callStaticMethod("parseFrom", result)
-            if (outsideDanmaku != null) {
-                dmSegmentMobileReply.callMethod(
-                    "addAllElems",
-                    outsideDanmaku.getObjectField("elems_")
-                )
-            }
+            result
+        } else {
+            null
+        }
+    }
+
+    fun extendProtobufResponse(urlString: String, dmSegmentMobileReply: Any) {
+        val result = parseProtobufResponse(urlString) ?: return
+        val outsideDanmaku =
+            dmSegmentMobileReply.javaClass.callStaticMethod("parseFrom", result)
+        if (outsideDanmaku != null) {
+            dmSegmentMobileReply.callMethod(
+                "addAllElems",
+                outsideDanmaku.getObjectField("elems_")
+            )
         }
     }
 }
