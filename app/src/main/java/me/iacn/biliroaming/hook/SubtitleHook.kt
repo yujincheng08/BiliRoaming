@@ -105,6 +105,9 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
     }
 
+    private val closeText =
+        currentContext.getString(getResId("Player_option_subtitle_lan_doc_nodisplay", "string"))
+
     override fun startHook() {
         if (sPrefs.getBoolean("custom_subtitle", false))
             hookSubtitleStyle()
@@ -167,8 +170,16 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 r?.let { DmViewReply.parseFrom(it.callMethodAs<ByteArray>("toByteArray")) }
             }
 
+            var closeSubtitle: SubtitleItem? = null
             var thSubtitles = listOf<SubtitleItem>()
             if (sPrefs.getBoolean("main_func", false)) {
+                if (param.args[0].callMethodAs<String>("getSpmid").contains("pgc")) {
+                    closeSubtitle = subtitleItem {
+                        lan = "nodisplay"
+                        lanDoc = closeText
+                    }
+                    changed = true
+                }
                 val oid = param.args[0].callMethod("getOid").toString()
                 var tryThailand = lastSeasonInfo.containsKey("watch_platform")
                         && lastSeasonInfo["watch_platform"] == "1"
@@ -234,6 +245,7 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     subtitle = subtitle.copy {
                         subtitles.addAll(thSubtitles)
                         cnSubtitle?.let { subtitles.add(it) }
+                        closeSubtitle?.let { subtitles.add(it) }
                     }
                 }
 
