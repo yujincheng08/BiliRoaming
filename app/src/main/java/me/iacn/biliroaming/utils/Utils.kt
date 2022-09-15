@@ -156,6 +156,7 @@ fun signQuery(query: String?, extraMap: Map<String, String> = emptyMap()): Strin
 fun getId(name: String) = instance.ids[name]
     ?: currentContext.resources.getIdentifier(name, "id", currentContext.packageName)
 
+@SuppressLint("DiscouragedApi")
 fun getResId(name: String, type: String) =
     currentContext.resources.getIdentifier(name, type, currentContext.packageName)
 
@@ -195,19 +196,20 @@ fun getStreamContent(input: InputStream) = try {
 /**
  * @param targetDir 目标文件夹
  */
-fun DocumentFile.copyTo(context: Context, targetDir: DocumentFile) {
-    val name = this.name ?: return
-    if (this.isDirectory) {
+fun DocumentFile.copyTo(targetDir: DocumentFile) {
+    val name = name ?: return
+    if (isDirectory) {
         val chile = targetDir.findOrCreateDir(name) ?: return
-        this.listFiles().forEach {
-            it.copyTo(context, chile)
+        listFiles().forEach {
+            it.copyTo(chile)
         }
-    } else if (this.isFile) {
-        val type = this.type ?: return
+    } else if (isFile) {
+        val type = type ?: return
         val targetFile = targetDir.createFile(type, name) ?: return
-        val `in` = context.contentResolver.openInputStream(this.uri) ?: return
-        val out = context.contentResolver.openOutputStream(targetFile.uri) ?: return
-        `in`.copyTo(out)
+        currentContext.contentResolver.openInputStream(uri)?.use {
+            currentContext.contentResolver.openOutputStream(targetFile.uri)
+                ?.use { o -> it.copyTo(o) }
+        }
     }
 }
 
