@@ -261,29 +261,33 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
     }
 
-    fun parseProtobufResponse(urlString: String): InputStream? {
-        val url = URL(urlString)
-        val connection = url.openConnection() as HttpURLConnection
-        connection.requestMethod = "GET"
-        connection.connectTimeout = 10000
-        connection.readTimeout = 10000
-        connection.setRequestProperty(
-            "Accept-Encoding",
-            "${if (BiliBiliPackage.instance.brotliInputStreamClass != null) "br," else ""}gzip,deflate"
-        )
-        connection.connect()
-        return if (connection.responseCode == HttpURLConnection.HTTP_OK) {
-            val inputStream = connection.inputStream
-            val result = when (connection.contentEncoding?.lowercase()) {
-                "gzip" -> GZIPInputStream(inputStream)
-                "br" -> BiliBiliPackage.instance.brotliInputStreamClass!!.new(inputStream) as InputStream
-                "deflate" -> InflaterInputStream(inputStream)
-                else -> inputStream
+    fun parseProtobufResponse(urlString: String): ByteArray? {
+        var finalResult: ByteArray? = null
+        thread {
+            val url = URL(urlString)
+            val connection = url.openConnection() as HttpURLConnection
+            connection.requestMethod = "GET"
+            connection.connectTimeout = 10000
+            connection.readTimeout = 10000
+            connection.setRequestProperty(
+                "Accept-Encoding",
+                "${if (BiliBiliPackage.instance.brotliInputStreamClass != null) "br," else ""}gzip,deflate"
+            )
+            connection.connect()
+            finalResult = if (connection.responseCode == HttpURLConnection.HTTP_OK) {
+                val inputStream = connection.inputStream
+                val result = when (connection.contentEncoding?.lowercase()) {
+                    "gzip" -> GZIPInputStream(inputStream)
+                    "br" -> BiliBiliPackage.instance.brotliInputStreamClass!!.new(inputStream) as InputStream
+                    "deflate" -> InflaterInputStream(inputStream)
+                    else -> inputStream
+                }
+                result.readBytes()
+            } else {
+                null
             }
-            result
-        } else {
-            null
-        }
+        }.join()
+        return finalResult
     }
 
     fun extendProtobufResponse(urlString: String, dmSegmentMobileReply: Any) {
