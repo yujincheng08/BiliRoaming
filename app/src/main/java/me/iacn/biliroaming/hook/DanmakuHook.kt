@@ -4,6 +4,7 @@ import android.net.Uri
 import me.iacn.biliroaming.BiliBiliPackage
 import me.iacn.biliroaming.utils.*
 import java.io.InputStream
+import java.lang.reflect.Method
 import java.net.HttpURLConnection
 import java.net.SocketTimeoutException
 import java.net.URL
@@ -22,9 +23,9 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     var episodeId: String = ""
 
     override fun startHook() {
-//        if (!sPrefs.getBoolean("load_outside_danmaku", false)) {
-//            return
-//        }
+        if (!sPrefs.getBoolean("load_outside_danmaku", false)) {
+            return
+        }
         val versionCode = getVersionCode(packageName)
 
         "com.bapis.bilibili.app.archive.v1.Arc".findClass(mClassLoader)
@@ -55,38 +56,62 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             aid = methodHookParam.args[0].callMethodAs("getAid")
             cid = methodHookParam.args[0].callMethodAs("getCid")
         }
-        if (versionCode > 6520000) {
-            "tv.danmaku.chronos.wrapper.rpc.remote.RemoteServiceHandler".findClass(mClassLoader).methods.find { method ->
-                (method.parameterTypes.size == 4 && method.parameterTypes[0].name == "tv.danmaku.chronos.wrapper.rpc.remote.RemoteServiceHandler"
-                        && method.parameterTypes[1].name == "float" && method.parameterTypes[2].name == "long" && method.parameterTypes[3].name == "java.util.Map"
-                        //public static final void tv.danmaku.chronos.wrapper.rpc.remote.RemoteServiceHandler.X(tv.danmaku.chronos.wrapper.rpc.remote.RemoteServiceHandler,float,long,java.util.Map)
-                        )
-            }?.let { method ->
-                method.hookAfterMethod { methodHookParam ->
-                    segmentIndex = (methodHookParam.args[2] as Long) / 360000 + 1
-                }
+        "com.bapis.bilibili.community.service.dm.v1.DMMoss".findClass(mClassLoader)
+            .hookAfterAllMethods(
+                "dmSegMobile"
+            ) { methodHookParam ->
+                segmentIndex = methodHookParam.args[0].callMethod("getSegmentIndex") as Long
             }
+        mClassLoader.loadClass("com.bapis.bilibili.community.service.dm.v1.DmSegMobileReq")
+            .hookAfterMethod("setSegmentIndex", "long") { methodHookParam ->
+                segmentIndex = methodHookParam.args[0] as Long
+            }
+        if (versionCode > 6520000) {
 
-            mClassLoader.loadClass("tv.danmaku.chronos.wrapper.ChronosGrpcClient\$a").declaredMethods
-                .find { method -> method.parameterTypes.size == 1 && method.parameterTypes[0].name == "okhttp3.Response" }
-                ?.hookAfterMethod { methodHookParam ->
+            var grpcDecodeResponseMethod =
+                // byte[] tv.danmaku.chronos.wrapper.ChronosGrpcClient$a.e(Response response) in version 6.56
+                "tv.danmaku.chronos.wrapper.ChronosGrpcClient\$a".findClassOrNull(mClassLoader)?.declaredMethods
+                    ?.find { method -> method.parameterTypes.size == 1 && method.parameterTypes[0].name == "okhttp3.Response" }
+            if (grpcDecodeResponseMethod != null) {
+                grpcDecodeResponseMethod.hookAfterMethod { methodHookParam ->
                     if (methodHookParam.args[0].getObjectField("a")?.toString()
-                            ?.contains("https://app.bilibili.com/bilibili.community.service.dm.v1.DM/DmSegMobile") == true
+                            ?.contains("community.service.dm.v1.DM/DmSegMobile") == true
                     ) {
-                        val dmSegment =
-                            mClassLoader.loadClass("com.bapis.bilibili.community.service.dm.v1.DmSegMobileReply")
-                                .callStaticMethod(
-                                    "parseFrom",
-                                    methodHookParam.result
-                                )
-                        if (dmSegment != null) {
-                            addDanmaku(dmSegment)
-                            methodHookParam.result = dmSegment.callMethod("toByteArray")
+                        injectResponseBytes(methodHookParam.result as ByteArray)?.let {
+                            methodHookParam.result = it
                         }
                     }
-
                 }
-
+            } else {
+                grpcDecodeResponseMethod =
+                    DexHelper(//com.bilibili.common.chronoscommon.plugins.f$a.a(okhttp3.Response) in version 6.89
+                        mClassLoader.findDexClassLoader(BiliBiliPackage.Companion::findRealClassloader)
+                            ?: return
+                    ).let { dexHelper ->
+                        dexHelper.findMethodUsingString(
+                            "Resp body compressed without known codec in header",
+                            false,
+                            -1,
+                            -1,
+                            null,
+                            -1,
+                            null,
+                            null,
+                            null,
+                            false
+                        ).asSequence().map {
+                            dexHelper.decodeMethodIndex(it)
+                        }
+                            .find { it?.declaringClass?.declaringClass != null }
+                            ?.declaringClass?.declaringClass?.declaredMethods?.find {
+                                it.returnType.name == "[B"
+                            }
+                    } as Method
+                grpcDecodeResponseMethod.hookAfterMethod { methodHookParam ->
+                    methodHookParam.result =
+                        injectResponseBytes(methodHookParam.result as ByteArray)
+                }
+            }
         } else {
             mClassLoader.loadClass("com.bapis.bilibili.community.service.dm.v1.DmSegMobileReq")
                 .hookAfterMethod("setSegmentIndex", "long") { methodHookParam ->
@@ -225,6 +250,21 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             if (sPrefs.getBoolean("translate_replace_katakana", true)) {
                 builder.appendQueryParameter("replaceKatakana", "1")
             }
+        }
+    }
+
+    fun injectResponseBytes(responseBody: ByteArray): ByteArray? {
+        val dmSegment =
+            mClassLoader.loadClass("com.bapis.bilibili.community.service.dm.v1.DmSegMobileReply")
+                .callStaticMethod(
+                    "parseFrom",
+                    responseBody
+                )
+        return if (dmSegment != null) {
+            addDanmaku(dmSegment)
+            dmSegment.callMethod("toByteArray") as ByteArray
+        } else {
+            null
         }
     }
 
