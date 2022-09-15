@@ -10,6 +10,7 @@ import java.net.SocketTimeoutException
 import java.net.URL
 import java.util.zip.GZIPInputStream
 import java.util.zip.InflaterInputStream
+import kotlin.concurrent.thread
 
 
 class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
@@ -41,7 +42,7 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             pageIndex = methodHookParam.thisObject.callMethod("getPage") as Int
         }
         BiliBiliPackage.instance.retrofitResponseClass?.hookAfterAllConstructors { methodHookParam ->
-            val url = getUrl(methodHookParam.args[0])
+            val url = getRetrofitUrl(methodHookParam.args[0])
             url?.let { Regex("season_id=([^0]\\d*)").find(it)?.groups?.get(1)?.value }?.let {
                 seasonId = it
             }
@@ -104,7 +105,7 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         }
                             .find { it?.declaringClass?.declaringClass != null }
                             ?.declaringClass?.declaringClass?.declaredMethods?.find {
-                                it.returnType.name == "[B"
+                                it.returnType == ByteArray::class.java
                             }
                     } as Method
                 grpcDecodeResponseMethod.hookAfterMethod { methodHookParam ->
@@ -113,10 +114,6 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
             }
         } else {
-            mClassLoader.loadClass("com.bapis.bilibili.community.service.dm.v1.DmSegMobileReq")
-                .hookAfterMethod("setSegmentIndex", "long") { methodHookParam ->
-                    segmentIndex = methodHookParam.args[0] as Long
-                }
             mClassLoader.loadClass("com.bapis.bilibili.community.service.dm.v1.DmSegMobileReply")
                 .getDeclaredMethod("getElemsList")
                 .hookBeforeMethod(
@@ -127,12 +124,6 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
     }
 
-    private fun getUrl(response: Any): String? {
-        val requestField = BiliBiliPackage.instance.requestField() ?: return null
-        val urlField = BiliBiliPackage.instance.urlField() ?: return null
-        val request = response.getObjectField(requestField)
-        return request?.getObjectField(urlField)?.toString()
-    }
 
     fun addDanmaku(dmSegmentMobileReply: Any) {
         if (seasonId != "" || episodeId != "") {
@@ -148,7 +139,8 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 dmSegmentMobileReply,
                 segmentIndex,
                 desc,
-                pageIndex
+                pageIndex,
+                duration
             )
         }
     }
@@ -158,6 +150,7 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         segmentIndex: Long,
         desc: String,
         page: Int,
+        duration: Long
     ) {
         val nicoGroups = Regex("sm\\d+").findAll(desc).toList()
         val twitchVod = Regex("https://www.twitch.tv/videos/(\\d+)")
