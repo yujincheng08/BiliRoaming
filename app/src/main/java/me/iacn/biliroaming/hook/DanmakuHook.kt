@@ -42,12 +42,15 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             pageIndex = methodHookParam.thisObject.callMethod("getPage") as Int
         }
         BiliBiliPackage.instance.retrofitResponseClass?.hookAfterAllConstructors { methodHookParam ->
-            val url = getRetrofitUrl(methodHookParam.args[0])
-            url?.let { Regex("season_id=([^0]\\d*)").find(it)?.groups?.get(1)?.value }?.let {
-                seasonId = it
-            }
-            url?.let { Regex("ep_id=([^0]\\d*)").find(it)?.groups?.get(1)?.value }?.let {
-                episodeId = it
+            getRetrofitUrl(methodHookParam.args[0])?.let { url ->
+                Regex("season_id=([^0]\\d*)").find(url)?.groups?.get(1)?.value?.let {
+                    seasonId = it
+                    episodeId = ""
+                }
+                Regex("ep_id=([^0]\\d*)").find(url)?.groups?.get(1)?.value?.let {
+                    episodeId = it
+                    seasonId = ""
+                }
             }
         }
         mClassLoader.loadClass("com.bapis.bilibili.app.view.v1.ViewMoss").hookAfterMethod(
