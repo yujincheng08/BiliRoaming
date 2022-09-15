@@ -107,6 +107,7 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     private val mainFunc by lazy { sPrefs.getBoolean("main_func", false) }
     private val generateSubtitle by lazy { sPrefs.getBoolean("auto_generate_subtitle", false) }
+    private val addCloseSubtitle by lazy { mainFunc && getVersionCode(packageName) >= 6750300 }
 
     private val closeText =
         currentContext.getString(getResId("Player_option_subtitle_lan_doc_nodisplay", "string"))
@@ -228,7 +229,9 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
             }
 
-            if (mainFunc && param.args[0].callMethodAs<String>("getSpmid").contains("pgc")) {
+            if (addCloseSubtitle && param.args[0]
+                    .callMethodAs<String>("getSpmid").contains("pgc")
+            ) {
                 subtitleItem {
                     lan = "nodisplay"
                     lanDoc = closeText
