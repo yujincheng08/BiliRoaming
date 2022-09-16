@@ -90,10 +90,6 @@ class MainActivity : Activity() {
                     runningStatusPref.setTitle(R.string.running_status_enable)
                     runningStatusPref.setSummary(R.string.runtime_xposed)
                 }
-                isAppFuckActive(activity) -> {
-                    runningStatusPref.setTitle(R.string.running_status_enable)
-                    runningStatusPref.setSummary(R.string.runtime_app_fuck)
-                }
                 isTaiChiModuleActive(activity) -> {
                     runningStatusPref.setTitle(R.string.running_status_enable)
                     runningStatusPref.setSummary(R.string.runtime_taichi)
@@ -194,29 +190,6 @@ class MainActivity : Activity() {
             } catch (e: Exception) {
                 false
             }
-        }
-
-        private fun isAppFuckActive(context: Context): Boolean {
-            try {
-                val appContext = context.createPackageContext(
-                    "com.bug.xposed",
-                    Context.CONTEXT_IGNORE_SECURITY or Context.CONTEXT_INCLUDE_CODE
-                )
-                val mods = appContext.getFileStreamPath("mods")
-                val bugSerializeClass =
-                    appContext.classLoader.loadClass("com.bug.utils.BugSerialize")
-                val modClass = appContext.classLoader.loadClass("com.bug.xposed.ModConfig\$Mod")
-                val list =
-                    bugSerializeClass.getDeclaredMethod("deserialize", InputStream::class.java)
-                        .invoke(null, mods.inputStream()) as ArrayList<*>
-                for (mod in list) {
-                    if (modClass.getMethod("getPkg")
-                            .invoke(mod) == BuildConfig.APPLICATION_ID
-                    ) return true
-                }
-            } catch (e: Throwable) {
-            }
-            return false
         }
     }
 
