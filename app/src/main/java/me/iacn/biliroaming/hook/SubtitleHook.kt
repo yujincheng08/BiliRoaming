@@ -206,12 +206,11 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
             }
 
-            var dmViewReply: DmViewReply? = null
+            val dmViewReply = if (generateSubtitle) parseDmViewReply(param.result) else null
             if (generateSubtitle) {
-                dmViewReply = parseDmViewReply(param.result)
                 val subtitles = mutableListOf<SubtitleItem>()
-                dmViewReply?.subtitle?.subtitlesList?.let { subtitles.addAll(it) }
-                subtitles.addAll(extraSubtitles)
+                dmViewReply?.subtitle?.subtitlesList?.let { subtitles += it }
+                subtitles += extraSubtitles
                 if (subtitles.map { it.lan }.let { "zh-Hant" in it && "zh-CN" !in it }) {
                     val origSub = subtitles.first { it.lan == "zh-Hant" }
                     val targetSubUrl = Uri.parse(origSub.subtitleUrl).buildUpon()
