@@ -307,7 +307,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     try {
                         videosToExport.forEach { video ->
                             targetDir.findOrCreateDir(video.parentFile!!.name)
-                                ?.let { DocumentFile.fromFile(video).copyTo(activity, it) }
+                                ?.let { DocumentFile.fromFile(video).copyTo(it) }
                         }
                         Log.toast("导出成功", true)
                     } catch (e: Exception) {
