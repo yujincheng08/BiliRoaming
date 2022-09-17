@@ -7,8 +7,39 @@
     android:orientation="horizontal"
     android:paddingStart="25dp"
     android:paddingEnd="20dp"
-    android:rowCount="6">
+    android:rowCount="8">
 
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="4"
+        android:text="弹弹Play番剧弹幕"
+        tools:ignore="HardcodedText" />
+
+    <Switch
+        android:id="@+id/dandanplay_danmaku_switch"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="1"
+        android:checked="true"
+        android:tag="dandanplay_danmaku_switch"
+        tools:ignore="HardcodedText" />
+
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="4"
+        android:text="弹幕服务器番剧弹幕"
+        tools:ignore="HardcodedText" />
+
+    <Switch
+        android:id="@+id/danmaku_server_switch"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="1"
+        android:checked="false"
+        android:tag="danmaku_server_switch"
+        tools:ignore="HardcodedText" />
 
     <TextView
         android:layout_width="0dp"
@@ -77,6 +108,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_columnWeight="1"
+        android:checked="true"
         android:tag="translate_switch"
         tools:ignore="HardcodedText" />
 
@@ -110,6 +142,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_columnWeight="1"
+        android:checked="true"
         android:tag="translate_replace_katakana"
         tools:ignore="HardcodedText" />
 </GridLayout>

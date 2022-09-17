@@ -45,6 +45,7 @@ import java.lang.reflect.Array as RArray
 class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     companion object {
         val lastSeasonInfo: MutableMap<String, String?> = HashMap()
+        val episodesDict = mutableMapOf<Int, List<String>>()
 
         private val jsonNonStrict = lazy {
             instance.kotlinJsonClass?.getStaticObjectField("Companion")?.callMethod("getNonstrict")
@@ -769,7 +770,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     private fun fixBangumi(jsonResult: JSONObject?, code: Int, url: String?) =
         if (isBangumiWithWatchPermission(jsonResult, code)) {
-            jsonResult?.also { allowDownload(it); fixEpisodesStatus(it) }
+            jsonResult?.also { allowDownload(it); fixEpisodesStatus(it);gatherEpisodesInfo(it) }
         } else {
             url?.let { Uri.parse(it) }?.run {
                 getQueryParameter("ep_id")?.let {
@@ -816,6 +817,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
                 allowDownload(newJsonResult, false)
                 fixEpisodesStatus(newJsonResult)
+                gatherEpisodesInfo(newJsonResult)
             }
             jsonResult?.apply {
                 // Replace only episodes and rights
@@ -1054,6 +1056,36 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
         for (episode in result?.optJSONArray("episodes").orEmpty()) {
             if (episode.optInt("status") == 13) episode.put("status", 2)
+        }
+    }
+
+    private fun gatherEpisodesInfo(result: JSONObject?) {
+        for (module in result?.optJSONArray("modules").orEmpty()) {
+            val data = module.optJSONObject("data")
+            val moduleEpisodes = data?.optJSONArray("episodes")
+            for (episode in moduleEpisodes.orEmpty()) {
+                if (episode.has("share_copy"))
+                    episodesDict[episode.optInt("aid")] = listOf(
+                        episode.optString("share_copy"),
+                        episode.optInt("duration").toString()
+                    )
+            }
+        }
+        for (section in result?.optJSONArray("prevueSection").orEmpty()) {
+            for (episode in section.optJSONArray("episodes").orEmpty()) {
+                if (episode.has("share_copy"))
+                    episodesDict[episode.optInt("aid")] = listOf(
+                        episode.optString("share_copy"),
+                        episode.optInt("duration").toString()
+                    )
+            }
+        }
+        for (episode in result?.optJSONArray("episodes").orEmpty()) {
+            if (episode.has("share_copy"))
+                episodesDict[episode.optInt("aid")] = listOf(
+                    episode.optString("share_copy"),
+                    episode.optInt("duration").toString()
+                )
         }
     }
 

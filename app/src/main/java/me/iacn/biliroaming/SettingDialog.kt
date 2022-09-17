@@ -406,10 +406,16 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     )
                 }
                 val switches = arrayOf(
-                    view.findViewById<Switch>(R.id.translate_switch),
+                    view.findViewById<Switch>(R.id.dandanplay_danmaku_switch),
+                    view.findViewById(R.id.danmaku_server_switch),
+                    view.findViewById(R.id.translate_switch),
                     view.findViewById(R.id.translate_replace_katakana),
                 )
-                switches.forEach { it.isChecked = prefs.getBoolean(it.tag.toString(), true) }
+                switches.forEach {
+                    if (prefs.contains(it.tag.toString())) {
+                        prefs.getBoolean(it.tag.toString(), true)
+                    }
+                }
                 setPositiveButton(android.R.string.ok) { _, _ ->
                     editTexts.forEach {
                         val host = it.text.toString()
@@ -523,7 +529,8 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     editTexts.forEach {
                         val accessKey = it.text.toString()
                         val key = "${it.tag}_accessKey"
-                        if (accessKey.isNotEmpty()) prefs.edit().putString(key, accessKey).apply()
+                        if (accessKey.isNotEmpty()) prefs.edit().putString(key, accessKey)
+                            .apply()
                         else prefs.edit().remove(key).apply()
                     }
                 }
@@ -706,7 +713,10 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         prefsFragment.onActivityCreated(null)
 
         val unhook =
-            Preference::class.java.hookAfterMethod("onCreateView", ViewGroup::class.java) { param ->
+            Preference::class.java.hookAfterMethod(
+                "onCreateView",
+                ViewGroup::class.java
+            ) { param ->
                 if (PreferenceCategory::class.java.isInstance(param.thisObject) && TextView::class.java.isInstance(
                         param.result
                     )

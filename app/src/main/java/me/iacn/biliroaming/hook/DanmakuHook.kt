@@ -2,9 +2,10 @@ package me.iacn.biliroaming.hook
 
 import android.net.Uri
 import me.iacn.biliroaming.BiliBiliPackage
+import me.iacn.biliroaming.hook.BangumiSeasonHook.Companion.episodesDict
 import me.iacn.biliroaming.utils.*
+import org.json.JSONObject
 import java.io.InputStream
-import java.lang.reflect.Method
 import java.net.HttpURLConnection
 import java.net.SocketTimeoutException
 import java.net.URL
@@ -22,6 +23,7 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     var segmentIndex: Long = 0
     var seasonId: String = ""
     var episodeId: String = ""
+    val dandanDanmakuPool = HashSet<Pair<Int, String>>()
 
     override fun startHook() {
         if (!sPrefs.getBoolean("load_outside_danmaku", false)) {
@@ -35,6 +37,8 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 duration = (methodHookParam.thisObject.callMethod("getDuration") as Long)
                 episodeId = ""
                 seasonId = ""
+                episodesDict.clear()
+                dandanDanmakuPool.clear()
             }
         "com.bapis.bilibili.app.archive.v1.Page".findClass(mClassLoader).hookAfterMethod(
             "getCid"
@@ -88,30 +92,10 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
             } else {
                 grpcDecodeResponseMethod =
-                    DexHelper(//com.bilibili.common.chronoscommon.plugins.f$a.a(okhttp3.Response) in version 6.89
-                        mClassLoader.findDexClassLoader(BiliBiliPackage.Companion::findRealClassloader)
-                            ?: return
-                    ).let { dexHelper ->
-                        dexHelper.findMethodUsingString(
-                            "Resp body compressed without known codec in header",
-                            false,
-                            -1,
-                            -1,
-                            null,
-                            -1,
-                            null,
-                            null,
-                            null,
-                            false
-                        ).asSequence().map {
-                            dexHelper.decodeMethodIndex(it)
-                        }
-                            .find { it?.declaringClass?.declaringClass != null }
-                            ?.declaringClass?.declaringClass?.declaredMethods?.find {
-                                it.returnType == ByteArray::class.java
-                            }
-                    } as Method
-                grpcDecodeResponseMethod.hookAfterMethod { methodHookParam ->
+                    mClassLoader.loadClass("com.bilibili.common.chronoscommon.plugins.f").declaredMethods.find {
+                        it.returnType == ByteArray::class.java
+                    }
+                grpcDecodeResponseMethod?.hookAfterMethod { methodHookParam ->
                     methodHookParam.result =
                         injectResponseBytes(methodHookParam.result as ByteArray)
                 }
@@ -130,13 +114,18 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     fun addDanmaku(dmSegmentMobileReply: Any) {
         if (seasonId != "" || episodeId != "") {
-            addSeasonDanmaku(
-                dmSegmentMobileReply,
-                segmentIndex,
-                seasonId = seasonId,
-                episodeId = episodeId,
-                aid = aid
-            )
+            if (segmentIndex == 1L) {
+                if (sPrefs.getBoolean("dandanplay_danmaku_switch", false))
+                    addDandanDanmaku(dmSegmentMobileReply)
+            }
+            if (sPrefs.getBoolean("danmaku_server_switch", false))
+                addSeasonDanmaku(
+                    dmSegmentMobileReply,
+                    segmentIndex,
+                    seasonId = seasonId,
+                    episodeId = episodeId,
+                    aid = aid
+                )
         } else {
             addDescDanmaku(
                 dmSegmentMobileReply,
@@ -217,6 +206,62 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
     }
 
+    fun addDandanDanmaku(dmSegmentMobileReply: Any) {
+        if (!episodesDict.containsKey(aid)) return
+        dandanDanmakuPool.clear()
+        val episodeDuration = episodesDict[aid]?.get(1)?.toInt()
+        val builder = Uri.Builder().scheme("https")
+            .encodedAuthority("api.dandanplay.net/api/v2/match")
+        val data =
+            "{\"fileName\":\"${episodesDict[aid]?.get(0)}\"," +
+                    "\"fileHash\":\"00000000000000000000000000000000\"," +
+                    "\"fileSize\":0," +
+                    "\"videoDuration\":${
+                        episodeDuration.toString()
+                            .let { it.substring(0, it.length - 3) }
+                    }," +
+                    "\"matchMode\":\"hashAndFileName\"}"
+
+        val content: JSONObject =
+            requestWithNewThread(
+                builder.toString(),
+                "POST",
+                "application/json",
+                data.toByteArray()
+            )
+                ?.decodeToString().toJSONObject()
+
+        val dandanEpisodeId: Int = content.optJSONArray("matches")
+                ?.optJSONObject(0)?.optInt("episodeId") ?: return
+        val commentList: JSONObject =
+            requestWithNewThread("https://api.dandanplay.net/api/v2/comment/$dandanEpisodeId?withRelated=false")
+                ?.decodeToString().toJSONObject()
+        val danmakuElemClass =
+            "com.bapis.bilibili.community.service.dm.v1.DanmakuElem"
+                .findClassOrNull(mClassLoader) ?: return
+        val danmakuElems = mutableListOf<Any>()
+        for (comment in commentList.optJSONArray("comments") ?: return) {
+            val danmaku = danmakuElemClass.callStaticMethod("access\$000") ?: return
+            val args = comment.optString("p").split(",")
+            (args[0].toFloat() * 1000).toInt().let {
+                if (it > duration) return else {
+                    danmaku.callMethod("setProgress", it)
+                }
+            }
+            danmaku.callMethod("setMode", args[1].toInt())
+            danmaku.callMethod("setColor", args[2].toInt())
+            danmaku.callMethod("setMidHash", "dandanpl")
+            danmaku.callMethod("setIdStr", comment.optLong("cid").toString())
+            danmaku.callMethod("setId", comment.optLong("cid"))
+            danmaku.callMethod("setPool", 1)
+            danmaku.callMethod("setWeight", 8)
+            danmaku.callMethod("setContent", comment.optString("m"))
+            dandanDanmakuPool.add(Pair((args[0].toFloat() * 1000).toInt(), comment.optString("m")))
+            danmakuElems.add(danmaku)
+        }
+        dmSegmentMobileReply.callMethod("addAllElems", danmakuElems)
+    }
+
     fun buildCustomUrl(path: String): Uri.Builder {
         val builder = Uri.Builder()
 
@@ -264,12 +309,18 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
     }
 
-    fun parseProtobufResponse(urlString: String): ByteArray? {
+    fun requestWithNewThread(
+        urlString: String,
+        method: String = "GET",
+        contentType: String? = null,
+        requestBody: ByteArray? = null
+    ): ByteArray? {
         var finalResult: ByteArray? = null
         thread {
             val url = URL(urlString)
             val connection = url.openConnection() as HttpURLConnection
-            connection.requestMethod = "GET"
+            connection.requestMethod = method
+            contentType?.let { connection.setRequestProperty("Content-Type", contentType) }
             connection.connectTimeout = 10000
             connection.readTimeout = 10000
             connection.setRequestProperty(
@@ -277,6 +328,7 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 "${if (BiliBiliPackage.instance.brotliInputStreamClass != null) "br," else ""}gzip,deflate"
             )
             connection.connect()
+            if (requestBody != null) connection.outputStream.write(requestBody)
             finalResult = if (connection.responseCode == HttpURLConnection.HTTP_OK) {
                 val inputStream = connection.inputStream
                 val result = when (connection.contentEncoding?.lowercase()) {
@@ -294,14 +346,27 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     fun extendProtobufResponse(urlString: String, dmSegmentMobileReply: Any) {
-        val result = parseProtobufResponse(urlString) ?: return
-        val outsideDanmaku =
-            dmSegmentMobileReply.javaClass.callStaticMethod("parseFrom", result)
-        if (outsideDanmaku != null) {
-            dmSegmentMobileReply.callMethod(
-                "addAllElems",
-                outsideDanmaku.getObjectField("elems_")
-            )
+        val result = requestWithNewThread(urlString)
+        dmSegmentMobileReply.javaClass.callStaticMethod("parseFrom", result)?.let {
+            if (dandanDanmakuPool.size == 0) {
+                dmSegmentMobileReply.callMethod(
+                    "addAllElems",
+                    it.getObjectField("elems_")
+                )
+            } else {
+                (it.getObjectField("elems_") as List<*>).forEach { danmakuElem ->
+                    if (danmakuElem != null
+                        && !dandanDanmakuPool.contains(
+                            Pair(
+                                (danmakuElem.callMethod("getProgress") as Int),
+                                (danmakuElem.callMethod("getContent") as String)
+                            )
+                        )
+                    ) {
+                        dmSegmentMobileReply.callMethod("addElems", danmakuElem)
+                    }
+                }
+            }
         }
     }
 }
