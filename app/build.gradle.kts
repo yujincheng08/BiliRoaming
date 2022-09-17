@@ -38,10 +38,13 @@ val releaseKeyPassword: String? by rootProject
 val appVerCode: String by rootProject
 val appVerName: String by rootProject
 
+val kotlinVersion: String by rootProject
+val protobufVersion: String by rootProject
+
 android {
     compileSdk = 33
     buildToolsVersion = "33.0.0"
-    ndkVersion = "25.0.8775105"
+    ndkVersion = "25.1.8937393"
 
     defaultConfig {
         applicationId = "me.iacn.biliroaming"
@@ -204,7 +207,7 @@ android {
 
 protobuf {
     protoc {
-        artifact = "com.google.protobuf:protoc:3.21.2"
+        artifact = "com.google.protobuf:protoc:$protobufVersion"
     }
 
     generatedFilesBaseDir = "$projectDir/src/generated"
@@ -263,11 +266,11 @@ configurations.all {
 
 dependencies {
     compileOnly("de.robv.android.xposed:api:82")
-    implementation("com.google.protobuf:protobuf-kotlin-lite:3.21.2")
-    compileOnly("com.google.protobuf:protoc:3.21.2")
-    implementation("org.jetbrains.kotlin:kotlin-stdlib:${rootProject.extra["kotlinVersion"]}")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.3")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.6.3")
+    implementation("com.google.protobuf:protobuf-kotlin-lite:$protobufVersion")
+    compileOnly("com.google.protobuf:protoc:$protobufVersion")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.6.4")
     implementation("androidx.documentfile:documentfile:1.0.1")
     implementation("dev.rikka.ndk.thirdparty:cxx:1.2.0")
 }
