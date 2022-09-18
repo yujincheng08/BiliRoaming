@@ -966,9 +966,11 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                         c.findClass(classloader).run {
                             declaredMethods.any { m ->
                                 m.name == "onClick"
-                            } && declaredFields.count {
-                                it.type == TextView::class.java || it.type == downloadingActivityClass
-                            } > 1
+                            } && declaredFields.any {
+                                it.type == TextView::class.java
+                            } && declaredFields.any {
+                                it.type == downloadingActivityClass
+                            }
                         }
                     } ?: return@class_
                 }
