@@ -155,7 +155,6 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     if (!sPrefs.getBoolean("fix_download", false)
                         || request.callMethodAs<Int>("getFnval") <= 1
                     ) {
-                        request.callMethod("setQn", 0)
                         request.callMethod("setFnval", MAX_FNVAL)
                         request.callMethod("setFourk", true)
                     }
@@ -216,7 +215,6 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     if (!sPrefs.getBoolean("fix_download", false)
                         || request.callMethodAs<Int>("getFnval") <= 1
                     ) {
-                        request.callMethod("setQn", 0)
                         request.callMethod("setFnval", MAX_FNVAL)
                         request.callMethod("setFourk", true)
                     }
