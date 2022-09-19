@@ -115,7 +115,7 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     fun addDanmaku(dmSegmentMobileReply: Any) {
         if (seasonId != "" || episodeId != "") {
             if (segmentIndex == 1L) {
-                if (sPrefs.getBoolean("dandanplay_danmaku_switch", false))
+                if (sPrefs.getBoolean("dandanplay_danmaku_switch", true))
                     addDandanDanmaku(dmSegmentMobileReply)
             }
             if (sPrefs.getBoolean("danmaku_server_switch", false))
@@ -187,6 +187,7 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             builder.appendQueryParameter("episode_id", episodeId)
         }
         builder.appendQueryParameter("aid", aid.toString())
+        builder.appendQueryParameter("duration", episodesDict[aid]?.get(1))
         builder.appendQueryParameter(
             "baha_danmaku_limit",
             sPrefs.getString("baha_danmaku_limit", "-1")
@@ -210,10 +211,18 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         if (!episodesDict.containsKey(aid)) return
         dandanDanmakuPool.clear()
         val episodeDuration = episodesDict[aid]?.get(1)?.toInt()
-        val builder = Uri.Builder().scheme("https")
-            .encodedAuthority("api.dandanplay.net/api/v2/match")
+        var episodeTitle: String = episodesDict[aid]?.get(0) ?: return
+        val dictReady = if (!SubtitleHelper.dictExist) {
+            SubtitleHelper.downloadDict()
+        } else true
+        if (dictReady) {
+            episodeTitle =
+                SubtitleHelper.convert("{\"body\":[{\"content\":\"${episodeTitle}}\"}]}").let {
+                    it.substring(21, it.length - 5)
+                }
+        }
         val data =
-            "{\"fileName\":\"${episodesDict[aid]?.get(0)}\"," +
+            "{\"fileName\":\"$episodeTitle\"," +
                     "\"fileHash\":\"00000000000000000000000000000000\"," +
                     "\"fileSize\":0," +
                     "\"videoDuration\":${
@@ -221,7 +230,8 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             .let { it.substring(0, it.length - 3) }
                     }," +
                     "\"matchMode\":\"hashAndFileName\"}"
-
+        val builder = Uri.Builder().scheme("https")
+            .encodedAuthority("api.dandanplay.net/api/v2/match")
         val content: JSONObject =
             requestWithNewThread(
                 builder.toString(),
@@ -232,7 +242,7 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 ?.decodeToString().toJSONObject()
 
         val dandanEpisodeId: Int = content.optJSONArray("matches")
-                ?.optJSONObject(0)?.optInt("episodeId") ?: return
+            ?.optJSONObject(0)?.optInt("episodeId") ?: return
         val commentList: JSONObject =
             requestWithNewThread("https://api.dandanplay.net/api/v2/comment/$dandanEpisodeId?withRelated=false")
                 ?.decodeToString().toJSONObject()
