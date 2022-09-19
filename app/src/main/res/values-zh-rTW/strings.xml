@@ -63,7 +63,6 @@
     <string name="purify_search_title">淨化搜尋頁面</string>
     <string name="purify_search_summary">去除搜尋頁面的熱搜和推薦</string>
     <string name="demo">範例</string>
-    <string name="runtime_app_fuck">執行環境：應用轉生</string>
     <string name="not_support">目前版本用戶端不支援此功能</string>
     <string name="os_not_support">目前系統版本不支援此功能</string>
     <string name="enable_av_title">顯示AV號</string>

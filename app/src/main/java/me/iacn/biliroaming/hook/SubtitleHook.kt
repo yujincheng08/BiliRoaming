@@ -105,12 +105,18 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
     }
 
+    private val mainFunc by lazy { sPrefs.getBoolean("main_func", false) }
+    private val generateSubtitle by lazy { sPrefs.getBoolean("auto_generate_subtitle", false) }
+    private val addCloseSubtitle by lazy { mainFunc && getVersionCode(packageName) >= 6750300 }
+
+    private val closeText =
+        currentContext.getString(getResId("Player_option_subtitle_lan_doc_nodisplay", "string"))
+
     override fun startHook() {
         if (sPrefs.getBoolean("custom_subtitle", false))
             hookSubtitleStyle()
-        if (sPrefs.getBoolean("main_func", false)
-            || sPrefs.getBoolean("auto_generate_subtitle", false)
-        ) hookSubtitleList()
+        if (mainFunc || generateSubtitle)
+            hookSubtitleList()
     }
 
     private fun hookSubtitleStyle() {
@@ -161,14 +167,12 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         "com.bapis.bilibili.community.service.dm.v1.DMMoss".from(mClassLoader)?.hookAfterMethod(
             "dmView", "com.bapis.bilibili.community.service.dm.v1.DmViewReq",
         ) { param ->
-            var changed = false
-
             val parseDmViewReply = { r: Any? ->
                 r?.let { DmViewReply.parseFrom(it.callMethodAs<ByteArray>("toByteArray")) }
             }
 
-            var thSubtitles = listOf<SubtitleItem>()
-            if (sPrefs.getBoolean("main_func", false)) {
+            val extraSubtitles = mutableListOf<SubtitleItem>()
+            if (mainFunc) {
                 val oid = param.args[0].callMethod("getOid").toString()
                 var tryThailand = lastSeasonInfo.containsKey("watch_platform")
                         && lastSeasonInfo["watch_platform"] == "1"
@@ -197,43 +201,47 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         } else JSONArray()
                     }
                     if (subtitles.length() != 0) {
-                        thSubtitles = subtitles.toSubtitles()
-                        changed = true
+                        extraSubtitles += subtitles.toSubtitles()
                     }
                 }
             }
 
-            var dmViewReply: DmViewReply? = null
-            var cnSubtitle: SubtitleItem? = null
-            if (sPrefs.getBoolean("auto_generate_subtitle", false)) {
-                dmViewReply = parseDmViewReply(param.result)
+            val dmViewReply = if (generateSubtitle) parseDmViewReply(param.result) else null
+            if (generateSubtitle) {
                 val subtitles = mutableListOf<SubtitleItem>()
-                dmViewReply?.subtitle?.subtitlesList?.let { subtitles.addAll(it) }
-                subtitles.addAll(thSubtitles)
+                dmViewReply?.subtitle?.subtitlesList?.let { subtitles += it }
+                subtitles += extraSubtitles
                 if (subtitles.map { it.lan }.let { "zh-Hant" in it && "zh-CN" !in it }) {
                     val origSub = subtitles.first { it.lan == "zh-Hant" }
                     val targetSubUrl = Uri.parse(origSub.subtitleUrl).buildUpon()
                         .appendQueryParameter("zh_converter", "t2cn")
                         .build().toString()
 
-                    cnSubtitle = subtitleItem {
+                    subtitleItem {
                         lan = "zh-CN"
                         lanDoc = "简中（生成）"
                         lanDocBrief = "简中"
                         subtitleUrl = targetSubUrl
                         id = origSub.id + 1
                         idStr = id.toString()
-                    }
-                    changed = true
+                    }.let { extraSubtitles += it }
                 }
             }
 
-            if (changed) {
+            if (addCloseSubtitle && param.args[0]
+                    .callMethodAs<String>("getSpmid").contains("pgc")
+            ) {
+                subtitleItem {
+                    lan = "nodisplay"
+                    lanDoc = closeText
+                }.let { extraSubtitles += it }
+            }
+
+            if (extraSubtitles.isNotEmpty()) {
                 val newRes = (dmViewReply ?: parseDmViewReply(param.result)
                 ?: dmViewReply { }).copy {
                     subtitle = subtitle.copy {
-                        subtitles.addAll(thSubtitles)
-                        cnSubtitle?.let { subtitles.add(it) }
+                        subtitles += extraSubtitles
                     }
                 }
 
@@ -242,8 +250,7 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
         }
 
-        if (!sPrefs.getBoolean("auto_generate_subtitle", false))
-            return
+        if (!generateSubtitle) return
         instance.biliCallClass?.hookBeforeMethod(
             instance.setParser(), instance.parserClass
         ) { param ->
