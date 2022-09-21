@@ -1064,28 +1064,34 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             val data = module.optJSONObject("data")
             val moduleEpisodes = data?.optJSONArray("episodes")
             for (episode in moduleEpisodes.orEmpty()) {
-                if (episode.has("share_copy"))
-                    episodesDict[episode.optInt("aid")] = listOf(
-                        episode.optString("share_copy"),
-                        episode.optInt("duration").toString()
-                    )
+                episodesDict[episode.optInt("aid")] = listOf(
+                    episode.optString(
+                        "share_copy",
+                        lastSeasonInfo["title"] + "第${episode.optString("index")}集"
+                    ),
+                    episode.optInt("duration").toString()
+                )
             }
         }
         for (section in result?.optJSONArray("prevueSection").orEmpty()) {
             for (episode in section.optJSONArray("episodes").orEmpty()) {
-                if (episode.has("share_copy"))
-                    episodesDict[episode.optInt("aid")] = listOf(
-                        episode.optString("share_copy"),
-                        episode.optInt("duration").toString()
-                    )
+                episodesDict[episode.optInt("aid")] = listOf(
+                    episode.optString(
+                        "share_copy",
+                        lastSeasonInfo["title"] + "第${episode.optString("index")}集"
+                    ),
+                    episode.optInt("duration").toString()
+                )
             }
         }
         for (episode in result?.optJSONArray("episodes").orEmpty()) {
-            if (episode.has("share_copy"))
-                episodesDict[episode.optInt("aid")] = listOf(
-                    episode.optString("share_copy"),
-                    episode.optInt("duration").toString()
-                )
+            episodesDict[episode.optInt("aid")] = listOf(
+                episode.optString(
+                    "share_copy",
+                    lastSeasonInfo["title"] + "第${episode.optString("index")}集"
+                ),
+                episode.optInt("duration").toString()
+            )
         }
     }
 

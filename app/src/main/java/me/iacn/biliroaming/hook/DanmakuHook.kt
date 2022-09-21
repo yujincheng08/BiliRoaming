@@ -210,7 +210,7 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     fun addDandanDanmaku(dmSegmentMobileReply: Any) {
         if (!episodesDict.containsKey(aid)) return
         dandanDanmakuPool.clear()
-        val episodeDuration = episodesDict[aid]?.get(1)?.toInt()
+        val episodeDuration = episodesDict[aid]?.get(1)?.toInt() ?: return
         var episodeTitle: String = episodesDict[aid]?.get(0) ?: return
         val dictReady = if (!SubtitleHelper.dictExist) {
             SubtitleHelper.downloadDict()
@@ -254,7 +254,7 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             val danmaku = danmakuElemClass.callStaticMethod("access\$000") ?: return
             val args = comment.optString("p").split(",")
             (args[0].toFloat() * 1000).toInt().let {
-                if (it > duration) return else {
+                if (it > episodeDuration) return else {
                     danmaku.callMethod("setProgress", it)
                 }
             }
