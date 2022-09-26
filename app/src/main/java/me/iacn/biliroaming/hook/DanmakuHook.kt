@@ -127,13 +127,15 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     aid = aid
                 )
         } else {
-            addDescDanmaku(
-                dmSegmentMobileReply,
-                segmentIndex,
-                desc,
-                pageIndex,
-                duration
-            )
+            if (sPrefs.getBoolean("reprint_danmaku_switch", true)) {
+                addDescDanmaku(
+                    dmSegmentMobileReply,
+                    segmentIndex,
+                    desc,
+                    pageIndex,
+                    duration
+                )
+            }
         }
     }
 
@@ -221,6 +223,7 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     it.substring(21, it.length - 5)
                 }
         }
+        val markOutsideDanmaku = sPrefs.getBoolean("danmaku_mark_switch", false)
         val data =
             "{\"fileName\":\"$episodeTitle\"," +
                     "\"fileHash\":\"00000000000000000000000000000000\"," +
@@ -265,7 +268,9 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             danmaku.callMethod("setId", comment.optLong("cid"))
             danmaku.callMethod("setPool", 1)
             danmaku.callMethod("setWeight", 8)
-            danmaku.callMethod("setContent", comment.optString("m"))
+            if (markOutsideDanmaku) {
+                danmaku.callMethod("setContent", '*' + comment.optString("m"))
+            }
             dandanDanmakuPool.add(Pair((args[0].toFloat() * 1000).toInt(), comment.optString("m")))
             danmakuElems.add(danmaku)
         }
@@ -357,8 +362,9 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     fun extendProtobufResponse(urlString: String, dmSegmentMobileReply: Any) {
         val result = requestWithNewThread(urlString)
+        val markOutsideDanmaku = sPrefs.getBoolean("danmaku_mark_switch", false)
         dmSegmentMobileReply.javaClass.callStaticMethod("parseFrom", result)?.let {
-            if (dandanDanmakuPool.size == 0) {
+            if (dandanDanmakuPool.size == 0 && !markOutsideDanmaku) {
                 dmSegmentMobileReply.callMethod(
                     "addAllElems",
                     it.getObjectField("elems_")
@@ -366,13 +372,19 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             } else {
                 (it.getObjectField("elems_") as List<*>).forEach { danmakuElem ->
                     if (danmakuElem != null
-                        && !dandanDanmakuPool.contains(
+                        && dandanDanmakuPool.size != 0 && !dandanDanmakuPool.contains(
                             Pair(
                                 (danmakuElem.callMethod("getProgress") as Int),
                                 (danmakuElem.callMethod("getContent") as String)
                             )
                         )
                     ) {
+                        if (markOutsideDanmaku) {
+                            danmakuElem.callMethod(
+                                "setContent",
+                                "*" + danmakuElem.callMethod("getContent")
+                            )
+                        }
                         dmSegmentMobileReply.callMethod("addElems", danmakuElem)
                     }
                 }

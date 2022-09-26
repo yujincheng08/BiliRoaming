@@ -7,7 +7,7 @@
     android:orientation="horizontal"
     android:paddingStart="25dp"
     android:paddingEnd="20dp"
-    android:rowCount="8">
+    android:rowCount="10">
 
     <TextView
         android:layout_width="0dp"
@@ -37,8 +37,40 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_columnWeight="1"
-        android:checked="false"
+        android:checked="true"
         android:tag="danmaku_server_switch"
+        tools:ignore="HardcodedText" />
+
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="4"
+        android:text="搬运视频弹幕"
+        tools:ignore="HardcodedText" />
+
+    <Switch
+        android:id="@+id/reprint_danmaku_switch"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="1"
+        android:checked="true"
+        android:tag="reprint_danmaku_switch"
+        tools:ignore="HardcodedText" />
+
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="4"
+        android:text="标识外站弹幕"
+        tools:ignore="HardcodedText" />
+
+    <Switch
+        android:id="@+id/danmaku_mark_switch"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="1"
+        android:checked="false"
+        android:tag="mark_danmaku_switch"
         tools:ignore="HardcodedText" />
 
     <TextView
@@ -91,7 +123,7 @@
         android:layout_height="wrap_content"
         android:layout_columnWeight="1"
         android:autofillHints="yes"
-        android:hint="1000"
+        android:hint="500"
         android:inputType="number"
         android:tag="nico_danmaku_limit"
         tools:ignore="HardcodedText" />
