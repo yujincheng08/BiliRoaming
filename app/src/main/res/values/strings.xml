@@ -227,4 +227,6 @@
     <string name="subtitle_append_info" translatable="false">请注意，站内宣传漫游或脚本会被拉黑</string>
     <string name="generate_subtitle_title">生成简中字幕</string>
     <string name="generate_subtitle_summary">根据繁体字幕自动生成简体中文字幕</string>
+    <string name="search_remove_ads_title">移除搜索推广</string>
+    <string name="search_remove_ads_summary">移除搜索综合标签下的推广</string>
 </resources>

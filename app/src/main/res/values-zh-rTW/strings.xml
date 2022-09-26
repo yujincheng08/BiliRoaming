@@ -227,4 +227,6 @@
 
     <string name="generate_subtitle_title">生成簡中字幕</string>
     <string name="generate_subtitle_summary">根據繁體字幕自動生成簡體中文字幕</string>
+    <string name="search_remove_ads_title">移除搜索推廣</string>
+    <string name="search_remove_ads_summary">移除搜索綜合標籤下的推廣</string>
 </resources>
