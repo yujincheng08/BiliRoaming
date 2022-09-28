@@ -794,7 +794,7 @@ Java_me_iacn_biliroaming_utils_DexHelper_decodeFieldIndex(JNIEnv *env,
   auto *handler =
       reinterpret_cast<Handler *>(env->GetLongField(thiz, token_field));
   if (!handler)
-    return env->NewLongArray(0);
+    return nullptr;
   auto &[helper, _] = *handler;
   auto out = helper->DecodeField(field_index);
   auto cl = env->GetObjectField(thiz, class_loader_field);
