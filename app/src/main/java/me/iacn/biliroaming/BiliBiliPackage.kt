@@ -1425,8 +1425,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     } == true
                 }?.let {
                     dexHelper.findMethodInvoking(it, -1, 2, "VLL", -1, null, null, null, false)
-                        .map { m -> dexHelper.decodeMethodIndex(m) }
-                        .firstOrNull()?.declaringClass?.name
+                        .asSequence()
+                        .firstNotNullOfOrNull { m -> dexHelper.decodeMethodIndex(m) }?.declaringClass?.name
                 } ?: return@class_
             }
             commentLongClickNew = class_ {
