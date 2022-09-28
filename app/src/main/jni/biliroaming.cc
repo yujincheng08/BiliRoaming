@@ -759,13 +759,13 @@ Java_me_iacn_biliroaming_utils_DexHelper_decodeMethodIndex(JNIEnv *env,
   auto *handler =
       reinterpret_cast<Handler *>(env->GetLongField(thiz, token_field));
   if (!handler)
-    return env->NewLongArray(0);
+    return nullptr;
   auto &[helper, _] = *handler;
   auto out = helper->DecodeMethod(method_index);
   auto cl = env->GetObjectField(thiz, class_loader_field);
   auto clazz = LoadClass(env, cl, out.declaring_class.name);
   if (!clazz)
-    return env->NewLongArray(0);
+    return nullptr;
   env->DeleteLocalRef(cl);
   std::string sig;
   sig.reserve(4096);
@@ -782,7 +782,7 @@ Java_me_iacn_biliroaming_utils_DexHelper_decodeMethodIndex(JNIEnv *env,
   }
   if (!method) {
     env->ExceptionClear();
-    return env->NewLongArray(0);
+    return nullptr;
   }
   return env->ToReflectedMethod(clazz, method, false);
 }
@@ -800,7 +800,7 @@ Java_me_iacn_biliroaming_utils_DexHelper_decodeFieldIndex(JNIEnv *env,
   auto cl = env->GetObjectField(thiz, class_loader_field);
   auto clazz = LoadClass(env, cl, out.declaring_class.name);
   if (!clazz)
-    return env->NewLongArray(0);
+    return nullptr;
   env->DeleteLocalRef(cl);
   auto fid = env->GetFieldID(clazz, out.name.data(), out.type.name.data());
   if (!fid) {
@@ -809,7 +809,7 @@ Java_me_iacn_biliroaming_utils_DexHelper_decodeFieldIndex(JNIEnv *env,
   }
   if (!fid) {
     env->ExceptionClear();
-    return env->NewLongArray(0);
+    return nullptr;
   }
   auto res = env->ToReflectedField(clazz, fid, false);
   env->DeleteLocalRef(clazz);
