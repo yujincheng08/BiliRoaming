@@ -677,6 +677,9 @@ message SearchBangumiCard {
   optional string selection_style = 0x1c;
   optional CheckMore check_more = 0x1d;
   optional FollowButton follow_button = 0x1e;
+  optional ReasonStyle style_label = 0x1f;
+  repeated ReasonStyle badges_v2 = 0x20;
+  optional string styles_v2 = 0x21;
 }
 
 message SearchItem {
