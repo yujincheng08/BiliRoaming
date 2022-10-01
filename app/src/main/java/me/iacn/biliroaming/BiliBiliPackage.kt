@@ -1149,6 +1149,19 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     true
                 ).asSequence().firstNotNullOfOrNull {
                     dexHelper.decodeMethodIndex(it)
+                }?.declaringClass ?: dexHelper.findMethodUsingString(
+                    "MusicBackgroundPlayBack status changed",
+                    true,
+                    -1,
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).asSequence().firstNotNullOfOrNull {
+                    dexHelper.decodeMethodIndex(it)
                 }?.declaringClass
 
                 musicBackgroundPlayer = class_ {
@@ -1173,7 +1186,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                         it.type == musicWrapperPlayerClass
                     }?.name ?: return@field
                 }
-                val ifs = musicWrapperPlayerClass?.interfaces ?: return@musicNotification
+                val ifs = musicWrapperPlayerClass?.interfaces?.flatMap {
+                    it.interfaces.asSequence() ?: arrayOf(it).asSequence()
+                } ?: return@musicNotification
                 val musicPlayerField = musicWrapperPlayerClass.declaredFields.firstOrNull {
                     ifs.contains(it.type.interfaces.firstOrNull())
                 } ?: return@musicNotification
