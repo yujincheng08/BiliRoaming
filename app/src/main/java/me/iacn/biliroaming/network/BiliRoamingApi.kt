@@ -41,6 +41,7 @@ object BiliRoamingApi {
     private const val BILI_MEDIA_URL = "bangumi.bilibili.com/view/web_api/media"
     private const val BILI_SECTION_URL = "api.bilibili.com/pgc/web/season/section"
     private const val BILI_CARD_URL = "https://account.bilibili.com/api/member/getCardByMid"
+    private const val BILI_PAGELIST = "api.bilibili.com/x/player/pagelist"
     private const val BILI_MODULE_TEMPLATE =
         "{\"data\": {},\"id\": 0,\"module_style\": {\"hidden\": 0,\"line\": 1},\"more\": \"查看更多\",\"style\": \"positive\",\"title\": \"选集\"}"
     private const val BILI_RIGHT_TEMPLATE =
@@ -155,6 +156,15 @@ object BiliRoamingApi {
     }
 
     @JvmStatic
+    fun getPagelist(aid: String) = getContent(
+        Uri.Builder().scheme("https")
+            .encodedAuthority(BILI_PAGELIST)
+            .appendQueryParameter("aid", aid).toString()
+    )?.toJSONObject()?.let {
+        if (it.optInt("code", -1) == 0) it else null
+    }
+
+    @JvmStatic
     fun getThailandSubtitles(epId: String?): String? {
         Log.d("Getting subtitle $epId form thailand")
         epId ?: return null
@@ -228,7 +238,10 @@ object BiliRoamingApi {
                 "link",
                 "https://www.bilibili.com/bangumi/play/ep${episode.optString("ep_id")}"
             )
-            episode.put("long_title", episode.optString("indexTitle", episode.optString("index_title")))
+            episode.put(
+                "long_title",
+                episode.optString("indexTitle", episode.optString("index_title"))
+            )
             episode.put("id", epId)
             episode.put("title", episode.optString("index"))
             episode.put("rights", BILI_RIGHT_TEMPLATE.toJSONObject())
@@ -452,16 +465,18 @@ object BiliRoamingApi {
     @JvmStatic
     fun getPlayUrl(queryString: String?, priorityArea: Array<String>? = null): String? {
         return getFromCustomUrl(queryString, priorityArea)?.let {
-            runCatchingOrNull { JSONObject(it).let { json -> json.optJSONObject("result") ?: json }.apply {
-                optJSONObject("dash")?.run {
-                    for (video in optJSONArray("video").orEmpty()) {
-                        replaceUPOS(video)
+            runCatchingOrNull {
+                JSONObject(it).let { json -> json.optJSONObject("result") ?: json }.apply {
+                    optJSONObject("dash")?.run {
+                        for (video in optJSONArray("video").orEmpty()) {
+                            replaceUPOS(video)
+                        }
+                        for (audio in optJSONArray("audio").orEmpty()) {
+                            replaceUPOS(audio)
+                        }
                     }
-                    for (audio in optJSONArray("audio").orEmpty()) {
-                        replaceUPOS(audio)
-                    }
-                }
-            }.toString() } ?: throw CustomServerException(mapOf("default" to "Not valid json $it"))
+                }.toString()
+            } ?: throw CustomServerException(mapOf("default" to "Not valid json $it"))
         }
     }
 
@@ -707,13 +722,47 @@ object BiliRoamingApi {
     }
 
     @JvmStatic
-    fun getSpace(mid: Long) : String? {
+    fun getSpace(mid: Long): String? {
         val content = getContent("$BILI_CARD_URL?mid=$mid").toJSONObject()
         if (content.optInt("code") != 0) return null
         val card = content.optJSONObject("card") ?: return null
         val levelInfo = card.optJSONObject("level_info") ?: return null
         val officialVerify = card.optJSONObject("official_verify") ?: return null
-        return """{"relation":-999,"guest_relation":-999,"default_tab":"video","is_params":true,"setting":{"fav_video":0,"coins_video":0,"likes_video":0,"bangumi":0,"played_game":0,"groups":0,"comic":0,"bbq":0,"dress_up":0,"disable_following":0,"live_playback":1,"close_space_medal":0,"only_show_wearing":0},"tab":{"archive":true,"article":true,"clip":true,"album":true,"favorite":false,"bangumi":false,"coin":false,"like":false,"community":false,"dynamic":true,"audios":true,"shop":false,"mall":false,"ugc_season":false,"comic":false,"cheese":false,"sub_comic":false,"activity":false,"series":false},"card":{"mid":"$mid","name":"${card.optString("name")}","approve":false,"sex":"${card.optString("sex")}","rank":"${card.optString("rank")}","face":"${card.optString("face")}","DisplayRank":"","regtime":0,"spacesta":0,"birthday":"","place":"","description":"该页面由哔哩漫游修复","article":0,"attentions":null,"fans":${card.optInt("fans", 114)},"friend":${card.optInt("friend", 514)},"attention":${card.optInt("attention", 233)},"sign":"【该页面由哔哩漫游修复】${card.optString("sign")}","level_info":{"current_level":${levelInfo.optInt("current_level")},"current_min":${levelInfo.optInt("current_min")},"current_exp":${levelInfo.optInt("current_exp")},"next_exp":"${levelInfo.optInt("next_exp")}"},"pendant":{"pid":0,"name":"","image":"","expire":0,"image_enhance":"","image_enhance_frame":""},"nameplate":{"nid":0,"name":"","image":"","image_small":"","level":"","condition":""},"official_verify":{"type":${officialVerify.optInt("type")},"desc":"${officialVerify.optString("desc")}","role":3,"title":"${officialVerify.optString("desc")}"},"vip":{"vipType":0,"vipDueDate":0,"dueRemark":"","accessStatus":0,"vipStatus":0,"vipStatusWarn":"","themeType":0,"label":{"path":"","text":"","label_theme":"","text_color":"","bg_style":0,"bg_color":"","border_color":""}},"silence":0,"end_time":0,"silence_url":"","likes":{"like_num":0,"skr_tip":"该页面由哔哩漫游修复"},"pr_info":{},"relation":{"status":1},"is_deleted":0,"honours":{"colour":{"dark":"#CE8620","normal":"#F0900B"},"tags":null},"profession":{}},"images":{"imgUrl":"https://i0.hdslb.com/bfs/album/16b6731618d911060e26f8fc95684c26bddc897c.jpg","night_imgurl":"https://i0.hdslb.com/bfs/album/ca79ebb2ebeee86c5634234c688b410661ea9623.png","has_garb":true,"goods_available":true},"live":{"roomStatus":0,"roundStatus":0,"liveStatus":0,"url":"","title":"","cover":"","online":0,"roomid":0,"broadcast_type":0,"online_hidden":0,"link":""},"archive":{"order":[{"title":"最新发布","value":"pubdate"},{"title":"最多播放","value":"click"}],"count":9999,"item":[]},"series":{"item":[]},"play_game":{"count":0,"item":[]},"article":{"count":0,"item":[],"lists_count":0,"lists":[]},"season":{"count":0,"item":[]},"coin_archive":{"count":0,"item":[]},"like_archive":{"count":0,"item":[]},"audios":{"count":0,"item":[]},"favourite2":{"count":0,"item":[]},"comic":{"count":0,"item":[]},"ugc_season":{"count":0,"item":[]},"cheese":{"count":0,"item":[]},"fans_effect":{},"tab2":[{"title":"动态","param":"dynamic"},{"title":"投稿","param":"contribute","items":[{"title":"视频","param":"video"}]}]}"""
+        return """{"relation":-999,"guest_relation":-999,"default_tab":"video","is_params":true,"setting":{"fav_video":0,"coins_video":0,"likes_video":0,"bangumi":0,"played_game":0,"groups":0,"comic":0,"bbq":0,"dress_up":0,"disable_following":0,"live_playback":1,"close_space_medal":0,"only_show_wearing":0},"tab":{"archive":true,"article":true,"clip":true,"album":true,"favorite":false,"bangumi":false,"coin":false,"like":false,"community":false,"dynamic":true,"audios":true,"shop":false,"mall":false,"ugc_season":false,"comic":false,"cheese":false,"sub_comic":false,"activity":false,"series":false},"card":{"mid":"$mid","name":"${
+            card.optString(
+                "name"
+            )
+        }","approve":false,"sex":"${card.optString("sex")}","rank":"${card.optString("rank")}","face":"${
+            card.optString(
+                "face"
+            )
+        }","DisplayRank":"","regtime":0,"spacesta":0,"birthday":"","place":"","description":"该页面由哔哩漫游修复","article":0,"attentions":null,"fans":${
+            card.optInt(
+                "fans",
+                114
+            )
+        },"friend":${card.optInt("friend", 514)},"attention":${
+            card.optInt(
+                "attention",
+                233
+            )
+        },"sign":"【该页面由哔哩漫游修复】${card.optString("sign")}","level_info":{"current_level":${
+            levelInfo.optInt(
+                "current_level"
+            )
+        },"current_min":${levelInfo.optInt("current_min")},"current_exp":${levelInfo.optInt("current_exp")},"next_exp":"${
+            levelInfo.optInt(
+                "next_exp"
+            )
+        }"},"pendant":{"pid":0,"name":"","image":"","expire":0,"image_enhance":"","image_enhance_frame":""},"nameplate":{"nid":0,"name":"","image":"","image_small":"","level":"","condition":""},"official_verify":{"type":${
+            officialVerify.optInt(
+                "type"
+            )
+        },"desc":"${officialVerify.optString("desc")}","role":3,"title":"${
+            officialVerify.optString(
+                "desc"
+            )
+        }"},"vip":{"vipType":0,"vipDueDate":0,"dueRemark":"","accessStatus":0,"vipStatus":0,"vipStatusWarn":"","themeType":0,"label":{"path":"","text":"","label_theme":"","text_color":"","bg_style":0,"bg_color":"","border_color":""}},"silence":0,"end_time":0,"silence_url":"","likes":{"like_num":0,"skr_tip":"该页面由哔哩漫游修复"},"pr_info":{},"relation":{"status":1},"is_deleted":0,"honours":{"colour":{"dark":"#CE8620","normal":"#F0900B"},"tags":null},"profession":{}},"images":{"imgUrl":"https://i0.hdslb.com/bfs/album/16b6731618d911060e26f8fc95684c26bddc897c.jpg","night_imgurl":"https://i0.hdslb.com/bfs/album/ca79ebb2ebeee86c5634234c688b410661ea9623.png","has_garb":true,"goods_available":true},"live":{"roomStatus":0,"roundStatus":0,"liveStatus":0,"url":"","title":"","cover":"","online":0,"roomid":0,"broadcast_type":0,"online_hidden":0,"link":""},"archive":{"order":[{"title":"最新发布","value":"pubdate"},{"title":"最多播放","value":"click"}],"count":9999,"item":[]},"series":{"item":[]},"play_game":{"count":0,"item":[]},"article":{"count":0,"item":[],"lists_count":0,"lists":[]},"season":{"count":0,"item":[]},"coin_archive":{"count":0,"item":[]},"like_archive":{"count":0,"item":[]},"audios":{"count":0,"item":[]},"favourite2":{"count":0,"item":[]},"comic":{"count":0,"item":[]},"ugc_season":{"count":0,"item":[]},"cheese":{"count":0,"item":[]},"fans_effect":{},"tab2":[{"title":"动态","param":"dynamic"},{"title":"投稿","param":"contribute","items":[{"title":"视频","param":"video"}]}]}"""
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -770,16 +819,21 @@ object BiliRoamingApi {
                 connection.connectTimeout = timeout
                 connection.readTimeout = timeout
                 connection.setRequestProperty("x-from-biliroaming", BuildConfig.VERSION_NAME)
-                connection.setRequestProperty("Accept-Encoding", "${if (instance.brotliInputStreamClass != null) "br," else ""}gzip,deflate")
+                connection.setRequestProperty(
+                    "Accept-Encoding",
+                    "${if (instance.brotliInputStreamClass != null) "br," else ""}gzip,deflate"
+                )
                 connection.connect()
                 if (connection.responseCode == HttpURLConnection.HTTP_OK) {
                     val inputStream = connection.inputStream
-                    getStreamContent(when (connection.contentEncoding?.lowercase()) {
-                        "gzip" -> GZIPInputStream(inputStream)
-                        "br" -> instance.brotliInputStreamClass!!.new(inputStream) as InputStream
-                        "deflate" -> InflaterInputStream(inputStream)
-                        else -> inputStream
-                    })
+                    getStreamContent(
+                        when (connection.contentEncoding?.lowercase()) {
+                            "gzip" -> GZIPInputStream(inputStream)
+                            "br" -> instance.brotliInputStreamClass!!.new(inputStream) as InputStream
+                            "deflate" -> InflaterInputStream(inputStream)
+                            else -> inputStream
+                        }
+                    )
                 } else null
             }
 

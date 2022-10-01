@@ -103,7 +103,7 @@ message ResponseUrl {
   optional string url = 0x4;
 }
 
-message SegmentVideo { repeated ResponseUrl segment = 0x1; }
+message SegmentVideo {repeated ResponseUrl segment = 0x1;}
 
 message Stream {
   optional StreamInfo stream_info = 0x1;
@@ -142,7 +142,7 @@ message TextInfo {
 
 message DialogConfig {}
 
-message ImageInfo { optional string url = 0x1; }
+message ImageInfo {optional string url = 0x1;}
 
 message ButtonInfo {}
 
@@ -226,7 +226,7 @@ message ViewReq {
   optional int32 autoplay = 0xd;
 }
 
-message UserSeason { optional string attention = 0x1; }
+message UserSeason {optional string attention = 0x1;}
 
 message SeasonPlayer {
   optional int64 aid = 0x1;
@@ -320,7 +320,36 @@ message CMConfig {}
 
 message CM {}
 
-message Config {}
+message ListenerConfig {
+  optional int32 jump_style = 0x1;
+}
+
+message Config {
+  optional string relates_title = 0x1;
+  optional int32 relates_style = 0x2;
+  optional int32 relate_gif_exp = 0x3;
+  optional int32 end_page_half = 0x4;
+  optional int32 end_page_full = 0x5;
+  optional bool auto_swindow = 0x6;
+  optional bool popup_info = 0x7;
+  optional string abtest_small_window = 0x8;
+  optional int32 rec_three_point_style = 0x9;
+  optional bool is_absolute_time = 0xa;
+  optional bool new_swindow = 0xb;
+  optional bool relates_biserial = 0xc;
+  optional ListenerConfig listener_conf = 0xd;
+  optional string relates_feed_style = 0xe;
+  optional bool relates_feed_popup = 0xf;
+  optional bool relates_feed_has_next = 0x10;
+  optional int32 local_play = 0x11;
+  optional bool play_story = 0x12;
+  optional bool arc_play_story = 0x13;
+  optional string story_icon = 0x14;
+  optional bool landscape_story = 0x15;
+  optional bool arc_landscape_story = 0x16;
+  optional string landscape_icon = 0x17;
+  optional bool show_listen_button = 0x18 ;
+}
 
 message CustomConfig {}
 
@@ -335,7 +364,43 @@ message Interaction {}
 
 message Label {}
 
-message OwnerExt {}
+message OfficialVerify {
+  optional int32 type = 0x1;
+  optional string desc = 0x2;
+}
+
+message VipLabel {
+  optional string path = 0x1;
+  optional string text = 0x2;
+  optional string label_theme = 0x3;
+}
+
+message Vip {
+  optional int32 vip_type = 0x1;
+  optional int64 due_date = 0x2;
+  optional string due_remark = 0x3;
+  optional int32 access_status = 0x4;
+  optional int32 vip_status = 0x5;
+  optional string vip_status_warn = 0x6;
+  optional int32 theme_type = 0x7;
+  optional VipLabel label = 0x8;
+}
+
+message Live {
+  optional int64 mid = 0x1;
+  optional int64 room_id = 0x2;
+  optional string uri = 0x3;
+  optional string endpage_uri = 0x4;
+}
+
+message OwnerExt {
+  optional OfficialVerify official_verify = 0x1;
+  optional Live live = 0x2;
+  optional Vip vip = 0x3;
+  repeated int64 assists = 0x4;
+  optional int64 fans = 0x5;
+  optional string arcCount = 0x6;
+}
 
 message Audio {}
 message DM {}
@@ -365,7 +430,7 @@ message RelateTab {}
 message Relate {}
 message ReqUser {}
 message Staff {}
-message TIcon { optional string icon = 0x1; }
+message TIcon {optional string icon = 0x1;}
 message Tag {
   optional int64 id = 0x1;
   optional string name = 0x2;
