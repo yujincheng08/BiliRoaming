@@ -614,6 +614,12 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             optJSONObject("follow_button")?.let {
                 followButton = followButton { reconstructFrom(it) }
             }
+            optJSONObject("style_label")?.let {
+                styleLabel = reasonStyle { reconstructFrom(it) }
+            }
+            for (badgeV2 in optJSONArray("badges_v2").orEmpty())
+                badgesV2 += reasonStyle { reconstructFrom(badgeV2) }
+            stylesV2 = optString("styles_v2")
         }
 
         fun SearchItemKt.Dsl.reconstructFrom(json: JSONObject) = json.run {
