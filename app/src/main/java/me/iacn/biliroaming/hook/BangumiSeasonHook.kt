@@ -924,6 +924,21 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     typeName = optString("tname")
                     videos = optLong("videos")
                 }
+                rights = rights {
+                    result.optJSONObject("rights")?.run {
+                        bp = optInt("bp")
+                        elec = optInt("elec")
+                        download = if (sPrefs.getBoolean("allow_download", false)) 1 else optInt("download")
+                        movie = optInt("movie")
+                        pay = optInt("pay")
+                        hd5 = optInt("hd5")
+                        noReprint = optInt("no_reprint")
+                        autoplay = optInt("autoplay")
+                        isCooperation = optInt("is_cooperation")
+                        ugcPay = optInt("ugc_pay")
+                        noBackground = if (sPrefs.getBoolean("play_arc_conf", false)) 0 else optInt("no_background")
+                    }
+                }
             }
             bvid = result.optString("bvid")
             val pages = result.optJSONArray("pages")

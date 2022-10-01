@@ -235,7 +235,20 @@ message SeasonPlayer {
   optional string from = 0x4;
 }
 
-message Rights {}
+message Rights {
+  optional int32 bp = 0x1;
+  optional int32 elec = 0x2;
+  optional int32 download = 0x3;
+  optional int32 movie = 0x4;
+  optional int32 pay = 0x5;
+  optional int32 hd5 = 0x6;
+  optional int32 no_reprint = 0x7;
+  optional int32 autoplay = 0x8;
+  optional int32 ugc_pay = 0x9;
+  optional int32 is_cooperation = 0xa;
+  optional int32 ugc_pay_preview = 0xb;
+  optional int32 no_background = 0xc;
+}
 
 message Stat {
   optional int64 aid = 0x1;
