@@ -33,6 +33,7 @@ import me.iacn.biliroaming.utils.callMethodOrNullAs
 import me.iacn.biliroaming.utils.callStaticMethod
 import me.iacn.biliroaming.utils.checkErrorToast
 import me.iacn.biliroaming.utils.from
+import me.iacn.biliroaming.utils.hookAfterMethod
 import me.iacn.biliroaming.utils.hookBeforeMethod
 import me.iacn.biliroaming.utils.iterator
 import me.iacn.biliroaming.utils.orEmpty
@@ -53,6 +54,7 @@ class SearchHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val searchBangumi = sPrefs.getBoolean("search_area_bangumi", false)
         val searchMovie = sPrefs.getBoolean("search_area_movie", false)
         val removeAds = sPrefs.getBoolean("search_remove_ads", false)
+        val purifySearch = sPrefs.getBoolean("purify_search", false)
 
         val searchMossClass =
             "com.bapis.bilibili.polymer.app.search.v1.SearchMoss".from(mClassLoader)
@@ -111,6 +113,13 @@ class SearchHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
                 param.result = null
             }
+        }
+
+        if (hidden && purifySearch) {
+            searchMossClass?.hookAfterMethod(
+                "defaultWords",
+                "com.bapis.bilibili.app.interfaces.v1.DefaultWordsReq"
+            ) { it.result = null }
         }
     }
 
