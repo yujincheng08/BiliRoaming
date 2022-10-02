@@ -409,6 +409,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     view.findViewById<Switch>(R.id.dandanplay_danmaku_switch),
                     view.findViewById(R.id.danmaku_server_switch),
                     view.findViewById(R.id.reprint_danmaku_switch),
+                    view.findViewById(R.id.alias_comment_switch),
                     view.findViewById(R.id.danmaku_mark_switch),
                     view.findViewById(R.id.translate_switch),
                     view.findViewById(R.id.translate_replace_katakana),

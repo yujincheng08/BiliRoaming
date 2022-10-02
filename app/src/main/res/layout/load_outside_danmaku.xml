@@ -61,6 +61,22 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_columnWeight="4"
+        android:text="加载关联番剧评论"
+        tools:ignore="HardcodedText" />
+
+    <Switch
+        android:id="@+id/alias_comment_switch"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="1"
+        android:checked="true"
+        android:tag="alias_comment_switch"
+        tools:ignore="HardcodedText" />
+
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="4"
         android:text="标识外站弹幕"
         tools:ignore="HardcodedText" />
 
