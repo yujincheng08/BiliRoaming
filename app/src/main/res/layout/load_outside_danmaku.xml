@@ -61,7 +61,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_columnWeight="4"
-        android:text="加载关联番剧评论"
+        android:text="加载内地番剧弹幕及评论"
         tools:ignore="HardcodedText" />
 
     <Switch
