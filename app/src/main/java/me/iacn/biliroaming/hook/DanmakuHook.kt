@@ -27,7 +27,7 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     val dandanDanmakuPool = HashSet<Pair<Int, String>>()
 
     var serverResponseArgv: JSONObject = JSONObject()
-    var aliasComment: Pair<Any?, Any?> = null to null
+    var aliasCommentCursor: Any? = null
     var currentCommentIsEnd = false
 
     override fun startHook() {
@@ -77,144 +77,103 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
 
     fun danmakuHook() {
-        val versionCode = getVersionCode(packageName)
-        "com.bapis.bilibili.community.service.dm.v1.DMMoss".findClass(mClassLoader)
-            .hookAfterAllMethods(
-                "dmSegMobile"
-            ) { methodHookParam ->
-                segmentIndex = methodHookParam.args[0].callMethod("getSegmentIndex") as Long
-            }
         mClassLoader.loadClass("com.bapis.bilibili.community.service.dm.v1.DmSegMobileReq")
             .hookAfterMethod("setSegmentIndex", "long") { methodHookParam ->
                 segmentIndex = methodHookParam.args[0] as Long
             }
-        if (versionCode > 6520000) {
-
-            var grpcDecodeResponseMethod =
-                // byte[] tv.danmaku.chronos.wrapper.ChronosGrpcClient$a.e(Response response) in version 6.56
-                "tv.danmaku.chronos.wrapper.ChronosGrpcClient\$a".findClassOrNull(mClassLoader)?.declaredMethods
-                    ?.find { method -> method.parameterTypes.size == 1 && method.parameterTypes[0].name == "okhttp3.Response" }
-            if (grpcDecodeResponseMethod != null) {
-                grpcDecodeResponseMethod.hookAfterMethod { methodHookParam ->
-                    if (methodHookParam.args[0].getObjectField("a")?.toString()
-                            ?.contains("community.service.dm.v1.DM/DmSegMobile") == true
-                    ) {
-                        injectResponseBytes(methodHookParam.result as ByteArray)?.let {
-                            methodHookParam.result = it
-                        }
-                    }
-                }
-            } else {
-                grpcDecodeResponseMethod =
-                    mClassLoader.loadClass("com.bilibili.common.chronoscommon.plugins.f").declaredMethods.find {
-                        it.returnType == ByteArray::class.java
-                    }
-                grpcDecodeResponseMethod?.hookAfterMethod { methodHookParam ->
-                    methodHookParam.result =
-                        injectResponseBytes(methodHookParam.result as ByteArray)
-                }
+        "com.bapis.bilibili.community.service.dm.v1.DMMoss".findClass(mClassLoader).let {
+            it.hookBeforeMethod(
+                "dmSegMobile",
+                "com.bapis.bilibili.community.service.dm.v1.DmSegMobileReq",
+                "com.bilibili.lib.moss.api.MossResponseHandler"
+            ) { methodHookParam ->
+                val dmSegMobileReply: Any = methodHookParam.thisObject.callMethod(
+                    "dmSegMobile",
+                    methodHookParam.args[0]
+                )!!
+                methodHookParam.args[1].callMethod("onNext", dmSegMobileReply)
+                methodHookParam.result = null
             }
-        } else {
-            mClassLoader.loadClass("com.bapis.bilibili.community.service.dm.v1.DmSegMobileReply")
-                .getDeclaredMethod("getElemsList")
-                .hookBeforeMethod(
-                ) { methodHookParam ->
-                    Log.d("DanmakuHook: call " + methodHookParam.method + " aid:$aid,cid:$cid,pageIndex:$pageIndex,season:$seasonId,episodeId:$episodeId")
-                    addDanmaku(methodHookParam.thisObject)
-                }
+            it.hookAfterMethod(
+                "dmSegMobile",
+                "com.bapis.bilibili.community.service.dm.v1.DmSegMobileReq"
+            ) { methodHookParam ->
+                Log.d("DanmakuHook: call " + methodHookParam.method.name + " aid:$aid,cid:$cid,pageIndex:$pageIndex,season:$seasonId,episodeId:$episodeId")
+                segmentIndex = methodHookParam.args[0].callMethod("getSegmentIndex") as Long
+                addDanmaku(methodHookParam.result)
+            }
         }
     }
 
 
     fun commentHook() {
-        if (!sPrefs.getBoolean("alias_comment_switch", false)) {
-            return
-        }
-        val mainListReqClass =
-            "com.bapis.bilibili.main.community.reply.v1.MainListReq".findClass(mClassLoader)
         "com.bapis.bilibili.main.community.reply.v1.ReplyMoss".findClass(mClassLoader)
             .hookBeforeMethod(
                 "mainList", "com.bapis.bilibili.main.community.reply.v1.MainListReq",
                 "com.bilibili.lib.moss.api.MossResponseHandler"
             ) { methodHookParam ->
                 if (desc.isNotEmpty()) {
-                    var youtubeLink =
-                        Regex("/\\.youtube\\.com/watch\\?[Vv]=([0-9a-zA-Z\\-_]*)/").find(desc)
-                    if (youtubeLink == null) {
-                        youtubeLink = Regex("youtu\\.be/([_0-9a-zA-Z]*)").find(desc)
-                    }
-                    val builder = buildCustomUrl("protobuf/comment")
-                    if (youtubeLink != null) {
-                        builder.appendQueryParameter("youtube", youtubeLink.groups[1]?.value)
-                    }
-                } else if (serverResponseArgv.has("aliasEpisode")) {
 
-                    val mainListReq = mainListReqClass.callStaticMethod(
-                        "parseFrom",
-                        methodHookParam.args[0].callMethod("toByteArray")
-                    )
-                    mainListReq?.callMethod(
-                        "setOid", serverResponseArgv.getJSONObject("aliasEpisode").optInt("aid")
-                    )
-                    mainListReq?.callMethod("getCursor").let { cursorReq ->
-                        if (cursorReq?.callMethod("getNext") != 0L) {
-                            currentCommentIsEnd = false
-                            if (aliasComment.second != null && methodHookParam.args[0].callMethod("getCursor")
-                                    ?.callMethod("getModeValue")
-                                == aliasComment.second!!.callMethod("getModeValue")
-                            ) {
-                                cursorReq?.callMethod(
-                                    "setNext",
-                                    aliasComment.second!!.callMethod("getNext")
-                                )
+                } else if (sPrefs.getBoolean(
+                        "alias_comment_switch",
+                        true
+                    ) && serverResponseArgv.has("aliasEpisode")
+                ) {
+                    Log.d("DanmakuHook: aliasComment:" + serverResponseArgv)
+                    val mainListReply =
+                        methodHookParam.thisObject.callMethod("mainList", methodHookParam.args[0])
+
+                    if (currentCommentIsEnd) {
+                        mainListReply?.callMethod("clearReplies")
+                    }
+                    currentCommentIsEnd = mainListReply?.callMethod("getCursor")
+                        ?.callMethod("getIsEnd") as Boolean
+
+                    val aliasCommentReply = methodHookParam.args[0]?.let { mainListReq ->
+                        mainListReq.callMethod(
+                            "setOid", serverResponseArgv.getJSONObject("aliasEpisode").optInt("aid")
+                        )
+                        mainListReq.callMethod("getCursor").let { cursorReq ->
+                            if (cursorReq?.callMethod("getNext") != 0L) {
+                                currentCommentIsEnd = false
+                                if (aliasCommentCursor != null && methodHookParam.args[0].callMethod(
+                                        "getCursor"
+                                    )
+                                        ?.callMethod("getModeValue")
+                                    == aliasCommentCursor!!.callMethod("getModeValue")
+                                ) {
+                                    cursorReq?.callMethod(
+                                        "setNext",
+                                        aliasCommentCursor!!.callMethod("getNext")
+                                    )
+                                }
                             }
                         }
+
+                        val extra = (mainListReq.callMethod("getExtra") as String).toJSONObject()
+                        extra.put(
+                            "ep_id",
+                            serverResponseArgv.getJSONObject("aliasEpisode").optInt("ep_id")
+                        )
+                        extra.put(
+                            "season_id",
+                            serverResponseArgv.getJSONObject("aliasEpisode").getInt("season_id")
+                        )
+                        mainListReq.callMethod("setExtra", extra.toString())
+
+                        methodHookParam.thisObject.callMethod("mainList", mainListReq)
+                    }
+                    mainListReply.callMethod(
+                        "addAllReplies", aliasCommentReply?.callMethod("getRepliesList")
+                    )
+
+                    aliasCommentCursor = aliasCommentReply?.callMethod("getCursor")
+                    if (aliasCommentCursor?.callMethod("getIsEnd") != true) {
+                        mainListReply.callMethod("getCursor")?.callMethod("setIsEnd", false)
                     }
 
-
-                    val extra = (mainListReq?.callMethod("getExtra") as String).toJSONObject()
-                    extra.put(
-                        "ep_id",
-                        serverResponseArgv.getJSONObject("aliasEpisode").optInt("ep_id")
-                    )
-                    extra.put(
-                        "season_id",
-                        serverResponseArgv.getJSONObject("aliasEpisode").getInt("season_id")
-                    )
-                    methodHookParam.thisObject.callMethod("mainList", mainListReq).let {
-                        aliasComment =
-                            it?.callMethod("getRepliesList") to it?.callMethod("getCursor")
-                    }
-                }
-            }
-
-        mClassLoader.loadClass("com.bilibili.app.comm.comment2.model.rpc.CommentRpcKt")
-            .declaredMethods.find { it.returnType.name == "com.bilibili.app.comm.comment2.model.BiliCommentCursor" }
-            .let { method ->
-                method?.hookBeforeMethod { methodHookParam ->
-                    if (aliasComment.second != null && (aliasComment.second?.callMethod("getIsEnd") != true)) {
-                        methodHookParam.args[0]?.callMethod("setIsEnd", false)
-                    }
-                }
-            }
-
-        "com.bapis.bilibili.main.community.reply.v1.MainListReply".findClass(mClassLoader)
-            .hookAfterMethod(
-                "hasCm"
-            ) { methodHookParam ->
-                if (currentCommentIsEnd) {
-                    methodHookParam.thisObject.callMethod(
-                        "clearReplies"
-                    )
-                }
-                currentCommentIsEnd = methodHookParam.thisObject.callMethod("getCursor")
-                    ?.callMethod("getIsEnd") as Boolean
-                if (aliasComment.first != null) {
-
-                    methodHookParam.thisObject.callMethod(
-                        "addAllReplies", aliasComment.first
-                    )
-                    aliasComment = null to aliasComment.second
+                    methodHookParam.args[1].callMethod("onNext", mainListReply)
+                    methodHookParam.result = null
                 }
             }
     }
@@ -305,6 +264,9 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             "nico_danmaku_limit",
             sPrefs.getString("nico_danmaku_limit", "1000")
         )
+        if (sPrefs.getBoolean("alias_comment_switch", true)) {
+            builder.appendQueryParameter("alias_comment", "1")
+        }
         appendTranslateParameter(builder)
         while (true) {
             try {
@@ -416,21 +378,6 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
     }
 
-    fun injectResponseBytes(responseBody: ByteArray): ByteArray? {
-        val dmSegment =
-            mClassLoader.loadClass("com.bapis.bilibili.community.service.dm.v1.DmSegMobileReply")
-                .callStaticMethod(
-                    "parseFrom",
-                    responseBody
-                )
-        return if (dmSegment != null) {
-            addDanmaku(dmSegment)
-            dmSegment.callMethod("toByteArray") as ByteArray
-        } else {
-            null
-        }
-    }
-
     fun requestWithNewThread(
         urlString: String,
         method: String = "GET",
@@ -438,6 +385,7 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         requestBody: ByteArray? = null,
         connectTimeout: Int = 10000
     ): Pair<ByteArray?, String> {
+        Log.d("DanmakuHook: parse url:$urlString")
         var finalResult: ByteArray? = null
         var responseContentType = ""
         thread {
