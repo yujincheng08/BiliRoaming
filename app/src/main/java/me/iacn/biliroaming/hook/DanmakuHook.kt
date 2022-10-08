@@ -30,6 +30,8 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     var aliasCommentCursor: Any? = null
     var currentCommentIsEnd = false
 
+    val MossException = "com.bilibili.lib.moss.api.MossException".findClass(mClassLoader)
+
     override fun startHook() {
         if (!sPrefs.getBoolean("load_outside_danmaku", false)) {
             return
@@ -87,11 +89,20 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 "com.bapis.bilibili.community.service.dm.v1.DmSegMobileReq",
                 "com.bilibili.lib.moss.api.MossResponseHandler"
             ) { methodHookParam ->
-                val dmSegMobileReply: Any = methodHookParam.thisObject.callMethod(
-                    "dmSegMobile",
-                    methodHookParam.args[0]
-                )!!
-                methodHookParam.args[1].callMethod("onNext", dmSegMobileReply)
+                try {
+                    methodHookParam.thisObject.callMethod(
+                        "dmSegMobile",
+                        methodHookParam.args[0]
+                    )
+                } catch (e: Throwable) {
+                    methodHookParam.args[1].callMethod(
+                        "onError",
+                        MossException.getStaticObjectField("UNSUPPORTED")
+                    )
+                    null
+                }?.let {dmSegMobileReply->
+                    methodHookParam.args[1].callMethod("onNext", dmSegMobileReply)
+                }
                 methodHookParam.result = null
             }
             it.hookAfterMethod(
@@ -100,7 +111,12 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             ) { methodHookParam ->
                 Log.d("DanmakuHook: call " + methodHookParam.method.name + " aid:$aid,cid:$cid,pageIndex:$pageIndex,season:$seasonId,episodeId:$episodeId")
                 segmentIndex = methodHookParam.args[0].callMethod("getSegmentIndex") as Long
-                addDanmaku(methodHookParam.result)
+                try {
+                    addDanmaku(methodHookParam.result)
+                } catch (e: Throwable) {
+                    println(e)
+                    methodHookParam.throwable = e
+                }
             }
         }
     }
@@ -112,6 +128,9 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 "mainList", "com.bapis.bilibili.main.community.reply.v1.MainListReq",
                 "com.bilibili.lib.moss.api.MossResponseHandler"
             ) { methodHookParam ->
+                if(methodHookParam.args[0].callMethod("getOid")!=aid){
+                    return@hookBeforeMethod
+                }
                 if (desc.isNotEmpty()) {
 
                 } else if (sPrefs.getBoolean(
@@ -180,11 +199,11 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     fun addDanmaku(dmSegmentMobileReply: Any) {
         if (seasonId != "" || episodeId != "") {
-            if (segmentIndex == 1L) {
-                if (sPrefs.getBoolean("dandanplay_danmaku_switch", true))
+            if (sPrefs.getBoolean("dandanplay_danmaku_switch", true)) {
+                if (segmentIndex == 1L) {
                     addDandanDanmaku(dmSegmentMobileReply)
-            }
-            if (sPrefs.getBoolean("danmaku_server_switch", false))
+                }
+            } else if (sPrefs.getBoolean("danmaku_server_switch", false))
                 addSeasonDanmaku(
                     dmSegmentMobileReply,
                     segmentIndex,
@@ -268,14 +287,7 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             builder.appendQueryParameter("alias_comment", "1")
         }
         appendTranslateParameter(builder)
-        while (true) {
-            try {
-                extendProtobufResponse(builder.toString(), dmSegmentMobileReply)
-                break
-            } catch (e: SocketTimeoutException) {
-                Log.e("addSeasonDanmaku: " + e)
-            }
-        }
+        extendProtobufResponse(builder.toString(), dmSegmentMobileReply)
     }
 
     fun addDandanDanmaku(dmSegmentMobileReply: Any) {
@@ -383,38 +395,47 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         method: String = "GET",
         contentType: String? = null,
         requestBody: ByteArray? = null,
-        connectTimeout: Int = 10000
+        connectTimeout: Int = 4000
     ): Pair<ByteArray?, String> {
         Log.d("DanmakuHook: parse url:$urlString")
         var finalResult: ByteArray? = null
         var responseContentType = ""
+        var exception: Throwable? = null
         thread {
-            val url = URL(urlString)
-            val connection = url.openConnection() as HttpURLConnection
-            connection.requestMethod = method
-            contentType?.let { connection.setRequestProperty("Content-Type", contentType) }
-            connection.connectTimeout = connectTimeout
-            connection.readTimeout = connectTimeout
-            connection.setRequestProperty(
-                "Accept-Encoding",
-                "${if (BiliBiliPackage.instance.brotliInputStreamClass != null) "br," else ""}gzip,deflate"
-            )
-            connection.connect()
-            if (requestBody != null) connection.outputStream.write(requestBody)
-            finalResult = if (connection.responseCode == HttpURLConnection.HTTP_OK) {
-                responseContentType = connection.contentType
-                val inputStream = connection.inputStream
-                val result = when (connection.contentEncoding?.lowercase()) {
-                    "gzip" -> GZIPInputStream(inputStream)
-                    "br" -> BiliBiliPackage.instance.brotliInputStreamClass!!.new(inputStream) as InputStream
-                    "deflate" -> InflaterInputStream(inputStream)
-                    else -> inputStream
+            try {
+                val url = URL(urlString)
+                val connection = url.openConnection() as HttpURLConnection
+                connection.requestMethod = method
+                contentType?.let { connection.setRequestProperty("Content-Type", contentType) }
+                connection.connectTimeout = connectTimeout
+                connection.readTimeout = connectTimeout
+                connection.setRequestProperty(
+                    "Accept-Encoding",
+                    "${if (BiliBiliPackage.instance.brotliInputStreamClass != null) "br," else ""}gzip,deflate"
+                )
+                connection.connect()
+
+                if (requestBody != null) connection.outputStream.write(requestBody)
+                finalResult = if (connection.responseCode == HttpURLConnection.HTTP_OK) {
+                    responseContentType = connection.contentType
+                    val inputStream = connection.inputStream
+                    val result = when (connection.contentEncoding?.lowercase()) {
+                        "gzip" -> GZIPInputStream(inputStream)
+                        "br" -> BiliBiliPackage.instance.brotliInputStreamClass!!.new(inputStream) as InputStream
+                        "deflate" -> InflaterInputStream(inputStream)
+                        else -> inputStream
+                    }
+                    result.readBytes()
+                } else {
+                    null
                 }
-                result.readBytes()
-            } else {
-                null
+            } catch (e: Throwable) {
+                exception = e
             }
         }.join()
+        if (exception != null) {
+            throw exception as Throwable
+        }
         return finalResult to responseContentType
     }
 
@@ -424,11 +445,11 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         contentType: String? = null,
         requestBody: ByteArray? = null
     ): ByteArray? {
-        return requestWithNewThread(urlString, method, contentType, requestBody, 10000).first
+        return requestWithNewThread(urlString, method, contentType, requestBody, 4000).first
     }
 
     fun extendProtobufResponse(urlString: String, dmSegmentMobileReply: Any) {
-        val result = requestWithNewThread(urlString, connectTimeout = 10000)
+        val result = requestWithNewThread(urlString, connectTimeout = 4000)
         serverResponseArgv = if (result.second.indexOf(";") != -1) {
             result.second.let { it.substring(it.indexOf(";") + 1).toJSONObject() }
         } else JSONObject()

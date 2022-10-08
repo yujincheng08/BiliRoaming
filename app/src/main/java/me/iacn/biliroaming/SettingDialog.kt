@@ -406,7 +406,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     )
                 }
                 val switches = arrayOf(
-                    view.findViewById<Switch>(R.id.dandanplay_danmaku_switch),
+                    view.findViewById<Switch>(R.id.dandanplay_danmaku_switch)!!,
                     view.findViewById(R.id.danmaku_server_switch),
                     view.findViewById(R.id.reprint_danmaku_switch),
                     view.findViewById(R.id.alias_comment_switch),
@@ -414,11 +414,38 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     view.findViewById(R.id.translate_switch),
                     view.findViewById(R.id.translate_replace_katakana),
                 )
+
+
+                switches[0]
+                    .setOnCheckedChangeListener { buttonView, isChecked ->
+                        if (isChecked) {
+                            switches[1].isChecked = false
+                        }
+                    }
+                switches[1]
+                    .setOnCheckedChangeListener { buttonView, isChecked ->
+                        arrayOf(
+                            view.findViewById<TextView>(R.id.baha_danmaku_limit),
+                            view.findViewById(R.id.nico_danmaku_limit),
+                            view.findViewById(R.id.alias_comment_switch),
+                        ).forEach {
+                            if (isChecked) {
+                                it.alpha = 1F
+                            } else {
+                                it.alpha = 0.2F
+                            }
+                        }
+                        if (isChecked) {
+                            switches[0].isChecked = false
+                        }
+                    }
+
                 switches.forEach {
                     if (prefs.contains(it.tag.toString())) {
-                        prefs.getBoolean(it.tag.toString(), true)
+                        it.isChecked = prefs.getBoolean(it.tag.toString(), true)
                     }
                 }
+
                 setPositiveButton(android.R.string.ok) { _, _ ->
                     editTexts.forEach {
                         val host = it.text.toString()

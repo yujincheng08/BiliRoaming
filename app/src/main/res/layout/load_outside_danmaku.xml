@@ -37,7 +37,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_columnWeight="1"
-        android:checked="true"
+        android:checked="false"
         android:tag="danmaku_server_switch"
         tools:ignore="HardcodedText" />
 
@@ -61,7 +61,8 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_columnWeight="4"
-        android:text="加载内地番剧弹幕及评论"
+        android:text="关联番剧弹幕及评论(?)"
+        android:tooltipText="如在港澳台番剧加载国区番剧弹幕及评论"
         tools:ignore="HardcodedText" />
 
     <Switch
@@ -71,6 +72,8 @@
         android:layout_columnWeight="1"
         android:checked="true"
         android:tag="alias_comment_switch"
+        android:tooltipText="如在港澳台番剧加载国区番剧弹幕及评论"
+        android:alpha="0.2"
         tools:ignore="HardcodedText" />
 
     <TextView
@@ -124,6 +127,7 @@
         android:hint="-1"
         android:inputType="number"
         android:tag="baha_danmaku_limit"
+        android:alpha="0.2"
         tools:ignore="HardcodedText" />
 
     <TextView
@@ -142,6 +146,7 @@
         android:hint="500"
         android:inputType="number"
         android:tag="nico_danmaku_limit"
+        android:alpha="0.2"
         tools:ignore="HardcodedText" />
 
     <TextView
