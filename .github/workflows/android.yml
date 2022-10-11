@@ -7,8 +7,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    if: ${{ !startsWith(github.event.head_commit.message, '[skip ci]') }}
-
     steps:
       - uses: actions/checkout@v2
         with:
@@ -32,7 +30,7 @@ jobs:
           restore-keys: gradle-deps
       - name: Install dep
         run: |
-          sudo apt-get install -y ccache ninja-build
+          sudo apt-get install -y ccache
           ccache -o max_size=1G
           ccache -o hash_dir=false
           ccache -o compiler_check='%compiler% -dumpmachine; %compiler% -dumpversion'
@@ -58,8 +56,6 @@ jobs:
           echo 'org.gradle.vfs.watch=true' >> gradle.properties
           echo 'org.gradle.jvmargs=-Xmx2048m' >> gradle.properties
           echo 'android.native.buildOutput=verbose' >> gradle.properties
-          ln -s $(which ninja) $(dirname $(which cmake)) # https://issuetracker.google.com/issues/206099937
-          echo "cmake.dir=$(dirname $(dirname $(which cmake)))" >> local.properties
           ./gradlew -PappVerName=${{ env.VERSION }} assembleRelease assembleDebug
           ccache -s
       - name: Upload built apk
@@ -86,20 +82,3 @@ jobs:
         run: |
           ESCAPED=`python3 -c 'import json,os,urllib.parse; print(urllib.parse.quote(json.dumps(os.environ["COMMIT_MESSAGE"])))'`
           curl -v "https://api.telegram.org/bot${BOT_TOKEN}/sendMediaGroup?chat_id=${CHANNEL_ID}&media=%5B%7B%22type%22:%22document%22,%20%22media%22:%22attach://release%22,%22parse_mode%22:%22MarkdownV2%22,%22caption%22:${ESCAPED}%7D%5D"  -F release="@$FILE"
-
-  skipped:
-    runs-on: ubuntu-latest
-    if: ${{ startsWith(github.event.head_commit.message, '[skip ci]') }}
-    steps:
-      - uses: actions/checkout@v2
-      - name: Send commit to telegram
-        uses: appleboy/telegram-action@master
-        with:
-          to: ${{ secrets.TELEGRAM_TO }}
-          token: ${{ secrets.TELEGRAM_TOKEN }}
-          format: markdown
-          message: |+
-            New push to github!
-            *${{ github.event.head_commit.message }}* by ${{ github.event.head_commit.author.name }}
-            See commit detail [here](${{ github.event.head_commit.url }})
-            This push skipped building
