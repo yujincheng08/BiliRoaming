@@ -5,15 +5,6 @@ import com.google.protobuf.gradle.*
 import java.nio.file.Paths
 import org.gradle.internal.os.OperatingSystem
 
-// https://github.com/google/protobuf-gradle-plugin/issues/540#issuecomment-1001053066
-fun com.android.build.api.dsl.AndroidSourceSet.proto(action: SourceDirectorySet.() -> Unit) {
-    (this as? ExtensionAware)
-        ?.extensions
-        ?.getByName("proto")
-        ?.let { it as? SourceDirectorySet }
-        ?.apply(action)
-}
-
 fun findInPath(executable: String): String? {
     val pathEnv = System.getenv("PATH")
     return pathEnv.split(File.pathSeparator).map { folder ->
