@@ -286,4 +286,5 @@ message HookInfo {
   optional Class comment_long_click_new = 73;
   optional Method on_operate_click = 74;
   optional Method get_content_string = 75;
+  optional Class live_pager_recycler_view = 76;
 }
