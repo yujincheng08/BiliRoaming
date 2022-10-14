@@ -1,15 +1,23 @@
 package me.iacn.biliroaming.hook
 
 import android.os.Bundle
+import android.view.MotionEvent
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.utils.Log
 import me.iacn.biliroaming.utils.hookAfterMethod
 import me.iacn.biliroaming.utils.hookBeforeMethod
+import me.iacn.biliroaming.utils.replaceMethod
 import me.iacn.biliroaming.utils.sPrefs
 import me.iacn.biliroaming.utils.toJSONObject
 
 class LiveRoomHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
+        if (sPrefs.getBoolean("forbid_switch_live_room", false)) {
+            instance.livePagerRecyclerViewClass?.replaceMethod(
+                "onInterceptTouchEvent",
+                MotionEvent::class.java
+            ) { false }
+        }
         if (!sPrefs.getBoolean("revert_live_room_feed", false)) {
             return
         }

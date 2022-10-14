@@ -165,6 +165,11 @@
             android:summary="@string/generate_subtitle_summary"
             android:title="@string/generate_subtitle_title" />
 
+        <SwitchPreference
+            android:key="forbid_switch_live_room"
+            android:summary="@string/forbid_switch_live_room_summary"
+            android:title="@string/forbid_switch_live_room_title" />
+
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/pref_backup">
         <Preference
