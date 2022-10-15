@@ -62,6 +62,7 @@ android {
                     "-fomit-frame-pointer",
                     "-Wno-builtin-macro-redefined",
                     "-Wno-unused-value",
+                    "-Wno-c++2b-extensions",
                     "-D__FILE__=__FILE_NAME__",
                 )
                 cppFlags("-std=c++20", *flags)
