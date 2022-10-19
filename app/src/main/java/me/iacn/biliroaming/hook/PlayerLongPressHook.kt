@@ -8,26 +8,20 @@ import me.iacn.biliroaming.utils.sPrefs
 
 class PlayerLongPressHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
-    private val isEnabled = sPrefs.getBoolean("forbid_player_long_click_accelerate", false)
+    private val enabled = sPrefs.getBoolean("forbid_player_long_click_accelerate", false)
 
     private val replacement = object : XC_MethodReplacement() {
-
-        override fun replaceHookedMethod(param: MethodHookParam): Any {
-            if(isEnabled) return true
-            return XposedBridge.invokeOriginalMethod(param.method,
-                    param.thisObject, param.args)
-        }
+        override fun replaceHookedMethod(param: MethodHookParam): Any = true
     }
 
     override fun startHook() {
+        if(!enabled) return
         //6.59.0以前
         val className = "tv.danmaku.biliplayerimpl.gesture" +
                 ".GestureService\$mTouchListener\$1"
-        runCatching {
-            val clazz = XposedHelpers.findClass(className, mClassLoader)
-            XposedHelpers.findAndHookMethod(clazz, "onLongPress",
-                    MotionEvent::class.java, replacement)
-        }
+        var clazz = XposedHelpers.findClass(className, mClassLoader)
+        XposedHelpers.findAndHookMethod(clazz, "onLongPress",
+                MotionEvent::class.java, replacement)
         //6.59.0
         val classNames = arrayOf(
                 "tv.danmaku.biliplayerimpl.gesture.GestureService\$" +
@@ -35,15 +29,13 @@ class PlayerLongPressHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 "tv.danmaku.biliplayerimpl.gesture.GestureService\$" +
                         "initInnerLongPressListener\$1\$onLongPressEnd\$1"
         )
-        runCatching {
-            classNames.forEach outer@ {
-                val clazz = XposedHelpers.findClass(it, mClassLoader)
-                clazz.declaredMethods.forEach inner@ { method ->
-                    if(method.name != "invoke") return@inner
-                    if(method.returnType == java.lang.Boolean::class.java ||
-                       method.returnType == java.lang.Boolean::class.javaPrimitiveType) {
-                        XposedBridge.hookMethod(method, replacement)
-                    }
+        classNames.forEach outer@{
+            clazz = XposedHelpers.findClassIfExists(it, mClassLoader)
+            clazz?.declaredMethods?.forEach inner@{ method ->
+                if(method.name != "invoke") return@inner
+                if(method.returnType == java.lang.Boolean::class.java ||
+                   method.returnType == java.lang.Boolean::class.javaPrimitiveType) {
+                    XposedBridge.hookMethod(method, replacement)
                 }
             }
         }
