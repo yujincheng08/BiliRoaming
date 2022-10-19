@@ -128,11 +128,13 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             var supportDrawer = instance.homeUserCenterClass != null
             var supportDrawerStyle = true
             val supportRevertLive = versionCode < 6830000
+            var supportAddTag = true
             when (platform) {
                 "android_hd" -> {
                     supportCustomizeTab = false
                     supportDrawer = false
                     supportDrawerStyle = false
+                    supportAddTag = false
                 }
             }
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
@@ -186,6 +188,11 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             }
             if (!supportRevertLive) {
                 disablePreference("revert_live_room_feed")
+            }
+            if (!supportAddTag) {
+                disablePreference("add_bangumi")
+                disablePreference("add_korea")
+                disablePreference("add_movie")
             }
         }
 
