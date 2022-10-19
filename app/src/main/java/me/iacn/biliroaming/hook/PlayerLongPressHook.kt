@@ -1,91 +1,51 @@
 package me.iacn.biliroaming.hook
 
+import android.view.MotionEvent
 import de.robv.android.xposed.XC_MethodReplacement
 import de.robv.android.xposed.XposedBridge
+import de.robv.android.xposed.XposedHelpers
 import me.iacn.biliroaming.utils.sPrefs
-import java.lang.reflect.Method
 
 class PlayerLongPressHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
-    private val replacement: XC_MethodReplacement =
-            object : XC_MethodReplacement() {
+    private val isEnabled = sPrefs.getBoolean("forbid_player_long_click_accelerate", false)
+
+    private val replacement = object : XC_MethodReplacement() {
 
         override fun replaceHookedMethod(param: MethodHookParam): Any {
-            if(sPrefs.getBoolean("forbid_player_long_click_accelerate", false)) {
-                return true
-            }
+            if(isEnabled) return true
             return XposedBridge.invokeOriginalMethod(param.method,
                     param.thisObject, param.args)
         }
     }
 
     override fun startHook() {
-        replace1()
-        replace2()
-    }
-
-    private inline fun doIgnoreException(action: () -> Unit) {
-        try {
-            action()
-        } catch(t: Throwable) {
-            //ignore
+        //6.59.0以前
+        val className = "tv.danmaku.biliplayerimpl.gesture" +
+                ".GestureService\$mTouchListener\$1"
+        runCatching {
+            val clazz = XposedHelpers.findClass(className, mClassLoader)
+            XposedHelpers.findAndHookMethod(clazz, "onLongPress",
+                    MotionEvent::class.java, replacement)
         }
-    }
-
-    private fun findMethod(clazz: Class<*>, methodName: String): Method? {
-        for(method in clazz.declaredMethods) {
-            if(method.name == methodName) return method
-        }
-        return null
-    }
-
-    private fun classNameListToClassList(vararg classNameList: String):
-            List<Class<*>> {
-        val classes = ArrayList<Class<*>>()
-        classNameList.forEach {
-            classes.add(mClassLoader.loadClass(it))
-        }
-        return classes
-    }
-
-    private fun hookInvokeMethod(vararg classNameList: String) {
-        doIgnoreException {
-            for(aClass in classNameListToClassList(*classNameList)) {
-                for(method in aClass.declaredMethods) {
-                    if(method.name != "invoke") continue
+        //6.59.0
+        val classNames = arrayOf(
+                "tv.danmaku.biliplayerimpl.gesture.GestureService\$" +
+                        "initInnerLongPressListener\$1\$onLongPress\$1",
+                "tv.danmaku.biliplayerimpl.gesture.GestureService\$" +
+                        "initInnerLongPressListener\$1\$onLongPressEnd\$1"
+        )
+        runCatching {
+            classNames.forEach outer@ {
+                val clazz = XposedHelpers.findClass(it, mClassLoader)
+                clazz.declaredMethods.forEach inner@ { method ->
+                    if(method.name != "invoke") return@inner
                     if(method.returnType == java.lang.Boolean::class.java ||
-                            method.returnType == java.lang.Boolean::class
-                                    .javaPrimitiveType) {
+                       method.returnType == java.lang.Boolean::class.javaPrimitiveType) {
                         XposedBridge.hookMethod(method, replacement)
                     }
                 }
             }
         }
-    }
-
-    /**
-     * 6.59.0以前
-     */
-    private fun replace1() {
-        val className = "tv.danmaku.biliplayerimpl.gesture" +
-                ".GestureService\$mTouchListener\$1"
-        doIgnoreException {
-            val clazz: Class<*> = mClassLoader.loadClass(className)
-            val method: Method = findMethod(clazz, "onLongPress")!!
-            XposedBridge.hookMethod(method, replacement)
-        }
-    }
-
-    /**
-     * 6.59.0
-     */
-    private fun replace2() {
-        val classeNames = arrayOf(
-                "tv.danmaku.biliplayerimpl.gesture.GestureService" +
-                        "\$initInnerLongPressListener\$1\$onLongPress\$1",
-                "tv.danmaku.biliplayerimpl.gesture.GestureService" +
-                        "\$initInnerLongPressListener\$1\$onLongPressEnd\$1"
-        )
-        hookInvokeMethod(*classeNames)
     }
 }
