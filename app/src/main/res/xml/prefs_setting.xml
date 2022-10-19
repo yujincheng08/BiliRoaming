@@ -170,6 +170,10 @@
             android:summary="@string/forbid_switch_live_room_summary"
             android:title="@string/forbid_switch_live_room_title" />
 
+        <SwitchPreference
+            android:key="forbid_player_long_click_accelerate"
+            android:summary="@string/forbid_player_long_click_accelerate_summary"
+            android:title="@string/forbid_player_long_click_accelerate_title" />
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/pref_backup">
         <Preference

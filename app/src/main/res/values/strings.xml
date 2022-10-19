@@ -229,4 +229,6 @@
     <string name="generate_subtitle_summary">根据繁体字幕自动生成简体中文字幕</string>
     <string name="forbid_switch_live_room_title">禁止滑动切换直播间</string>
     <string name="forbid_switch_live_room_summary">禁止上下滑动切换直播间</string>
+    <string name="forbid_player_long_click_accelerate_title">禁用播放器长按加速</string>
+    <string name="forbid_player_long_click_accelerate_summary">禁用播放器长按开启倍速播放的功能</string>
 </resources>
