@@ -26,7 +26,7 @@ val releaseStorePassword: String? by rootProject
 val releaseKeyAlias: String? by rootProject
 val releaseKeyPassword: String? by rootProject
 
-val appVerCode: String by rootProject
+val appVerCode: Int by rootProject
 val appVerName: String by rootProject
 
 val kotlinVersion: String by rootProject
@@ -41,7 +41,7 @@ android {
         applicationId = "me.iacn.biliroaming"
         minSdk = 24
         targetSdk = 33  // Target Android T
-        versionCode = appVerCode.toInt()
+        versionCode = appVerCode
         versionName = appVerName
 
         externalNativeBuild {
