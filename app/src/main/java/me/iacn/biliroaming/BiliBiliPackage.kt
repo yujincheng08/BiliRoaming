@@ -739,7 +739,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 val progressBarClass = "tv.danmaku.biliplayer.view.RingProgressBar" from classloader
                     ?: "com.bilibili.playerbizcommon.view.RingProgressBar" from classloader
                 val sectionClass = classesList.filter {
-                    it.startsWith("tv.danmaku.bili.ui.video.section")
+                    it.startsWith("tv.danmaku.bili.ui.video.section") ||
+                            it.startsWith("tv.danmaku.bili.ui.video.profile.action")
                 }.firstNotNullOfOrNull { c ->
                     c.findClass(classloader).takeIf {
                         it.declaredFields.any { f -> f.type == progressBarClass }

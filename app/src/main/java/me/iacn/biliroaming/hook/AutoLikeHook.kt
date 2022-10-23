@@ -35,9 +35,9 @@ class AutoLikeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 val likeView = sec.javaClass.declaredFields.filter {
                     View::class.java.isAssignableFrom(it.type)
                 }.map {
-                    sec.getObjectField(it.name) as View
+                    sec.getObjectField(it.name) as View?
                 }.firstOrNull {
-                    it.id == likeId
+                    it?.id == likeId
                 }
                 if (like == 0) {
                     likeView?.callOnClick()
