@@ -2,7 +2,7 @@
 
 buildscript {
     val kotlinVersion by extra("1.7.20")
-    val protobufVersion by extra("3.21.7")
+    val protobufVersion by extra("3.21.8")
     repositories {
         google()
         mavenCentral()

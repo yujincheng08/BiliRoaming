@@ -6,6 +6,11 @@ jobs:
   build:
     name: Build on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    env:
+      CCACHE_DIR: ${{ github.workspace }}/.ccache
+      CCACHE_COMPILERCHECK: "%compiler% -dumpmachine; %compiler% -dumpversion"
+      CCACHE_NOHASHDIR: true
+      CCACHE_MAXSIZE: 1G
     strategy:
       fail-fast: false
       matrix:
@@ -16,14 +21,31 @@ jobs:
       uses: actions/checkout@v2
       with:
         submodules: 'recursive'
-    - name: Set up JDK 18
+    - name: Set up JDK 17
       uses: actions/setup-java@v3
       with:
         distribution: 'zulu'
-        java-version: '18'
+        java-version: '17'
+        cache: 'gradle'
+    - name: Set up ccache
+      uses: hendrikmuhs/ccache-action@v1.2
+      with:
+        key: ${{ runner.os }}-${{ github.sha }}
+        restore-keys: ${{ runner.os }}
+    - name: Cache gradle build
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.gradle/caches/build-cache-*
+        key: gradle-builds-${{ github.sha }}
+        restore-keys: gradle-builds
     - name: Build with Gradle
       run: |
+        echo 'org.gradle.caching=true' >> gradle.properties
+        echo 'org.gradle.parallel=true' >> gradle.properties
+        echo 'org.gradle.vfs.watch=true' >> gradle.properties
         echo 'org.gradle.jvmargs=-Xmx2048m' >> gradle.properties
+        echo 'android.native.buildOutput=verbose' >> gradle.properties
         ./gradlew assemble
     - name: Upload build artifact
       uses: actions/upload-artifact@v2

@@ -7,48 +7,36 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      CCACHE_DIR: ${{ github.workspace }}/.ccache
+      CCACHE_COMPILERCHECK: "%compiler% -dumpmachine; %compiler% -dumpversion"
+      CCACHE_NOHASHDIR: true
+      CCACHE_MAXSIZE: 1G
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: 'recursive'
-      - name: Setup JDK 18
+      - name: Setup JDK 17
         uses: actions/setup-java@v3
         with:
-          distribution: 'zulu'
-          java-version: 18
+          distribution: 'temurin'
+          java-version: 17
+          cache: 'gradle'
       - name: Retrieve version
         run: |
           echo VERSION=$(echo ${{ github.event.head_commit.id }} | head -c 10) >> $GITHUB_ENV
-      - name: Cache gradle dep
-        uses: actions/cache@v2
+      - name: Set up ccache
+        uses: hendrikmuhs/ccache-action@v1.2
         with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-            !~/.gradle/caches/build-cache-*
-          key: gradle-deps-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: gradle-deps
-      - name: Install dep
-        run: |
-          sudo apt-get install -y ccache
-          ccache -o max_size=1G
-          ccache -o hash_dir=false
-          ccache -o compiler_check='%compiler% -dumpmachine; %compiler% -dumpversion'
-          ccache -zp
+          key: ${{ runner.os }}-${{ github.sha }}
+          restore-keys: ${{ runner.os }}
       - name: Cache gradle build
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             ~/.gradle/caches/build-cache-*
           key: gradle-builds-${{ github.sha }}
           restore-keys: gradle-builds
-      - name: Cache native build
-        uses: actions/cache@v2
-        with:
-          path: |
-            ~/.ccache
-          key: native-cache-${{ github.sha }}
-          restore-keys: native-cache-
       - name: Build with Gradle
         run: |
           echo 'org.gradle.caching=true' >> gradle.properties
@@ -57,17 +45,16 @@ jobs:
           echo 'org.gradle.jvmargs=-Xmx2048m' >> gradle.properties
           echo 'android.native.buildOutput=verbose' >> gradle.properties
           ./gradlew -PappVerName=${{ env.VERSION }} assembleRelease assembleDebug
-          ccache -s
       - name: Upload built apk
         if: success()
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: snapshot
           path: |
               ${{ github.workspace }}/app/build/outputs/apk
               ${{ github.workspace }}/app/build/outputs/mapping
       - name: Post to channel
-        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
+        if: github.ref == 'refs/heads/master'
         env:
           CHANNEL_ID: ${{ secrets.TELEGRAM_TO }}
           BOT_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
