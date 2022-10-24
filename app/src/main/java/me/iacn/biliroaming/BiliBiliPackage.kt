@@ -538,10 +538,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             }
             biliAccounts = biliAccounts {
                 val biliAccountsClass = dexHelper.findMethodUsingString(
-                    "authorization_code",
+                    "refresh token error",
                     false,
                     -1,
-                    -1,
+                    0,
                     null,
                     -1,
                     null,
