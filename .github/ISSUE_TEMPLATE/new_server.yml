@@ -27,6 +27,12 @@ body:
         - label: 港澳
         - label: 台湾
         - label: 东南亚
+  - type: checkboxes
+    id: premium
+    attributes:
+      label: 带会员专享
+      options:
+        - label: 服务器只有带会员用户能解析
   - type: input
     id: sponsor
     attributes:
