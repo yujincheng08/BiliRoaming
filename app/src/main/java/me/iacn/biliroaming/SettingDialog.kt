@@ -141,7 +141,6 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 supportMusicNotificationHook = false
             val supportSplashHook = instance.brandSplashClass != null
             val supportTeenagersMode = instance.teenagersModeDialogActivityClass != null
-            val supportCustomizeCC = instance.subtitleSpanClass != null
             val supportStoryVideo = instance.storyVideoActivityClass != null
             val supportPurifyShare = instance.shareClickResultClass != null
             val supportDownloadThread = versionCode < 6630000 || versionCode >= 6900000
@@ -169,9 +168,6 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             if (!supportCustomizeTab) {
                 disablePreference("customize_home_tab_title")
                 disablePreference("customize_bottom_bar_title")
-            }
-            if (!supportCustomizeCC) {
-                disablePreference("custom_subtitle")
             }
             if (!supportStoryVideo) {
                 disablePreference("replace_story_video")
@@ -208,7 +204,10 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         }
 
         private fun showCustomSubtitle() {
-            CustomSubtitleDialog(activity, prefs).show()
+            if (instance.subtitleSpanClass != null)
+                CustomSubtitleDialog(activity, prefs).show()
+            else
+                CustomSubtitleDialogNew(activity, prefs).show()
         }
 
         @Deprecated("Deprecated in Java")

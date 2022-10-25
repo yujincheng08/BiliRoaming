@@ -231,4 +231,10 @@
     <string name="forbid_switch_live_room_summary">禁止上下滑动切换直播间</string>
     <string name="forbid_player_long_click_accelerate_title">禁用播放器长按加速</string>
     <string name="forbid_player_long_click_accelerate_summary">禁用播放器长按开启倍速播放的功能</string>
+    <string name="custom_subtitle_remove_bg">移除字幕背景</string>
+    <string name="custom_subtitle_bold">粗体显示</string>
+    <string name="custom_subtitle_fill_color">字体颜色</string>
+    <string name="custom_subtitle_stroke_color">描边颜色</string>
+    <string name="custom_subtitle_stroke_width">描边宽度</string>
+    <string name="custom_subtitle_pick_color">取色</string>
 </resources>
