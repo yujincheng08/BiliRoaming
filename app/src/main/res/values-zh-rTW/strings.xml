@@ -236,5 +236,12 @@
     <string name="custom_subtitle_fill_color">字體顏色</string>
     <string name="custom_subtitle_stroke_color">描邊顏色</string>
     <string name="custom_subtitle_stroke_width">描邊寬度</string>
+    <string name="custom_subtitle_bg_color">背景顏色</string>
+    <string name="custom_subtitle_font_size">字體大小</string>
+    <string name="custom_subtitle_blur">字體陰影</string>
+    <string name="custom_subtitle_test">測試內容</string>
+    <string name="custom_subtitle_test_text">字幕樣式預覽</string>
+    <string name="custom_subtitle_fix_break">修復換行 (除非想解決字幕換行問題, 否則不要開啟)</string>
+    <string name="custom_subtitle_preview">預覽</string>
     <string name="custom_subtitle_pick_color">取色</string>
 </resources>

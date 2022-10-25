@@ -3,9 +3,14 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:paddingLeft="16dp"
+    android:paddingTop="10dp"
+    android:paddingRight="16dp"
+    android:paddingBottom="10dp">
 
     <RelativeLayout
+        android:id="@+id/pvBlack"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
@@ -26,6 +31,7 @@
     </RelativeLayout>
 
     <RelativeLayout
+        android:id="@+id/pvWhite"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
@@ -46,6 +52,7 @@
     </RelativeLayout>
 
     <RelativeLayout
+        android:id="@+id/pvTp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
@@ -68,6 +75,63 @@
     </RelativeLayout>
 
     <LinearLayout
+        android:id="@+id/ll_noBg"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?android:attr/selectableItemBackground"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="10dp"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:singleLine="true"
+            android:text="@string/custom_subtitle_remove_bg"
+            android:textSize="16sp" />
+
+        <Switch
+            android:id="@+id/noBg"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
+            android:clickable="false"
+            android:tag="subtitle_remove_bg" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/ll_bold"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?android:attr/selectableItemBackground"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="10dp"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:singleLine="true"
+            android:text="@string/custom_subtitle_bold"
+            android:textSize="16sp" />
+
+        <Switch
+            android:id="@+id/bold"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
+            android:clickable="false"
+            android:tag="subtitle_bold" />
+    </LinearLayout>
+
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
@@ -77,8 +141,8 @@
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"
             android:singleLine="true"
-            android:text="字体颜色"
-            tools:ignore="HardcodedText" />
+            android:text="@string/custom_subtitle_fill_color"
+            android:textSize="16sp" />
 
         <EditText
             android:id="@+id/font_color"
@@ -88,20 +152,19 @@
             android:layout_weight="1"
             android:autofillHints="yes"
             android:digits="0123456789ABCDEFabcdef"
-            android:hint="FFFFFFFF"
             android:inputType="text|textCapCharacters"
             android:tag="subtitle_font_color2"
-            tools:ignore="HardcodedText" />
+            tools:ignore="LabelFor" />
 
         <Button
             android:id="@+id/btn_chooseColorFc"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="取色"
-            tools:ignore="HardcodedText" />
+            android:text="@string/custom_subtitle_pick_color" />
     </LinearLayout>
 
     <LinearLayout
+        android:id="@+id/ll_bg"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
@@ -111,8 +174,8 @@
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"
             android:singleLine="true"
-            android:text="背景颜色"
-            tools:ignore="HardcodedText" />
+            android:text="@string/custom_subtitle_bg_color"
+            android:textSize="16sp" />
 
         <EditText
             android:id="@+id/background_color"
@@ -122,21 +185,19 @@
             android:layout_weight="1"
             android:autofillHints="yes"
             android:digits="0123456789ABCDEFabcdef"
-            android:hint="20000000"
             android:inputType="text|textCapCharacters"
             android:tag="subtitle_background_color"
-            tools:ignore="HardcodedText" />
+            tools:ignore="LabelFor" />
 
         <Button
             android:id="@+id/btn_chooseColorBc"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="取色"
-            tools:ignore="HardcodedText" />
+            android:text="@string/custom_subtitle_pick_color" />
     </LinearLayout>
 
-
     <LinearLayout
+        android:id="@+id/ll_size"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
@@ -146,8 +207,8 @@
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"
             android:singleLine="true"
-            android:text="字体大小"
-            tools:ignore="HardcodedText" />
+            android:text="@string/custom_subtitle_font_size"
+            android:textSize="16sp" />
 
         <EditText
             android:id="@+id/font_size"
@@ -156,13 +217,13 @@
             android:layout_columnWeight="4"
             android:autofillHints="yes"
             android:digits="0123456789"
-            android:hint="30"
-            android:inputType="text|textCapCharacters"
+            android:inputType="number"
             android:tag="subtitle_font_size"
-            tools:ignore="HardcodedText,TextFields" />
+            tools:ignore="LabelFor" />
     </LinearLayout>
 
     <LinearLayout
+        android:id="@+id/ll_blur"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
@@ -172,8 +233,8 @@
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"
             android:singleLine="true"
-            android:text="字体阴影"
-            tools:ignore="HardcodedText" />
+            android:text="@string/custom_subtitle_blur"
+            android:textSize="16sp" />
 
         <EditText
             android:id="@+id/font_blur_solid"
@@ -182,10 +243,9 @@
             android:layout_columnWeight="4"
             android:autofillHints="yes"
             android:digits="0123456789"
-            android:hint="1"
             android:inputType="text|textCapCharacters"
             android:tag="subtitle_blur_solid"
-            tools:ignore="HardcodedText" />
+            tools:ignore="LabelFor" />
     </LinearLayout>
 
     <LinearLayout
@@ -198,28 +258,26 @@
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"
             android:singleLine="true"
-            android:text="描边颜色"
-            tools:ignore="HardcodedText" />
+            android:text="@string/custom_subtitle_stroke_color"
+            android:textSize="16sp" />
 
         <EditText
-            android:id="@+id/strok_color"
+            android:id="@+id/stroke_color"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_columnWeight="4"
             android:layout_weight="1"
             android:autofillHints="yes"
             android:digits="0123456789ABCDEFabcdef"
-            android:hint="00000000"
             android:inputType="text|textCapCharacters"
             android:tag="subtitle_stroke_color"
-            tools:ignore="HardcodedText" />
+            tools:ignore="LabelFor" />
 
         <Button
             android:id="@+id/btn_chooseColorSc"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="取色"
-            tools:ignore="HardcodedText" />
+            android:text="@string/custom_subtitle_pick_color" />
     </LinearLayout>
 
     <LinearLayout
@@ -232,8 +290,8 @@
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"
             android:singleLine="true"
-            android:text="描边宽度"
-            tools:ignore="HardcodedText" />
+            android:text="@string/custom_subtitle_stroke_width"
+            android:textSize="16sp" />
 
         <EditText
             android:id="@+id/stroke_width"
@@ -242,14 +300,14 @@
             android:layout_columnWeight="4"
             android:layout_weight="1"
             android:autofillHints="yes"
-            android:hint="0"
             android:inputType="numberDecimal"
             android:tag="subtitle_stroke_width"
-            tools:ignore="HardcodedText" />
+            tools:ignore="LabelFor" />
 
     </LinearLayout>
 
     <LinearLayout
+        android:id="@+id/ll_pv"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
@@ -259,8 +317,8 @@
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"
             android:singleLine="true"
-            android:text="测试内容"
-            tools:ignore="HardcodedText" />
+            android:text="@string/custom_subtitle_test"
+            android:textSize="16sp" />
 
         <EditText
             android:id="@+id/et_testText"
@@ -269,15 +327,14 @@
             android:layout_weight="1"
             android:importantForAutofill="no"
             android:inputType="text"
-            android:text="字幕样式预览"
-            tools:ignore="HardcodedText,LabelFor" />
+            android:text="@string/custom_subtitle_test_text"
+            tools:ignore="LabelFor" />
 
         <Button
             android:id="@+id/btn_pv"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="预览"
-            tools:ignore="HardcodedText" />
+            android:text="@string/custom_subtitle_preview" />
     </LinearLayout>
 
     <CheckBox
@@ -286,7 +343,6 @@
         android:layout_height="wrap_content"
         android:checked="false"
         android:tag="subtitle_fix_break"
-        android:text="修复换行 (除非想解决字幕换行问题, 否则不要开启)"
-        tools:ignore="HardcodedText" />
+        android:text="@string/custom_subtitle_fix_break" />
 
 </LinearLayout>

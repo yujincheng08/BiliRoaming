@@ -12,7 +12,6 @@ import android.text.style.AbsoluteSizeSpan
 import android.text.style.LineBackgroundSpan
 import android.text.style.MaskFilterSpan
 import android.text.style.StyleSpan
-import de.robv.android.xposed.XposedBridge
 import me.iacn.biliroaming.*
 import me.iacn.biliroaming.API.*
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
@@ -112,18 +111,18 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private val generateSubtitle by lazy { sPrefs.getBoolean("auto_generate_subtitle", false) }
     private val addCloseSubtitle by lazy { mainFunc && getVersionCode(packageName) >= 6750300 }
     private val customSubtitle by lazy { sPrefs.getBoolean("custom_subtitle", false) }
-    private val removeBg by lazy { sPrefs.getBoolean("custom_subtitle_remove_bg", true) }
-    private val boldText by lazy { sPrefs.getBoolean("custom_subtitle_bold", true) }
+    private val removeBg by lazy { sPrefs.getBoolean("subtitle_remove_bg", true) }
+    private val boldText by lazy { sPrefs.getBoolean("subtitle_bold", true) }
     private val fillColor by lazy {
-        sPrefs.getString("custom_subtitle_fill_color", null)
+        sPrefs.getString("subtitle_font_color2", null)
             ?.runCatchingOrNull { Color.parseColor("#$this") } ?: Color.WHITE
     }
     private val strokeColor by lazy {
-        sPrefs.getString("custom_subtitle_stroke_color", null)
+        sPrefs.getString("subtitle_stroke_color", null)
             ?.runCatchingOrNull { Color.parseColor("#$this") } ?: Color.BLACK
     }
     private val strokeWidth by lazy {
-        sPrefs.getFloat("custom_subtitle_stroke_width", 5.0F)
+        sPrefs.getFloat("subtitle_stroke_width", 5.0F)
     }
 
     private val closeText =
@@ -193,15 +192,12 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 Boolean::class.javaPrimitiveType
             ) { null }
         }
-        val paintField = cronCanvasClass.declaredFields
-            .find { it.name == "paint" }?.also { it.isAccessible = true }
-            ?: return
-        val fillColorField = cronCanvasClass.declaredFields
-            .find { it.name == "fillColor" }?.also { it.isAccessible = true }
-            ?: return
-        val strokeColorField = cronCanvasClass.declaredFields
-            .find { it.name == "strokeColor" }?.also { it.isAccessible = true }
-            ?: return
+        val paintField = cronCanvasClass.getDeclaredField("paint")
+            .apply { isAccessible = true }
+        val fillColorField = cronCanvasClass.getDeclaredField("fillColor")
+            .apply { isAccessible = true }
+        val strokeColorField = cronCanvasClass.getDeclaredField("strokeColor")
+            .apply { isAccessible = true }
         cronCanvasClass.hookBeforeMethod(
             "drawText",
             String::class.java,
@@ -209,9 +205,6 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             Float::class.javaPrimitiveType,
             Boolean::class.javaPrimitiveType
         ) { param ->
-            val text = param.args[0] as String
-            val x = param.args[1] as Float
-            val y = param.args[2] as Float
             val stroke = param.args[3] as Boolean
             val cronCanvas = param.thisObject
 
@@ -222,10 +215,9 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 strokeColorField.setInt(cronCanvas, strokeColor)
                 if (boldText)
                     paint.isFakeBoldText = true
-                XposedBridge.invokeOriginalMethod(
-                    param.method, cronCanvas,
-                    arrayOf(text, x, y, true)
-                )
+                param.args[3] = true
+                param.invokeOriginalMethod()
+                param.args[3] = false
             }
         }
     }

@@ -204,10 +204,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         }
 
         private fun showCustomSubtitle() {
-            if (instance.subtitleSpanClass != null)
-                CustomSubtitleDialog(activity, prefs).show()
-            else
-                CustomSubtitleDialogNew(activity, prefs).show()
+            CustomSubtitleDialog(activity, prefs).show()
         }
 
         @Deprecated("Deprecated in Java")
