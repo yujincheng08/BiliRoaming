@@ -18,13 +18,14 @@ jobs:
 
     steps:
     - name: Check out
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         submodules: 'recursive'
+        fetch-depth: 0
     - name: Set up JDK 17
       uses: actions/setup-java@v3
       with:
-        distribution: 'zulu'
+        distribution: 'temurin'
         java-version: '17'
         cache: 'gradle'
     - name: Set up ccache
@@ -48,7 +49,7 @@ jobs:
         echo 'android.native.buildOutput=verbose' >> gradle.properties
         ./gradlew assemble
     - name: Upload build artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: ${{ matrix.os }}-artifact
         path: app/build/outputs
