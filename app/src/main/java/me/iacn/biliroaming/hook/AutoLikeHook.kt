@@ -12,7 +12,8 @@ class AutoLikeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
         Log.d("startHook: AutoLike")
 
-        val likeId = getId("frame1")
+        val likeId = getId("frame_recommend")
+        val like1 = getId("frame1")
         val detailClass = instance.biliVideoDetailClass ?: return
         var detail: Any? = null
 
@@ -34,10 +35,10 @@ class AutoLikeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 val like = requestUser?.getIntField("mLike")
                 val likeView = sec.javaClass.declaredFields.filter {
                     View::class.java.isAssignableFrom(it.type)
-                }.map {
-                    sec.getObjectField(it.name) as View?
-                }.firstOrNull {
-                    it?.id == likeId
+                }.firstNotNullOfOrNull {
+                    sec.getObjectFieldOrNullAs<View>(it.name)?.takeIf { v ->
+                        v.id == likeId || v.id == like1
+                    }
                 }
                 if (like == 0) {
                     likeView?.callOnClick()
