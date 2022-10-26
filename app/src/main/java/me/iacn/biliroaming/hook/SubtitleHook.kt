@@ -130,7 +130,7 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     override fun startHook() {
         if (customSubtitle)
-            if (instance.subtitleSpanClass != null) {
+            if (instance.cronCanvasClass == null) {
                 hookSubtitleStyle()
             } else {
                 hookSubtitleStyleNew()
@@ -211,10 +211,9 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             val paint = paintField.get(cronCanvas) as TextPaint
             if (!stroke && paint.strokeWidth == 0.0F) {
                 paint.strokeWidth = strokeWidth
+                paint.isFakeBoldText = boldText
                 fillColorField.setInt(cronCanvas, fillColor)
                 strokeColorField.setInt(cronCanvas, strokeColor)
-                if (boldText)
-                    paint.isFakeBoldText = true
                 param.args[3] = true
                 param.invokeOriginalMethod()
                 param.args[3] = false
