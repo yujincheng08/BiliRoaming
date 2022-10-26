@@ -19,7 +19,7 @@ import me.iacn.biliroaming.hook.SubtitleHook
 class CustomSubtitleDialog(val activity: Activity, prefs: SharedPreferences) :
     AlertDialog.Builder(activity) {
     init {
-        val oldClient = instance.subtitleSpanClass != null
+        val oldClient = instance.cronCanvasClass == null
         val layout = activity.resources.getLayout(R.layout.custom_subtitle_dialog)
         val view = LayoutInflater.from(context).inflate(layout, null)
         val noBgSwitch = view.findViewById<Switch>(R.id.noBg).apply {
