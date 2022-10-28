@@ -244,4 +244,9 @@
     <string name="custom_subtitle_fix_break">修復換行 (除非想解決字幕換行問題, 否則不要開啟)</string>
     <string name="custom_subtitle_preview">預覽</string>
     <string name="custom_subtitle_pick_color">取色</string>
+    <string name="custom_subtitle_font">字體</string>
+    <string name="custom_subtitle_reset">重設</string>
+    <string name="custom_subtitle_import">導入</string>
+    <string name="custom_subtitle_status_default">當前：默認</string>
+    <string name="custom_subtitle_status_custom">當前：自訂</string>
 </resources>

@@ -1,7 +1,12 @@
+@file:Suppress("DEPRECATION")
+
 package me.iacn.biliroaming
 
 import android.app.Activity
 import android.app.AlertDialog
+import android.app.Fragment
+import android.content.ActivityNotFoundException
+import android.content.Intent
 import android.content.SharedPreferences
 import android.graphics.Color
 import android.text.SpannableString
@@ -15,9 +20,12 @@ import android.widget.Switch
 import android.widget.TextView
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.hook.SubtitleHook
+import me.iacn.biliroaming.utils.Log
 
-class CustomSubtitleDialog(val activity: Activity, prefs: SharedPreferences) :
+class CustomSubtitleDialog(val activity: Activity, fragment: Fragment, prefs: SharedPreferences) :
     AlertDialog.Builder(activity) {
+    private var fontStatus: TextView? = null
+
     init {
         val oldClient = instance.cronCanvasClass == null
         val layout = activity.resources.getLayout(R.layout.custom_subtitle_dialog)
@@ -36,6 +44,9 @@ class CustomSubtitleDialog(val activity: Activity, prefs: SharedPreferences) :
         }
         val llBold = view.findViewById<View>(R.id.ll_bold)
         llBold.setOnClickListener { boldSwitch.toggle() }
+        val llFont = view.findViewById<View>(R.id.ll_font)
+        fontStatus = view.findViewById(R.id.tv_fontStatus)
+        refreshFontStatus()
         val fontColor = view.findViewById<EditText>(R.id.font_color)
         fontColor.setText(prefs.getString(fontColor.tag.toString(), "FFFFFFFF"))
         val backgroundColor = view.findViewById<EditText>(R.id.background_color)
@@ -93,10 +104,28 @@ class CustomSubtitleDialog(val activity: Activity, prefs: SharedPreferences) :
                 }
             }.show()
         }
+        view.findViewById<Button>(R.id.btn_importFont).setOnClickListener {
+            try {
+                fragment.startActivityForResult(
+                    Intent.createChooser(Intent(Intent.ACTION_GET_CONTENT).apply {
+                        type = "font/*"
+                        addCategory(Intent.CATEGORY_OPENABLE)
+                    }, "选择字体文件"),
+                    2338
+                )
+            } catch (ex: ActivityNotFoundException) {
+                Log.toast("请安装文件管理器")
+            }
+        }
+        view.findViewById<Button>(R.id.btn_resetFont).setOnClickListener {
+            SubtitleHook.fontFile.delete()
+            refreshFontStatus()
+        }
 
         if (oldClient) {
             llNoBg.visibility = View.GONE
             llBold.visibility = View.GONE
+            llFont.visibility = View.GONE
         } else {
             view.findViewById<View>(R.id.pvBlack).visibility = View.GONE
             view.findViewById<View>(R.id.pvWhite).visibility = View.GONE
@@ -125,5 +154,22 @@ class CustomSubtitleDialog(val activity: Activity, prefs: SharedPreferences) :
         setTitle(activity.getString(R.string.custom_subtitle_title))
 
         setView(view)
+    }
+
+    private fun refreshFontStatus() {
+        fontStatus?.text = if (SubtitleHook.fontFile.isFile)
+            activity.getString(R.string.custom_subtitle_status_custom)
+        else
+            activity.getString(R.string.custom_subtitle_status_default)
+    }
+
+    fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        val uri = data?.data
+        if (requestCode != 2338 || resultCode != Activity.RESULT_OK || uri == null) return
+        activity.contentResolver.openInputStream(uri)?.use {
+            val fontFile = SubtitleHook.fontFile.apply { delete() }
+            it.copyTo(fontFile.outputStream())
+            refreshFontStatus()
+        }
     }
 }
