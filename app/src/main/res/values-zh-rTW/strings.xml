@@ -246,7 +246,7 @@
     <string name="custom_subtitle_pick_color">取色</string>
     <string name="custom_subtitle_font">字體</string>
     <string name="custom_subtitle_reset">重設</string>
-    <string name="custom_subtitle_import">導入</string>
-    <string name="custom_subtitle_status_default">當前：默認</string>
-    <string name="custom_subtitle_status_custom">當前：自訂</string>
+    <string name="custom_subtitle_import">匯入</string>
+    <string name="custom_subtitle_status_default">目前：預設</string>
+    <string name="custom_subtitle_status_custom">目前：自訂</string>
 </resources>
