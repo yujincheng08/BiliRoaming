@@ -132,6 +132,48 @@
     </LinearLayout>
 
     <LinearLayout
+        android:id="@+id/ll_font"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/custom_subtitle_font"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/tv_fontStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:singleLine="true"
+                android:textColor="?android:attr/textColorSecondary"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btn_resetFont"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/custom_subtitle_reset" />
+
+        <Button
+            android:id="@+id/btn_importFont"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/custom_subtitle_import" />
+    </LinearLayout>
+
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
@@ -139,7 +181,6 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_columnWeight="1"
             android:singleLine="true"
             android:text="@string/custom_subtitle_fill_color"
             android:textSize="16sp" />
@@ -148,7 +189,6 @@
             android:id="@+id/font_color"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_columnWeight="4"
             android:layout_weight="1"
             android:autofillHints="yes"
             android:digits="0123456789ABCDEFabcdef"
@@ -172,7 +212,6 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_columnWeight="1"
             android:singleLine="true"
             android:text="@string/custom_subtitle_bg_color"
             android:textSize="16sp" />
@@ -181,7 +220,6 @@
             android:id="@+id/background_color"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_columnWeight="4"
             android:layout_weight="1"
             android:autofillHints="yes"
             android:digits="0123456789ABCDEFabcdef"
@@ -205,7 +243,6 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_columnWeight="1"
             android:singleLine="true"
             android:text="@string/custom_subtitle_font_size"
             android:textSize="16sp" />
@@ -214,7 +251,6 @@
             android:id="@+id/font_size"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_columnWeight="4"
             android:autofillHints="yes"
             android:digits="0123456789"
             android:inputType="number"
@@ -231,7 +267,6 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_columnWeight="1"
             android:singleLine="true"
             android:text="@string/custom_subtitle_blur"
             android:textSize="16sp" />
@@ -240,7 +275,6 @@
             android:id="@+id/font_blur_solid"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_columnWeight="4"
             android:autofillHints="yes"
             android:digits="0123456789"
             android:inputType="text|textCapCharacters"
@@ -256,7 +290,6 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_columnWeight="1"
             android:singleLine="true"
             android:text="@string/custom_subtitle_stroke_color"
             android:textSize="16sp" />
@@ -265,7 +298,6 @@
             android:id="@+id/stroke_color"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_columnWeight="4"
             android:layout_weight="1"
             android:autofillHints="yes"
             android:digits="0123456789ABCDEFabcdef"
@@ -288,7 +320,6 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_columnWeight="1"
             android:singleLine="true"
             android:text="@string/custom_subtitle_stroke_width"
             android:textSize="16sp" />
@@ -297,7 +328,6 @@
             android:id="@+id/stroke_width"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_columnWeight="4"
             android:layout_weight="1"
             android:autofillHints="yes"
             android:inputType="numberDecimal"
@@ -315,7 +345,6 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_columnWeight="1"
             android:singleLine="true"
             android:text="@string/custom_subtitle_test"
             android:textSize="16sp" />
