@@ -206,10 +206,25 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             .apply { isAccessible = true }
         val strokeColorField = cronCanvasClass.getDeclaredField("strokeColor")
             .apply { isAccessible = true }
+        val maxWidthField = cronCanvasClass.getDeclaredField("maxWidth")
+            .apply { isAccessible = true }
         MainScope().launch(Dispatchers.IO) {
             subtitleFont = if (fontFile.isFile) {
                 Typeface.createFromFile(fontFile)
             } else null
+        }
+        cronCanvasClass.hookBeforeMethod(
+            "measureText",
+            String::class.java
+        ) { param ->
+            val cronCanvas = param.thisObject
+            val paint = paintField.get(cronCanvas) as TextPaint
+            val maxWidth = maxWidthField.getFloat(cronCanvas)
+            if (maxWidth != 0.0F) {
+                paint.strokeWidth = strokeWidth
+                paint.isFakeBoldText = boldText
+                subtitleFont?.let { paint.typeface = it }
+            }
         }
         cronCanvasClass.hookBeforeMethod(
             "drawText",
@@ -218,14 +233,9 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             Float::class.javaPrimitiveType,
             Boolean::class.javaPrimitiveType
         ) { param ->
-            val stroke = param.args[3] as Boolean
             val cronCanvas = param.thisObject
-
-            val paint = paintField.get(cronCanvas) as TextPaint
-            if (!stroke && paint.strokeWidth == 0.0F) {
-                paint.strokeWidth = strokeWidth
-                paint.isFakeBoldText = boldText
-                subtitleFont?.let { paint.typeface = it }
+            val maxWidth = maxWidthField.getFloat(cronCanvas)
+            if (maxWidth != 0.0F) {
                 fillColorField.setInt(cronCanvas, fillColor)
                 strokeColorField.setInt(cronCanvas, strokeColor)
                 param.args[3] = true
