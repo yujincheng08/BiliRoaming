@@ -49,7 +49,6 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
             @Suppress("DEPRECATION")
             when {
                 !lpparam.processName.contains(":") -> {
-                    ActivityHolder.init()
                     if (shouldSaveLog) {
                         startLog()
                     }

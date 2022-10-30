@@ -4,19 +4,14 @@ import android.annotation.SuppressLint
 import android.app.AndroidAppHelper
 import android.content.Context
 import android.content.pm.PackageManager.GET_META_DATA
-import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Build
 import android.util.TypedValue
-import android.view.View
-import android.view.ViewGroup
-import android.view.Window
-import android.view.WindowManager
+import android.view.*
 import androidx.annotation.RequiresApi
 import androidx.documentfile.provider.DocumentFile
 import com.google.protobuf.GeneratedMessageLite
-import me.iacn.biliroaming.ActivityHolder
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.Constant
 import me.iacn.biliroaming.XposedInit
@@ -344,6 +339,7 @@ val Int.sp: Int
         currentContext.resources.displayMetrics
     ).roundToInt()
 
+@Suppress("DEPRECATION")
 val currentIsLandscape: Boolean
-    get() = ActivityHolder.topActivity?.resources?.configuration?.orientation ==
-            Configuration.ORIENTATION_LANDSCAPE
+    get() = currentContext.getSystemService(WindowManager::class.java)
+        .defaultDisplay.orientation.let { it == Surface.ROTATION_90 || it == Surface.ROTATION_270 }
