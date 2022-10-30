@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.AndroidAppHelper
 import android.content.Context
 import android.content.pm.PackageManager.GET_META_DATA
+import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Build
@@ -15,6 +16,7 @@ import android.view.WindowManager
 import androidx.annotation.RequiresApi
 import androidx.documentfile.provider.DocumentFile
 import com.google.protobuf.GeneratedMessageLite
+import me.iacn.biliroaming.ActivityHolder
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.Constant
 import me.iacn.biliroaming.XposedInit
@@ -27,6 +29,7 @@ import java.lang.ref.WeakReference
 import java.math.BigInteger
 import java.net.URL
 import java.util.*
+import kotlin.math.roundToInt
 import kotlin.reflect.KProperty
 
 class Weak(val initializer: () -> Class<*>?) {
@@ -333,3 +336,14 @@ fun Window.blurBackground() {
     })
     addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
 }
+
+val Int.sp: Int
+    inline get() = TypedValue.applyDimension(
+        TypedValue.COMPLEX_UNIT_SP,
+        toFloat(),
+        currentContext.resources.displayMetrics
+    ).roundToInt()
+
+val currentIsLandscape: Boolean
+    get() = ActivityHolder.topActivity?.resources?.configuration?.orientation ==
+            Configuration.ORIENTATION_LANDSCAPE

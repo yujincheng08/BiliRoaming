@@ -119,6 +119,8 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private val customSubtitle by lazy { sPrefs.getBoolean("custom_subtitle", false) }
     private val removeBg by lazy { sPrefs.getBoolean("subtitle_remove_bg", true) }
     private val boldText by lazy { sPrefs.getBoolean("subtitle_bold", true) }
+    private val fontSizePortrait by lazy { sPrefs.getInt("subtitle_font_size_portrait", 0).sp }
+    private val fontSizeLandscape by lazy { sPrefs.getInt("subtitle_font_size_landscape", 0).sp }
     private val fillColor by lazy {
         sPrefs.getString("subtitle_font_color2", null)
             ?.runCatchingOrNull { Color.parseColor("#$this") } ?: Color.WHITE
@@ -224,6 +226,11 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 paint.strokeWidth = strokeWidth
                 paint.isFakeBoldText = boldText
                 subtitleFont?.let { paint.typeface = it }
+                if (currentIsLandscape && fontSizeLandscape > 0) {
+                    paint.textSize = fontSizeLandscape.toFloat()
+                } else if (!currentIsLandscape && fontSizePortrait > 0) {
+                    paint.textSize = fontSizePortrait.toFloat()
+                }
             }
         }
         cronCanvasClass.hookBeforeMethod(
