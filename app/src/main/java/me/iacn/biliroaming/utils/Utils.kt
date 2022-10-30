@@ -8,10 +8,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Build
 import android.util.TypedValue
-import android.view.View
-import android.view.ViewGroup
-import android.view.Window
-import android.view.WindowManager
+import android.view.*
 import androidx.annotation.RequiresApi
 import androidx.documentfile.provider.DocumentFile
 import com.google.protobuf.GeneratedMessageLite
@@ -27,6 +24,7 @@ import java.lang.ref.WeakReference
 import java.math.BigInteger
 import java.net.URL
 import java.util.*
+import kotlin.math.roundToInt
 import kotlin.reflect.KProperty
 
 class Weak(val initializer: () -> Class<*>?) {
@@ -333,3 +331,15 @@ fun Window.blurBackground() {
     })
     addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
 }
+
+val Int.sp: Int
+    inline get() = TypedValue.applyDimension(
+        TypedValue.COMPLEX_UNIT_SP,
+        toFloat(),
+        currentContext.resources.displayMetrics
+    ).roundToInt()
+
+@Suppress("DEPRECATION")
+val currentIsLandscape: Boolean
+    get() = currentContext.getSystemService(WindowManager::class.java)
+        .defaultDisplay.orientation.let { it == Surface.ROTATION_90 || it == Surface.ROTATION_270 }

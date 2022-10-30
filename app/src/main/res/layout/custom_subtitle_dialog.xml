@@ -259,6 +259,56 @@
     </LinearLayout>
 
     <LinearLayout
+        android:id="@+id/ll_sizePortrait"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:singleLine="true"
+            android:text="@string/custom_subtitle_font_size_portrait"
+            android:textSize="16sp" />
+
+        <EditText
+            android:id="@+id/fontSizePortrait"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:autofillHints="yes"
+            android:digits="0123456789"
+            android:hint="@string/custom_subtitle_zero_as_default"
+            android:inputType="number"
+            android:tag="subtitle_font_size_portrait"
+            tools:ignore="LabelFor" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/ll_sizeLandscape"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:singleLine="true"
+            android:text="@string/custom_subtitle_font_size_landscape"
+            android:textSize="16sp" />
+
+        <EditText
+            android:id="@+id/fontSizeLandscape"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:autofillHints="yes"
+            android:digits="0123456789"
+            android:hint="@string/custom_subtitle_zero_as_default"
+            android:inputType="number"
+            android:tag="subtitle_font_size_landscape"
+            tools:ignore="LabelFor" />
+    </LinearLayout>
+
+    <LinearLayout
         android:id="@+id/ll_blur"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

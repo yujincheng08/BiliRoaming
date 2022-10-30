@@ -238,6 +238,8 @@
     <string name="custom_subtitle_stroke_width">描邊寬度</string>
     <string name="custom_subtitle_bg_color">背景顏色</string>
     <string name="custom_subtitle_font_size">字體大小</string>
+    <string name="custom_subtitle_font_size_portrait">字體大小 - 豎屏</string>
+    <string name="custom_subtitle_font_size_landscape">字體大小 - 橫屏</string>
     <string name="custom_subtitle_blur">字體陰影</string>
     <string name="custom_subtitle_test">測試內容</string>
     <string name="custom_subtitle_test_text">字幕樣式預覽</string>
@@ -249,4 +251,5 @@
     <string name="custom_subtitle_import">匯入</string>
     <string name="custom_subtitle_status_default">目前：預設</string>
     <string name="custom_subtitle_status_custom">目前：自訂</string>
+    <string name="custom_subtitle_zero_as_default">0表示預設</string>
 </resources>
