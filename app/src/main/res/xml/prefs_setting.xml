@@ -84,10 +84,6 @@
             android:key="dialog_blur_background"
             android:summary="@string/dialog_blur_background_summary"
             android:title="@string/dialog_blur_background_title" />
-        <SwitchPreference
-            android:key="modify_vip_section_style"
-            android:summary="@string/modify_vip_section_style_summary"
-            android:title="@string/modify_vip_section_style_title" />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/miscellaneous_category">
@@ -252,6 +248,10 @@
             android:key="drawer_style"
             android:summary="@string/drawer_style_summary"
             android:title="@string/drawer_style_title" />
+        <SwitchPreference
+            android:key="modify_vip_section_style"
+            android:summary="@string/modify_vip_section_style_summary"
+            android:title="@string/modify_vip_section_style_title" />
         <SwitchPreference
             android:dependency="hidden"
             android:key="purify_splash"
