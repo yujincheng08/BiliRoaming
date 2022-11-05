@@ -141,6 +141,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val parserClass by Weak { mHookInfo.biliCall.parser from mClassLoader }
     val livePagerRecyclerViewClass by Weak { mHookInfo.livePagerRecyclerView from mClassLoader }
     val cronCanvasClass by Weak { "com.bilibili.cron.Canvas" from mClassLoader }
+    val userFragmentClass by Weak { "tv.danmaku.bili.ui.main2.mine.HomeUserCenterFragment" from mClassLoader }
 
     val ids: Map<String, Int> by lazy {
         mHookInfo.mapIds.idsMap

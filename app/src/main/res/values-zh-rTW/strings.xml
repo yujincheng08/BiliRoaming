@@ -252,4 +252,6 @@
     <string name="custom_subtitle_status_default">目前：預設</string>
     <string name="custom_subtitle_status_custom">目前：自訂</string>
     <string name="custom_subtitle_zero_as_default">0表示預設</string>
+    <string name="modify_vip_section_style_title">修改我的大會員樣式</string>
+    <string name="modify_vip_section_style_summary">我的頁面將大會員樣式從橫幅修改為正常樣式</string>
 </resources>

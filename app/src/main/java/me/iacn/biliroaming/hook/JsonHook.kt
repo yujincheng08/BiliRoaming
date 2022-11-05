@@ -1,5 +1,9 @@
 package me.iacn.biliroaming.hook
 
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.utils.*
 import java.lang.reflect.Type
@@ -312,6 +316,24 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             }
                         }
                     } else {
+                        if (sPrefs.getBoolean("modify_vip_section_style", false)) {
+                            val vipSection = result.getObjectField("vipSectionV2")
+                            val vipId = vipSection?.getLongField("id") ?: 0L
+                            val vipUrl = vipSection?.getObjectFieldAs("url") ?: ""
+                            val vipIcon =
+                                "https://i2.hdslb.com/bfs/activity-plat/static/20220927/e369244d0b14644f5e1a06431e22a4d5/1QALxDPPso.png"
+                            result.getObjectFieldOrNullAs<MutableList<*>?>("sectionListV2")
+                                ?.firstOrNull()
+                                ?.getObjectFieldAs<MutableList<Any?>?>("itemList")?.run {
+                                    val itemClass = firstOrNull()?.javaClass ?: return@run
+                                    itemClass.new().apply {
+                                        setLongField("id", vipId)
+                                        setObjectField("title", "我的大会员")
+                                        setObjectField("uri", vipUrl)
+                                        setObjectField("icon", vipIcon)
+                                    }.let { add(0, it) }
+                                }
+                        }
                         result.getObjectFieldOrNullAs<MutableList<*>?>("sectionListV2")?.forEach { sections ->
                             try {
                                 // 将标题写入 drawerItems
@@ -461,6 +483,19 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     && sPrefs.getBoolean("block_up_rcmd_ads", false)
                 ) result.setObjectField("ads", null)
             }
+        }
+
+        if (sPrefs.getBoolean("modify_vip_section_style", false)) {
+            val vipEntranceViewClass =
+                "tv.danmaku.bili.ui.main2.mine.widgets.MineVipEntranceView".from(mClassLoader)
+            val vipEntranceViewField =
+                vipEntranceViewClass?.let { instance.userFragmentClass?.findFieldByExactType(it) }
+            instance.userFragmentClass?.hookAfterMethod(
+                "onCreateView",
+                LayoutInflater::class.java,
+                ViewGroup::class.java,
+                Bundle::class.java
+            ) { (vipEntranceViewField?.get(it.thisObject) as? View)?.visibility = View.GONE }
         }
 
         val searchRankClass = "com.bilibili.search.api.SearchRank".findClass(mClassLoader)
