@@ -61,6 +61,7 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 param.result?.callMethod("getVideoGuide")?.run {
                     callMethod("clearAttention")
                     callMethod("clearCommandDms")
+                    callMethod("clearContractCard")
                 }
             }
         }
