@@ -208,7 +208,7 @@
     <string name="remove_video_relate_only_av_title">僅展示UP主投稿影片</string>
     <string name="remove_video_relate_only_av_summary">上個選項的基礎上，僅展示UP主投稿影片，移除番劇等內容</string>
     <string name="remove_video_cmd_dms_title">移除互動浮窗</string>
-    <string name="remove_video_cmd_dms_summary">移除影片播放時浮窗出現的三連關注、關聯影片、投票彈幕、評分彈幕等</string>
+    <string name="remove_video_cmd_dms_summary">移除影片播放時浮窗出現的三連關注、關聯影片、投票彈幕、評分彈幕、投資當前UP主等</string>
     <string name="block_word_search_title">封鎖評論關鍵字搜尋功能</string>
     <string name="block_word_search_summary">封鎖影片評論藍色關鍵字點擊觸發跳轉搜尋功能</string>
     <string name="disable_try_watch_vip_quality_title">禁用免費試看大會員清晰度</string>
