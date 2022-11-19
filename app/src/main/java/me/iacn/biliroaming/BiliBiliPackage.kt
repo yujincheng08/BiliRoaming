@@ -141,6 +141,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val parserClass by Weak { mHookInfo.biliCall.parser from mClassLoader }
     val livePagerRecyclerViewClass by Weak { mHookInfo.livePagerRecyclerView from mClassLoader }
     val cronCanvasClass by Weak { "com.bilibili.cron.Canvas" from mClassLoader }
+    val subtitleConfigGetClass by Weak { "tv.danmaku.biliplayerv2.service.interact.biz.chronos.chronosrpc.methods.receive.GetDanmakuConfig\$SubtitleConfig" from mClassLoader }
+    val subtitleConfigChangeClass by Weak { "tv.danmaku.biliplayerv2.service.interact.biz.chronos.chronosrpc.methods.send.DanmakuConfigChange\$SubtitleConfig" from mClassLoader }
 
     val ids: Map<String, Int> by lazy {
         mHookInfo.mapIds.idsMap

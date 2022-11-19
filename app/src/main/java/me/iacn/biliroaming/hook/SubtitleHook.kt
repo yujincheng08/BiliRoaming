@@ -135,6 +135,7 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private val strokeWidth by lazy {
         sPrefs.getFloat("subtitle_stroke_width", 5.0F)
     }
+    private val offset by lazy { sPrefs.getInt("subtitle_offset", 0) }
 
     private val closeText =
         currentContext.getString(getResId("Player_option_subtitle_lan_doc_nodisplay", "string"))
@@ -197,6 +198,13 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     private fun hookSubtitleStyleNew() {
+        if (offset != 0) {
+            arrayOf(instance.subtitleConfigGetClass, instance.subtitleConfigChangeClass).forEach {
+                it?.hookBeforeMethod("setBottomMargin", Float::class.javaObjectType) { param ->
+                    param.args[0] = (param.args[0] as Float) + offset
+                }
+            }
+        }
         val cronCanvasClass = instance.cronCanvasClass ?: return
         if (removeBg) {
             cronCanvasClass.replaceMethod(
