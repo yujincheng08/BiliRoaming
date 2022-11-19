@@ -44,7 +44,6 @@ class CustomSubtitleDialog(val activity: Activity, fragment: Fragment, prefs: Sh
         }
         val llBold = view.findViewById<View>(R.id.ll_bold)
         llBold.setOnClickListener { boldSwitch.toggle() }
-        val llFont = view.findViewById<View>(R.id.ll_font)
         fontStatus = view.findViewById(R.id.tv_fontStatus)
         refreshFontStatus()
         val fontColor = view.findViewById<EditText>(R.id.font_color)
@@ -65,8 +64,9 @@ class CustomSubtitleDialog(val activity: Activity, fragment: Fragment, prefs: Sh
         strokeWidth.setText(prefs.getFloat(strokeWidth.tag.toString(), 5.0F).toString())
         val fixBreak = view.findViewById<CheckBox>(R.id.cb_fixBreak)
         fixBreak.isChecked = prefs.getBoolean(fixBreak.tag.toString(), false)
-        val btnPv = view.findViewById<Button>(R.id.btn_pv)
-        btnPv.setOnClickListener {
+        val offset = view.findViewById<EditText>(R.id.subOffset)
+        offset.setText(prefs.getInt(offset.tag.toString(), 0).toString())
+        view.findViewById<Button>(R.id.btn_pv).setOnClickListener {
             val testText = view.findViewById<EditText>(R.id.et_testText).text.toString()
             val spannableString = SpannableString(testText)
             val fc = fontColor.text.toString()
@@ -129,9 +129,10 @@ class CustomSubtitleDialog(val activity: Activity, fragment: Fragment, prefs: Sh
         if (oldClient) {
             llNoBg.visibility = View.GONE
             llBold.visibility = View.GONE
-            llFont.visibility = View.GONE
+            view.findViewById<View>(R.id.ll_font).visibility = View.GONE
             view.findViewById<View>(R.id.ll_sizePortrait).visibility = View.GONE
             view.findViewById<View>(R.id.ll_sizeLandscape).visibility = View.GONE
+            view.findViewById<View>(R.id.ll_subOffset).visibility = View.GONE
         } else {
             view.findViewById<View>(R.id.pvBlack).visibility = View.GONE
             view.findViewById<View>(R.id.pvWhite).visibility = View.GONE
@@ -168,6 +169,7 @@ class CustomSubtitleDialog(val activity: Activity, fragment: Fragment, prefs: Sh
                     strokeWidth.text.toString().toFloatOrNull() ?: 5.0F
                 )
                 putBoolean(fixBreak.tag.toString(), fixBreak.isChecked)
+                putInt(offset.tag.toString(), offset.text.toString().toIntOrNull() ?: 0)
             }.apply()
         }
 

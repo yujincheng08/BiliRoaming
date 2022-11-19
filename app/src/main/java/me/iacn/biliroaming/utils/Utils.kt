@@ -234,6 +234,7 @@ fun GeneratedMessageLite<*, *>.print(indent: Int = 0): String {
                 sb.appendLine(name)
                 sb.append(v.print(indent + 1))
             }
+
             is List<*> -> {
                 for (vv in v) {
                     sb.append(name)
@@ -242,12 +243,14 @@ fun GeneratedMessageLite<*, *>.print(indent: Int = 0): String {
                             sb.appendLine()
                             sb.append(vv.print(indent + 1))
                         }
+
                         else -> {
                             sb.appendLine(vv?.toString() ?: "null")
                         }
                     }
                 }
             }
+
             else -> {
                 sb.append(name)
                 sb.appendLine(v?.toString() ?: "null")
@@ -335,6 +338,13 @@ fun Window.blurBackground() {
 val Int.sp: Int
     inline get() = TypedValue.applyDimension(
         TypedValue.COMPLEX_UNIT_SP,
+        toFloat(),
+        currentContext.resources.displayMetrics
+    ).roundToInt()
+
+val Int.dp: Int
+    inline get() = TypedValue.applyDimension(
+        TypedValue.COMPLEX_UNIT_DIP,
         toFloat(),
         currentContext.resources.displayMetrics
     ).roundToInt()

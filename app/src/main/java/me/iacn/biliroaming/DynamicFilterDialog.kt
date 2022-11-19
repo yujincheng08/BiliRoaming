@@ -17,6 +17,7 @@ import android.widget.*
 import me.iacn.biliroaming.utils.Log
 import me.iacn.biliroaming.utils.addBackgroundRipple
 import me.iacn.biliroaming.utils.children
+import me.iacn.biliroaming.utils.dp
 import kotlin.math.roundToInt
 
 class DynamicFilterDialog(val activity: Activity, prefs: SharedPreferences) :
@@ -184,13 +185,6 @@ class DynamicFilterDialog(val activity: Activity, prefs: SharedPreferences) :
 
         setView(scrollView)
     }
-
-    private val Int.dp
-        inline get() = TypedValue.applyDimension(
-            TypedValue.COMPLEX_UNIT_DIP,
-            toFloat(),
-            context.resources.displayMetrics
-        ).roundToInt()
 
     private inline fun string(resId: Int) = context.getString(resId)
 

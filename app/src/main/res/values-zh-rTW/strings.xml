@@ -252,4 +252,6 @@
     <string name="custom_subtitle_status_default">目前：預設</string>
     <string name="custom_subtitle_status_custom">目前：自訂</string>
     <string name="custom_subtitle_zero_as_default">0表示預設</string>
+    <string name="custom_subtitle_offset">字幕偏移</string>
+    <string name="custom_subtitle_offset_hint">0表示預設，正上負下</string>
 </resources>

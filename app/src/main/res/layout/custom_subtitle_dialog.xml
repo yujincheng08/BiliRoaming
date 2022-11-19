@@ -387,6 +387,31 @@
     </LinearLayout>
 
     <LinearLayout
+        android:id="@+id/ll_subOffset"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:singleLine="true"
+            android:text="@string/custom_subtitle_offset"
+            android:textSize="16sp" />
+
+        <EditText
+            android:id="@+id/subOffset"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:autofillHints="yes"
+            android:digits="+-0123456789"
+            android:hint="@string/custom_subtitle_offset_hint"
+            android:inputType="number"
+            android:tag="subtitle_offset"
+            tools:ignore="LabelFor" />
+    </LinearLayout>
+
+    <LinearLayout
         android:id="@+id/ll_pv"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
