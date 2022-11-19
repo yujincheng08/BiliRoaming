@@ -393,7 +393,11 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     )
                     val token = param.thisObject.getObjectField(serviceField.name)
                         ?.getObjectField(sessionField.name)
-                        ?.callMethod(tokenMethod.name)?.getObjectField("a") as? MediaSession.Token
+                        ?.callMethod(tokenMethod.name)?.run {
+                            javaClass.declaredFields.firstNotNullOfOrNull {
+                                getObjectField(it.name) as? MediaSession.Token
+                            }
+                        }
                     token?.let { mediaStyle.setMediaSession(it) }
                     style = mediaStyle
                     extras.putBoolean("Primitive", true)
