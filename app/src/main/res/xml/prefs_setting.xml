@@ -345,6 +345,11 @@
             android:summary="@string/remove_video_relate_only_av_summary"
             android:title="@string/remove_video_relate_only_av_title" />
         <SwitchPreference
+            android:dependency="remove_video_relate_only_av"
+            android:key="remove_video_relate_nothing"
+            android:summary="@string/remove_video_relate_nothing_summary"
+            android:title="@string/remove_video_relate_nothing_title" />
+        <SwitchPreference
             android:dependency="hidden"
             android:key="remove_video_cmd_dms"
             android:summary="@string/remove_video_cmd_dms_summary"

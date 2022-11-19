@@ -8,6 +8,7 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val purifyCity = sPrefs.getBoolean("purify_city", false)
         val removeRelatePromote = sPrefs.getBoolean("remove_video_relate_promote", false)
         val removeRelateOnlyAv = sPrefs.getBoolean("remove_video_relate_only_av", false)
+        val removeRelateNothing = sPrefs.getBoolean("remove_video_relate_nothing", false)
         val removeCmdDms = sPrefs.getBoolean("remove_video_cmd_dms", false)
         val purifySearch = sPrefs.getBoolean("purify_search", false)
         val purifyCampus = sPrefs.getBoolean("purify_campus", false)
@@ -45,6 +46,9 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         ) add(idx)
                         if (hidden && removeRelatePromote && removeRelateOnlyAv
                             && r?.callMethodAs<String?>("getGoto").let { it != "av" }
+                        ) add(idx)
+                        if (hidden && removeRelatePromote && removeRelateOnlyAv && removeRelateNothing
+                            && r?.callMethodAs<String?>("getGoto").let { it == "av" }
                         ) add(idx)
                     }
             }.reversed().forEach {
