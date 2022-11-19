@@ -199,16 +199,10 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     private fun hookSubtitleStyleNew() {
         if (offset != 0) {
-            instance.subtitleConfigGetClass?.hookBeforeMethod(
-                "setBottomMargin",
-                Float::class.javaObjectType
-            ) { it.args[0] = offset.toFloat() }
-            instance.subtitleConfigChangeClass?.hookBeforeMethod(
-                "setBottomMargin",
-                Float::class.javaObjectType
-            ) { param ->
-                if (param.args[0] == 0.0F)
-                    param.args[0] = offset.toFloat()
+            arrayOf(instance.subtitleConfigGetClass, instance.subtitleConfigChangeClass).forEach {
+                it?.hookBeforeMethod("setBottomMargin", Float::class.javaObjectType) { param ->
+                    param.args[0] = (param.args[0] as Float) + offset
+                }
             }
         }
         val cronCanvasClass = instance.cronCanvasClass ?: return
