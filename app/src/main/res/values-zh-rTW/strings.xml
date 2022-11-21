@@ -258,4 +258,6 @@
     <string name="custom_subtitle_offset_hint">0表示預設，正上負下</string>
     <string name="regex_mode">正則模式</string>
     <string name="invalid_regex">儲存失敗，正則表達式有誤</string>
+    <string name="remove_live_shopping_ads_title">移除直播間橫幅購物廣告</string>
+    <string name="remove_live_shopping_ads_summary">移除直播間內彈出的購物廣告</string>
 </resources>

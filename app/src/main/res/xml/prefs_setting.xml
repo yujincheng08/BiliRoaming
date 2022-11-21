@@ -365,6 +365,12 @@
             android:key="block_up_rcmd_ads"
             android:summary="@string/block_up_rcmd_ads_summary"
             android:title="@string/block_up_rcmd_ads_title" />
+
+        <SwitchPreference
+            android:dependency="hidden"
+            android:key="remove_live_shopping_ads"
+            android:summary="@string/remove_live_shopping_ads_summary"
+            android:title="@string/remove_live_shopping_ads_title" />
     </PreferenceCategory>
 
     <PreferenceCategory
