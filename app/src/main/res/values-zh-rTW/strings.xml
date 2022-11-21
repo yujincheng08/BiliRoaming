@@ -201,7 +201,7 @@
     <string name="keyword_group_name_channel">頻道</string>
     <string name="keyword_group_add">新增</string>
     <string name="keyword_group_delete">刪除</string>
-    <string name="keyword_group_clear">刪除所有</string>
+    <string name="keyword_group_clear">清空</string>
     <string name="prefs_save_success_and_reboot">儲存成功 重啟後生效</string>
     <string name="remove_video_relate_promote_title">移除影片下方的相關推廣</string>
     <string name="remove_video_relate_promote_summary">移除影片下方的相關推廣，例如遊戲、課程、會員購、創作推廣等</string>
@@ -256,4 +256,6 @@
     <string name="custom_subtitle_zero_as_default">0表示預設</string>
     <string name="custom_subtitle_offset">字幕偏移</string>
     <string name="custom_subtitle_offset_hint">0表示預設，正上負下</string>
+    <string name="regex_mode">正則模式</string>
+    <string name="invalid_regex">儲存失敗，正則表達式有誤</string>
 </resources>

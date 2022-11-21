@@ -17,7 +17,6 @@ import me.iacn.biliroaming.utils.Log
 import me.iacn.biliroaming.utils.children
 import me.iacn.biliroaming.utils.dp
 import me.iacn.biliroaming.utils.migrateHomeFilterPrefsIfNeeded
-import kotlin.math.roundToInt
 
 class HomeFilterDialog(val activity: Activity, prefs: SharedPreferences) :
     AlertDialog.Builder(activity) {
@@ -44,10 +43,7 @@ class HomeFilterDialog(val activity: Activity, prefs: SharedPreferences) :
             )
         })
         val lowPlayCountInput = textInputItem(string(R.string.hide_low_play_count_recommend_title))
-            .let {
-                root.addView(it.first)
-                it.second
-            }
+            .let { root.addView(it.first); it.second }
         prefs.getLong("hide_low_play_count_recommend_limit", 0).takeIf { it > 0 }
             ?.let { lowPlayCountInput.setText(it.toString()) }
 
@@ -60,15 +56,9 @@ class HomeFilterDialog(val activity: Activity, prefs: SharedPreferences) :
             )
         })
         val shortDurationInput = textInputItem(string(R.string.hide_short_duration_recommend_title))
-            .let {
-                root.addView(it.first)
-                it.second
-            }
+            .let { root.addView(it.first); it.second }
         val longDurationInput = textInputItem(string(R.string.hide_long_duration_recommend_title))
-            .let {
-                root.addView(it.first)
-                it.second
-            }
+            .let { root.addView(it.first); it.second }
         prefs.getInt("hide_short_duration_recommend_limit", 0).takeIf { it > 0 }
             ?.let { shortDurationInput.setText(it.toString()) }
         prefs.getInt("hide_long_duration_recommend_limit", 0).takeIf { it > 0 }
@@ -82,15 +72,21 @@ class HomeFilterDialog(val activity: Activity, prefs: SharedPreferences) :
                 LinearLayout.LayoutParams.WRAP_CONTENT
             )
         })
-        val titleGroup = root.addKeywordGroup(string(R.string.keyword_group_name_title))
-        val reasonGroup = root.addKeywordGroup(string(R.string.keyword_group_name_rcmd_reason))
+        val titlePair = root.addKeywordGroup(string(R.string.keyword_group_name_title), true)
+        val titleGroup = titlePair.first
+        val titleRegexModeSwitch = titlePair.second
+        titleRegexModeSwitch.isChecked = prefs.getBoolean("home_filter_title_regex_mode", false)
+        val reasonPair = root.addKeywordGroup(string(R.string.keyword_group_name_rcmd_reason), true)
+        val reasonGroup = reasonPair.first
+        val reasonRegexModeSwitch = reasonPair.second
+        reasonRegexModeSwitch.isChecked = prefs.getBoolean("home_filter_reason_regex_mode", false)
         val uidGroup = root.addKeywordGroup(
             string(R.string.keyword_group_name_uid),
-            EditorInfo.TYPE_CLASS_NUMBER
-        )
-        val upGroup = root.addKeywordGroup(string(R.string.keyword_group_name_up))
-        val categoryGroup = root.addKeywordGroup(string(R.string.keyword_group_name_category))
-        val channelGroup = root.addKeywordGroup(string(R.string.keyword_group_name_channel))
+            inputType = EditorInfo.TYPE_CLASS_NUMBER
+        ).first
+        val upGroup = root.addKeywordGroup(string(R.string.keyword_group_name_up)).first
+        val categoryGroup = root.addKeywordGroup(string(R.string.keyword_group_name_category)).first
+        val channelGroup = root.addKeywordGroup(string(R.string.keyword_group_name_channel)).first
         prefs.getStringSet("home_filter_keywords_title", null)?.forEach {
             titleGroup.addView(keywordInputItem(titleGroup, it).first)
         }
@@ -125,16 +121,31 @@ class HomeFilterDialog(val activity: Activity, prefs: SharedPreferences) :
                 .filter { it.isNotEmpty() }
                 .toSet()
 
+            val titles = getKeywords(titleGroup)
+            val titleRegexMode = titleRegexModeSwitch.isChecked
+            if (titleRegexMode && titles.runCatching { forEach { it.toRegex() } }.isFailure) {
+                Log.toast(string(R.string.invalid_regex), force = true)
+                return@setPositiveButton
+            }
+            val reasons = getKeywords(reasonGroup)
+            val reasonRegexMode = reasonRegexModeSwitch.isChecked
+            if (reasonRegexMode && reasons.runCatching { forEach { it.toRegex() } }.isFailure) {
+                Log.toast(string(R.string.invalid_regex), force = true)
+                return@setPositiveButton
+            }
+
             prefs.edit().apply {
                 putLong("hide_low_play_count_recommend_limit", lowPlayCount)
                 putInt("hide_short_duration_recommend_limit", shortDuration)
                 putInt("hide_long_duration_recommend_limit", longDuration)
-                putStringSet("home_filter_keywords_title", getKeywords(titleGroup))
-                putStringSet("home_filter_keywords_reason", getKeywords(reasonGroup))
+                putStringSet("home_filter_keywords_title", titles)
+                putStringSet("home_filter_keywords_reason", reasons)
                 putStringSet("home_filter_keywords_uid", getKeywords(uidGroup))
                 putStringSet("home_filter_keywords_up", getKeywords(upGroup))
                 putStringSet("home_filter_keywords_category", getKeywords(categoryGroup))
                 putStringSet("home_filter_keywords_channel", getKeywords(channelGroup))
+                putBoolean("home_filter_title_regex_mode", titleRegexMode)
+                putBoolean("home_filter_reason_regex_mode", reasonRegexMode)
             }.apply()
 
             Log.toast(string(R.string.prefs_save_success_and_reboot))
@@ -183,8 +194,9 @@ class HomeFilterDialog(val activity: Activity, prefs: SharedPreferences) :
     private fun keywordTypeHeader(
         group: ViewGroup,
         name: String,
-        onClick: (v: View) -> Unit,
-    ): Pair<LinearLayout, Button> {
+        showRegex: Boolean,
+        onAdd: (v: View) -> Unit,
+    ): Triple<LinearLayout, Button, Switch> {
         val layout = LinearLayout(context).apply {
             gravity = Gravity.START
             orientation = LinearLayout.HORIZONTAL
@@ -209,23 +221,42 @@ class HomeFilterDialog(val activity: Activity, prefs: SharedPreferences) :
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             )
-            setOnClickListener(onClick)
+            minWidth = 60.dp
+            minimumWidth = 60.dp
+            setOnClickListener(onAdd)
         }
         val clearView = Button(context).apply {
             text = string(R.string.keyword_group_clear)
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                marginStart = 6.dp
-            }
-            visibility = View.INVISIBLE
+            )
+            visibility = View.GONE
+            minWidth = 60.dp
+            minimumWidth = 60.dp
             setOnClickListener { group.removeAllViews() }
+        }
+        val regexModeView = TextView(context).apply {
+            text = string(R.string.regex_mode)
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { marginStart = 4.dp }
+        }
+        val regexModeSwitch = Switch(context).apply {
+            isSoundEffectsEnabled = false
+            isHapticFeedbackEnabled = false
+        }
+        if (!showRegex) {
+            regexModeView.visibility = View.GONE
+            regexModeSwitch.visibility = View.GONE
         }
         layout.addView(nameView)
         layout.addView(addView)
         layout.addView(clearView)
-        return Pair(layout, clearView)
+        layout.addView(regexModeView)
+        layout.addView(regexModeSwitch)
+        return Triple(layout, clearView, regexModeSwitch)
     }
 
     private fun keywordInputItem(
@@ -243,6 +274,7 @@ class HomeFilterDialog(val activity: Activity, prefs: SharedPreferences) :
         val editText = EditText(context).apply {
             inputType = type
             setText(keyword)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 16F)
             setSingleLine()
             layoutParams = LinearLayout.LayoutParams(
                 0,
@@ -255,6 +287,8 @@ class HomeFilterDialog(val activity: Activity, prefs: SharedPreferences) :
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             )
+            minWidth = 60.dp
+            minimumWidth = 60.dp
             setOnClickListener { parent.removeView(layout) }
         }
         layout.addView(editText)
@@ -264,8 +298,9 @@ class HomeFilterDialog(val activity: Activity, prefs: SharedPreferences) :
 
     private fun LinearLayout.addKeywordGroup(
         name: String,
-        inputType: Int = EditorInfo.TYPE_CLASS_TEXT
-    ): ViewGroup {
+        showRegex: Boolean = false,
+        inputType: Int = EditorInfo.TYPE_CLASS_TEXT,
+    ): Pair<ViewGroup, Switch> {
         val group = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
             layoutParams = LinearLayout.LayoutParams(
@@ -273,19 +308,18 @@ class HomeFilterDialog(val activity: Activity, prefs: SharedPreferences) :
                 LinearLayout.LayoutParams.WRAP_CONTENT
             )
         }
-        val clearButton = keywordTypeHeader(group, name) {
+        val header = keywordTypeHeader(group, name, showRegex) {
             keywordInputItem(group, type = inputType).let {
                 group.addView(it.first)
                 it.second.requestFocus()
             }
-        }.let {
-            addView(it.first)
-            it.second
-        }
+        }.also { addView(it.first) }
+        val clearButton = header.second
+        val regexModeSwitch = header.third
         group.setOnHierarchyChangeListener(object : ViewGroup.OnHierarchyChangeListener {
             override fun onChildViewAdded(parent: View, child: View) {
                 if (group.childCount == 0) {
-                    clearButton.visibility = View.INVISIBLE
+                    clearButton.visibility = View.GONE
                 } else {
                     clearButton.visibility = View.VISIBLE
                 }
@@ -293,13 +327,13 @@ class HomeFilterDialog(val activity: Activity, prefs: SharedPreferences) :
 
             override fun onChildViewRemoved(parent: View, child: View) {
                 if (group.childCount == 0) {
-                    clearButton.visibility = View.INVISIBLE
+                    clearButton.visibility = View.GONE
                 } else {
                     clearButton.visibility = View.VISIBLE
                 }
             }
         })
         addView(group)
-        return group
+        return Pair(group, regexModeSwitch)
     }
 }

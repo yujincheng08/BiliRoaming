@@ -19,9 +19,17 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         migrateHomeFilterPrefsIfNeeded()
         sPrefs.getStringSet("home_filter_keywords_title", null) ?: setOf()
     }
+    private val kwdFilterTitleRegexes by lazy { kwdFilterTitleList.map { it.toRegex() } }
+    private val kwdFilterTitleRegexMode by lazy {
+        sPrefs.getBoolean("home_filter_title_regex_mode", false)
+    }
     private val kwdFilterReasonList by lazy {
         migrateHomeFilterPrefsIfNeeded()
         sPrefs.getStringSet("home_filter_keywords_reason", null) ?: setOf()
+    }
+    private val kwdFilterReasonRegexes by lazy { kwdFilterReasonList.map { it.toRegex() } }
+    private val kwdFilterReasonRegexMode by lazy {
+        sPrefs.getBoolean("home_filter_reason_regex_mode", false)
     }
     private val kwdFilterUidList by lazy {
         migrateHomeFilterPrefsIfNeeded()
@@ -47,7 +55,7 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         "bangumi" to arrayListOf("bangumi", "special", "pgc"),
         "game" to arrayListOf("game"),
         "picture" to arrayListOf("picture"),
-        "vertical" to arrayListOf("vertical","story"),
+        "vertical" to arrayListOf("vertical", "story"),
         "banner" to arrayListOf("banner"),
         "live" to arrayListOf("live"),
         "inline" to arrayListOf("inline"),
@@ -61,24 +69,20 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         filterMap[it].orEmpty()
     }
 
-    private fun String.isNum(): Boolean {
-        for (s in this) {
-            if (!Character.isDigit(s)) return false
-        }
-        return true
-    }
+    private fun String.isNum() = all { it.isDigit() }
 
     private fun toLong(str: String): Long {
         return try {
             when {
-                str.isNum() ->
-                    return str.toDouble().toLong()
+                str.isNum() -> return str.toDouble().toLong()
+
                 str.contains("万") ->
                     (str.replace("万", "").toDouble() * 10_000).toLong()
+
                 str.contains("亿") ->
                     (str.replace("亿", "").toDouble() * 100_000_000).toLong()
-                else ->
-                    -1L
+
+                else -> -1L
             }
         } catch (e: Throwable) {
             -1
@@ -119,8 +123,14 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             } catch (thr: Throwable) {
                 return false
             }
-            kwdFilterTitleList.forEach {
-                if (it.isNotEmpty() && title.contains(it)) return true
+            if (kwdFilterTitleRegexMode) {
+                kwdFilterTitleRegexes.forEach {
+                    if (title.contains(it)) return true
+                }
+            } else {
+                kwdFilterTitleList.forEach {
+                    if (it.isNotEmpty() && title.contains(it)) return true
+                }
             }
         }
 
@@ -183,8 +193,14 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 return false
             }
             if (reason == "null") return false
-            kwdFilterReasonList.forEach {
-                if (it.isNotEmpty() && reason.contains(it)) return true
+            if (kwdFilterReasonRegexMode) {
+                kwdFilterReasonRegexes.forEach {
+                    if (reason.contains(it)) return true
+                }
+            } else {
+                kwdFilterReasonList.forEach {
+                    if (it.isNotEmpty() && reason.contains(it)) return true
+                }
             }
         }
 

@@ -11,6 +11,8 @@ class DynamicHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private val purifyContents by lazy {
         sPrefs.getStringSet("customize_dynamic_keyword_content", null) ?: setOf()
     }
+    private val purifyContentRegexes by lazy { purifyContents.map { it.toRegex() } }
+    private val contentRegexMode by lazy { sPrefs.getBoolean("dynamic_content_regex_mode", false) }
     private val purifyUpNames by lazy {
         sPrefs.getStringSet("customize_dynamic_keyword_upname", null) ?: setOf()
     }
@@ -102,9 +104,10 @@ class DynamicHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         it?.callMethod("getModuleDesc")
                             ?.callMethodAs<String?>("getText") ?: ""
                     } ?: ""
-                if (modulesText.isNotEmpty() && purifyContents.any { modulesText.contains(it) }) {
-                    idxList.add(idx)
-                }
+                if (modulesText.isNotEmpty() && if (contentRegexMode)
+                        purifyContentRegexes.any { modulesText.contains(it) }
+                    else purifyContents.any { modulesText.contains(it) }
+                ) idxList.add(idx)
             }
 
             val extend = e?.callMethod("getExtend")
@@ -115,9 +118,10 @@ class DynamicHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     ?.joinToString(separator = "") {
                         it?.callMethodAs<String?>("getOrigText") ?: ""
                     } ?: ""
-                if (contentOrig.isNotEmpty() && purifyContents.any { contentOrig.contains(it) }) {
-                    idxList.add(idx)
-                }
+                if (contentOrig.isNotEmpty() && if (contentRegexMode)
+                        purifyContentRegexes.any { contentOrig.contains(it) }
+                    else purifyContents.any { contentOrig.contains(it) }
+                ) idxList.add(idx)
             }
 
             if (purifyContents.isNotEmpty()) {
@@ -126,9 +130,10 @@ class DynamicHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     ?.joinToString(separator = "") {
                         it?.callMethodAs<String?>("getOrigText") ?: ""
                     } ?: ""
-                if (content.isNotEmpty() && purifyContents.any { content.contains(it) }) {
-                    idxList.add(idx)
-                }
+                if (content.isNotEmpty() && if (contentRegexMode)
+                        purifyContentRegexes.any { content.contains(it) }
+                    else purifyContents.any { content.contains(it) }
+                ) idxList.add(idx)
             }
 
             if (purifyUpNames.isNotEmpty()) {
