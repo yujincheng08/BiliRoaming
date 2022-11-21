@@ -1,5 +1,3 @@
-@file:Suppress("NOTHING_TO_INLINE")
-
 package me.iacn.biliroaming
 
 import android.app.Activity
@@ -112,9 +110,9 @@ class DynamicFilterDialog(val activity: Activity, prefs: SharedPreferences) :
         val byKeywordTitle = categoryTitle(string(R.string.customize_dynamic_by_keyword))
         root.addView(byKeywordTitle)
 
-        val contentPair = root.addKeywordGroup(string(R.string.keyword_group_name_content), true)
-        val contentGroup = contentPair.first
-        val contentRegexSwitch = contentPair.second
+        val (contentGroup, contentRegexSwitch) = root.addKeywordGroup(
+            string(R.string.keyword_group_name_content), true
+        )
         contentRegexSwitch.isChecked = prefs.getBoolean("dynamic_content_regex_mode", false)
         val upNameGroup = root.addKeywordGroup(string(R.string.keyword_group_name_up)).first
         val uidGroup = root.addKeywordGroup(
@@ -179,7 +177,7 @@ class DynamicFilterDialog(val activity: Activity, prefs: SharedPreferences) :
         setView(scrollView)
     }
 
-    private inline fun string(resId: Int) = context.getString(resId)
+    private fun string(resId: Int) = context.getString(resId)
 
     private fun keywordTypeHeader(
         group: ViewGroup,
@@ -335,14 +333,12 @@ class DynamicFilterDialog(val activity: Activity, prefs: SharedPreferences) :
                 LinearLayout.LayoutParams.WRAP_CONTENT
             )
         }
-        val header = keywordTypeHeader(group, name, showRegex) {
+        val (_, clearButton, regexModeSwitch) = keywordTypeHeader(group, name, showRegex) {
             keywordInputItem(group, type = inputType).let {
                 group.addView(it.first)
                 it.second.requestFocus()
             }
         }.also { addView(it.first) }
-        val clearButton = header.second
-        val regexModeSwitch = header.third
         group.setOnHierarchyChangeListener(object : ViewGroup.OnHierarchyChangeListener {
             override fun onChildViewAdded(parent: View, child: View) {
                 if (group.childCount == 0) {

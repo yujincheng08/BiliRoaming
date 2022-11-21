@@ -1,5 +1,3 @@
-@file:Suppress("NOTHING_TO_INLINE")
-
 package me.iacn.biliroaming
 
 import android.app.Activity
@@ -72,13 +70,13 @@ class HomeFilterDialog(val activity: Activity, prefs: SharedPreferences) :
                 LinearLayout.LayoutParams.WRAP_CONTENT
             )
         })
-        val titlePair = root.addKeywordGroup(string(R.string.keyword_group_name_title), true)
-        val titleGroup = titlePair.first
-        val titleRegexModeSwitch = titlePair.second
+        val (titleGroup, titleRegexModeSwitch) = root.addKeywordGroup(
+            string(R.string.keyword_group_name_title), true
+        )
         titleRegexModeSwitch.isChecked = prefs.getBoolean("home_filter_title_regex_mode", false)
-        val reasonPair = root.addKeywordGroup(string(R.string.keyword_group_name_rcmd_reason), true)
-        val reasonGroup = reasonPair.first
-        val reasonRegexModeSwitch = reasonPair.second
+        val (reasonGroup, reasonRegexModeSwitch) = root.addKeywordGroup(
+            string(R.string.keyword_group_name_rcmd_reason), true
+        )
         reasonRegexModeSwitch.isChecked = prefs.getBoolean("home_filter_reason_regex_mode", false)
         val uidGroup = root.addKeywordGroup(
             string(R.string.keyword_group_name_uid),
@@ -157,7 +155,7 @@ class HomeFilterDialog(val activity: Activity, prefs: SharedPreferences) :
         setView(scrollView)
     }
 
-    private inline fun string(resId: Int) = context.getString(resId)
+    private fun string(resId: Int) = context.getString(resId)
 
     private fun textInputItem(
         name: String,
@@ -308,14 +306,12 @@ class HomeFilterDialog(val activity: Activity, prefs: SharedPreferences) :
                 LinearLayout.LayoutParams.WRAP_CONTENT
             )
         }
-        val header = keywordTypeHeader(group, name, showRegex) {
+        val (_, clearButton, regexModeSwitch) = keywordTypeHeader(group, name, showRegex) {
             keywordInputItem(group, type = inputType).let {
                 group.addView(it.first)
                 it.second.requestFocus()
             }
         }.also { addView(it.first) }
-        val clearButton = header.second
-        val regexModeSwitch = header.third
         group.setOnHierarchyChangeListener(object : ViewGroup.OnHierarchyChangeListener {
             override fun onChildViewAdded(parent: View, child: View) {
                 if (group.childCount == 0) {
