@@ -281,17 +281,17 @@ fun View.addBackgroundRipple() = with(TypedValue()) {
 fun migrateHomeFilterPrefsIfNeeded() {
     if (!sPrefs.getBoolean("home_filter_prefs_migrated", false)) {
         val titleList = sPrefs.getString("keywords_filter_title_recommend_list", null)
-            ?.split('|')?.filter { it.trim().isNotEmpty() }?.toSet()
+            ?.split('|')?.filter { it.isNotBlank() }?.toSet()
         val reasonList = sPrefs.getString("keywords_filter_reason_recommend_list", null)
-            ?.split('|')?.filter { it.trim().isNotEmpty() }?.toSet()
+            ?.split('|')?.filter { it.isNotBlank() }?.toSet()
         val uidList = sPrefs.getString("keywords_filter_uid_recommend_list", null)
-            ?.split('|')?.filter { it.trim().isNotEmpty() }?.toSet()
+            ?.split('|')?.filter { it.isNotBlank() }?.toSet()
         val upList = sPrefs.getString("keywords_filter_upname_recommend_list", null)
-            ?.split('|')?.filter { it.trim().isNotEmpty() }?.toSet()
+            ?.split('|')?.filter { it.isNotBlank() }?.toSet()
         val categoryList = sPrefs.getString("keywords_filter_rname_recommend_list", null)
-            ?.split('|')?.filter { it.trim().isNotEmpty() }?.toSet()
+            ?.split('|')?.filter { it.isNotBlank() }?.toSet()
         val channelList = sPrefs.getString("keywords_filter_tname_recommend_list", null)
-            ?.split('|')?.filter { it.trim().isNotEmpty() }?.toSet()
+            ?.split('|')?.filter { it.isNotBlank() }?.toSet()
 
         sPrefs.edit().apply {
             putStringSet("home_filter_keywords_title", titleList)

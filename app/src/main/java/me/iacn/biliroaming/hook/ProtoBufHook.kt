@@ -37,6 +37,10 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             "com.bapis.bilibili.app.view.v1.ViewReq"
         ) { param ->
             param.result ?: return@hookAfterMethod
+            if (hidden && removeRelatePromote && removeRelateOnlyAv && removeRelateNothing) {
+                param.result.callMethod("clearRelates")
+                return@hookAfterMethod
+            }
             buildSet {
                 param.result.callMethodAs<List<*>?>("getRelatesList")
                     ?.onEachIndexed { idx, r ->
@@ -46,9 +50,6 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         ) add(idx)
                         if (hidden && removeRelatePromote && removeRelateOnlyAv
                             && r?.callMethodAs<String?>("getGoto").let { it != "av" }
-                        ) add(idx)
-                        if (hidden && removeRelatePromote && removeRelateOnlyAv && removeRelateNothing
-                            && r?.callMethodAs<String?>("getGoto").let { it == "av" }
                         ) add(idx)
                     }
             }.reversed().forEach {
