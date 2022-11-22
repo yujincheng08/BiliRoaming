@@ -18,6 +18,17 @@ class LiveRoomHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 MotionEvent::class.java
             ) { false }
         }
+        if (sPrefs.getBoolean("hidden", false)
+            && sPrefs.getBoolean("remove_live_shopping_ads", false)
+        ) {
+            instance.liveShoppingViewModelClass?.replaceMethod(
+                instance.setShoppingCard(),
+                Int::class.javaPrimitiveType,
+                "com.bilibili.bililive.room.biz.shopping.beans.LiveGoodsCardDetail",
+                String::class.java,
+                Boolean::class.javaPrimitiveType
+            ) { null }
+        }
         if (!sPrefs.getBoolean("revert_live_room_feed", false)) {
             return
         }
