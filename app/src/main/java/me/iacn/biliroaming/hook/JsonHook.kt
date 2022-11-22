@@ -288,7 +288,7 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         listOf(result.getObjectFieldOrNullAs<MutableList<*>?>("padSectionList"),
                                result.getObjectFieldOrNullAs<MutableList<*>?>("recommendSectionList"),
                                result.getObjectFieldOrNullAs<MutableList<*>?>("moreSectionList")
-                        ).forEach { it ->
+                        ).forEach {
                             it?.removeAll { items ->
                                 // 分析内容
                                 val title = items?.getObjectFieldAs<String>("title")
@@ -461,10 +461,6 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 dmAdvertClass -> if (sPrefs.getBoolean("hidden", false)
                     && sPrefs.getBoolean("block_up_rcmd_ads", false)
                 ) result.setObjectField("ads", null)
-
-                liveShoppingInfoClass -> if (sPrefs.getBoolean("hidden", false)
-                    && sPrefs.getBoolean("remove_live_shopping_ads", false)
-                ) result.setObjectField("shoppingCardDetail", null)
             }
         }
 
@@ -511,6 +507,24 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             )
                         }
                     }
+            }
+        }
+
+        instance.fastJsonClass?.hookAfterMethod(
+            instance.fastJsonParse(),
+            String::class.java,
+            Type::class.java,
+            "com.alibaba.fastjson.parser.Feature[]"
+        ) { param ->
+            var result = param.result ?: return@hookAfterMethod
+            if (result.javaClass == instance.generalResponseClass) {
+                result = result.getObjectField("data") ?: return@hookAfterMethod
+            }
+
+            when (result.javaClass) {
+                liveShoppingInfoClass -> if (sPrefs.getBoolean("hidden", false)
+                    && sPrefs.getBoolean("remove_live_shopping_ads", false)
+                ) result.setObjectField("shoppingCardDetail", null)
             }
         }
     }
