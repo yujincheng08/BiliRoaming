@@ -143,7 +143,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val cronCanvasClass by Weak { "com.bilibili.cron.Canvas" from mClassLoader }
     val subtitleConfigGetClass by Weak { "tv.danmaku.biliplayerv2.service.interact.biz.chronos.chronosrpc.methods.receive.GetDanmakuConfig\$SubtitleConfig" from mClassLoader }
     val subtitleConfigChangeClass by Weak { "tv.danmaku.biliplayerv2.service.interact.biz.chronos.chronosrpc.methods.send.DanmakuConfigChange\$SubtitleConfig" from mClassLoader }
-    val liveShoppingViewModelClass by Weak { mHookInfo.liveShoppingViewModel.class_ from mClassLoader }
 
     val ids: Map<String, Int> by lazy {
         mHookInfo.mapIds.idsMap
@@ -277,8 +276,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     fun onOperateClick() = mHookInfo.onOperateClick.orNull
 
     fun getContentString() = mHookInfo.getContentString.orNull
-
-    fun setShoppingCard() = mHookInfo.liveShoppingViewModel.setShoppingCard.orNull
 
     private fun readHookInfo(context: Context): Configs.HookInfo {
         try {
@@ -1819,34 +1816,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 name = liveVerticalPagerView.declaredFields.find {
                     View::class.java.isAssignableFrom(it.type)
                 }?.type?.name ?: return@class_
-            }
-            liveShoppingViewModel = liveShoppingViewModel {
-                val clazz =
-                    "com.bilibili.bililive.room.biz.shopping.viewmodel.LiveRoomShoppingViewModel"
-                        .from(classloader) ?: dexHelper.findMethodUsingString(
-                        "LiveShoppingViewModel",
-                        false,
-                        -1,
-                        -1,
-                        null,
-                        -1,
-                        null,
-                        null,
-                        null,
-                        true
-                    ).asSequence().firstNotNullOfOrNull {
-                        dexHelper.decodeMethodIndex(it)?.declaringClass
-                    } ?: return@liveShoppingViewModel
-                val setShoppingCardMethod = clazz.declaredMethods.find { m ->
-                    m.parameterTypes.let {
-                        it.size == 4 && it[0] == Int::class.javaPrimitiveType
-                                && it[1].simpleName == "LiveGoodsCardDetail"
-                                && it[2] == String::class.java
-                                && it[3] == Boolean::class.javaPrimitiveType
-                    }
-                } ?: return@liveShoppingViewModel
-                class_ = class_ { name = clazz.name }
-                setShoppingCard = method { name = setShoppingCardMethod.name }
             }
 
             dexHelper.close()
