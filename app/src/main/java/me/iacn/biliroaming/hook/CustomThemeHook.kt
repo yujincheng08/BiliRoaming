@@ -6,7 +6,6 @@ import android.content.SharedPreferences
 import android.graphics.Color
 import android.util.SparseArray
 import android.view.View
-import de.robv.android.xposed.XposedBridge.invokeOriginalMethod
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.ColorChooseDialog
 import me.iacn.biliroaming.Constant.CURRENT_COLOR_KEY
@@ -30,7 +29,6 @@ class CustomThemeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 put("custom2", CUSTOM_THEME_ID2)
             }
 
-        @Suppress("UNCHECKED_CAST")
         val colorArray =
             instance.themeHelperClass?.getStaticObjectFieldAs<SparseArray<IntArray>>(instance.colorArray())
         val primaryColor = customColor
@@ -44,7 +42,6 @@ class CustomThemeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             ) { param ->
                 val biliSkinList = param.args[0]
 
-                @Suppress("UNCHECKED_CAST")
                 val mList = biliSkinList.getObjectFieldAs<MutableList<Any>>("mList")
                 val biliSkin =
                     "tv.danmaku.bili.ui.theme.api.BiliSkin".findClassOrNull(mClassLoader)?.new()
@@ -84,7 +81,7 @@ class CustomThemeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                 }"
                     )
                     try {
-                        invokeOriginalMethod(param.method, param.thisObject, param.args)
+                        param.invokeOriginalMethod()
                     } catch (e: Exception) {
                         e.printStackTrace()
                     }
@@ -98,11 +95,9 @@ class CustomThemeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
         // No reset when not logged in
         val replacer: Replacer = { param ->
-            if (Thread.currentThread().stackTrace.count { s ->
+            if (Thread.currentThread().stackTrace.any { s ->
                     s.className == "tv.danmaku.bili.MainActivityV2" && s.methodName == "onPostCreate"
-                } > 0
-            ) null else
-                invokeOriginalMethod(param.method, param.thisObject, param.args)
+                }) null else param.invokeOriginalMethod()
         }
         instance.themeReset().forEach {
             instance.themeProcessorClass?.replaceMethod(it, replacer = replacer)
