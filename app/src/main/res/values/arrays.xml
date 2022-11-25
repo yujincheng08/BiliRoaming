@@ -47,7 +47,6 @@
         <item>番剧</item>
         <item>影视</item>
         <item>韩综</item>
-        <item>热点</item>
         <item>其它</item>
     </string-array>
     <string-array name="tab_values">
@@ -57,7 +56,6 @@
         <item>bangumi</item>
         <item>movie</item>
         <item>korea</item>
-        <item>activity</item>
         <item>other_tabs</item>
     </string-array>
     <string-array name="home_recommend_entries">
