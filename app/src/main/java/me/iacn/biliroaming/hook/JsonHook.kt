@@ -13,6 +13,9 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
         Log.d("startHook: Json")
 
+        val hidden = sPrefs.getBoolean("hidden", false)
+        val purifyLivePopups = sPrefs.getStringSet("purify_live_popups", null) ?: setOf()
+
         val tabResponseClass =
             "tv.danmaku.bili.ui.main2.resource.MainResourceManager\$TabResponse".findClassOrNull(
                 mClassLoader
@@ -49,6 +52,17 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             "com.bilibili.bililive.room.biz.shopping.beans.LiveShoppingInfo".from(mClassLoader)
         val liveGoodsCardInfoClass =
             "com.bilibili.bililive.room.biz.shopping.beans.LiveGoodsCardInfo".from(mClassLoader)
+        val biliLiveRoomInfoClass =
+            "com.bilibili.bililive.videoliveplayer.net.beans.gateway.roominfo.BiliLiveRoomInfo"
+                .from(mClassLoader)
+        val liveRoomReserveInfoClass =
+            "com.bilibili.bililive.room.biz.reverse.bean.LiveRoomReserveInfo".from(mClassLoader)
+        val biliLiveRoomUserInfoClass =
+            "com.bilibili.bililive.videoliveplayer.net.beans.gateway.userinfo.BiliLiveRoomUserInfo"
+                .from(mClassLoader)
+        val liveRoomRecommendCardClass =
+            "com.bilibili.bililive.videoliveplayer.net.beans.attentioncard.LiveRoomRecommendCard"
+                .from(mClassLoader)
 
         instance.fastJsonClass?.hookAfterMethod(
             instance.fastJsonParse(),
@@ -342,13 +356,43 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 result = result.getObjectField("data") ?: return@hookAfterMethod
 
             when (result.javaClass) {
-                liveShoppingInfoClass -> if (sPrefs.getBoolean("hidden", false)
-                    && sPrefs.getBoolean("remove_live_shopping_ads", false)
-                ) result.setObjectField("shoppingCardDetail", null)
+                liveShoppingInfoClass -> {
+                    if (hidden && purifyLivePopups.contains("shoppingCard"))
+                        result.setObjectField("shoppingCardDetail", null)
+                    if (hidden && purifyLivePopups.contains("shoppingSelected"))
+                        result.setObjectField("selectedGoods", null)
+                }
 
-                liveGoodsCardInfoClass -> if (sPrefs.getBoolean("hidden", false)
-                    && sPrefs.getBoolean("remove_live_shopping_ads", false)
-                ) param.result = null
+                liveGoodsCardInfoClass -> {
+                    if (hidden && purifyLivePopups.contains("shoppingCard"))
+                        param.result = null
+                }
+
+                biliLiveRoomInfoClass -> {
+                    if (hidden && purifyLivePopups.contains("follow"))
+                        result.getObjectField("functionCard")
+                            ?.setObjectField("followCard", null)
+                    if (hidden && purifyLivePopups.contains("banner"))
+                        result.setObjectField("bannerInfo", null)
+                }
+
+                liveRoomRecommendCardClass -> {
+                    if (hidden && purifyLivePopups.contains("follow"))
+                        param.result = null
+                }
+
+                liveRoomReserveInfoClass -> {
+                    if (hidden && purifyLivePopups.contains("reserve"))
+                        result.setBooleanField("showReserveDetail", false)
+                }
+
+                biliLiveRoomUserInfoClass -> {
+                    if (hidden && purifyLivePopups.contains("gift"))
+                        result.getObjectField("functionCard")
+                            ?.setObjectField("sengGiftCard", null)
+                    if (hidden && purifyLivePopups.contains("task"))
+                        result.setObjectField("taskInfo", null)
+                }
             }
         }
     }
@@ -364,13 +408,7 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         var hasKoreaHK = false
         var hasKoreaTW = false
         tab.forEach {
-            val uri = it.getObjectFieldAs<String>("uri")
-            val name = it.getObjectFieldAs<String>("name")
-            val tabId = it.getObjectFieldAs<String>("tabId")
-            val reportId = it.getObjectFieldAs<String>("reportId")
-            val pos = it.getObjectFieldAs<Int>("pos")
-            Log.v("tab: $uri $name $tabId $reportId $pos")
-            when (uri) {
+            when (it.getObjectFieldAs<String>("uri")) {
                 "bilibili://pgc/home" -> hasBangumiCN = true
                 "bilibili://following/home_activity_tab/6544" -> hasBangumiTW = true
                 "bilibili://pgc/home?home_flow_type=2" -> hasMovieCN = true

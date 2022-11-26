@@ -258,6 +258,8 @@
     <string name="custom_subtitle_offset_hint">0表示默认，正上负下</string>
     <string name="regex_mode">正则模式</string>
     <string name="invalid_regex">保存失败，正则表达式有误</string>
-    <string name="remove_live_shopping_ads_title">移除直播间横幅购物广告</string>
-    <string name="remove_live_shopping_ads_summary">移除直播间内弹出的购物广告</string>
+    <string name="purify_live_popups_title">净化直播间浮窗</string>
+    <string name="purify_live_popups_summary">净化直播间各种浮窗</string>
+    <string name="disable_live_room_double_click_title">禁用直播间双击点赞</string>
+    <string name="disable_live_room_double_click_summary">将直播间双击点赞行为更换为暂停/播放</string>
 </resources>
