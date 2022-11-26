@@ -220,6 +220,7 @@
         <item>直播预约</item>
         <item>投喂支持</item>
         <item>滚动横幅</item>
+        <item>电池任务</item>
     </string-array>
     <string-array name="live_popup_values">
         <item>shoppingCard</item>
@@ -228,5 +229,6 @@
         <item>reserve</item>
         <item>gift</item>
         <item>banner</item>
+        <item>task</item>
     </string-array>
 </resources>

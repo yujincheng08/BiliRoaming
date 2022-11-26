@@ -355,8 +355,6 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             if (result.javaClass == instance.generalResponseClass)
                 result = result.getObjectField("data") ?: return@hookAfterMethod
 
-            Log.d("kofua, type: ${result.javaClass.name}, json: ${param.args[0]}")
-
             when (result.javaClass) {
                 liveShoppingInfoClass -> {
                     if (hidden && purifyLivePopups.contains("shoppingCard"))
@@ -392,6 +390,8 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     if (hidden && purifyLivePopups.contains("gift"))
                         result.getObjectField("functionCard")
                             ?.setObjectField("sengGiftCard", null)
+                    if (hidden && purifyLivePopups.contains("task"))
+                        result.setObjectField("taskInfo", null)
                 }
             }
         }
