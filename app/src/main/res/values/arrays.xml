@@ -213,4 +213,18 @@
         <item>24</item>
         <item>25</item>
     </string-array>
+    <string-array name="live_popup_entries">
+        <item>购物卡片</item>
+        <item>购物精选</item>
+        <item>关注提醒</item>
+        <item>直播预约</item>
+        <item>投喂支持</item>
+    </string-array>
+    <string-array name="live_popup_values">
+        <item>shoppingCard</item>
+        <item>shoppingSelected</item>
+        <item>follow</item>
+        <item>reserve</item>
+        <item>gift</item>
+    </string-array>
 </resources>

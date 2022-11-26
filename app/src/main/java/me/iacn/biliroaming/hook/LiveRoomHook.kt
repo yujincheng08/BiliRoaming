@@ -3,12 +3,7 @@ package me.iacn.biliroaming.hook
 import android.os.Bundle
 import android.view.MotionEvent
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
-import me.iacn.biliroaming.utils.Log
-import me.iacn.biliroaming.utils.hookAfterMethod
-import me.iacn.biliroaming.utils.hookBeforeMethod
-import me.iacn.biliroaming.utils.replaceMethod
-import me.iacn.biliroaming.utils.sPrefs
-import me.iacn.biliroaming.utils.toJSONObject
+import me.iacn.biliroaming.utils.*
 
 class LiveRoomHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
@@ -17,6 +12,18 @@ class LiveRoomHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 "onInterceptTouchEvent",
                 MotionEvent::class.java
             ) { false }
+        }
+        if (sPrefs.getBoolean("disable_live_room_double_click", false)) {
+            instance.liveRoomPlayerViewClass?.hookBeforeMethod("onDoubleTap") { param ->
+                val player = param.thisObject.callMethodOrNull("getPlayerCommonBridge")
+                    ?: return@hookBeforeMethod
+                val method = if (player.callMethodOrNullAs("isPlaying")
+                        ?: return@hookBeforeMethod
+                ) "pause" else "resume"
+                player.runCatching {
+                    callMethod(method)
+                }.onSuccess { param.result = true }
+            }
         }
         if (!sPrefs.getBoolean("revert_live_room_feed", false)) {
             return

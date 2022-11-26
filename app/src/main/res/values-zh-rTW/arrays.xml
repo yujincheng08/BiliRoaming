@@ -107,4 +107,11 @@
         <item>付費更新</item>
         <item>話題集合</item>
     </string-array>
+    <string-array name="live_popup_entries">
+        <item>購物卡片</item>
+        <item>購物精選</item>
+        <item>關注提醒</item>
+        <item>直播預約</item>
+        <item>投餵支持</item>
+    </string-array>
 </resources>

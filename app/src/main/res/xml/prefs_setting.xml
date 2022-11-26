@@ -366,11 +366,19 @@
             android:summary="@string/block_up_rcmd_ads_summary"
             android:title="@string/block_up_rcmd_ads_title" />
 
+        <MultiSelectListPreference
+            android:dependency="hidden"
+            android:entries="@array/live_popup_entries"
+            android:entryValues="@array/live_popup_values"
+            android:key="purify_live_popups"
+            android:summary="@string/purify_live_popups_summary"
+            android:title="@string/purify_live_popups_title" />
+
         <SwitchPreference
             android:dependency="hidden"
-            android:key="remove_live_shopping_ads"
-            android:summary="@string/remove_live_shopping_ads_summary"
-            android:title="@string/remove_live_shopping_ads_title" />
+            android:key="disable_live_room_double_click"
+            android:summary="@string/disable_live_room_double_click_summary"
+            android:title="@string/disable_live_room_double_click_title" />
     </PreferenceCategory>
 
     <PreferenceCategory
