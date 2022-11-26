@@ -15,13 +15,12 @@ class LiveRoomHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
         if (sPrefs.getBoolean("disable_live_room_double_click", false)) {
             instance.liveRoomPlayerViewClass?.hookBeforeMethod("onDoubleTap") { param ->
-                val player = param.thisObject.callMethodOrNull("getPlayerCommonBridge")
-                    ?: return@hookBeforeMethod
-                val method = if (player.callMethodOrNullAs("isPlaying")
+                runCatching {
+                    val player = param.thisObject.callMethod("getPlayerCommonBridge")
                         ?: return@hookBeforeMethod
-                ) "pause" else "resume"
-                player.runCatching {
-                    callMethod(method)
+                    val method = if (player.callMethodAs("isPlaying"))
+                        "pause" else "resume"
+                    player.callMethod(method)
                 }.onSuccess { param.result = true }
             }
         }
