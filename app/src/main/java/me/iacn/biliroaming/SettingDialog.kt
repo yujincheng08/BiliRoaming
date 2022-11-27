@@ -81,7 +81,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("share_log")?.onPreferenceClickListener = this
             findPreference("customize_drawer")?.onPreferenceClickListener = this
             findPreference("custom_link")?.onPreferenceClickListener = this
-            findPreference("add_custom_button")?.onPreferenceClickListener = this
+            findPreference("add_custom_button")?.onPreferenceChangeListener = this
             findPreference("customize_dynamic")?.onPreferenceClickListener = this
             checkCompatibleVersion()
             checkUpdate()
@@ -222,9 +222,12 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                         selectImage(LOGO_SELECTION)
                 }
                 "custom_subtitle" -> {
-                    if (newValue as Boolean) {
+                    if (newValue as Boolean)
                         showCustomSubtitle()
-                    }
+                }
+                "add_custom_button" -> {
+                    if (newValue as Boolean)
+                        onAddCustomButtonClick()
                 }
             }
             return true
@@ -633,7 +636,6 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             "share_log" -> onShareLogClick()
             "customize_drawer" -> onCustomizeDrawerClick()
             "custom_link" -> onCustomLinkClick()
-            "add_custom_button" -> onAddCustomButtonClick()
             "customize_dynamic" -> onCustomDynamicClick()
             else -> false
         }

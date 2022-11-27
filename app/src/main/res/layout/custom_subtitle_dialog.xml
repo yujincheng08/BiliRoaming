@@ -1,452 +1,457 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:paddingLeft="16dp"
-    android:paddingTop="10dp"
-    android:paddingRight="16dp"
-    android:paddingBottom="10dp">
-
-    <RelativeLayout
-        android:id="@+id/pvBlack"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_alignBottom="@id/tv_pvBlack"
-            android:layout_marginBottom="-5dp"
-            android:background="#000" />
-
-        <TextView
-            android:id="@+id/tv_pvBlack"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:layout_margin="5dp"
-            android:gravity="center" />
-    </RelativeLayout>
-
-    <RelativeLayout
-        android:id="@+id/pvWhite"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_alignBottom="@id/tv_pvWhite"
-            android:layout_marginBottom="-5dp"
-            android:background="#FFF" />
-
-        <TextView
-            android:id="@+id/tv_pvWhite"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:layout_margin="5dp"
-            android:gravity="center" />
-    </RelativeLayout>
-
-    <RelativeLayout
-        android:id="@+id/pvTp"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <ImageView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_alignBottom="@id/tv_pvTp"
-            android:layout_marginBottom="-5dp"
-            android:scaleType="center"
-            android:src="@drawable/tp"
-            tools:ignore="ContentDescription" />
-
-        <TextView
-            android:id="@+id/tv_pvTp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:layout_margin="5dp"
-            android:gravity="center" />
-    </RelativeLayout>
+    android:layout_height="wrap_content">
 
     <LinearLayout
-        android:id="@+id/ll_noBg"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?android:attr/selectableItemBackground"
-        android:gravity="center_vertical"
-        android:orientation="horizontal">
+        android:orientation="vertical"
+        android:paddingLeft="16dp"
+        android:paddingTop="10dp"
+        android:paddingRight="16dp"
+        android:paddingBottom="10dp">
 
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="10dp"
-            android:layout_weight="1"
-            android:ellipsize="end"
-            android:paddingTop="8dp"
-            android:paddingBottom="8dp"
-            android:singleLine="true"
-            android:text="@string/custom_subtitle_remove_bg"
-            android:textSize="16sp" />
+        <RelativeLayout
+            android:id="@+id/pvBlack"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
 
-        <Switch
-            android:id="@+id/noBg"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@android:color/transparent"
-            android:clickable="false"
-            android:tag="subtitle_remove_bg" />
-    </LinearLayout>
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignBottom="@id/tv_pvBlack"
+                android:layout_marginBottom="-5dp"
+                android:background="#000" />
 
-    <LinearLayout
-        android:id="@+id/ll_bold"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="?android:attr/selectableItemBackground"
-        android:orientation="horizontal">
+            <TextView
+                android:id="@+id/tv_pvBlack"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:layout_margin="5dp"
+                android:gravity="center" />
+        </RelativeLayout>
 
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="10dp"
-            android:layout_weight="1"
-            android:ellipsize="end"
-            android:paddingTop="8dp"
-            android:paddingBottom="8dp"
-            android:singleLine="true"
-            android:text="@string/custom_subtitle_bold"
-            android:textSize="16sp" />
+        <RelativeLayout
+            android:id="@+id/pvWhite"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
 
-        <Switch
-            android:id="@+id/bold"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@android:color/transparent"
-            android:clickable="false"
-            android:tag="subtitle_bold" />
-    </LinearLayout>
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignBottom="@id/tv_pvWhite"
+                android:layout_marginBottom="-5dp"
+                android:background="#FFF" />
 
-    <LinearLayout
-        android:id="@+id/ll_font"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:orientation="horizontal">
+            <TextView
+                android:id="@+id/tv_pvWhite"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:layout_margin="5dp"
+                android:gravity="center" />
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/pvTp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignBottom="@id/tv_pvTp"
+                android:layout_marginBottom="-5dp"
+                android:scaleType="center"
+                android:src="@drawable/tp"
+                tools:ignore="ContentDescription" />
+
+            <TextView
+                android:id="@+id/tv_pvTp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:layout_margin="5dp"
+                android:gravity="center" />
+        </RelativeLayout>
 
         <LinearLayout
-            android:layout_width="0dp"
+            android:id="@+id/ll_noBg"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical">
+            android:background="?android:attr/selectableItemBackground"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
             <TextView
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="@string/custom_subtitle_font"
+                android:layout_marginEnd="10dp"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:singleLine="true"
+                android:text="@string/custom_subtitle_remove_bg"
                 android:textSize="16sp" />
 
-            <TextView
-                android:id="@+id/tv_fontStatus"
+            <Switch
+                android:id="@+id/noBg"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:ellipsize="end"
-                android:singleLine="true"
-                android:textColor="?android:attr/textColorSecondary"
-                android:textSize="12sp" />
+                android:background="@android:color/transparent"
+                android:clickable="false"
+                android:tag="subtitle_remove_bg" />
         </LinearLayout>
 
-        <Button
-            android:id="@+id/btn_resetFont"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/custom_subtitle_reset" />
-
-        <Button
-            android:id="@+id/btn_importFont"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/custom_subtitle_import" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:singleLine="true"
-            android:text="@string/custom_subtitle_fill_color"
-            android:textSize="16sp" />
-
-        <EditText
-            android:id="@+id/font_color"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:autofillHints="yes"
-            android:digits="0123456789ABCDEFabcdef"
-            android:inputType="text|textCapCharacters"
-            android:tag="subtitle_font_color2"
-            tools:ignore="LabelFor" />
-
-        <Button
-            android:id="@+id/btn_chooseColorFc"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/custom_subtitle_pick_color" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/ll_bg"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:singleLine="true"
-            android:text="@string/custom_subtitle_bg_color"
-            android:textSize="16sp" />
-
-        <EditText
-            android:id="@+id/background_color"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:autofillHints="yes"
-            android:digits="0123456789ABCDEFabcdef"
-            android:inputType="text|textCapCharacters"
-            android:tag="subtitle_background_color"
-            tools:ignore="LabelFor" />
-
-        <Button
-            android:id="@+id/btn_chooseColorBc"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/custom_subtitle_pick_color" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/ll_size"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:singleLine="true"
-            android:text="@string/custom_subtitle_font_size"
-            android:textSize="16sp" />
-
-        <EditText
-            android:id="@+id/font_size"
+        <LinearLayout
+            android:id="@+id/ll_bold"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:autofillHints="yes"
-            android:digits="0123456789"
-            android:inputType="number"
-            android:tag="subtitle_font_size"
-            tools:ignore="LabelFor" />
-    </LinearLayout>
+            android:background="?android:attr/selectableItemBackground"
+            android:orientation="horizontal">
 
-    <LinearLayout
-        android:id="@+id/ll_sizePortrait"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="10dp"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:singleLine="true"
+                android:text="@string/custom_subtitle_bold"
+                android:textSize="16sp" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:singleLine="true"
-            android:text="@string/custom_subtitle_font_size_portrait"
-            android:textSize="16sp" />
+            <Switch
+                android:id="@+id/bold"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@android:color/transparent"
+                android:clickable="false"
+                android:tag="subtitle_bold" />
+        </LinearLayout>
 
-        <EditText
-            android:id="@+id/fontSizePortrait"
+        <LinearLayout
+            android:id="@+id/ll_font"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:autofillHints="yes"
-            android:digits="0123456789"
-            android:hint="@string/custom_subtitle_zero_as_default"
-            android:inputType="number"
-            android:tag="subtitle_font_size_portrait"
-            tools:ignore="LabelFor" />
-    </LinearLayout>
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
-    <LinearLayout
-        android:id="@+id/ll_sizeLandscape"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:singleLine="true"
-            android:text="@string/custom_subtitle_font_size_landscape"
-            android:textSize="16sp" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/custom_subtitle_font"
+                    android:textSize="16sp" />
 
-        <EditText
-            android:id="@+id/fontSizeLandscape"
+                <TextView
+                    android:id="@+id/tv_fontStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:singleLine="true"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/btn_resetFont"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/custom_subtitle_reset" />
+
+            <Button
+                android:id="@+id/btn_importFont"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/custom_subtitle_import" />
+        </LinearLayout>
+
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:autofillHints="yes"
-            android:digits="0123456789"
-            android:hint="@string/custom_subtitle_zero_as_default"
-            android:inputType="number"
-            android:tag="subtitle_font_size_landscape"
-            tools:ignore="LabelFor" />
-    </LinearLayout>
+            android:orientation="horizontal">
 
-    <LinearLayout
-        android:id="@+id/ll_blur"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:singleLine="true"
+                android:text="@string/custom_subtitle_fill_color"
+                android:textSize="16sp" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:singleLine="true"
-            android:text="@string/custom_subtitle_blur"
-            android:textSize="16sp" />
+            <EditText
+                android:id="@+id/font_color"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:autofillHints="yes"
+                android:digits="0123456789ABCDEFabcdef"
+                android:inputType="text|textCapCharacters"
+                android:tag="subtitle_font_color2"
+                tools:ignore="LabelFor" />
 
-        <EditText
-            android:id="@+id/font_blur_solid"
+            <Button
+                android:id="@+id/btn_chooseColorFc"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/custom_subtitle_pick_color" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/ll_bg"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:autofillHints="yes"
-            android:digits="0123456789"
-            android:inputType="text|textCapCharacters"
-            android:tag="subtitle_blur_solid"
-            tools:ignore="LabelFor" />
-    </LinearLayout>
+            android:orientation="horizontal">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:singleLine="true"
+                android:text="@string/custom_subtitle_bg_color"
+                android:textSize="16sp" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:singleLine="true"
-            android:text="@string/custom_subtitle_stroke_color"
-            android:textSize="16sp" />
+            <EditText
+                android:id="@+id/background_color"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:autofillHints="yes"
+                android:digits="0123456789ABCDEFabcdef"
+                android:inputType="text|textCapCharacters"
+                android:tag="subtitle_background_color"
+                tools:ignore="LabelFor" />
 
-        <EditText
-            android:id="@+id/stroke_color"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:autofillHints="yes"
-            android:digits="0123456789ABCDEFabcdef"
-            android:inputType="text|textCapCharacters"
-            android:tag="subtitle_stroke_color"
-            tools:ignore="LabelFor" />
+            <Button
+                android:id="@+id/btn_chooseColorBc"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/custom_subtitle_pick_color" />
+        </LinearLayout>
 
-        <Button
-            android:id="@+id/btn_chooseColorSc"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/custom_subtitle_pick_color" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:singleLine="true"
-            android:text="@string/custom_subtitle_stroke_width"
-            android:textSize="16sp" />
-
-        <EditText
-            android:id="@+id/stroke_width"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:autofillHints="yes"
-            android:inputType="numberDecimal"
-            android:tag="subtitle_stroke_width"
-            tools:ignore="LabelFor" />
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/ll_subOffset"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:singleLine="true"
-            android:text="@string/custom_subtitle_offset"
-            android:textSize="16sp" />
-
-        <EditText
-            android:id="@+id/subOffset"
+        <LinearLayout
+            android:id="@+id/ll_size"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:autofillHints="yes"
-            android:digits="+-0123456789"
-            android:hint="@string/custom_subtitle_offset_hint"
-            android:inputType="number"
-            android:tag="subtitle_offset"
-            tools:ignore="LabelFor" />
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:singleLine="true"
+                android:text="@string/custom_subtitle_font_size"
+                android:textSize="16sp" />
+
+            <EditText
+                android:id="@+id/font_size"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:autofillHints="yes"
+                android:digits="0123456789"
+                android:inputType="number"
+                android:tag="subtitle_font_size"
+                tools:ignore="LabelFor" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/ll_sizePortrait"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:singleLine="true"
+                android:text="@string/custom_subtitle_font_size_portrait"
+                android:textSize="16sp" />
+
+            <EditText
+                android:id="@+id/fontSizePortrait"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:autofillHints="yes"
+                android:digits="0123456789"
+                android:hint="@string/custom_subtitle_zero_as_default"
+                android:inputType="number"
+                android:tag="subtitle_font_size_portrait"
+                tools:ignore="LabelFor" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/ll_sizeLandscape"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:singleLine="true"
+                android:text="@string/custom_subtitle_font_size_landscape"
+                android:textSize="16sp" />
+
+            <EditText
+                android:id="@+id/fontSizeLandscape"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:autofillHints="yes"
+                android:digits="0123456789"
+                android:hint="@string/custom_subtitle_zero_as_default"
+                android:inputType="number"
+                android:tag="subtitle_font_size_landscape"
+                tools:ignore="LabelFor" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/ll_blur"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:singleLine="true"
+                android:text="@string/custom_subtitle_blur"
+                android:textSize="16sp" />
+
+            <EditText
+                android:id="@+id/font_blur_solid"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:autofillHints="yes"
+                android:digits="0123456789"
+                android:inputType="text|textCapCharacters"
+                android:tag="subtitle_blur_solid"
+                tools:ignore="LabelFor" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:singleLine="true"
+                android:text="@string/custom_subtitle_stroke_color"
+                android:textSize="16sp" />
+
+            <EditText
+                android:id="@+id/stroke_color"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:autofillHints="yes"
+                android:digits="0123456789ABCDEFabcdef"
+                android:inputType="text|textCapCharacters"
+                android:tag="subtitle_stroke_color"
+                tools:ignore="LabelFor" />
+
+            <Button
+                android:id="@+id/btn_chooseColorSc"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/custom_subtitle_pick_color" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:singleLine="true"
+                android:text="@string/custom_subtitle_stroke_width"
+                android:textSize="16sp" />
+
+            <EditText
+                android:id="@+id/stroke_width"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:autofillHints="yes"
+                android:inputType="numberDecimal"
+                android:tag="subtitle_stroke_width"
+                tools:ignore="LabelFor" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/ll_subOffset"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:singleLine="true"
+                android:text="@string/custom_subtitle_offset"
+                android:textSize="16sp" />
+
+            <EditText
+                android:id="@+id/subOffset"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:autofillHints="yes"
+                android:digits="+-0123456789"
+                android:hint="@string/custom_subtitle_offset_hint"
+                android:inputType="number"
+                android:tag="subtitle_offset"
+                tools:ignore="LabelFor" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/ll_pv"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:singleLine="true"
+                android:text="@string/custom_subtitle_test"
+                android:textSize="16sp" />
+
+            <EditText
+                android:id="@+id/et_testText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:importantForAutofill="no"
+                android:inputType="text"
+                android:text="@string/custom_subtitle_test_text"
+                tools:ignore="LabelFor" />
+
+            <Button
+                android:id="@+id/btn_pv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/custom_subtitle_preview" />
+        </LinearLayout>
+
+        <CheckBox
+            android:id="@+id/cb_fixBreak"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:checked="false"
+            android:tag="subtitle_fix_break"
+            android:text="@string/custom_subtitle_fix_break" />
+
     </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/ll_pv"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:singleLine="true"
-            android:text="@string/custom_subtitle_test"
-            android:textSize="16sp" />
-
-        <EditText
-            android:id="@+id/et_testText"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:importantForAutofill="no"
-            android:inputType="text"
-            android:text="@string/custom_subtitle_test_text"
-            tools:ignore="LabelFor" />
-
-        <Button
-            android:id="@+id/btn_pv"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/custom_subtitle_preview" />
-    </LinearLayout>
-
-    <CheckBox
-        android:id="@+id/cb_fixBreak"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:checked="false"
-        android:tag="subtitle_fix_break"
-        android:text="@string/custom_subtitle_fix_break" />
-
-</LinearLayout>
+</ScrollView>
