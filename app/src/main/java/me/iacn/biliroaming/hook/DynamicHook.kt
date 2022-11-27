@@ -77,9 +77,7 @@ class DynamicHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 "dynRed",
                 "com.bapis.bilibili.app.dynamic.v1.DynRedReq"
             ) { param ->
-                param.result?.run {
-                    callMethod("setDefaultTab", "video")
-                }
+                param.result?.callMethod("setDefaultTab", "video")
             }
         }
     }
@@ -90,11 +88,12 @@ class DynamicHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val contentList = dynamicList.callMethodAs<List<*>?>("getListList")
             ?: return
         val idxList = mutableSetOf<Int>()
-        contentList.forEachIndexed { idx, e ->
+        for ((idx, e) in contentList.withIndex()) {
             if (purifyTypes.isNotEmpty()) {
                 val cardType = e?.callMethodAs("getCardTypeValue") ?: -1
                 if (purifyTypes.contains(cardType)) {
                     idxList.add(idx)
+                    continue
                 }
             }
 
@@ -107,7 +106,10 @@ class DynamicHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 if (modulesText.isNotEmpty() && if (contentRegexMode)
                         purifyContentRegexes.any { modulesText.contains(it) }
                     else purifyContents.any { modulesText.contains(it) }
-                ) idxList.add(idx)
+                ) {
+                    idxList.add(idx)
+                    continue
+                }
             }
 
             val extend = e?.callMethod("getExtend")
@@ -121,7 +123,10 @@ class DynamicHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 if (contentOrig.isNotEmpty() && if (contentRegexMode)
                         purifyContentRegexes.any { contentOrig.contains(it) }
                     else purifyContents.any { contentOrig.contains(it) }
-                ) idxList.add(idx)
+                ) {
+                    idxList.add(idx)
+                    continue
+                }
             }
 
             if (purifyContents.isNotEmpty()) {
@@ -133,13 +138,17 @@ class DynamicHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 if (content.isNotEmpty() && if (contentRegexMode)
                         purifyContentRegexes.any { content.contains(it) }
                     else purifyContents.any { content.contains(it) }
-                ) idxList.add(idx)
+                ) {
+                    idxList.add(idx)
+                    continue
+                }
             }
 
             if (purifyUpNames.isNotEmpty()) {
                 val origName = extend?.callMethodAs("getOrigName") ?: ""
                 if (origName.isNotEmpty() && purifyUpNames.any { origName == it }) {
                     idxList.add(idx)
+                    continue
                 }
             }
 
@@ -147,6 +156,7 @@ class DynamicHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 val uid = extend?.callMethodAs("getUid") ?: 0L
                 if (uid > 0L && purifyUidList.any { uid == it }) {
                     idxList.add(idx)
+                    continue
                 }
             }
         }

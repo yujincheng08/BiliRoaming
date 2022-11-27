@@ -1,113 +1,118 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_columnWeight="1"
-        android:singleLine="false"
-        android:textSize="18sp"
-        android:text="ID必填，其他不填则表示不替换"
-        tools:ignore="HardcodedText" />
+    android:layout_height="match_parent">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="vertical">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"
-            android:singleLine="true"
-            android:text="替换项目ID"
+            android:singleLine="false"
+            android:text="ID必填，其他不填则表示不替换"
+            android:textSize="18sp"
             tools:ignore="HardcodedText" />
 
-        <EditText
-            android:id="@+id/custom_button_id"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_columnWeight="4"
-            android:layout_weight="1"
-            android:digits="0123456789"
-            android:inputType="text"
-            android:hint="ID必须存在，且标题项目也存在"
-            android:tag="custom_button_id"
-            tools:ignore="HardcodedText" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_columnWeight="1"
-            android:singleLine="true"
-            android:text="新名称"
-            tools:ignore="HardcodedText" />
-
-        <EditText
-            android:id="@+id/custom_button_title"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_columnWeight="4"
-            android:layout_weight="1"
-            android:tag="custom_button_title"/>
-    </LinearLayout>
-
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_columnWeight="1"
-            android:singleLine="true"
-            android:text="新链接"
-            tools:ignore="HardcodedText" />
-
-        <EditText
-            android:id="@+id/custom_button_uri"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_columnWeight="4"
-            android:layout_weight="1"
-            android:hint="bilibili://user_center/vip"
-            android:tag="custom_button_uri"
-            tools:ignore="HardcodedText" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_columnWeight="1"
-            android:singleLine="true"
-            android:text="新图标"
-            tools:ignore="HardcodedText" />
-
-        <EditText
-            android:id="@+id/custom_button_icon"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_columnWeight="4"
-            android:hint="https://i0.hdslb.com/bfs/album/276769577d2a5db1d9f914364abad7c5253086f6.png"
-            android:tag="custom_button_icon"
-            tools:ignore="HardcodedText" />
-    </LinearLayout>
+            android:orientation="horizontal">
 
-</LinearLayout>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:singleLine="true"
+                android:text="替换项目ID"
+                tools:ignore="HardcodedText" />
+
+            <EditText
+                android:id="@+id/custom_button_id"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="4"
+                android:layout_weight="1"
+                android:digits="0123456789"
+                android:hint="ID必须存在，且标题项目也存在"
+                android:inputType="text"
+                android:tag="custom_button_id"
+                tools:ignore="HardcodedText" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:singleLine="true"
+                android:text="新名称"
+                tools:ignore="HardcodedText" />
+
+            <EditText
+                android:id="@+id/custom_button_title"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="4"
+                android:layout_weight="1"
+                android:tag="custom_button_title" />
+        </LinearLayout>
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:singleLine="true"
+                android:text="新链接"
+                tools:ignore="HardcodedText" />
+
+            <EditText
+                android:id="@+id/custom_button_uri"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="4"
+                android:layout_weight="1"
+                android:hint="bilibili://user_center/vip"
+                android:tag="custom_button_uri"
+                tools:ignore="HardcodedText" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:singleLine="true"
+                android:text="新图标"
+                tools:ignore="HardcodedText" />
+
+            <EditText
+                android:id="@+id/custom_button_icon"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="4"
+                android:hint="https://i0.hdslb.com/bfs/album/276769577d2a5db1d9f914364abad7c5253086f6.png"
+                android:tag="custom_button_icon"
+                tools:ignore="HardcodedText" />
+        </LinearLayout>
+
+    </LinearLayout>
+</ScrollView>
