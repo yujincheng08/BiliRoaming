@@ -12,7 +12,7 @@ Logo来自[哔哩哔哩漫游娘](https://www.weibo.com/p/230418139a6f1100102vlj
 )](https://github.com/yujincheng08/BiliRoaming)
 
 # 哔哩漫游
-解除B站客户端番剧区域限制的Xposed模块，并且提供其他小功能
+相对于主支, 添加了自动加载动画疯,NicoNico,Twitch,弹弹play的弹幕的功能
 
 # BiliRoaming
 An Xposed module that unblocks bangumi area limit of BILIBILI, and miscellaneous features
