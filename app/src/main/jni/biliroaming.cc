@@ -1,13 +1,13 @@
 #include <android/log.h>
 #include <dex_helper.h>
+#include <fcntl.h>
+#include <jni.h>
+#include <list>
+#include <map>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <jni.h>
-#include <fcntl.h>
-#include <map>
 #include <zlib.h>
-#include <list>
 
 #define LOG_TAG "BiliRoaming"
 #define LOGV(...) __android_log_print(ANDROID_LOG_VERBOSE, LOG_TAG, __VA_ARGS__)
@@ -40,22 +40,21 @@ struct MemMap {
   explicit MemMap(std::string file_name) {
     int fd = open(file_name.data(), O_RDONLY | O_CLOEXEC);
     if (fd > 0) {
-      struct stat s{};
+      struct stat s {};
       fstat(fd, &s);
-      auto *addr = mmap(nullptr, s.st_size, PROT_READ, MAP_PRIVATE,
-                        fd, 0);
+      auto *addr = mmap(nullptr, s.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
       if (addr != MAP_FAILED) {
-        addr_ = static_cast<uint8_t*>(addr);
+        addr_ = static_cast<uint8_t *>(addr);
         len_ = s.st_size;
       }
     }
     close(fd);
   }
   explicit MemMap(size_t size) {
-    auto *addr = mmap(nullptr, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS,
-                      -1, 0);
+    auto *addr = mmap(nullptr, size, PROT_READ | PROT_WRITE,
+                      MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     if (addr != MAP_FAILED) {
-      addr_ = static_cast<uint8_t*>(addr);
+      addr_ = static_cast<uint8_t *>(addr);
       len_ = size;
     }
   }
@@ -70,37 +69,35 @@ struct MemMap {
   [[nodiscard]] auto addr() const { return addr_; }
   [[nodiscard]] auto len() const { return len_; }
 
-  MemMap(MemMap&& other) noexcept : addr_(other.addr_), len_(other.len_) {
+  MemMap(MemMap &&other) noexcept : addr_(other.addr_), len_(other.len_) {
     other.addr_ = nullptr;
-    other.len_= 0;
+    other.len_ = 0;
   }
-  MemMap &operator=(MemMap&& other) noexcept {
+  MemMap &operator=(MemMap &&other) noexcept {
     new (this) MemMap(std::move(other));
     return *this;
   }
 
-  MemMap(const MemMap&) = delete;
-  MemMap &operator=(const MemMap&) = delete;
+  MemMap(const MemMap &) = delete;
+  MemMap &operator=(const MemMap &) = delete;
+
 private:
-  uint8_t* addr_ = nullptr;
+  uint8_t *addr_ = nullptr;
   size_t len_ = 0;
 };
 
-void *myalloc([[maybe_unused]] void *q, unsigned n, unsigned m)
-{
+void *myalloc([[maybe_unused]] void *q, unsigned n, unsigned m) {
   return calloc(n, m);
 }
 
-void myfree([[maybe_unused]] void *q, void *p)
-{
+void myfree([[maybe_unused]] void *q, void *p) {
   (void)q;
   free(p);
 }
 
-
 struct [[gnu::packed]] ZipLocalFile {
-  static ZipLocalFile* from(uint8_t* begin) {
-    auto* file = reinterpret_cast<ZipLocalFile*>(begin);
+  static ZipLocalFile *from(uint8_t *begin) {
+    auto *file = reinterpret_cast<ZipLocalFile *>(begin);
     if (file->signature == 0x4034b50u) {
       return file;
     } else {
@@ -108,10 +105,9 @@ struct [[gnu::packed]] ZipLocalFile {
     }
   }
   ZipLocalFile *next() {
-    return from(reinterpret_cast<uint8_t*>(this) +
-      sizeof(ZipLocalFile) + file_name_length + extra_length + compress_size);
+    return from(reinterpret_cast<uint8_t *>(this) + sizeof(ZipLocalFile) +
+                file_name_length + extra_length + compress_size);
   }
-
 
   MemMap uncompress() {
     if (compress == 0x8) {
@@ -127,9 +123,9 @@ struct [[gnu::packed]] ZipLocalFile {
       d_stream.zfree = myfree;
       d_stream.opaque = nullptr;
 
-      d_stream.next_in  = data();
+      d_stream.next_in = data();
       d_stream.avail_in = compress_size;
-      d_stream.next_out = out.addr();            /* discard the output */
+      d_stream.next_out = out.addr(); /* discard the output */
       d_stream.avail_out = out.len();
 
       err = inflateInit2(&d_stream, -MAX_WBITS);
@@ -138,9 +134,10 @@ struct [[gnu::packed]] ZipLocalFile {
         return {};
       }
 
-      for (int c= 0;;++c) {
+      for (int c = 0;; ++c) {
         err = inflate(&d_stream, Z_NO_FLUSH);
-        if (err == Z_STREAM_END) break;
+        if (err == Z_STREAM_END)
+          break;
         if (err != Z_OK) {
           LOGE("inflate %d", err);
           return {};
@@ -154,7 +151,8 @@ struct [[gnu::packed]] ZipLocalFile {
       }
 
       if (d_stream.total_out != uncompress_size) {
-        LOGE("bad inflate: %ld vs %zu\n", d_stream.total_out, static_cast<size_t>(uncompress_size));
+        LOGE("bad inflate: %ld vs %zu\n", d_stream.total_out,
+             static_cast<size_t>(uncompress_size));
         return {};
       }
       mprotect(out.addr(), out.len(), PROT_READ);
@@ -169,12 +167,11 @@ struct [[gnu::packed]] ZipLocalFile {
     return {};
   }
 
-  std::string_view file_name() {
-      return {name, file_name_length};
-  }
+  std::string_view file_name() { return {name, file_name_length}; }
 
   uint8_t *data() {
-    return reinterpret_cast<uint8_t*>(this) + sizeof(ZipLocalFile) + file_name_length + extra_length;
+    return reinterpret_cast<uint8_t *>(this) + sizeof(ZipLocalFile) +
+           file_name_length + extra_length;
   }
 
   [[maybe_unused]] uint32_t signature;
@@ -193,24 +190,26 @@ struct [[gnu::packed]] ZipLocalFile {
 
 class ZipFile {
 public:
-    static std::unique_ptr<ZipFile> Open(const MemMap &map) {
-      auto *local_file = ZipLocalFile::from(map.addr());
-      if (!local_file) return nullptr;
-      auto r = std::make_unique<ZipFile>();
-      while(local_file) {
-        r->entries.emplace(local_file->file_name(), local_file);
-        local_file = local_file->next();
-      }
-      return r;
-    }
-    ZipLocalFile* Find(std::string_view entry_name) {
-      if (auto i = entries.find(entry_name); i != entries.end()) {
-        return i->second;
-      }
+  static std::unique_ptr<ZipFile> Open(const MemMap &map) {
+    auto *local_file = ZipLocalFile::from(map.addr());
+    if (!local_file)
       return nullptr;
+    auto r = std::make_unique<ZipFile>();
+    while (local_file) {
+      r->entries.emplace(local_file->file_name(), local_file);
+      local_file = local_file->next();
     }
+    return r;
+  }
+  ZipLocalFile *Find(std::string_view entry_name) {
+    if (auto i = entries.find(entry_name); i != entries.end()) {
+      return i->second;
+    }
+    return nullptr;
+  }
+
 private:
-    std::map<std::string_view, ZipLocalFile*> entries;
+  std::map<std::string_view, ZipLocalFile *> entries;
 };
 static_assert(offsetof(ZipLocalFile, signature) == 0);
 static_assert(offsetof(ZipLocalFile, version) == 4);
@@ -329,8 +328,7 @@ Java_me_iacn_biliroaming_utils_DexHelper_findMethodUsingString(
   auto out = helper->FindMethodUsingString(
       str_, match_prefix, return_type, parameter_count,
       parameter_shorty_ ? parameter_shorty_ : "", declaring_class,
-      parameter_types_, contains_parameter_types_, dex_priority_,
-      find_first);
+      parameter_types_, contains_parameter_types_, dex_priority_, find_first);
 
   env->ReleaseStringUTFChars(str, str_);
   if (parameter_shorty_)
@@ -379,7 +377,8 @@ Java_me_iacn_biliroaming_utils_DexHelper_load(JNIEnv *env, jobject thiz,
     auto dex_file_length = env->GetArrayLength(cookie);
     const auto *dex_files = reinterpret_cast<const MyDexFile **>(
         env->GetLongArrayElements(cookie, nullptr));
-    std::vector<std::tuple<const void *, size_t, const void *, size_t>> dex_images;
+    std::vector<std::tuple<const void *, size_t, const void *, size_t>>
+        dex_images;
     if (!dex_files[0]) {
       while (dex_file_length-- > 1) {
         const auto *dex_file = dex_files[dex_file_length];
@@ -394,30 +393,41 @@ Java_me_iacn_biliroaming_utils_DexHelper_load(JNIEnv *env, jobject thiz,
           dex_images.clear();
           break;
         } else {
-          dex_images.emplace_back(dex_file->begin_, dex_file->size_, nullptr, 0);
+          dex_images.emplace_back(dex_file->begin_, dex_file->size_, nullptr,
+                                  0);
         }
       }
     }
     if (dex_images.empty()) {
       // contains compact dex, try to load from original file
-      auto file_name_obj = (jstring) env->GetObjectField(java_dex_file, file_name_field);
-      if (!file_name_obj) continue;
+      auto file_name_obj =
+          (jstring)env->GetObjectField(java_dex_file, file_name_field);
+      if (!file_name_obj)
+        continue;
       auto file_name = env->GetStringUTFChars(file_name_obj, nullptr);
       LOGD("dex filename is %s", file_name);
       auto map = MemMap(file_name);
-      if (!map.ok()) continue;
+      if (!map.ok())
+        continue;
       auto zip_file = ZipFile::Open(map);
       if (zip_file) {
         for (int idx = 1;; ++idx) {
-          auto entry = zip_file->Find("classes" + (idx == 1 ? std::string() : std::to_string(idx)) + ".dex");
+          auto entry = zip_file->Find(
+              "classes" + (idx == 1 ? std::string() : std::to_string(idx)) +
+              ".dex");
           if (entry) {
             auto uncompress = entry->uncompress();
             if (uncompress.ok()) {
-              LOGD("uncompressed %.*s", static_cast<int>(entry->file_name().size()), entry->file_name().data());
-              images.emplace_back(uncompress.addr(), uncompress.len(), nullptr, 0);
+              LOGD("uncompressed %.*s",
+                   static_cast<int>(entry->file_name().size()),
+                   entry->file_name().data());
+              images.emplace_back(uncompress.addr(), uncompress.len(), nullptr,
+                                  0);
               maps.emplace_back(std::move(uncompress));
             } else {
-              LOGW("failed to uncompressed %.*s", static_cast<int>(entry->file_name().size()), entry->file_name().data());
+              LOGW("failed to uncompressed %.*s",
+                   static_cast<int>(entry->file_name().size()),
+                   entry->file_name().data());
             }
           } else {
             break;
@@ -430,14 +440,15 @@ Java_me_iacn_biliroaming_utils_DexHelper_load(JNIEnv *env, jobject thiz,
       env->ReleaseStringUTFChars(file_name_obj, file_name);
       env->DeleteLocalRef(file_name_obj);
     } else {
-      for (auto &image: dex_images) {
+      for (auto &image : dex_images) {
         images.emplace_back(std::move(image));
       }
     }
   }
   if (images.empty())
     return 0;
-  auto res = reinterpret_cast<jlong>(new Handler(std::make_unique<DexHelper>(images), std::move(maps)));
+  auto res = reinterpret_cast<jlong>(
+      new Handler(std::make_unique<DexHelper>(images), std::move(maps)));
   env->SetLongField(thiz, token_field, res);
   return res;
 }
@@ -489,8 +500,7 @@ Java_me_iacn_biliroaming_utils_DexHelper_findMethodInvoking(
   auto out = helper->FindMethodInvoking(
       method_index, return_type, parameter_count,
       parameter_shorty_ ? parameter_shorty_ : "", declaring_class,
-      parameter_types_, contains_parameter_types_, dex_priority_,
-      find_first);
+      parameter_types_, contains_parameter_types_, dex_priority_, find_first);
 
   if (parameter_shorty_)
     env->ReleaseStringUTFChars(parameter_shorty, parameter_shorty_);
@@ -558,8 +568,7 @@ Java_me_iacn_biliroaming_utils_DexHelper_findMethodInvoked(
   auto out = helper->FindMethodInvoked(
       method_index, return_type, parameter_count,
       parameter_shorty_ ? parameter_shorty_ : "", declaring_class,
-      parameter_types_, contains_parameter_types_, dex_priority_,
-      find_first);
+      parameter_types_, contains_parameter_types_, dex_priority_, find_first);
 
   if (parameter_shorty_)
     env->ReleaseStringUTFChars(parameter_shorty, parameter_shorty_);
@@ -627,8 +636,7 @@ Java_me_iacn_biliroaming_utils_DexHelper_findMethodSettingField(
   auto out = helper->FindMethodSettingField(
       field_index, return_type, parameter_count,
       parameter_shorty_ ? parameter_shorty_ : "", declaring_class,
-      parameter_types_, contains_parameter_types_, dex_priority_,
-      find_first);
+      parameter_types_, contains_parameter_types_, dex_priority_, find_first);
 
   if (parameter_shorty_)
     env->ReleaseStringUTFChars(parameter_shorty, parameter_shorty_);
@@ -696,8 +704,7 @@ Java_me_iacn_biliroaming_utils_DexHelper_findMethodGettingField(
   auto out = helper->FindMethodGettingField(
       field_index, return_type, parameter_count,
       parameter_shorty_ ? parameter_shorty_ : "", declaring_class,
-      parameter_types_, contains_parameter_types_, dex_priority_,
-      find_first);
+      parameter_types_, contains_parameter_types_, dex_priority_, find_first);
 
   if (parameter_shorty_)
     env->ReleaseStringUTFChars(parameter_shorty, parameter_shorty_);
@@ -926,7 +933,7 @@ extern "C" JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *) {
     executable = env->FindClass("java/lang/reflect/AbstractMethod");
   }
   get_parameters_method =
-          env->GetMethodID(executable, "getParameterTypes", "()[Ljava/lang/Class;");
+      env->GetMethodID(executable, "getParameterTypes", "()[Ljava/lang/Class;");
   auto clazz = env->FindClass("java/lang/Class");
   get_class_name_method =
       env->GetMethodID(clazz, "getName", "()Ljava/lang/String;");
@@ -941,7 +948,8 @@ extern "C" JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *) {
       env->GetFieldID(element, "dexFile", "Ldalvik/system/DexFile;");
   auto dex_file = env->FindClass("dalvik/system/DexFile");
   cookie_field = env->GetFieldID(dex_file, "mCookie", "Ljava/lang/Object;");
-  file_name_field = env->GetFieldID(dex_file, "mFileName", "Ljava/lang/String;");
+  file_name_field =
+      env->GetFieldID(dex_file, "mFileName", "Ljava/lang/String;");
   return JNI_VERSION_1_4;
 }
 
