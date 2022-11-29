@@ -86,15 +86,6 @@ private:
   size_t len_ = 0;
 };
 
-void *myalloc([[maybe_unused]] void *q, unsigned n, unsigned m) {
-  return calloc(n, m);
-}
-
-void myfree([[maybe_unused]] void *q, void *p) {
-  (void)q;
-  free(p);
-}
-
 struct [[gnu::packed]] ZipLocalFile {
   static ZipLocalFile *from(uint8_t *begin) {
     auto *file = reinterpret_cast<ZipLocalFile *>(begin);
@@ -116,36 +107,26 @@ struct [[gnu::packed]] ZipLocalFile {
         PLOGE("failed to mmap for unocmpression");
         return {};
       }
-      int err;
-      z_stream d_stream; /* decompression stream */
+      z_stream d_stream{
+          .next_in = data(),
+          .avail_in = compress_size,
+          .next_out = out.addr(), /* discard the output */
+          .avail_out = static_cast<uInt>(out.len()),
+          .zalloc = Z_NULL,
+          .zfree = Z_NULL,
+          .opaque = Z_NULL,
+          .data_type = Z_UNKNOWN,
+      }; /* decompression stream */
 
-      d_stream.zalloc = myalloc;
-      d_stream.zfree = myfree;
-      d_stream.opaque = nullptr;
-
-      d_stream.next_in = data();
-      d_stream.avail_in = compress_size;
-      d_stream.next_out = out.addr(); /* discard the output */
-      d_stream.avail_out = out.len();
-
-      err = inflateInit2(&d_stream, -MAX_WBITS);
-      if (err != Z_OK) {
-        LOGE("inflateInit %d", err);
-        return {};
-      }
-
-      for (int c = 0;; ++c) {
-        err = inflate(&d_stream, Z_NO_FLUSH);
-        if (err == Z_STREAM_END)
-          break;
+      for (int err = inflateInit2(&d_stream, -MAX_WBITS); err != Z_STREAM_END;
+           err = inflate(&d_stream, Z_NO_FLUSH)) {
         if (err != Z_OK) {
           LOGE("inflate %d", err);
           return {};
         }
       }
 
-      err = inflateEnd(&d_stream);
-      if (err != Z_OK) {
+      if (int err = inflateEnd(&d_stream); err != Z_OK) {
         LOGE("inflateEnd %d", err);
         return {};
       }
