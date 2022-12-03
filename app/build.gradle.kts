@@ -34,7 +34,7 @@ val protobufVersion: String by rootProject
 
 android {
     compileSdk = 33
-    buildToolsVersion = "33.0.0"
+    buildToolsVersion = "33.0.1"
     ndkVersion = "25.1.8937393"
 
     defaultConfig {

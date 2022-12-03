@@ -378,6 +378,11 @@
             android:key="purify_live_popups"
             android:summary="@string/purify_live_popups_summary"
             android:title="@string/purify_live_popups_title" />
+        <SwitchPreference
+            android:dependency="hidden"
+            android:key="block_modules"
+            android:summary="@string/block_modules_summary"
+            android:title="@string/block_modules_title" />
     </PreferenceCategory>
 
     <PreferenceCategory
