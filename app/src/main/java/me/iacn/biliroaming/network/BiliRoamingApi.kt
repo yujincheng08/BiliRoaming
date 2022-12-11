@@ -178,9 +178,9 @@ object BiliRoamingApi {
     }
 
     @JvmStatic
-    fun getAreaSearchBangumi(queryString: String, area: String, type: String): String? {
+    fun getAreaSearchBangumi(query: Map<String, String>, area: String, type: String): String? {
         if (area == "th") {
-            return getThailandSearchBangumi(queryString, type)
+            return getThailandSearchBangumi(query, type)
         }
         val hostUrl = sPrefs.getString(area + "_server", null) ?: return null
         val uri = Uri.Builder()
@@ -188,7 +188,7 @@ object BiliRoamingApi {
             .encodedAuthority(hostUrl + BILI_SEARCH_URL)
             .encodedQuery(
                 signQuery(
-                    queryString, mapOf(
+                    query, mapOf(
                         "type" to type,
                         "appkey" to "1d8b6e7d45233436",
                         "build" to "6400000",
@@ -203,14 +203,14 @@ object BiliRoamingApi {
     }
 
     @JvmStatic
-    fun getThailandSearchBangumi(queryString: String, type: String): String? {
+    fun getThailandSearchBangumi(query: Map<String, String>, type: String): String? {
         val thUrl = sPrefs.getString("th_server", null) ?: return null
         val uri = Uri.Builder()
             .scheme("https")
             .encodedAuthority(thUrl + THAILAND_PATH_SEARCH)
             .encodedQuery(
                 signQuery(
-                    queryString, mapOf(
+                    query, mapOf(
                         "type" to type,
                         "appkey" to "7d089525d3611b1c",
                         "build" to "1001310",
@@ -780,6 +780,7 @@ object BiliRoamingApi {
                     val latch = CountDownLatch(1)
                     var result = ""
 
+                    @Suppress("UNUSED")
                     @JavascriptInterface
                     fun callback(r: String) {
                         result = r

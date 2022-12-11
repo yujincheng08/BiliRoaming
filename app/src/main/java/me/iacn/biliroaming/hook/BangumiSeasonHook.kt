@@ -510,13 +510,13 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val keyword = request.keyword
         val query = mapOf(
             "access_key" to (instance.accessKey ?: ""),
-            "fnval" to request.playerArgs.fnval,
-            "fnver" to request.playerArgs.fnver,
-            "qn" to request.playerArgs.qn,
+            "fnval" to request.playerArgs.fnval.toString(),
+            "fnver" to request.playerArgs.fnver.toString(),
+            "qn" to request.playerArgs.qn.toString(),
             "pn" to pn,
-            "ps" to ps,
+            "ps" to ps.toString(),
             "keyword" to keyword,
-        ).map { "${it.key}=${it.value.toString().urlEncoded}" }.joinToString("&")
+        )
         val jsonContent = getAreaSearchBangumi(query, area, type)?.toJSONObject()
             ?: return null
         checkErrorToast(jsonContent, true)
@@ -665,8 +665,10 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 "search_area_bangumi", false
             ) || sPrefs.getBoolean("search_area_movie", false))
         ) {
-            val content = getAreaSearchBangumi(URL(url.urlDecoded).query, area, type)
-                ?: return data
+            val query = Uri.parse(url).run {
+                queryParameterNames.associateWith { getQueryParameter(it) ?: "" }
+            }
+            val content = getAreaSearchBangumi(query, area, type) ?: return data
             val jsonContent = content.toJSONObject()
             checkErrorToast(jsonContent, true)
             val newData = jsonContent.optJSONObject("data") ?: return data
@@ -700,8 +702,10 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 "search_area_bangumi", false
             ) || sPrefs.getBoolean("search_area_movie", false))
         ) {
-            val content = getAreaSearchBangumi(URL(url.urlDecoded).query, area, type)
-                ?: return data
+            val query = Uri.parse(url).run {
+                queryParameterNames.associateWith { getQueryParameter(it) ?: "" }
+            }
+            val content = getAreaSearchBangumi(query, area, type) ?: return data
             val jsonContent = content.toJSONObject()
             checkErrorToast(jsonContent, true)
             val newData = jsonContent.optJSONObject("data") ?: return data
