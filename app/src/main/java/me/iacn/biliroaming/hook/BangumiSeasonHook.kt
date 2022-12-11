@@ -28,7 +28,6 @@ import java.io.InputStream
 import java.lang.reflect.Method
 import java.lang.reflect.Proxy
 import java.net.URL
-import java.net.URLDecoder
 import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.Array
@@ -36,12 +35,10 @@ import kotlin.Boolean
 import kotlin.Int
 import java.lang.reflect.Array as RArray
 
-
 /**
  * Created by iAcn on 2019/3/27
  * Email i@iacn.me
  */
-
 class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     companion object {
         val lastSeasonInfo: MutableMap<String, String?> = HashMap()
@@ -99,6 +96,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             javaClass.getStaticObjectField("Companion")?.callMethod("serializer"),
             this
         ).toJSONObject()
+
         isGson -> gson?.callMethodAs<String>(instance.gsonToJson(), this)?.toJSONObject()
         else -> instance.fastJsonClass?.callStaticMethodAs<String>(
             "toJSONString",
@@ -113,6 +111,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             getStaticObjectField("Companion")?.callMethod("serializer"),
             json
         )
+
         isGson -> gson?.callMethod(instance.gsonFromJson(), json, this)
         else -> instance.fastJsonClass?.callStaticMethod(instance.fastJsonParse(), json, this)
     }
@@ -517,7 +516,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             "pn" to pn,
             "ps" to ps,
             "keyword" to keyword,
-        ).map { "${it.key}=${it.value}" }.joinToString("&")
+        ).map { "${it.key}=${it.value.toString().urlEncoded}" }.joinToString("&")
         val jsonContent = getAreaSearchBangumi(query, area, type)?.toJSONObject()
             ?: return null
         checkErrorToast(jsonContent, true)
@@ -661,14 +660,13 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     private fun retrieveAreaSearchV2(data: Any?, url: String, area: String, type: String): Any? {
-        data ?: return data
+        data ?: return null
         if (sPrefs.getBoolean("hidden", false) && (sPrefs.getBoolean(
                 "search_area_bangumi", false
             ) || sPrefs.getBoolean("search_area_movie", false))
         ) {
-            val content = getAreaSearchBangumi(
-                URL(URLDecoder.decode(url, Charsets.UTF_8.name())).query, area, type
-            ) ?: return data
+            val content = getAreaSearchBangumi(URL(url.urlDecoded).query, area, type)
+                ?: return data
             val jsonContent = content.toJSONObject()
             checkErrorToast(jsonContent, true)
             val newData = jsonContent.optJSONObject("data") ?: return data
@@ -697,20 +695,13 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     private fun retrieveAreaSearch(data: Any?, url: String, area: String, type: String): Any? {
-        data ?: return data
-        if (sPrefs.getBoolean("hidden", false) &&
-            (sPrefs.getBoolean(
-                "search_area_bangumi",
-                false
+        data ?: return null
+        if (sPrefs.getBoolean("hidden", false) && (sPrefs.getBoolean(
+                "search_area_bangumi", false
             ) || sPrefs.getBoolean("search_area_movie", false))
         ) {
-            val content =
-                getAreaSearchBangumi(
-                    URL(URLDecoder.decode(url, Charsets.UTF_8.name())).query,
-                    area,
-                    type
-                )
-                    ?: return data
+            val content = getAreaSearchBangumi(URL(url.urlDecoded).query, area, type)
+                ?: return data
             val jsonContent = content.toJSONObject()
             checkErrorToast(jsonContent, true)
             val newData = jsonContent.optJSONObject("data") ?: return data
@@ -934,7 +925,8 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     result.optJSONObject("rights")?.run {
                         bp = optInt("bp")
                         elec = optInt("elec")
-                        download = if (sPrefs.getBoolean("allow_download", false)) 1 else optInt("download")
+                        download = if (sPrefs.getBoolean("allow_download", false))
+                            1 else optInt("download")
                         movie = optInt("movie")
                         pay = optInt("pay")
                         hd5 = optInt("hd5")
@@ -942,7 +934,8 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         autoplay = optInt("autoplay")
                         isCooperation = optInt("is_cooperation")
                         ugcPay = optInt("ugc_pay")
-                        noBackground = if (sPrefs.getBoolean("play_arc_conf", false)) 0 else optInt("no_background")
+                        noBackground = if (sPrefs.getBoolean("play_arc_conf", false))
+                            0 else optInt("no_background")
                     }
                 }
             }

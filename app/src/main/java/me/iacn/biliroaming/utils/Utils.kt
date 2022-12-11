@@ -23,6 +23,8 @@ import java.io.InputStream
 import java.lang.ref.WeakReference
 import java.math.BigInteger
 import java.net.URL
+import java.net.URLDecoder
+import java.net.URLEncoder
 import java.util.*
 import kotlin.math.roundToInt
 import kotlin.reflect.KProperty
@@ -353,3 +355,9 @@ val Int.dp: Int
 val currentIsLandscape: Boolean
     get() = currentContext.getSystemService(WindowManager::class.java)
         .defaultDisplay.orientation.let { it == Surface.ROTATION_90 || it == Surface.ROTATION_270 }
+
+val String.urlEncoded: String
+    inline get() = URLEncoder.encode(this, Charsets.UTF_8.name())
+
+val String.urlDecoded: String
+    inline get() = URLDecoder.decode(this, Charsets.UTF_8.name())
