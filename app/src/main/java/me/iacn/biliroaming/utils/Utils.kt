@@ -132,14 +132,17 @@ fun checkErrorToast(json: JSONObject, isCustomServer: Boolean = false) {
 }
 
 fun signQuery(query: String?, extraMap: Map<String, String> = emptyMap()): String? {
+    query ?: return null
+    val queryMap = query.split('&')
+        .map { it.split('=', limit = 2) }
+        .filter { it.size == 2 }
+        .associate { Pair(it[0], it[1]) }
+    return signQuery(queryMap, extraMap)
+}
+
+fun signQuery(query: Map<String, String>, extraMap: Map<String, String> = emptyMap()): String {
     val queryMap = TreeMap<String, String>()
-    val pairs = query?.split("&".toRegex())?.toTypedArray() ?: return null
-    for (pair in pairs) {
-        val idx = pair.indexOf("=")
-        val key = pair.substring(0, idx)
-        if (key !in arrayOf("t", "sign"))
-            queryMap[key] = pair.substring(idx + 1)
-    }
+    queryMap.putAll(query)
     val packageName = AndroidAppHelper.currentPackageName()
     queryMap["appkey"] = appKey[packageName] ?: "1d8b6e7d45233436"
     queryMap["build"] = getVersionCode(packageName).toString()
@@ -147,6 +150,8 @@ fun signQuery(query: String?, extraMap: Map<String, String> = emptyMap()): Strin
     queryMap["mobi_app"] = platform
     queryMap["platform"] = platform
     queryMap.putAll(extraMap)
+    queryMap.remove("ts")
+    queryMap.remove("sign")
     return instance.libBiliClass?.callStaticMethod(instance.signQueryName(), queryMap).toString()
 }
 
