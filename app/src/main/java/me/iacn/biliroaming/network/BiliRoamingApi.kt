@@ -799,6 +799,7 @@ object BiliRoamingApi {
                     webView.loadUrl(
                         urlString, mapOf(
                             "x-from-biliroaming" to BuildConfig.VERSION_NAME,
+                            "platform-from-biliroaming" to platform,
                             "Build" to BuildConfig.VERSION_CODE.toString()
                         )
                     )
@@ -824,6 +825,7 @@ object BiliRoamingApi {
                     "Accept-Encoding",
                     "${if (instance.brotliInputStreamClass != null) "br," else ""}gzip,deflate"
                 )
+                connection.setRequestProperty("platform-from-biliroaming", platform)
                 connection.connect()
                 if (connection.responseCode == HttpURLConnection.HTTP_OK) {
                     val inputStream = connection.inputStream
