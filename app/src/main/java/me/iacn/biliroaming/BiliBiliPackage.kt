@@ -596,23 +596,23 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 }
             }
             themeHelper = themeHelper {
-                val themeHelperClass = classesList.filter {
-                    it.startsWith("tv.danmaku.bili.ui.theme")
-                }.map { it on classloader }.firstOrNull { c ->
-                    c.declaredFields.filter {
-                        Modifier.isStatic(it.modifiers)
-                    }.count {
-                        it.type == SparseArray::class.java
-                    } > 1
-                } ?: return@themeHelper
+                val colorArrayMethodIndex = dexHelper.findMethodUsingString(
+                    "theme_entries_last_key",
+                    false,
+                    dexHelper.encodeClassIndex(Int::class.java),
+                    1,
+                    null,
+                    -1,
+                    longArrayOf(dexHelper.encodeClassIndex(Context::class.java)),
+                    null,
+                    null,
+                    true
+                ).firstOrNull() ?: return@themeHelper
+                val colorArrayMethod =
+                    dexHelper.decodeMethodIndex(colorArrayMethodIndex) ?: return@themeHelper
 
-                class_ = class_ { name = themeHelperClass.name }
-                colorArray = field {
-                    name = themeHelperClass.declaredFields.firstOrNull {
-                        it.type == SparseArray::class.java &&
-                                (it.genericType as ParameterizedType).actualTypeArguments[0].toString() == "int[]"
-                    }?.name ?: return@field
-                }
+                class_ = class_ { name = colorArrayMethod.declaringClass.name }
+                colorArray = field { name = colorArrayMethod.name }
             }
             themeIdHelper = themeIdHelper {
                 val themeIdHelperClass = classesList.filter {
