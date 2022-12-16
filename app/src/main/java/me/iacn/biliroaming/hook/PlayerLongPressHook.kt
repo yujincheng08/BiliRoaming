@@ -1,10 +1,7 @@
 package me.iacn.biliroaming.hook
 
 import android.view.MotionEvent
-import me.iacn.biliroaming.utils.Hooker
-import me.iacn.biliroaming.utils.Log
-import me.iacn.biliroaming.utils.hookBeforeMethod
-import me.iacn.biliroaming.utils.sPrefs
+import me.iacn.biliroaming.utils.*
 
 class PlayerLongPressHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
@@ -14,8 +11,9 @@ class PlayerLongPressHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
         val hooker: Hooker = { param -> param.result = true }
         // pre 6.59.0
-        "tv.danmaku.biliplayerimpl.gesture.GestureService\$mTouchListener\$1".hookBeforeMethod(
-            mClassLoader,
+        "tv.danmaku.biliplayerimpl.gesture.GestureService\$mTouchListener\$1".findClassOrNull(
+            mClassLoader
+        )?.hookBeforeMethod(
             "onLongPress",
             MotionEvent::class.java,
             hooker = hooker
