@@ -67,11 +67,6 @@ message ReportDownload {
   optional Method method = 2;
 }
 
-message GrabHelper {
-  optional Class class = 1;
-  optional Method method = 2;
-}
-
 message NotificationBuilder {
   optional Class class = 1;
   optional Method method = 2;
@@ -261,7 +256,6 @@ message HookInfo {
   optional Settings settings = 31;
   optional Class video_detail_callback = 33;
   optional DownloadThread download_thread = 34;
-  optional GrabHelper grab_helper = 37;
   optional MusicNotification music_notification = 38;
   optional BangumiParams bangumi_params = 45;
   optional GsonHelper gson_helper = 46;

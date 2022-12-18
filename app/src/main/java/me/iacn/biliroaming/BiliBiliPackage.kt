@@ -615,21 +615,40 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 colorArray = field { name = colorArrayMethod.name }
             }
             themeIdHelper = themeIdHelper {
-                val themeIdHelperClass = classesList.filter {
-                    it.startsWith("tv.danmaku.bili.ui.theme")
-                }.firstNotNullOfOrNull { c ->
-                    c.findClass(classloader).takeIf {
-                        it.declaredFields.count { f ->
-                            Modifier.isStatic(f.modifiers) && f.type == SparseArray::class.java
-                        } == 1
-                    }
+                val mWebActivityClass = "tv.danmaku.bili.ui.webview.MWebActivity".from(classloader)
+                    ?: return@themeIdHelper
+                val mWebActivityIndex = dexHelper.encodeClassIndex(mWebActivityClass)
+                val themeIdHelperClass = dexHelper.findMethodUsingString(
+                    "native.theme",
+                    false,
+                    -1,
+                    -1,
+                    null,
+                    mWebActivityIndex,
+                    null,
+                    null,
+                    null,
+                    true
+                ).firstOrNull()?.run {
+                    dexHelper.findMethodInvoking(
+                        this,
+                        -1,
+                        0,
+                        "I",
+                        -1,
+                        null,
+                        null,
+                        null,
+                        true
+                    ).firstOrNull()?.let {
+                        dexHelper.decodeMethodIndex(it)
+                    }?.declaringClass
                 } ?: return@themeIdHelper
                 class_ = class_ { name = themeIdHelperClass.name }
                 colorId = field {
-                    name =
-                        themeIdHelperClass.declaredFields.firstOrNull {
-                            it.type == SparseArray::class.java
-                        }?.name ?: return@field
+                    name = themeIdHelperClass.declaredFields.find {
+                        it.type == SparseArray::class.java
+                    }?.name ?: return@field
                 }
             }
             columnHelper = columnHelper {
@@ -989,20 +1008,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                                 class_ = class_ { name = c }
                                 method = method { name = m.name }
                             }
-                        }
-                    }
-                }
-            }
-            grabHelper = grabHelper {
-                val garbClass = "com.bilibili.lib.ui.garb.Garb".findClassOrNull(classloader)
-                    ?: return@grabHelper
-                classesList.filter {
-                    it.startsWith("com.bilibili.lib.ui.garb")
-                }.forEach { c ->
-                    c.findClass(classloader).declaredMethods.forEach { m ->
-                        if (Modifier.isStatic(m.modifiers) && m.returnType == garbClass) {
-                            class_ = class_ { name = c }
-                            method = method { name = m.name }
                         }
                     }
                 }
