@@ -1776,9 +1776,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     }?.declaringClass ?: return@biliCall
                 val setParserMethod = biliCallClass.methods.find {
                     it.parameterTypes.size == 1 && it.parameterTypes[0].let { c ->
-                        c.isInterface && c.methods.size == 2 && c.methods.any { m ->
-                            m.parameterTypes.size == 1 && m.parameterTypes[0] == Any::class.java
-                                    && m.returnType == Any::class.java
+                        c.isInterface && c.interfaces.size == 1 && c.interfaces[0].let { sc ->
+                            sc != null && sc.isInterface && sc.declaredMethods.size == 1
                         }
                     }
                 } ?: return@biliCall
