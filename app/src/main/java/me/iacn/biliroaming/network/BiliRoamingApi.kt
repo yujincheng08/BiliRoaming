@@ -100,13 +100,14 @@ object BiliRoamingApi {
             }
         }
         val thUrl = sPrefs.getString("th_server", null)
+        val mobiApp = sPrefs.getString("th_server_platform", platform)!!
         if (thUrl != null && (seasonJson.optInt("code") == -404 || fixThailandSeasonFlag)) {
             builder.scheme("https").encodedAuthority(thUrl + THAILAND_PATH_SEASON)
                 .appendQueryParameter("s_locale", "zh_SG")
                 .appendQueryParameter("access_key", instance.getCustomizeAccessKey("th_server"))
                 .appendQueryParameter("mobi_app", "bstar_a")
                 .appendQueryParameter("build", "1080003")
-            getContent(builder.toString())?.toJSONObject()?.also {
+            getContent(builder.toString(), mobiApp)?.toJSONObject()?.also {
                 it.optJSONObject("result")?.let { result ->
                     fixThailandSeason(result)
                     seasonJson = it
@@ -538,6 +539,7 @@ object BiliRoamingApi {
 
         for ((area, host) in hostList.toList().asReversed()) {
             val accessKey = instance.getCustomizeAccessKey("${area}_server") ?: ""
+            val mobiApp = sPrefs.getString("${area}_server_platform", platform)!!
             val extraMap = if (area == "th") mapOf(
                 "area" to area,
                 "appkey" to "7d089525d3611b1c",
@@ -556,7 +558,7 @@ object BiliRoamingApi {
                 .encodedAuthority(host + path)
                 .encodedQuery(signQuery(queryString, extraMap))
                 .toString()
-            getContent(uri)?.let {
+            getContent(uri, mobiApp)?.let {
                 Log.d("use server $area $host for playurl")
                 if (it.contains("\"code\":0")) {
                     lastSeasonInfo["area"] = area
@@ -766,7 +768,7 @@ object BiliRoamingApi {
     }
 
     @SuppressLint("SetJavaScriptEnabled")
-    fun getContent(urlString: String): String? {
+    fun getContent(urlString: String, mobiApp: String = platform): String? {
         val timeout = 10000
         return try {
             // Work around for android 7
@@ -799,7 +801,7 @@ object BiliRoamingApi {
                     webView.loadUrl(
                         urlString, mapOf(
                             "x-from-biliroaming" to BuildConfig.VERSION_NAME,
-                            "platform-from-biliroaming" to platform,
+                            "platform-from-biliroaming" to mobiApp,
                             "Build" to BuildConfig.VERSION_CODE.toString()
                         )
                     )
@@ -825,7 +827,7 @@ object BiliRoamingApi {
                     "Accept-Encoding",
                     "${if (instance.brotliInputStreamClass != null) "br," else ""}gzip,deflate"
                 )
-                connection.setRequestProperty("platform-from-biliroaming", platform)
+                connection.setRequestProperty("platform-from-biliroaming", mobiApp)
                 connection.connect()
                 if (connection.responseCode == HttpURLConnection.HTTP_OK) {
                     val inputStream = connection.inputStream
@@ -845,7 +847,7 @@ object BiliRoamingApi {
             Log.e(e)
             null
         }?.also {
-            Log.d("getContent url: $urlString")
+            Log.d("getContent url: $urlString mobiApp: $mobiApp")
             Log.d("getContent result: $it")
         }
     }
