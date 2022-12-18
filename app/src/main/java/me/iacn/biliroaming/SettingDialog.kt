@@ -460,17 +460,26 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     view.findViewById(R.id.th_server)
                 )
                 editTexts.forEach {
-                    it.setText(prefs.getString("${it.tag}_accessKey", ""))
+                    val accessKey = prefs.getString("${it.tag}_accessKey", "")
+                    val platform = prefs.getString("${it.tag}_platform", null)
+                    val s = if (platform != null) "$accessKey;$platform" else accessKey
+                    it.setText(s)
                     it.hint = ""
                 }
                 setTitle(R.string.customize_accessKey_title)
                 setView(view)
                 setPositiveButton(android.R.string.ok) { _, _ ->
+                    val edit = prefs.edit()
                     editTexts.forEach {
-                        val accessKey = it.text.toString()
+                        val s = it.text.toString()
+                        val accessKey = s.substringBefore(';')
+                        val platform = s.substringAfter(';', "")
+                        val platformKey = "${it.tag}_platform"
                         val key = "${it.tag}_accessKey"
-                        if (accessKey.isNotEmpty()) prefs.edit().putString(key, accessKey).apply()
-                        else prefs.edit().remove(key).apply()
+                        if (accessKey.isNotEmpty()) edit.putString(key, accessKey).apply()
+                        else edit.remove(key).apply()
+                        if (platform.isNotEmpty()) edit.putString(platformKey, platform).apply()
+                        else edit.remove(platformKey).apply()
                     }
                 }
                 show()
