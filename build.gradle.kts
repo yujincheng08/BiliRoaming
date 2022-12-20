@@ -4,7 +4,7 @@ import org.eclipse.jgit.internal.storage.file.FileRepository
 
 buildscript {
     val kotlinVersion by extra("1.7.21")
-    val protobufVersion by extra("3.21.10")
+    val protobufVersion by extra("3.21.12")
     repositories {
         google()
         mavenCentral()
