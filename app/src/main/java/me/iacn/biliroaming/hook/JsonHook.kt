@@ -46,6 +46,8 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             "com.bilibili.app.authorspace.api.BiliSpace".findClassOrNull(mClassLoader)
         val ogvApiResponseClass =
             "tv.danmaku.bili.ui.offline.api.OgvApiResponse".findClassOrNull(mClassLoader)
+        val ogvApiResponseClassV2 =
+            "tv.danmaku.bili.ui.offline.api.OgvApiResponseV2".findClassOrNull(mClassLoader)
         val dmAdvertClass =
             "com.bilibili.ad.adview.videodetail.danmakuv2.model.DmAdvert".from(mClassLoader)
         val liveShoppingInfoClass =
@@ -290,6 +292,15 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     val resultObj = result.getObjectFieldAs<ArrayList<Any>>("result")
                     for (i in resultObj) {
                         i.setIntField("isPlayable", 1)
+                    }
+                }
+
+                ogvApiResponseClassV2 -> if (sPrefs.getBoolean("allow_download", false)) {
+                    val resultObj = result.getObjectFieldOrNull("data")?.getObjectFieldOrNullAs<MutableList<*>>("epPlayableParams")
+                    if (resultObj != null) {
+                        for (i in resultObj) {
+                            i.setIntField("playableType", 0)
+                        }
                     }
                 }
 
