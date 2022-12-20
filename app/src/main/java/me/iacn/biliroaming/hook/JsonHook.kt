@@ -296,7 +296,8 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
 
                 ogvApiResponseV2Class -> if (sPrefs.getBoolean("allow_download", false)) {
-                    val epPlayableParams = result.getObjectFieldOrNull("data")?.getObjectFieldOrNullAs<MutableList<*>>("epPlayableParams")
+                    val epPlayableParams = result.getObjectFieldOrNull("data")
+                        ?.getObjectFieldOrNullAs<MutableList<*>>("epPlayableParams")
                     epPlayableParams?.forEach { playableParam ->
                         playableParam.setIntField("playableType", 0)
                     }
