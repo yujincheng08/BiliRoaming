@@ -316,6 +316,13 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         }
                     }
                 }
+                if (url?.contains("https://api.bilibili.com/pgc/player/api/v2/cache/play") == true && body.javaClass == instance.ogvApiResponseV2Class && sPrefs.getBoolean("allow_download", false)) {
+                    val epPlayableV2 = body.getObjectFieldOrNull("data")
+                    val epPlayableParams = epPlayableV2?.getObjectFieldOrNullAs<ArrayList<Any>>("epPlayableParams")
+                    epPlayableParams?.forEach { playableParam ->
+                        playableParam.setIntField("playableType", 0)
+                    }
+                }
             }
         }
 

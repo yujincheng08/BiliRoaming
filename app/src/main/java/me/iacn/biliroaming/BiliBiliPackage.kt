@@ -144,6 +144,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val subtitleConfigGetClass by Weak { "tv.danmaku.biliplayerv2.service.interact.biz.chronos.chronosrpc.methods.receive.GetDanmakuConfig\$SubtitleConfig" from mClassLoader }
     val subtitleConfigChangeClass by Weak { "tv.danmaku.biliplayerv2.service.interact.biz.chronos.chronosrpc.methods.send.DanmakuConfigChange\$SubtitleConfig" from mClassLoader }
     val liveRoomPlayerViewClass by Weak { "com.bilibili.bililive.room.ui.roomv3.player.container.LiveRoomPlayerContainerView" from mClassLoader }
+    val ogvApiResponseV2Class by Weak { "tv.danmaku.bili.ui.offline.api.OgvApiResponseV2" from mClassLoader }
 
     val ids: Map<String, Int> by lazy {
         mHookInfo.mapIds.idsMap
