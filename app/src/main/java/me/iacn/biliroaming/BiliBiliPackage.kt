@@ -962,17 +962,20 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 }
             }
             videoDetailCallback = class_ {
-                val callback =
-                    "com.bilibili.okretro.BiliApiDataCallback".findClassOrNull(classloader)
-                name = classesList.filter {
-                    it.startsWith("tv.danmaku.bili.ui.video.videodetail.function")
-                }.map { c ->
-                    c.findClass(classloader)
-                }.filter {
-                    it.superclass == callback
-                }.firstOrNull {
-                    it.declaredFields.size == 1
-                }?.name ?: return@class_
+                name = dexHelper.findMethodUsingString(
+                    "VideoDetailRepository",
+                    false,
+                    -1,
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).firstOrNull()?.let {
+                    dexHelper.decodeMethodIndex(it)
+                }?.declaringClass?.name ?: return@class_
             }
             downloadThread = downloadThread {
                 val downloadingActivityClass =
