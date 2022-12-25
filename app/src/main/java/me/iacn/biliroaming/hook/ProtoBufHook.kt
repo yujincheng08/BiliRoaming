@@ -14,6 +14,7 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val purifyCampus = sPrefs.getBoolean("purify_campus", false)
         val blockWordSearch = sPrefs.getBoolean("block_word_search", false)
         val blockModules = sPrefs.getBoolean("block_modules", false)
+        val blockUpperRecommendAd = sPrefs.getBoolean("block_upper_recommend_ad", false)
 
         if (hidden && (purifyCity || purifyCampus)) {
             listOf(
@@ -38,6 +39,11 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             "com.bapis.bilibili.app.view.v1.ViewReq"
         ) { param ->
             param.result ?: return@hookAfterMethod
+            val aid = param.result.callMethod("getArc")
+                ?.callMethodAs("getAid") ?: -1L
+            val like = param.result.callMethod("getReqUser")
+                ?.callMethodAs("getLike") ?: -1
+            AutoLikeHook.detail = aid to like
             if (hidden && removeRelatePromote && removeRelateOnlyAv && removeRelateNothing) {
                 param.result.callMethod("clearRelates")
                 return@hookAfterMethod
@@ -106,6 +112,10 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             ) {
                 it.result.callMethod("clearPools")
             }
+        }
+        if (hidden && blockUpperRecommendAd) {
+            "com.bapis.bilibili.ad.v1.SourceContentDto".from(mClassLoader)
+                ?.replaceMethod("getAdContent") { null }
         }
     }
 }
