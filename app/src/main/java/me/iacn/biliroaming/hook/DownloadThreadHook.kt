@@ -15,8 +15,8 @@ class DownloadThreadHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         Log.d("startHook: DownloadThread")
         instance.downloadThreadListenerClass?.run {
             hookBeforeAllConstructors { param ->
-                if (param.args.size < 2) return@hookBeforeAllConstructors
-                val view = param.args[1] as? TextView ?: return@hookBeforeAllConstructors
+                val view = param.args.find { it is TextView } as? TextView
+                    ?: return@hookBeforeAllConstructors
                 val visibility = if (view.tag as Int == 1) {
                     view.text = "自定义"
                     View.VISIBLE
@@ -27,10 +27,10 @@ class DownloadThreadHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
             replaceMethod("onClick", View::class.java) { param ->
                 var textViewField: String? = null
-                var activityField: String? = null
+                var viewHostField: String? = null
                 declaredFields.forEach {
                     when (it.type) {
-                        instance.downloadingActivityClass -> activityField = it.name
+                        instance.downloadThreadViewHostClass -> viewHostField = it.name
                         TextView::class.java -> textViewField = it.name
                     }
                 }
@@ -42,7 +42,7 @@ class DownloadThreadHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             minValue = 1
                             maxValue = 64
                             wrapSelectorWheel = false
-                            value = param.thisObject.getObjectField(activityField)
+                            value = param.thisObject.getObjectField(viewHostField)
                                 ?.getIntField(instance.downloadingThread())
                                 ?: 1
                         }

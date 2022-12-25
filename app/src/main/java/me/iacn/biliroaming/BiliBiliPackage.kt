@@ -50,7 +50,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val fastJsonClass by Weak { mHookInfo.fastJson.class_ from mClassLoader }
     val bangumiUniformSeasonClass by Weak { mHookInfo.bangumiSeason from mClassLoader }
     val sectionClass by Weak { mHookInfo.section.class_ from mClassLoader }
-    val partySectionClass by Weak { mHookInfo.partySection.class_ from mClassLoader }
     val retrofitResponseClass by Weak { mHookInfo.retrofitResponse from mClassLoader }
     val themeHelperClass by Weak { mHookInfo.themeHelper.class_ from mClassLoader }
     val themeIdHelperClass by Weak { mHookInfo.themeIdHelper.class_ from mClassLoader }
@@ -67,7 +66,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val brandSplashClass by Weak { "tv.danmaku.bili.ui.splash.brand.ui.BaseBrandSplashFragment" from mClassLoader }
     val urlConnectionClass by Weak { "com.bilibili.lib.okhttp.huc.OkHttpURLConnection" from mClassLoader }
     val downloadThreadListenerClass by Weak { mHookInfo.downloadThread.listener from mClassLoader }
-    val downloadingActivityClass by Weak { mHookInfo.downloadThread.downloadActivity from mClassLoader }
+    val downloadThreadViewHostClass by Weak { mHookInfo.downloadThread.viewHost from mClassLoader }
     val reportDownloadThreadClass by Weak { mHookInfo.downloadThread.reportDownload.class_ from mClassLoader }
     val libBiliClass by Weak { mHookInfo.signQuery.class_ from mClassLoader }
     val splashActivityClass by Weak {
@@ -109,7 +108,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val liveKvConfigHelperClass by Weak { "com.bilibili.bililive.tec.kvcore.LiveKvConfigHelper" from mClassLoader }
     val storyVideoActivityClass by Weak { "com.bilibili.video.story.StoryVideoActivity" from mClassLoader }
     val okioWrapperClass by Weak { mHookInfo.okio.class_ from mClassLoader }
-    val videoUpperAdClass by Weak { mHookInfo.videoUpperAd.class_ from mClassLoader }
     val ellipsizingTextViewClass by Weak { "com.bilibili.bplus.followingcard.widget.EllipsizingTextView" from mClassLoader }
     val dynamicDescHolderListenerClass by Weak { mHookInfo.dynDescHolderListener from mClassLoader }
     val shareClickResultClass by Weak { "com.bilibili.lib.sharewrapper.online.api.ShareClickResult" from mClassLoader }
@@ -120,7 +118,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val musicBackgroundPlayerClass by Weak { mHookInfo.musicNotification.musicBackgroundPlayer from mClassLoader }
     val kanbanCallbackClass by Weak { mHookInfo.kanBan.class_ from mClassLoader }
     val toastHelperClass by Weak { mHookInfo.toastHelper.class_ from mClassLoader }
-    val videoDetailCallbackClass by Weak { mHookInfo.videoDetailCallback from mClassLoader }
     val biliAccountsClass by Weak { mHookInfo.biliAccounts.class_ from mClassLoader }
     val networkExceptionClass by Weak { "com.bilibili.lib.moss.api.NetworkException" from mClassLoader }
     val brotliInputStreamClass by Weak { mHookInfo.brotliInputStream from mClassLoader }
@@ -186,9 +183,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     fun requestField() = mHookInfo.okHttp.response.request.orNull
 
-    fun likeMethod() = mHookInfo.section.method.orNull
-
-    fun partyLikeMethod() = mHookInfo.partySection.method.orNull
+    fun likeMethod() = mHookInfo.section.like.orNull
 
     fun themeName() = mHookInfo.themeName.field.orNull
 
@@ -235,8 +230,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     fun okioInputStream() = mHookInfo.okioBuffer.inputStream.orNull
 
     fun okioReadFrom() = mHookInfo.okioBuffer.readFrom.orNull
-
-    fun videoUpperAd() = mHookInfo.videoUpperAd.method.orNull
 
     fun seekTo() = mHookInfo.playerCoreService.seekTo.orNull
 
@@ -596,7 +589,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 }
             }
             themeHelper = themeHelper {
-                val colorArrayMethodIndex = dexHelper.findMethodUsingString(
+                val colorArrayMethod = dexHelper.findMethodUsingString(
                     "theme_entries_last_key",
                     false,
                     dexHelper.encodeClassIndex(Int::class.java),
@@ -607,9 +600,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     null,
                     null,
                     true
-                ).firstOrNull() ?: return@themeHelper
-                val colorArrayMethod =
-                    dexHelper.decodeMethodIndex(colorArrayMethodIndex) ?: return@themeHelper
+                ).firstOrNull()?.let {
+                    dexHelper.decodeMethodIndex(it)
+                } ?: return@themeHelper
 
                 class_ = class_ { name = colorArrayMethod.declaringClass.name }
                 colorArray = field { name = colorArrayMethod.name }
@@ -759,26 +752,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 }
             }
             section = section {
-                val progressBarClass = "tv.danmaku.biliplayer.view.RingProgressBar" from classloader
-                    ?: "com.bilibili.playerbizcommon.view.RingProgressBar" from classloader
-                val sectionClass = classesList.filter {
-                    it.startsWith("tv.danmaku.bili.ui.video.section") ||
-                            it.startsWith("tv.danmaku.bili.ui.video.profile.action")
-                }.firstNotNullOfOrNull { c ->
-                    c.findClass(classloader).takeIf {
-                        it.declaredFields.any { f -> f.type == progressBarClass }
-                    }
-                } ?: return@section
-                class_ = class_ { name = sectionClass.name }
-                method = method {
-                    name = sectionClass.declaredMethods.firstOrNull {
-                        it.parameterTypes.size == 1 && it.parameterTypes[0] == Object::class.java
-                    }?.name ?: return@method
-                }
-            }
-            partySection = partySection {
-                val partySectionClass = dexHelper.findMethodUsingString(
-                    "mRecommendLayout",
+                val sectionClass = dexHelper.findMethodUsingString(
+                    "ActionViewHolder",
                     false,
                     -1,
                     -1,
@@ -788,15 +763,14 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     null,
                     null,
                     true
-                ).asSequence().firstNotNullOfOrNull {
+                ).firstOrNull()?.let {
                     dexHelper.decodeMethodIndex(it)
-                }?.declaringClass ?: return@partySection
-                class_ = class_ { name = partySectionClass.name }
-                method = method {
-                    name = partySectionClass.superclass?.declaredMethods?.firstOrNull {
-                        it.parameterTypes.size == 1 && it.returnType == Void::class.javaPrimitiveType && !it.isFinal
-                    }?.name ?: return@method
-                }
+                }?.declaringClass ?: return@section
+                val likeMethod = sectionClass.superclass?.declaredMethods?.find {
+                    it.parameterTypes.size == 1 && it.returnType == Void.TYPE && !it.isFinal
+                } ?: return@section
+                class_ = class_ { name = sectionClass.name }
+                like = method { name = likeMethod.name }
             }
             signQuery = signQuery {
                 val signedQueryClass =
@@ -961,13 +935,30 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     }?.name ?: return@method
                 }
             }
-            videoDetailCallback = class_ {
-                name = dexHelper.findMethodUsingString(
-                    "VideoDetailRepository",
-                    false,
+            downloadThread = downloadThread {
+                val viewHostClass = (if (platform == "android_hd")
+                    "tv.danmaku.bili.ui.offline.HdOfflineDowningFragment".from(classloader)
+                else
+                    "tv.danmaku.bili.ui.offline.DownloadingActivity".from(classloader))
+                    ?: return@downloadThread
+                viewHost = class_ { name = viewHostClass.name }
+                field = field {
+                    name = viewHostClass.declaredFields.find {
+                        it.type == Int::class.javaPrimitiveType
+                    }?.name ?: return@downloadThread
+                }
+                val onTaskCountClickMethod = viewHostClass.declaredMethods.find { m ->
+                    m.isSynthetic && m.parameterTypes.let {
+                        it.size == 4 && if (platform == "android_hd") {
+                            it[0] == TextView::class.java && it[1] == viewHostClass
+                        } else it[0] == viewHostClass && it[1] == TextView::class.java
+                    }
+                } ?: return@downloadThread
+                val listenerClass = dexHelper.findMethodInvoked(
+                    dexHelper.encodeMethodIndex(onTaskCountClickMethod),
                     -1,
-                    -1,
-                    null,
+                    1,
+                    "VL",
                     -1,
                     null,
                     null,
@@ -975,44 +966,37 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     true
                 ).firstOrNull()?.let {
                     dexHelper.decodeMethodIndex(it)
-                }?.declaringClass?.name ?: return@class_
-            }
-            downloadThread = downloadThread {
-                val downloadingActivityClass =
-                    "tv.danmaku.bili.ui.offline.DownloadingActivity" from classloader
-                        ?: return@downloadThread
-                downloadActivity = class_ { name = downloadingActivityClass.name }
-                field = field {
-                    name = downloadingActivityClass.declaredFields.firstOrNull {
-                        it.type == Int::class.javaPrimitiveType
-                    }?.name ?: return@field
-                }
-                listener = class_ {
-                    name = classesList.filter {
-                        it.startsWith("tv.danmaku.bili.ui.offline")
-                    }.firstOrNull { c ->
-                        c.findClass(classloader).run {
-                            declaredMethods.any { m ->
-                                m.name == "onClick"
-                            } && declaredFields.any {
-                                it.type == TextView::class.java
-                            } && declaredFields.any {
-                                it.type == downloadingActivityClass
-                            }
-                        }
-                    } ?: return@class_
-                }
-                reportDownload = reportDownload {
-                    classesList.filter {
-                        it.startsWith("tv.danmaku.bili.ui.offline.api")
-                    }.forEach { c ->
-                        c.findClass(classloader).declaredMethods.forEach { m ->
-                            if (m.parameterTypes.size == 2 && m.parameterTypes[0] == Context::class.java && m.parameterTypes[1] == Int::class.javaPrimitiveType) {
-                                class_ = class_ { name = c }
-                                method = method { name = m.name }
-                            }
-                        }
+                }?.declaringClass ?: return@downloadThread
+                listener = class_ { name = listenerClass.name }
+                val reportMethod = dexHelper.findMethodUsingString(
+                    "meantime",
+                    false,
+                    -1,
+                    -1,
+                    null,
+                    dexHelper.encodeClassIndex(viewHostClass),
+                    null,
+                    null,
+                    null,
+                    true
+                ).firstOrNull()?.run {
+                    dexHelper.findMethodInvoking(
+                        this,
+                        -1,
+                        2,
+                        "VLI",
+                        -1,
+                        null,
+                        null,
+                        null,
+                        true
+                    ).firstOrNull()?.let {
+                        dexHelper.decodeMethodIndex(it)
                     }
+                } ?: return@downloadThread
+                reportDownload = reportDownload {
+                    class_ = class_ { name = reportMethod.declaringClass.name }
+                    method = method { name = reportMethod.name }
                 }
             }
             musicNotification = musicNotification {
@@ -1544,33 +1528,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 } ?: return@okIOBuffer
                 readFrom = method { name = okioReadFromMethod.name }
             }
-            videoUpperAd = videoUpperAdInfo {
-                val adHolderClass =
-                    "com.bilibili.ad.adview.videodetail.upper.VideoUpperAdSectionViewHolder".findClassOrNull(
-                        classloader
-                    )
-                        ?: "com.bilibili.ad.adview.videodetail.upper.VideoUpperAdViewHolder".findClassOrNull(
-                            classloader
-                        ) ?: return@videoUpperAdInfo
-                val reg = Regex("^com\\.bilibili\\.ad\\.adview\\.videodetail\\.upper\\.[^.]*$")
-                classesList.filter {
-                    it.startsWith("com.bilibili.ad.adview.videodetail.upper")
-                }.filter { c ->
-                    c.matches(reg)
-                }.map { c ->
-                    c.findClass(classloader)
-                }.forEach { c ->
-                    c.declaredMethods.forEach { m ->
-                        if (Modifier.isPublic(m.modifiers) && m.parameterTypes.size >= 2 &&
-                            m.parameterTypes[0] == ViewGroup::class.java &&
-                            m.returnType == adHolderClass
-                        ) {
-                            class_ = class_ { name = c.name }
-                            method = method { name = m.name }
-                        }
-                    }
-                }
-            }
             dynDescHolderListener = class_ {
                 name = classesList.filter {
                     it.startsWith("com.bilibili.bplus.followinglist.module.item")
@@ -1784,9 +1741,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     }?.declaringClass ?: return@biliCall
                 val setParserMethod = biliCallClass.methods.find {
                     it.parameterTypes.size == 1 && it.parameterTypes[0].let { c ->
-                        c.isInterface && c.interfaces.size == 1 && c.interfaces[0].let { sc ->
-                            sc != null && sc.isInterface && sc.declaredMethods.size == 1
-                        }
+                        c.isInterface && c.interfaces.size == 1 && c.interfaces[0].declaredMethods.size == 1
                     }
                 } ?: return@biliCall
                 val requestFiled = biliCallClass.declaredFields.find {

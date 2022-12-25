@@ -109,11 +109,6 @@ message OkIOBuffer {
   optional Method read_from = 3;
 }
 
-message VideoUpperAdInfo {
-  optional Class class = 1;
-  optional Method method = 2;
-}
-
 message DescCopy {
   repeated Class classes = 1;
   repeated Method methods = 2;
@@ -161,12 +156,7 @@ message SignQuery {
 
 message Section {
   optional Class class = 1;
-  optional Method method = 2;
-}
-
-message PartySection {
-  optional Class class = 1;
-  optional Method method = 2;
+  optional Method like = 2;
 }
 
 message Drawer {
@@ -179,7 +169,7 @@ message Drawer {
 }
 
 message DownloadThread {
-  optional Class download_activity = 1;
+  optional Class view_host = 1;
   optional Class listener = 2;
   optional Field field = 3;
   optional ReportDownload report_download = 4;
@@ -249,12 +239,10 @@ message HookInfo {
   optional ShareWrapper share_wrapper = 23;
   optional ThemeName theme_name = 24;
   optional Section section = 25;
-  optional PartySection party_section = 26;
   optional SignQuery sign_query = 27;
   optional Class general_response = 28;
   optional Drawer drawer = 30;
   optional Settings settings = 31;
-  optional Class video_detail_callback = 33;
   optional DownloadThread download_thread = 34;
   optional MusicNotification music_notification = 38;
   optional BangumiParams bangumi_params = 45;
@@ -266,7 +254,6 @@ message HookInfo {
   optional Class comment_long_click = 53;
   optional OkIO okio = 54;
   optional OkIOBuffer okio_buffer = 55;
-  optional VideoUpperAdInfo video_upper_ad = 56;
   optional Class comment_span = 57;
   optional Class dyn_desc_holder_listener = 58;
   optional DescCopy desc_copy = 59;
