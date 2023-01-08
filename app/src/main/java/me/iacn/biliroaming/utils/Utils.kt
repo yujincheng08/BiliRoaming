@@ -78,7 +78,7 @@ fun getVersionCode(packageName: String) = try {
 } ?: 6080000
 
 
-val appKey = mapOf(
+val appKeyMap = mapOf(
     "tv.danmaku.bili" to "1d8b6e7d45233436",
     "com.bilibili.app.blue" to "07da50c9a0bf829f",
     "com.bilibili.app.in" to "bb3101000e232e27",
@@ -144,7 +144,7 @@ fun signQuery(query: Map<String, String>, extraMap: Map<String, String> = emptyM
     val queryMap = TreeMap<String, String>()
     queryMap.putAll(query)
     val packageName = AndroidAppHelper.currentPackageName()
-    queryMap["appkey"] = appKey[packageName] ?: "1d8b6e7d45233436"
+    queryMap["appkey"] = instance.appKey
     queryMap["build"] = getVersionCode(packageName).toString()
     queryMap["device"] = "android"
     queryMap["mobi_app"] = platform

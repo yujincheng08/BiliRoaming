@@ -141,6 +141,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val subtitleConfigGetClass by Weak { "tv.danmaku.biliplayerv2.service.interact.biz.chronos.chronosrpc.methods.receive.GetDanmakuConfig\$SubtitleConfig" from mClassLoader }
     val subtitleConfigChangeClass by Weak { "tv.danmaku.biliplayerv2.service.interact.biz.chronos.chronosrpc.methods.send.DanmakuConfigChange\$SubtitleConfig" from mClassLoader }
     val liveRoomPlayerViewClass by Weak { "com.bilibili.bililive.room.ui.roomv3.player.container.LiveRoomPlayerContainerView" from mClassLoader }
+    val biliConfigClass by Weak { mHookInfo.biliConfig.class_ from mClassLoader }
 
     val ids: Map<String, Int> by lazy {
         mHookInfo.mapIds.idsMap
@@ -161,6 +162,12 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     val accessKey by lazy {
         biliAccounts?.callMethodOrNullAs<String>(mHookInfo.biliAccounts.getAccessKey.orNull)
+    }
+
+    val appKey by lazy {
+        mHookInfo.biliConfig.getAppKey.orNull?.let {
+            biliConfigClass?.callStaticMethodOrNullAs<String>(it)
+        } ?: appKeyMap[packageName] ?: "1d8b6e7d45233436"
     }
 
     fun fastJsonParse() = mHookInfo.fastJson.parse.orNull
@@ -1751,6 +1758,54 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 parser = class_ { name = setParserMethod.parameterTypes[0].name }
                 setParser = method { name = setParserMethod.name }
                 request = field { name = requestFiled.name }
+            }
+            biliConfig = biliConfig {
+                val biliConfigClass = "com.bilibili.api.BiliConfig".from(classloader)
+                    ?: dexHelper.findMethodUsingString(
+                        "Call BiliConfig.init() first!",
+                        false,
+                        -1,
+                        -1,
+                        null,
+                        -1,
+                        null,
+                        null,
+                        null,
+                        true
+                    ).asSequence().firstNotNullOfOrNull {
+                        dexHelper.decodeMethodIndex(it)
+                    }?.declaringClass ?: return@biliConfig
+                class_ = class_ {
+                    name = biliConfigClass.name
+                }
+                val biliConfigClassIdx = dexHelper.encodeClassIndex(biliConfigClass)
+                val loginMethodIdx = dexHelper.findMethodUsingString(
+                    "url_find_pwd_no_sms",
+                    false,
+                    -1,
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).asSequence().firstOrNull() ?: return@biliConfig
+                dexHelper.findMethodInvoking(
+                    loginMethodIdx,
+                    -1,
+                    0,
+                    null,
+                    biliConfigClassIdx,
+                    null,
+                    null,
+                    null,
+                    true
+                ).asSequence().firstNotNullOfOrNull {
+                    dexHelper.decodeMethodIndex(it)
+                }?.let {
+                    getAppKey = method { name = it.name }
+                }
             }
             dexHelper.findMethodUsingString(
                 "im.chat-group.msg.repost.click",
