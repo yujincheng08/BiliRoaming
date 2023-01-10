@@ -191,10 +191,7 @@ object BiliRoamingApi {
                 signQuery(
                     query, mapOf(
                         "type" to type,
-                        "appkey" to "1d8b6e7d45233436",
                         "build" to "6400000",
-                        "mobi_app" to "android",
-                        "platform" to "android",
                         "area" to area,
                     )
                 )

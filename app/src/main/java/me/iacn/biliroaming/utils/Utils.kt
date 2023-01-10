@@ -148,7 +148,7 @@ fun signQuery(query: Map<String, String>, extraMap: Map<String, String> = emptyM
     queryMap["build"] = getVersionCode(packageName).toString()
     queryMap["device"] = "android"
     queryMap["mobi_app"] = platform
-    queryMap["platform"] = platform
+    queryMap["platform"] = "android"
     queryMap.putAll(extraMap)
     queryMap.remove("ts")
     queryMap.remove("sign")
