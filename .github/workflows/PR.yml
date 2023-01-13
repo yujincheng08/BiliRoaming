@@ -48,7 +48,7 @@ jobs:
         echo 'org.gradle.vfs.watch=true' >> gradle.properties
         echo 'org.gradle.jvmargs=-Xmx2048m' >> gradle.properties
         echo 'android.native.buildOutput=verbose' >> gradle.properties
-        ./gradlew assemble
+        ./gradlew --no-daemon assemble
     - name: Upload build artifact
       uses: actions/upload-artifact@v3
       with:
