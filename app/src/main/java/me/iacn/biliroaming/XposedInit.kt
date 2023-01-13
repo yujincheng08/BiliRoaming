@@ -46,7 +46,6 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
             Application::class.java
         ) { param ->
             // Hook main process and download process
-            @Suppress("DEPRECATION")
             when {
                 !lpparam.processName.contains(":") -> {
                     if (shouldSaveLog) {
@@ -113,7 +112,9 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                     startHook(FullStoryHook(lpparam.classLoader))
                     startHook(DialogBlurBackgroundHook(lpparam.classLoader))
                     startHook(PlayerLongPressHook(lpparam.classLoader))
+                    startHook(BlockUpdateHook(lpparam.classLoader))
                 }
+
                 lpparam.processName.endsWith(":web") -> {
                     BiliBiliPackage(lpparam.classLoader, param.args[0] as Context)
                     CustomThemeHook(lpparam.classLoader).insertColorForWebProcess()
@@ -121,6 +122,7 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                     startHook(PurifyShareHook(lpparam.classLoader))
                     startHook(DialogBlurBackgroundHook(lpparam.classLoader))
                 }
+
                 lpparam.processName.endsWith(":download") -> {
                     BiliBiliPackage(lpparam.classLoader, param.args[0] as Context)
                     startHook(BangumiPlayUrlHook(lpparam.classLoader))

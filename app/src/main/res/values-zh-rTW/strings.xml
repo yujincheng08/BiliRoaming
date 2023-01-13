@@ -262,4 +262,7 @@
     <string name="purify_live_popups_summary">淨化直播間各種浮窗</string>
     <string name="disable_live_room_double_click_title">禁用直播間雙擊按讚</string>
     <string name="disable_live_room_double_click_summary">將直播間雙擊按讚行為更換為暫停/播放</string>
+    <string name="block_modules_title">禁止下載 App 基礎組件庫</string>
+    <string name="block_modules_summary">在清理儲存空間中清理 App 基礎組件庫後不再下載，能節省儲存空間，但會影響部分功能。</string>
+    <string name="block_update_title">禁止 App 檢查更新</string>
 </resources>

@@ -179,6 +179,10 @@
             android:key="disable_live_room_double_click"
             android:summary="@string/disable_live_room_double_click_summary"
             android:title="@string/disable_live_room_double_click_title" />
+
+        <SwitchPreference
+            android:key="block_update"
+            android:title="@string/block_update_title" />
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/pref_backup">
         <Preference
