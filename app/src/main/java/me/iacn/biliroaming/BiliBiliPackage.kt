@@ -142,6 +142,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val subtitleConfigChangeClass by Weak { "tv.danmaku.biliplayerv2.service.interact.biz.chronos.chronosrpc.methods.send.DanmakuConfigChange\$SubtitleConfig" from mClassLoader }
     val liveRoomPlayerViewClass by Weak { "com.bilibili.bililive.room.ui.roomv3.player.container.LiveRoomPlayerContainerView" from mClassLoader }
     val biliConfigClass by Weak { mHookInfo.biliConfig.class_ from mClassLoader }
+    val updateInfoSupplierClass by Weak { mHookInfo.updateInfoSupplier.class_ from mClassLoader }
+    val latestVersionExceptionClass by Weak { "tv.danmaku.bili.update.internal.exception.LatestVersionException" from mClassLoader }
 
     val ids: Map<String, Int> by lazy {
         mHookInfo.mapIds.idsMap
@@ -277,6 +279,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     fun onOperateClick() = mHookInfo.onOperateClick.orNull
 
     fun getContentString() = mHookInfo.getContentString.orNull
+
+    fun check() = mHookInfo.updateInfoSupplier.check.orNull
 
     private fun readHookInfo(context: Context): Configs.HookInfo {
         try {
@@ -1834,6 +1838,24 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 name = liveVerticalPagerView.declaredFields.find {
                     View::class.java.isAssignableFrom(it.type)
                 }?.type?.name ?: return@class_
+            }
+            updateInfoSupplier = updateInfoSupplier {
+                val checkMethod = dexHelper.findMethodUsingString(
+                    "Do sync http request.",
+                    false,
+                    -1,
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).firstOrNull()?.let {
+                    dexHelper.decodeMethodIndex(it)
+                } ?: return@updateInfoSupplier
+                class_ = class_ { name = checkMethod.declaringClass.name }
+                check = method { name = checkMethod.name }
             }
 
             dexHelper.close()

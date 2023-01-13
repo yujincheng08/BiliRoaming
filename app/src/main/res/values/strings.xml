@@ -264,4 +264,5 @@
     <string name="disable_live_room_double_click_summary">将直播间双击点赞行为更换为暂停/播放</string>
     <string name="block_modules_title">禁止下载 App 基础组件库</string>
     <string name="block_modules_summary">在清理存储空间中清理 App 基础组件库后不再下载，能节省存储空间，但会影响部分功能。</string>
+    <string name="block_update_title">禁止 App 检查更新</string>
 </resources>
