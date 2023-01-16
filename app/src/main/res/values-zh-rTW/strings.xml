@@ -265,4 +265,6 @@
     <string name="block_modules_title">禁止下載 App 基礎組件庫</string>
     <string name="block_modules_summary">在清理儲存空間中清理 App 基礎組件庫後不再下載，能節省儲存空間，但會影響部分功能。</string>
     <string name="block_update_title">禁止 App 檢查更新</string>
+    <string name="remove_vip_section_title">移除我的大會員橫幅</string>
+    <string name="remove_vip_section_summary">我的頁面將大會員橫幅移除</string>
 </resources>
