@@ -14,6 +14,16 @@ import me.iacn.biliroaming.utils.*
 import org.json.JSONObject
 
 class CopyHook(classLoader: ClassLoader) : BaseHook(classLoader) {
+    companion object {
+        private val DYNAMIC_COPYABLE_IDS = arrayOf(
+            "dy_card_text",
+            "dy_opus_paragraph_desc",
+            "dy_opus_paragraph_title",
+            "dy_opus_copy_right_id",
+            "dy_opus_paragraph_text",
+        )
+    }
+
     override fun startHook() {
         if (!sPrefs.getBoolean("comment_copy", false)) return
         instance.descCopyView().zip(instance.descCopy()).forEach { p ->
@@ -35,22 +45,24 @@ class CopyHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
         }
 
-
-        instance.dynamicDescHolderListenerClass?.replaceMethod(
-            "onLongClick",
-            View::class.java
-        ) { param ->
-            if (!sPrefs.getBoolean("comment_copy_enhance", false)) return@replaceMethod true
-            val dyCardTextId = getId("dy_card_text")
-            (param.args[0] as? View)?.findViewById<TextView>(dyCardTextId)?.let {
-                if (instance.ellipsizingTextViewClass?.isInstance(it) == true) it else null
-            }?.let { view ->
-                view.getFirstFieldByExactTypeOrNull<CharSequence>()?.also { text ->
-                    showCopyDialog(view.context, text, param)
-                }
-            } ?: Log.toast("找不到动态内容", true)
-            true
+        instance.dynamicDescHolderListeners().forEach { c ->
+            c?.replaceMethod("onLongClick", View::class.java) { param ->
+                if (!sPrefs.getBoolean("comment_copy_enhance", false))
+                    return@replaceMethod true
+                val itemView = param.args[0] as? View
+                DYNAMIC_COPYABLE_IDS.asSequence().firstNotNullOfOrNull { n ->
+                    getId(n).takeIf { it != 0 }?.let { itemView?.findViewById<TextView>(it) }
+                }?.let { v ->
+                    (if (instance.ellipsizingTextViewClass?.isInstance(v) == true) {
+                        v.getFirstFieldByExactTypeOrNull()
+                    } else v.text)?.also { text ->
+                        showCopyDialog(v.context, text, param)
+                    }
+                } ?: Log.toast("找不到动态内容", true)
+                true
+            }
         }
+
         val commentCopyHook = fun(param: MethodHookParam, idName: String): Any? {
             if (!sPrefs.getBoolean("comment_copy_enhance", false)) return true
             if (param.args[0] is FrameLayout) return param.invokeOriginalMethod()

@@ -109,7 +109,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val storyVideoActivityClass by Weak { "com.bilibili.video.story.StoryVideoActivity" from mClassLoader }
     val okioWrapperClass by Weak { mHookInfo.okio.class_ from mClassLoader }
     val ellipsizingTextViewClass by Weak { "com.bilibili.bplus.followingcard.widget.EllipsizingTextView" from mClassLoader }
-    val dynamicDescHolderListenerClass by Weak { mHookInfo.dynDescHolderListener from mClassLoader }
     val shareClickResultClass by Weak { "com.bilibili.lib.sharewrapper.online.api.ShareClickResult" from mClassLoader }
     val backgroundPlayerClass by Weak { mHookInfo.musicNotification.backgroundPlayer from mClassLoader }
     val playerServiceClass by Weak { mHookInfo.musicNotification.playerService from mClassLoader }
@@ -281,6 +280,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     fun getContentString() = mHookInfo.getContentString.orNull
 
     fun check() = mHookInfo.updateInfoSupplier.check.orNull
+
+    fun dynamicDescHolderListeners() =
+        mHookInfo.dynDescHolderListenerList.map { it.from(mClassLoader) }
 
     private fun readHookInfo(context: Context): Configs.HookInfo {
         try {
@@ -1539,17 +1541,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 } ?: return@okIOBuffer
                 readFrom = method { name = okioReadFromMethod.name }
             }
-            dynDescHolderListener = class_ {
-                name = classesList.filter {
-                    it.startsWith("com.bilibili.bplus.followinglist.module.item")
-                }.firstOrNull { c ->
-                    c.findClass(classloader).run {
-                        declaredMethods.count {
-                            it.name == "onLongClick"
-                        } == 1
-                    }
-                } ?: return@class_
-            }
+            classesList.filter {
+                it.startsWith("com.bilibili.bplus.followinglist.module.item")
+                        && View.OnLongClickListener::class.java.isAssignableFrom(it.on(classloader))
+            }.let { l -> dynDescHolderListener.addAll(l.toList().map { class_ { name = it } }) }
             descCopy = descCopy {
                 val descViewHolderClass = dexHelper.findMethodUsingString(
                     "AV%d",
