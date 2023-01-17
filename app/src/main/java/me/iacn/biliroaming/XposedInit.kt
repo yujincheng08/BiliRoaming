@@ -113,6 +113,7 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                     startHook(DialogBlurBackgroundHook(lpparam.classLoader))
                     startHook(PlayerLongPressHook(lpparam.classLoader))
                     startHook(BlockUpdateHook(lpparam.classLoader))
+                    startHook(VipSectionHook(lpparam.classLoader))
                 }
 
                 lpparam.processName.endsWith(":web") -> {

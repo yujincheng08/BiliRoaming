@@ -387,6 +387,10 @@
             android:key="block_modules"
             android:summary="@string/block_modules_summary"
             android:title="@string/block_modules_title" />
+        <SwitchPreference
+            android:key="remove_vip_section"
+            android:summary="@string/remove_vip_section_summary"
+            android:title="@string/remove_vip_section_title" />
     </PreferenceCategory>
 
     <PreferenceCategory
