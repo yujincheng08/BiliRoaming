@@ -265,7 +265,7 @@ message HookInfo {
   optional OkIO okio = 54;
   optional OkIOBuffer okio_buffer = 55;
   optional Class comment_span = 57;
-  optional Class dyn_desc_holder_listener = 58;
+  repeated Class dyn_desc_holder_listener = 58;
   optional DescCopy desc_copy = 59;
   optional Class bangumi_season = 60;
   optional KanBan kan_ban = 67;
