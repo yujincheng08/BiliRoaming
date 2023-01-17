@@ -143,7 +143,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val biliConfigClass by Weak { mHookInfo.biliConfig.class_ from mClassLoader }
     val updateInfoSupplierClass by Weak { mHookInfo.updateInfoSupplier.class_ from mClassLoader }
     val latestVersionExceptionClass by Weak { "tv.danmaku.bili.update.internal.exception.LatestVersionException" from mClassLoader }
-    val userFragmentClass by Weak { "tv.danmaku.bili.ui.main2.mine.HomeUserCenterFragment" from mClassLoader }
 
     val ids: Map<String, Int> by lazy {
         mHookInfo.mapIds.idsMap

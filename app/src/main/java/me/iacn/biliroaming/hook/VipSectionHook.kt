@@ -18,8 +18,8 @@ class VipSectionHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val vipEntranceViewClass =
             "tv.danmaku.bili.ui.main2.mine.widgets.MineVipEntranceView".from(mClassLoader)
         val vipEntranceViewField =
-            vipEntranceViewClass?.let { instance.userFragmentClass?.findFieldByExactType(it) }
-        instance.userFragmentClass?.hookAfterMethod(
+            vipEntranceViewClass?.let { instance.homeUserCenterClass?.findFieldByExactType(it) }
+        instance.homeUserCenterClass?.hookAfterMethod(
             "onCreateView",
             LayoutInflater::class.java,
             ViewGroup::class.java,
