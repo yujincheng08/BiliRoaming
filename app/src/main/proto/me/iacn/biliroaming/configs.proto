@@ -229,6 +229,12 @@ message UpdateInfoSupplier {
   optional Method check = 2;
 }
 
+message CommentImageLoader {
+  optional Class class = 1;
+  optional Method load = 2;
+  optional Method rich_load = 3;
+}
+
 message HookInfo {
   int64 last_update_time = 1;
   optional MapIds map_ids = 2;
@@ -280,4 +286,5 @@ message HookInfo {
   optional Class live_pager_recycler_view = 76;
   optional BiliConfig bili_config = 77;
   optional UpdateInfoSupplier update_info_supplier = 78;
+  optional CommentImageLoader comment_image_loader = 79;
 }
