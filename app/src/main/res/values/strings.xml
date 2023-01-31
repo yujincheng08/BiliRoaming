@@ -267,4 +267,6 @@
     <string name="block_update_title">禁止 App 检查更新</string>
     <string name="remove_vip_section_title">移除我的大会员横幅</string>
     <string name="remove_vip_section_summary">我的页面将大会员横幅移除</string>
+    <string name="save_comment_image_title">笔记图片长按保存</string>
+    <string name="save_comment_image_summary">视频笔记图片长按保存到本地</string>
 </resources>

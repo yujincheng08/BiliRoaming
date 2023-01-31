@@ -114,6 +114,7 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                     startHook(PlayerLongPressHook(lpparam.classLoader))
                     startHook(BlockUpdateHook(lpparam.classLoader))
                     startHook(VipSectionHook(lpparam.classLoader))
+                    startHook(CommentImageHook(lpparam.classLoader))
                 }
 
                 lpparam.processName.endsWith(":web") -> {

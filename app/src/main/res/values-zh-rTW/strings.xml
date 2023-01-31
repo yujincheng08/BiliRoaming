@@ -267,4 +267,6 @@
     <string name="block_update_title">禁止 App 檢查更新</string>
     <string name="remove_vip_section_title">移除我的大會員橫幅</string>
     <string name="remove_vip_section_summary">我的頁面將大會員橫幅移除</string>
+    <string name="save_comment_image_title">筆記圖片長按儲存</string>
+    <string name="save_comment_image_summary">影片筆記圖片長按儲存到本地</string>
 </resources>

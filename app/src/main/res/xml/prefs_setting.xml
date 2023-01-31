@@ -183,6 +183,11 @@
         <SwitchPreference
             android:key="block_update"
             android:title="@string/block_update_title" />
+
+        <SwitchPreference
+            android:key="save_comment_image"
+            android:summary="@string/save_comment_image_summary"
+            android:title="@string/save_comment_image_title" />
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/pref_backup">
         <Preference
