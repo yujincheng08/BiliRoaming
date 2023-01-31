@@ -69,17 +69,17 @@ class CommentImageHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                     resolver.openOutputStream(uri!!)?.use { stream.copyTo(it) }
                                 }.onSuccess {
                                     Log.toast(
-                                        "评论图片成功保存至\n$relativePath${File.separator}$fullFilename",
+                                        "图片已保存至\n$relativePath${File.separator}$fullFilename",
                                         true
                                     )
                                 }.onFailure {
                                     Log.e(it)
-                                    Log.toast("评论图片保存失败，可能已经保存或未授予权限", true)
+                                    Log.toast("图片保存失败，可能已经保存或未授予权限", true)
                                 }
                             }
                         }.onFailure {
                             Log.e(it)
-                            Log.toast("评论图片获取失败", force = true)
+                            Log.toast("图片获取失败", force = true)
                         }
                     }
                     true
