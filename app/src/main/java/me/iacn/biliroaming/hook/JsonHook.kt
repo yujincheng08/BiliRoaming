@@ -54,6 +54,9 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             "com.bilibili.bililive.room.biz.shopping.beans.LiveShoppingInfo".from(mClassLoader)
         val liveGoodsCardInfoClass =
             "com.bilibili.bililive.room.biz.shopping.beans.LiveGoodsCardInfo".from(mClassLoader)
+        val liveRecommendCardGoodsClass =
+            "com.bilibili.bililive.room.biz.shopping.beans.LiveShoppingRecommendCardGoodsDetail"
+                .from(mClassLoader)
         val biliLiveRoomInfoClass =
             "com.bilibili.bililive.videoliveplayer.net.beans.gateway.roominfo.BiliLiveRoomInfo"
                 .from(mClassLoader)
@@ -367,15 +370,19 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
             when (result.javaClass) {
                 liveShoppingInfoClass -> {
-                    if (hidden && purifyLivePopups.contains("shoppingCard"))
+                    if (hidden && purifyLivePopups.contains("shoppingCard")) {
                         result.setObjectField("shoppingCardDetail", null)
+                        result.runCatchingOrNull {
+                            setObjectField("recommendCardDetail", null)
+                        }
+                    }
                     if (hidden && purifyLivePopups.contains("shoppingSelected"))
                         result.runCatchingOrNull {
                             setObjectField("selectedGoods", null)
                         }
                 }
 
-                liveGoodsCardInfoClass -> {
+                liveGoodsCardInfoClass, liveRecommendCardGoodsClass -> {
                     if (hidden && purifyLivePopups.contains("shoppingCard"))
                         param.result = null
                 }
