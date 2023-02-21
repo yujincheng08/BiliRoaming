@@ -1,9 +1,10 @@
 import com.android.build.api.artifact.ArtifactTransformationRequest
 import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.variant.BuiltArtifact
-import com.google.protobuf.gradle.*
-import java.nio.file.Paths
+import com.google.protobuf.gradle.id
+import com.google.protobuf.gradle.proto
 import org.gradle.internal.os.OperatingSystem
+import java.nio.file.Paths
 
 fun findInPath(executable: String): String? {
     val pathEnv = System.getenv("PATH")
@@ -17,7 +18,7 @@ fun findInPath(executable: String): String? {
 
 plugins {
     id("com.android.application")
-    id("kotlin-android")
+    id("org.jetbrains.kotlin.android")
     id("com.google.protobuf")
 }
 
@@ -28,7 +29,6 @@ val releaseKeyPassword: String? by rootProject
 
 val appVerCode: Int by rootProject
 val appVerName: String by rootProject
-
 val kotlinVersion: String by rootProject
 val protobufVersion: String by rootProject
 
@@ -119,7 +119,7 @@ android {
             proguardFiles("proguard-rules.pro")
             externalNativeBuild {
                 cmake {
-                    val flags =arrayOf(
+                    val flags = arrayOf(
                         "-flto",
                         "-ffunction-sections",
                         "-fdata-sections",
@@ -131,8 +131,7 @@ android {
                     cppFlags.addAll(flags)
                     cFlags.addAll(flags)
                     val configFlags = arrayOf(
-                        "-Oz",
-                        "-DNDEBUG"
+                        "-Oz", "-DNDEBUG"
                     ).joinToString(" ")
                     arguments(
                         "-DCMAKE_BUILD_TYPE=Release",
@@ -239,7 +238,8 @@ abstract class CopyApksTask : DefaultTask() {
 
 androidComponents.onVariants { variant ->
     if (variant.name != "release") return@onVariants
-    val updateArtifact = project.tasks.register<CopyApksTask>("copy${variant.name.capitalize()}Apk")
+    val updateArtifact =
+        project.tasks.register<CopyApksTask>("copy${variant.name.replaceFirstChar { it.uppercase() }}Apk")
     val transformationRequest = variant.artifacts.use(updateArtifact)
         .wiredWithDirectories(CopyApksTask::apkFolder, CopyApksTask::outFolder)
         .toTransformMany(SingleArtifact.APK)
@@ -275,7 +275,10 @@ val restartBiliBili = task("restartBiliBili").doLast {
     }
     exec {
         commandLine(
-            adbExecutable, "shell", "am", "start",
+            adbExecutable,
+            "shell",
+            "am",
+            "start",
             "$(pm resolve-activity --components tv.danmaku.bili)"
         )
     }
@@ -283,12 +286,14 @@ val restartBiliBili = task("restartBiliBili").doLast {
 
 val optimizeReleaseRes = task("optimizeReleaseRes").doLast {
     val aapt2 = Paths.get(
-        project.android.sdkDirectory.path,
-        "build-tools", project.android.buildToolsVersion, "aapt2"
+        project.android.sdkDirectory.path, "build-tools", project.android.buildToolsVersion, "aapt2"
     )
     val zip = Paths.get(
-        project.buildDir.path, "intermediates",
-        "optimized_processed_res", "release", "resources-release-optimize.ap_"
+        project.buildDir.path,
+        "intermediates",
+        "optimized_processed_res",
+        "release",
+        "resources-release-optimize.ap_"
     )
     val optimized = File("${zip}.opt")
     val cmd = exec {
