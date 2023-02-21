@@ -17,9 +17,9 @@ fun findInPath(executable: String): String? {
 }
 
 plugins {
-    id("com.android.application")
-    id("org.jetbrains.kotlin.android")
-    id("com.google.protobuf")
+    alias(libs.plugins.agp.app)
+    alias(libs.plugins.kotlin)
+    alias(libs.plugins.protobuf)
 }
 
 val releaseStoreFile: String? by rootProject
@@ -29,13 +29,11 @@ val releaseKeyPassword: String? by rootProject
 
 val appVerCode: Int by rootProject
 val appVerName: String by rootProject
-val kotlinVersion: String by rootProject
-val protobufVersion: String by rootProject
 
 android {
     compileSdk = 33
-    buildToolsVersion = "33.0.1"
-    ndkVersion = "25.1.8937393"
+    buildToolsVersion = "33.0.2"
+    ndkVersion = "25.2.9519653"
 
     defaultConfig {
         applicationId = "me.iacn.biliroaming"
@@ -198,7 +196,7 @@ android {
 
 protobuf {
     protoc {
-        artifact = "com.google.protobuf:protoc:$protobufVersion"
+        artifact = libs.protobuf.protoc.get().toString()
     }
 
     generatedFilesBaseDir = "$projectDir/src/generated"
@@ -257,14 +255,15 @@ configurations.all {
 }
 
 dependencies {
-    compileOnly("de.robv.android.xposed:api:82")
-    implementation("com.google.protobuf:protobuf-kotlin-lite:$protobufVersion")
-    compileOnly("com.google.protobuf:protoc:$protobufVersion")
-    implementation("org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.6.4")
-    implementation("androidx.documentfile:documentfile:1.0.1")
-    implementation("dev.rikka.ndk.thirdparty:cxx:1.2.0")
+    compileOnly(libs.xposed)
+    implementation(libs.protobuf.kotlin)
+    implementation(libs.protobuf.java)
+    compileOnly(libs.protobuf.protoc)
+    implementation(libs.kotlin.stdlib)
+    implementation(libs.kotlin.coroutines.android)
+    implementation(libs.kotlin.coroutines.jdk)
+    implementation(libs.androidx.documentfile)
+    implementation(libs.cxx)
 }
 
 val adbExecutable: String = androidComponents.sdkComponents.adb.get().asFile.absolutePath
