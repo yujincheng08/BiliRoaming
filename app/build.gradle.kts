@@ -1,34 +1,49 @@
-import com.android.build.api.artifact.ArtifactTransformationRequest
-import com.android.build.api.artifact.SingleArtifact
-import com.android.build.api.variant.BuiltArtifact
-import com.google.protobuf.gradle.id
-import com.google.protobuf.gradle.proto
-import org.gradle.internal.os.OperatingSystem
-import java.nio.file.Paths
+import com.google.protobuf.gradle.*
 
-fun findInPath(executable: String): String? {
-    val pathEnv = System.getenv("PATH")
-    return pathEnv.split(File.pathSeparator).map { folder ->
-        Paths.get("${folder}${File.separator}${executable}${if (OperatingSystem.current().isWindows) ".exe" else ""}")
-            .toFile()
-    }.firstOrNull { path ->
-        path.exists()
-    }?.absolutePath
-}
-
+@Suppress("DSL_SCOPE_VIOLATION") // TODO: Remove once KTIJ-19369 is fixed
 plugins {
     alias(libs.plugins.agp.app)
     alias(libs.plugins.kotlin)
     alias(libs.plugins.protobuf)
+    alias(libs.plugins.lsplugin.resopt)
+    alias(libs.plugins.lsplugin.jgit)
+    alias(libs.plugins.lsplugin.apksign)
+    alias(libs.plugins.lsplugin.apktransform)
+    alias(libs.plugins.lsplugin.cmaker)
 }
 
-val releaseStoreFile: String? by rootProject
-val releaseStorePassword: String? by rootProject
-val releaseKeyAlias: String? by rootProject
-val releaseKeyPassword: String? by rootProject
-
-val appVerCode: Int by rootProject
+val appVerCode = jgit.repo()?.commitCount("refs/remotes/origin/master") ?: 0
 val appVerName: String by rootProject
+
+apksign {
+    storeFileProperty = "releaseStoreFile"
+    storePasswordProperty = "releaseStorePassword"
+    keyAliasProperty = "releaseKeyAlias"
+    keyPasswordProperty = "releaseKeyPassword"
+}
+
+apktransform {
+    copy {
+        if (buildType == "release") {
+            file("${name}/BiliRoaming_${appVerName}.apk")
+        } else {
+            null
+        }
+    }
+}
+
+cmaker {
+    default {
+        targets("biliroaming")
+        abiFilters("armeabi-v7a", "arm64-v8a", "x86")
+        arguments += "-DANDROID_STL=none"
+        cppFlags += "-Wno-c++2b-extensions"
+    }
+
+    buildTypes {
+        arguments += "-DDEBUG_SYMBOLS_PATH=${project.buildDir.absolutePath}/symbols/${it.name}"
+    }
+}
 
 android {
     compileSdk = 33
@@ -41,47 +56,6 @@ android {
         targetSdk = 33  // Target Android T
         versionCode = appVerCode
         versionName = appVerName
-
-        externalNativeBuild {
-            cmake {
-                targets("biliroaming")
-                abiFilters("armeabi-v7a", "arm64-v8a", "x86")
-                arguments("-DANDROID_STL=none")
-                val flags = arrayOf(
-                    "-Wall",
-                    "-Werror",
-                    "-Qunused-arguments",
-                    "-Wno-gnu-string-literal-operator-template",
-                    "-fno-rtti",
-                    "-fvisibility=hidden",
-                    "-fvisibility-inlines-hidden",
-                    "-fno-exceptions",
-                    "-fno-stack-protector",
-                    "-fomit-frame-pointer",
-                    "-Wno-builtin-macro-redefined",
-                    "-Wno-unused-value",
-                    "-Wno-c++2b-extensions",
-                    "-D__FILE__=__FILE_NAME__",
-                )
-                cppFlags("-std=c++20", *flags)
-                cFlags("-std=c18", *flags)
-                findInPath("ccache")?.let {
-                    println("Using ccache $it")
-                    arguments += "-DANDROID_CCACHE=$it"
-                }
-            }
-        }
-    }
-
-    signingConfigs {
-        create("config") {
-            releaseStoreFile?.also {
-                storeFile = rootProject.file(it)
-                storePassword = releaseStorePassword
-                keyAlias = releaseKeyAlias
-                keyPassword = releaseKeyPassword
-            }
-        }
     }
 
     buildFeatures {
@@ -93,52 +67,10 @@ android {
     }
 
     buildTypes {
-        all {
-            signingConfig =
-                if (releaseStoreFile.isNullOrEmpty()) signingConfigs.getByName("debug") else signingConfigs.getByName(
-                    "config"
-                )
-        }
-        debug {
-            externalNativeBuild {
-                cmake {
-                    arguments.addAll(
-                        arrayOf(
-                            "-DCMAKE_CXX_FLAGS_DEBUG=-Og",
-                            "-DCMAKE_C_FLAGS_DEBUG=-Og",
-                        )
-                    )
-                }
-            }
-        }
         release {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles("proguard-rules.pro")
-            externalNativeBuild {
-                cmake {
-                    val flags = arrayOf(
-                        "-flto",
-                        "-ffunction-sections",
-                        "-fdata-sections",
-                        "-Wl,--gc-sections",
-                        "-fno-unwind-tables",
-                        "-fno-asynchronous-unwind-tables",
-                        "-Wl,--exclude-libs,ALL",
-                    )
-                    cppFlags.addAll(flags)
-                    cFlags.addAll(flags)
-                    val configFlags = arrayOf(
-                        "-Oz", "-DNDEBUG"
-                    ).joinToString(" ")
-                    arguments(
-                        "-DCMAKE_BUILD_TYPE=Release",
-                        "-DCMAKE_CXX_FLAGS_RELEASE=$configFlags",
-                        "-DCMAKE_C_FLAGS_RELEASE=$configFlags",
-                        "-DDEBUG_SYMBOLS_PATH=${project.buildDir.absolutePath}/symbols/$name",
-                    )
-                }
-            }
         }
     }
 
@@ -215,40 +147,6 @@ protobuf {
     }
 }
 
-abstract class CopyApksTask : DefaultTask() {
-    @get:Internal
-    abstract val transformer: Property<(input: BuiltArtifact) -> File>
-
-    @get:InputDirectory
-    abstract val apkFolder: DirectoryProperty
-
-    @get:OutputDirectory
-    abstract val outFolder: DirectoryProperty
-
-    @get:Internal
-    abstract val transformationRequest: Property<ArtifactTransformationRequest<CopyApksTask>>
-
-    @TaskAction
-    fun taskAction() = transformationRequest.get().submit(this) { builtArtifact ->
-        File(builtArtifact.outputFile).copyTo(transformer.get()(builtArtifact), true)
-    }
-}
-
-androidComponents.onVariants { variant ->
-    if (variant.name != "release") return@onVariants
-    val updateArtifact =
-        project.tasks.register<CopyApksTask>("copy${variant.name.replaceFirstChar { it.uppercase() }}Apk")
-    val transformationRequest = variant.artifacts.use(updateArtifact)
-        .wiredWithDirectories(CopyApksTask::apkFolder, CopyApksTask::outFolder)
-        .toTransformMany(SingleArtifact.APK)
-    updateArtifact.configure {
-        this.transformationRequest.set(transformationRequest)
-        transformer.set { builtArtifact ->
-            File(projectDir, "${variant.name}/BiliRoaming_${builtArtifact.versionName}.apk")
-        }
-    }
-}
-
 configurations.all {
     exclude("org.jetbrains.kotlin", "kotlin-stdlib-jdk7")
     exclude("org.jetbrains.kotlin", "kotlin-stdlib-jdk8")
@@ -283,34 +181,6 @@ val restartBiliBili = task("restartBiliBili").doLast {
     }
 }
 
-val optimizeReleaseRes = task("optimizeReleaseRes").doLast {
-    val aapt2 = Paths.get(
-        project.android.sdkDirectory.path, "build-tools", project.android.buildToolsVersion, "aapt2"
-    )
-    val zip = Paths.get(
-        project.buildDir.path,
-        "intermediates",
-        "optimized_processed_res",
-        "release",
-        "resources-release-optimize.ap_"
-    )
-    val optimized = File("${zip}.opt")
-    val cmd = exec {
-        commandLine(aapt2, "optimize", "--collapse-resource-names", "-o", optimized, zip)
-        isIgnoreExitValue = true
-    }
-    if (cmd.exitValue == 0) {
-        delete(zip)
-        optimized.renameTo(zip.toFile())
-    }
-}
-tasks.whenTaskAdded {
-    when (name) {
-        "optimizeReleaseResources" -> {
-            finalizedBy(optimizeReleaseRes)
-        }
-        "installDebug" -> {
-            finalizedBy(restartBiliBili)
-        }
-    }
+afterEvaluate {
+    tasks.getByPath("installDebug").finalizedBy(restartBiliBili)
 }

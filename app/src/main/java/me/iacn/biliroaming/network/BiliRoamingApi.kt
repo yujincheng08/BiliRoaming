@@ -321,7 +321,6 @@ object BiliRoamingApi {
     }
 
     @JvmStatic
-    @Throws(JSONException::class)
     private fun getExtraInfo(result: JSONObject, accessKey: String?) {
         val mediaId = result.optString("media_id")
         getMediaInfo(result, mediaId, accessKey)

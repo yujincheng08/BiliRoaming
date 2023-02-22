@@ -29,7 +29,6 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
         moduleRes = getModuleRes(modulePath)
     }
 
-    @Throws(Throwable::class)
     override fun handleLoadPackage(lpparam: LoadPackageParam) {
         if (BuildConfig.APPLICATION_ID == lpparam.packageName) {
             MainActivity.Companion::class.java.name.replaceMethod(
