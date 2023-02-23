@@ -24,8 +24,8 @@ apksign {
 
 apktransform {
     copy {
-        if (buildType == "release") {
-            file("${name}/BiliRoaming_${appVerName}.apk")
+        if (it.buildType == "release") {
+            file("${it.name}/BiliRoaming_${appVerName}.apk")
         } else {
             null
         }

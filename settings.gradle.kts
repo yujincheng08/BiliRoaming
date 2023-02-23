@@ -42,9 +42,9 @@ dependencyResolutionManagement {
             plugin("agp-app", "com.android.application").version("7.4.1")
             plugin("protobuf", "com.google.protobuf").version("0.9.1")
             plugin("lsplugin-jgit", "org.lsposed.lsplugin.jgit").version("1.0")
-            plugin("lsplugin-resopt", "org.lsposed.lsplugin.resopt").version("1.1")
+            plugin("lsplugin-resopt", "org.lsposed.lsplugin.resopt").version("1.2")
             plugin("lsplugin-apksign", "org.lsposed.lsplugin.apksign").version("1.1")
-            plugin("lsplugin-apktransform", "org.lsposed.lsplugin.apktransform").version("1.1")
+            plugin("lsplugin-apktransform", "org.lsposed.lsplugin.apktransform").version("1.2")
             plugin("lsplugin-cmaker", "org.lsposed.lsplugin.cmaker").version("1.0")
         }
     }
