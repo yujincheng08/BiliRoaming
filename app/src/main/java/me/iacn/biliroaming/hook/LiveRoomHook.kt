@@ -24,6 +24,15 @@ class LiveRoomHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         player.callMethod(method)
                     }.onSuccess { param.result = true }
                 }
+            val lastTouchUpTimeField =
+                instance.liveRoomPlayerViewClass?.findFirstFieldByExactTypeOrNull(Long::class.javaPrimitiveType!!)
+            if (lastTouchUpTimeField != null) {
+                instance.liveRoomPlayerViewClass?.declaredMethods?.filter { m ->
+                    m.isPublic && m.returnType == Void.TYPE && m.parameterTypes.let { it.size == 1 && it[0] == MotionEvent::class.java }
+                }?.forEach { m ->
+                    m.hookAfterMethod { lastTouchUpTimeField.setLong(it.thisObject, 0L) }
+                }
+            }
         }
         if (!sPrefs.getBoolean("revert_live_room_feed", false)) {
             return
