@@ -188,6 +188,11 @@
             android:key="save_comment_image"
             android:summary="@string/save_comment_image_summary"
             android:title="@string/save_comment_image_title" />
+
+        <SwitchPreference
+            android:key="more_playback_speed"
+            android:summary="@string/more_playback_speed_summary"
+            android:title="@string/more_playback_speed_title" />
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/pref_backup">
         <Preference
@@ -393,6 +398,7 @@
             android:summary="@string/block_modules_summary"
             android:title="@string/block_modules_title" />
         <SwitchPreference
+            android:dependency="hidden"
             android:key="remove_vip_section"
             android:summary="@string/remove_vip_section_summary"
             android:title="@string/remove_vip_section_title" />

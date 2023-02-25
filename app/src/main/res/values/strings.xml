@@ -269,4 +269,6 @@
     <string name="remove_vip_section_summary">我的页面将大会员横幅移除</string>
     <string name="save_comment_image_title">笔记图片长按保存</string>
     <string name="save_comment_image_summary">视频笔记图片长按保存到本地</string>
+    <string name="more_playback_speed_title">扩展播放速度列表</string>
+    <string name="more_playback_speed_summary">视频及听视频播放速度列表添加3X、4X及10X倍数播放选项</string>
 </resources>

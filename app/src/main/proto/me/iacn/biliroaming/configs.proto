@@ -90,6 +90,7 @@ message PlayerCoreService {
   optional Method seek_to = 3;
   optional Method on_seek_complete = 4;
   optional Class seek_complete_listener = 5;
+  optional Method update_speed = 6;
 }
 
 message PegasusFeed {
@@ -235,6 +236,59 @@ message CommentImageLoader {
   optional Method rich_load = 3;
 }
 
+message SpeedAdapter {
+  optional Class class = 1;
+  optional Field speed_array = 2;
+}
+
+message StorySuperMenu {
+  optional Class class = 1;
+  optional Field speed_array = 2;
+}
+
+message MenuFuncSegment {
+  optional Class class = 1;
+  optional Field speed_array = 2;
+}
+
+message NewShareService {
+  optional Class class = 1;
+  optional Field speed_array = 2;
+}
+
+message PlaySpeedSetting {
+  optional Class class = 1;
+  optional Field speed_array = 2;
+  optional Field speed_text_id_array = 3;
+}
+
+message PodcastSpeedSeekBar {
+  optional Class class = 1;
+  optional Field speed_array = 2;
+  optional Field speed_name_list = 3;
+}
+
+message AbsMusicPlayerPanelSegment {
+  optional Class class = 1;
+  optional Field speed_array = 2;
+}
+
+message PlayerSpeedWidget {
+  optional Class class = 1;
+  optional Method update = 2;
+}
+
+message PlaybackSpeed {
+  repeated SpeedAdapter speed_adapter = 1;
+  optional StorySuperMenu story_super_menu = 2;
+  optional MenuFuncSegment menu_func_segment = 3;
+  optional NewShareService new_share_service = 4;
+  repeated PlaySpeedSetting play_speed_setting = 5;
+  optional PodcastSpeedSeekBar podcast_speed_seek_bar = 6;
+  optional AbsMusicPlayerPanelSegment music_player_panel = 7;
+  repeated PlayerSpeedWidget player_speed_widget = 8;
+}
+
 message HookInfo {
   int64 last_update_time = 1;
   optional MapIds map_ids = 2;
@@ -287,4 +341,5 @@ message HookInfo {
   optional BiliConfig bili_config = 77;
   optional UpdateInfoSupplier update_info_supplier = 78;
   optional CommentImageLoader comment_image_loader = 79;
+  optional PlaybackSpeed playback_speed = 80;
 }
