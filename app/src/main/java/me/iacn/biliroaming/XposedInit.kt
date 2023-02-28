@@ -7,7 +7,6 @@ import android.content.Context
 import android.content.res.Resources
 import android.content.res.XModuleResources
 import android.os.Build
-import android.os.Bundle
 import de.robv.android.xposed.IXposedHookLoadPackage
 import de.robv.android.xposed.IXposedHookZygoteInit
 import de.robv.android.xposed.XC_MethodHook
@@ -115,14 +114,6 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                     startHook(BlockUpdateHook(lpparam.classLoader))
                     startHook(VipSectionHook(lpparam.classLoader))
                     startHook(CommentImageHook(lpparam.classLoader))
-
-                    "com.bilibili.bangumi.player.resolver.PgcPlayUrlRpcWrapper\$a".findClassOrNull(lpparam.classLoader)?.hookAfterAllConstructors {
-                        Log.e("${it.thisObject} ${Thread.currentThread().stackTrace.joinToString("\n")}")
-                    }
-                    "com.bilibili.bangumi.ui.page.detail.BangumiDetailActivityV3".hookBeforeMethod(lpparam.classLoader, "onCreate", Bundle::class.java) {
-                        val thiz = it.thisObject as Activity
-                        Log.e("${thiz.javaClass} ${thiz.intent.extras?.keySet()?.joinToString("\n")}")
-                    }
                 }
 
                 lpparam.processName.endsWith(":web") -> {
