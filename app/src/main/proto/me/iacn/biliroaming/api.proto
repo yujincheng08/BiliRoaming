@@ -12,6 +12,13 @@ enum CodeType {
   CODE265 = 2;
 }
 
+message SceneControl {
+}
+
+message DataControl {
+  optional bool need_watch_progress = 0x1;
+}
+
 message PlayViewReq {
   optional int64 ep_id = 0x1;
   optional int64 cid = 0x2;
@@ -26,6 +33,15 @@ message PlayViewReq {
   optional int32 teenagers_mode = 0xb;
   optional CodeType prefer_codec_type = 0xc;
   optional bool is_preview = 0xd;
+  optional int32 room_id = 0xe;
+  optional bool is_need_view_info = 0xf;
+  optional SceneControl scene_control = 0x10;
+  optional int32 inline_scene = 0x11;
+  optional int64 material_no = 0x12;
+  optional int32 security_level = 0x13;
+  optional int64 season_id = 0x14;
+  optional DataControl data_control = 0x15;
+
 }
 
 message ContinuePlayInfo {

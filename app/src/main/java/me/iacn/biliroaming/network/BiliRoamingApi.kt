@@ -15,7 +15,6 @@ import me.iacn.biliroaming.XposedInit
 import me.iacn.biliroaming.hook.BangumiSeasonHook.Companion.lastSeasonInfo
 import me.iacn.biliroaming.utils.*
 import org.json.JSONArray
-import org.json.JSONException
 import org.json.JSONObject
 import java.io.IOException
 import java.io.InputStream
@@ -23,6 +22,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
 import java.util.zip.GZIPInputStream
 import java.util.zip.InflaterInputStream
 
@@ -60,9 +60,23 @@ object BiliRoamingApi {
     const val mainlandTestParams =
         "cid=13073143&ep_id=100615&otype=json&fnval=16&module=pgc&platform=android&test=true"
 
+    val seasonCache: AtomicReference<Triple<Int, AtomicReference<String>, CountDownLatch>?> =
+        AtomicReference(null)
 
     @JvmStatic
     fun getSeason(info: Map<String, String?>, hidden_hint: Boolean): String? {
+        val seasonId = info.getOrDefault("season_id", null)?.toInt()
+        val cache = seasonCache.get()
+        val cacheTuple = if (seasonId != null) {
+            if (cache?.first == seasonId) {
+                cache.third.await()
+                return cache.second.get()
+            } else {
+                Triple(seasonId, AtomicReference<String>(), CountDownLatch(1)).also {
+                    seasonCache.compareAndSet(cache, it)
+                }
+            }
+        } else null
         var hidden = hidden_hint
         val builder = Uri.Builder()
         builder.scheme("https")
@@ -117,7 +131,10 @@ object BiliRoamingApi {
         } else {
             checkErrorToast(seasonJson)
         }
-        return seasonJson.toString()
+        return seasonJson.toString().also {
+            cacheTuple?.second?.set(it)
+            cacheTuple?.third?.countDown()
+        }
     }
 
     @JvmStatic
