@@ -172,7 +172,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     || needForceProxy(response)
                 ) {
                     try {
-                        val content = getPlayUrl(reconstructQuery(request))
+                        val content = getPlayUrl(reconstructQuery(request, response))
                         countDownLatch?.countDown()
                         content?.let {
                             Log.toast("已从代理服务器获取播放地址\n如加载缓慢或黑屏，可去漫游设置中测速并设置 UPOS")
@@ -240,7 +240,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     ).new()
                 if (needProxy(response)) {
                     try {
-                        val content = getPlayUrl(reconstructQuery(request))
+                        val content = getPlayUrl(reconstructQuery(request, response))
                         countDownLatch?.countDown()
                         content?.let {
                             Log.toast("已从代理服务器获取播放地址\n如加载缓慢或黑屏，可去漫游设置中测速并设置 UPOS")
@@ -396,13 +396,20 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         return PlayViewReply.parseFrom(serializedRequest).business.isPreview
     }
 
-    private fun reconstructQuery(request: Any): String? {
+    private fun reconstructQuery(request: Any, response: Any): String? {
         val serializedRequest = request.callMethodAs<ByteArray>("toByteArray")
         val req = PlayViewReq.parseFrom(serializedRequest)
+        val episodeInfo by lazy {
+            response.callMethodOrNull("getBusiness")?.callMethodOrNull("getEpisodeInfo")
+        }
         // CANNOT use reflection for compatibility with Xpatch
         return Uri.Builder().run {
-            appendQueryParameter("ep_id", req.epId.toString())
-            appendQueryParameter("cid", req.cid.toString())
+            appendQueryParameter("ep_id", req.epId.let {
+                if (it != 0L) it else episodeInfo?.callMethodOrNullAs<Int>("getEpId") ?: 0
+            }.toString())
+            appendQueryParameter("cid", req.cid.let {
+                if (it != 0L) it else episodeInfo?.callMethodOrNullAs<Long>("getCid") ?: 0
+            }.toString())
             appendQueryParameter("qn", req.qn.toString())
             appendQueryParameter("fnver", req.fnver.toString())
             appendQueryParameter("fnval", req.fnval.toString())
@@ -424,7 +431,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
             }
             val videoCodeCid = jsonContent.optInt("video_codecid")
-            val serializedResponse = playViewReply {
+            val serializedResponse = PlayViewReply.parseFrom(response.callMethodAs<ByteArray>("toByteArray")).copy {
                 playConf = playAbilityConf {
                     dislikeDisable = true
                     likeDisable = true
@@ -531,8 +538,15 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     }
                 }
 
-                business = businessInfo {
+                business = business.copy {
                     isPreview = jsonContent.optInt("is_preview", 0) == 1
+                    episodeInfo = episodeInfo.copy {
+                        seasonInfo = seasonInfo.copy {
+                            rights = seasonRights {
+                                canWatch = 1
+                            }
+                        }
+                    }
                 }
 
                 viewInfo = viewInfo {

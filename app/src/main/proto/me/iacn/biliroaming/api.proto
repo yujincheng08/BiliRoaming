@@ -28,10 +28,74 @@ message PlayViewReq {
   optional bool is_preview = 0xd;
 }
 
+message ContinuePlayInfo {
+
+}
+
+message ClipInfo {
+
+}
+
+message QualityExtInfo {
+
+}
+
+message RecordInfo {
+
+}
+
+message UserStatus {
+}
+
+message SeasonRights {
+  optional int32 can_watch = 0x1;
+}
+
+message SeasonInfo {
+  optional int32 season_id = 0x1;
+  optional int32 season_type = 0x2;
+  optional int32 season_status = 0x3;
+  optional string cover = 0x4;
+  optional string title = 0x5;
+  optional SeasonRights rights = 0x6;
+}
+
+message EpisodeInfo {
+  optional int32 ep_id = 0x1;
+  optional int64 cid = 0x2;
+  optional int64 aid = 0x3;
+  optional int64 ep_status = 0x4;
+  optional SeasonInfo season_info = 0x5;
+  optional string cover = 0x6;
+  optional string title = 0x7;
+  optional Interaction interaction = 0x8;
+}
+
+message EpisodeAdvertisementInfo {
+
+}
+
 message BusinessInfo {
-  optional bool is_preview = 1;
-  optional bool bp = 2;
-  optional string marlin_token = 3;
+  optional bool is_preview = 0x1;
+  optional bool bp = 0x2;
+  optional string marlin_token = 0x3;
+  optional string playback_speed_color = 0x4;
+  optional ContinuePlayInfo continue_play_info = 0x5;
+  repeated ClipInfo clip_info = 0x6;
+  optional int32 inline_type = 0x7;
+  optional int32 ep_whole_duration = 0x8;
+  optional PlayViewDimension dimension = 0x9;
+  repeated QualityExtInfo quality_ext_map = 0xa;
+  map<string, int32> ext_map = 0xb;
+  optional bool drm_tech_type = 0xc;
+  optional int32 limit_action_type = 0xd;
+  optional bool is_drm = 0xe;
+  optional RecordInfo record_info = 0xf;
+  optional int32 vip_status = 0x10;
+  optional bool is_live_pre = 0x11;
+  optional EpisodeInfo episode_info = 0x12;
+  optional EpisodeAdvertisementInfo episode_advertisement_info = 0x13;
+  optional UserStatus user_status = 0x14;
 }
 
 message PlayAbilityConf {
@@ -274,6 +338,12 @@ message Dimension {
   optional int64 width = 0x1;
   optional int64 height = 0x2;
   optional int64 rotate = 0x3;
+}
+
+message PlayViewDimension {
+  optional int32 width = 0x1;
+  optional int32 height = 0x2;
+  optional int32 rotate = 0x3;
 }
 
 message StaffInfo {}
