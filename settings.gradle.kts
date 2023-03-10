@@ -39,7 +39,7 @@ dependencyResolutionManagement {
             ).versionRef("coroutines")
             library("androidx-documentfile", "androidx.documentfile:documentfile:1.0.1")
             plugin("kotlin", "org.jetbrains.kotlin.android").versionRef(kotlinVersion)
-            plugin("agp-app", "com.android.application").version("7.4.1")
+            plugin("agp-app", "com.android.application").version("7.4.2")
             plugin("protobuf", "com.google.protobuf").version("0.9.1")
             plugin("lsplugin-jgit", "org.lsposed.lsplugin.jgit").version("1.0")
             plugin("lsplugin-resopt", "org.lsposed.lsplugin.resopt").version("1.2")
