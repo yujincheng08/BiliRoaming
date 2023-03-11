@@ -3,10 +3,12 @@ package me.iacn.biliroaming.hook
 import android.graphics.Bitmap
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
 import me.iacn.biliroaming.BuildConfig
+import me.iacn.biliroaming.XposedInit.Companion.moduleRes
 import me.iacn.biliroaming.utils.*
-import java.io.BufferedReader
-import java.io.InputStreamReader
 
 
 class WebViewHook(classLoader: ClassLoader) : BaseHook(classLoader) {
@@ -27,32 +29,26 @@ class WebViewHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     private val jsHooker = object : Any() {
+        @Suppress("UNUSED")
         @JavascriptInterface
         fun hook(url: String, text: String): String {
             return this@WebViewHook.hook(url, text)
         }
 
+        @Suppress("UNUSED")
         @JavascriptInterface
         fun saveImage(url: String) {
-            // TODO
+            MainScope().launch(Dispatchers.IO) {
+                CommentImageHook.saveImage(url)
+            }
         }
     }
 
     private val js by lazy {
-        val sb = StringBuilder()
-        try {
-            WebViewHook::class.java.classLoader?.getResourceAsStream("assets/xhook.js")
-                .use { `is` ->
-                    val isr = InputStreamReader(`is`)
-                    val br = BufferedReader(isr)
-                    while (true) {
-                        br.readLine()?.also { sb.appendLine(it) } ?: break
-                    }
-                }
-        } catch (e: Exception) {
-        }
-        sb.appendLine()
-        sb.toString()
+        runCatchingOrNull {
+            moduleRes.assets.open("xhook.js")
+                .use { it.bufferedReader().readText() }
+        } ?: ""
     }
 
     override fun startHook() {
@@ -69,10 +65,10 @@ class WebViewHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 ).hookBeforeMethod(hooker)
                 if (sPrefs.getBoolean("save_comment_image", false)) {
                     clazz.getDeclaredMethod("onPageFinished", biliWebviewClass, String::class.java)
-                        .hookBeforeMethod { param ->
-                            val url = param.args[1] as String
+                        .hookBeforeMethod { hookParam ->
+                            val url = hookParam.args[1] as String
                             if (url.startsWith("https://www.bilibili.com/h5/note-app/view")) {
-                                param.args[0].callMethod(
+                                hookParam.args[0].callMethod(
                                     "evaluateJavascript",
                                     """(function(){for(var i=0;i<document.images.length;++i){if(document.images[i].className==='img-preview'){document.images[i].addEventListener("contextmenu",(e)=>{hooker.saveImage(e.target.currentSrc);})}}})()""",
                                     null
@@ -82,8 +78,7 @@ class WebViewHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
                 hookedClient.add(clazz)
                 Log.d("hook webview $clazz")
-
-            } catch (e: NoSuchMethodException) {
+            } catch (_: NoSuchMethodException) {
             }
         }
     }
