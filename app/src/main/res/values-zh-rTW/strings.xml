@@ -92,7 +92,8 @@
     <string name="purify_city_title">移除同城標籤</string>
     <string name="purify_campus_title">移除校園標籤</string>
     <string name="setting">設定</string>
-
+    <string name="block_pcdn_title">移除PCDN支持</string>
+    <string name="block_pcdn_summary">實驗性阻止視頻或者直播使用PCDN加載，但不影響MCDN。可能在舊版無效。</string>
 
 
 
