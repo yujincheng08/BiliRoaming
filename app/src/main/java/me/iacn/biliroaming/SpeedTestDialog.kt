@@ -23,6 +23,7 @@ import me.iacn.biliroaming.network.BiliRoamingApi.getPlayUrl
 import me.iacn.biliroaming.network.BiliRoamingApi.mainlandTestParams
 import me.iacn.biliroaming.network.BiliRoamingApi.overseaTestParams
 import me.iacn.biliroaming.utils.Log
+import me.iacn.biliroaming.utils.runCatchingOrNull
 import me.iacn.biliroaming.utils.sPrefs
 import me.iacn.biliroaming.utils.toJSONObject
 import java.net.URL
@@ -165,7 +166,7 @@ class SpeedTestDialog(private val pref: ListPreference, activity: Activity) :
 
     private fun getTestUrl(): String? {
         val json = try {
-            if (XposedInit.country.get(5L, TimeUnit.SECONDS) == "cn") getPlayUrl(
+            if (runCatchingOrNull { XposedInit.country.get(5L, TimeUnit.SECONDS) } == "cn") getPlayUrl(
                 overseaTestParams,
                 arrayOf("hk", "tw")
             )

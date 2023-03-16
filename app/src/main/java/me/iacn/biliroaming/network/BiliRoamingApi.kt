@@ -423,7 +423,7 @@ object BiliRoamingApi {
         listOf(
             (sPrefs.getString("upos_host", null)
                 ?: XposedInit.moduleRes.getString(R.string.cos_host)) to ""
-        ) + if (runCatching { XposedInit.country.get(5L, TimeUnit.SECONDS) }.getOrNull() == "cn") {
+        ) + if (runCatchingOrNull { XposedInit.country.get(5L, TimeUnit.SECONDS) } == "cn") {
             val uri = Uri.Builder()
                 .scheme("https")
                 .encodedAuthority("api.bilibili.com/pgc/player/api/playurl")
@@ -511,8 +511,7 @@ object BiliRoamingApi {
             linkedMapOf("tw" to twUrl, "hk" to hkUrl, "th" to thUrl, "cn" to cnUrl).filterKeys {
                 if (!sPrefs.getString("${it}_server_accessKey", null).isNullOrEmpty())
                     return@filterKeys true
-                it != (runCatching { XposedInit.country.get(5L, TimeUnit.SECONDS) }.getOrNull()
-                    ?: true)
+                it != (runCatchingOrNull { XposedInit.country.get(5L, TimeUnit.SECONDS) } ?: true)
             }.filterValues {
                 it != null
             }.mapValuesTo(hostList) {
