@@ -423,7 +423,7 @@ object BiliRoamingApi {
         listOf(
             (sPrefs.getString("upos_host", null)
                 ?: XposedInit.moduleRes.getString(R.string.cos_host)) to ""
-        ) + if (XposedInit.country.get(5L, TimeUnit.SECONDS) == "cn") {
+        ) + if (runCatching { XposedInit.country.get(5L, TimeUnit.SECONDS) }.getOrNull() == "cn") {
             val uri = Uri.Builder()
                 .scheme("https")
                 .encodedAuthority("api.bilibili.com/pgc/player/api/playurl")
