@@ -4,6 +4,7 @@ import android.content.ContentValues
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
+import android.view.View
 import android.widget.ImageView
 import de.robv.android.xposed.XC_MethodHook
 import kotlinx.coroutines.Dispatchers
@@ -96,5 +97,21 @@ class CommentImageHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             it.name == instance.load() && it.parameterTypes.size == 6
                     || it.name == instance.richLoad() && it.parameterTypes.size == 3
         }?.forEach { it.hookAfterMethod(hooker) }
+        instance.cardGridViewBinderClass?.declaredMethods?.find { it.name == instance.bind() }
+            ?.hookAfterMethod { param ->
+                val view = param.args[0]?.getFirstFieldByExactTypeOrNull<View>()
+                    ?: return@hookAfterMethod
+                val imageInfo = view.javaClass.declaredFields.find {
+                    it.type.isInterface && it.type.declaredMethods.size >= 10
+                }?.also { it.isAccessible = true }?.get(view) ?: return@hookAfterMethod
+                val imageUrl = imageInfo.getFirstFieldByExactTypeOrNull<String>()
+                    ?: return@hookAfterMethod
+                view.setOnLongClickListener {
+                    MainScope().launch(Dispatchers.IO) {
+                        saveImage(imageUrl)
+                    }
+                    true
+                }
+            }
     }
 }

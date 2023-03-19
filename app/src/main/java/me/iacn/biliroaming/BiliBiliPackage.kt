@@ -144,6 +144,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val updateInfoSupplierClass by Weak { mHookInfo.updateInfoSupplier.class_ from mClassLoader }
     val latestVersionExceptionClass by Weak { "tv.danmaku.bili.update.internal.exception.LatestVersionException" from mClassLoader }
     val commentImageLoaderClass by Weak { mHookInfo.commentImageLoader.class_ from mClassLoader }
+    val cardGridViewBinderClass by Weak { mHookInfo.cardGridViewBinder.class_ from mClassLoader }
 
     val ids: Map<String, Int> by lazy {
         mHookInfo.mapIds.idsMap
@@ -288,6 +289,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     fun load() = mHookInfo.commentImageLoader.load.orNull
 
     fun richLoad() = mHookInfo.commentImageLoader.richLoad.orNull
+
+    fun bind() = mHookInfo.cardGridViewBinder.bind.orNull
 
     private fun readHookInfo(context: Context): Configs.HookInfo {
         try {
@@ -1873,14 +1876,23 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     dexHelper.decodeMethodIndex(it)
                 } ?: return@commentImageLoader
                 val clazz = loadMethod.declaringClass
-                val richTextClass = "com.bilibili.app.comm.comment2.model.RichTextNote"
-                    .from(classloader) ?: return@commentImageLoader
-                val richLoadMethod = clazz.declaredMethods.find { m ->
-                    m.parameterTypes.let { it.size == 3 && it[1] == List::class.java && it[2] == richTextClass }
-                } ?: return@commentImageLoader
                 class_ = class_ { name = clazz.name }
                 load = method { name = loadMethod.name }
-                richLoad = method { name = richLoadMethod.name }
+                "com.bilibili.app.comm.comment2.model.RichTextNote".from(classloader)?.run {
+                    clazz.declaredMethods.find { m ->
+                        m.parameterTypes.let { it.size == 3 && it[1] == List::class.java && it[2] == this }
+                    }?.let { richLoad = method { name = it.name } }
+                }
+            }
+            cardGridViewBinder = cardGridViewBinder {
+                val clazz = "com.bilibili.bplus.followinglist.widget.draw.PaintingCardGridView"
+                    .from(classloader)?.declaredFields?.find { it.isFinal && it.type.isFinal }?.type
+                    ?.superclass ?: return@cardGridViewBinder
+                val bindMethod = clazz.declaredMethods.find {
+                    it.isFinal && it.returnType == Void.TYPE
+                } ?: return@cardGridViewBinder
+                class_ = class_ { name = clazz.name }
+                bind = method { name = bindMethod.name }
             }
 
             dexHelper.close()

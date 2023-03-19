@@ -235,6 +235,11 @@ message CommentImageLoader {
   optional Method rich_load = 3;
 }
 
+message CardGridViewBinder {
+  optional Class class = 1;
+  optional Method bind = 2;
+}
+
 message HookInfo {
   int64 last_update_time = 1;
   optional MapIds map_ids = 2;
@@ -287,4 +292,5 @@ message HookInfo {
   optional BiliConfig bili_config = 77;
   optional UpdateInfoSupplier update_info_supplier = 78;
   optional CommentImageLoader comment_image_loader = 79;
+  optional CardGridViewBinder card_grid_view_binder = 80;
 }
