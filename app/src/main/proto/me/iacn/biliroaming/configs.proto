@@ -238,6 +238,7 @@ message CommentImageLoader {
 message CardGridViewBinder {
   optional Class class = 1;
   optional Method bind = 2;
+  optional Field data_interfaces = 3;
 }
 
 message HookInfo {

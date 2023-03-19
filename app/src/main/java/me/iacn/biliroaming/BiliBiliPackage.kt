@@ -292,6 +292,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     fun bind() = mHookInfo.cardGridViewBinder.bind.orNull
 
+    fun dataInterfacesField() = mHookInfo.cardGridViewBinder.dataInterfaces.orNull
+
     private fun readHookInfo(context: Context): Configs.HookInfo {
         try {
             val hookInfoFile = File(context.cacheDir, Constant.HOOK_INFO_FILE_NAME)
@@ -1887,12 +1889,15 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             cardGridViewBinder = cardGridViewBinder {
                 val clazz = "com.bilibili.bplus.followinglist.widget.draw.PaintingCardGridView"
                     .from(classloader)?.declaredFields?.find { it.isFinal && it.type.isFinal }?.type
-                    ?.superclass ?: return@cardGridViewBinder
-                val bindMethod = clazz.declaredMethods.find {
-                    it.isFinal && it.returnType == Void.TYPE
+                    ?: return@cardGridViewBinder
+                val bindMethod = clazz.superclass.declaredMethods.find {
+                    it.isAbstract && it.returnType == Void.TYPE
                 } ?: return@cardGridViewBinder
+                val dataInterfacesField = clazz.findFirstFieldByExactTypeOrNull(List::class.java)
+                    ?: return@cardGridViewBinder
                 class_ = class_ { name = clazz.name }
                 bind = method { name = bindMethod.name }
+                dataInterfaces = field { name = dataInterfacesField.name }
             }
 
             dexHelper.close()

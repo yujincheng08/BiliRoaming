@@ -99,14 +99,12 @@ class CommentImageHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }?.forEach { it.hookAfterMethod(hooker) }
         instance.cardGridViewBinderClass?.declaredMethods?.find { it.name == instance.bind() }
             ?.hookAfterMethod { param ->
-                val view = param.args[0]?.getFirstFieldByExactTypeOrNull<View>()
+                val pos = param.args[1] as Int
+                val imageUrl = param.thisObject
+                    .getObjectFieldOrNullAs<List<Any>?>(instance.dataInterfacesField())
+                    ?.getOrNull(pos)?.getFirstFieldByExactTypeOrNull<String>()
                     ?: return@hookAfterMethod
-                val imageInfo = view.javaClass.declaredFields.find {
-                    it.type.isInterface && it.type.declaredMethods.size >= 10
-                }?.also { it.isAccessible = true }?.get(view) ?: return@hookAfterMethod
-                val imageUrl = imageInfo.getFirstFieldByExactTypeOrNull<String>()
-                    ?: return@hookAfterMethod
-                view.setOnLongClickListener {
+                param.args[0]?.getFirstFieldByExactTypeOrNull<View>()?.setOnLongClickListener {
                     MainScope().launch(Dispatchers.IO) {
                         saveImage(imageUrl)
                     }
