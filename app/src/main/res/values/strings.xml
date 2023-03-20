@@ -269,4 +269,7 @@
     <string name="remove_vip_section_summary">我的页面将大会员横幅移除</string>
     <string name="save_comment_image_title">笔记图片长按保存</string>
     <string name="save_comment_image_summary">视频笔记图片长按保存到本地</string>
+
+    <string name="danmaku_filter_summary">弹幕屏蔽优化</string>
+    <string name="danmaku_filter_title">增强弹幕屏蔽功能</string>
 </resources>
