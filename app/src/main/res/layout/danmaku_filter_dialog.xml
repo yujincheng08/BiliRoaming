@@ -14,7 +14,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_columnWeight="4"
-        android:text="弹幕云屏蔽等级"
+        android:text="弹幕云屏蔽"
         tools:ignore="HardcodedText" />
 
     <Switch
@@ -44,6 +44,4 @@
         android:inputType="numberDecimal"
         android:tag="danmaku_filter_weight_value"
         tools:ignore="HardcodedText" />
-
-
 </GridLayout>

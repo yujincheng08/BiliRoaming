@@ -5,7 +5,6 @@ import me.iacn.biliroaming.utils.*
 
 class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
-    val MossException = "com.bilibili.lib.moss.api.MossException".findClass(mClassLoader)
 
     override fun startHook() {
         if (!sPrefs.getBoolean("danmaku_filter", false)) {
@@ -24,31 +23,19 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 "com.bapis.bilibili.community.service.dm.v1.DmSegMobileReq",
                 "com.bilibili.lib.moss.api.MossResponseHandler"
             ) { methodHookParam ->
-                try {
-                    methodHookParam.thisObject.callMethod(
-                        "dmSegMobile", methodHookParam.args[0]
-                    )
-                } catch (e: Throwable) {
-                    methodHookParam.args[1].callMethod(
-                        "onError", MossException.getStaticObjectField("UNSUPPORTED")
-                    )
-                    null
-                }?.let { dmSegMobileReply ->
-                    methodHookParam.args[1].callMethod("onNext", dmSegMobileReply)
-                }
+                methodHookParam.thisObject.callMethod(
+                    "dmSegMobile", methodHookParam.args[0]
+                )
+                    ?.let { dmSegMobileReply ->
+                        methodHookParam.args[1].callMethod("onNext", dmSegMobileReply)
+                    }
                 methodHookParam.result = null
             }
             it.hookAfterMethod(
                 "dmSegMobile", "com.bapis.bilibili.community.service.dm.v1.DmSegMobileReq"
             ) { methodHookParam ->
-                Log.d("DanmakuHook: call " + methodHookParam.method.name)
-                try {
-                    filterDanmaku(methodHookParam.result)
-                } catch (e: Throwable) {
-                    println(e)
-                    methodHookParam.throwable =
-                        MossException.getStaticObjectField("UNSUPPORTED") as Throwable?
-                }
+                Log.d("DanmakuHook: call ${methodHookParam.method.name}")
+                filterDanmaku(methodHookParam.result)
             }
         }
     }
@@ -60,11 +47,11 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 "danmaku_filter_weight_switch", false
             )
         ) sPrefs.getString("danmaku_filter_weight_value", "0")?.toInt() else null
-        Log.d("DanmakuHook: weightThreshold" + weightThreshold)
+        Log.d("DanmakuHook: weightThreshold: $weightThreshold")
         for (danmakuElem in (dmSegmentMobileReply.getObjectField("elems_") as List<*>)) {
             if (danmakuElem != null) {
                 if (weightThreshold != null) {
-                    val weight = danmakuElem.callMethod("getWeight") as Int
+                    val weight = danmakuElem.callMethodAs<Int>("getWeight")
                     if (weight < weightThreshold) continue
                 }
                 resultDanmakuList.add(danmakuElem)
