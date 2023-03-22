@@ -8,6 +8,7 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val purifyCity = sPrefs.getBoolean("purify_city", false)
         val removeRelatePromote = sPrefs.getBoolean("remove_video_relate_promote", false)
         val removeRelateOnlyAv = sPrefs.getBoolean("remove_video_relate_only_av", false)
+        val removeUgcSeason = sPrefs.getBoolean("remove_video_UgcSeason", false)
         val removeRelateNothing = sPrefs.getBoolean("remove_video_relate_nothing", false)
         val removeCmdDms = sPrefs.getBoolean("remove_video_cmd_dms", false)
         val purifySearch = sPrefs.getBoolean("purify_search", false)
@@ -44,7 +45,11 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             val like = param.result.callMethod("getReqUser")
                 ?.callMethodAs("getLike") ?: -1
             AutoLikeHook.detail = aid to like
-            if (hidden && removeRelatePromote && removeRelateOnlyAv && removeRelateNothing) {
+            if (hidden && removeRelatePromote && removeRelateOnlyAv && removeUgcSeason) {
+                param.result.callMethod("clearUgcSeason")
+                return@hookAfterMethod
+            }
+            if (hidden && removeRelatePromote && removeRelateOnlyAv && removeUgcSeason && removeRelateNothing) {
                 param.result.callMethod("clearRelates")
                 return@hookAfterMethod
             }
