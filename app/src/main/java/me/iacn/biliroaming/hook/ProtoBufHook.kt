@@ -45,11 +45,10 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             val like = param.result.callMethod("getReqUser")
                 ?.callMethodAs("getLike") ?: -1
             AutoLikeHook.detail = aid to like
-            if (hidden && removeRelatePromote && removeRelateOnlyAv && removeUgcSeason) {
+            if (hidden && removeUgcSeason) {
                 param.result.callMethod("clearUgcSeason")
-                return@hookAfterMethod
             }
-            if (hidden && removeRelatePromote && removeRelateOnlyAv && removeUgcSeason && removeRelateNothing) {
+            if (hidden && removeRelatePromote && removeRelateOnlyAv && removeRelateNothing) {
                 param.result.callMethod("clearRelates")
                 return@hookAfterMethod
             }
