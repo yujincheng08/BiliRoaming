@@ -82,7 +82,10 @@ class HomeFilterDialog(val activity: Activity, prefs: SharedPreferences) :
             string(R.string.keyword_group_name_uid),
             inputType = EditorInfo.TYPE_CLASS_NUMBER
         ).first
-        val upGroup = root.addKeywordGroup(string(R.string.keyword_group_name_up)).first
+        val (upGroup, upRegexModeSwitch) = root.addKeywordGroup(
+            string(R.string.keyword_group_name_up), true
+        )
+        upRegexModeSwitch.isChecked = prefs.getBoolean("home_filter_up_regex_mode", false)
         val categoryGroup = root.addKeywordGroup(string(R.string.keyword_group_name_category)).first
         val channelGroup = root.addKeywordGroup(string(R.string.keyword_group_name_channel)).first
         prefs.getStringSet("home_filter_keywords_title", null)?.forEach {
@@ -131,6 +134,12 @@ class HomeFilterDialog(val activity: Activity, prefs: SharedPreferences) :
                 Log.toast(string(R.string.invalid_regex), force = true)
                 return@setPositiveButton
             }
+            val ups = getKeywords(upGroup)
+            val upRegexMode = upRegexModeSwitch.isChecked
+            if (upRegexMode && ups.runCatching { forEach { it.toRegex() } }.isFailure) {
+                Log.toast(string(R.string.invalid_regex), force = true)
+                return@setPositiveButton
+            }
 
             prefs.edit().apply {
                 putLong("hide_low_play_count_recommend_limit", lowPlayCount)
@@ -139,11 +148,12 @@ class HomeFilterDialog(val activity: Activity, prefs: SharedPreferences) :
                 putStringSet("home_filter_keywords_title", titles)
                 putStringSet("home_filter_keywords_reason", reasons)
                 putStringSet("home_filter_keywords_uid", getKeywords(uidGroup))
-                putStringSet("home_filter_keywords_up", getKeywords(upGroup))
+                putStringSet("home_filter_keywords_up", ups)
                 putStringSet("home_filter_keywords_category", getKeywords(categoryGroup))
                 putStringSet("home_filter_keywords_channel", getKeywords(channelGroup))
                 putBoolean("home_filter_title_regex_mode", titleRegexMode)
                 putBoolean("home_filter_reason_regex_mode", reasonRegexMode)
+                putBoolean("home_filter_up_regex_mode", upRegexMode)
             }.apply()
 
             Log.toast(string(R.string.prefs_save_success_and_reboot))
