@@ -48,13 +48,15 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             )
         ) sPrefs.getString("danmaku_filter_weight_value", "0")?.toInt() else null
         Log.d("DanmakuHook: weightThreshold: $weightThreshold")
-        for (danmakuElem in (dmSegmentMobileReply.getObjectField("elems_") as List<*>)) {
-            if (danmakuElem != null) {
-                if (weightThreshold != null) {
-                    val weight = danmakuElem.callMethodAs<Int>("getWeight")
-                    if (weight < weightThreshold) continue
+        dmSegmentMobileReply.getObjectFieldOrNullAs<List<*>>("elems_").orEmpty().let { elems->
+            for (danmakuElem in elems) {
+                if (danmakuElem != null) {
+                    if (weightThreshold != null) {
+                        val weight = danmakuElem.callMethodAs<Int>("getWeight")
+                        if (weight < weightThreshold) continue
+                    }
+                    resultDanmakuList.add(danmakuElem)
                 }
-                resultDanmakuList.add(danmakuElem)
             }
         }
         Log.d("DanmakuHook: before= " + dmSegmentMobileReply.callMethod("getElemsCount") + " ;after=" + resultDanmakuList.size)
