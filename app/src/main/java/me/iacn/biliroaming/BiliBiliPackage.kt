@@ -58,7 +58,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val themeListClickClass by Weak { mHookInfo.themeListClick from mClassLoader }
     val shareWrapperClass by Weak { mHookInfo.shareWrapper.class_ from mClassLoader }
     val themeNameClass by Weak { mHookInfo.themeName.class_ from mClassLoader }
-    val liveNetworkTypeClass by Weak { mHookInfo.liveNetworkType.class_ from mClassLoader }
     val themeProcessorClass by Weak { mHookInfo.themeProcessor.class_ from mClassLoader }
     val drawerClass by Weak { mHookInfo.drawer.class_ from mClassLoader }
     val generalResponseClass by Weak { mHookInfo.generalResponse from mClassLoader }
@@ -145,6 +144,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val updateInfoSupplierClass by Weak { mHookInfo.updateInfoSupplier.class_ from mClassLoader }
     val latestVersionExceptionClass by Weak { "tv.danmaku.bili.update.internal.exception.LatestVersionException" from mClassLoader }
     val commentImageLoaderClass by Weak { mHookInfo.commentImageLoader.class_ from mClassLoader }
+    val cardGridViewBinderClass by Weak { mHookInfo.cardGridViewBinder.class_ from mClassLoader }
+    val liveNetworkTypeClass by Weak { mHookInfo.liveNetworkType.class_ from mClassLoader }
 
     val ids: Map<String, Int> by lazy {
         mHookInfo.mapIds.idsMap
@@ -196,8 +197,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     fun likeMethod() = mHookInfo.section.like.orNull
 
     fun themeName() = mHookInfo.themeName.field.orNull
-
-    fun liveNetworkType() = mHookInfo.liveNetworkType.method.orNull
 
     fun shareWrapper() = mHookInfo.shareWrapper.method.orNull
 
@@ -291,6 +290,12 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     fun load() = mHookInfo.commentImageLoader.load.orNull
 
     fun richLoad() = mHookInfo.commentImageLoader.richLoad.orNull
+
+    fun bind() = mHookInfo.cardGridViewBinder.bind.orNull
+
+    fun dataInterfacesField() = mHookInfo.cardGridViewBinder.dataInterfaces.orNull
+
+    fun liveNetworkType() = mHookInfo.liveNetworkType.method.orNull
 
     private fun readHookInfo(context: Context): Configs.HookInfo {
         try {
@@ -1876,14 +1881,26 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     dexHelper.decodeMethodIndex(it)
                 } ?: return@commentImageLoader
                 val clazz = loadMethod.declaringClass
-                val richTextClass = "com.bilibili.app.comm.comment2.model.RichTextNote"
-                    .from(classloader) ?: return@commentImageLoader
-                val richLoadMethod = clazz.declaredMethods.find { m ->
-                    m.parameterTypes.let { it.size == 3 && it[1] == List::class.java && it[2] == richTextClass }
-                } ?: return@commentImageLoader
                 class_ = class_ { name = clazz.name }
                 load = method { name = loadMethod.name }
-                richLoad = method { name = richLoadMethod.name }
+                "com.bilibili.app.comm.comment2.model.RichTextNote".from(classloader)?.run {
+                    clazz.declaredMethods.find { m ->
+                        m.parameterTypes.let { it.size == 3 && it[1] == List::class.java && it[2] == this }
+                    }?.let { richLoad = method { name = it.name } }
+                }
+            }
+            cardGridViewBinder = cardGridViewBinder {
+                val clazz = "com.bilibili.bplus.followinglist.widget.draw.PaintingCardGridView"
+                    .from(classloader)?.declaredFields?.find { it.isFinal && it.type.isFinal }?.type
+                    ?: return@cardGridViewBinder
+                val bindMethod = clazz.superclass.declaredMethods.find {
+                    it.isAbstract && it.returnType == Void.TYPE
+                } ?: return@cardGridViewBinder
+                val dataInterfacesField = clazz.findFirstFieldByExactTypeOrNull(List::class.java)
+                    ?: return@cardGridViewBinder
+                class_ = class_ { name = clazz.name }
+                bind = method { name = bindMethod.name }
+                dataInterfaces = field { name = dataInterfacesField.name }
             }
             liveNetworkType = liveNetworkType {
                 val liveNetworkTypeToIndex = dexHelper.findMethodUsingString(

@@ -8,6 +8,7 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val purifyCity = sPrefs.getBoolean("purify_city", false)
         val removeRelatePromote = sPrefs.getBoolean("remove_video_relate_promote", false)
         val removeRelateOnlyAv = sPrefs.getBoolean("remove_video_relate_only_av", false)
+        val removeUgcSeason = sPrefs.getBoolean("remove_video_UgcSeason", false)
         val removeRelateNothing = sPrefs.getBoolean("remove_video_relate_nothing", false)
         val removeCmdDms = sPrefs.getBoolean("remove_video_cmd_dms", false)
         val purifySearch = sPrefs.getBoolean("purify_search", false)
@@ -44,6 +45,9 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             val like = param.result.callMethod("getReqUser")
                 ?.callMethodAs("getLike") ?: -1
             AutoLikeHook.detail = aid to like
+            if (hidden && removeUgcSeason) {
+                param.result.callMethod("clearUgcSeason")
+            }
             if (hidden && removeRelatePromote && removeRelateOnlyAv && removeRelateNothing) {
                 param.result.callMethod("clearRelates")
                 return@hookAfterMethod
@@ -73,6 +77,18 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 param.result?.callMethod("getVideoGuide")?.run {
                     callMethod("clearAttention")
                     callMethod("clearCommandDms")
+                    callMethod("clearContractCard")
+                }
+            }
+            "com.bapis.bilibili.app.viewunite.v1.ViewMoss".from(mClassLoader)?.hookAfterMethod(
+                "viewProgress",
+                "com.bapis.bilibili.app.viewunite.v1.ViewProgressReq"
+            ) { param ->
+                param.result?.callMethod("getDm")?.run {
+                    callMethod("clearAttention")
+                    callMethod("clearCommandDms")
+                }
+                param.result?.callMethod("getVideoGuide")?.run {
                     callMethod("clearContractCard")
                 }
             }

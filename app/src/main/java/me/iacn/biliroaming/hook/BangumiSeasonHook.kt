@@ -475,9 +475,9 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val navList = v.callMethodAs<List<Any>>("getNavList")
             .map { SearchNav.parseFrom(it.callMethodAs<ByteArray>("toByteArray")) }
             .toMutableList()
-        val currentArea = runCatching {
+        val currentArea = runCatchingOrNull {
             XposedInit.country.get(5L, TimeUnit.SECONDS)
-        }.getOrNull()
+        }
         for (area in AREA_TYPES) {
             if (area.value.area == currentArea)
                 continue
@@ -735,9 +735,9 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 false
             ) || sPrefs.getBoolean("search_area_movie", false))
         ) {
-            val currentArea = runCatching {
+            val currentArea = runCatchingOrNull {
                 XposedInit.country.get(5L, TimeUnit.SECONDS)
-            }.getOrNull()
+            }
             for (area in AREA_TYPES) {
                 if (area.value.area == currentArea)
                     continue

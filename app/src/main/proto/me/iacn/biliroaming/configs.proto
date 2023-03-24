@@ -235,6 +235,12 @@ message CommentImageLoader {
   optional Method rich_load = 3;
 }
 
+message CardGridViewBinder {
+  optional Class class = 1;
+  optional Method bind = 2;
+  optional Field data_interfaces = 3;
+}
+
 message LiveNetworkType {
   optional Class class = 1;
   optional Method method = 2;
@@ -292,5 +298,6 @@ message HookInfo {
   optional BiliConfig bili_config = 77;
   optional UpdateInfoSupplier update_info_supplier = 78;
   optional CommentImageLoader comment_image_loader = 79;
-  optional LiveNetworkType live_network_type = 80;
+  optional CardGridViewBinder card_grid_view_binder = 80;
+  optional LiveNetworkType live_network_type = 81;
 }
