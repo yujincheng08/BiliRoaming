@@ -46,9 +46,9 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val weightThreshold = if (sPrefs.getBoolean(
                 "danmaku_filter_weight_switch", false
             )
-        ) sPrefs.getString("danmaku_filter_weight_value", "0")?.toInt() else null
+        ) sPrefs.getInt("danmaku_filter_weight_value", 0) else null
         Log.d("DanmakuHook: weightThreshold: $weightThreshold")
-        dmSegmentMobileReply.getObjectFieldOrNullAs<List<*>>("elems_").orEmpty().let { elems->
+        dmSegmentMobileReply.getObjectFieldOrNullAs<List<*>>("elems_").orEmpty().let { elems ->
             for (danmakuElem in elems) {
                 if (danmakuElem != null) {
                     if (weightThreshold != null) {

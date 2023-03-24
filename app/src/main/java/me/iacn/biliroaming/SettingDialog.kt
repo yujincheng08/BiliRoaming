@@ -423,12 +423,19 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
 
                 setPositiveButton(android.R.string.ok) { _, _ ->
                     editTexts.forEach {
-                        val host = it.text.toString()
-                        if (host.isNotEmpty())
-                            prefs.edit().putString(
-                                it.tag.toString(),
-                                host
-                            ).apply()
+                        val text = it.text.toString()
+                        if (text.isNotEmpty())
+                            if(it.inputType==android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL){
+                                prefs.edit().putInt(
+                                    it.tag.toString(),
+                                    text.toInt()
+                                ).apply()
+                            }else{
+                                prefs.edit().putString(
+                                    it.tag.toString(),
+                                    text
+                                ).apply()
+                            }
                         else
                             prefs.edit().remove(it.tag.toString()).apply()
                     }
