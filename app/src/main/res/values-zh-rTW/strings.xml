@@ -92,7 +92,10 @@
     <string name="purify_city_title">移除同城標籤</string>
     <string name="purify_campus_title">移除校園標籤</string>
     <string name="setting">設定</string>
-
+    <string name="block_pcdn_title">阻止影片使用 PCDN 載入</string>
+    <string name="block_pcdn_summary">啟用此選項可能會稍微改善影片載入速度。在純 IPv6 網路環境或透過代理伺服器連線的情況下，建議啟用。不影響 MCDN。可能在舊版無效。</string>
+    <string name="block_pcdn_live_title">阻止直播 P2P 上傳。</string>
+    <string name="block_pcdn_live_summary">觀看熱門直播時，啟用此選項可停用P2P Peer功能，避免使用大量上傳頻寬，但在舊版可能無效。</string>
 
 
 

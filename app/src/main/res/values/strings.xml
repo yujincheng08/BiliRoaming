@@ -271,4 +271,8 @@
     <string name="remove_vip_section_summary">我的页面将大会员横幅移除</string>
     <string name="save_comment_image_title">笔记图片长按保存</string>
     <string name="save_comment_image_summary">视频笔记图片长按保存到本地</string>
+    <string name="block_pcdn_title">阻止视频通过 PCDN 加载</string>
+    <string name="block_pcdn_summary">可能一定程度上优化视频加载速度。纯 IPv6 网络环境，或通过代理访问网络，推荐启用此项。不影响 MCDN。可能在旧版无效。</string>
+    <string name="block_pcdn_live_title">阻止直播 P2P 上传</string>
+    <string name="block_pcdn_live_summary">阻止观看热门直播时被当作 P2P Peer，而占用大量上传带宽。可能在旧版无效。</string>
 </resources>
