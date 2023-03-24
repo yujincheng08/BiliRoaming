@@ -8,10 +8,13 @@ import me.iacn.biliroaming.utils.*
 class P2pHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
         Log.d("startHook: P2P")
-        val blockPcdn = sPrefs.getBoolean("block_pcdn", true)
+        val blockPcdn = sPrefs.getBoolean("block_pcdn", false)
+        val blockPcdnLive = sPrefs.getBoolean("block_pcdn_live", false)
         if (blockPcdn) {
-            // general player
             "tv.danmaku.ijk.media.player.P2P".from(mClassLoader)?.run {
+                replaceMethod("resolveP2PServerUrls", Bundle::class.java) {
+                    Log.d("block pcdn -> tv.danmaku.ijk.media.player.P2P#resolveP2PServerUrls")
+                }
                 replaceMethod("isNeedCreateClient") { 
                     Log.d("block pcdn -> tv.danmaku.ijk.media.player.P2P#isNeedCreateClient")
                     false
@@ -20,15 +23,13 @@ class P2pHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     Log.d("block pcdn -> tv.danmaku.ijk.media.player.P2P#getHttpServerPort")
                     -1
                 }
-                replaceMethod("resolveP2PServerUrls", Bundle::class.java) {
-                    Log.d("block pcdn -> tv.danmaku.ijk.media.player.P2P#resolveP2PServerUrls")
-                }
                 replaceMethod("isServerEffective", List::class.java, List::class.java) {
                     Log.d("block pcdn -> tv.danmaku.ijk.media.player.P2P#isServerEffective")
                     false
                 }
             }
-            // live related
+        }
+        if (blockPcdnLive) {
             "com.bilibili.sistersplayer.p2p.P2PContext".from(mClassLoader)?.run {
                 replaceMethod("setConfiguration", String::class.java) {
                     Log.d("block pcdn -> com.bilibili.sistersplayer.p2p.P2PContext#setConfiguration")

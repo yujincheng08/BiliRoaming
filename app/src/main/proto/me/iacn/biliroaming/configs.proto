@@ -235,6 +235,10 @@ message CommentImageLoader {
   optional Method rich_load = 3;
 }
 
+message LiveNetworkType {
+  optional Class class = 1;
+  optional Method method = 2;
+}
 
 message HookInfo {
   int64 last_update_time = 1;
