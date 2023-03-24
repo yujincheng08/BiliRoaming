@@ -58,6 +58,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val themeListClickClass by Weak { mHookInfo.themeListClick from mClassLoader }
     val shareWrapperClass by Weak { mHookInfo.shareWrapper.class_ from mClassLoader }
     val themeNameClass by Weak { mHookInfo.themeName.class_ from mClassLoader }
+    val liveNetworkTypeClass by Weak { mHookInfo.liveNetworkType.class_ from mClassLoader }
     val themeProcessorClass by Weak { mHookInfo.themeProcessor.class_ from mClassLoader }
     val drawerClass by Weak { mHookInfo.drawer.class_ from mClassLoader }
     val generalResponseClass by Weak { mHookInfo.generalResponse from mClassLoader }
@@ -195,6 +196,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     fun likeMethod() = mHookInfo.section.like.orNull
 
     fun themeName() = mHookInfo.themeName.field.orNull
+
+    fun liveNetworkType() = mHookInfo.liveNetworkType.method.orNull
 
     fun shareWrapper() = mHookInfo.shareWrapper.method.orNull
 
@@ -1881,6 +1884,40 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 class_ = class_ { name = clazz.name }
                 load = method { name = loadMethod.name }
                 richLoad = method { name = richLoadMethod.name }
+            }
+            liveNetworkType = liveNetworkType {
+                val liveNetworkTypeToIndex = dexHelper.findMethodUsingString(
+                    "getNetworkConnectivity=",
+                    false,
+                    -1,
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).firstOrNull() ?: return@liveNetworkType
+                val liveNetworkTypeHelperClass =
+                    dexHelper.decodeMethodIndex(liveNetworkTypeToIndex)?.declaringClass ?: return@liveNetworkType
+                class_ = class_ { name = liveNetworkTypeHelperClass.name }
+                val liveNetworkTypeHelperIndex = dexHelper.encodeClassIndex(liveNetworkTypeHelperClass)
+                val stringIndex = dexHelper.encodeClassIndex(String::class.java)
+                val liveNetworkTypeMethod = dexHelper.findMethodUsingString(
+                    "getNetworkConnectivity=",
+                    false,
+                    stringIndex,
+                    0,
+                    null,
+                    liveNetworkTypeHelperIndex,
+                    null,
+                    null,
+                    null,
+                    true
+                ).asSequence().firstNotNullOfOrNull {
+                    dexHelper.decodeMethodIndex(it)
+                } ?: return@liveNetworkType
+                method = method { name = liveNetworkTypeMethod.name }
             }
 
             dexHelper.close()

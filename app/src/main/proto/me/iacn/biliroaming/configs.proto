@@ -235,6 +235,7 @@ message CommentImageLoader {
   optional Method rich_load = 3;
 }
 
+
 message HookInfo {
   int64 last_update_time = 1;
   optional MapIds map_ids = 2;
@@ -287,4 +288,5 @@ message HookInfo {
   optional BiliConfig bili_config = 77;
   optional UpdateInfoSupplier update_info_supplier = 78;
   optional CommentImageLoader comment_image_loader = 79;
+  optional LiveNetworkType live_network_type = 80;
 }
