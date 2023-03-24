@@ -1903,30 +1903,13 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 dataInterfaces = field { name = dataInterfacesField.name }
             }
             liveNetworkType = liveNetworkType {
-                val liveNetworkTypeToIndex = dexHelper.findMethodUsingString(
-                    "getNetworkConnectivity=",
-                    false,
-                    -1,
-                    -1,
-                    null,
-                    -1,
-                    null,
-                    null,
-                    null,
-                    true
-                ).firstOrNull() ?: return@liveNetworkType
-                val liveNetworkTypeHelperClass =
-                    dexHelper.decodeMethodIndex(liveNetworkTypeToIndex)?.declaringClass ?: return@liveNetworkType
-                class_ = class_ { name = liveNetworkTypeHelperClass.name }
-                val liveNetworkTypeHelperIndex = dexHelper.encodeClassIndex(liveNetworkTypeHelperClass)
-                val stringIndex = dexHelper.encodeClassIndex(String::class.java)
                 val liveNetworkTypeMethod = dexHelper.findMethodUsingString(
                     "getNetworkConnectivity=",
                     false,
-                    stringIndex,
-                    0,
+                    -1,
+                    -1,
                     null,
-                    liveNetworkTypeHelperIndex,
+                    -1,
                     null,
                     null,
                     null,
@@ -1934,6 +1917,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 ).asSequence().firstNotNullOfOrNull {
                     dexHelper.decodeMethodIndex(it)
                 } ?: return@liveNetworkType
+                val liveNetworkTypeHelperClass =
+                    liveNetworkTypeMethod?.declaringClass ?: return@liveNetworkType
+                class_ = class_ { name = liveNetworkTypeHelperClass.name }
                 method = method { name = liveNetworkTypeMethod.name }
             }
 
