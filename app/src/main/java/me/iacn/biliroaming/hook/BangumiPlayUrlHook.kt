@@ -318,9 +318,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 val supplement = response.callMethod("getSupplement")
                     ?.callMethod("getValue")?.callMethodAs<ByteArray>("toByteArray")
                     ?.let { PlayViewReply.parseFrom(it) }
-                if (param.result == null || supplement == null
-                    || needProxy(supplement, unite = true)
-                ) {
+                if (param.result == null || supplement == null || needProxyUnite(supplement)) {
                     try {
                         val serializedRequest = request.callMethodAs<ByteArray>("toByteArray")
                         val req = PlayViewUniteReq.parseFrom(serializedRequest)
@@ -359,8 +357,8 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
     }
 
-    private fun needProxy(response: Any, unite: Boolean = false): Boolean {
-        if (!unite && !response.callMethodAs<Boolean>("hasVideoInfo")) return true
+    private fun needProxy(response: Any): Boolean {
+        if (!response.callMethodAs<Boolean>("hasVideoInfo")) return true
 
         val viewInfo = response.callMethod("getViewInfo")
 
@@ -381,6 +379,18 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         if (viewInfo?.callMethod("getEndPage")?.callMethod("getDialog")
                 ?.callMethodAs<String>("getType")?.let { it != "" } == true
         ) return true
+        return false
+    }
+
+    private fun needProxyUnite(supplement: PlayViewReply): Boolean {
+        val viewInfo = supplement.viewInfo
+        if (viewInfo.dialog.type == "area_limit") return true
+        if (viewInfo.endPage.dialog.type == "area_limit") return true
+
+        sPrefs.getString("cn_server_accessKey", null) ?: return false
+        if (supplement.business.isPreview) return true
+        if (viewInfo.dialog.type.isNotEmpty()) return true
+        if (viewInfo.endPage.dialog.type.isNotEmpty()) return true
         return false
     }
 
