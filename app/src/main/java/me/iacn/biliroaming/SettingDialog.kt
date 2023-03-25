@@ -425,12 +425,12 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     editTexts.forEach {
                         val text = it.text.toString()
                         if (text.isNotEmpty())
-                            if(it.inputType==android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL){
+                            if (it.inputType == android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL) {
                                 prefs.edit().putInt(
                                     it.tag.toString(),
                                     text.toInt()
                                 ).apply()
-                            }else{
+                            } else {
                                 prefs.edit().putString(
                                     it.tag.toString(),
                                     text

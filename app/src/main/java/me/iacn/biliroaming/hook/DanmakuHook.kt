@@ -11,14 +11,13 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             return
         }
         Log.d("StartHook: DanmakuHook")
-        danmakuHook()
+        hookDanmaku()
     }
 
 
-    fun danmakuHook() {
-        "com.bapis.bilibili.community.service.dm.v1.DMMoss".findClass(mClassLoader).let {
-            Log.d("DanmakuHook: hook $it")
-            it.hookBeforeMethod(
+    private fun hookDanmaku() {
+        "com.bapis.bilibili.community.service.dm.v1.DMMoss".findClass(mClassLoader).run {
+            hookBeforeMethod(
                 "dmSegMobile",
                 "com.bapis.bilibili.community.service.dm.v1.DmSegMobileReq",
                 "com.bilibili.lib.moss.api.MossResponseHandler"
@@ -31,35 +30,31 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     }
                 methodHookParam.result = null
             }
-            it.hookAfterMethod(
+            hookAfterMethod(
                 "dmSegMobile", "com.bapis.bilibili.community.service.dm.v1.DmSegMobileReq"
             ) { methodHookParam ->
-                Log.d("DanmakuHook: call ${methodHookParam.method.name}")
                 filterDanmaku(methodHookParam.result)
             }
         }
     }
 
 
-    fun filterDanmaku(dmSegmentMobileReply: Any) {
+    private fun filterDanmaku(dmSegmentMobileReply: Any) {
         val resultDanmakuList = mutableListOf<Any>()
         val weightThreshold = if (sPrefs.getBoolean(
                 "danmaku_filter_weight_switch", false
             )
         ) sPrefs.getInt("danmaku_filter_weight_value", 0) else null
-        Log.d("DanmakuHook: weightThreshold: $weightThreshold")
         dmSegmentMobileReply.getObjectFieldOrNullAs<List<*>>("elems_").orEmpty().let { elems ->
             for (danmakuElem in elems) {
-                if (danmakuElem != null) {
-                    if (weightThreshold != null) {
-                        val weight = danmakuElem.callMethodAs<Int>("getWeight")
-                        if (weight < weightThreshold) continue
-                    }
-                    resultDanmakuList.add(danmakuElem)
+                if (danmakuElem == null || weightThreshold == null) {
+                    continue
                 }
+                val weight = danmakuElem.callMethodAs<Int>("getWeight")
+                if (weight < weightThreshold) continue
+                resultDanmakuList.add(danmakuElem)
             }
         }
-        Log.d("DanmakuHook: before= " + dmSegmentMobileReply.callMethod("getElemsCount") + " ;after=" + resultDanmakuList.size)
         dmSegmentMobileReply.callMethod("clearElems")
         dmSegmentMobileReply.callMethod("addAllElems", resultDanmakuList)
     }
