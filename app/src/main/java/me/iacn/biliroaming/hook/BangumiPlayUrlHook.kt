@@ -1,6 +1,7 @@
 package me.iacn.biliroaming.hook
 
 import android.net.Uri
+import com.google.protobuf.any
 import me.iacn.biliroaming.*
 import me.iacn.biliroaming.API.*
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
@@ -191,15 +192,14 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             Log.toast("获取播放地址失败")
                         }
                     } catch (e: CustomServerException) {
-                        var messages = ""
-                        for (error in e.errors) {
-                            messages += "${error.key}: ${error.value}\n"
+                        val messages = buildString {
+                            for (error in e.errors)
+                                appendLine("${error.key}: ${error.value}")
                         }
-                        param.result =
-                            showPlayerError(
-                                response,
-                                "请求解析中服务器发生错误(点此查看更多)\n${messages.trim()}"
-                            )
+                        param.result = showPlayerError(
+                            response,
+                            "请求解析中服务器发生错误(点此查看更多)\n${messages.trim()}"
+                        )
                         Log.w("请求解析服务器发生错误: ${messages.trim()}")
                         Log.toast("请求解析服务器发生错误: ${messages.trim()}")
                     }
@@ -268,15 +268,14 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         }
                             ?: throw CustomServerException(mapOf("未知错误" to "请检查哔哩漫游设置中解析服务器设置。"))
                     } catch (e: CustomServerException) {
-                        var messages = ""
-                        for (error in e.errors) {
-                            messages += "${error.key}: ${error.value}\n"
+                        val messages = buildString {
+                            for (error in e.errors)
+                                appendLine("${error.key}: ${error.value}")
                         }
-                        param.result =
-                            showPlayerError(
-                                response,
-                                "请求解析中服务器发生错误(点此查看更多)\n${messages.trim()}"
-                            )
+                        param.result = showPlayerError(
+                            response,
+                            "请求解析中服务器发生错误(点此查看更多)\n${messages.trim()}"
+                        )
                         Log.w("请求解析服务器发生错误: ${messages.trim()}")
                         Log.toast("请求解析服务器发生错误: ${messages.trim()}")
                     }
@@ -285,10 +284,83 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
             }
         }
+        "com.bapis.bilibili.app.playerunite.v1.PlayerMoss".from(mClassLoader)?.run {
+            var isDownload = false
+            hookBeforeMethod(
+                "playViewUnite",
+                "com.bapis.bilibili.app.playerunite.v1.PlayViewUniteReq"
+            ) { param ->
+                val request = param.args[0]
+                val vod = request.callMethod("getVod") ?: return@hookBeforeMethod
+                if (sPrefs.getBoolean("allow_download", false)
+                    && vod.callMethodAs<Int>("getDownload") >= 1
+                ) {
+                    if (!sPrefs.getBoolean("fix_download", false)
+                        || vod.callMethodAs<Int>("getFnval") <= 1
+                    ) {
+                        vod.callMethod("setFnval", MAX_FNVAL)
+                        vod.callMethod("setFourk", true)
+                    }
+                    isDownload = true
+                    vod.callMethod("setDownload", 0)
+                }
+            }
+            hookAfterMethod(
+                "playViewUnite",
+                "com.bapis.bilibili.app.playerunite.v1.PlayViewUniteReq"
+            ) { param ->
+                if (instance.networkExceptionClass?.isInstance(param.throwable) == true)
+                    return@hookAfterMethod
+                val request = param.args[0]
+                val response =
+                    param.result ?: "com.bapis.bilibili.app.playerunite.v1.PlayViewUniteReply"
+                        .on(mClassLoader).new()
+                val supplement = response.callMethod("getSupplement")
+                    ?.callMethod("getValue")?.callMethodAs<ByteArray>("toByteArray")
+                    ?.let { PlayViewReply.parseFrom(it) }
+                if (param.result == null || supplement == null
+                    || needProxy(supplement, unite = true)
+                ) {
+                    try {
+                        val serializedRequest = request.callMethodAs<ByteArray>("toByteArray")
+                        val req = PlayViewUniteReq.parseFrom(serializedRequest)
+                        val thaiSeason = lazy {
+                            getSeason(
+                                mapOf("season_id" to req.extraContentMap["season_id"]),
+                                true
+                            )?.toJSONObject()?.optJSONObject("result")
+                        }
+                        val content =
+                            getPlayUrl(reconstructQueryUnite(req, supplement, thaiSeason))
+                        countDownLatch?.countDown()
+                        content?.let {
+                            Log.toast("已从代理服务器获取播放地址\n如加载缓慢或黑屏，可去漫游设置中测速并设置 UPOS")
+                            param.result = reconstructResponseUnite(
+                                response, supplement, it, isDownload, thaiSeason
+                            )
+                        }
+                            ?: throw CustomServerException(mapOf("未知错误" to "请检查哔哩漫游设置中解析服务器设置。"))
+                    } catch (e: CustomServerException) {
+                        val messages = buildString {
+                            for (error in e.errors)
+                                appendLine("${error.key}: ${error.value}")
+                        }
+                        param.result = showPlayerErrorUnite(
+                            response, supplement,
+                            "请求解析中服务器发生错误(点此查看更多)\n${messages.trim()}"
+                        )
+                        Log.w("请求解析服务器发生错误: ${messages.trim()}")
+                        Log.toast("请求解析服务器发生错误: ${messages.trim()}")
+                    }
+                } else if (isDownload) {
+                    param.result = fixDownloadProtoUnite(response)
+                }
+            }
+        }
     }
 
-    private fun needProxy(response: Any): Boolean {
-        if (!response.callMethodAs<Boolean>("hasVideoInfo")) return true
+    private fun needProxy(response: Any, unite: Boolean = false): Boolean {
+        if (!unite && !response.callMethodAs<Boolean>("hasVideoInfo")) return true
 
         val viewInfo = response.callMethod("getViewInfo")
 
@@ -312,34 +384,53 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         return false
     }
 
+    private fun PlayViewReply.toErrorReply(message: String) = copy {
+        viewInfo = viewInfo.copy {
+            if (endPage.hasDialog()) {
+                dialog = endPage.dialog
+            }
+            dialog = dialog.copy {
+                msg = "获取播放地址失败"
+                title = title.copy {
+                    text = message
+                    if (!hasTextColor()) textColor = "#ffffff"
+                }
+                image = image.copy {
+                    url =
+                        "https://i0.hdslb.com/bfs/album/08d5ce2fef8da8adf91024db4a69919b8d02fd5c.png"
+                }
+                if (!hasCode()) code = 6002003
+                if (!hasStyle()) style = "horizontal_image"
+                if (!hasType()) type = "area_limit"
+            }
+            clearEndPage()
+        }
+        clearVideoInfo()
+    }
+
     private fun showPlayerError(response: Any, message: String) = runCatchingOrNull {
         val serializedRequest = response.callMethodAs<ByteArray>("toByteArray")
-        val newRes = PlayViewReply.parseFrom(serializedRequest).copy {
-            viewInfo = viewInfo.copy {
-                if (endpage.hasDialog()) {
-                    dialog = endpage.dialog
-                }
-                dialog = dialog.copy {
-                    msg = "获取播放地址失败"
-                    title = title.copy {
-                        text = message
-                        if (!hasTextColor()) textColor = "#ffffff"
-                    }
-                    image = image.copy {
-                        url =
-                            "https://i0.hdslb.com/bfs/album/08d5ce2fef8da8adf91024db4a69919b8d02fd5c.png"
-                    }
-                    if (!hasCode()) code = 6002003
-                    if (!hasStyle()) style = "horizontal_image"
-                    if (!hasType()) type = "area_limit"
-                }
-                clearEndpage()
-            }
-            clearVideoInfo()
-        }
+        val newRes = PlayViewReply.parseFrom(serializedRequest).toErrorReply(message)
         val serializedResponse = newRes.toByteArray()
         response.javaClass.callStaticMethod("parseFrom", serializedResponse)!!
     } ?: response
+
+    private fun showPlayerErrorUnite(response: Any, supplement: PlayViewReply?, message: String) =
+        runCatchingOrNull {
+            val serializedRequest = response.callMethodAs<ByteArray>("toByteArray")
+            val newRes = PlayViewUniteReply.parseFrom(serializedRequest).copy {
+                (supplement ?: playViewReply {}).toErrorReply(message).let {
+                    this.supplement = any {
+                        typeUrl =
+                            "type.googleapis.com/bilibili.app.playerunite.pgcanymodel.PGCAnyModel"
+                        value = it.toByteString()
+                    }
+                }
+                clearVodInfo()
+            }
+            val serializedResponse = newRes.toByteArray()
+            response.javaClass.callStaticMethod("parseFrom", serializedResponse)!!
+        } ?: response
 
     private fun fixDownload(content: String): String {
         val json = JSONObject(content)
@@ -371,35 +462,40 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         return json.toString()
     }
 
-    private fun PlayViewReplyKt.Dsl.fixDownloadProto() {
-        videoInfo = videoInfo.copy {
-            var audioId = 0
-            var setted = false
-            val streams = streamList.map {
-                if (it.streamInfo.quality != quality || setted) {
-                    it.copy {
-                        clearContent()
-                    }
-                } else {
-                    audioId = it.dashVideo.audioId
-                    setted = true
-                    it
-                }
+    private fun VideoInfoKt.Dsl.fixDownloadProto() {
+        var audioId = 0
+        var setted = false
+        val streams = streamList.map {
+            if (it.streamInfo.quality != quality || setted) {
+                it.copy { clearContent() }
+            } else {
+                audioId = it.dashVideo.audioId
+                setted = true
+                it
             }
-            val audio = dashAudio.first {
-                it.id != audioId
-            }
-            streamList.clear()
-            dashAudio.clear()
-            streamList += streams
-            dashAudio += audio
         }
+        val audio = dashAudio.first {
+            it.id != audioId
+        }
+        streamList.clear()
+        dashAudio.clear()
+        streamList += streams
+        dashAudio += audio
     }
 
     private fun fixDownloadProto(response: Any) = runCatchingOrNull {
         val serializedRequest = response.callMethodAs<ByteArray>("toByteArray")
         val newRes = PlayViewReply.parseFrom(serializedRequest).copy {
-            fixDownloadProto()
+            videoInfo = videoInfo.copy { fixDownloadProto() }
+        }
+        val serializedResponse = newRes.toByteArray()
+        response.javaClass.callStaticMethod("parseFrom", serializedResponse)!!
+    } ?: response
+
+    private fun fixDownloadProtoUnite(response: Any) = runCatchingOrNull {
+        val serializedRequest = response.callMethodAs<ByteArray>("toByteArray")
+        val newRes = PlayViewUniteReply.parseFrom(serializedRequest).copy {
+            vodInfo = vodInfo.copy { fixDownloadProto() }
         }
         val serializedResponse = newRes.toByteArray()
         response.javaClass.callStaticMethod("parseFrom", serializedResponse)!!
@@ -456,6 +552,39 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }.query
     }
 
+    private fun reconstructQueryUnite(
+        req: PlayViewUniteReq,
+        supplement: PlayViewReply?,
+        thaiSeason: Lazy<JSONObject?>
+    ): String? {
+        val episodeInfo = supplement?.business?.episodeInfo
+        val thaiEpisodeId by lazy {
+            thaiSeason.value?.optJSONArray("modules").orEmpty().asSequence<JSONObject>()
+                .firstOrNull()
+                ?.optJSONObject("data")?.optJSONArray("episodes").orEmpty().asSequence<JSONObject>()
+                .firstOrNull()
+                ?.optLong("id") ?: 0L
+        }
+        // CANNOT use reflection for compatibility with Xpatch
+        return Uri.Builder().run {
+            appendQueryParameter("ep_id", req.extraContentMap["ep_id"].let {
+                if (!it.isNullOrEmpty() && it != "0") it.toInt() else episodeInfo?.epId ?: 0
+            }.let {
+                if (it != 0) it else thaiEpisodeId.toInt()
+            }.toString())
+            appendQueryParameter("cid", req.vod.cid.let {
+                if (it != 0L) it else episodeInfo?.cid ?: 0
+            }.let {
+                if (it != 0L) it else thaiEpisodeId.toInt()
+            }.toString())
+            appendQueryParameter("qn", req.vod.qn.toString())
+            appendQueryParameter("fnver", req.vod.fnver.toString())
+            appendQueryParameter("fnval", req.vod.fnval.toString())
+            appendQueryParameter("force_host", req.vod.forceHost.toString())
+            appendQueryParameter("fourk", req.vod.fourk.toString())
+            build()
+        }.query
+    }
 
     private fun reconstructResponse(
         response: Any,
@@ -472,7 +601,6 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     jsonContent = jsonContent.getJSONObject("result")
                 }
             }
-            val videoCodeCid = jsonContent.optInt("video_codecid")
             val serializedResponse =
                 PlayViewReply.parseFrom(response.callMethodAs<ByteArray>("toByteArray")).copy {
                     playConf = playAbilityConf {
@@ -482,153 +610,73 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         freyaEnterDisable = true
                         freyaFullDisable = true
                     }
+                    videoInfo = jsonContent.toVideoInfo(isDownload)
+                    fixBusinessProto(thaiSeason, jsonContent)
+                    viewInfo = viewInfo {}
+                }.toByteArray()
+            return response.javaClass.callStaticMethod("parseFrom", serializedResponse)!!
+        } catch (e: Throwable) {
+            Log.e(e)
+        }
+        return response
+    }
 
-                    val qualityMap = jsonContent.optJSONArray("accept_quality")?.let {
-                        (0 until it.length()).map { idx -> it.optInt(idx) }
+    private fun reconstructResponseUnite(
+        response: Any,
+        supplement: PlayViewReply?,
+        content: String,
+        isDownload: Boolean,
+        thaiSeason: Lazy<JSONObject?>
+    ): Any {
+        try {
+            var jsonContent = content.toJSONObject()
+            if (jsonContent.has("result")) {
+                // For kghost server
+                val result = jsonContent.opt("result")
+                if (result != null && result !is String) {
+                    jsonContent = jsonContent.getJSONObject("result")
+                }
+            }
+            val serializedResponse =
+                PlayViewUniteReply.parseFrom(response.callMethodAs<ByteArray>("toByteArray")).copy {
+                    vodInfo = jsonContent.toVideoInfo(isDownload)
+                    val playViewReply = (supplement ?: playViewReply {}).copy {
+                        fixBusinessProto(thaiSeason, jsonContent)
+                        viewInfo = viewInfo {}
                     }
-                    val type = jsonContent.optString("type")
-                    val formatMap = HashMap<Int, JSONObject>()
-                    for (format in jsonContent.optJSONArray("support_formats").orEmpty()) {
-                        formatMap[format.optInt("quality")] = format
+                    this.supplement = any {
+                        typeUrl =
+                            "type.googleapis.com/bilibili.app.playerunite.pgcanymodel.PGCAnyModel"
+                        value = playViewReply.toByteString()
                     }
-
-                    videoInfo = videoInfo {
-                        timelength = jsonContent.optLong("timelength")
-                        videoCodecid = jsonContent.optInt("video_codecid")
-                        quality = jsonContent.optInt("quality")
-                        format = jsonContent.optString("format")
-
-                        if (type == "DASH") {
-                            val audioIds = ArrayList<Int>()
-                            for (audio in jsonContent.optJSONObject("dash")?.optJSONArray("audio")
-                                .orEmpty()) {
-                                dashAudio += dashItem {
-                                    audio.run {
-                                        baseUrl = optString("base_url")
-                                        id = optInt("id")
-                                        audioIds.add(id)
-                                        md5 = optString("md5")
-                                        size = optLong("size")
-                                        codecid = optInt("codecid")
-                                        bandwidth = optInt("bandwidth")
-                                        for (bk in optJSONArray("backup_url").orEmpty()
-                                            .asSequence<String>())
-                                            backupUrl += bk
-                                    }
-                                }
-                            }
-                            for (video in jsonContent.optJSONObject("dash")?.optJSONArray("video")
-                                .orEmpty()) {
-                                if (video.optInt("codecid") != videoCodeCid) continue
-                                streamList += stream {
-                                    dashVideo = dashVideo {
-                                        video.run {
-                                            baseUrl = optString("base_url")
-                                            backupUrl += optJSONArray("backup_url").orEmpty()
-                                                .asSequence<String>().toList()
-                                            bandwidth = optInt("bandwidth")
-                                            codecid = optInt("codecid")
-                                            md5 = optString("md5")
-                                            size = optLong("size")
-                                        }
-                                        // Not knowing the extract matching,
-                                        // just use the largest id
-                                        audioId = audioIds.maxOrNull() ?: audioIds[0]
-                                        noRexcode = jsonContent.optInt("no_rexcode") != 0
-                                    }
-                                    streamInfo = streamInfo {
-                                        quality = video.optInt("id")
-                                        intact = true
-                                        attribute = 0
-                                        formatMap[quality]?.let { fmt ->
-                                            reconstructFormat(fmt)
-                                        }
-                                    }
-                                }
-                            }
-                        } else if (type == "FLV" || type == "MP4") {
-                            qualityMap?.forEach { quality ->
-                                streamList += stream {
-                                    streamInfo = streamInfo {
-                                        this.quality = quality
-                                        intact = true
-                                        attribute = 0
-                                        formatMap[quality]?.let { fmt ->
-                                            reconstructFormat(fmt)
-                                        }
-                                    }
-
-                                    if (quality == jsonContent.optInt("quality")) {
-                                        segmentVideo = segmentVideo {
-                                            for (seg in jsonContent.optJSONArray("durl")
-                                                .orEmpty()) {
-                                                segment += responseUrl {
-                                                    seg.run {
-                                                        length = optLong("length")
-                                                        backupUrl += optJSONArray("backup_url").orEmpty()
-                                                            .asSequence<String>().toList()
-                                                        md5 = optString("md5")
-                                                        order = optInt("order")
-                                                        size = optLong("size")
-                                                        url = optString("url")
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-
-                    if (hasBusiness()) {
-                        business = business.copy {
-                            isPreview = jsonContent.optInt("is_preview", 0) == 1
-                            episodeInfo = episodeInfo.copy {
-                                seasonInfo = seasonInfo.copy {
-                                    rights = seasonRights {
-                                        canWatch = 1
-                                    }
-                                }
-                            }
-                        }
-                    } else {
-                        // thai
-                        business = businessInfo {
-                            val season = thaiSeason.value ?: return@businessInfo
-                            val episode = season.optJSONArray("modules").orEmpty()
-                                .asSequence<JSONObject>().firstOrNull()
-                                ?.optJSONObject("data")?.optJSONArray("episodes").orEmpty()
-                                .asSequence<JSONObject>().firstOrNull() ?: return@businessInfo
-                            isPreview = jsonContent.optInt("is_preview", 0) == 1
-                            episodeInfo = episodeInfo {
-                                epId = episode.optInt("id")
-                                cid = episode.optLong("id")
-                                aid = season.optLong("season_id")
-                                epStatus = episode.optLong("status")
-                                cover = episode.optString("cover")
-                                title = episode.optString("title")
-                                seasonInfo = seasonInfo {
-                                    seasonId = season.optInt("season_id")
-                                    seasonType = season.optInt("type")
-                                    seasonStatus = season.optInt("status")
-                                    cover = season.optString("cover")
-                                    title = season.optString("title")
-                                    rights = seasonRights {
-                                        canWatch = 1
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    viewInfo = viewInfo {
-
-                    }
-
-                    if (isDownload) {
-                        fixDownloadProto()
+                    playArcConf = playArcConf {
+                        arcConf[1] = arcConf { isSupport = true } //FLIPCONF
+                        arcConf[2] = arcConf { isSupport = true } //CASTCONF
+                        arcConf[3] = arcConf { isSupport = true } //FEEDBACK
+                        arcConf[4] = arcConf { isSupport = true } //SUBTITLE
+                        arcConf[5] = arcConf { isSupport = true } //PLAYBACKRATE
+                        arcConf[6] = arcConf { isSupport = true } //TIMEUP
+                        arcConf[7] = arcConf { isSupport = true } //PLAYBACKMODE
+                        arcConf[8] = arcConf { isSupport = true } //SCALEMODE
+                        arcConf[9] = arcConf { isSupport = true } //BACKGROUNDPLAY
+                        arcConf[10] = arcConf { isSupport = true } //LIKE
+                        arcConf[12] = arcConf { isSupport = true } //COIN
+                        arcConf[14] = arcConf { isSupport = true } //SHARE
+                        arcConf[15] = arcConf { isSupport = true } //SCREENSHOT
+                        arcConf[16] = arcConf { isSupport = true } //LOCKSCREEN
+                        arcConf[17] = arcConf { isSupport = true } //RECOMMEND
+                        arcConf[18] = arcConf { isSupport = true } //PLAYBACKSPEED
+                        arcConf[19] = arcConf { isSupport = true } //DEFINITION
+                        arcConf[20] = arcConf { isSupport = true } //SELECTIONS
+                        arcConf[21] = arcConf { isSupport = true } //NEXT
+                        arcConf[22] = arcConf { isSupport = true } //EDITDM
+                        arcConf[23] = arcConf { isSupport = true } //SMALLWINDOW
+                        arcConf[25] = arcConf { isSupport = true } //OUTERDM
+                        arcConf[26] = arcConf { isSupport = true } //INNERDM
+                        arcConf[29] = arcConf { isSupport = true } //COLORFILTER
+                        arcConf[31] = arcConf { disabled = true } //FREYAENTER
+                        arcConf[32] = arcConf { disabled = true } //FREYAFULLENTER
+                        arcConf[34] = arcConf { isSupport = true } //RECORDSCREEN
                     }
                 }.toByteArray()
             return response.javaClass.callStaticMethod("parseFrom", serializedResponse)!!
@@ -636,6 +684,152 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             Log.e(e)
         }
         return response
+    }
+
+    private fun PlayViewReplyKt.Dsl.fixBusinessProto(
+        thaiSeason: Lazy<JSONObject?>,
+        jsonContent: JSONObject
+    ) {
+        if (hasBusiness()) {
+            business = business.copy {
+                isPreview = jsonContent.optInt("is_preview", 0) == 1
+                episodeInfo = episodeInfo.copy {
+                    seasonInfo = seasonInfo.copy {
+                        rights = seasonRights {
+                            canWatch = 1
+                        }
+                    }
+                }
+            }
+        } else {
+            // thai
+            business = businessInfo {
+                val season = thaiSeason.value ?: return@businessInfo
+                val episode = season.optJSONArray("modules").orEmpty()
+                    .asSequence<JSONObject>().firstOrNull()
+                    ?.optJSONObject("data")?.optJSONArray("episodes").orEmpty()
+                    .asSequence<JSONObject>().firstOrNull() ?: return@businessInfo
+                isPreview = jsonContent.optInt("is_preview", 0) == 1
+                episodeInfo = episodeInfo {
+                    epId = episode.optInt("id")
+                    cid = episode.optLong("id")
+                    aid = season.optLong("season_id")
+                    epStatus = episode.optLong("status")
+                    cover = episode.optString("cover")
+                    title = episode.optString("title")
+                    seasonInfo = seasonInfo {
+                        seasonId = season.optInt("season_id")
+                        seasonType = season.optInt("type")
+                        seasonStatus = season.optInt("status")
+                        cover = season.optString("cover")
+                        title = season.optString("title")
+                        rights = seasonRights {
+                            canWatch = 1
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun JSONObject.toVideoInfo(isDownload: Boolean) = videoInfo {
+        val qualityMap = optJSONArray("accept_quality")?.let {
+            (0 until it.length()).map { idx -> it.optInt(idx) }
+        }
+        val type = optString("type")
+        val videoCodeCid = optInt("video_codecid")
+        val formatMap = HashMap<Int, JSONObject>()
+        for (format in optJSONArray("support_formats").orEmpty()) {
+            formatMap[format.optInt("quality")] = format
+        }
+
+        timelength = optLong("timelength")
+        videoCodecid = optInt("video_codecid")
+        quality = optInt("quality")
+        format = optString("format")
+
+        if (type == "DASH") {
+            val audioIds = ArrayList<Int>()
+            for (audio in optJSONObject("dash")?.optJSONArray("audio").orEmpty()) {
+                dashAudio += dashItem {
+                    audio.run {
+                        baseUrl = optString("base_url")
+                        id = optInt("id")
+                        audioIds.add(id)
+                        md5 = optString("md5")
+                        size = optLong("size")
+                        codecid = optInt("codecid")
+                        bandwidth = optInt("bandwidth")
+                        for (bk in optJSONArray("backup_url").orEmpty().asSequence<String>())
+                            backupUrl += bk
+                    }
+                }
+            }
+            for (video in optJSONObject("dash")?.optJSONArray("video").orEmpty()) {
+                if (video.optInt("codecid") != videoCodeCid) continue
+                streamList += stream {
+                    dashVideo = dashVideo {
+                        video.run {
+                            baseUrl = optString("base_url")
+                            backupUrl += optJSONArray("backup_url").orEmpty()
+                                .asSequence<String>().toList()
+                            bandwidth = optInt("bandwidth")
+                            codecid = optInt("codecid")
+                            md5 = optString("md5")
+                            size = optLong("size")
+                        }
+                        // Not knowing the extract matching,
+                        // just use the largest id
+                        audioId = audioIds.maxOrNull() ?: audioIds[0]
+                        noRexcode = optInt("no_rexcode") != 0
+                    }
+                    streamInfo = streamInfo {
+                        quality = video.optInt("id")
+                        intact = true
+                        attribute = 0
+                        formatMap[quality]?.let { fmt ->
+                            reconstructFormat(fmt)
+                        }
+                    }
+                }
+            }
+        } else if (type == "FLV" || type == "MP4") {
+            qualityMap?.forEach { quality ->
+                streamList += stream {
+                    streamInfo = streamInfo {
+                        this.quality = quality
+                        intact = true
+                        attribute = 0
+                        formatMap[quality]?.let { fmt ->
+                            reconstructFormat(fmt)
+                        }
+                    }
+
+                    if (quality == optInt("quality")) {
+                        segmentVideo = segmentVideo {
+                            for (seg in optJSONArray("durl")
+                                .orEmpty()) {
+                                segment += responseUrl {
+                                    seg.run {
+                                        length = optLong("length")
+                                        backupUrl += optJSONArray("backup_url").orEmpty()
+                                            .asSequence<String>().toList()
+                                        md5 = optString("md5")
+                                        order = optInt("order")
+                                        size = optLong("size")
+                                        url = optString("url")
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (isDownload) {
+            fixDownloadProto()
+        }
     }
 
     private fun StreamInfoKt.Dsl.reconstructFormat(fmt: JSONObject) = fmt.run {
