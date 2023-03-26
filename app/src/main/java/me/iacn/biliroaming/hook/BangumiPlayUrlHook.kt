@@ -29,6 +29,8 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         const val MAX_FNVAL = 16 or 64 or 128 or 256 or 512 or 1024 or 2048
         const val FAIL_CODE = -404
         var countDownLatch: CountDownLatch? = null
+        private const val PGC_ANY_MODEL_TYPE_URL =
+            "type.googleapis.com/bilibili.app.playerunite.pgcanymodel.PGCAnyModel"
     }
 
     override fun startHook() {
@@ -92,12 +94,12 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     Log.toast("获取播放地址失败")
                 }
             } catch (e: CustomServerException) {
-                var messages = ""
-                for (error in e.errors) {
-                    messages += "${error.key}: ${error.value}\n"
-                }
-                Log.w("请求解析服务器发生错误: ${messages.trim()}")
-                Log.toast("请求解析服务器发生错误: ${messages.trim()}")
+                val messages = buildString {
+                    for (error in e.errors)
+                        appendLine("${error.key}: ${error.value}")
+                }.trim()
+                Log.w("请求解析服务器发生错误: $messages")
+                Log.toast("请求解析服务器发生错误: $messages")
             }
         }
 
@@ -122,12 +124,12 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     getPlayUrl(params, arrayOf(lastArea))
                 }
             } catch (e: CustomServerException) {
-                var messages = ""
-                for (error in e.errors) {
-                    messages += "${error.key}: ${error.value}\n"
-                }
-                Log.w("请求解析服务器发生错误: ${messages.trim()}")
-                Log.toast("请求解析服务器发生错误: ${messages.trim()}")
+                val messages = buildString {
+                    for (error in e.errors)
+                        appendLine("${error.key}: ${error.value}")
+                }.trim()
+                Log.w("请求解析服务器发生错误: $messages")
+                Log.toast("请求解析服务器发生错误: $messages")
                 return@hookBeforeAllConstructors
             } ?: run {
                 Log.toast("获取播放地址失败")
@@ -195,13 +197,13 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         val messages = buildString {
                             for (error in e.errors)
                                 appendLine("${error.key}: ${error.value}")
-                        }
+                        }.trim()
                         param.result = showPlayerError(
                             response,
-                            "请求解析中服务器发生错误(点此查看更多)\n${messages.trim()}"
+                            "请求解析中服务器发生错误(点此查看更多)\n$messages"
                         )
-                        Log.w("请求解析服务器发生错误: ${messages.trim()}")
-                        Log.toast("请求解析服务器发生错误: ${messages.trim()}")
+                        Log.w("请求解析服务器发生错误: $messages")
+                        Log.toast("请求解析服务器发生错误: $messages")
                     }
                 } else if (isDownload) {
                     param.result = fixDownloadProto(response)
@@ -271,13 +273,13 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         val messages = buildString {
                             for (error in e.errors)
                                 appendLine("${error.key}: ${error.value}")
-                        }
+                        }.trim()
                         param.result = showPlayerError(
                             response,
-                            "请求解析中服务器发生错误(点此查看更多)\n${messages.trim()}"
+                            "请求解析中服务器发生错误(点此查看更多)\n$messages"
                         )
-                        Log.w("请求解析服务器发生错误: ${messages.trim()}")
-                        Log.toast("请求解析服务器发生错误: ${messages.trim()}")
+                        Log.w("请求解析服务器发生错误: $messages")
+                        Log.toast("请求解析服务器发生错误: $messages")
                     }
                 } else if (isDownload) {
                     param.result = fixDownloadProto(response)
@@ -315,10 +317,15 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 val response =
                     param.result ?: "com.bapis.bilibili.app.playerunite.v1.PlayViewUniteReply"
                         .on(mClassLoader).new()
-                val supplement = response.callMethod("getSupplement")
-                    ?.callMethod("getValue")?.callMethodAs<ByteArray>("toByteArray")
-                    ?.let { PlayViewReply.parseFrom(it) }
-                if (param.result == null || supplement == null || needProxyUnite(supplement)) {
+                val supplementAny = response.callMethod("getSupplement")
+                val typeUrl = supplementAny?.callMethodAs<String>("getTypeUrl")
+                // Only handle pgc video
+                if (!typeUrl.isNullOrEmpty() && typeUrl != PGC_ANY_MODEL_TYPE_URL)
+                    return@hookAfterMethod
+                val supplement = supplementAny?.callMethod("getValue")
+                    ?.callMethodAs<ByteArray>("toByteArray")
+                    ?.let { PlayViewReply.parseFrom(it) } ?: playViewReply {}
+                if (needProxyUnite(response, supplement)) {
                     try {
                         val serializedRequest = request.callMethodAs<ByteArray>("toByteArray")
                         val req = PlayViewUniteReq.parseFrom(serializedRequest)
@@ -328,8 +335,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                 true
                             )?.toJSONObject()?.optJSONObject("result")
                         }
-                        val content =
-                            getPlayUrl(reconstructQueryUnite(req, supplement, thaiSeason))
+                        val content = getPlayUrl(reconstructQueryUnite(req, supplement, thaiSeason))
                         countDownLatch?.countDown()
                         content?.let {
                             Log.toast("已从代理服务器获取播放地址\n如加载缓慢或黑屏，可去漫游设置中测速并设置 UPOS")
@@ -342,13 +348,13 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         val messages = buildString {
                             for (error in e.errors)
                                 appendLine("${error.key}: ${error.value}")
-                        }
+                        }.trim()
                         param.result = showPlayerErrorUnite(
                             response, supplement,
-                            "请求解析中服务器发生错误(点此查看更多)\n${messages.trim()}"
+                            "请求解析中服务器发生错误(点此查看更多)\n$messages"
                         )
-                        Log.w("请求解析服务器发生错误: ${messages.trim()}")
-                        Log.toast("请求解析服务器发生错误: ${messages.trim()}")
+                        Log.w("请求解析服务器发生错误: $messages")
+                        Log.toast("请求解析服务器发生错误: $messages")
                     }
                 } else if (isDownload) {
                     param.result = fixDownloadProtoUnite(response)
@@ -382,7 +388,9 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         return false
     }
 
-    private fun needProxyUnite(supplement: PlayViewReply): Boolean {
+    private fun needProxyUnite(response: Any, supplement: PlayViewReply): Boolean {
+        if (!response.callMethodAs<Boolean>("hasVodInfo")) return true
+
         val viewInfo = supplement.viewInfo
         if (viewInfo.dialog.type == "area_limit") return true
         if (viewInfo.endPage.dialog.type == "area_limit") return true
@@ -425,16 +433,13 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         response.javaClass.callStaticMethod("parseFrom", serializedResponse)!!
     } ?: response
 
-    private fun showPlayerErrorUnite(response: Any, supplement: PlayViewReply?, message: String) =
+    private fun showPlayerErrorUnite(response: Any, supplement: PlayViewReply, message: String) =
         runCatchingOrNull {
             val serializedRequest = response.callMethodAs<ByteArray>("toByteArray")
             val newRes = PlayViewUniteReply.parseFrom(serializedRequest).copy {
-                (supplement ?: playViewReply {}).toErrorReply(message).let {
-                    this.supplement = any {
-                        typeUrl =
-                            "type.googleapis.com/bilibili.app.playerunite.pgcanymodel.PGCAnyModel"
-                        value = it.toByteString()
-                    }
+                this.supplement = any {
+                    typeUrl = PGC_ANY_MODEL_TYPE_URL
+                    value = supplement.toErrorReply(message).toByteString()
                 }
                 clearVodInfo()
             }
@@ -564,10 +569,10 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     private fun reconstructQueryUnite(
         req: PlayViewUniteReq,
-        supplement: PlayViewReply?,
+        supplement: PlayViewReply,
         thaiSeason: Lazy<JSONObject?>
     ): String? {
-        val episodeInfo = supplement?.business?.episodeInfo
+        val episodeInfo = supplement.business.episodeInfo
         val thaiEpisodeId by lazy {
             thaiSeason.value?.optJSONArray("modules").orEmpty().asSequence<JSONObject>()
                 .firstOrNull()
@@ -578,12 +583,12 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         // CANNOT use reflection for compatibility with Xpatch
         return Uri.Builder().run {
             appendQueryParameter("ep_id", req.extraContentMap["ep_id"].let {
-                if (!it.isNullOrEmpty() && it != "0") it.toInt() else episodeInfo?.epId ?: 0
+                if (!it.isNullOrEmpty() && it != "0") it.toInt() else episodeInfo.epId
             }.let {
                 if (it != 0) it else thaiEpisodeId.toInt()
             }.toString())
             appendQueryParameter("cid", req.vod.cid.let {
-                if (it != 0L) it else episodeInfo?.cid ?: 0
+                if (it != 0L) it else episodeInfo.cid
             }.let {
                 if (it != 0L) it else thaiEpisodeId.toInt()
             }.toString())
@@ -633,7 +638,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     private fun reconstructResponseUnite(
         response: Any,
-        supplement: PlayViewReply?,
+        supplement: PlayViewReply,
         content: String,
         isDownload: Boolean,
         thaiSeason: Lazy<JSONObject?>
@@ -650,14 +655,13 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             val serializedResponse =
                 PlayViewUniteReply.parseFrom(response.callMethodAs<ByteArray>("toByteArray")).copy {
                     vodInfo = jsonContent.toVideoInfo(isDownload)
-                    val playViewReply = (supplement ?: playViewReply {}).copy {
+                    val newSupplement = supplement.copy {
                         fixBusinessProto(thaiSeason, jsonContent)
                         viewInfo = viewInfo {}
                     }
                     this.supplement = any {
-                        typeUrl =
-                            "type.googleapis.com/bilibili.app.playerunite.pgcanymodel.PGCAnyModel"
-                        value = playViewReply.toByteString()
+                        typeUrl = PGC_ANY_MODEL_TYPE_URL
+                        value = newSupplement.toByteString()
                     }
                     playArcConf = playArcConf {
                         arcConf[1] = arcConf { isSupport = true } //FLIPCONF
@@ -817,8 +821,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
                     if (quality == optInt("quality")) {
                         segmentVideo = segmentVideo {
-                            for (seg in optJSONArray("durl")
-                                .orEmpty()) {
+                            for (seg in optJSONArray("durl").orEmpty()) {
                                 segment += responseUrl {
                                     seg.run {
                                         length = optLong("length")
