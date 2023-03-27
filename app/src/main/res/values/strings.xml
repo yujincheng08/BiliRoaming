@@ -271,4 +271,7 @@
     <string name="save_comment_image_summary">视频笔记图片长按保存到本地</string>
     <string name="danmaku_filter_summary">弹幕屏蔽优化</string>
     <string name="danmaku_filter_title">增强弹幕屏蔽功能</string>
+    <string name="danmaku_filter_weight_switch_label">弹幕云屏蔽</string>
+    <string name="danmaku_filter_weight_value_label">弹幕屏蔽等级</string>
+    <string name="danmaku_filter_weight_value_hint">4</string>
 </resources>

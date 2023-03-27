@@ -14,8 +14,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_columnWeight="4"
-        android:text="弹幕云屏蔽"
-        tools:ignore="HardcodedText" />
+        android:text="@string/danmaku_filter_weight_switch_label" />
 
     <Switch
         android:id="@+id/danmaku_filter_weight_switch"
@@ -23,16 +22,14 @@
         android:layout_height="wrap_content"
         android:layout_columnWeight="1"
         android:checked="true"
-        android:tag="danmaku_filter_weight_switch"
-        tools:ignore="HardcodedText" />
+        android:tag="danmaku_filter_weight_switch" />
 
     <TextView
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_columnWeight="2"
         android:singleLine="true"
-        android:text="弹幕屏蔽等级"
-        tools:ignore="HardcodedText" />
+        android:text="@string/danmaku_filter_weight_value_label" />
 
     <EditText
         android:id="@+id/danmaku_filter_weight_value"
@@ -40,8 +37,7 @@
         android:layout_height="wrap_content"
         android:layout_columnWeight="5"
         android:autofillHints="no"
-        android:hint="4"
+        android:hint="@string/danmaku_filter_weight_value_hint"
         android:inputType="numberDecimal"
-        android:tag="danmaku_filter_weight_value"
-        tools:ignore="HardcodedText" />
+        android:tag="danmaku_filter_weight_value" />
 </GridLayout>
