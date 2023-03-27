@@ -145,6 +145,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val latestVersionExceptionClass by Weak { "tv.danmaku.bili.update.internal.exception.LatestVersionException" from mClassLoader }
     val commentImageLoaderClass by Weak { mHookInfo.commentImageLoader.class_ from mClassLoader }
     val cardGridViewBinderClass by Weak { mHookInfo.cardGridViewBinder.class_ from mClassLoader }
+    val liveNetworkTypeClass by Weak { mHookInfo.liveNetworkType.class_ from mClassLoader }
 
     val ids: Map<String, Int> by lazy {
         mHookInfo.mapIds.idsMap
@@ -293,6 +294,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     fun bind() = mHookInfo.cardGridViewBinder.bind.orNull
 
     fun dataInterfacesField() = mHookInfo.cardGridViewBinder.dataInterfaces.orNull
+
+    fun liveNetworkType() = mHookInfo.liveNetworkType.method.orNull
 
     private fun readHookInfo(context: Context): Configs.HookInfo {
         try {
@@ -1898,6 +1901,26 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 class_ = class_ { name = clazz.name }
                 bind = method { name = bindMethod.name }
                 dataInterfaces = field { name = dataInterfacesField.name }
+            }
+            liveNetworkType = liveNetworkType {
+                val liveNetworkTypeMethod = dexHelper.findMethodUsingString(
+                    "getNetworkConnectivity=",
+                    false,
+                    -1,
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).asSequence().firstNotNullOfOrNull {
+                    dexHelper.decodeMethodIndex(it)
+                } ?: return@liveNetworkType
+                val liveNetworkTypeHelperClass =
+                    liveNetworkTypeMethod?.declaringClass ?: return@liveNetworkType
+                class_ = class_ { name = liveNetworkTypeHelperClass.name }
+                method = method { name = liveNetworkTypeMethod.name }
             }
 
             dexHelper.close()

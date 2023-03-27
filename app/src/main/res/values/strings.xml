@@ -207,6 +207,8 @@
     <string name="remove_video_relate_promote_summary">移除视频下方的相关推广，例如游戏、课程、会员购、创作推广等</string>
     <string name="remove_video_relate_only_av_title">仅展示UP主投稿视频</string>
     <string name="remove_video_relate_only_av_summary">上个选项的基础上，仅展示UP主投稿视频，移除番剧等内容</string>
+    <string name="remove_video_UgcSeason_title">移除视频下方的分集列表</string>
+    <string name="remove_video_UgcSeason_summary">移除视频下方的UP主视频分集列表</string>
     <string name="remove_video_relate_nothing_title">移除视频下方的所有内容</string>
     <string name="remove_video_relate_nothing_summary">上个选项的基础上，将UP主投稿视频也移除</string>
     <string name="remove_video_cmd_dms_title">移除互动浮窗</string>
@@ -269,6 +271,10 @@
     <string name="remove_vip_section_summary">我的页面将大会员横幅移除</string>
     <string name="save_comment_image_title">笔记图片长按保存</string>
     <string name="save_comment_image_summary">视频笔记图片长按保存到本地</string>
+    <string name="block_pcdn_title">阻止视频通过 PCDN 加载</string>
+    <string name="block_pcdn_summary">可能一定程度上优化视频加载速度。纯 IPv6 网络环境，或通过代理访问网络，推荐启用此项。不影响 MCDN。可能在旧版无效。</string>
+    <string name="block_pcdn_live_title">阻止直播 P2P 上传</string>
+    <string name="block_pcdn_live_summary">阻止观看热门直播时被当作 P2P Peer，而占用大量上传带宽。可能在旧版无效。</string>
     <string name="danmaku_filter_summary">弹幕屏蔽优化</string>
     <string name="danmaku_filter_title">增强弹幕屏蔽功能</string>
     <string name="danmaku_filter_weight_switch_label">弹幕云屏蔽</string>

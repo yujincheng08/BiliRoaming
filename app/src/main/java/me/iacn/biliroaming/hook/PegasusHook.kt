@@ -40,6 +40,10 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         migrateHomeFilterPrefsIfNeeded()
         sPrefs.getStringSet("home_filter_keywords_up", null) ?: setOf()
     }
+    private val kwdFilterUpnameRegexes by lazy { kwdFilterUpnameList.map { it.toRegex() } }
+    private val kwdFilterUpnameRegexMode by lazy {
+        sPrefs.getBoolean("home_filter_up_regex_mode", false)
+    }
     private val kwdFilterRnameList by lazy {
         migrateHomeFilterPrefsIfNeeded()
         sPrefs.getStringSet("home_filter_keywords_category", null) ?: setOf()
@@ -124,13 +128,11 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 return false
             }
             if (kwdFilterTitleRegexMode) {
-                kwdFilterTitleRegexes.forEach {
-                    if (title.contains(it)) return true
-                }
+                if (kwdFilterTitleRegexes.any { title.contains(it) })
+                    return true
             } else {
-                kwdFilterTitleList.forEach {
-                    if (it.isNotEmpty() && title.contains(it)) return true
-                }
+                if (kwdFilterTitleList.any { title.contains(it) })
+                    return true
             }
         }
 
@@ -154,8 +156,12 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 return false
             }
             if (upname == "null") return false
-            kwdFilterUpnameList.forEach {
-                if (it.isNotEmpty() && upname.contains(it)) return true
+            if (kwdFilterUpnameRegexMode) {
+                if (kwdFilterUpnameRegexes.any { upname.contains(it) })
+                    return true
+            } else {
+                if (kwdFilterUpnameList.any { upname.contains(it) })
+                    return true
             }
         }
 
