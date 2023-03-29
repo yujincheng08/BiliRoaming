@@ -312,8 +312,8 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     ?.callMethod("getSubtitlesCount") == 0)
                 if (!tryThailand && !lastSeasonInfo.containsKey("area")) {
                     countDownLatch = CountDownLatch(1)
-                    runCatching {
-                        countDownLatch?.await(5, TimeUnit.SECONDS)
+                    runCatchingOrNull {
+                        countDownLatch?.await(10, TimeUnit.SECONDS)
                     }
                     tryThailand = lastSeasonInfo.containsKey("area")
                             && lastSeasonInfo["area"] == "th"
