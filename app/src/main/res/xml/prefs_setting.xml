@@ -81,6 +81,11 @@
             android:title="@string/disable_story_full_title" />
         <SwitchPreference
             android:defaultValue="false"
+            android:key="disable_main_page_story"
+            android:summary="@string/disable_main_page_story_summary"
+            android:title="@string/disable_main_page_story_title" />
+        <SwitchPreference
+            android:defaultValue="false"
             android:key="dialog_blur_background"
             android:summary="@string/dialog_blur_background_summary"
             android:title="@string/dialog_blur_background_title" />
