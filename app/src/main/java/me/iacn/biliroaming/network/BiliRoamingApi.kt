@@ -60,11 +60,11 @@ object BiliRoamingApi {
     const val mainlandTestParams =
         "cid=13073143&ep_id=100615&otype=json&fnval=16&module=pgc&platform=android&test=true"
 
-    val seasonCache: AtomicReference<Triple<Int, AtomicReference<String>, CountDownLatch>?> =
+    private val seasonCache: AtomicReference<Triple<Int, AtomicReference<String>, CountDownLatch>?> =
         AtomicReference(null)
 
     @JvmStatic
-    fun getSeason(info: Map<String, String?>, hidden_hint: Boolean): String? {
+    fun getSeason(info: Map<String, String?>, hiddenHint: Boolean): String? {
         val seasonId = info.getOrDefault("season_id", null)?.toInt()
         val cache = seasonCache.get()
         val cacheTuple = if (seasonId != null) {
@@ -77,7 +77,7 @@ object BiliRoamingApi {
                 }
             }
         } else null
-        var hidden = hidden_hint
+        var hidden = hiddenHint
         val builder = Uri.Builder()
         builder.scheme("https")
             .encodedAuthority(if (hidden) BILI_HIDDEN_SEASON_URL else BILI_SEASON_URL)
@@ -476,17 +476,43 @@ object BiliRoamingApi {
         stream.put("backup_url", JSONArray(newBackup))
     }
 
+    private fun checkBaseUrl(stream: JSONObject) {
+        val checkConnection = fun(url: String) = runCatchingOrNull {
+            val connection = URL(url).openConnection() as HttpURLConnection
+            connection.requestMethod = "HEAD"
+            connection.connectTimeout = 1000_000
+            connection.readTimeout = 1000_000
+            connection.connect()
+            connection.responseCode == HttpURLConnection.HTTP_OK
+        } ?: false
+        val baseUrl = stream.optString("base_url")
+        if (!checkConnection(baseUrl)) {
+            stream.optJSONArray("backup_url")?.asSequence<String>()
+                ?.find { checkConnection(it) }?.let {
+                    stream.put("base_url", it)
+                }
+        }
+    }
+
     @JvmStatic
-    fun getPlayUrl(queryString: String?, priorityArea: Array<String>? = null): String? {
+    fun getPlayUrl(
+        queryString: String?,
+        priorityArea: Array<String>? = null,
+        isDownload: Boolean = false
+    ): String? {
         return getFromCustomUrl(queryString, priorityArea)?.let {
             runCatchingOrNull {
                 JSONObject(it).let { json -> json.optJSONObject("result") ?: json }.apply {
                     optJSONObject("dash")?.run {
                         for (video in optJSONArray("video").orEmpty()) {
                             replaceUPOS(video)
+                            if (isDownload)
+                                checkBaseUrl(video)
                         }
                         for (audio in optJSONArray("audio").orEmpty()) {
                             replaceUPOS(audio)
+                            if (isDownload)
+                                checkBaseUrl(audio)
                         }
                     }
                 }.toString()
