@@ -494,7 +494,10 @@ object BiliRoamingApi {
         }
     }
 
-    class CustomServerException(val errors: Map<String, String>) : Throwable()
+    class CustomServerException(val errors: Map<String, String>) : Throwable() {
+        override val message: String
+            get() = errors.asSequence().joinToString("\n") { "${it.key}: ${it.value}" }.trim()
+    }
 
     @JvmStatic
     private fun getFromCustomUrl(queryString: String?, priorityArea: Array<String>?): String? {

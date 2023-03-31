@@ -95,10 +95,8 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     Log.toast("获取播放地址失败")
                 }
             } catch (e: CustomServerException) {
-                val messages = e.errors.asSequence()
-                    .joinToString("\n") { "${it.key}: ${it.value}" }.trim()
-                Log.w("请求解析服务器发生错误: $messages")
-                Log.toast("请求解析服务器发生错误: $messages")
+                Log.w("请求解析服务器发生错误: ${e.message}")
+                Log.toast("请求解析服务器发生错误: ${e.message}")
             }
         }
 
@@ -123,10 +121,8 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     getPlayUrl(params, arrayOf(lastArea))
                 }
             } catch (e: CustomServerException) {
-                val messages = e.errors.asSequence()
-                    .joinToString("\n") { "${it.key}: ${it.value}" }.trim()
-                Log.w("请求解析服务器发生错误: $messages")
-                Log.toast("请求解析服务器发生错误: $messages")
+                Log.w("请求解析服务器发生错误: ${e.message}")
+                Log.toast("请求解析服务器发生错误: ${e.message}")
                 return@hookBeforeAllConstructors
             } ?: run {
                 Log.toast("获取播放地址失败")
@@ -193,14 +189,12 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             Log.toast("获取播放地址失败")
                         }
                     } catch (e: CustomServerException) {
-                        val messages = e.errors.asSequence()
-                            .joinToString("\n") { "${it.key}: ${it.value}" }.trim()
                         param.result = showPlayerError(
                             response,
-                            "请求解析中服务器发生错误(点此查看更多)\n$messages"
+                            "请求解析中服务器发生错误(点此查看更多)\n${e.message}"
                         )
-                        Log.w("请求解析服务器发生错误: $messages")
-                        Log.toast("请求解析服务器发生错误: $messages")
+                        Log.w("请求解析服务器发生错误: ${e.message}")
+                        Log.toast("请求解析服务器发生错误: ${e.message}")
                     }
                 } else if (isDownload) {
                     param.result = fixDownloadProto(response)
@@ -268,14 +262,12 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         }
                             ?: throw CustomServerException(mapOf("未知错误" to "请检查哔哩漫游设置中解析服务器设置。"))
                     } catch (e: CustomServerException) {
-                        val messages = e.errors.asSequence()
-                            .joinToString("\n") { "${it.key}: ${it.value}" }.trim()
                         param.result = showPlayerError(
                             response,
-                            "请求解析中服务器发生错误(点此查看更多)\n$messages"
+                            "请求解析中服务器发生错误(点此查看更多)\n${e.message}"
                         )
-                        Log.w("请求解析服务器发生错误: $messages")
-                        Log.toast("请求解析服务器发生错误: $messages")
+                        Log.w("请求解析服务器发生错误: ${e.message}")
+                        Log.toast("请求解析服务器发生错误: ${e.message}")
                     }
                 } else if (isDownload) {
                     param.result = fixDownloadProto(response)
@@ -341,14 +333,12 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         }
                             ?: throw CustomServerException(mapOf("未知错误" to "请检查哔哩漫游设置中解析服务器设置。"))
                     } catch (e: CustomServerException) {
-                        val messages = e.errors.asSequence()
-                            .joinToString("\n") { "${it.key}: ${it.value}" }.trim()
                         param.result = showPlayerErrorUnite(
                             response, supplement,
-                            "请求解析中服务器发生错误(点此查看更多)\n$messages"
+                            "请求解析中服务器发生错误(点此查看更多)\n${e.message}"
                         )
-                        Log.w("请求解析服务器发生错误: $messages")
-                        Log.toast("请求解析服务器发生错误: $messages")
+                        Log.w("请求解析服务器发生错误: ${e.message}")
+                        Log.toast("请求解析服务器发生错误: ${e.message}")
                     }
                 } else if (isDownload) {
                     param.result = fixDownloadProtoUnite(response)
