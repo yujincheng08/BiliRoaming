@@ -1,61 +1,42 @@
 package me.iacn.biliroaming.hook
 
+import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.utils.*
-
+import java.lang.reflect.Proxy
 
 class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
-
     override fun startHook() {
-        if (!sPrefs.getBoolean("danmaku_filter", false)) {
-            return
-        }
-        Log.d("StartHook: DanmakuHook")
-        hookDanmaku()
-    }
-
-
-    private fun hookDanmaku() {
-        "com.bapis.bilibili.community.service.dm.v1.DMMoss".findClass(mClassLoader).run {
-            hookBeforeMethod(
-                "dmSegMobile",
-                "com.bapis.bilibili.community.service.dm.v1.DmSegMobileReq",
-                "com.bilibili.lib.moss.api.MossResponseHandler"
-            ) { methodHookParam ->
-                methodHookParam.thisObject.callMethod(
-                    "dmSegMobile", methodHookParam.args[0]
-                )
-                    ?.let { dmSegMobileReply ->
-                        methodHookParam.args[1].callMethod("onNext", dmSegMobileReply)
-                    }
-                methodHookParam.result = null
-            }
-            hookAfterMethod(
-                "dmSegMobile", "com.bapis.bilibili.community.service.dm.v1.DmSegMobileReq"
-            ) { methodHookParam ->
-                filterDanmaku(methodHookParam.result)
-            }
-        }
-    }
-
-
-    private fun filterDanmaku(dmSegmentMobileReply: Any) {
-        val resultDanmakuList = mutableListOf<Any>()
-        val weightThreshold = if (sPrefs.getBoolean(
-                "danmaku_filter_weight_switch", false
-            )
-        ) sPrefs.getInt("danmaku_filter_weight_value", 0) else null
-        dmSegmentMobileReply.getObjectFieldOrNullAs<List<*>>("elems_").orEmpty().let { elems ->
-            for (danmakuElem in elems) {
-                if (danmakuElem == null || weightThreshold == null) {
-                    continue
+        val blockWeight = sPrefs.getInt("danmaku_filter_weight_value", 0)
+            .takeIf { it > 0 } ?: return
+        "com.bapis.bilibili.community.service.dm.v1.DMMoss".from(mClassLoader)?.hookBeforeMethod(
+            "dmSegMobile",
+            "com.bapis.bilibili.community.service.dm.v1.DmSegMobileReq",
+            instance.mossResponseHandlerClass
+        ) { param ->
+            val handler = param.args[1]
+            param.args[1] = Proxy.newProxyInstance(
+                handler.javaClass.classLoader,
+                arrayOf(instance.mossResponseHandlerClass)
+            ) { _, m, args ->
+                if (m.name == "onNext") {
+                    filterDanmaku(args[0], blockWeight)
+                    m(handler, *args)
+                } else if (args == null) {
+                    m(handler)
+                } else {
+                    m(handler, *args)
                 }
-                val weight = danmakuElem.callMethodAs<Int>("getWeight")
-                if (weight < weightThreshold) continue
-                resultDanmakuList.add(danmakuElem)
             }
         }
-        dmSegmentMobileReply.callMethod("clearElems")
-        dmSegmentMobileReply.callMethod("addAllElems", resultDanmakuList)
+    }
+
+    private fun filterDanmaku(reply: Any?, blockWeight: Int) {
+        reply?.callMethodAs<List<Any>>("getElemsList")?.filter {
+            it.callMethodAs<Int>("getWeight") >= blockWeight
+        }?.let {
+            reply.callMethod("clearElems")
+            reply.callMethod("addAllElems", it)
+        }
     }
 }

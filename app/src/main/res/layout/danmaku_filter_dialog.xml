@@ -1,43 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
-<GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="wrap_content"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:columnCount="2"
+    android:gravity="center_vertical"
     android:orientation="horizontal"
-    android:paddingStart="25dp"
-    android:paddingEnd="20dp"
-    android:rowCount="6">
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp">
 
+    <SeekBar
+        android:id="@+id/seekBar"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:max="12"
+        android:paddingTop="16dp"
+        android:paddingBottom="16dp" />
 
     <TextView
-        android:layout_width="0dp"
+        android:id="@+id/tvHint"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_columnWeight="4"
-        android:text="@string/danmaku_filter_weight_switch_label" />
-
-    <Switch
-        android:id="@+id/danmaku_filter_weight_switch"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_columnWeight="1"
-        android:checked="true"
-        android:tag="danmaku_filter_weight_switch" />
-
-    <TextView
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_columnWeight="2"
-        android:singleLine="true"
-        android:text="@string/danmaku_filter_weight_value_label" />
-
-    <EditText
-        android:id="@+id/danmaku_filter_weight_value"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_columnWeight="5"
-        android:autofillHints="no"
-        android:hint="@string/danmaku_filter_weight_value_hint"
-        android:inputType="numberDecimal"
-        android:tag="danmaku_filter_weight_value" />
-</GridLayout>
+        android:gravity="end"
+        android:minWidth="32dp"
+        android:textColor="?android:attr/textColorPrimaryNoDisable"
+        android:textSize="14sp"
+        tools:text="1级" />
+</LinearLayout>

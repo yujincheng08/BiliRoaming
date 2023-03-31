@@ -21,7 +21,8 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.EditText
-import android.widget.Switch
+import android.widget.SeekBar
+import android.widget.SeekBar.OnSeekBarChangeListener
 import android.widget.TextView
 import androidx.documentfile.provider.DocumentFile
 import kotlinx.coroutines.MainScope
@@ -78,7 +79,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("export_video")?.onPreferenceClickListener = this
             findPreference("home_filter")?.onPreferenceClickListener = this
             findPreference("custom_subtitle")?.onPreferenceChangeListener = this
-            findPreference("danmaku_filter")?.onPreferenceChangeListener = this
+            findPreference("danmaku_filter")?.onPreferenceClickListener = this
             findPreference("customize_accessKey")?.onPreferenceClickListener = this
             findPreference("share_log")?.onPreferenceClickListener = this
             findPreference("customize_drawer")?.onPreferenceClickListener = this
@@ -231,12 +232,6 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     if (newValue as Boolean)
                         onAddCustomButtonClick()
                 }
-                "danmaku_filter" -> {
-                    if (newValue as Boolean) {
-                        onDanmakuFilterClick()
-                    }
-                }
-
             }
             return true
         }
@@ -383,64 +378,31 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             return true
         }
 
-
         private fun onDanmakuFilterClick(): Boolean {
             AlertDialog.Builder(activity).run {
-                val layout = moduleRes.getLayout(R.layout.danmaku_filter_dialog)
-                val inflater = LayoutInflater.from(context)
-                val view = inflater.inflate(layout, null)
-                val editTexts = arrayOf(
-                    view.findViewById<EditText>(R.id.danmaku_filter_weight_value)!!,
-                )
-                val switches = arrayOf(
-                    view.findViewById<Switch>(R.id.danmaku_filter_weight_switch),
-                )
-                val switchPairs = listOf<Pair<Switch, EditText>>(Pair(switches[0], editTexts[0]))
-
-                editTexts.forEach {
-                    it.setText(
-                        prefs.getString(
-                            it.tag.toString(),
-                            it.hint.toString()
-                        )
-                    )
-                }
-                switches.forEach {
-                    if (prefs.contains(it.tag.toString())) {
-                        it.isChecked = prefs.getBoolean(it.tag.toString(), false)
+                val view = LayoutInflater.from(context)
+                    .inflate(R.layout.danmaku_filter_dialog, null)
+                val seekBar = view.findViewById<SeekBar>(R.id.seekBar)
+                val tvHint = view.findViewById<TextView>(R.id.tvHint)
+                seekBar.setOnSeekBarChangeListener(object : OnSeekBarChangeListener {
+                    override fun onProgressChanged(
+                        seekBar: SeekBar?, progress: Int, fromUser: Boolean
+                    ) {
+                        tvHint.text =
+                            context.getString(R.string.danmaku_filter_weight_hint, progress)
                     }
-                }
 
-                switchPairs.forEach {
-                    it.second.alpha = if (it.first.isChecked) 1f else 0.2f
-                    it.first.setOnCheckedChangeListener { _, isChecked ->
-                        it.second.alpha = if (isChecked) 1f else 0.2f
-                    }
-                }
-
+                    override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+                    override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+                })
+                val current = prefs.getInt("danmaku_filter_weight_value", 0)
+                tvHint.text = context.getString(R.string.danmaku_filter_weight_hint, current)
+                seekBar.progress = current
+                setTitle(R.string.danmaku_filter_title)
+                setNegativeButton(android.R.string.cancel, null)
                 setPositiveButton(android.R.string.ok) { _, _ ->
-                    editTexts.forEach {
-                        val text = it.text.toString()
-                        if (text.isNotEmpty())
-                            if (it.inputType == android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL) {
-                                prefs.edit().putInt(
-                                    it.tag.toString(),
-                                    text.toInt()
-                                ).apply()
-                            } else {
-                                prefs.edit().putString(
-                                    it.tag.toString(),
-                                    text
-                                ).apply()
-                            }
-                        else
-                            prefs.edit().remove(it.tag.toString()).apply()
-                    }
-                    switches.forEach {
-                        prefs.edit().putBoolean(it.tag.toString(), it.isChecked).apply()
-                    }
+                    prefs.edit().putInt("danmaku_filter_weight_value", seekBar.progress).apply()
                 }
-                setTitle("弹幕屏蔽设置")
                 setView(view)
                 show()
             }
@@ -715,6 +677,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             "customize_drawer" -> onCustomizeDrawerClick()
             "custom_link" -> onCustomLinkClick()
             "customize_dynamic" -> onCustomDynamicClick()
+            "danmaku_filter" -> onDanmakuFilterClick()
             else -> false
         }
     }
