@@ -276,4 +276,9 @@
     <string name="remove_vip_section_summary">我的頁面將大會員橫幅移除</string>
     <string name="save_comment_image_title">筆記圖片長按儲存</string>
     <string name="save_comment_image_summary">影片筆記圖片長按儲存到本地</string>
+    <string name="danmaku_filter_summary">彈幕屏蔽優化</string>
+    <string name="danmaku_filter_title">增强彈幕屏蔽功能</string>
+    <string name="danmaku_filter_weight_switch_label">彈幕雲屏蔽</string>
+    <string name="danmaku_filter_weight_value_label">彈幕屏蔽等級</string>
+    <string name="danmaku_filter_weight_value_hint">4</string>
 </resources>

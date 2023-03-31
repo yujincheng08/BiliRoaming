@@ -160,6 +160,11 @@
             android:title="@string/play_arc_conf_title" />
 
         <SwitchPreference
+            android:key="danmaku_filter"
+            android:summary="@string/danmaku_filter_summary"
+            android:title="@string/danmaku_filter_title" />
+
+        <SwitchPreference
             android:defaultValue="false"
             android:key="force_browser"
             android:summary="@string/force_browser_summary"

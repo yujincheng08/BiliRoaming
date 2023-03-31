@@ -277,4 +277,9 @@
     <string name="block_pcdn_summary">可能一定程度上优化视频加载速度。纯 IPv6 网络环境，或通过代理访问网络，推荐启用此项。不影响 MCDN。可能在旧版无效。</string>
     <string name="block_pcdn_live_title">阻止直播 P2P 上传</string>
     <string name="block_pcdn_live_summary">阻止观看热门直播时被当作 P2P Peer，而占用大量上传带宽。可能在旧版无效。</string>
+    <string name="danmaku_filter_summary">弹幕屏蔽优化</string>
+    <string name="danmaku_filter_title">增强弹幕屏蔽功能</string>
+    <string name="danmaku_filter_weight_switch_label">弹幕云屏蔽</string>
+    <string name="danmaku_filter_weight_value_label">弹幕屏蔽等级</string>
+    <string name="danmaku_filter_weight_value_hint">4</string>
 </resources>

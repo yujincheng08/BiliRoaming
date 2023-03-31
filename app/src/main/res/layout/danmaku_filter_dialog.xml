@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:columnCount="2"
+    android:orientation="horizontal"
+    android:paddingStart="25dp"
+    android:paddingEnd="20dp"
+    android:rowCount="6">
+
+
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="4"
+        android:text="@string/danmaku_filter_weight_switch_label" />
+
+    <Switch
+        android:id="@+id/danmaku_filter_weight_switch"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="1"
+        android:checked="true"
+        android:tag="danmaku_filter_weight_switch" />
+
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="2"
+        android:singleLine="true"
+        android:text="@string/danmaku_filter_weight_value_label" />
+
+    <EditText
+        android:id="@+id/danmaku_filter_weight_value"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="5"
+        android:autofillHints="no"
+        android:hint="@string/danmaku_filter_weight_value_hint"
+        android:inputType="numberDecimal"
+        android:tag="danmaku_filter_weight_value" />
+</GridLayout>
