@@ -166,17 +166,11 @@ class SpeedTestDialog(private val pref: ListPreference, activity: Activity) :
 
     private fun getTestUrl(): String? {
         val json = try {
-            if (runCatchingOrNull { XposedInit.country.get(5L, TimeUnit.SECONDS) } == "cn") getPlayUrl(
-                overseaTestParams,
-                arrayOf("hk", "tw")
-            )
+            if (runCatchingOrNull { XposedInit.country.get(5L, TimeUnit.SECONDS) } == "cn")
+                getPlayUrl(overseaTestParams, arrayOf("hk", "tw"))
             else getPlayUrl(mainlandTestParams, arrayOf("cn"))
         } catch (e: BiliRoamingApi.CustomServerException) {
-            var messages = ""
-            for (error in e.errors) {
-                messages += "${error.key}: ${error.value}\n"
-            }
-            Log.w("请求解析服务器发生错误: ${messages.trim()}")
+            Log.w("请求解析服务器发生错误: ${e.message}")
             return null
         }
         return json?.toJSONObject()?.optJSONObject("dash")?.getJSONArray("audio")?.run {
