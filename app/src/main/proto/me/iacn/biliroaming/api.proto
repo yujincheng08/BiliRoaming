@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+import "google/protobuf/any.proto";
+
 package me.iacn.biliroaming;
 
 option java_package = "me.iacn.biliroaming";
@@ -10,6 +12,7 @@ enum CodeType {
   NOCODE = 0;
   CODE264 = 1;
   CODE265 = 2;
+  CODEAV1 = 3;
 }
 
 message SceneControl {
@@ -273,7 +276,7 @@ message ViewInfo {
   optional Toast toast = 0x2;
   optional CouponInfo coupon_info = 0x3;
   repeated int64 demand_no_pay_epids = 0x4;
-  optional EndPage endpage = 0x5;
+  optional EndPage end_page = 0x5;
   map<string, bool> exp_config = 0x6;
   optional PopWin pop_win = 0x7;
   optional PromptBar try_watch_prompt_bar = 0x8;
@@ -288,6 +291,53 @@ message PlayViewReply {
   optional BusinessInfo business = 0x3;
   optional Event event = 0x4;
   optional ViewInfo view_info = 0x5;
+}
+
+message ExtraContent {}
+
+message ArcConf {
+  optional bool is_support = 0x1;
+  optional bool disabled = 0x2;
+  optional ExtraContent extra_content = 0x3;
+}
+
+message PlayArcConf {
+  map<int32, ArcConf> arc_conf = 0x1;
+}
+
+message PlayDeviceConf {}
+message PlayArc {}
+message QnTrialInfo {}
+
+message PlayViewUniteReply {
+  optional VideoInfo vod_info = 0x1;
+  optional PlayArcConf play_arc_conf = 0x2;
+  optional PlayDeviceConf play_device_conf = 0x3;
+  optional Event event = 0x4;
+  optional google.protobuf.Any supplement = 0x5;
+  optional PlayArc play_arc = 0x6;
+  optional QnTrialInfo qn_trial_info = 0x7;
+  optional History history = 0x8;
+}
+
+message VideoVod {
+  optional int64 aid = 0x1;
+  optional int64 cid = 0x2;
+  optional int64 qn = 0x3;
+  optional int32 fnver = 0x4;
+  optional int32 fnval = 0x5;
+  optional int32 download = 0x6;
+  optional int32 force_host = 0x7;
+  optional bool fourk = 0x8;
+  optional CodeType prefer_code_type = 0x9;
+  optional int64 voice_balance = 0xa;
+}
+
+message PlayViewUniteReq {
+  optional VideoVod vod = 0x1;
+  optional string spmid = 0x2;
+  optional string from_spmid = 0x3;
+  map<string, string> extra_content = 0x4;
 }
 
 message ViewReq {
