@@ -315,8 +315,11 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         val serializedRequest = request.callMethodAs<ByteArray>("toByteArray")
                         val req = PlayViewUniteReq.parseFrom(serializedRequest)
                         val thaiSeason = lazy {
+                            val seasonId = req.extraContentMap["season_id"].takeIf { it != "0" }
+                                ?: lastSeasonInfo["season_id"] ?: "0"
+                            val epId = req.extraContentMap["ep_id"]
                             getSeason(
-                                mapOf("season_id" to req.extraContentMap["season_id"]),
+                                mapOf("season_id" to seasonId, "ep_id" to epId),
                                 true
                             )?.toJSONObject()?.optJSONObject("result")
                         }
