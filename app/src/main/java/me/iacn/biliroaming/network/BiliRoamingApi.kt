@@ -476,43 +476,17 @@ object BiliRoamingApi {
         stream.put("backup_url", JSONArray(newBackup))
     }
 
-    private fun checkBaseUrl(stream: JSONObject) {
-        val checkConnection = fun(url: String) = runCatchingOrNull {
-            val connection = URL(url).openConnection() as HttpURLConnection
-            connection.requestMethod = "HEAD"
-            connection.connectTimeout = 1000_000
-            connection.readTimeout = 1000_000
-            connection.connect()
-            connection.responseCode == HttpURLConnection.HTTP_OK
-        } ?: false
-        val baseUrl = stream.optString("base_url")
-        if (!checkConnection(baseUrl)) {
-            stream.optJSONArray("backup_url")?.asSequence<String>()
-                ?.find { checkConnection(it) }?.let {
-                    stream.put("base_url", it)
-                }
-        }
-    }
-
     @JvmStatic
-    fun getPlayUrl(
-        queryString: String?,
-        priorityArea: Array<String>? = null,
-        isDownload: Boolean = false
-    ): String? {
+    fun getPlayUrl(queryString: String?, priorityArea: Array<String>? = null): String? {
         return getFromCustomUrl(queryString, priorityArea)?.let {
             runCatchingOrNull {
                 JSONObject(it).let { json -> json.optJSONObject("result") ?: json }.apply {
                     optJSONObject("dash")?.run {
                         for (video in optJSONArray("video").orEmpty()) {
                             replaceUPOS(video)
-                            if (isDownload)
-                                checkBaseUrl(video)
                         }
                         for (audio in optJSONArray("audio").orEmpty()) {
                             replaceUPOS(audio)
-                            if (isDownload)
-                                checkBaseUrl(audio)
                         }
                     }
                 }.toString()

@@ -16,6 +16,7 @@ import org.json.JSONObject
 import java.io.ByteArrayInputStream
 import java.io.InputStream
 import java.net.HttpURLConnection
+import java.net.URL
 import java.util.concurrent.CountDownLatch
 
 /**
@@ -95,8 +96,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
             } catch (e: CustomServerException) {
                 val messages = buildString {
-                    for (error in e.errors)
-                        appendLine("${error.key}: ${error.value}")
+                    e.errors.forEach { (k, v) -> appendLine("$k: $v") }
                 }.trim()
                 Log.w("请求解析服务器发生错误: $messages")
                 Log.toast("请求解析服务器发生错误: $messages")
@@ -125,8 +125,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
             } catch (e: CustomServerException) {
                 val messages = buildString {
-                    for (error in e.errors)
-                        appendLine("${error.key}: ${error.value}")
+                    e.errors.forEach { (k, v) -> appendLine("$k: $v") }
                 }.trim()
                 Log.w("请求解析服务器发生错误: $messages")
                 Log.toast("请求解析服务器发生错误: $messages")
@@ -186,10 +185,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                 true
                             )?.toJSONObject()?.optJSONObject("result")
                         }
-                        val content = getPlayUrl(
-                            reconstructQuery(req, response, thaiSeason),
-                            isDownload = isDownload
-                        )
+                        val content = getPlayUrl(reconstructQuery(req, response, thaiSeason))
                         countDownLatch?.countDown()
                         content?.let {
                             Log.toast("已从代理服务器获取播放地址\n如加载缓慢或黑屏，可去漫游设置中测速并设置 UPOS")
@@ -200,8 +196,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         }
                     } catch (e: CustomServerException) {
                         val messages = buildString {
-                            for (error in e.errors)
-                                appendLine("${error.key}: ${error.value}")
+                            e.errors.forEach { (k, v) -> appendLine("$k: $v") }
                         }.trim()
                         param.result = showPlayerError(
                             response,
@@ -268,10 +263,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                 true
                             )?.toJSONObject()?.optJSONObject("result")
                         }
-                        val content = getPlayUrl(
-                            reconstructQuery(req, response, thaiSeason),
-                            isDownload = isDownload
-                        )
+                        val content = getPlayUrl(reconstructQuery(req, response, thaiSeason))
                         countDownLatch?.countDown()
                         content?.let {
                             Log.toast("已从代理服务器获取播放地址\n如加载缓慢或黑屏，可去漫游设置中测速并设置 UPOS")
@@ -280,8 +272,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             ?: throw CustomServerException(mapOf("未知错误" to "请检查哔哩漫游设置中解析服务器设置。"))
                     } catch (e: CustomServerException) {
                         val messages = buildString {
-                            for (error in e.errors)
-                                appendLine("${error.key}: ${error.value}")
+                            e.errors.forEach { (k, v) -> appendLine("$k: $v") }
                         }.trim()
                         param.result = showPlayerError(
                             response,
@@ -344,10 +335,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                 true
                             )?.toJSONObject()?.optJSONObject("result")
                         }
-                        val content = getPlayUrl(
-                            reconstructQueryUnite(req, supplement, thaiSeason),
-                            isDownload = isDownload
-                        )
+                        val content = getPlayUrl(reconstructQueryUnite(req, supplement, thaiSeason))
                         countDownLatch?.countDown()
                         content?.let {
                             Log.toast("已从代理服务器获取播放地址\n如加载缓慢或黑屏，可去漫游设置中测速并设置 UPOS")
@@ -358,8 +346,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             ?: throw CustomServerException(mapOf("未知错误" to "请检查哔哩漫游设置中解析服务器设置。"))
                     } catch (e: CustomServerException) {
                         val messages = buildString {
-                            for (error in e.errors)
-                                appendLine("${error.key}: ${error.value}")
+                            e.errors.forEach { (k, v) -> appendLine("$k: $v") }
                         }.trim()
                         param.result = showPlayerErrorUnite(
                             response, supplement,
@@ -489,21 +476,47 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         return json.toString()
     }
 
-    private fun VideoInfoKt.Dsl.fixDownloadProto() {
+    private fun VideoInfoKt.Dsl.fixDownloadProto(checkBaseUrl: Boolean = false) {
         var audioId = 0
         var setted = false
-        val streams = streamList.map {
-            if (it.streamInfo.quality != quality || setted) {
-                it.copy { clearContent() }
+        val checkConnection = fun(url: String) = runCatchingOrNull {
+            val connection = URL(url).openConnection() as HttpURLConnection
+            connection.requestMethod = "HEAD"
+            connection.connectTimeout = 1000_000
+            connection.readTimeout = 1000_000
+            connection.connect()
+            connection.responseCode == HttpURLConnection.HTTP_OK
+        } ?: false
+        val streams = streamList.map { s ->
+            if (s.streamInfo.quality != quality || setted) {
+                s.copy { clearContent() }
             } else {
-                audioId = it.dashVideo.audioId
+                audioId = s.dashVideo.audioId
                 setted = true
-                it
+                if (checkBaseUrl) {
+                    s.copy {
+                        dashVideo = dashVideo.copy {
+                            if (!checkConnection(baseUrl))
+                                backupUrl.find { checkConnection(it) }?.let {
+                                    baseUrl = it
+                                }
+                        }
+                    }
+                } else s
             }
         }
-        val audio = dashAudio.firstOrNull {
+        val audio = (dashAudio.find {
             it.id == audioId
-        } ?: dashAudio.first()
+        } ?: dashAudio.first()).let { a ->
+            if (checkBaseUrl) {
+                a.copy {
+                    if (!checkConnection(baseUrl))
+                        backupUrl.find { checkConnection(it) }?.let {
+                            baseUrl = it
+                        }
+                }
+            } else a
+        }
         streamList.clear()
         dashAudio.clear()
         streamList += streams
@@ -853,7 +866,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
 
         if (isDownload) {
-            fixDownloadProto()
+            fixDownloadProto(true)
         }
     }
 
