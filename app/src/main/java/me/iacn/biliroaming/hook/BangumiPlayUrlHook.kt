@@ -16,6 +16,7 @@ import org.json.JSONObject
 import java.io.ByteArrayInputStream
 import java.io.InputStream
 import java.net.HttpURLConnection
+import java.net.URL
 import java.util.concurrent.CountDownLatch
 
 /**
@@ -94,12 +95,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     Log.toast("获取播放地址失败")
                 }
             } catch (e: CustomServerException) {
-                val messages = buildString {
-                    for (error in e.errors)
-                        appendLine("${error.key}: ${error.value}")
-                }.trim()
-                Log.w("请求解析服务器发生错误: $messages")
-                Log.toast("请求解析服务器发生错误: $messages")
+                Log.toast("请求解析服务器发生错误: ${e.message}", alsoLog = true)
             }
         }
 
@@ -124,12 +120,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     getPlayUrl(params, arrayOf(lastArea))
                 }
             } catch (e: CustomServerException) {
-                val messages = buildString {
-                    for (error in e.errors)
-                        appendLine("${error.key}: ${error.value}")
-                }.trim()
-                Log.w("请求解析服务器发生错误: $messages")
-                Log.toast("请求解析服务器发生错误: $messages")
+                Log.toast("请求解析服务器发生错误: ${e.message}", alsoLog = true)
                 return@hookBeforeAllConstructors
             } ?: run {
                 Log.toast("获取播放地址失败")
@@ -153,16 +144,15 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 "com.bapis.bilibili.pgc.gateway.player.v1.PlayViewReq"
             ) { param ->
                 val request = param.args[0]
-                if (sPrefs.getBoolean("allow_download", false)
-                    && request.callMethodAs<Int>("getDownload") >= 1
-                ) {
+                isDownload = sPrefs.getBoolean("allow_download", false)
+                        && request.callMethodAs<Int>("getDownload") >= 1
+                if (isDownload) {
                     if (!sPrefs.getBoolean("fix_download", false)
                         || request.callMethodAs<Int>("getFnval") <= 1
                     ) {
                         request.callMethod("setFnval", MAX_FNVAL)
                         request.callMethod("setFourk", true)
                     }
-                    isDownload = true
                     request.callMethod("setDownload", 0)
                 }
             }
@@ -182,7 +172,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             val seasonId = req.seasonId.toString().takeIf { it != "0" }
                                 ?: lastSeasonInfo["season_id"] ?: "0"
                             getSeason(
-                                mapOf("season_id" to seasonId),
+                                mapOf("season_id" to seasonId, "ep_id" to req.epId.toString()),
                                 true
                             )?.toJSONObject()?.optJSONObject("result")
                         }
@@ -192,20 +182,14 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             Log.toast("已从代理服务器获取播放地址\n如加载缓慢或黑屏，可去漫游设置中测速并设置 UPOS")
                             param.result = reconstructResponse(response, it, isDownload, thaiSeason)
                         } ?: run {
-                            Log.w("Failed to get play url")
-                            Log.toast("获取播放地址失败")
+                            Log.toast("获取播放地址失败", alsoLog = true)
                         }
                     } catch (e: CustomServerException) {
-                        val messages = buildString {
-                            for (error in e.errors)
-                                appendLine("${error.key}: ${error.value}")
-                        }.trim()
                         param.result = showPlayerError(
                             response,
-                            "请求解析中服务器发生错误(点此查看更多)\n$messages"
+                            "请求解析中服务器发生错误(点此查看更多)\n${e.message}"
                         )
-                        Log.w("请求解析服务器发生错误: $messages")
-                        Log.toast("请求解析服务器发生错误: $messages")
+                        Log.toast("请求解析服务器发生错误: ${e.message}", alsoLog = true)
                     }
                 } else if (isDownload) {
                     param.result = fixDownloadProto(response)
@@ -225,16 +209,15 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 // else we are downloading
                 // if fnval == 0 -> flv download
                 // thus fix download will set qn = 0 and set fnval to max
-                if (sPrefs.getBoolean("allow_download", false)
-                    && request.callMethodAs<Int>("getDownload") >= 1
-                ) {
+                isDownload = sPrefs.getBoolean("allow_download", false)
+                        && request.callMethodAs<Int>("getDownload") >= 1
+                if (isDownload) {
                     if (!sPrefs.getBoolean("fix_download", false)
                         || request.callMethodAs<Int>("getFnval") <= 1
                     ) {
                         request.callMethod("setFnval", MAX_FNVAL)
                         request.callMethod("setFourk", true)
                     }
-                    isDownload = true
                     request.callMethod("setDownload", 0)
                 }
             }
@@ -250,10 +233,9 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 if (instance.networkExceptionClass?.isInstance(param.throwable) == true)
                     return@hookAfterMethod
                 val request = param.args[0]
-                val response = param.result
-                    ?: "com.bapis.bilibili.pgc.gateway.player.v2.PlayViewReply".findClass(
-                        mClassLoader
-                    ).new()
+                val response =
+                    param.result ?: "com.bapis.bilibili.pgc.gateway.player.v2.PlayViewReply"
+                        .on(mClassLoader).new()
                 if (needProxy(response)) {
                     try {
                         val serializedRequest = request.callMethodAs<ByteArray>("toByteArray")
@@ -262,7 +244,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             val seasonId = req.seasonId.toString().takeIf { it != "0" }
                                 ?: lastSeasonInfo["season_id"] ?: "0"
                             getSeason(
-                                mapOf("season_id" to seasonId),
+                                mapOf("season_id" to seasonId, "ep_id" to req.epId.toString()),
                                 true
                             )?.toJSONObject()?.optJSONObject("result")
                         }
@@ -274,16 +256,11 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         }
                             ?: throw CustomServerException(mapOf("未知错误" to "请检查哔哩漫游设置中解析服务器设置。"))
                     } catch (e: CustomServerException) {
-                        val messages = buildString {
-                            for (error in e.errors)
-                                appendLine("${error.key}: ${error.value}")
-                        }.trim()
                         param.result = showPlayerError(
                             response,
-                            "请求解析中服务器发生错误(点此查看更多)\n$messages"
+                            "请求解析中服务器发生错误(点此查看更多)\n${e.message}"
                         )
-                        Log.w("请求解析服务器发生错误: $messages")
-                        Log.toast("请求解析服务器发生错误: $messages")
+                        Log.toast("请求解析服务器发生错误: ${e.message}", alsoLog = true)
                     }
                 } else if (isDownload) {
                     param.result = fixDownloadProto(response)
@@ -298,16 +275,15 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             ) { param ->
                 val request = param.args[0]
                 val vod = request.callMethod("getVod") ?: return@hookBeforeMethod
-                if (sPrefs.getBoolean("allow_download", false)
-                    && vod.callMethodAs<Int>("getDownload") >= 1
-                ) {
+                isDownload = sPrefs.getBoolean("allow_download", false)
+                        && vod.callMethodAs<Int>("getDownload") >= 1
+                if (isDownload) {
                     if (!sPrefs.getBoolean("fix_download", false)
                         || vod.callMethodAs<Int>("getFnval") <= 1
                     ) {
                         vod.callMethod("setFnval", MAX_FNVAL)
                         vod.callMethod("setFourk", true)
                     }
-                    isDownload = true
                     vod.callMethod("setDownload", 0)
                 }
             }
@@ -334,8 +310,11 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         val serializedRequest = request.callMethodAs<ByteArray>("toByteArray")
                         val req = PlayViewUniteReq.parseFrom(serializedRequest)
                         val thaiSeason = lazy {
+                            val seasonId = req.extraContentMap["season_id"].takeIf { it != "0" }
+                                ?: lastSeasonInfo["season_id"] ?: "0"
+                            val epId = req.extraContentMap["ep_id"]
                             getSeason(
-                                mapOf("season_id" to req.extraContentMap["season_id"]),
+                                mapOf("season_id" to seasonId, "ep_id" to epId),
                                 true
                             )?.toJSONObject()?.optJSONObject("result")
                         }
@@ -349,16 +328,11 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         }
                             ?: throw CustomServerException(mapOf("未知错误" to "请检查哔哩漫游设置中解析服务器设置。"))
                     } catch (e: CustomServerException) {
-                        val messages = buildString {
-                            for (error in e.errors)
-                                appendLine("${error.key}: ${error.value}")
-                        }.trim()
                         param.result = showPlayerErrorUnite(
                             response, supplement,
-                            "请求解析中服务器发生错误(点此查看更多)\n$messages"
+                            "请求解析中服务器发生错误(点此查看更多)\n${e.message}"
                         )
-                        Log.w("请求解析服务器发生错误: $messages")
-                        Log.toast("请求解析服务器发生错误: $messages")
+                        Log.toast("请求解析服务器发生错误: ${e.message}", alsoLog = true)
                     }
                 } else if (isDownload) {
                     param.result = fixDownloadProtoUnite(response)
@@ -481,20 +455,46 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         return json.toString()
     }
 
-    private fun VideoInfoKt.Dsl.fixDownloadProto() {
+    private fun VideoInfoKt.Dsl.fixDownloadProto(checkBaseUrl: Boolean = false) {
         var audioId = 0
         var setted = false
-        val streams = streamList.map {
-            if (it.streamInfo.quality != quality || setted) {
-                it.copy { clearContent() }
+        val checkConnection = fun(url: String) = runCatchingOrNull {
+            val connection = URL(url).openConnection() as HttpURLConnection
+            connection.requestMethod = "HEAD"
+            connection.connectTimeout = 1000
+            connection.readTimeout = 1000
+            connection.connect()
+            connection.responseCode == HttpURLConnection.HTTP_OK
+        } ?: false
+        val streams = streamList.map { s ->
+            if (s.streamInfo.quality != quality || setted) {
+                s.copy { clearContent() }
             } else {
-                audioId = it.dashVideo.audioId
+                audioId = s.dashVideo.audioId
                 setted = true
-                it
+                if (checkBaseUrl) {
+                    s.copy {
+                        dashVideo = dashVideo.copy {
+                            if (!checkConnection(baseUrl))
+                                backupUrl.find { checkConnection(it) }?.let {
+                                    baseUrl = it
+                                }
+                        }
+                    }
+                } else s
             }
         }
-        val audio = dashAudio.first {
-            it.id != audioId
+        val audio = (dashAudio.find {
+            it.id == audioId
+        } ?: dashAudio.first()).let { a ->
+            if (checkBaseUrl) {
+                a.copy {
+                    if (!checkConnection(baseUrl))
+                        backupUrl.find { checkConnection(it) }?.let {
+                            baseUrl = it
+                        }
+                }
+            } else a
         }
         streamList.clear()
         dashAudio.clear()
@@ -845,7 +845,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
 
         if (isDownload) {
-            fixDownloadProto()
+            fixDownloadProto(true)
         }
     }
 

@@ -222,6 +222,8 @@
     <string name="force_browser_summary">而不是使用内置浏览器</string>
     <string name="disable_story_full_title">关闭看一看按钮</string>
     <string name="disable_story_full_summary">横屏稿件半屏时不显示看一看按钮</string>
+    <string name="disable_main_page_story_title">点击首页头像跳转“我的”页面</string>
+    <string name="disable_main_page_story_summary">开启后点击首页头像跳转至“我的”页面而不是快捷刷短视频。若启用“移动我的页面到侧边栏”则本项无效。可能在旧版无效。</string>
     <string name="dialog_blur_background_summary">花里胡哨! (需要 Android 12+ 并开启 允许窗口级模糊处理)</string>
     <string name="dialog_blur_background_title">全局 Dialog 背景模糊</string>
     <string name="block_up_rcmd_ads_title">屏蔽UP主推荐广告</string>

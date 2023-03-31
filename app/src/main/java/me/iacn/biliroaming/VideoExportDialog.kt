@@ -60,8 +60,7 @@ class VideoExportDialog(activity: Activity, fragment: Fragment) : AlertDialog.Bu
                     videoEntry.path = page
                     allVideos.add(videoEntry)
                 } catch (e: Throwable) {
-                    e.printStackTrace()
-                    Log.toast("${e.message}", true)
+                    Log.toast("${e.message}", true, alsoLog = true)
                 }
             }
         }

@@ -15,7 +15,7 @@ object Log {
     private val handler by lazy { Handler(Looper.getMainLooper()) }
     private var toast: Toast? = null
 
-    fun toast(msg: String, force: Boolean = false, duration: Int = Toast.LENGTH_SHORT) {
+    fun toast(msg: String, force: Boolean = false, duration: Int = Toast.LENGTH_SHORT, alsoLog: Boolean = true) {
         if (!force && !sPrefs.getBoolean("show_info", true)) return
         handler.post {
             BiliBiliPackage.instance.toastHelperClass?.runCatchingOrNull {
@@ -35,6 +35,7 @@ object Log {
                 }
             }
         }
+        if (alsoLog) w(msg)
     }
 
     @JvmStatic

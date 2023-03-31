@@ -289,8 +289,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                                     activity.contentResolver.openInputStream(uri)?.copyTo(out)
                                 }
                             } catch (e: Exception) {
-                                e.printStackTrace()
-                                Log.toast(e.message ?: "未知错误", true)
+                                Log.toast(e.message ?: "未知错误", true, alsoLog = true)
                             }
                             Log.toast("请至少重新打开哔哩漫游设置", true)
                         }
@@ -301,8 +300,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                                         ?.let { `in`.copyTo(it) }
                                 }
                             } catch (e: Exception) {
-                                e.printStackTrace()
-                                Log.toast(e.message ?: "未知错误", true)
+                                Log.toast(e.message ?: "未知错误", true, alsoLog = true)
                             }
                         }
                     }
@@ -320,8 +318,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                         }
                         Log.toast("导出成功", true)
                     } catch (e: Exception) {
-                        e.printStackTrace()
-                        Log.toast("${e.message}")
+                        Log.toast("${e.message}", alsoLog = true)
                     }
                 }
             }
