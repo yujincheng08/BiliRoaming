@@ -467,8 +467,8 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val checkConnection = fun(url: String) = runCatchingOrNull {
             val connection = URL(url).openConnection() as HttpURLConnection
             connection.requestMethod = "HEAD"
-            connection.connectTimeout = 1000_000
-            connection.readTimeout = 1000_000
+            connection.connectTimeout = 1000
+            connection.readTimeout = 1000
             connection.connect()
             connection.responseCode == HttpURLConnection.HTTP_OK
         } ?: false
