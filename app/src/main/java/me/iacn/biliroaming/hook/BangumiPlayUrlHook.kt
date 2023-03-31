@@ -95,8 +95,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     Log.toast("获取播放地址失败")
                 }
             } catch (e: CustomServerException) {
-                Log.w("请求解析服务器发生错误: ${e.message}")
-                Log.toast("请求解析服务器发生错误: ${e.message}")
+                Log.toast("请求解析服务器发生错误: ${e.message}", alsoLog = true)
             }
         }
 
@@ -121,8 +120,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     getPlayUrl(params, arrayOf(lastArea))
                 }
             } catch (e: CustomServerException) {
-                Log.w("请求解析服务器发生错误: ${e.message}")
-                Log.toast("请求解析服务器发生错误: ${e.message}")
+                Log.toast("请求解析服务器发生错误: ${e.message}", alsoLog = true)
                 return@hookBeforeAllConstructors
             } ?: run {
                 Log.toast("获取播放地址失败")
@@ -184,16 +182,14 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             Log.toast("已从代理服务器获取播放地址\n如加载缓慢或黑屏，可去漫游设置中测速并设置 UPOS")
                             param.result = reconstructResponse(response, it, isDownload, thaiSeason)
                         } ?: run {
-                            Log.w("Failed to get play url")
-                            Log.toast("获取播放地址失败")
+                            Log.toast("获取播放地址失败", alsoLog = true)
                         }
                     } catch (e: CustomServerException) {
                         param.result = showPlayerError(
                             response,
                             "请求解析中服务器发生错误(点此查看更多)\n${e.message}"
                         )
-                        Log.w("请求解析服务器发生错误: ${e.message}")
-                        Log.toast("请求解析服务器发生错误: ${e.message}")
+                        Log.toast("请求解析服务器发生错误: ${e.message}", alsoLog = true)
                     }
                 } else if (isDownload) {
                     param.result = fixDownloadProto(response)
@@ -264,8 +260,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             response,
                             "请求解析中服务器发生错误(点此查看更多)\n${e.message}"
                         )
-                        Log.w("请求解析服务器发生错误: ${e.message}")
-                        Log.toast("请求解析服务器发生错误: ${e.message}")
+                        Log.toast("请求解析服务器发生错误: ${e.message}", alsoLog = true)
                     }
                 } else if (isDownload) {
                     param.result = fixDownloadProto(response)
@@ -337,8 +332,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             response, supplement,
                             "请求解析中服务器发生错误(点此查看更多)\n${e.message}"
                         )
-                        Log.w("请求解析服务器发生错误: ${e.message}")
-                        Log.toast("请求解析服务器发生错误: ${e.message}")
+                        Log.toast("请求解析服务器发生错误: ${e.message}", alsoLog = true)
                     }
                 } else if (isDownload) {
                     param.result = fixDownloadProtoUnite(response)
