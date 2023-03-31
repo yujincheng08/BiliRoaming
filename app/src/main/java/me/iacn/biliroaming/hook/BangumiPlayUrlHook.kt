@@ -95,9 +95,8 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     Log.toast("获取播放地址失败")
                 }
             } catch (e: CustomServerException) {
-                val messages = buildString {
-                    e.errors.forEach { (k, v) -> appendLine("$k: $v") }
-                }.trim()
+                val messages = e.errors.asSequence()
+                    .joinToString("\n") { "${it.key}: ${it.value}" }.trim()
                 Log.w("请求解析服务器发生错误: $messages")
                 Log.toast("请求解析服务器发生错误: $messages")
             }
@@ -124,9 +123,8 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     getPlayUrl(params, arrayOf(lastArea))
                 }
             } catch (e: CustomServerException) {
-                val messages = buildString {
-                    e.errors.forEach { (k, v) -> appendLine("$k: $v") }
-                }.trim()
+                val messages = e.errors.asSequence()
+                    .joinToString("\n") { "${it.key}: ${it.value}" }.trim()
                 Log.w("请求解析服务器发生错误: $messages")
                 Log.toast("请求解析服务器发生错误: $messages")
                 return@hookBeforeAllConstructors
@@ -152,7 +150,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 "com.bapis.bilibili.pgc.gateway.player.v1.PlayViewReq"
             ) { param ->
                 val request = param.args[0]
-                if (sPrefs.getBoolean("allow_download", false)
+                isDownload = if (sPrefs.getBoolean("allow_download", false)
                     && request.callMethodAs<Int>("getDownload") >= 1
                 ) {
                     if (!sPrefs.getBoolean("fix_download", false)
@@ -161,9 +159,9 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         request.callMethod("setFnval", MAX_FNVAL)
                         request.callMethod("setFourk", true)
                     }
-                    isDownload = true
                     request.callMethod("setDownload", 0)
-                } else isDownload = false
+                    true
+                } else false
             }
             hookAfterMethod(
                 "playView",
@@ -195,9 +193,8 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             Log.toast("获取播放地址失败")
                         }
                     } catch (e: CustomServerException) {
-                        val messages = buildString {
-                            e.errors.forEach { (k, v) -> appendLine("$k: $v") }
-                        }.trim()
+                        val messages = e.errors.asSequence()
+                            .joinToString("\n") { "${it.key}: ${it.value}" }.trim()
                         param.result = showPlayerError(
                             response,
                             "请求解析中服务器发生错误(点此查看更多)\n$messages"
@@ -223,7 +220,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 // else we are downloading
                 // if fnval == 0 -> flv download
                 // thus fix download will set qn = 0 and set fnval to max
-                if (sPrefs.getBoolean("allow_download", false)
+                isDownload = if (sPrefs.getBoolean("allow_download", false)
                     && request.callMethodAs<Int>("getDownload") >= 1
                 ) {
                     if (!sPrefs.getBoolean("fix_download", false)
@@ -232,9 +229,9 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         request.callMethod("setFnval", MAX_FNVAL)
                         request.callMethod("setFourk", true)
                     }
-                    isDownload = true
                     request.callMethod("setDownload", 0)
-                } else isDownload = false
+                    true
+                } else false
             }
             hookAfterMethod(
                 "playView",
@@ -271,9 +268,8 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         }
                             ?: throw CustomServerException(mapOf("未知错误" to "请检查哔哩漫游设置中解析服务器设置。"))
                     } catch (e: CustomServerException) {
-                        val messages = buildString {
-                            e.errors.forEach { (k, v) -> appendLine("$k: $v") }
-                        }.trim()
+                        val messages = e.errors.asSequence()
+                            .joinToString("\n") { "${it.key}: ${it.value}" }.trim()
                         param.result = showPlayerError(
                             response,
                             "请求解析中服务器发生错误(点此查看更多)\n$messages"
@@ -294,7 +290,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             ) { param ->
                 val request = param.args[0]
                 val vod = request.callMethod("getVod") ?: return@hookBeforeMethod
-                if (sPrefs.getBoolean("allow_download", false)
+                isDownload = if (sPrefs.getBoolean("allow_download", false)
                     && vod.callMethodAs<Int>("getDownload") >= 1
                 ) {
                     if (!sPrefs.getBoolean("fix_download", false)
@@ -303,9 +299,9 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         vod.callMethod("setFnval", MAX_FNVAL)
                         vod.callMethod("setFourk", true)
                     }
-                    isDownload = true
                     vod.callMethod("setDownload", 0)
-                } else isDownload = false
+                    true
+                } else false
             }
             hookAfterMethod(
                 "playViewUnite",
@@ -345,9 +341,8 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         }
                             ?: throw CustomServerException(mapOf("未知错误" to "请检查哔哩漫游设置中解析服务器设置。"))
                     } catch (e: CustomServerException) {
-                        val messages = buildString {
-                            e.errors.forEach { (k, v) -> appendLine("$k: $v") }
-                        }.trim()
+                        val messages = e.errors.asSequence()
+                            .joinToString("\n") { "${it.key}: ${it.value}" }.trim()
                         param.result = showPlayerErrorUnite(
                             response, supplement,
                             "请求解析中服务器发生错误(点此查看更多)\n$messages"
