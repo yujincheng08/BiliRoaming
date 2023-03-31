@@ -225,8 +225,8 @@
     <string name="force_browser_summary">而不是使用內建瀏覽器</string>
     <string name="disable_story_full_title">關閉看一看按鈕</string>
     <string name="disable_story_full_summary">橫向稿件在稿件詳情頁時不顯示看一看按鈕</string>
-    <string name="disable_main_page_story_title">點擊首頁頭像跳轉至「我的」頁面</string>
-    <string name="disable_main_page_story_summary">開啟後，點擊首頁頭像跳轉至「我的」頁面，而非快捷切換到短影音頁面。如果啟用「自訂我的頁面」，則本項設定無效。可能無法在舊版中使用。</string>
+    <string name="disable_main_page_story_title">點擊首頁頭像跳到「我的」頁面</string>
+    <string name="disable_main_page_story_summary">開啟後，點擊首頁頭像跳到「我的」頁面，而非快捷切換到短影片頁面。如果啟用「移動我的頁面到側邊欄」，則本項設定無效。可能無法在舊版中使用。</string>
     <string name="dialog_blur_background_summary">花裡胡哨! (需要 Android 12+ 並開啟 允許視窗級模糊處理)</string>
     <string name="dialog_blur_background_title">全域 Dialog 背景模糊</string>
     <string name="block_up_rcmd_ads_title">封鎖UP主推薦廣告</string>
