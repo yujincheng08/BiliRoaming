@@ -146,9 +146,9 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 "com.bapis.bilibili.pgc.gateway.player.v1.PlayViewReq"
             ) { param ->
                 val request = param.args[0]
-                isDownload = if (sPrefs.getBoolean("allow_download", false)
-                    && request.callMethodAs<Int>("getDownload") >= 1
-                ) {
+                isDownload = sPrefs.getBoolean("allow_download", false)
+                        && request.callMethodAs<Int>("getDownload") >= 1
+                if (isDownload) {
                     if (!sPrefs.getBoolean("fix_download", false)
                         || request.callMethodAs<Int>("getFnval") <= 1
                     ) {
@@ -156,8 +156,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         request.callMethod("setFourk", true)
                     }
                     request.callMethod("setDownload", 0)
-                    true
-                } else false
+                }
             }
             hookAfterMethod(
                 "playView",
@@ -214,9 +213,9 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 // else we are downloading
                 // if fnval == 0 -> flv download
                 // thus fix download will set qn = 0 and set fnval to max
-                isDownload = if (sPrefs.getBoolean("allow_download", false)
-                    && request.callMethodAs<Int>("getDownload") >= 1
-                ) {
+                isDownload = sPrefs.getBoolean("allow_download", false)
+                        && request.callMethodAs<Int>("getDownload") >= 1
+                if (isDownload) {
                     if (!sPrefs.getBoolean("fix_download", false)
                         || request.callMethodAs<Int>("getFnval") <= 1
                     ) {
@@ -224,8 +223,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         request.callMethod("setFourk", true)
                     }
                     request.callMethod("setDownload", 0)
-                    true
-                } else false
+                }
             }
             hookAfterMethod(
                 "playView",
@@ -282,9 +280,9 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             ) { param ->
                 val request = param.args[0]
                 val vod = request.callMethod("getVod") ?: return@hookBeforeMethod
-                isDownload = if (sPrefs.getBoolean("allow_download", false)
-                    && vod.callMethodAs<Int>("getDownload") >= 1
-                ) {
+                isDownload = sPrefs.getBoolean("allow_download", false)
+                        && vod.callMethodAs<Int>("getDownload") >= 1
+                if (isDownload) {
                     if (!sPrefs.getBoolean("fix_download", false)
                         || vod.callMethodAs<Int>("getFnval") <= 1
                     ) {
@@ -292,8 +290,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         vod.callMethod("setFourk", true)
                     }
                     vod.callMethod("setDownload", 0)
-                    true
-                } else false
+                }
             }
             hookAfterMethod(
                 "playViewUnite",
