@@ -18,6 +18,7 @@ import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.concurrent.CountDownLatch
+import kotlin.math.abs
 
 /**
  * Created by iAcn on 2019/3/29
@@ -813,6 +814,8 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     }
                 }
             }
+            var bestMatchQn = quality
+            var minDeltaQn = Int.MAX_VALUE
             for (video in optJSONObject("dash")?.optJSONArray("video").orEmpty()) {
                 if (video.optInt("codecid") != videoCodeCid) continue
                 streamList += stream {
@@ -833,6 +836,11 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     }
                     streamInfo = streamInfo {
                         quality = video.optInt("id")
+                        val deltaQn = abs(quality - bestMatchQn)
+                        if (deltaQn < minDeltaQn) {
+                            bestMatchQn = quality
+                            minDeltaQn = deltaQn
+                        }
                         intact = true
                         attribute = 0
                         formatMap[quality]?.let { fmt ->
@@ -841,6 +849,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     }
                 }
             }
+            quality = bestMatchQn
         } else if (type == "FLV" || type == "MP4") {
             qualityMap?.forEach { quality ->
                 streamList += stream {

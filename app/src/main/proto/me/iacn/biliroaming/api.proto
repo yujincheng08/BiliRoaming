@@ -30,7 +30,7 @@ message PlayViewReq {
   optional int32 fnval = 0x5;
   optional int32 download = 0x6;
   optional int32 force_host = 0x7;
-  optional int32 fourk = 0x8;
+  optional bool fourk = 0x8;
   optional string spmid = 0x9;
   optional string from_spmid = 0xa;
   optional int32 teenagers_mode = 0xb;
