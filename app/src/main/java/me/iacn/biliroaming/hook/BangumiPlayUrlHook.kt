@@ -38,6 +38,8 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
         if (!sPrefs.getBoolean("main_func", false)) return
         Log.d("startHook: BangumiPlayUrl")
+        val enableBlockBangumiPageAds = sPrefs.getBoolean("block_bangumi_page_ads", false)
+
         instance.signQueryName()?.let {
             instance.libBiliClass?.hookBeforeMethod(it, Map::class.java) { param ->
                 @Suppress("UNCHECKED_CAST")
@@ -192,23 +194,10 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         )
                         Log.toast("请求解析服务器发生错误: ${e.message}", alsoLog = true)
                     }
-                } else {
-                    lastSeasonInfo["epid"] = request.callMethod("getEpId")?.toString()
-                    if (isDownload) {
-                        param.result = fixDownloadProto(response)
-                    }
-                    if (sPrefs.getBoolean("block_bangumi_page_ads", false)) {
-                        param.result?.callMethod("getViewInfo")?.run {
-                            callMethod("clearAnimation")
-                            callMethod("clearCouponInfo")
-                            callMethod("clearEndPage")
-                            callMethod("clearHighDefinitionTrialInfo")
-                            callMethod("clearPayTip")
-                            callMethod("clearPopWin")
-                            callMethod("clearToast")
-                            callMethod("clearTryWatchPromptBar")
-                        }
-                    }
+                } else if (isDownload) {
+                    param.result = fixDownloadProto(response)
+                } else if (enableBlockBangumiPageAds) {
+                    param.result = purifyViewInfo(response)
                 }
             }
         }
@@ -278,23 +267,10 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         )
                         Log.toast("请求解析服务器发生错误: ${e.message}", alsoLog = true)
                     }
-                } else {
-                    lastSeasonInfo["epid"] = request.callMethod("getEpId")?.toString()
-                    if (isDownload) {
-                        param.result = fixDownloadProto(response)
-                    }
-                    if (sPrefs.getBoolean("block_bangumi_page_ads", false)) {
-                        param.result?.callMethod("getViewInfo")?.run {
-                            callMethod("clearAnimation")
-                            callMethod("clearCouponInfo")
-                            callMethod("clearEndPage")
-                            callMethod("clearHighDefinitionTrialInfo")
-                            callMethod("clearPayTip")
-                            callMethod("clearPopWin")
-                            callMethod("clearToast")
-                            callMethod("clearTryWatchPromptBar")
-                        }
-                    }
+                } else if (isDownload) {
+                    param.result = fixDownloadProto(response)
+                } else if (enableBlockBangumiPageAds) {
+                    param.result = purifyViewInfo(response)
                 }
             }
         }
@@ -367,6 +343,8 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     }
                 } else if (isDownload) {
                     param.result = fixDownloadProtoUnite(response)
+                } else if (enableBlockBangumiPageAds) {
+                    param.result = purifyViewInfo(response, supplement)
                 }
             }
         }
@@ -896,5 +874,34 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         newDescription = optString("new_description")
         superscript = optString("superscript")
         displayDesc = optString("display_desc")
+    }
+
+
+    private fun purifyViewInfo(response: Any, supplement: PlayViewReply? = null): Any {
+        try {
+            supplement?.let {
+                val serializedRequest = response.callMethodAs<ByteArray>("toByteArray")
+                val newRes = PlayViewUniteReply.parseFrom(serializedRequest).copy {
+                    it.copy {
+                        viewInfo = viewInfo {}
+                    }.let { newSupplement ->
+                        this.supplement = any {
+                            typeUrl = PGC_ANY_MODEL_TYPE_URL
+                            value = newSupplement.toByteString()
+                        }
+                    }
+                }
+                val serializedResponse = newRes.toByteArray()
+                return response.javaClass.callStaticMethod("parseFrom", serializedResponse)!!
+            } ?: response.javaClass.declaredMethods.find {
+                it.name == "setViewInfo"
+            }?.let {
+                it.isAccessible = true
+                it(response, it.parameterTypes[0].new())
+            }
+        } catch (e: Throwable) {
+            Log.e(e)
+        }
+        return response
     }
 }

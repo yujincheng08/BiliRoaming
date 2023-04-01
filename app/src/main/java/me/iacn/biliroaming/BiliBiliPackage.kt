@@ -298,6 +298,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     fun playerFullStoryWidgets() =
         mHookInfo.playerFullStoryWidgetList.map { it.class_.from(mClassLoader) to it.method.orNull }
 
+    fun bangumiUniformSeasonActivityEntrance() = mHookInfo.bangumiSeasonActivityEntrance.orNull
+
     private fun readHookInfo(context: Context): Configs.HookInfo {
         try {
             val hookInfoFile = File(context.cacheDir, Constant.HOOK_INFO_FILE_NAME)
@@ -1617,13 +1619,19 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     methods += method { name = it.name }
                 }
             }
-            bangumiSeason = class_ {
-                name = dexHelper.findMethodUsingString(
-                    "BangumiAllButton",
-                    true, -1, 0, null, -1, null, null, null, true
-                ).firstOrNull()?.let {
-                    dexHelper.decodeMethodIndex(it)
-                }?.declaringClass?.declaringClass?.name ?: return@class_
+            dexHelper.findMethodUsingString(
+                "BangumiAllButton",
+                true, -1, 0, null, -1, null, null, null, true
+            ).firstOrNull()?.let {
+                dexHelper.decodeMethodIndex(it)
+            }?.declaringClass?.declaringClass?.let {
+                bangumiSeason = class_ { name = it.name }
+                bangumiSeasonActivityEntrance = method {
+                    name = it.declaredMethods.find {
+                        it.parameterTypes.isEmpty() && it.genericReturnType.toString()
+                            .contains("ActivityEntrance")
+                    }?.name ?: return@method
+                }
             }
             kanBan = kanBan {
                 val statusClass =
@@ -1918,7 +1926,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     dexHelper.decodeMethodIndex(it)
                 } ?: return@liveNetworkType
                 val liveNetworkTypeHelperClass =
-                    liveNetworkTypeMethod?.declaringClass ?: return@liveNetworkType
+                    liveNetworkTypeMethod.declaringClass
                 class_ = class_ { name = liveNetworkTypeHelperClass.name }
                 method = method { name = liveNetworkTypeMethod.name }
             }
