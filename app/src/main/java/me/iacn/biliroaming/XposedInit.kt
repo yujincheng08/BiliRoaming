@@ -118,6 +118,7 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                     startHook(P2pHook(lpparam.classLoader))
                     startHook(DanmakuHook(lpparam.classLoader))
                     startHook(MainPageStoryHook(lpparam.classLoader))
+                    startHook(BangumiPageAdHook(lpparam.classLoader))
                 }
 
                 lpparam.processName.endsWith(":web") -> {
