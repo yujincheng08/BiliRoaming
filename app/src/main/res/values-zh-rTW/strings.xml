@@ -231,7 +231,8 @@
     <string name="dialog_blur_background_title">全域 Dialog 背景模糊</string>
     <string name="block_up_rcmd_ads_title">封鎖UP主推薦廣告</string>
     <string name="block_up_rcmd_ads_summary">封鎖影片播放過程中，浮窗出現的UP主推薦廣告</string>
-
+    <string name="block_bangumi_page_ads_title">封鎖番劇頁面廣告</string>
+    <string name="block_bangumi_page_ads_summary">封鎖番劇頁面彈窗廣告及會員購</string>
 
 
     <string name="generate_subtitle_title">生成簡中字幕</string>

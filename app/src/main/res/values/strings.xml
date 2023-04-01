@@ -228,6 +228,8 @@
     <string name="dialog_blur_background_title">全局 Dialog 背景模糊</string>
     <string name="block_up_rcmd_ads_title">屏蔽UP主推荐广告</string>
     <string name="block_up_rcmd_ads_summary">屏蔽视频播放过程中，浮窗出现的UP主推荐广告</string>
+    <string name="block_bangumi_page_ads_title">屏蔽番剧页面广告</string>
+    <string name="block_bangumi_page_ads_summary">屏蔽番剧页面弹窗广告及会员购</string>
     <string name="subtitle_convert_failed" translatable="false">字幕转换失败，请重试</string>
     <string name="subtitle_dict_download_failed" translatable="false">转换字典下载失败，请重试</string>
     <string name="subtitle_append_info" translatable="false">请注意，站内宣传漫游或脚本会被拉黑</string>
