@@ -289,7 +289,7 @@ message HookInfo {
   optional ToastHelper toast_helper = 68;
   optional Class brotli_input_stream = 69;
   optional Method can_try_watch_vip_quality = 70;
-  optional PlayerFullStoryWidget player_full_story_widget = 71;
+  repeated PlayerFullStoryWidget player_full_story_widget = 71;
   optional BiliCall bili_call = 72;
   optional Class comment_long_click_new = 73;
   optional Method on_operate_click = 74;

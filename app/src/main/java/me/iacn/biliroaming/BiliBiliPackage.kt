@@ -130,7 +130,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val playerQualityServiceClass by Weak { "com.bilibili.playerbizcommon.features.quality.PlayerQualityService" from mClassLoader }
     val mossResponseHandlerClass by Weak { "com.bilibili.lib.moss.api.MossResponseHandler" from mClassLoader }
     val projectionPlayUrlClass by Weak { "com.bilibili.lib.projection.internal.api.model.ProjectionPlayUrl" from mClassLoader }
-    val playerFullStoryWidgetClass by Weak { mHookInfo.playerFullStoryWidget.class_ from mClassLoader }
     val responseBodyClass by Weak { mHookInfo.okHttp.responseBody.class_ from mClassLoader }
     val mediaTypeClass by Weak { mHookInfo.okHttp.mediaType.class_ from mClassLoader }
     val biliCallClass by Weak { mHookInfo.biliCall.class_ from mClassLoader }
@@ -267,8 +266,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     fun musicPlayerService() = mHookInfo.musicNotification.musicPlayerService.orNull
 
-    fun playerFullStoryWidget() = mHookInfo.playerFullStoryWidget.method.orNull
-
     fun create() = mHookInfo.okHttp.responseBody.create.orNull
 
     fun string() = mHookInfo.okHttp.responseBody.string.orNull
@@ -297,6 +294,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     fun dataInterfacesField() = mHookInfo.cardGridViewBinder.dataInterfaces.orNull
 
     fun liveNetworkType() = mHookInfo.liveNetworkType.method.orNull
+
+    fun playerFullStoryWidgets() =
+        mHookInfo.playerFullStoryWidgetList.map { it.class_.from(mClassLoader) to it.method.orNull }
 
     private fun readHookInfo(context: Context): Configs.HookInfo {
         try {
@@ -1719,30 +1719,29 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     dexHelper.decodeMethodIndex(it)
                 }?.name ?: return@method
             }
-            playerFullStoryWidget = playerFullStoryWidget {
-                val playerFullStoryWidgetClass = dexHelper.findMethodUsingString(
-                    "PlayerFullStoryWidget",
-                    true,
-                    -1,
-                    -1,
-                    null,
-                    -1,
-                    null,
-                    null,
-                    null,
-                    true
-                ).firstOrNull()?.let {
-                    dexHelper.decodeMethodIndex(it)
-                }?.declaringClass ?: return@playerFullStoryWidget
-                class_ = class_ {
-                    name = playerFullStoryWidgetClass.name
+            dexHelper.findMethodUsingString(
+                "player.player.story-button.0.player",
+                false,
+                -1,
+                -1,
+                null,
+                -1,
+                null,
+                null,
+                null,
+                false
+            ).asSequence().mapNotNull {
+                val clazz = dexHelper.decodeMethodIndex(it)?.declaringClass
+                val method = clazz?.declaredMethods?.find { m ->
+                    m.isStatic && m.parameterTypes.size == 1 && m.parameterTypes[0] == clazz && m.returnType == Boolean::class.javaPrimitiveType
                 }
-                method = method {
-                    name = playerFullStoryWidgetClass.declaredMethods.firstOrNull {
-                        it.isStatic && it.parameterTypes.size == 1 && it.parameterTypes[0] == playerFullStoryWidgetClass && it.returnType == Boolean::class.javaPrimitiveType
-                    }?.name ?: return@method
-                }
-            }
+                if (clazz != null && method != null) {
+                    playerFullStoryWidget {
+                        class_ = class_ { name = clazz.name }
+                        this.method = method { name = method.name }
+                    }
+                } else null
+            }.let { playerFullStoryWidget.addAll(it.toList()) }
             biliCall = biliCall {
                 val biliCallClass = "com.bilibili.okretro.call.BiliCall".from(classloader)
                     ?: dexHelper.findMethodUsingString(
