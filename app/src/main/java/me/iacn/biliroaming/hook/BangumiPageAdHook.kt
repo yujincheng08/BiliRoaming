@@ -5,9 +5,10 @@ import java.util.List
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.utils.*
 
-class OGVActivityHook(classLoader: ClassLoader) : BaseHook(classLoader) {
+class BangumiPageAdHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
-        Log.d("startHook: OGVActivity")
+        Log.d("startHook: BangumiPageAd")
+        // toast activity
         "com.bilibili.bangumi.data.page.detail.entity.OGVActivityVo".from(mClassLoader)?.hookBeforeConstructor(
             Int::class.javaPrimitiveType, 
             "com.bilibili.bangumi.data.page.detail.entity.OGVActivityBarVo", 
@@ -26,6 +27,17 @@ class OGVActivityHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             param.args[4].callMethodAs<List<*>?>("clear")
             param.args[5] = null
             param.args[6] = null
+        }
+        // mall
+        "com.bilibili.bangumi.data.page.detail.entity.BangumiUniformSeason".from(mClassLoader)?.let { class_ ->
+            val activityEntranceListMethod = class_.declaredMethods?.find {
+                it.parameterTypes.size == 0 && it.genericReturnType.toString().contains("ActivityEntrance")
+            } ?.name
+            Log.d("activityEntranceListMethod: $activityEntranceListMethod")
+            class_.replaceMethod(activityEntranceListMethod) {
+                Log.d("activityEntranceListMethod hook successfully.")
+                null
+            }
         }
     }
 }
