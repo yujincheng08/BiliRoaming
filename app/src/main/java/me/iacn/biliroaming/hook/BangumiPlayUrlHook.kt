@@ -192,8 +192,23 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         )
                         Log.toast("请求解析服务器发生错误: ${e.message}", alsoLog = true)
                     }
-                } else if (isDownload) {
-                    param.result = fixDownloadProto(response)
+                } else {
+                    lastSeasonInfo["epid"] = request.callMethod("getEpId")?.toString()
+                    if (isDownload) {
+                        param.result = fixDownloadProto(response)
+                    }
+                    if (sPrefs.getBoolean("block_bangumi_page_ads", false)) {
+                        param.result?.callMethod("getViewInfo")?.run {
+                            callMethod("clearAnimation")
+                            callMethod("clearCouponInfo")
+                            callMethod("clearEndPage")
+                            callMethod("clearHighDefinitionTrialInfo")
+                            callMethod("clearPayTip")
+                            callMethod("clearPopWin")
+                            callMethod("clearToast")
+                            callMethod("clearTryWatchPromptBar")
+                        }
+                    }
                 }
             }
         }
@@ -263,8 +278,23 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         )
                         Log.toast("请求解析服务器发生错误: ${e.message}", alsoLog = true)
                     }
-                } else if (isDownload) {
-                    param.result = fixDownloadProto(response)
+                } else {
+                    lastSeasonInfo["epid"] = request.callMethod("getEpId")?.toString()
+                    if (isDownload) {
+                        param.result = fixDownloadProto(response)
+                    }
+                    if (sPrefs.getBoolean("block_bangumi_page_ads", false)) {
+                        param.result?.callMethod("getViewInfo")?.run {
+                            callMethod("clearAnimation")
+                            callMethod("clearCouponInfo")
+                            callMethod("clearEndPage")
+                            callMethod("clearHighDefinitionTrialInfo")
+                            callMethod("clearPayTip")
+                            callMethod("clearPopWin")
+                            callMethod("clearToast")
+                            callMethod("clearTryWatchPromptBar")
+                        }
+                    }
                 }
             }
         }
