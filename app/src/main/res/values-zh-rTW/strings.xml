@@ -280,4 +280,8 @@
     <string name="danmaku_filter_title">彈幕屏蔽等級</string>
     <string name="danmaku_filter_summary">恢復舊版按等級屏蔽彈幕功能，0級表示關閉本功能</string>
     <string name="danmaku_filter_weight_hint">%1$d級</string>
+    <string name="half_screen_quality_title">影片豎屏清晰度</string>
+    <string name="half_screen_quality_summary">設置影片豎屏播放時的清晰度，設置後會大幅降低影片的首次播放載入速度，需開啟解鎖番劇限制選項</string>
+    <string name="full_screen_quality_title">影片橫屏清晰度</string>
+    <string name="full_screen_quality_summary">設置影片橫屏播放時預設的清晰度，當播放器畫質選項為自動時此選項不生效，需開啟解鎖番劇限制選項</string>
 </resources>

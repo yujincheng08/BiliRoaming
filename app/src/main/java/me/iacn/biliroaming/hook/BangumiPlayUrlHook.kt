@@ -35,10 +35,14 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             "type.googleapis.com/bilibili.app.playerunite.pgcanymodel.PGCAnyModel"
     }
 
+    private val defaultQn: Int?
+        get() = instance.playerSettingHelperClass?.callStaticMethodAs<Int>(instance.getDefaultQn())
+
     override fun startHook() {
         if (!sPrefs.getBoolean("main_func", false)) return
         Log.d("startHook: BangumiPlayUrl")
-        val enableBlockBangumiPageAds = sPrefs.getBoolean("block_bangumi_page_ads", false)
+        val blockBangumiPageAds = sPrefs.getBoolean("block_bangumi_page_ads", false)
+        val halfScreenQuality = sPrefs.getString("half_screen_quality", "0")?.toInt() ?: 0
 
         instance.signQueryName()?.let {
             instance.libBiliClass?.hookBeforeMethod(it, Map::class.java) { param ->
@@ -157,6 +161,15 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         request.callMethod("setFourk", true)
                     }
                     request.callMethod("setDownload", 0)
+                } else if (halfScreenQuality != 0) {
+                    request.callMethod("setFnval", MAX_FNVAL)
+                    request.callMethod("setFourk", true)
+                    if (halfScreenQuality != 1) {
+                        request.callMethod("setQn", halfScreenQuality)
+                    } else {
+                        // follow full screen quality
+                        defaultQn?.let { request.callMethod("setQn", it) }
+                    }
                 }
             }
             hookAfterMethod(
@@ -196,7 +209,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     }
                 } else if (isDownload) {
                     param.result = fixDownloadProto(response)
-                } else if (enableBlockBangumiPageAds) {
+                } else if (blockBangumiPageAds) {
                     param.result = purifyViewInfo(response)
                 }
             }
@@ -224,6 +237,14 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         request.callMethod("setFourk", true)
                     }
                     request.callMethod("setDownload", 0)
+                } else if (halfScreenQuality != 0) {
+                    request.callMethod("setFnval", MAX_FNVAL)
+                    request.callMethod("setFourk", true)
+                    if (halfScreenQuality != 1) {
+                        request.callMethod("setQn", halfScreenQuality)
+                    } else {
+                        defaultQn?.let { request.callMethod("setQn", it) }
+                    }
                 }
             }
             hookAfterMethod(
@@ -269,7 +290,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     }
                 } else if (isDownload) {
                     param.result = fixDownloadProto(response)
-                } else if (enableBlockBangumiPageAds) {
+                } else if (blockBangumiPageAds) {
                     param.result = purifyViewInfo(response)
                 }
             }
@@ -292,6 +313,14 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         vod.callMethod("setFourk", true)
                     }
                     vod.callMethod("setDownload", 0)
+                } else if (halfScreenQuality != 0) {
+                    vod.callMethod("setFnval", MAX_FNVAL)
+                    vod.callMethod("setFourk", true)
+                    if (halfScreenQuality != 1) {
+                        vod.callMethod("setQn", halfScreenQuality)
+                    } else {
+                        defaultQn?.let { vod.callMethod("setQn", it) }
+                    }
                 }
             }
             hookAfterMethod(
@@ -343,7 +372,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     }
                 } else if (isDownload) {
                     param.result = fixDownloadProtoUnite(response)
-                } else if (enableBlockBangumiPageAds) {
+                } else if (blockBangumiPageAds) {
                     param.result = purifyViewInfo(response, supplement)
                 }
             }
@@ -414,24 +443,22 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     private fun showPlayerError(response: Any, message: String) = runCatchingOrNull {
-        val serializedRequest = response.callMethodAs<ByteArray>("toByteArray")
-        val newRes = PlayViewReply.parseFrom(serializedRequest).toErrorReply(message)
-        val serializedResponse = newRes.toByteArray()
-        response.javaClass.callStaticMethod("parseFrom", serializedResponse)!!
+        val serializedResponse = response.callMethodAs<ByteArray>("toByteArray")
+        val newRes = PlayViewReply.parseFrom(serializedResponse).toErrorReply(message)
+        response.javaClass.callStaticMethod("parseFrom", newRes.toByteArray())
     } ?: response
 
     private fun showPlayerErrorUnite(response: Any, supplement: PlayViewReply, message: String) =
         runCatchingOrNull {
-            val serializedRequest = response.callMethodAs<ByteArray>("toByteArray")
-            val newRes = PlayViewUniteReply.parseFrom(serializedRequest).copy {
+            val serializedResponse = response.callMethodAs<ByteArray>("toByteArray")
+            val newRes = PlayViewUniteReply.parseFrom(serializedResponse).copy {
                 this.supplement = any {
                     typeUrl = PGC_ANY_MODEL_TYPE_URL
                     value = supplement.toErrorReply(message).toByteString()
                 }
                 clearVodInfo()
-            }
-            val serializedResponse = newRes.toByteArray()
-            response.javaClass.callStaticMethod("parseFrom", serializedResponse)!!
+            }.toByteArray()
+            response.javaClass.callStaticMethod("parseFrom", newRes)
         } ?: response
 
     private fun fixDownload(content: String): String {
@@ -512,21 +539,19 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     private fun fixDownloadProto(response: Any) = runCatchingOrNull {
-        val serializedRequest = response.callMethodAs<ByteArray>("toByteArray")
-        val newRes = PlayViewReply.parseFrom(serializedRequest).copy {
+        val serializedResponse = response.callMethodAs<ByteArray>("toByteArray")
+        val newRes = PlayViewReply.parseFrom(serializedResponse).copy {
             videoInfo = videoInfo.copy { fixDownloadProto() }
-        }
-        val serializedResponse = newRes.toByteArray()
-        response.javaClass.callStaticMethod("parseFrom", serializedResponse)!!
+        }.toByteArray()
+        response.javaClass.callStaticMethod("parseFrom", newRes)
     } ?: response
 
     private fun fixDownloadProtoUnite(response: Any) = runCatchingOrNull {
-        val serializedRequest = response.callMethodAs<ByteArray>("toByteArray")
-        val newRes = PlayViewUniteReply.parseFrom(serializedRequest).copy {
+        val serializedResponse = response.callMethodAs<ByteArray>("toByteArray")
+        val newRes = PlayViewUniteReply.parseFrom(serializedResponse).copy {
             vodInfo = vodInfo.copy { fixDownloadProto() }
-        }
-        val serializedResponse = newRes.toByteArray()
-        response.javaClass.callStaticMethod("parseFrom", serializedResponse)!!
+        }.toByteArray()
+        response.javaClass.callStaticMethod("parseFrom", newRes)
     } ?: response
 
     private fun isLimitWatchingArea(jsonText: String) = try {
@@ -540,8 +565,8 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     private fun needForceProxy(response: Any): Boolean {
         sPrefs.getString("cn_server_accessKey", null) ?: return false
-        val serializedRequest = response.callMethodAs<ByteArray>("toByteArray")
-        return PlayViewReply.parseFrom(serializedRequest).business.isPreview
+        val serializedResponse = response.callMethodAs<ByteArray>("toByteArray")
+        return PlayViewReply.parseFrom(serializedResponse).business.isPreview
     }
 
     private fun reconstructQuery(
@@ -619,35 +644,30 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         content: String,
         isDownload: Boolean,
         thaiSeason: Lazy<JSONObject?>
-    ): Any {
-        try {
-            var jsonContent = content.toJSONObject()
-            if (jsonContent.has("result")) {
-                // For kghost server
-                val result = jsonContent.opt("result")
-                if (result != null && result !is String) {
-                    jsonContent = jsonContent.getJSONObject("result")
-                }
+    ) = runCatching {
+        var jsonContent = content.toJSONObject()
+        if (jsonContent.has("result")) {
+            // For kghost server
+            val result = jsonContent.opt("result")
+            if (result != null && result !is String) {
+                jsonContent = jsonContent.getJSONObject("result")
             }
-            val serializedResponse =
-                PlayViewReply.parseFrom(response.callMethodAs<ByteArray>("toByteArray")).copy {
-                    playConf = playAbilityConf {
-                        dislikeDisable = true
-                        likeDisable = true
-                        elecDisable = true
-                        freyaEnterDisable = true
-                        freyaFullDisable = true
-                    }
-                    videoInfo = jsonContent.toVideoInfo(isDownload)
-                    fixBusinessProto(thaiSeason, jsonContent)
-                    viewInfo = viewInfo {}
-                }.toByteArray()
-            return response.javaClass.callStaticMethod("parseFrom", serializedResponse)!!
-        } catch (e: Throwable) {
-            Log.e(e)
         }
-        return response
-    }
+        val serializedResponse = response.callMethodAs<ByteArray>("toByteArray")
+        val newRes = PlayViewReply.parseFrom(serializedResponse).copy {
+            playConf = playAbilityConf {
+                dislikeDisable = true
+                likeDisable = true
+                elecDisable = true
+                freyaEnterDisable = true
+                freyaFullDisable = true
+            }
+            videoInfo = jsonContent.toVideoInfo(isDownload)
+            fixBusinessProto(thaiSeason, jsonContent)
+            viewInfo = viewInfo {}
+        }.toByteArray()
+        response.javaClass.callStaticMethod("parseFrom", newRes)
+    }.onFailure { Log.e(it) }.getOrDefault(response)
 
     private fun reconstructResponseUnite(
         response: Any,
@@ -655,63 +675,58 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         content: String,
         isDownload: Boolean,
         thaiSeason: Lazy<JSONObject?>
-    ): Any {
-        try {
-            var jsonContent = content.toJSONObject()
-            if (jsonContent.has("result")) {
-                // For kghost server
-                val result = jsonContent.opt("result")
-                if (result != null && result !is String) {
-                    jsonContent = jsonContent.getJSONObject("result")
-                }
+    ) = runCatching {
+        var jsonContent = content.toJSONObject()
+        if (jsonContent.has("result")) {
+            // For kghost server
+            val result = jsonContent.opt("result")
+            if (result != null && result !is String) {
+                jsonContent = jsonContent.getJSONObject("result")
             }
-            val serializedResponse =
-                PlayViewUniteReply.parseFrom(response.callMethodAs<ByteArray>("toByteArray")).copy {
-                    vodInfo = jsonContent.toVideoInfo(isDownload)
-                    val newSupplement = supplement.copy {
-                        fixBusinessProto(thaiSeason, jsonContent)
-                        viewInfo = viewInfo {}
-                    }
-                    this.supplement = any {
-                        typeUrl = PGC_ANY_MODEL_TYPE_URL
-                        value = newSupplement.toByteString()
-                    }
-                    playArcConf = playArcConf {
-                        arcConf[1] = arcConf { isSupport = true } //FLIPCONF
-                        arcConf[2] = arcConf { isSupport = true } //CASTCONF
-                        arcConf[3] = arcConf { isSupport = true } //FEEDBACK
-                        arcConf[4] = arcConf { isSupport = true } //SUBTITLE
-                        arcConf[5] = arcConf { isSupport = true } //PLAYBACKRATE
-                        arcConf[6] = arcConf { isSupport = true } //TIMEUP
-                        arcConf[7] = arcConf { isSupport = true } //PLAYBACKMODE
-                        arcConf[8] = arcConf { isSupport = true } //SCALEMODE
-                        arcConf[9] = arcConf { isSupport = true } //BACKGROUNDPLAY
-                        arcConf[10] = arcConf { isSupport = true } //LIKE
-                        arcConf[12] = arcConf { isSupport = true } //COIN
-                        arcConf[14] = arcConf { isSupport = true } //SHARE
-                        arcConf[15] = arcConf { isSupport = true } //SCREENSHOT
-                        arcConf[16] = arcConf { isSupport = true } //LOCKSCREEN
-                        arcConf[17] = arcConf { isSupport = true } //RECOMMEND
-                        arcConf[18] = arcConf { isSupport = true } //PLAYBACKSPEED
-                        arcConf[19] = arcConf { isSupport = true } //DEFINITION
-                        arcConf[20] = arcConf { isSupport = true } //SELECTIONS
-                        arcConf[21] = arcConf { isSupport = true } //NEXT
-                        arcConf[22] = arcConf { isSupport = true } //EDITDM
-                        arcConf[23] = arcConf { isSupport = true } //SMALLWINDOW
-                        arcConf[25] = arcConf { isSupport = true } //OUTERDM
-                        arcConf[26] = arcConf { isSupport = true } //INNERDM
-                        arcConf[29] = arcConf { isSupport = true } //COLORFILTER
-                        arcConf[31] = arcConf { disabled = true } //FREYAENTER
-                        arcConf[32] = arcConf { disabled = true } //FREYAFULLENTER
-                        arcConf[34] = arcConf { isSupport = true } //RECORDSCREEN
-                    }
-                }.toByteArray()
-            return response.javaClass.callStaticMethod("parseFrom", serializedResponse)!!
-        } catch (e: Throwable) {
-            Log.e(e)
         }
-        return response
-    }
+        val serializedResponse = response.callMethodAs<ByteArray>("toByteArray")
+        val newRes = PlayViewUniteReply.parseFrom(serializedResponse).copy {
+            vodInfo = jsonContent.toVideoInfo(isDownload)
+            val newSupplement = supplement.copy {
+                fixBusinessProto(thaiSeason, jsonContent)
+                viewInfo = viewInfo {}
+            }
+            this.supplement = any {
+                typeUrl = PGC_ANY_MODEL_TYPE_URL
+                value = newSupplement.toByteString()
+            }
+            playArcConf = playArcConf {
+                arcConf[1] = arcConf { isSupport = true } //FLIPCONF
+                arcConf[2] = arcConf { isSupport = true } //CASTCONF
+                arcConf[3] = arcConf { isSupport = true } //FEEDBACK
+                arcConf[4] = arcConf { isSupport = true } //SUBTITLE
+                arcConf[5] = arcConf { isSupport = true } //PLAYBACKRATE
+                arcConf[6] = arcConf { isSupport = true } //TIMEUP
+                arcConf[7] = arcConf { isSupport = true } //PLAYBACKMODE
+                arcConf[8] = arcConf { isSupport = true } //SCALEMODE
+                arcConf[9] = arcConf { isSupport = true } //BACKGROUNDPLAY
+                arcConf[10] = arcConf { isSupport = true } //LIKE
+                arcConf[12] = arcConf { isSupport = true } //COIN
+                arcConf[14] = arcConf { isSupport = true } //SHARE
+                arcConf[15] = arcConf { isSupport = true } //SCREENSHOT
+                arcConf[16] = arcConf { isSupport = true } //LOCKSCREEN
+                arcConf[17] = arcConf { isSupport = true } //RECOMMEND
+                arcConf[18] = arcConf { isSupport = true } //PLAYBACKSPEED
+                arcConf[19] = arcConf { isSupport = true } //DEFINITION
+                arcConf[20] = arcConf { isSupport = true } //SELECTIONS
+                arcConf[21] = arcConf { isSupport = true } //NEXT
+                arcConf[22] = arcConf { isSupport = true } //EDITDM
+                arcConf[23] = arcConf { isSupport = true } //SMALLWINDOW
+                arcConf[25] = arcConf { isSupport = true } //OUTERDM
+                arcConf[26] = arcConf { isSupport = true } //INNERDM
+                arcConf[29] = arcConf { isSupport = true } //COLORFILTER
+                arcConf[31] = arcConf { disabled = true } //FREYAENTER
+                arcConf[32] = arcConf { disabled = true } //FREYAFULLENTER
+                arcConf[34] = arcConf { isSupport = true } //RECORDSCREEN
+            }
+        }.toByteArray()
+        response.javaClass.callStaticMethod("parseFrom", newRes)
+    }.onFailure { Log.e(it) }.getOrDefault(response)
 
     private fun PlayViewReplyKt.Dsl.fixBusinessProto(
         thaiSeason: Lazy<JSONObject?>,
@@ -876,28 +891,24 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         displayDesc = optString("display_desc")
     }
 
-
-    private fun purifyViewInfo(response: Any, supplement: PlayViewReply? = null): Any {
-        try {
-            supplement?.copy { viewInfo = viewInfo {} }?.let {
-                val serializedRequest = response.callMethodAs<ByteArray>("toByteArray")
-                val newRes = PlayViewUniteReply.parseFrom(serializedRequest).copy {
-                    this.supplement = any {
-                        typeUrl = PGC_ANY_MODEL_TYPE_URL
-                        value = it.toByteString()
-                    }
-                }.toByteArray()
-                return response.javaClass.callStaticMethodAs("parseFrom", newRes)
-            }
+    private fun purifyViewInfo(response: Any, supplement: PlayViewReply? = null) = runCatching {
+        supplement?.copy { viewInfo = viewInfo {} }?.let {
+            val serializedResponse = response.callMethodAs<ByteArray>("toByteArray")
+            val newRes = PlayViewUniteReply.parseFrom(serializedResponse).copy {
+                this.supplement = any {
+                    typeUrl = PGC_ANY_MODEL_TYPE_URL
+                    value = it.toByteString()
+                }
+            }.toByteArray()
+            response.javaClass.callStaticMethod("parseFrom", newRes)
+        } ?: run {
             response.javaClass.declaredMethods.firstOrNull {
                 it.name == "setViewInfo"
             }?.let {
                 it.isAccessible = true
                 it(response, it.parameterTypes[0].new())
             }
-        } catch (e: Throwable) {
-            Log.e(e)
+            response
         }
-        return response
-    }
+    }.onFailure { Log.e(it) }.getOrDefault(response)
 }

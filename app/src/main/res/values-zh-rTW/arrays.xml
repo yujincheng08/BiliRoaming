@@ -116,4 +116,29 @@
         <item>滾動橫幅</item>
         <item>電池任務</item>
     </string-array>
+    <string-array name="half_screen_quality_entries">
+        <item>預設</item>
+        <item>跟隨橫屏清晰度</item>
+        <item>240P</item>
+        <item>360P</item>
+        <item>480P</item>
+        <item>720P</item>
+        <item>720P 60幀</item>
+        <item>1080P</item>
+        <item>1080P 高碼率</item>
+        <item>1080P 60幀</item>
+        <item>4K</item>
+    </string-array>
+    <string-array name="full_screen_quality_entries">
+        <item>預設</item>
+        <item>240P</item>
+        <item>360P</item>
+        <item>480P</item>
+        <item>720P</item>
+        <item>720P 60幀</item>
+        <item>1080P</item>
+        <item>1080P 高碼率</item>
+        <item>1080P 60幀</item>
+        <item>4K</item>
+    </string-array>
 </resources>

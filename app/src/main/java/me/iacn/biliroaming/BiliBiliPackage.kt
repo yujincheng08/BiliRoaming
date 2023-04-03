@@ -146,6 +146,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val cardGridViewBinderClass by Weak { mHookInfo.cardGridViewBinder.class_ from mClassLoader }
     val liveNetworkTypeClass by Weak { mHookInfo.liveNetworkType.class_ from mClassLoader }
     val roundImageViewClass by Weak { "com.bilibili.app.comm.comment2.comments.view.RoundImageView" from mClassLoader }
+    val playerPreloadHolderClass by Weak { mHookInfo.playerPreloadHolder.class_ from mClassLoader }
+    val playerSettingHelperClass by Weak { mHookInfo.playerSettingHelper.class_ from mClassLoader }
 
     val ids: Map<String, Int> by lazy {
         mHookInfo.mapIds.idsMap
@@ -299,6 +301,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         mHookInfo.playerFullStoryWidgetList.map { it.class_.from(mClassLoader) to it.method.orNull }
 
     fun bangumiUniformSeasonActivityEntrance() = mHookInfo.bangumiSeasonActivityEntrance.orNull
+
+    fun getPreload() = mHookInfo.playerPreloadHolder.get.orNull
+
+    fun getDefaultQn() = mHookInfo.playerSettingHelper.getDefaultQn.orNull
 
     private fun readHookInfo(context: Context): Configs.HookInfo {
         try {
@@ -1925,10 +1931,57 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 ).asSequence().firstNotNullOfOrNull {
                     dexHelper.decodeMethodIndex(it)
                 } ?: return@liveNetworkType
-                val liveNetworkTypeHelperClass =
-                    liveNetworkTypeMethod.declaringClass
-                class_ = class_ { name = liveNetworkTypeHelperClass.name }
+                class_ = class_ { name = liveNetworkTypeMethod.declaringClass.name }
                 method = method { name = liveNetworkTypeMethod.name }
+            }
+            playerPreloadHolder = playerPreloadHolder {
+                val stringClassIndex = dexHelper.encodeClassIndex(String::class.java)
+                val getMethod = dexHelper.findMethodUsingString(
+                    "preloadKey is null",
+                    false,
+                    -1,
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).firstOrNull()?.run {
+                    dexHelper.findMethodInvoking(
+                        this,
+                        stringClassIndex,
+                        2,
+                        "LLL",
+                        -1,
+                        null,
+                        longArrayOf(stringClassIndex),
+                        null,
+                        true
+                    ).firstOrNull()?.let {
+                        dexHelper.decodeMethodIndex(it)
+                    }
+                } ?: return@playerPreloadHolder
+                class_ = class_ { name = getMethod.declaringClass.name }
+                get = method { name = getMethod.name }
+            }
+            playerSettingHelper = playerSettingHelper {
+                val getDefaultQnMethod = dexHelper.findMethodUsingString(
+                    "get free data failed",
+                    false,
+                    -1,
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).firstOrNull()?.let {
+                    dexHelper.decodeMethodIndex(it)
+                } ?: return@playerSettingHelper
+                class_ = class_ { name = getDefaultQnMethod.declaringClass.name }
+                getDefaultQn = method { name = getDefaultQnMethod.name }
             }
 
             dexHelper.close()

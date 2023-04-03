@@ -282,4 +282,8 @@
     <string name="danmaku_filter_title">弹幕屏蔽等级</string>
     <string name="danmaku_filter_summary">恢复旧版按等级屏蔽弹幕功能，0级表示关闭本功能</string>
     <string name="danmaku_filter_weight_hint">%1$d级</string>
+    <string name="half_screen_quality_title">视频竖屏清晰度</string>
+    <string name="half_screen_quality_summary">设置视频竖屏播放时的清晰度，设置后会大幅降低视频的首次播放加载速度，需开启解锁番剧限制选项</string>
+    <string name="full_screen_quality_title">视频横屏清晰度</string>
+    <string name="full_screen_quality_summary">设置视频横屏播放时默认的清晰度，当播放器画质选项为自动时此选项不生效，需开启解锁番剧限制选项</string>
 </resources>
