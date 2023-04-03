@@ -1627,7 +1627,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             }?.declaringClass?.declaringClass?.let {
                 bangumiSeason = class_ { name = it.name }
                 bangumiSeasonActivityEntrance = method {
-                    name = it.declaredMethods.find {
+                    name = it.declaredMethods.firstOrNull {
                         it.parameterTypes.isEmpty() && it.genericReturnType.toString()
                             .contains("ActivityEntrance")
                     }?.name ?: return@method

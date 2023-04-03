@@ -2,7 +2,6 @@ package me.iacn.biliroaming.hook
 
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.utils.*
-import java.util.List
 
 class BangumiPageAdHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
@@ -15,12 +14,14 @@ class BangumiPageAdHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 for (i in args.indices) {
                     when (val item = args[i]) {
                         is Int -> args[i] = 0
-                        is List<*> -> item.clear()
+                        is MutableList<*> -> item.clear()
                         else -> args[i] = null
                     }
                 }
             }
         // mall
-        instance.bangumiUniformSeasonClass?.replaceMethod(instance.bangumiUniformSeasonActivityEntrance()) { null }
+        instance.bangumiUniformSeasonActivityEntrance()?.let {
+            instance.bangumiUniformSeasonClass?.replaceMethod(it) { null }
+        }
     }
 }

@@ -879,21 +879,17 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     private fun purifyViewInfo(response: Any, supplement: PlayViewReply? = null): Any {
         try {
-            supplement?.let {
+            supplement?.copy { viewInfo = viewInfo {} }?.let {
                 val serializedRequest = response.callMethodAs<ByteArray>("toByteArray")
                 val newRes = PlayViewUniteReply.parseFrom(serializedRequest).copy {
-                    it.copy {
-                        viewInfo = viewInfo {}
-                    }.let { newSupplement ->
-                        this.supplement = any {
-                            typeUrl = PGC_ANY_MODEL_TYPE_URL
-                            value = newSupplement.toByteString()
-                        }
+                    this.supplement = any {
+                        typeUrl = PGC_ANY_MODEL_TYPE_URL
+                        value = it.toByteString()
                     }
-                }
-                val serializedResponse = newRes.toByteArray()
-                return response.javaClass.callStaticMethod("parseFrom", serializedResponse)!!
-            } ?: response.javaClass.declaredMethods.find {
+                }.toByteArray()
+                return response.javaClass.callStaticMethodAs("parseFrom", newRes)
+            }
+            response.javaClass.declaredMethods.firstOrNull {
                 it.name == "setViewInfo"
             }?.let {
                 it.isAccessible = true
