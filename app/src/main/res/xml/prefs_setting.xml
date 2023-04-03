@@ -395,6 +395,12 @@
             android:summary="@string/block_up_rcmd_ads_summary"
             android:title="@string/block_up_rcmd_ads_title" />
 
+        <SwitchPreference
+            android:dependency="hidden"
+            android:key="block_bangumi_page_ads"
+            android:summary="@string/block_bangumi_page_ads_summary"
+            android:title="@string/block_bangumi_page_ads_title" />
+
         <MultiSelectListPreference
             android:dependency="hidden"
             android:entries="@array/live_popup_entries"

@@ -38,6 +38,8 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
         if (!sPrefs.getBoolean("main_func", false)) return
         Log.d("startHook: BangumiPlayUrl")
+        val enableBlockBangumiPageAds = sPrefs.getBoolean("block_bangumi_page_ads", false)
+
         instance.signQueryName()?.let {
             instance.libBiliClass?.hookBeforeMethod(it, Map::class.java) { param ->
                 @Suppress("UNCHECKED_CAST")
@@ -194,6 +196,8 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     }
                 } else if (isDownload) {
                     param.result = fixDownloadProto(response)
+                } else if (enableBlockBangumiPageAds) {
+                    param.result = purifyViewInfo(response)
                 }
             }
         }
@@ -265,6 +269,8 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     }
                 } else if (isDownload) {
                     param.result = fixDownloadProto(response)
+                } else if (enableBlockBangumiPageAds) {
+                    param.result = purifyViewInfo(response)
                 }
             }
         }
@@ -337,6 +343,8 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     }
                 } else if (isDownload) {
                     param.result = fixDownloadProtoUnite(response)
+                } else if (enableBlockBangumiPageAds) {
+                    param.result = purifyViewInfo(response, supplement)
                 }
             }
         }
@@ -866,5 +874,30 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         newDescription = optString("new_description")
         superscript = optString("superscript")
         displayDesc = optString("display_desc")
+    }
+
+
+    private fun purifyViewInfo(response: Any, supplement: PlayViewReply? = null): Any {
+        try {
+            supplement?.copy { viewInfo = viewInfo {} }?.let {
+                val serializedRequest = response.callMethodAs<ByteArray>("toByteArray")
+                val newRes = PlayViewUniteReply.parseFrom(serializedRequest).copy {
+                    this.supplement = any {
+                        typeUrl = PGC_ANY_MODEL_TYPE_URL
+                        value = it.toByteString()
+                    }
+                }.toByteArray()
+                return response.javaClass.callStaticMethodAs("parseFrom", newRes)
+            }
+            response.javaClass.declaredMethods.firstOrNull {
+                it.name == "setViewInfo"
+            }?.let {
+                it.isAccessible = true
+                it(response, it.parameterTypes[0].new())
+            }
+        } catch (e: Throwable) {
+            Log.e(e)
+        }
+        return response
     }
 }
