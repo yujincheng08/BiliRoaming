@@ -83,7 +83,7 @@ class CustomThemeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     try {
                         param.invokeOriginalMethod()
                     } catch (e: Exception) {
-                        e.printStackTrace()
+                        Log.w(e)
                     }
                 }
                 colorDialog.show()

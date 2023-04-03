@@ -60,11 +60,11 @@ object BiliRoamingApi {
     const val mainlandTestParams =
         "cid=13073143&ep_id=100615&otype=json&fnval=16&module=pgc&platform=android&test=true"
 
-    val seasonCache: AtomicReference<Triple<Int, AtomicReference<String>, CountDownLatch>?> =
+    private val seasonCache: AtomicReference<Triple<Int, AtomicReference<String>, CountDownLatch>?> =
         AtomicReference(null)
 
     @JvmStatic
-    fun getSeason(info: Map<String, String?>, hidden_hint: Boolean): String? {
+    fun getSeason(info: Map<String, String?>, hiddenHint: Boolean): String? {
         val seasonId = info.getOrDefault("season_id", null)?.toInt()
         val cache = seasonCache.get()
         val cacheTuple = if (seasonId != null) {
@@ -77,7 +77,7 @@ object BiliRoamingApi {
                 }
             }
         } else null
-        var hidden = hidden_hint
+        var hidden = hiddenHint
         val builder = Uri.Builder()
         builder.scheme("https")
             .encodedAuthority(if (hidden) BILI_HIDDEN_SEASON_URL else BILI_SEASON_URL)
@@ -494,7 +494,10 @@ object BiliRoamingApi {
         }
     }
 
-    class CustomServerException(val errors: Map<String, String>) : Throwable()
+    class CustomServerException(val errors: Map<String, String>) : Throwable() {
+        override val message: String
+            get() = errors.asSequence().joinToString("\n") { "${it.key}: ${it.value}" }.trim()
+    }
 
     @JvmStatic
     private fun getFromCustomUrl(queryString: String?, priorityArea: Array<String>?): String? {
