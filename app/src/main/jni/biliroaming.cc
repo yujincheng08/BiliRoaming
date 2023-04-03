@@ -210,14 +210,135 @@ jclass LoadClass(JNIEnv *env, jobject class_loader,
                  std::string_view descriptor) {
   if (descriptor.empty())
     return nullptr;
-  if (descriptor[0] != 'L')
-    return nullptr;
+  switch (descriptor[0]) {
+    case 'B': {
+        auto box_type = env->FindClass("java/lang/Byte");
+        static auto field = env->GetStaticFieldID(box_type, "TYPE", "Ljava/lang/Class;");
+        auto res = (jclass) env->GetStaticObjectField(box_type, field);
+        env->DeleteLocalRef(box_type);
+        return res;
+    }
+    case 'C': {
+        auto box_type = env->FindClass("java/lang/Character");
+        static auto field = env->GetStaticFieldID(box_type, "TYPE", "Ljava/lang/Class;");
+        auto res = (jclass) env->GetStaticObjectField(box_type, field);
+        env->DeleteLocalRef(box_type);
+        return res;
+    }
+    case 'D': {
+        auto box_type = env->FindClass("java/lang/Double");
+        static auto field = env->GetStaticFieldID(box_type, "TYPE", "Ljava/lang/Class;");
+        auto res = (jclass) env->GetStaticObjectField(box_type, field);
+        env->DeleteLocalRef(box_type);
+        return res;
+    }
+    case 'F': {
+        auto box_type = env->FindClass("java/lang/Float");
+        static auto field = env->GetStaticFieldID(box_type, "TYPE", "Ljava/lang/Class;");
+        auto res = (jclass) env->GetStaticObjectField(box_type, field);
+        env->DeleteLocalRef(box_type);
+        return res;
+    }
+    case 'I': {
+        auto box_type = env->FindClass("java/lang/Integer");
+        static auto field = env->GetStaticFieldID(box_type, "TYPE", "Ljava/lang/Class;");
+        auto res = (jclass) env->GetStaticObjectField(box_type, field);
+        env->DeleteLocalRef(box_type);
+        return res;
+    }
+    case 'J': {
+        auto box_type = env->FindClass("java/lang/Long");
+        static auto field = env->GetStaticFieldID(box_type, "TYPE", "Ljava/lang/Class;");
+        auto res = (jclass) env->GetStaticObjectField(box_type, field);
+        env->DeleteLocalRef(box_type);
+        return res;
+    }
+    case 'S': {
+        auto box_type = env->FindClass("java/lang/Short");
+        static auto field = env->GetStaticFieldID(box_type, "TYPE", "Ljava/lang/Class;");
+        auto res = (jclass) env->GetStaticObjectField(box_type, field);
+        env->DeleteLocalRef(box_type);
+        return res;
+    }
+    case 'Z': {
+        auto box_type = env->FindClass("java/lang/Boolean");
+        static auto field = env->GetStaticFieldID(box_type, "TYPE", "Ljava/lang/Class;");
+        auto res = (jclass) env->GetStaticObjectField(box_type, field);
+        env->DeleteLocalRef(box_type);
+        return res;
+    }
+    case 'V': {
+        auto box_type = env->FindClass("java/lang/Void");
+        static auto field = env->GetStaticFieldID(box_type, "TYPE", "Ljava/lang/Class;");
+        auto res = (jclass) env->GetStaticObjectField(box_type, field);
+        env->DeleteLocalRef(box_type);
+        return res;
+    }
+    case '[': {
+        auto java_name = env->NewStringUTF(descriptor.data());
+        auto res = (jclass)env->CallObjectMethod(class_loader, load_class_method,
+                                                 java_name, false);
+        return res;
+    }
+    case 'L':
+      break;
+    default:
+      return nullptr;
+  }
   std::string name(descriptor.substr(1, descriptor.length() - 2));
   std::replace(name.begin(), name.end(), '/', '.');
   auto java_name = env->NewStringUTF(name.data());
   auto res = (jclass)env->CallObjectMethod(class_loader, load_class_method,
                                            java_name, false);
   return res;
+}
+
+jobject LoadField(JNIEnv *env, jclass clazz, std::string_view name) {
+    auto java_name = env->NewStringUTF(name.data());
+    static jmethodID get_declared_field = [&env] {
+        auto c = env->FindClass("java/lang/Class");
+        auto m = env->GetMethodID(c, "getDeclaredField", "(Ljava/lang/String;)Ljava/lang/reflect/Field;");
+        env->DeleteLocalRef(c);
+        return m;
+    }();
+    if (!get_declared_field) {
+        return nullptr;
+    }
+    auto res = env->CallObjectMethod(clazz, get_declared_field, java_name);
+    env->DeleteLocalRef(java_name);
+    if (env->ExceptionCheck()) {
+        env->DeleteLocalRef(env->ExceptionOccurred());
+        env->ExceptionClear();
+        return nullptr;
+    }
+    return res;
+}
+
+jobject LoadMethod(JNIEnv *env, jclass clazz, std::string_view name, std::vector<std::string_view> params) {
+    auto java_name = env->NewStringUTF(name.data());
+    auto c = env->FindClass("java/lang/Class");
+    static jmethodID get_declard_method = [&env, &c] {
+        auto m = env->GetMethodID(c, "getDeclaredMethod", "(Ljava/lang/String;[Ljava/lang/Class;)Ljava/lang/reflect/Method;");
+        return m;
+    }();
+    if (!get_declard_method) {
+        return nullptr;
+    }
+    auto params_class = env->NewObjectArray(static_cast<int>(params.size()), c, nullptr);
+    for (int i = 0; i < params.size(); i++) {
+        auto param = LoadClass(env, clazz, params[i]);
+        env->SetObjectArrayElement(params_class, i, param);
+        env->DeleteLocalRef(param);
+    }
+    auto res = env->CallObjectMethod(clazz, get_declard_method, java_name, params_class);
+    env->DeleteLocalRef(java_name);
+    env->DeleteLocalRef(params_class);
+    if (env->ExceptionCheck()) {
+        env->DeleteLocalRef(env->ExceptionOccurred());
+        env->ExceptionClear();
+        return nullptr;
+    }
+    return res;
 }
 
 std::string GetClassDescriptor(JNIEnv *env, jclass clazz) {
@@ -755,24 +876,13 @@ Java_me_iacn_biliroaming_utils_DexHelper_decodeMethodIndex(JNIEnv *env,
   if (!clazz)
     return nullptr;
   env->DeleteLocalRef(cl);
-  std::string sig;
-  sig.reserve(4096);
-  sig += "(";
-  for (const auto &param : out.parameters) {
-    sig += param.name;
+  std::vector<std::string_view> params(out.parameters.size());
+  for (size_t i = 0; i < out.parameters.size(); ++i) {
+    params[i] = out.parameters[i].name;
   }
-  sig += ")";
-  sig += out.return_type.name;
-  auto *method = env->GetMethodID(clazz, out.name.data(), sig.data());
-  if (!method) {
-    env->ExceptionClear();
-    method = env->GetStaticMethodID(clazz, out.name.data(), sig.data());
-  }
-  if (!method) {
-    env->ExceptionClear();
-    return nullptr;
-  }
-  return env->ToReflectedMethod(clazz, method, false);
+  auto res = LoadMethod(env, clazz, out.name, params);
+  env->DeleteLocalRef(clazz);
+  return res;
 }
 
 extern "C" JNIEXPORT jobject JNICALL
@@ -790,16 +900,7 @@ Java_me_iacn_biliroaming_utils_DexHelper_decodeFieldIndex(JNIEnv *env,
   if (!clazz)
     return nullptr;
   env->DeleteLocalRef(cl);
-  auto fid = env->GetFieldID(clazz, out.name.data(), out.type.name.data());
-  if (!fid) {
-    env->ExceptionClear();
-    fid = env->GetStaticFieldID(clazz, out.name.data(), out.type.name.data());
-  }
-  if (!fid) {
-    env->ExceptionClear();
-    return nullptr;
-  }
-  auto res = env->ToReflectedField(clazz, fid, false);
+  auto res = LoadField(env, clazz, out.name);
   env->DeleteLocalRef(clazz);
   return res;
 }
