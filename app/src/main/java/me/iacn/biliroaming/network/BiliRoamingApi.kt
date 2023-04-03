@@ -132,7 +132,8 @@ object BiliRoamingApi {
             checkErrorToast(seasonJson)
         }
         return seasonJson.toString().also {
-            cacheTuple?.second?.set(it)
+            if (seasonJson.optInt("code", -1) == 0)
+                cacheTuple?.second?.set(it)
             cacheTuple?.third?.countDown()
         }
     }
