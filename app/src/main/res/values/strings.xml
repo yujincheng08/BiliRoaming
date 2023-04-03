@@ -280,4 +280,9 @@
     <string name="danmaku_filter_weight_switch_label">弹幕云屏蔽</string>
     <string name="danmaku_filter_weight_value_label">弹幕屏蔽等级</string>
     <string name="danmaku_filter_weight_value_hint">4</string>
+    <string name="danmaku_filter_pakku_switch_label">合并刷屏弹幕(pakku.js)</string>
+    <string name="danmaku_filter_pakku_setting_label">pakku选项</string>
+    <string name="danmaku_filter_pakku_setting_tooltip">如需修改默认选项,请将PC上导出的pakku设置粘贴至此</string>
+    <string name="danmaku_filter_pakku_setting_hint">默认 </string>
+    <string name="danmaku_filter_pakku_switch_tooltip">"弹幕复读终结者！瞬间合并B站的刷屏弹幕！"-pakku.js@xmcp</string>
 </resources>

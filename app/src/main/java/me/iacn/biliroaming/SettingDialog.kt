@@ -392,25 +392,54 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 val layout = moduleRes.getLayout(R.layout.danmaku_filter_dialog)
                 val inflater = LayoutInflater.from(context)
                 val view = inflater.inflate(layout, null)
+
+                val switches = arrayOf(
+                    view.findViewById<Switch>(R.id.danmaku_filter_weight_switch)!!,
+                    view.findViewById<Switch>(R.id.danmaku_filter_pakku_switch)!!,
+                )
+
                 val editTexts = arrayOf(
                     view.findViewById<EditText>(R.id.danmaku_filter_weight_value)!!,
+                    view.findViewById<EditText>(R.id.danmaku_filter_pakku_setting)!!,
                 )
-                val switches = arrayOf(
-                    view.findViewById<Switch>(R.id.danmaku_filter_weight_switch),
-                )
-                val switchPairs = listOf<Pair<Switch, EditText>>(Pair(switches[0], editTexts[0]))
 
-                editTexts.forEach {
-                    it.setText(
-                        prefs.getString(
-                            it.tag.toString(),
-                            it.hint.toString()
-                        )
-                    )
-                }
+                val switchPairs = listOf<Pair<Switch, EditText>>(
+                    Pair(switches[0], editTexts[0]),
+                    Pair(switches[1], editTexts[1])
+                )
+
+                val tooltipPairs = listOf(
+                    Pair(switches[1], getString(R.string.danmaku_filter_pakku_switch_tooltip)),
+                    Pair(editTexts[1], getString(R.string.danmaku_filter_pakku_setting_tooltip))
+                )
+
+
                 switches.forEach {
                     if (prefs.contains(it.tag.toString())) {
                         it.isChecked = prefs.getBoolean(it.tag.toString(), false)
+                    }
+                }
+
+                editTexts.forEach {
+                    it.hint.toString().let { hint ->
+                        if (!hint.endsWith(" ")) {
+                            if (it.inputType != android.text.InputType.TYPE_CLASS_NUMBER) {
+                                it.setText(
+                                    prefs.getString(
+                                        it.tag.toString(),
+                                        hint
+                                    )
+                                )
+                            } else {
+                                it.setText(
+                                    prefs.getInt(
+                                        it.tag.toString(),
+                                        hint.toInt()
+                                    ).toString()
+                                )
+                            }
+
+                        }
                     }
                 }
 
@@ -421,11 +450,21 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     }
                 }
 
+                tooltipPairs.forEach {
+                    it.first.setOnClickListener { _ ->
+                        Log.toast(it.second)
+                    }
+                    it.first.setOnLongClickListener { _ ->
+                        Log.toast(it.second)
+                        true
+                    }
+                }
+
                 setPositiveButton(android.R.string.ok) { _, _ ->
                     editTexts.forEach {
                         val text = it.text.toString()
-                        if (text.isNotEmpty())
-                            if (it.inputType == android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL) {
+                        if (text.isNotEmpty()) {
+                            if (it.inputType == android.text.InputType.TYPE_CLASS_NUMBER) {
                                 prefs.edit().putInt(
                                     it.tag.toString(),
                                     text.toInt()
@@ -436,7 +475,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                                     text
                                 ).apply()
                             }
-                        else
+                        } else
                             prefs.edit().remove(it.tag.toString()).apply()
                     }
                     switches.forEach {

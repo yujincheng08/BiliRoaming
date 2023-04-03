@@ -279,4 +279,9 @@
     <string name="danmaku_filter_weight_switch_label">彈幕雲屏蔽</string>
     <string name="danmaku_filter_weight_value_label">彈幕屏蔽等級</string>
     <string name="danmaku_filter_weight_value_hint">4</string>
+    <string name="danmaku_filter_pakku_switch_label">合併刷屏彈幕(pakku.js)</string>
+    <string name="danmaku_filter_pakku_setting_label">pakku選項</string>
+    <string name="danmaku_filter_pakku_setting_tooltip">如需修改預設設置，請將PC上導出的Pakku設置貼上至此</string>
+    <string name="danmaku_filter_pakku_setting_hint">預設 </string>
+    <string name="danmaku_filter_pakku_switch_tooltip">"彈幕複讀終結者！瞬間合併B站的刷屏彈幕！"-pakku.js@xmcp</string>
 </resources>

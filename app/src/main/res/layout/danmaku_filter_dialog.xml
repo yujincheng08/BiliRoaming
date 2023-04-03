@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:columnCount="2"
@@ -38,6 +37,38 @@
         android:layout_columnWeight="5"
         android:autofillHints="no"
         android:hint="@string/danmaku_filter_weight_value_hint"
-        android:inputType="numberDecimal"
+        android:inputType="number"
         android:tag="danmaku_filter_weight_value" />
+
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="2"
+        android:singleLine="true"
+        android:text="@string/danmaku_filter_pakku_switch_label" />
+
+    <Switch
+        android:id="@+id/danmaku_filter_pakku_switch"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="1"
+        android:checked="false"
+        android:tag="danmaku_filter_pakku_switch" />
+
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="2"
+        android:text="@string/danmaku_filter_pakku_setting_label" />
+
+    <EditText
+        android:id="@+id/danmaku_filter_pakku_setting"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="5"
+        android:autofillHints="no"
+        android:singleLine="false"
+        android:hint="@string/danmaku_filter_pakku_setting_hint"
+        android:inputType="textAutoComplete"
+        android:tag="danmaku_filter_pakku_setting" />
 </GridLayout>
