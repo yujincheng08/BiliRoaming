@@ -7,7 +7,7 @@ import java.lang.reflect.Proxy
 class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     override fun startHook() {
-        val blockWeight = sPrefs.getInt("danmaku_filter_weight_value", 0)
+        val blockWeight = sPrefs.getInt("danmaku_filter_weight", 0)
             .takeIf { it > 0 } ?: return
         "com.bapis.bilibili.community.service.dm.v1.DMMoss".from(mClassLoader)?.hookBeforeMethod(
             "dmSegMobile",

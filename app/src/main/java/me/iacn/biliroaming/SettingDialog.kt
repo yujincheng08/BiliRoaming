@@ -395,13 +395,13 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     override fun onStartTrackingTouch(seekBar: SeekBar?) {}
                     override fun onStopTrackingTouch(seekBar: SeekBar?) {}
                 })
-                val current = prefs.getInt("danmaku_filter_weight_value", 0)
+                val current = prefs.getInt("danmaku_filter_weight", 0)
                 tvHint.text = context.getString(R.string.danmaku_filter_weight_hint, current)
                 seekBar.progress = current
                 setTitle(R.string.danmaku_filter_title)
                 setNegativeButton(android.R.string.cancel, null)
                 setPositiveButton(android.R.string.ok) { _, _ ->
-                    prefs.edit().putInt("danmaku_filter_weight_value", seekBar.progress).apply()
+                    prefs.edit().putInt("danmaku_filter_weight", seekBar.progress).apply()
                 }
                 setView(view)
                 show()
