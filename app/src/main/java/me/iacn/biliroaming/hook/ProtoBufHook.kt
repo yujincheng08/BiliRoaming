@@ -16,6 +16,7 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val blockWordSearch = sPrefs.getBoolean("block_word_search", false)
         val blockModules = sPrefs.getBoolean("block_modules", false)
         val blockUpperRecommendAd = sPrefs.getBoolean("block_upper_recommend_ad", false)
+        val disableMainPageStory = sPrefs.getBoolean("disable_main_page_story", false)
 
         if (hidden && (purifyCity || purifyCampus)) {
             listOf(
@@ -132,6 +133,23 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         if (hidden && blockUpperRecommendAd) {
             "com.bapis.bilibili.ad.v1.SourceContentDto".from(mClassLoader)
                 ?.replaceMethod("getAdContent") { null }
+        }
+        if (disableMainPageStory) {
+            "com.bapis.bilibili.app.distribution.setting.experimental.MultipleTusConfig"
+                .from(mClassLoader)?.hookAfterMethod("getTopLeft") { param ->
+                    param.result?.run {
+                        callMethod("clearBadge")
+                        callMethod("clearListenBackgroundImage")
+                        callMethod("clearListenForegroundImage")
+                        callMethod("clearStoryBackgroundImage")
+                        callMethod("clearStoryForegroundImage")
+                        val tabUrl = "bilibili://root?tab_name=我的"
+                        callMethod("getUrl")?.callMethod("setValue", tabUrl)
+                        callMethod("getUrlV2")?.callMethod("setValue", tabUrl)
+                        callMethod("getGoto")?.callMethod("setValue", "1")
+                        callMethod("getGotoV2")?.callMethod("setValue", 1)
+                    }
+                }
         }
     }
 }
