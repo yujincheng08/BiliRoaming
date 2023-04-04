@@ -22,6 +22,8 @@ import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.EditText
 import android.widget.Switch
+import android.widget.SeekBar
+import android.widget.SeekBar.OnSeekBarChangeListener
 import android.widget.TextView
 import androidx.documentfile.provider.DocumentFile
 import kotlinx.coroutines.MainScope
@@ -231,12 +233,6 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     if (newValue as Boolean)
                         onAddCustomButtonClick()
                 }
-                "danmaku_filter" -> {
-                    if (newValue as Boolean) {
-                        onDanmakuFilterClick()
-                    }
-                }
-
             }
             return true
         }
@@ -754,6 +750,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             "customize_drawer" -> onCustomizeDrawerClick()
             "custom_link" -> onCustomLinkClick()
             "customize_dynamic" -> onCustomDynamicClick()
+            "danmaku_filter" -> onDanmakuFilterClick()
             else -> false
         }
     }

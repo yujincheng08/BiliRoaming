@@ -246,6 +246,16 @@ message LiveNetworkType {
   optional Method method = 2;
 }
 
+message PlayerPreloadHolder {
+  optional Class class = 1;
+  optional Method get = 2;
+}
+
+message PlayerSettingHelper {
+  optional Class class = 1;
+  optional Method get_default_qn = 2;
+}
+
 message HookInfo {
   int64 last_update_time = 1;
   optional MapIds map_ids = 2;
@@ -289,7 +299,7 @@ message HookInfo {
   optional ToastHelper toast_helper = 68;
   optional Class brotli_input_stream = 69;
   optional Method can_try_watch_vip_quality = 70;
-  optional PlayerFullStoryWidget player_full_story_widget = 71;
+  repeated PlayerFullStoryWidget player_full_story_widget = 71;
   optional BiliCall bili_call = 72;
   optional Class comment_long_click_new = 73;
   optional Method on_operate_click = 74;
@@ -300,4 +310,7 @@ message HookInfo {
   optional CommentImageLoader comment_image_loader = 79;
   optional CardGridViewBinder card_grid_view_binder = 80;
   optional LiveNetworkType live_network_type = 81;
+  optional Method bangumi_season_activity_entrance = 82;
+  optional PlayerPreloadHolder player_preload_holder = 83;
+  optional PlayerSettingHelper player_setting_helper = 84;
 }

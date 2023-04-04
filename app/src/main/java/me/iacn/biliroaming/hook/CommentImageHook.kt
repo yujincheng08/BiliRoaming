@@ -111,5 +111,16 @@ class CommentImageHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     true
                 }
             }
+        instance.roundImageViewClass?.declaredMethods?.find { m ->
+            m.parameterTypes.let { ts -> ts.size == 2 && ts.all { it == String::class.java } }
+        }?.hookAfterMethod { param ->
+            val imageUrl = (param.args[0] as String).ifBlank { return@hookAfterMethod }
+            (param.thisObject as View).setOnLongClickListener {
+                MainScope().launch(Dispatchers.IO) {
+                    saveImage(imageUrl)
+                }
+                true
+            }
+        }
     }
 }

@@ -231,4 +231,54 @@
         <item>banner</item>
         <item>task</item>
     </string-array>
+    <string-array name="half_screen_quality_entries">
+        <item>默认</item>
+        <item>跟随横屏清晰度</item>
+        <item>240P</item>
+        <item>360P</item>
+        <item>480P</item>
+        <item>720P</item>
+        <item>720P 60帧</item>
+        <item>1080P</item>
+        <item>1080P 高码率</item>
+        <item>1080P 60帧</item>
+        <item>4K</item>
+    </string-array>
+    <string-array name="half_screen_quality_values">
+        <item>0</item>
+        <item>1</item>
+        <item>6</item>
+        <item>16</item>
+        <item>32</item>
+        <item>64</item>
+        <item>74</item>
+        <item>80</item>
+        <item>112</item>
+        <item>116</item>
+        <item>120</item>
+    </string-array>
+    <string-array name="full_screen_quality_entries">
+        <item>默认</item>
+        <item>240P</item>
+        <item>360P</item>
+        <item>480P</item>
+        <item>720P</item>
+        <item>720P 60帧</item>
+        <item>1080P</item>
+        <item>1080P 高码率</item>
+        <item>1080P 60帧</item>
+        <item>4K</item>
+    </string-array>
+    <string-array name="full_screen_quality_values">
+        <item>0</item>
+        <item>6</item>
+        <item>16</item>
+        <item>32</item>
+        <item>64</item>
+        <item>74</item>
+        <item>80</item>
+        <item>112</item>
+        <item>116</item>
+        <item>120</item>
+    </string-array>
 </resources>
