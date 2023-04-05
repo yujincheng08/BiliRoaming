@@ -233,7 +233,7 @@
     </string-array>
     <string-array name="half_screen_quality_entries">
         <item>默认</item>
-        <item>跟随横屏清晰度</item>
+        <item>跟随全屏清晰度</item>
         <item>240P</item>
         <item>360P</item>
         <item>480P</item>

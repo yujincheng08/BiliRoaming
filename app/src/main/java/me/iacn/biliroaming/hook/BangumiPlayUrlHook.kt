@@ -161,15 +161,11 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         request.callMethod("setFourk", true)
                     }
                     request.callMethod("setDownload", 0)
-                } else if (halfScreenQuality != 0) {
+                } else if (halfScreenQuality == 1) {
                     request.callMethod("setFnval", MAX_FNVAL)
                     request.callMethod("setFourk", true)
-                    if (halfScreenQuality != 1) {
-                        request.callMethod("setQn", halfScreenQuality)
-                    } else {
-                        // follow full screen quality
-                        defaultQn?.let { request.callMethod("setQn", it) }
-                    }
+                    // follow full screen quality
+                    defaultQn?.let { request.callMethod("setQn", it) }
                 }
             }
             hookAfterMethod(
@@ -237,14 +233,10 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         request.callMethod("setFourk", true)
                     }
                     request.callMethod("setDownload", 0)
-                } else if (halfScreenQuality != 0) {
+                } else if (halfScreenQuality == 1) {
                     request.callMethod("setFnval", MAX_FNVAL)
                     request.callMethod("setFourk", true)
-                    if (halfScreenQuality != 1) {
-                        request.callMethod("setQn", halfScreenQuality)
-                    } else {
-                        defaultQn?.let { request.callMethod("setQn", it) }
-                    }
+                    defaultQn?.let { request.callMethod("setQn", it) }
                 }
             }
             hookAfterMethod(
@@ -374,6 +366,23 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     param.result = fixDownloadProtoUnite(response)
                 } else if (blockBangumiPageAds) {
                     param.result = purifyViewInfo(response, supplement)
+                }
+            }
+        }
+        "com.bapis.bilibili.app.playurl.v1.PlayURLMoss".from(mClassLoader)?.hookBeforeMethod(
+            "playView",
+            "com.bapis.bilibili.app.playurl.v1.PlayViewReq"
+        ) { param ->
+            val request = param.args[0]
+            val isDownload = request.callMethodAs<Int>("getDownload") >= 1
+            if (isDownload) return@hookBeforeMethod
+            if (halfScreenQuality != 0) {
+                request.callMethod("setFnval", MAX_FNVAL)
+                request.callMethod("setFourk", true)
+                if (halfScreenQuality != 1) {
+                    request.callMethod("setQn", halfScreenQuality)
+                } else {
+                    defaultQn?.let { request.callMethod("setQn", it) }
                 }
             }
         }
