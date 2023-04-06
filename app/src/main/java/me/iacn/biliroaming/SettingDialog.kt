@@ -22,7 +22,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.*
-import android.widget.SeekBar.OnSeekBarChangeListener
 import androidx.documentfile.provider.DocumentFile
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
@@ -403,7 +402,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
 
                 spinner.let {
                     val values =
-                        arrayOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12")
+                        arrayOf("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12")
                     val adapter =
                         ArrayAdapter(activity, android.R.layout.simple_spinner_item, values)
 
@@ -414,7 +413,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     }
                     adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
                     it.adapter = adapter
-                    spinner.setSelection((value - 1))
+                    spinner.setSelection(values.indexOf(value.toString()))
                 }
 
                 val switchPairs = listOf<Pair<Switch, View>>(
@@ -482,7 +481,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                             it.adapter.getItem(it.selectedItemPosition).toString().toInt()
                         )
                     }
-                    edit.commit()
+                    edit.apply()
                 }
                 setTitle(getString(R.string.danmaku_filter_dialog_title))
                 setView(view)

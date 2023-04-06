@@ -57,8 +57,8 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     private fun filterDanmaku(dmSegmentMobileReply: Any) {
-        var danmuList: List<Any?>
-        dmSegmentMobileReply.getObjectFieldOrNullAs<List<*>>("elems_").orEmpty().let {
+        var danmuList: List<Any>
+        dmSegmentMobileReply.callMethodAs<List<Any>>("getElemsList").let {
             danmuList = it
             if (sPrefs.getBoolean("danmaku_filter_weight_switch", false)) {
                 danmuList = filterByWeight(danmuList)
@@ -71,18 +71,10 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         dmSegmentMobileReply.callMethod("addAllElems", danmuList)
     }
 
-    private fun filterByWeight(danmuList: List<Any?>): List<Any?> {
-        val resultDanmakuList = mutableListOf<Any>()
+    private fun filterByWeight(danmuList: List<Any>): List<Any> {
         val weightThreshold = sPrefs.getInt("danmaku_filter_weight_value", 0)
-        for (danmakuElem in danmuList) {
-            if (danmakuElem == null) {
-                continue
-            }
-            val weight = danmakuElem.callMethodAs<Int>("getWeight")
-            if (weight < weightThreshold) continue
-            resultDanmakuList.add(danmakuElem)
-        }
-        return resultDanmakuList
+        return danmuList
+            .filter { it.callMethodAs<Int>("getWeight") >= weightThreshold }
     }
 }
 
@@ -327,14 +319,7 @@ class PakkuCore(settingJson: String?) {
     }
 
     private fun whitelisted(content: String): Boolean {
-        if (customWhiteList.isNotEmpty()) {
-            for (it in customWhiteList) {
-                if (it.containsMatchIn(content)) {
-                    return true
-                }
-            }
-        }
-        return false
+        return customWhiteList.any { it.containsMatchIn(content) }
     }
 
     fun detaolu(inp: String): String {
@@ -348,7 +333,7 @@ class PakkuCore(settingJson: String?) {
         if (PakkuSetting.TRIM_SPACE) {
             TrimText.replaceSpace(builder)
         }
-        for ((regex, replacement) in customForceList) {
+        customForceList.forEach { (regex, replacement) ->
             if (regex.containsMatchIn(builder)) {
                 return builder.replace(regex, replacement)
             }
@@ -356,31 +341,18 @@ class PakkuCore(settingJson: String?) {
         return builder.toString()
     }
 
-    private fun splitIgnore(pakkuDanmakuList: List<PakkuDanmaku>): Pair<MutableList<Any>, MutableList<PakkuDanmaku>> {
-        val resultDanmakuList = mutableListOf<Any>()
-        val needFilterDanmakuList = mutableListOf<PakkuDanmaku>()
-        pakkuDanmakuList.forEach { elem ->
-            val mode = elem.mode
+    private fun splitIgnore(pakkuDanmakuList: List<PakkuDanmaku>): Pair<List<Any>, List<PakkuDanmaku>> =
+        pakkuDanmakuList.partition { elem ->
             when {
-                !PakkuSetting.PROC_POOL1 && elem.pool == 1 -> {
-                    resultDanmakuList.add(elem.elem)
-                }
-                !PakkuSetting.PROC_TYPE7 && mode == 7 -> {
-                    resultDanmakuList.add(elem.elem)
-                }
-                !PakkuSetting.PROC_TYPE4 && mode == 4 -> {
-                    resultDanmakuList.add(elem.elem)
-                }
-                whitelisted(elem.getContent()) -> {
-                    resultDanmakuList.add(elem.elem)
-                }
-                else -> {
-                    needFilterDanmakuList.add(elem)
-                }
+                !PakkuSetting.PROC_POOL1 && elem.pool == 1 -> true
+                !PakkuSetting.PROC_TYPE7 && elem.mode == 7 -> true
+                !PakkuSetting.PROC_TYPE4 && elem.mode == 4 -> true
+                whitelisted(elem.getContent()) -> true
+                else -> false
             }
+        }.let { (resultDanmakuList, needFilterDanmakuList) ->
+            resultDanmakuList.map { it.elem } to needFilterDanmakuList
         }
-        return resultDanmakuList to needFilterDanmakuList
-    }
 
     private fun findPeer(pakkuDanmakuList: MutableList<PakkuDanmaku>): MutableList<Any> {
         val resultDanmakuList = mutableListOf<Any>()
@@ -388,69 +360,43 @@ class PakkuCore(settingJson: String?) {
         val pakkuEditDistance = PakkuEditDistance.instance
         pakkuDanmakuList.sortBy { it.progress }
         val peerList = mutableListOf<PakkuPeer>()
-        for (index: Int in 0 until pakkuDanmakuList.size - 1) {
-            val currentDanmaku = pakkuDanmakuList[index]
+        for ((index, currentDanmaku) in pakkuDanmakuList.withIndex()) {
             if (currentDanmaku.repeated) continue
             var danmakuOffset = 1
-            var comparingDanmaku = pakkuDanmakuList[index + danmakuOffset]
+            var comparingDanmaku = pakkuDanmakuList.getOrNull(index + danmakuOffset)
             var peer: PakkuPeer? = null
-            while (index + danmakuOffset < pakkuDanmakuList.size
-                && comparingDanmaku.progress - currentDanmaku.progress <
-                PakkuSetting.THRESHOLD * 1000
+            while (comparingDanmaku != null &&
+                comparingDanmaku.progress - currentDanmaku.progress < PakkuSetting.THRESHOLD * 1000
             ) {
-                comparingDanmaku = pakkuDanmakuList[index + danmakuOffset]
-                if (!comparingDanmaku.repeated) {
-                    if (pakkuEditDistance.similarMemorized(
-                            currentDanmaku, comparingDanmaku,
-                        ) != "false"
-                    ) {
-                        if (peer == null) {
-                            peer = PakkuPeer()
-                        }
-                        if (!currentDanmaku.repeated) {
-                            currentDanmaku.repeated = true
-                            peer.addDanmaku(currentDanmaku)
-                        }
-                        comparingDanmaku.repeated = true
-                        peer.addDanmaku(comparingDanmaku)
+                if (!comparingDanmaku.repeated &&
+                    pakkuEditDistance.similarMemorized(currentDanmaku, comparingDanmaku) != "false"
+                ) {
+                    peer = peer ?: PakkuPeer()
+                    if (!currentDanmaku.repeated) {
+                        currentDanmaku.repeated = true
+                        peer.addDanmaku(currentDanmaku)
                     }
+                    comparingDanmaku.repeated = true
+                    peer.addDanmaku(comparingDanmaku)
                 }
                 danmakuOffset += 1
+                comparingDanmaku = pakkuDanmakuList.getOrNull(index + danmakuOffset)
             }
-            if (peer != null) {
-                peerList.add(peer)
-            }
+            peer?.let { peerList.add(it) }
         }
 
-        pakkuDanmakuList.forEach {
-            if (!it.repeated) resultDanmakuList.add(it.elem)
-        }
-        peerList.forEach {
-            if (PakkuSetting.HIDE_THRESHOLD == 0 || it.size() < PakkuSetting.HIDE_THRESHOLD) {
-                val danmakuElem = it.buildRepresent(PakkuSetting.REPRESENTATIVE_PERCENT)
-                resultDanmakuList.add(danmakuElem)
-            }
-        }
+        pakkuDanmakuList.filter { !it.repeated }.forEach { resultDanmakuList.add(it.elem) }
+        peerList.filter { PakkuSetting.HIDE_THRESHOLD == 0 || it.size() < PakkuSetting.HIDE_THRESHOLD }
+            .map { it.buildRepresent(PakkuSetting.REPRESENTATIVE_PERCENT) }
+            .forEach { resultDanmakuList.add(it) }
         return resultDanmakuList
     }
 
-    fun doFilter(danmuList: List<Any?>): List<Any?> {
-        val resultDanmakuList = mutableListOf<Any>()
-        var pakkuDanmakuList = mutableListOf<PakkuDanmaku>()
-        var i = 0
-        danmuList.forEach {
-            i += 1
-            pakkuDanmakuList.add(PakkuDanmaku(it!!))
-        }
-
-        val splitResult = splitIgnore(pakkuDanmakuList)
-        resultDanmakuList.addAll(splitResult.first)
-        pakkuDanmakuList = splitResult.second
-
-        resultDanmakuList.addAll(findPeer(pakkuDanmakuList))
-        return resultDanmakuList
+    fun doFilter(danmuList: List<Any>): List<Any> {
+        val pakkuDanmakuList = danmuList.map { PakkuDanmaku(it) }
+        val (ignoredDanmakuList, needFilterDanmakuList) = splitIgnore(pakkuDanmakuList)
+        return ignoredDanmakuList + findPeer(needFilterDanmakuList.toMutableList())
     }
-
 }
 
 /**
@@ -501,39 +447,33 @@ class PakkuEditDistance {
     }
 
     fun gen2gramArray(p: String): IntArray {
-        val pWithFirstChar = p + p[0]
-        val res = IntArray(p.length)
-        for (i in p.indices) {
-            res[i] = (thash(pWithFirstChar[i].code, pWithFirstChar[i + 1].code))
-        }
-        return res
+        return (p + p[0]).zipWithNext { a, b -> thash(a.code, b.code) }.toIntArray()
     }
 
     private fun cosineDistanceMemorized(
-        pgram: IntArray,
-        qgram: IntArray,
-        plen: Int,
-        qlen: Int
+        pGram: IntArray,
+        qGram: IntArray,
+        pLen: Int,
+        qLen: Int
     ): Int {
         if (PakkuSetting.MAX_COSINE > 100) {
             return 0
         }
         val edA = edA
         val edB = edB
-        for (i in 0 until plen) {
-            edA[pgram[i]]++
+        for (i in 0 until pLen) {
+            edA[pGram[i]]++
         }
 
-        for (i in 0 until qlen) {
-            edB[qgram[i]]++
+        for (i in 0 until qLen) {
+            edB[qGram[i]]++
         }
 
         var x = 0
         var y = 0
         var z = 0
 
-        for (i in 0 until plen) {
-            val h1 = pgram[i]
+        pGram.take(pLen).forEach { h1 ->
             if (edA[h1] != 0) {
                 y += edA[h1] * edA[h1]
                 if (edB[h1] != 0) {
@@ -541,13 +481,11 @@ class PakkuEditDistance {
                     z += edB[h1] * edB[h1]
                     edB[h1] = 0
                 }
-
                 edA[h1] = 0
             }
         }
 
-        for (i in 0 until qlen) {
-            val h1 = qgram[i]
+        qGram.take(qLen).forEach { h1 ->
             if (edB[h1] != 0) {
                 z += edB[h1] * edB[h1]
                 edB[h1] = 0
