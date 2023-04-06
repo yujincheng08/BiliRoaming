@@ -18,13 +18,11 @@ import android.os.Bundle
 import android.preference.*
 import android.provider.MediaStore
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
-import android.widget.EditText
-import android.widget.Switch
-import android.widget.SeekBar
+import android.widget.*
 import android.widget.SeekBar.OnSeekBarChangeListener
-import android.widget.TextView
 import androidx.documentfile.provider.DocumentFile
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
@@ -233,6 +231,11 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     if (newValue as Boolean)
                         onAddCustomButtonClick()
                 }
+                "danmaku_filter" -> {
+                    if (newValue as Boolean) {
+                        onDanmakuFilterClick()
+                    }
+                }
             }
             return true
         }
@@ -392,20 +395,37 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 )
 
                 val editTexts = arrayOf(
-                    view.findViewById<EditText>(R.id.danmaku_filter_weight_value)!!,
                     view.findViewById<EditText>(R.id.danmaku_filter_pakku_setting)!!,
                 )
 
-                val switchPairs = listOf<Pair<Switch, EditText>>(
-                    Pair(switches[0], editTexts[0]),
-                    Pair(switches[1], editTexts[1])
+                val spinner =
+                    view.findViewById<Spinner>(R.id.danmaku_filter_weight_value)!!
+
+                spinner.let {
+                    val values =
+                        arrayOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12")
+                    val adapter =
+                        ArrayAdapter(activity, android.R.layout.simple_spinner_item, values)
+
+                    val value = try {
+                        prefs.getInt(it.tag.toString(), 4)
+                    } catch (e: Exception) {
+                        prefs.getString(it.tag.toString(), "4")!!.toInt()
+                    }
+                    adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+                    it.adapter = adapter
+                    spinner.setSelection((value - 1))
+                }
+
+                val switchPairs = listOf<Pair<Switch, View>>(
+                    Pair(switches[0], spinner),
+                    Pair(switches[1], editTexts[0])
                 )
 
                 val tooltipPairs = listOf(
                     Pair(switches[1], getString(R.string.danmaku_filter_pakku_switch_tooltip)),
-                    Pair(editTexts[1], getString(R.string.danmaku_filter_pakku_setting_tooltip))
+                    Pair(editTexts[0], getString(R.string.danmaku_filter_pakku_setting_tooltip))
                 )
-
 
                 switches.forEach {
                     if (prefs.contains(it.tag.toString())) {
@@ -414,26 +434,14 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 }
 
                 editTexts.forEach {
-                    it.hint.toString().let { hint ->
-                        if (!hint.endsWith(" ")) {
-                            if (it.inputType != android.text.InputType.TYPE_CLASS_NUMBER) {
-                                it.setText(
-                                    prefs.getString(
-                                        it.tag.toString(),
-                                        hint
-                                    )
-                                )
-                            } else {
-                                it.setText(
-                                    prefs.getInt(
-                                        it.tag.toString(),
-                                        hint.toInt()
-                                    ).toString()
-                                )
-                            }
-
-                        }
-                    }
+                    val hint = it.hint.toString()
+                    val key = it.tag.toString()
+                    it.setText(
+                        prefs.getString(
+                            key,
+                            hint
+                        )
+                    )
                 }
 
                 switchPairs.forEach {
@@ -445,37 +453,38 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
 
                 tooltipPairs.forEach {
                     it.first.setOnClickListener { _ ->
-                        Log.toast(it.second)
+                        Log.toast(it.second, false, Toast.LENGTH_LONG)
                     }
                     it.first.setOnLongClickListener { _ ->
-                        Log.toast(it.second)
+                        Log.toast(it.second, false, Toast.LENGTH_LONG)
                         true
                     }
                 }
 
                 setPositiveButton(android.R.string.ok) { _, _ ->
+                    val edit = prefs.edit()
                     editTexts.forEach {
                         val text = it.text.toString()
                         if (text.isNotEmpty()) {
-                            if (it.inputType == android.text.InputType.TYPE_CLASS_NUMBER) {
-                                prefs.edit().putInt(
-                                    it.tag.toString(),
-                                    text.toInt()
-                                ).apply()
-                            } else {
-                                prefs.edit().putString(
-                                    it.tag.toString(),
-                                    text
-                                ).apply()
-                            }
+                            edit.putString(
+                                it.tag.toString(),
+                                text
+                            ).apply()
                         } else
-                            prefs.edit().remove(it.tag.toString()).apply()
+                            edit.remove(it.tag.toString()).apply()
                     }
                     switches.forEach {
-                        prefs.edit().putBoolean(it.tag.toString(), it.isChecked).apply()
+                        edit.putBoolean(it.tag.toString(), it.isChecked).apply()
                     }
+                    spinner.let {
+                        edit.putInt(
+                            it.tag.toString(),
+                            it.adapter.getItem(it.selectedItemPosition).toString().toInt()
+                        )
+                    }
+                    edit.commit()
                 }
-                setTitle("弹幕屏蔽设置")
+                setTitle(getString(R.string.danmaku_filter_dialog_title))
                 setView(view)
                 show()
             }

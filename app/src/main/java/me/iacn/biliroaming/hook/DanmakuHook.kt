@@ -1,10 +1,11 @@
 package me.iacn.biliroaming.hook
 
+import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.utils.*
 import org.json.JSONArray
 import org.json.JSONObject
 import java.lang.reflect.Field
-import java.util.*
+import java.lang.reflect.Proxy
 import kotlin.math.abs
 import kotlin.math.floor
 
@@ -25,21 +26,27 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         hookDanmaku()
     }
 
-
     private fun hookDanmaku() {
         "com.bapis.bilibili.community.service.dm.v1.DMMoss".findClass(mClassLoader).run {
             hookBeforeMethod(
                 "dmSegMobile",
                 "com.bapis.bilibili.community.service.dm.v1.DmSegMobileReq",
                 "com.bilibili.lib.moss.api.MossResponseHandler"
-            ) { methodHookParam ->
-                methodHookParam.thisObject.callMethod(
-                    "dmSegMobile", methodHookParam.args[0]
-                )
-                    ?.let { dmSegMobileReply ->
-                        methodHookParam.args[1].callMethod("onNext", dmSegMobileReply)
+            ) { param ->
+                val handler = param.args[1]
+                param.args[1] = Proxy.newProxyInstance(
+                    handler.javaClass.classLoader,
+                    arrayOf(instance.mossResponseHandlerClass)
+                ) { _, method, args ->
+                    if (method.name == "onNext") {
+                        filterDanmaku(args[0])
+                        method(handler, *args)
+                    } else if (args == null) {
+                        method(handler)
+                    } else {
+                        method(handler, *args)
                     }
-                methodHookParam.result = null
+                }
             }
             hookAfterMethod(
                 "dmSegMobile", "com.bapis.bilibili.community.service.dm.v1.DmSegMobileReq"
@@ -57,13 +64,8 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 danmuList = filterByWeight(danmuList)
             }
             if (pakku != null) {
-                val ts = Date().time
-                Log.d("pakku :before " + danmuList.size)
                 danmuList = pakku!!.doFilter(danmuList)
-                val dis = Date().time - ts
-                Log.d("pakku:after " + danmuList.size + " for " + dis)
             }
-
         }
         dmSegmentMobileReply.callMethod("clearElems")
         dmSegmentMobileReply.callMethod("addAllElems", danmuList)
@@ -91,7 +93,7 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
  * This code is licensed under the GPL VERSION 3.
  * See LICENSE.txt for details.
  *
- * Modified by DeltaFlyer, 2023: Convert to Kotlin.
+ * Modified by DeltaFlyer, 2023: Implement with Kotlin.
  */
 
 class PakkuPeer {
@@ -102,11 +104,11 @@ class PakkuPeer {
         }
 
         private fun makeMark(txt: String, cnt: Int): String {
-            val cntString = if (PakkuCore.Setting.DANMU_SUBSCRIPT)
+            val cntString = if (PakkuSetting.DANMU_SUBSCRIPT)
                 "₍${toSubscript(cnt)}₎"
             else
                 "[x$cnt]"
-            return when (PakkuCore.Setting.DANMU_MARK) {
+            return when (PakkuSetting.DANMU_MARK) {
                 "suffix" -> "$txt${cntString}"
                 "prefix" -> "${cntString}$txt"
                 else -> txt
@@ -135,25 +137,27 @@ class PakkuPeer {
                 danmakuList[0]
             }
         val baseElem = baseDanmaku.elem
-        baseElem.callMethod("setContent", danmakuList.groupBy { it.content }.maxByOrNull {
-            it.value.size
-        }?.key)
-        baseElem.callMethod("setWeight", danmakuList.map { it.weight }.average().toInt())
-        baseElem.callMethod("setColor", danmakuList.groupBy { it.color }.maxByOrNull {
-            it.value.size
-        }?.key)
+        baseElem.callMethod("setContent", danmakuList.groupingBy { it.getContent() }
+            .eachCount()
+            .maxByOrNull { it.value }
+            ?.key)
+        baseElem.callMethod("setWeight", danmakuList.map { it.getWeight() }.average().toInt())
+        baseElem.callMethod("setColor", danmakuList.groupingBy { it.getColor() }
+            .eachCount()
+            .maxByOrNull { it.value }
+            ?.key)
 
         var mostMode = danmakuList.groupBy { it.mode }.maxByOrNull {
             it.value.size
         }?.key
-        if (PakkuCore.Setting.MODE_ELEVATION) {
+        if (PakkuSetting.MODE_ELEVATION) {
             if (mostMode == 1) {
                 mostMode = 5
             }
         }
         baseElem.callMethod("setMode", mostMode)
-        if (danmakuList.size > PakkuCore.Setting.MARK_THRESHOLD) {
-            baseElem.callMethod("setContent", makeMark(baseDanmaku.content, danmakuList.size))
+        if (danmakuList.size > PakkuSetting.MARK_THRESHOLD) {
+            baseElem.callMethod("setContent", makeMark(baseDanmaku.getContent(), danmakuList.size))
         }
 
         return baseElem
@@ -162,26 +166,114 @@ class PakkuPeer {
 
 class PakkuDanmaku(danmakuElem: Any) {
     var progress: Int
-    var content: String
-    var gram: IntArray
     var elem: Any
     var repeated: Boolean
     var pool: Int
     var mode: Int
-    var weight: Int
-    var color: Int
+    private var _gram: IntArray? = null
+    private var _content: String? = null
 
+    fun getGram(): IntArray {
+        return this._gram ?: (PakkuEditDistance.instance.gen2gramArray(this.getContent())).also {
+            this._gram = it
+        }
+    }
+
+    fun getContent(): String {
+        return this._content ?: PakkuCore.instance.detaolu(this.elem.callMethodAs("getContent"))
+            .also {
+                this._content = it
+            }
+    }
+
+    fun getWeight(): Int {
+        return this.elem.callMethodAs("getWeight")
+    }
+
+    fun getColor(): Int {
+        return this.elem.callMethodAs("getColor")
+    }
 
     init {
-        this.progress = danmakuElem.callMethodAs("getProgress")
-        this.content = PakkuCore.instance.detaolu(danmakuElem.callMethodAs("getContent"))
-        this.gram = PakkuEditDistance.instance.gen2gramArray(this.content)
         this.elem = danmakuElem
         this.repeated = false
+
+        this.progress = danmakuElem.callMethodAs("getProgress")
         this.pool = danmakuElem.callMethodAs("getPool")
         this.mode = danmakuElem.callMethodAs("getMode")
-        this.weight = danmakuElem.callMethodAs("getWeight")
-        this.color = danmakuElem.callMethodAs("getColor")
+    }
+}
+
+class TrimText {
+    companion object {
+        private const val fullWidthChars =
+            "　１２３４５６７８９０！＠＃＄％＾＆＊（）－＝＿＋［］｛｝;＇:＂,．／＜＞？＼｜｀～ｑｗｅｒｔｙｕｉｏｐａｓｄｆｇｈｊｋｌｚｘｃｖｂｎｍＱＷＥＲＴＹＵＩＯＰＡＳＤＦＧＨＪＫＬＺＸＣＶＢＮＭ"
+        private const val halfWidthChars =
+            " 1234567890！@#\$%^&*()-=_+[]{}；'：\"，./<>？\\|`~qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM"
+
+        private val width_re = Regex("[" + fullWidthChars.replace("/", "\\/") + "]")
+
+        private val ending_chars_re =
+            Regex("[" + ".。,，/?？!！…~～@^、+=-_♂♀ ".replace("/", "\\/") + "]+$")
+
+        private val trim_space_re = Regex("[ 　]+")
+
+
+        fun replaceWidth(input: StringBuilder): StringBuilder {
+            input.replace(width_re) { matchResult ->
+                halfWidthChars[fullWidthChars.indexOf(matchResult.value)].toString()
+            }
+            return input
+        }
+
+        fun replaceEndingChar(input: StringBuilder): StringBuilder {
+            input.replace(ending_chars_re, "")
+            return input
+        }
+
+        fun replaceSpace(input: StringBuilder): StringBuilder {
+            input.replace(trim_space_re, " ")
+            return input
+        }
+    }
+}
+
+class PakkuSetting {
+    companion object {
+        var MARK_THRESHOLD = 1
+        var DANMU_MARK = "prefix"
+        var TRIM_SPACE = true
+        var MAX_DIST = 5
+        var TRIM_ENDING = true
+        var MAX_COSINE = 60
+        var THRESHOLD = 20
+        var FORCELIST =
+            "[[\"^23{2,}\$\",\"233...\"],[\"^6{3,}\$\",\"666...\"],[\"^[fF]+\$\",\"FFF...\"],[\"^[hH]+\$\",\"hhh...\"]]"
+        var WHITELIST = "[]"
+        var PROC_TYPE7 = false
+        var TRIM_WIDTH = true
+        var PROC_POOL1 = false
+        var HIDE_THRESHOLD = 0
+        var DANMU_SUBSCRIPT = true
+        var PROC_TYPE4 = false
+        var MODE_ELEVATION = false
+        var REPRESENTATIVE_PERCENT = 20
+
+        fun getStaticValuesFromJson(json: JSONObject) {
+            val fields: Array<Field> = Companion::class.java.declaredFields
+            for (field in fields) {
+                val fieldName: String = field.name
+                val value: String = json.optString(fieldName)
+                if (value.isEmpty()) continue
+                val convertedValue = when {
+                    value == "on" || value == "off" -> true
+                    value.toIntOrNull() != null -> value.toInt()
+                    else -> value
+                }
+                field.isAccessible = true
+                field.set(null, convertedValue)
+            }
+        }
     }
 }
 
@@ -189,79 +281,21 @@ class PakkuCore(settingJson: String?) {
 
     init {
         if (settingJson != null && settingJson.isNotEmpty() && settingJson[0] == '{') {
-            Setting.setStaticValuesFromJson(JSONObject(settingJson))
+            PakkuSetting.getStaticValuesFromJson(JSONObject(settingJson))
         }
-        initWidthTable()
         generateCtx()
         instance = this
-    }
-
-
-    class Setting {
-        companion object {
-            var MARK_THRESHOLD = 1
-            var DANMU_MARK = "prefix"
-            var TRIM_SPACE = true
-            var MAX_DIST = 5
-            var TRIM_ENDING = true
-            var MAX_COSINE = 60
-            var THRESHOLD = 20
-            var FORCELIST =
-                "[[\"^23{2,}\$\",\"233...\"],[\"^6{3,}\$\",\"666...\"],[\"^[fF]+\$\",\"FFF...\"],[\"^[hH]+\$\",\"hhh...\"]]"
-            var WHITELIST = "[]"
-            var PROC_TYPE7 = false
-            var TRIM_WIDTH = true
-            var PROC_POOL1 = false
-            var HIDE_THRESHOLD = 0
-            var DANMU_SUBSCRIPT = true
-            var PROC_TYPE4 = false
-            var MODE_ELEVATION = true
-            var REPRESENTATIVE_PERCENT = 20
-
-            fun setStaticValuesFromJson(json: JSONObject) {
-                val fields: Array<Field> = Companion::class.java.declaredFields
-                for (field in fields) {
-                    val fieldName: String = field.name
-                    val value: String = json.optString(fieldName)
-                    if (value.isEmpty()) continue
-                    val convertedValue = when {
-                        value == "on" || value == "off" -> true
-                        value.toIntOrNull() != null -> value.toInt()
-                        else -> value
-                    }
-                    field.isAccessible = true
-                    field.set(null, convertedValue)
-                }
-            }
-        }
     }
 
     companion object {
         lateinit var instance: PakkuCore
     }
 
-    private lateinit var WIDTH_TABLE: MutableMap<Char, Char>
-    private lateinit var FORCELIST_ctx: Array<Pair<Regex, String>>
-    private lateinit var WHITELIST_ctx: Array<Regex>
-
-    private val ENDING_CHARS = ".。,，/?？!！…~～@^、+=-_♂♀ "
-    private val trim_space_re = Regex("[ 　]+")
-
-
-    private fun initWidthTable() {
-        WIDTH_TABLE = mutableMapOf()
-        val before =
-            "　１２３４５６７８９０！＠＃＄％＾＆＊（）－＝＿＋［］｛｝;＇:＂,．／＜＞？＼｜｀～ｑｗｅｒｔｙｕｉｏｐａｓｄｆｇｈｊｋｌｚｘｃｖｂｎｍＱＷＥＲＴＹＵＩＯＰＡＳＤＦＧＨＪＫＬＺＸＣＶＢＮＭ"
-        val after =
-            " 1234567890！@#\$%^&*()-=_+[]{}；'：\"，./<>？\\|`~qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM"
-        assert(before.length == after.length)
-        for (i in before.indices) {
-            WIDTH_TABLE[before[i]] = after[i]
-        }
-    }
+    private lateinit var customForceList: Array<Pair<Regex, String>>
+    private lateinit var customWhiteList: Array<Regex>
 
     private fun generateCtx() {
-        Setting.FORCELIST.let {
+        PakkuSetting.FORCELIST.let {
             val jsonArray = JSONArray(it)
             val size = jsonArray.length()
             val forceList = mutableListOf<Pair<Regex, String>>()
@@ -271,10 +305,10 @@ class PakkuCore(settingJson: String?) {
                 val replacement = pairArray.getString(1)
                 forceList.add(regex to replacement)
             }
-            FORCELIST_ctx = forceList.toTypedArray()
+            customForceList = forceList.toTypedArray()
         }
 
-        Setting.WHITELIST.let {
+        PakkuSetting.WHITELIST.let {
             val jsonArray = JSONArray(it)
             val size = jsonArray.length()
             val whiteList = mutableListOf<Regex>()
@@ -282,45 +316,38 @@ class PakkuCore(settingJson: String?) {
                 val reg = jsonArray.getString(i)
                 whiteList.add(Regex(reg))
             }
-            WHITELIST_ctx = whiteList.toTypedArray()
+            customWhiteList = whiteList.toTypedArray()
         }
     }
 
     private fun whitelisted(content: String): Boolean {
-        for (it in WHITELIST_ctx) {
-            if (it.containsMatchIn(content)) {
-                return true
+        if (customWhiteList.isNotEmpty()) {
+            for (it in customWhiteList) {
+                if (it.containsMatchIn(content)) {
+                    return true
+                }
             }
         }
         return false
     }
 
     fun detaolu(inp: String): String {
-
-        var len = inp.length
-        var text = ""
-        if (Setting.TRIM_ENDING) {
-            for (i in len - 1 downTo 1) {
-                if (!ENDING_CHARS.contains(inp[i])) {
-                    len = i + 1
-                    break
-                }
+        val builder = StringBuilder(inp)
+        if (PakkuSetting.TRIM_ENDING) {
+            TrimText.replaceWidth(builder)
+        }
+        if (PakkuSetting.TRIM_WIDTH) {
+            TrimText.replaceEndingChar(builder)
+        }
+        if (PakkuSetting.TRIM_SPACE) {
+            TrimText.replaceSpace(builder)
+        }
+        for ((regex, replacement) in customForceList) {
+            if (regex.containsMatchIn(builder)) {
+                return builder.replace(regex, replacement)
             }
         }
-
-        for (i in 0 until len) {
-            val to = if (Setting.TRIM_WIDTH) WIDTH_TABLE[inp[i]] else null
-            text += to ?: inp[i]
-        }
-        if (Setting.TRIM_SPACE) {
-            text = text.replace(trim_space_re, " ")
-        }
-        FORCELIST_ctx.forEach {
-            if (it.first.containsMatchIn(text)) {
-                return@detaolu text.replace(it.first, it.second)
-            }
-        }
-        return text
+        return builder.toString()
     }
 
     private fun splitIgnore(pakkuDanmakuList: List<PakkuDanmaku>): Pair<MutableList<Any>, MutableList<PakkuDanmaku>> {
@@ -329,16 +356,16 @@ class PakkuCore(settingJson: String?) {
         pakkuDanmakuList.forEach { elem ->
             val mode = elem.mode
             when {
-                !Setting.PROC_POOL1 && elem.pool == 1 -> {
+                !PakkuSetting.PROC_POOL1 && elem.pool == 1 -> {
                     resultDanmakuList.add(elem.elem)
                 }
-                !Setting.PROC_TYPE7 && mode == 7 -> {
+                !PakkuSetting.PROC_TYPE7 && mode == 7 -> {
                     resultDanmakuList.add(elem.elem)
                 }
-                !Setting.PROC_TYPE4 && mode == 4 -> {
+                !PakkuSetting.PROC_TYPE4 && mode == 4 -> {
                     resultDanmakuList.add(elem.elem)
                 }
-                whitelisted(elem.content) -> {
+                whitelisted(elem.getContent()) -> {
                     resultDanmakuList.add(elem.elem)
                 }
                 else -> {
@@ -363,13 +390,12 @@ class PakkuCore(settingJson: String?) {
             var peer: PakkuPeer? = null
             while (index + danmakuOffset < pakkuDanmakuList.size
                 && comparingDanmaku.progress - currentDanmaku.progress <
-                Setting.THRESHOLD * 1000
+                PakkuSetting.THRESHOLD * 1000
             ) {
                 comparingDanmaku = pakkuDanmakuList[index + danmakuOffset]
                 if (!comparingDanmaku.repeated) {
                     if (pakkuEditDistance.similarMemorized(
-                            currentDanmaku.content, comparingDanmaku.content,
-                            currentDanmaku.gram, comparingDanmaku.gram
+                            currentDanmaku, comparingDanmaku,
                         ) != "false"
                     ) {
                         if (peer == null) {
@@ -394,8 +420,8 @@ class PakkuCore(settingJson: String?) {
             if (!it.repeated) resultDanmakuList.add(it.elem)
         }
         peerList.forEach {
-            if (Setting.HIDE_THRESHOLD == 0 || it.size() < Setting.HIDE_THRESHOLD) {
-                val danmakuElem = it.buildRepresent(Setting.REPRESENTATIVE_PERCENT)
+            if (PakkuSetting.HIDE_THRESHOLD == 0 || it.size() < PakkuSetting.HIDE_THRESHOLD) {
+                val danmakuElem = it.buildRepresent(PakkuSetting.REPRESENTATIVE_PERCENT)
                 resultDanmakuList.add(danmakuElem)
             }
         }
@@ -403,6 +429,7 @@ class PakkuCore(settingJson: String?) {
     }
 
     fun doFilter(danmuList: List<Any?>): List<Any?> {
+        val resultDanmakuList = mutableListOf<Any>()
         var pakkuDanmakuList = mutableListOf<PakkuDanmaku>()
         var i = 0
         danmuList.forEach {
@@ -411,8 +438,9 @@ class PakkuCore(settingJson: String?) {
         }
 
         val splitResult = splitIgnore(pakkuDanmakuList)
-        val resultDanmakuList = splitResult.first
+        resultDanmakuList.addAll(splitResult.first)
         pakkuDanmakuList = splitResult.second
+
         resultDanmakuList.addAll(findPeer(pakkuDanmakuList))
         return resultDanmakuList
     }
@@ -425,14 +453,14 @@ class PakkuCore(settingJson: String?) {
  * This code is licensed under the GPL VERSION 3.
  * See LICENSE.txt for details.
  *
- * Modified by DeltaFlyer, 2023: Convert to Kotlin.
+ * Modified by DeltaFlyer, 2023: Implement with Kotlin.
  */
 
 class PakkuEditDistance {
 
-    private val ed_a = IntArray(0x10ffff)
-    private val ed_b = IntArray(0x10ffff)
-    private val ed_counts = ed_a
+    private val edA = IntArray(0x10ffff)
+    private val edB = IntArray(0x10ffff)
+    private val edCounts = edA
     private val MIN_DANMU_SIZE = 10
 
     companion object {
@@ -445,26 +473,22 @@ class PakkuEditDistance {
     }
 
     private fun editDistance(p: String, q: String): Int {
-        val edCounts = ed_counts
+        val edCounts = edCounts
 
-        for (i in p.indices) {
-            edCounts[p[i].code]++
-        }
+        p.forEach { edCounts[it.code]++ }
 
-        for (i in q.indices) {
-            edCounts[q[i].code]--
-        }
+        q.forEach { edCounts[it.code]-- }
 
         var ans = 0
 
-        for (i in p.indices) {
-            ans += abs(edCounts[p[i].code])
-            edCounts[p[i].code] = 0
+        p.forEach {
+            ans += abs(edCounts[it.code])
+            edCounts[it.code] = 0
         }
 
-        for (i in q.indices) {
-            ans += abs(edCounts[q[i].code])
-            edCounts[q[i].code] = 0
+        q.forEach {
+            ans += abs(edCounts[it.code])
+            edCounts[it.code] = 0
         }
 
         return ans
@@ -485,11 +509,11 @@ class PakkuEditDistance {
         plen: Int,
         qlen: Int
     ): Int {
-        if (PakkuCore.Setting.MAX_COSINE > 100) {
+        if (PakkuSetting.MAX_COSINE > 100) {
             return 0
         }
-        val edA = ed_a
-        val edB = ed_b
+        val edA = edA
+        val edB = edB
         for (i in 0 until plen) {
             edA[pgram[i]]++
         }
@@ -523,38 +547,40 @@ class PakkuEditDistance {
                 edB[h1] = 0
             }
         }
-
         return x * x / y / z
     }
 
-    fun similarMemorized(P: String, Q: String, Pgram: IntArray, Qgram: IntArray): String {
-        if (P == Q) {
+    fun similarMemorized(danmakuP: PakkuDanmaku, danmakuQ: PakkuDanmaku): String {
+        val contentP = danmakuP.getContent()
+        val contentQ = danmakuQ.getContent()
+        if (contentP == contentQ) {
             return "=="
         }
 
-        val dis = editDistance(P, Q)
-        if (P.length + Q.length < MIN_DANMU_SIZE) {
-            if (dis < (P.length + Q.length) / MIN_DANMU_SIZE * PakkuCore.Setting.MAX_DIST - 1) {
+        val dis = editDistance(contentP, contentQ)
+        if (contentP.length + contentQ.length < MIN_DANMU_SIZE) {
+            if (dis < (contentP.length + contentQ.length) / MIN_DANMU_SIZE * PakkuSetting.MAX_DIST - 1) {
                 return "≤$dis"
             }
         } else {
-            if (dis <= PakkuCore.Setting.MAX_DIST) {
+            if (dis <= PakkuSetting.MAX_DIST) {
                 return "≤$dis"
             }
         }
-        if (dis >= P.length + Q.length) {
+        if (dis >= contentP.length + contentQ.length) {
             return "false"
         }
 
-        val cos = (cosineDistanceMemorized(Pgram, Qgram, P.length, Q.length) * 100).inv()
-        if (cos >= PakkuCore.Setting.MAX_COSINE) {
+        val cos = (cosineDistanceMemorized(
+            danmakuP.getGram(),
+            danmakuQ.getGram(),
+            contentP.length,
+            contentQ.length
+        ) * 100).inv()
+        if (cos >= PakkuSetting.MAX_COSINE) {
             return "$cos%"
         }
 
         return "false"
-    }
-
-    fun compare(P: String, Q: String): String {
-        return similarMemorized(P, Q, gen2gramArray(P), gen2gramArray(Q))
     }
 }

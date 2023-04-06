@@ -277,6 +277,10 @@
     <string name="remove_vip_section_summary">我的頁面將大會員橫幅移除</string>
     <string name="save_comment_image_title">筆記圖片長按儲存</string>
     <string name="save_comment_image_summary">影片筆記圖片長按儲存到本地</string>
+    <string name="half_screen_quality_title">影片豎屏清晰度</string>
+    <string name="half_screen_quality_summary">設置影片豎屏播放時的清晰度，設置後會大幅降低影片的首次播放載入速度，需開啟解鎖番劇限制選項</string>
+    <string name="full_screen_quality_title">影片橫屏清晰度</string>
+    <string name="full_screen_quality_summary">設置影片橫屏播放時預設的清晰度，當播放器畫質選項為自動時此選項不生效，需開啟解鎖番劇限制選項</string>
     <string name="danmaku_filter_summary">彈幕屏蔽優化</string>
     <string name="danmaku_filter_title">增强彈幕屏蔽功能</string>
     <string name="danmaku_filter_weight_switch_label">彈幕雲屏蔽</string>
@@ -284,7 +288,8 @@
     <string name="danmaku_filter_weight_value_hint">4</string>
     <string name="danmaku_filter_pakku_switch_label">合併刷屏彈幕(pakku.js)</string>
     <string name="danmaku_filter_pakku_setting_label">pakku選項</string>
-    <string name="danmaku_filter_pakku_setting_tooltip">如需修改預設設置，請將PC上導出的Pakku設置貼上至此</string>
+    <string name="danmaku_filter_pakku_setting_tooltip">點擊兩下文字，將從電腦上匯出的pakku設定粘貼到此處。</string>
     <string name="danmaku_filter_pakku_setting_hint">預設 </string>
     <string name="danmaku_filter_pakku_switch_tooltip">"彈幕複讀終結者！瞬間合併B站的刷屏彈幕！"-pakku.js@xmcp</string>
+    <string name="danmaku_filter_dialog_title">彈幕屏蔽設置</string>
 </resources>

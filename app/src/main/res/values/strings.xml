@@ -279,6 +279,10 @@
     <string name="block_pcdn_summary">可能一定程度上优化视频加载速度。纯 IPv6 网络环境，或通过代理访问网络，推荐启用此项。不影响 MCDN。可能在旧版无效。</string>
     <string name="block_pcdn_live_title">阻止直播 P2P 上传</string>
     <string name="block_pcdn_live_summary">阻止观看热门直播时被当作 P2P Peer，而占用大量上传带宽。可能在旧版无效。</string>
+    <string name="half_screen_quality_title">视频竖屏清晰度</string>
+    <string name="half_screen_quality_summary">设置视频竖屏播放时的清晰度，设置后会大幅降低视频的首次播放加载速度，需开启解锁番剧限制选项</string>
+    <string name="full_screen_quality_title">视频横屏清晰度</string>
+    <string name="full_screen_quality_summary">设置视频横屏播放时默认的清晰度，当播放器画质选项为自动时此选项不生效，需开启解锁番剧限制选项</string>
     <string name="danmaku_filter_summary">弹幕屏蔽优化</string>
     <string name="danmaku_filter_title">增强弹幕屏蔽功能</string>
     <string name="danmaku_filter_weight_switch_label">弹幕云屏蔽</string>
@@ -286,7 +290,8 @@
     <string name="danmaku_filter_weight_value_hint">4</string>
     <string name="danmaku_filter_pakku_switch_label">合并刷屏弹幕(pakku.js)</string>
     <string name="danmaku_filter_pakku_setting_label">pakku选项</string>
-    <string name="danmaku_filter_pakku_setting_tooltip">如需修改默认选项,请将PC上导出的pakku设置粘贴至此</string>
+    <string name="danmaku_filter_pakku_setting_tooltip">双击文本,并粘贴PC上导出的pakku设置至此</string>
     <string name="danmaku_filter_pakku_setting_hint">默认 </string>
     <string name="danmaku_filter_pakku_switch_tooltip">"弹幕复读终结者！瞬间合并B站的刷屏弹幕！"-pakku.js@xmcp</string>
+    <string name="danmaku_filter_dialog_title">弹幕屏蔽设置</string>
 </resources>
