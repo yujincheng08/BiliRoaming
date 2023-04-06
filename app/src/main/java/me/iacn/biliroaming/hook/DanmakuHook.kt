@@ -240,38 +240,44 @@ class TrimText {
 
 class PakkuSetting {
     companion object {
-        var MARK_THRESHOLD = 1
-        var DANMU_MARK = "prefix"
-        var TRIM_SPACE = true
         var MAX_DIST = 5
-        var TRIM_ENDING = true
         var MAX_COSINE = 60
         var THRESHOLD = 20
+
         var FORCELIST =
             "[[\"^23{2,}\$\",\"233...\"],[\"^6{3,}\$\",\"666...\"],[\"^[fF]+\$\",\"FFF...\"],[\"^[hH]+\$\",\"hhh...\"]]"
         var WHITELIST = "[]"
-        var PROC_TYPE7 = false
-        var TRIM_WIDTH = true
+
         var PROC_POOL1 = false
-        var HIDE_THRESHOLD = 0
-        var DANMU_SUBSCRIPT = true
         var PROC_TYPE4 = false
+        var PROC_TYPE7 = false
+
+        var TRIM_WIDTH = true
+        var TRIM_SPACE = true
+        var TRIM_ENDING = true
+
         var MODE_ELEVATION = false
         var REPRESENTATIVE_PERCENT = 20
 
-        fun getStaticValuesFromJson(json: JSONObject) {
-            val fields: Array<Field> = Companion::class.java.declaredFields
+        var MARK_THRESHOLD = 1
+        var DANMU_MARK = "prefix"
+        var HIDE_THRESHOLD = 0
+        var DANMU_SUBSCRIPT = true
+
+        fun parseStaticValuesFromJson(json: JSONObject) {
+            val fields: Array<Field> = PakkuSetting::class.java.declaredFields
             for (field in fields) {
                 val fieldName: String = field.name
                 val value: String = json.optString(fieldName)
                 if (value.isEmpty()) continue
                 val convertedValue = when {
-                    value == "on" || value == "off" -> true
+                    value == "on" -> true
+                    value == "off" -> false
                     value.toIntOrNull() != null -> value.toInt()
                     else -> value
                 }
                 field.isAccessible = true
-                field.set(null, convertedValue)
+                field.set(PakkuSetting, convertedValue)
             }
         }
     }
@@ -281,7 +287,7 @@ class PakkuCore(settingJson: String?) {
 
     init {
         if (settingJson != null && settingJson.isNotEmpty() && settingJson[0] == '{') {
-            PakkuSetting.getStaticValuesFromJson(JSONObject(settingJson))
+            PakkuSetting.parseStaticValuesFromJson(JSONObject(settingJson))
         }
         generateCtx()
         instance = this

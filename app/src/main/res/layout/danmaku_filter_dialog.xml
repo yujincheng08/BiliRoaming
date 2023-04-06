@@ -60,7 +60,7 @@
 
     <EditText
         android:id="@+id/danmaku_filter_pakku_setting"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_columnWeight="3"
         android:autofillHints="no"
