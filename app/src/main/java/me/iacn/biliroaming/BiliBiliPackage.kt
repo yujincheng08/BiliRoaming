@@ -145,7 +145,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val commentImageLoaderClass by Weak { mHookInfo.commentImageLoader.class_ from mClassLoader }
     val cardGridViewBinderClass by Weak { mHookInfo.cardGridViewBinder.class_ from mClassLoader }
     val liveNetworkTypeClass by Weak { mHookInfo.liveNetworkType.class_ from mClassLoader }
-    val roundImageViewClass by Weak { "com.bilibili.app.comm.comment2.comments.view.RoundImageView" from mClassLoader }
+    val roundImageViewClass by Weak {
+        "com.bilibili.app.comm.comment2.comments.view.RoundImageView".from(mClassLoader)
+            ?: "com.bilibili.app.comment.ext.widgets.RoundImageView".from(mClassLoader)
+    }
     val playerPreloadHolderClass by Weak { mHookInfo.playerPreloadHolder.class_ from mClassLoader }
     val playerSettingHelperClass by Weak { mHookInfo.playerSettingHelper.class_ from mClassLoader }
 
