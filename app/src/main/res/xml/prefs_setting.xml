@@ -399,8 +399,8 @@
         <SwitchPreference
             android:dependency="hidden"
             android:key="remove_video_honor"
-            android:summary="@string/remove_video_Honor_summary"
-            android:title="@string/remove_video_Honor_title" />
+            android:summary="@string/remove_video_honor_summary"
+            android:title="@string/remove_video_honor_title" />
         <SwitchPreference
             android:dependency="hidden"
             android:key="remove_video_cmd_dms"
