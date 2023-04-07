@@ -216,6 +216,23 @@
             android:key="full_screen_quality"
             android:summary="@string/full_screen_quality_summary"
             android:title="@string/full_screen_quality_title" />
+
+        <ListPreference
+            android:defaultValue="0"
+            android:dependency="main_func"
+            android:entries="@array/video_codec_entries"
+            android:entryValues="@array/video_codec_values"
+            android:key="prefer_playback_codec"
+            android:summary="@string/prefer_codec_summary"
+            android:title="@string/prefer_playback_codec_title" />
+
+        <ListPreference
+            android:defaultValue="0"
+            android:dependency="main_func"
+            android:entries="@array/video_codec_entries"
+            android:entryValues="@array/video_codec_values"
+            android:key="prefer_download_codec"
+            android:title="@string/prefer_download_codec_title" />
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/pref_backup">
         <Preference

@@ -35,6 +35,8 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val qnApplied = AtomicBoolean(false)
         private const val PGC_ANY_MODEL_TYPE_URL =
             "type.googleapis.com/bilibili.app.playerunite.pgcanymodel.PGCAnyModel"
+        private val codecMap =
+            mapOf(CodeType.CODE264 to 7, CodeType.CODE265 to 12, CodeType.CODEAV1 to 13)
     }
 
     private val defaultQn: Int?
@@ -43,6 +45,10 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
         if (!sPrefs.getBoolean("main_func", false)) return
         Log.d("startHook: BangumiPlayUrl")
+        val allowDownload = sPrefs.getBoolean("allow_download", false)
+        val fixDownload = sPrefs.getBoolean("fix_download", false)
+        val preferPlaybackCodec = sPrefs.getString("prefer_playback_codec", "0")?.toInt() ?: 0
+        val preferDownloadCodec = sPrefs.getString("prefer_download_codec", "0")?.toInt() ?: 0
         val blockBangumiPageAds = sPrefs.getBoolean("block_bangumi_page_ads", false)
         val halfScreenQuality = sPrefs.getString("half_screen_quality", "0")?.toInt() ?: 0
 
@@ -50,10 +56,8 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             instance.libBiliClass?.hookBeforeMethod(it, Map::class.java) { param ->
                 @Suppress("UNCHECKED_CAST")
                 val params = param.args[0] as MutableMap<String, String>
-                if (sPrefs.getBoolean("allow_download", false) &&
-                    params.containsKey("ep_id") && params.containsKey("dl")
-                ) {
-                    if (sPrefs.getBoolean("fix_download", false)) {
+                if (allowDownload && params.containsKey("ep_id") && params.containsKey("dl")) {
+                    if (fixDownload) {
                         params["dl_fix"] = "1"
                         params["qn"] = "0"
                         if (params["fnval"] == "0" || params["fnval"] == "1")
@@ -153,17 +157,21 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 "com.bapis.bilibili.pgc.gateway.player.v1.PlayViewReq"
             ) { param ->
                 val request = param.args[0]
-                isDownload = sPrefs.getBoolean("allow_download", false)
-                        && request.callMethodAs<Int>("getDownload") >= 1
+                val download = request.callMethodAs<Int>("getDownload") >= 1
+                isDownload = allowDownload && download
                 if (isDownload) {
-                    if (!sPrefs.getBoolean("fix_download", false)
-                        || request.callMethodAs<Int>("getFnval") <= 1
-                    ) {
+                    if (!fixDownload || request.callMethodAs<Int>("getFnval") <= 1) {
                         request.callMethod("setFnval", MAX_FNVAL)
                         request.callMethod("setFourk", true)
                     }
                     request.callMethod("setDownload", 0)
-                } else if (halfScreenQuality == 1) {
+                }
+                if (download && preferDownloadCodec != 0) {
+                    request.callMethod("setPreferCodecTypeValue", preferDownloadCodec)
+                } else if (!download && preferPlaybackCodec != 0) {
+                    request.callMethod("setPreferCodecTypeValue", preferPlaybackCodec)
+                }
+                if (!download && halfScreenQuality == 1) {
                     request.callMethod("setFnval", MAX_FNVAL)
                     request.callMethod("setFourk", true)
                     if (qnApplied.compareAndSet(false, true)) {
@@ -195,7 +203,9 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         countDownLatch?.countDown()
                         content?.let {
                             Log.toast("已从代理服务器获取播放地址\n如加载缓慢或黑屏，可去漫游设置中测速并设置 UPOS")
-                            param.result = reconstructResponse(response, it, isDownload, thaiSeason)
+                            param.result = reconstructResponse(
+                                req.preferCodecType, response, it, isDownload, thaiSeason
+                            )
                         } ?: run {
                             Log.toast("获取播放地址失败", alsoLog = true)
                         }
@@ -226,17 +236,21 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 // else we are downloading
                 // if fnval == 0 -> flv download
                 // thus fix download will set qn = 0 and set fnval to max
-                isDownload = sPrefs.getBoolean("allow_download", false)
-                        && request.callMethodAs<Int>("getDownload") >= 1
+                val download = request.callMethodAs<Int>("getDownload") >= 1
+                isDownload = allowDownload && download
                 if (isDownload) {
-                    if (!sPrefs.getBoolean("fix_download", false)
-                        || request.callMethodAs<Int>("getFnval") <= 1
-                    ) {
+                    if (!fixDownload || request.callMethodAs<Int>("getFnval") <= 1) {
                         request.callMethod("setFnval", MAX_FNVAL)
                         request.callMethod("setFourk", true)
                     }
                     request.callMethod("setDownload", 0)
-                } else if (halfScreenQuality == 1) {
+                }
+                if (download && preferDownloadCodec != 0) {
+                    request.callMethod("setPreferCodecTypeValue", preferDownloadCodec)
+                } else if (!download && preferPlaybackCodec != 0) {
+                    request.callMethod("setPreferCodecTypeValue", preferPlaybackCodec)
+                }
+                if (!download && halfScreenQuality == 1) {
                     request.callMethod("setFnval", MAX_FNVAL)
                     request.callMethod("setFourk", true)
                     if (qnApplied.compareAndSet(false, true)) {
@@ -275,7 +289,9 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         countDownLatch?.countDown()
                         content?.let {
                             Log.toast("已从代理服务器获取播放地址\n如加载缓慢或黑屏，可去漫游设置中测速并设置 UPOS")
-                            param.result = reconstructResponse(response, it, isDownload, thaiSeason)
+                            param.result = reconstructResponse(
+                                req.preferCodecType, response, it, isDownload, thaiSeason
+                            )
                         }
                             ?: throw CustomServerException(mapOf("未知错误" to "请检查哔哩漫游设置中解析服务器设置。"))
                     } catch (e: CustomServerException) {
@@ -300,17 +316,21 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             ) { param ->
                 val request = param.args[0]
                 val vod = request.callMethod("getVod") ?: return@hookBeforeMethod
-                isDownload = sPrefs.getBoolean("allow_download", false)
-                        && vod.callMethodAs<Int>("getDownload") >= 1
+                val download = vod.callMethodAs<Int>("getDownload") >= 1
+                isDownload = allowDownload && download
                 if (isDownload) {
-                    if (!sPrefs.getBoolean("fix_download", false)
-                        || vod.callMethodAs<Int>("getFnval") <= 1
-                    ) {
+                    if (!fixDownload || vod.callMethodAs<Int>("getFnval") <= 1) {
                         vod.callMethod("setFnval", MAX_FNVAL)
                         vod.callMethod("setFourk", true)
                     }
                     vod.callMethod("setDownload", 0)
-                } else if (halfScreenQuality != 0) {
+                }
+                if (download && preferDownloadCodec != 0) {
+                    vod.callMethod("setPreferCodecTypeValue", preferDownloadCodec)
+                } else if (!download && preferPlaybackCodec != 0) {
+                    vod.callMethod("setPreferCodecTypeValue", preferPlaybackCodec)
+                }
+                if (!download && halfScreenQuality != 0) {
                     // unlock available quality limit, allow quality up to 8K
                     vod.callMethod("setFnval", MAX_FNVAL)
                     vod.callMethod("setFourk", true)
@@ -360,7 +380,8 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         content?.let {
                             Log.toast("已从代理服务器获取播放地址\n如加载缓慢或黑屏，可去漫游设置中测速并设置 UPOS")
                             param.result = reconstructResponseUnite(
-                                response, supplement, it, isDownload, thaiSeason
+                                req.vod.preferCodeType, response, supplement,
+                                it, isDownload, thaiSeason
                             )
                         }
                             ?: throw CustomServerException(mapOf("未知错误" to "请检查哔哩漫游设置中解析服务器设置。"))
@@ -383,9 +404,16 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             "com.bapis.bilibili.app.playurl.v1.PlayViewReq"
         ) { param ->
             val request = param.args[0]
-            val isDownload = request.callMethodAs<Int>("getDownload") >= 1
-            if (isDownload) return@hookBeforeMethod
-            if (halfScreenQuality != 0) {
+            val download = request.callMethodAs<Int>("getDownload") >= 1
+            if (download && preferDownloadCodec != 0) {
+                // unlock download quality limit for UGC, allow quality up to 8K
+                request.callMethod("setFnval", MAX_FNVAL)
+                request.callMethod("setFourk", true)
+                request.callMethod("setPreferCodecTypeValue", preferDownloadCodec)
+            } else if (!download && preferPlaybackCodec != 0) {
+                request.callMethod("setPreferCodecTypeValue", preferPlaybackCodec)
+            }
+            if (!download && halfScreenQuality != 0) {
                 request.callMethod("setFnval", MAX_FNVAL)
                 request.callMethod("setFourk", true)
                 if (qnApplied.compareAndSet(false, true)) {
@@ -660,6 +688,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     private fun reconstructResponse(
+        preferCodec: CodeType,
         response: Any,
         content: String,
         isDownload: Boolean,
@@ -682,7 +711,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 freyaEnterDisable = true
                 freyaFullDisable = true
             }
-            videoInfo = jsonContent.toVideoInfo(isDownload)
+            videoInfo = jsonContent.toVideoInfo(preferCodec, isDownload)
             fixBusinessProto(thaiSeason, jsonContent)
             viewInfo = viewInfo {}
         }.toByteArray()
@@ -690,6 +719,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }.onFailure { Log.e(it) }.getOrDefault(response)
 
     private fun reconstructResponseUnite(
+        preferCodec: CodeType,
         response: Any,
         supplement: PlayViewReply,
         content: String,
@@ -706,7 +736,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
         val serializedResponse = response.callMethodAs<ByteArray>("toByteArray")
         val newRes = PlayViewUniteReply.parseFrom(serializedResponse).copy {
-            vodInfo = jsonContent.toVideoInfo(isDownload)
+            vodInfo = jsonContent.toVideoInfo(preferCodec, isDownload)
             val newSupplement = supplement.copy {
                 fixBusinessProto(thaiSeason, jsonContent)
                 viewInfo = viewInfo {}
@@ -794,19 +824,18 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
     }
 
-    private fun JSONObject.toVideoInfo(isDownload: Boolean) = videoInfo {
-        val qualityMap = optJSONArray("accept_quality")?.let {
-            (0 until it.length()).map { idx -> it.optInt(idx) }
-        }
+    private fun JSONObject.toVideoInfo(preferCodec: CodeType, isDownload: Boolean) = videoInfo {
+        val qualityList = optJSONArray("accept_quality")
+            ?.asSequence<Int>()?.toList().orEmpty()
         val type = optString("type")
-        val videoCodeCid = optInt("video_codecid")
+        val videoCodecId = optInt("video_codecid")
         val formatMap = HashMap<Int, JSONObject>()
         for (format in optJSONArray("support_formats").orEmpty()) {
             formatMap[format.optInt("quality")] = format
         }
 
         timelength = optLong("timelength")
-        videoCodecid = optInt("video_codecid")
+        videoCodecid = videoCodecId
         quality = optInt("quality")
         format = optString("format")
 
@@ -829,8 +858,13 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
             var bestMatchQn = quality
             var minDeltaQn = Int.MAX_VALUE
-            for (video in optJSONObject("dash")?.optJSONArray("video").orEmpty()) {
-                if (video.optInt("codecid") != videoCodeCid) continue
+            val preferCodecId = codecMap[preferCodec] ?: videoCodecId
+            val videos = optJSONObject("dash")?.optJSONArray("video")
+                ?.asSequence<JSONObject>()?.toList().orEmpty()
+            val preferVideos = videos.filter { it.optInt("codecid") == preferCodecId }
+                .takeIf { it.size == qualityList.size }
+                ?: videos.filter { it.optInt("codecid") == videoCodecId }
+            preferVideos.forEach { video ->
                 streamList += stream {
                     dashVideo = dashVideo {
                         video.run {
@@ -864,7 +898,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
             quality = bestMatchQn
         } else if (type == "FLV" || type == "MP4") {
-            qualityMap?.forEach { quality ->
+            qualityList.forEach { quality ->
                 streamList += stream {
                     streamInfo = streamInfo {
                         this.quality = quality

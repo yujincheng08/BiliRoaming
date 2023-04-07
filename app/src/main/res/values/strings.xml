@@ -288,4 +288,7 @@
     <string name="half_screen_quality_summary">设置视频半屏播放时的清晰度，设置后会大幅降低视频的首次播放加载速度，旧版播放器（半屏时进度条在框内）仅支持跟随全屏清晰度，需开启解锁番剧限制选项</string>
     <string name="full_screen_quality_title">视频全屏清晰度</string>
     <string name="full_screen_quality_summary">设置视频全屏播放时默认的清晰度，当播放器画质选项为自动时此选项不生效，需开启解锁番剧限制选项</string>
+    <string name="prefer_playback_codec_title">视频播放优选编码</string>
+    <string name="prefer_download_codec_title">视频下载优选编码</string>
+    <string name="prefer_codec_summary">视频同等画质下一般 H.265/HEVC 相较 H.264/AVC 压缩率更高，体积更小，但对设备性能要求稍微高一点，H.264/AVC 不支持 HDR、杜比视界及 8K，非必要不要使用，需开启解锁番剧限制选项</string>
 </resources>

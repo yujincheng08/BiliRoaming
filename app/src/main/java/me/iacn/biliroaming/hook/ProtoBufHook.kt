@@ -132,7 +132,7 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 "list",
                 "com.bapis.bilibili.app.resource.v1.ListReq"
             ) {
-                it.result.callMethod("clearPools")
+                it.result?.callMethod("clearPools")
             }
         }
         if (hidden && blockUpperRecommendAd) {

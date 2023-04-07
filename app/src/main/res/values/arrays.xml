@@ -285,4 +285,14 @@
         <item>120</item>
         <item>127</item>
     </string-array>
+    <string-array name="video_codec_entries">
+        <item>默认</item>
+        <item>H.264/AVC</item>
+        <item>H.265/HEVC</item>
+    </string-array>
+    <string-array name="video_codec_values">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+    </string-array>
 </resources>

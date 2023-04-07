@@ -143,4 +143,9 @@
         <item>4K</item>
         <item>8K</item>
     </string-array>
+    <string-array name="video_codec_entries">
+        <item>預設</item>
+        <item>H.264/AVC</item>
+        <item>H.265/HEVC</item>
+    </string-array>
 </resources>
