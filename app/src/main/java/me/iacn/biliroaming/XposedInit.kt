@@ -16,6 +16,7 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.future.future
 import me.iacn.biliroaming.hook.*
 import me.iacn.biliroaming.utils.*
+import org.json.JSONObject
 import java.util.concurrent.CompletableFuture
 
 
@@ -68,8 +69,13 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                     )
 
                     country = MainScope().future(Dispatchers.IO) {
+                        fun JSONObject.optStringFix(name: String, fallback: String = "") =
+                            if (isNull(name)) fallback else optString(name, fallback)
                         when (fetchJson(Constant.infoUrl)?.optJSONObject("data")
-                            ?.optString("country")) {
+                            ?.optStringFix("country").orEmpty().ifEmpty {
+                                fetchJson(Constant.zoneUrl)?.optJSONObject("data")
+                                    ?.optStringFix("country")
+                            }) {
                             "中国" -> "cn"
                             "香港", "澳门" -> "hk"
                             "台湾" -> "tw"
