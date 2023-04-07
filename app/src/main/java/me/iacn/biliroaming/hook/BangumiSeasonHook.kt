@@ -69,8 +69,8 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     private val isGson by lazy {
-        instance.bangumiUniformSeasonClass?.annotations?.fold(false) { last, it ->
-            last || it.annotationClass.java.name.startsWith("gsonannotator")
+        instance.bangumiUniformSeasonClass?.annotations?.any {
+            it.annotationClass.java.name.startsWith("gsonannotator")
         } ?: false && instance.gsonFromJson() != null && instance.gsonToJson() != null
     }
 
@@ -770,8 +770,10 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     private fun fixBangumi(jsonResult: JSONObject?, code: Int, url: String?) =
         if (isBangumiWithWatchPermission(jsonResult, code)) {
+            BangumiPlayUrlHook.qnApplied.set(false)
             jsonResult?.also { allowDownload(it); fixEpisodesStatus(it) }
         } else {
+            BangumiPlayUrlHook.qnApplied.set(false)
             url?.let { Uri.parse(it) }?.run {
                 getQueryParameter("ep_id")?.let {
                     lastSeasonInfo.clear()
@@ -1119,8 +1121,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 (tvDesc.parent as View).setOnClickListener {
                     val lines = tvDesc.text.lines()
                     val title = lines[0]
-                    val message = lines.subList(1, lines.size)
-                        .fold(StringBuilder()) { sb, line -> sb.appendLine(line) }
+                    val message = lines.subList(1, lines.size).joinToString("\n").trim()
                     AlertDialog.Builder(tvDesc.context)
                         .setTitle(title)
                         .setMessage(message)

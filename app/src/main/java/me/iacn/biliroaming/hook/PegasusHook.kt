@@ -222,8 +222,8 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             param.result.getObjectField("data")?.getObjectFieldAs<ArrayList<Any>>("items")
                 ?.let { arr ->
                     arr.removeAll {
-                        filter.fold(false) { acc, item ->
-                            acc || item in it.getObjectFieldOrNullAs<String>("cardGoto")
+                        filter.any { item ->
+                            item in it.getObjectFieldOrNullAs<String>("cardGoto")
                                 .orEmpty() || item in it.getObjectFieldOrNullAs<String>("cardType")
                                 .orEmpty() || item in it.getObjectFieldOrNullAs<String>("goTo")
                                 .orEmpty()

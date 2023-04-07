@@ -233,7 +233,7 @@
     </string-array>
     <string-array name="half_screen_quality_entries">
         <item>默认</item>
-        <item>跟随横屏清晰度</item>
+        <item>跟随全屏清晰度</item>
         <item>240P</item>
         <item>360P</item>
         <item>480P</item>
@@ -243,6 +243,7 @@
         <item>1080P 高码率</item>
         <item>1080P 60帧</item>
         <item>4K</item>
+        <item>8K</item>
     </string-array>
     <string-array name="half_screen_quality_values">
         <item>0</item>
@@ -256,6 +257,7 @@
         <item>112</item>
         <item>116</item>
         <item>120</item>
+        <item>127</item>
     </string-array>
     <string-array name="full_screen_quality_entries">
         <item>默认</item>
@@ -268,6 +270,7 @@
         <item>1080P 高码率</item>
         <item>1080P 60帧</item>
         <item>4K</item>
+        <item>8K</item>
     </string-array>
     <string-array name="full_screen_quality_values">
         <item>0</item>
@@ -280,5 +283,6 @@
         <item>112</item>
         <item>116</item>
         <item>120</item>
+        <item>127</item>
     </string-array>
 </resources>

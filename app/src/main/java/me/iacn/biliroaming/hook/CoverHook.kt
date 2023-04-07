@@ -54,10 +54,9 @@ class CoverHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                     viewModelField?.type?.declaredMethods?.lastOrNull { it.returnType.name == "com.bilibili.bangumi.data.page.detail.entity.BangumiUniformEpisode" }
                                 val episode =
                                     getObjectField(viewModelField?.name)?.callMethod(episodeMethod?.name)
-                                val hasGson =
-                                    episode?.javaClass?.annotations?.fold(false) { last, it ->
-                                        last || it.annotationClass.java.name.startsWith("gsonannotator")
-                                    } ?: false && instance.gsonFromJson() != null && instance.gsonToJson() != null
+                                val hasGson = episode?.javaClass?.annotations?.any {
+                                    it.annotationClass.java.name.startsWith("gsonannotator")
+                                } ?: false && instance.gsonFromJson() != null && instance.gsonToJson() != null
                                 if (hasGson) {
                                     val json =
                                         gson?.callMethodAs<String>(instance.gsonToJson(), episode)

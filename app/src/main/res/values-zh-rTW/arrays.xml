@@ -118,7 +118,7 @@
     </string-array>
     <string-array name="half_screen_quality_entries">
         <item>預設</item>
-        <item>跟隨橫屏清晰度</item>
+        <item>跟隨全螢幕清晰度</item>
         <item>240P</item>
         <item>360P</item>
         <item>480P</item>
@@ -128,6 +128,7 @@
         <item>1080P 高碼率</item>
         <item>1080P 60幀</item>
         <item>4K</item>
+        <item>8K</item>
     </string-array>
     <string-array name="full_screen_quality_entries">
         <item>預設</item>
@@ -140,5 +141,6 @@
         <item>1080P 高碼率</item>
         <item>1080P 60幀</item>
         <item>4K</item>
+        <item>8K</item>
     </string-array>
 </resources>
