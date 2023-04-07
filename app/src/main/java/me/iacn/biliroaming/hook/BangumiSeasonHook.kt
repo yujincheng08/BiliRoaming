@@ -69,8 +69,8 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     private val isGson by lazy {
-        instance.bangumiUniformSeasonClass?.annotations?.fold(false) { last, it ->
-            last || it.annotationClass.java.name.startsWith("gsonannotator")
+        instance.bangumiUniformSeasonClass?.annotations?.any {
+            it.annotationClass.java.name.startsWith("gsonannotator")
         } ?: false && instance.gsonFromJson() != null && instance.gsonToJson() != null
     }
 
@@ -1121,8 +1121,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 (tvDesc.parent as View).setOnClickListener {
                     val lines = tvDesc.text.lines()
                     val title = lines[0]
-                    val message = lines.subList(1, lines.size)
-                        .fold(StringBuilder()) { sb, line -> sb.appendLine(line) }
+                    val message = lines.subList(1, lines.size).joinToString("\n").trim()
                     AlertDialog.Builder(tvDesc.context)
                         .setTitle(title)
                         .setMessage(message)

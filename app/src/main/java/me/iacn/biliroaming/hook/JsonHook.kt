@@ -335,10 +335,9 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     }
                 categoryClass ->
                     if (sPrefs.getBoolean("music_notification", false)) {
-                        val hasMusic = result?.fold(false) { r, i ->
-                            r || (i.getObjectFieldAs<String?>("mUri")
-                                ?.startsWith("bilibili://music")
-                                ?: false)
+                        val hasMusic = result?.any {
+                            it.getObjectFieldAs<String?>("mUri")
+                                ?.startsWith("bilibili://music") ?: false
                         } ?: false
                         if (!hasMusic) {
                             result?.add(
