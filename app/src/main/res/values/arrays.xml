@@ -281,4 +281,48 @@
         <item>116</item>
         <item>120</item>
     </string-array>
+    <string-array name="pakku_max_dist_entries">
+        <item>禁用 (≤0)</item>
+        <item>轻微 (≤3)</item>
+        <item>中等 (≤5)</item>
+        <item>强力 (≤8)</item>
+    </string-array>
+    <string-array name="pakku_max_cosine_entries">
+        <item>禁用 (+∞%)</item>
+        <item>轻微 (85%)</item>
+        <item>中等 (60%)</item>
+        <item>强力 (30%)</item>
+    </string-array>
+    <string-array name="pakku_danmu_mark_entries">
+        <item>显示在结尾</item>
+        <item>显示在开头</item>
+        <item>不显示</item>
+    </string-array>
+    <string-array name="pakku_representative_percent_entries">
+        <item>最先出现的时间</item>
+        <item>20% 弹幕出现的时间</item>
+        <item>50% 弹幕出现的时间</item>
+    </string-array>
+    <string-array name="pakku_max_dist_values">
+        <item>0</item>
+        <item>3</item>
+        <item>5</item>
+        <item>8</item>
+    </string-array>
+    <string-array name="pakku_max_cosine_values">
+        <item>1000</item>
+        <item>85</item>
+        <item>60</item>
+        <item>30</item>
+    </string-array>
+    <string-array name="pakku_danmu_mark_values">
+        <item>suffix</item>
+        <item>prefix</item>
+        <item>off</item>
+    </string-array>
+    <string-array name="pakku_representative_percent_values">
+        <item>0</item>
+        <item>20</item>
+        <item>50</item>
+    </string-array>
 </resources>

@@ -18,7 +18,6 @@ import android.os.Bundle
 import android.preference.*
 import android.provider.MediaStore
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.*
@@ -383,110 +382,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
 
 
         private fun onDanmakuFilterClick(): Boolean {
-            AlertDialog.Builder(activity).run {
-                val layout = moduleRes.getLayout(R.layout.danmaku_filter_dialog)
-                val inflater = LayoutInflater.from(context)
-                val view = inflater.inflate(layout, null)
-
-                val switches = arrayOf(
-                    view.findViewById<Switch>(R.id.danmaku_filter_weight_switch)!!,
-                    view.findViewById<Switch>(R.id.danmaku_filter_pakku_switch)!!,
-                )
-
-                val editTexts = arrayOf(
-                    view.findViewById<EditText>(R.id.danmaku_filter_pakku_setting)!!,
-                )
-
-                val spinner =
-                    view.findViewById<Spinner>(R.id.danmaku_filter_weight_value)!!
-
-                spinner.let {
-                    val values =
-                        arrayOf("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12")
-                    val adapter =
-                        ArrayAdapter(activity, android.R.layout.simple_spinner_item, values)
-
-                    val value = try {
-                        prefs.getInt(it.tag.toString(), 4)
-                    } catch (e: Exception) {
-                        prefs.getString(it.tag.toString(), "4")!!.toInt()
-                    }
-                    adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-                    it.adapter = adapter
-                    spinner.setSelection(values.indexOf(value.toString()))
-                }
-
-                val switchPairs = listOf<Pair<Switch, View>>(
-                    Pair(switches[0], spinner),
-                    Pair(switches[1], editTexts[0])
-                )
-
-                val tooltipPairs = listOf(
-                    Pair(switches[1], getString(R.string.danmaku_filter_pakku_switch_tooltip)),
-                    Pair(editTexts[0], getString(R.string.danmaku_filter_pakku_setting_tooltip))
-                )
-
-                switches.forEach {
-                    if (prefs.contains(it.tag.toString())) {
-                        it.isChecked = prefs.getBoolean(it.tag.toString(), false)
-                    }
-                }
-
-                editTexts.forEach {
-                    val hint = it.hint.toString()
-                    val key = it.tag.toString()
-                    it.setText(
-                        prefs.getString(
-                            key,
-                            hint
-                        )
-                    )
-                }
-
-                switchPairs.forEach {
-                    it.second.alpha = if (it.first.isChecked) 1f else 0.2f
-                    it.first.setOnCheckedChangeListener { _, isChecked ->
-                        it.second.alpha = if (isChecked) 1f else 0.2f
-                    }
-                }
-
-                tooltipPairs.forEach {
-                    it.first.setOnClickListener { _ ->
-                        Log.toast(it.second, false, Toast.LENGTH_LONG)
-                    }
-                    it.first.setOnLongClickListener { _ ->
-                        Log.toast(it.second, false, Toast.LENGTH_LONG)
-                        true
-                    }
-                }
-
-                setPositiveButton(android.R.string.ok) { _, _ ->
-                    val edit = prefs.edit()
-                    editTexts.forEach {
-                        val text = it.text.toString()
-                        if (text.isNotEmpty()) {
-                            edit.putString(
-                                it.tag.toString(),
-                                text
-                            ).apply()
-                        } else
-                            edit.remove(it.tag.toString()).apply()
-                    }
-                    switches.forEach {
-                        edit.putBoolean(it.tag.toString(), it.isChecked).apply()
-                    }
-                    spinner.let {
-                        edit.putInt(
-                            it.tag.toString(),
-                            it.adapter.getItem(it.selectedItemPosition).toString().toInt()
-                        )
-                    }
-                    edit.apply()
-                }
-                setTitle(getString(R.string.danmaku_filter_dialog_title))
-                setView(view)
-                show()
-            }
+            DanmakuFilterDialog(activity, prefs).show()
             return true
         }
 

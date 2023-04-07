@@ -148,7 +148,7 @@ class PakkuPeer {
             }
         }
         baseElem.callMethod("setMode", mostMode)
-        if (danmakuList.size > PakkuSetting.MARK_THRESHOLD) {
+        if (PakkuSetting.DANMU_MARK != "off" && danmakuList.size > PakkuSetting.MARK_THRESHOLD) {
             baseElem.callMethod("setContent", makeMark(baseDanmaku.getContent(), danmakuList.size))
         }
 
@@ -256,21 +256,58 @@ class PakkuSetting {
         var HIDE_THRESHOLD = 0
         var DANMU_SUBSCRIPT = true
 
-        fun parseStaticValuesFromJson(json: JSONObject) {
+        fun parseStaticValuesFromJson(jsonString: String) {
+            val json =
+                try {
+                    JSONObject(jsonString)
+                } catch (e: Exception) {
+                    return
+                }
             val fields: Array<Field> = PakkuSetting::class.java.declaredFields
             for (field in fields) {
+                field.isAccessible = true
                 val fieldName: String = field.name
                 val value: String = json.optString(fieldName)
                 if (value.isEmpty()) continue
-                val convertedValue = when {
-                    value == "on" -> true
-                    value == "off" -> false
-                    value.toIntOrNull() != null -> value.toInt()
-                    else -> value
+                when (field.type) {
+                    Boolean::class.java -> {
+                        field.set(
+                            PakkuSetting, when (value) {
+                                "on" -> true
+                                "off" -> false
+                                else -> false
+                            }
+                        )
+                    }
+                    Int::class.java -> {
+                        field.set(PakkuSetting, value.toIntOrNull() ?: 0)
+                    }
+                    String::class.java -> {
+                        field.set(PakkuSetting, value)
+                    }
                 }
-                field.isAccessible = true
-                field.set(PakkuSetting, convertedValue)
             }
+        }
+
+        fun toJson(): JSONObject {
+            val jsonObject = JSONObject()
+            val fields: Array<Field> = PakkuSetting::class.java.declaredFields
+            for (field in fields) {
+                field.isAccessible = true
+                val value = field.get(PakkuSetting)
+                when (field.type) {
+                    Boolean::class.java -> {
+                        jsonObject.put(field.name, if (value as Boolean) "on" else "off")
+                    }
+                    Int::class.java -> {
+                        jsonObject.put(field.name, (value as Int).toString())
+                    }
+                    String::class.java -> {
+                        jsonObject.put(field.name, value as String)
+                    }
+                }
+            }
+            return jsonObject
         }
     }
 }
@@ -279,7 +316,7 @@ class PakkuCore(settingJson: String?) {
 
     init {
         if (settingJson != null && settingJson.isNotEmpty() && settingJson[0] == '{') {
-            PakkuSetting.parseStaticValuesFromJson(JSONObject(settingJson))
+            PakkuSetting.parseStaticValuesFromJson(settingJson)
         }
         generateCtx()
         instance = this

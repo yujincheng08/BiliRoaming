@@ -292,4 +292,8 @@
     <string name="danmaku_filter_pakku_setting_hint">預設 </string>
     <string name="danmaku_filter_pakku_switch_tooltip">"彈幕複讀終結者！瞬間合併B站的刷屏彈幕！"-pakku.js@xmcp</string>
     <string name="danmaku_filter_dialog_title">彈幕屏蔽設置</string>
+    <string name="danmaku_filter_pakku_max_dist_label">編輯距離合併強度</string>
+    <string name="danmaku_filter_pakku_max_cosine_label">詞頻向量合併強度</string>
+    <string name="danmaku_filter_pakku_danmu_mark_label">彈幕數量標記</string>
+    <string name="danmaku_filter_pakku_representative_percent_label">合併後的彈幕顯示於</string>
 </resources>

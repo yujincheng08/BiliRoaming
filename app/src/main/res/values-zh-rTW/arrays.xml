@@ -141,4 +141,26 @@
         <item>1080P 60幀</item>
         <item>4K</item>
     </string-array>
+    <string-array name="pakku_max_dist_entries">
+        <item>禁用 (≤0)</item>
+        <item>輕微 (≤3)</item>
+        <item>中等 (≤5)</item>
+        <item>強力 (≤8)</item>
+    </string-array>
+    <string-array name="pakku_max_cosine_entries">
+        <item>禁用 (+∞%)</item>
+        <item>輕微 (85%)</item>
+        <item>中等 (60%)</item>
+        <item>強力 (30%)</item>
+    </string-array>
+    <string-array name="pakku_danmu_mark_entries">
+        <item>顯示在結尾</item>
+        <item>顯示在開頭</item>
+        <item>不顯示</item>
+    </string-array>
+    <string-array name="pakku_representative_percent_entries">
+        <item>最先出現的時間</item>
+        <item>20% 彈幕出現的時間</item>
+        <item>50% 彈幕出現的時間</item>
+    </string-array>
 </resources>

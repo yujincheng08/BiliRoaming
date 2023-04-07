@@ -56,6 +56,62 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_columnWeight="2"
+        android:singleLine="true"
+        android:text="@string/danmaku_filter_pakku_max_dist_label" />
+
+    <Spinner
+        android:id="@+id/danmaku_filter_pakku_max_dist"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="3"
+        android:tag="MAX_DIST" />
+
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="2"
+        android:singleLine="true"
+        android:text="@string/danmaku_filter_pakku_max_cosine_label" />
+
+    <Spinner
+        android:id="@+id/danmaku_filter_pakku_max_cosine"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="3"
+        android:tag="MAX_COSINE" />
+
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="2"
+        android:singleLine="true"
+        android:text="@string/danmaku_filter_pakku_danmu_mark_label" />
+
+    <Spinner
+        android:id="@+id/danmaku_filter_pakku_danmu_mark"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="3"
+        android:tag="DANMU_MARK" />
+
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="2"
+        android:singleLine="true"
+        android:text="@string/danmaku_filter_pakku_representative_percent_label" />
+
+    <Spinner
+        android:id="@+id/danmaku_filter_pakku_representative_percent"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="3"
+        android:tag="REPRESENTATIVE_PERCENT" />
+
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="2"
         android:text="@string/danmaku_filter_pakku_setting_label" />
 
     <EditText
