@@ -8,6 +8,7 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val purifyCity = sPrefs.getBoolean("purify_city", false)
         val removeRelatePromote = sPrefs.getBoolean("remove_video_relate_promote", false)
         val removeRelateOnlyAv = sPrefs.getBoolean("remove_video_relate_only_av", false)
+        val removeHonor = sPrefs.getBoolean("remove_video_honor", false)
         val removeUgcSeason = sPrefs.getBoolean("remove_video_UgcSeason", false)
         val removeRelateNothing = sPrefs.getBoolean("remove_video_relate_nothing", false)
         val removeCmdDms = sPrefs.getBoolean("remove_video_cmd_dms", false)
@@ -47,6 +48,9 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 ?.callMethodAs("getLike") ?: -1
             AutoLikeHook.detail = aid to like
             BangumiPlayUrlHook.qnApplied.set(false)
+            if (hidden && removeHonor) {
+                param.result.callMethod("clearHonor")
+            }
             if (hidden && removeUgcSeason) {
                 param.result.callMethod("clearUgcSeason")
             }

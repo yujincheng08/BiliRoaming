@@ -207,6 +207,8 @@
     <string name="remove_video_relate_promote_summary">移除视频下方的相关推广，例如游戏、课程、会员购、创作推广等</string>
     <string name="remove_video_relate_only_av_title">仅展示UP主投稿视频</string>
     <string name="remove_video_relate_only_av_summary">上个选项的基础上，仅展示UP主投稿视频，移除番剧等内容</string>
+    <string name="remove_video_honor_title">移除视频下方的获得荣誉</string>
+    <string name="remove_video_honor_summary">移除视频下方的荣誉信息，例如入站必刷、每周必看、全站排行榜、4K频道精选等</string>
     <string name="remove_video_UgcSeason_title">移除视频下方的分集列表</string>
     <string name="remove_video_UgcSeason_summary">移除视频下方的UP主视频分集列表</string>
     <string name="remove_video_relate_nothing_title">移除视频下方的所有内容</string>
