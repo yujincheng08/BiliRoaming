@@ -18,6 +18,7 @@ import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.concurrent.CountDownLatch
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.abs
 
 /**
@@ -31,6 +32,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         const val MAX_FNVAL = 16 or 64 or 128 or 256 or 512 or 1024 or 2048
         const val FAIL_CODE = -404
         var countDownLatch: CountDownLatch? = null
+        val qnApplied = AtomicBoolean(false)
         private const val PGC_ANY_MODEL_TYPE_URL =
             "type.googleapis.com/bilibili.app.playerunite.pgcanymodel.PGCAnyModel"
     }
@@ -164,8 +166,9 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 } else if (halfScreenQuality == 1) {
                     request.callMethod("setFnval", MAX_FNVAL)
                     request.callMethod("setFourk", true)
-                    // follow full screen quality
-                    defaultQn?.let { request.callMethod("setQn", it) }
+                    if (qnApplied.compareAndSet(false, true)) {
+                        defaultQn?.let { request.callMethod("setQn", it) }
+                    }
                 }
             }
             hookAfterMethod(
@@ -236,7 +239,9 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 } else if (halfScreenQuality == 1) {
                     request.callMethod("setFnval", MAX_FNVAL)
                     request.callMethod("setFourk", true)
-                    defaultQn?.let { request.callMethod("setQn", it) }
+                    if (qnApplied.compareAndSet(false, true)) {
+                        defaultQn?.let { request.callMethod("setQn", it) }
+                    }
                 }
             }
             hookAfterMethod(
@@ -306,12 +311,16 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     }
                     vod.callMethod("setDownload", 0)
                 } else if (halfScreenQuality != 0) {
+                    // unlock available quality limit, allow quality up to 8K
                     vod.callMethod("setFnval", MAX_FNVAL)
                     vod.callMethod("setFourk", true)
-                    if (halfScreenQuality != 1) {
-                        vod.callMethod("setQn", halfScreenQuality)
-                    } else {
-                        defaultQn?.let { vod.callMethod("setQn", it) }
+                    if (qnApplied.compareAndSet(false, true)) {
+                        if (halfScreenQuality != 1) {
+                            vod.callMethod("setQn", halfScreenQuality)
+                        } else {
+                            // follow full screen quality
+                            defaultQn?.let { vod.callMethod("setQn", it) }
+                        }
                     }
                 }
             }
@@ -379,10 +388,12 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             if (halfScreenQuality != 0) {
                 request.callMethod("setFnval", MAX_FNVAL)
                 request.callMethod("setFourk", true)
-                if (halfScreenQuality != 1) {
-                    request.callMethod("setQn", halfScreenQuality)
-                } else {
-                    defaultQn?.let { request.callMethod("setQn", it) }
+                if (qnApplied.compareAndSet(false, true)) {
+                    if (halfScreenQuality != 1) {
+                        request.callMethod("setQn", halfScreenQuality)
+                    } else {
+                        defaultQn?.let { request.callMethod("setQn", it) }
+                    }
                 }
             }
         }

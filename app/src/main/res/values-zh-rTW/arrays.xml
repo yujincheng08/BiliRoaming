@@ -128,6 +128,7 @@
         <item>1080P 高碼率</item>
         <item>1080P 60幀</item>
         <item>4K</item>
+        <item>8K</item>
     </string-array>
     <string-array name="full_screen_quality_entries">
         <item>預設</item>
@@ -140,5 +141,6 @@
         <item>1080P 高碼率</item>
         <item>1080P 60幀</item>
         <item>4K</item>
+        <item>8K</item>
     </string-array>
 </resources>

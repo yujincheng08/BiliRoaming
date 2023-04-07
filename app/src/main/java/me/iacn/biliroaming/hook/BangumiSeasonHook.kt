@@ -770,8 +770,10 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     private fun fixBangumi(jsonResult: JSONObject?, code: Int, url: String?) =
         if (isBangumiWithWatchPermission(jsonResult, code)) {
+            BangumiPlayUrlHook.qnApplied.set(false)
             jsonResult?.also { allowDownload(it); fixEpisodesStatus(it) }
         } else {
+            BangumiPlayUrlHook.qnApplied.set(false)
             url?.let { Uri.parse(it) }?.run {
                 getQueryParameter("ep_id")?.let {
                     lastSeasonInfo.clear()

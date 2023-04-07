@@ -46,6 +46,7 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             val like = param.result.callMethod("getReqUser")
                 ?.callMethodAs("getLike") ?: -1
             AutoLikeHook.detail = aid to like
+            BangumiPlayUrlHook.qnApplied.set(false)
             if (hidden && removeUgcSeason) {
                 param.result.callMethod("clearUgcSeason")
             }
