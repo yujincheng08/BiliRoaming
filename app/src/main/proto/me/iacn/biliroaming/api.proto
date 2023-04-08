@@ -6,6 +6,7 @@ package me.iacn.biliroaming;
 
 option java_package = "me.iacn.biliroaming";
 option java_outer_classname = "API";
+option java_multiple_files = true;
 option optimize_for = LITE_RUNTIME;
 
 enum CodeType {
@@ -227,7 +228,9 @@ message DialogConfig {}
 
 message ImageInfo {optional string url = 0x1;}
 
-message ButtonInfo {}
+message ButtonInfo {
+  optional string action_type = 0x7;
+}
 
 message Report {}
 
@@ -250,7 +253,10 @@ message Dialog {
   repeated BottomDisplay bottom_display = 0xe;
 }
 
-message Toast {}
+message Toast {
+  optional string text = 0x1;
+  optional ButtonInfo button = 0x2;
+}
 
 message CouponInfo {
   optional int64 code = 0x1;
@@ -263,13 +269,19 @@ message EndPage {
   optional bool hide = 0x2;
 }
 
-message PopWin {}
+message PopWin {
+  repeated ButtonInfo button = 0x3;
+}
 
-message PromptBar {}
+message PromptBar {
+  repeated ButtonInfo button = 0x6;
+}
 
 message PayTip {}
 
 message HighDefinitionTrialInfo {}
+
+message Animation {}
 
 message ViewInfo {
   optional Dialog dialog = 0x1;
@@ -283,6 +295,15 @@ message ViewInfo {
   optional PayTip pay_tip = 0x9;
   optional HighDefinitionTrialInfo high_definition_trial_info = 0xa;
   map<string, Dialog> ext_dialog = 0xb;
+  optional Animation animation = 0xc;
+  map<string, Toast> ext_toast = 0xd;
+}
+
+message FreyaConfig {}
+
+message PlayAbilityExtConf {
+  optional bool allow_close_subtitle = 0x1;
+  optional FreyaConfig freya_config = 0x2;
 }
 
 message PlayViewReply {
@@ -291,6 +312,7 @@ message PlayViewReply {
   optional BusinessInfo business = 0x3;
   optional Event event = 0x4;
   optional ViewInfo view_info = 0x5;
+  optional PlayAbilityExtConf play_ext_conf = 0x6;
 }
 
 message ExtraContent {}

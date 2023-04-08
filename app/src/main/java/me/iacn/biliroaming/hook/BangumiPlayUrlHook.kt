@@ -912,7 +912,24 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     private fun purifyViewInfo(response: Any, supplement: PlayViewReply? = null) = runCatching {
-        supplement?.copy { viewInfo = viewInfo {} }?.let {
+        supplement?.copy {
+            playExtConf = playExtConf.copy { clearFreyaConfig() }
+            viewInfo = viewInfo.copy {
+                clearAnimation()
+                clearCouponInfo()
+                if (endPage.dialog.type != "pay")
+                    clearEndPage()
+                clearHighDefinitionTrialInfo()
+                clearPayTip()
+                if (popWin.buttonList.all { it.actionType != "pay" })
+                    clearPopWin()
+                if (toast.button.actionType != "pay")
+                    clearToast()
+                if (tryWatchPromptBar.buttonList.all { it.actionType != "pay" })
+                    clearTryWatchPromptBar()
+                extToast.clear()
+            }
+        }?.let {
             val serializedResponse = response.callMethodAs<ByteArray>("toByteArray")
             val newRes = PlayViewUniteReply.parseFrom(serializedResponse).copy {
                 this.supplement = any {
@@ -922,11 +939,30 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }.toByteArray()
             response.javaClass.callStaticMethod("parseFrom", newRes)
         } ?: run {
-            response.javaClass.declaredMethods.firstOrNull {
-                it.name == "setViewInfo"
-            }?.let {
-                it.isAccessible = true
-                it(response, it.parameterTypes[0].new())
+            response.callMethodOrNull("getPlayExtConf")
+                ?.callMethod("clearFreyaConfig")
+            response.callMethod("getViewInfo")?.run {
+                callMethodOrNull("clearAnimation")
+                callMethod("clearCouponInfo")
+                if (callMethod("getEndPage")
+                        ?.callMethod("getDialog")
+                        ?.callMethod("getType") != "pay"
+                ) callMethod("clearEndPage")
+                callMethod("clearHighDefinitionTrialInfo")
+                callMethod("clearPayTip")
+                if (callMethod("getPopWin")
+                        ?.callMethodAs<List<Any>>("getButtonList")
+                        ?.all { it.callMethod("getActionType") != "pay" } != false
+                ) callMethod("clearPopWin")
+                if (callMethod("getToast")
+                        ?.callMethod("getButton")
+                        ?.callMethod("getActionType") != "pay"
+                ) callMethod("clearToast")
+                if (callMethod("getTryWatchPromptBar")
+                        ?.callMethodAs<List<Any>>("getButtonList")
+                        ?.all { it.callMethod("getActionType") != "pay" } != false
+                ) callMethod("clearTryWatchPromptBar")
+                callMethodOrNullAs<LinkedHashMap<*, *>>("internalGetMutableExtToast")?.clear()
             }
             response
         }
