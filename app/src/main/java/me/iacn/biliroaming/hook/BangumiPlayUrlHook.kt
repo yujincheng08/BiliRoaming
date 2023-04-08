@@ -620,7 +620,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             appendQueryParameter("fnver", req.fnver.toString())
             appendQueryParameter("fnval", req.fnval.toString())
             appendQueryParameter("force_host", req.forceHost.toString())
-            appendQueryParameter("fourk", req.fourk.toString())
+            appendQueryParameter("fourk", if (req.fourk) "1" else "0")
             build()
         }.query
     }
@@ -654,7 +654,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             appendQueryParameter("fnver", req.vod.fnver.toString())
             appendQueryParameter("fnval", req.vod.fnval.toString())
             appendQueryParameter("force_host", req.vod.forceHost.toString())
-            appendQueryParameter("fourk", req.vod.fourk.toString())
+            appendQueryParameter("fourk", if (req.vod.fourk) "1" else "0")
             build()
         }.query
     }
