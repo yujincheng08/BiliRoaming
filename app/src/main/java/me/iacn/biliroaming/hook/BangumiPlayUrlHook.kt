@@ -35,6 +35,8 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val qnApplied = AtomicBoolean(false)
         private const val PGC_ANY_MODEL_TYPE_URL =
             "type.googleapis.com/bilibili.app.playerunite.pgcanymodel.PGCAnyModel"
+        private val codecMap =
+            mapOf(CodeType.CODE264 to 7, CodeType.CODE265 to 12, CodeType.CODEAV1 to 13)
     }
 
     private val defaultQn: Int?
@@ -195,7 +197,8 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         countDownLatch?.countDown()
                         content?.let {
                             Log.toast("已从代理服务器获取播放地址\n如加载缓慢或黑屏，可去漫游设置中测速并设置 UPOS")
-                            param.result = reconstructResponse(response, it, isDownload, thaiSeason)
+                            param.result =
+                                reconstructResponse(req, response, it, isDownload, thaiSeason)
                         } ?: run {
                             Log.toast("获取播放地址失败", alsoLog = true)
                         }
@@ -275,7 +278,8 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         countDownLatch?.countDown()
                         content?.let {
                             Log.toast("已从代理服务器获取播放地址\n如加载缓慢或黑屏，可去漫游设置中测速并设置 UPOS")
-                            param.result = reconstructResponse(response, it, isDownload, thaiSeason)
+                            param.result =
+                                reconstructResponse(req, response, it, isDownload, thaiSeason)
                         }
                             ?: throw CustomServerException(mapOf("未知错误" to "请检查哔哩漫游设置中解析服务器设置。"))
                     } catch (e: CustomServerException) {
@@ -360,7 +364,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         content?.let {
                             Log.toast("已从代理服务器获取播放地址\n如加载缓慢或黑屏，可去漫游设置中测速并设置 UPOS")
                             param.result = reconstructResponseUnite(
-                                response, supplement, it, isDownload, thaiSeason
+                                req, response, supplement, it, isDownload, thaiSeason
                             )
                         }
                             ?: throw CustomServerException(mapOf("未知错误" to "请检查哔哩漫游设置中解析服务器设置。"))
@@ -660,6 +664,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     private fun reconstructResponse(
+        req: PlayViewReq,
         response: Any,
         content: String,
         isDownload: Boolean,
@@ -682,7 +687,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 freyaEnterDisable = true
                 freyaFullDisable = true
             }
-            videoInfo = jsonContent.toVideoInfo(isDownload)
+            videoInfo = jsonContent.toVideoInfo(req.preferCodecType, isDownload)
             fixBusinessProto(thaiSeason, jsonContent)
             viewInfo = viewInfo {}
         }.toByteArray()
@@ -690,6 +695,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }.onFailure { Log.e(it) }.getOrDefault(response)
 
     private fun reconstructResponseUnite(
+        req: PlayViewUniteReq,
         response: Any,
         supplement: PlayViewReply,
         content: String,
@@ -706,7 +712,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
         val serializedResponse = response.callMethodAs<ByteArray>("toByteArray")
         val newRes = PlayViewUniteReply.parseFrom(serializedResponse).copy {
-            vodInfo = jsonContent.toVideoInfo(isDownload)
+            vodInfo = jsonContent.toVideoInfo(req.vod.preferCodeType, isDownload)
             val newSupplement = supplement.copy {
                 fixBusinessProto(thaiSeason, jsonContent)
                 viewInfo = viewInfo {}
@@ -794,19 +800,18 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
     }
 
-    private fun JSONObject.toVideoInfo(isDownload: Boolean) = videoInfo {
-        val qualityMap = optJSONArray("accept_quality")?.let {
-            (0 until it.length()).map { idx -> it.optInt(idx) }
-        }
+    private fun JSONObject.toVideoInfo(preferCodec: CodeType, isDownload: Boolean) = videoInfo {
+        val qualityList = optJSONArray("accept_quality")
+            ?.asSequence<Int>()?.toList().orEmpty()
         val type = optString("type")
-        val videoCodeCid = optInt("video_codecid")
+        val videoCodecId = optInt("video_codecid")
         val formatMap = HashMap<Int, JSONObject>()
         for (format in optJSONArray("support_formats").orEmpty()) {
             formatMap[format.optInt("quality")] = format
         }
 
         timelength = optLong("timelength")
-        videoCodecid = optInt("video_codecid")
+        videoCodecid = videoCodecId
         quality = optInt("quality")
         format = optString("format")
 
@@ -829,8 +834,14 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
             var bestMatchQn = quality
             var minDeltaQn = Int.MAX_VALUE
-            for (video in optJSONObject("dash")?.optJSONArray("video").orEmpty()) {
-                if (video.optInt("codecid") != videoCodeCid) continue
+            val preferCodecId = codecMap[preferCodec] ?: videoCodecId
+            val videos = optJSONObject("dash")?.optJSONArray("video")
+                ?.asSequence<JSONObject>()?.toList().orEmpty()
+            val availableQns = videos.map { it.optInt("id") }.toSet()
+            val preferVideos = videos.filter { it.optInt("codecid") == preferCodecId }
+                .takeIf { l -> l.map { it.optInt("id") }.containsAll(availableQns) }
+                ?: videos.filter { it.optInt("codecid") == videoCodecId }
+            preferVideos.forEach { video ->
                 streamList += stream {
                     dashVideo = dashVideo {
                         video.run {
@@ -849,7 +860,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     }
                     streamInfo = streamInfo {
                         quality = video.optInt("id")
-                        val deltaQn = abs(quality - bestMatchQn)
+                        val deltaQn = abs(quality - this@videoInfo.quality)
                         if (deltaQn < minDeltaQn) {
                             bestMatchQn = quality
                             minDeltaQn = deltaQn
@@ -864,7 +875,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
             quality = bestMatchQn
         } else if (type == "FLV" || type == "MP4") {
-            qualityMap?.forEach { quality ->
+            qualityList.forEach { quality ->
                 streamList += stream {
                     streamInfo = streamInfo {
                         this.quality = quality
