@@ -47,6 +47,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         Log.d("startHook: BangumiPlayUrl")
         val blockBangumiPageAds = sPrefs.getBoolean("block_bangumi_page_ads", false)
         val halfScreenQuality = sPrefs.getString("half_screen_quality", "0")?.toInt() ?: 0
+        val fullScreenQuality = sPrefs.getString("full_screen_quality", "0")?.toInt() ?: 0
 
         instance.signQueryName()?.let {
             instance.libBiliClass?.hookBeforeMethod(it, Map::class.java) { param ->
@@ -165,10 +166,10 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         request.callMethod("setFourk", true)
                     }
                     request.callMethod("setDownload", 0)
-                } else if (halfScreenQuality == 1) {
+                } else if (halfScreenQuality == 1 || fullScreenQuality != 0) {
                     request.callMethod("setFnval", MAX_FNVAL)
                     request.callMethod("setFourk", true)
-                    if (qnApplied.compareAndSet(false, true)) {
+                    if (halfScreenQuality == 1 && qnApplied.compareAndSet(false, true)) {
                         defaultQn?.let { request.callMethod("setQn", it) }
                     }
                 }
@@ -239,10 +240,10 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         request.callMethod("setFourk", true)
                     }
                     request.callMethod("setDownload", 0)
-                } else if (halfScreenQuality == 1) {
+                } else if (halfScreenQuality == 1 || fullScreenQuality != 0) {
                     request.callMethod("setFnval", MAX_FNVAL)
                     request.callMethod("setFourk", true)
-                    if (qnApplied.compareAndSet(false, true)) {
+                    if (halfScreenQuality == 1 && qnApplied.compareAndSet(false, true)) {
                         defaultQn?.let { request.callMethod("setQn", it) }
                     }
                 }
@@ -314,11 +315,11 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         vod.callMethod("setFourk", true)
                     }
                     vod.callMethod("setDownload", 0)
-                } else if (halfScreenQuality != 0) {
+                } else if (halfScreenQuality != 0 || fullScreenQuality != 0) {
                     // unlock available quality limit, allow quality up to 8K
                     vod.callMethod("setFnval", MAX_FNVAL)
                     vod.callMethod("setFourk", true)
-                    if (qnApplied.compareAndSet(false, true)) {
+                    if (halfScreenQuality != 0 && qnApplied.compareAndSet(false, true)) {
                         if (halfScreenQuality != 1) {
                             vod.callMethod("setQn", halfScreenQuality)
                         } else {
@@ -389,10 +390,10 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             val request = param.args[0]
             val isDownload = request.callMethodAs<Int>("getDownload") >= 1
             if (isDownload) return@hookBeforeMethod
-            if (halfScreenQuality != 0) {
+            if (halfScreenQuality != 0 || fullScreenQuality != 0) {
                 request.callMethod("setFnval", MAX_FNVAL)
                 request.callMethod("setFourk", true)
-                if (qnApplied.compareAndSet(false, true)) {
+                if (halfScreenQuality != 0 && qnApplied.compareAndSet(false, true)) {
                     if (halfScreenQuality != 1) {
                         request.callMethod("setQn", halfScreenQuality)
                     } else {
