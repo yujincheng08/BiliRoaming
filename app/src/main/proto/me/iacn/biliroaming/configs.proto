@@ -241,11 +241,6 @@ message CardGridViewBinder {
   optional Field data_interfaces = 3;
 }
 
-message LiveNetworkType {
-  optional Class class = 1;
-  optional Method method = 2;
-}
-
 message PlayerPreloadHolder {
   optional Class class = 1;
   optional Method get = 2;
@@ -254,6 +249,11 @@ message PlayerPreloadHolder {
 message PlayerSettingHelper {
   optional Class class = 1;
   optional Method get_default_qn = 2;
+}
+
+message LiveRtcHelper {
+  optional Class live_rtc_enable_class = 1;
+  optional Method live_rtc_enable_method = 2;
 }
 
 message HookInfo {
@@ -309,8 +309,8 @@ message HookInfo {
   optional UpdateInfoSupplier update_info_supplier = 78;
   optional CommentImageLoader comment_image_loader = 79;
   optional CardGridViewBinder card_grid_view_binder = 80;
-  optional LiveNetworkType live_network_type = 81;
   optional Method bangumi_season_activity_entrance = 82;
   optional PlayerPreloadHolder player_preload_holder = 83;
   optional PlayerSettingHelper player_setting_helper = 84;
+  optional LiveRtcHelper live_rtc_helper = 85;
 }
