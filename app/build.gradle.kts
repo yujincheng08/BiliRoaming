@@ -1,6 +1,5 @@
 import com.google.protobuf.gradle.*
 
-@Suppress("DSL_SCOPE_VIOLATION") // TODO: Remove once KTIJ-19369 is fixed
 plugins {
     alias(libs.plugins.agp.app)
     alias(libs.plugins.kotlin)
