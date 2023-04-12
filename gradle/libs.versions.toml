@@ -1,0 +1,27 @@
+[versions]
+protobuf = "3.22.0"
+coroutine = "1.6.4"
+kotlin = "1.8.20"
+
+[plugins]
+kotlin = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+agp-app = { id = "com.android.application", version = "7.4.2" }
+protobuf = { id = "com.google.protobuf", version = "0.9.1" }
+lsplugin-jgit = { id = "org.lsposed.lsplugin.jgit", version = "1.0" }
+lsplugin-resopt = { id = "org.lsposed.lsplugin.resopt", version = "1.2" }
+lsplugin-apksign = { id = "org.lsposed.lsplugin.apksign", version = "1.1" }
+lsplugin-apktransform = { id = "org.lsposed.lsplugin.apktransform", version = "1.2" }
+lsplugin-cmaker = { id = "org.lsposed.lsplugin.cmaker", version = "1.0" }
+
+
+
+[libraries]
+xposed = { module = "de.robv.android.xposed:api", version = "82" }
+cxx = { module = "dev.rikka.ndk.thirdparty:cxx", version = "1.2.0" }
+protobuf-kotlin = { module = "com.google.protobuf:protobuf-kotlin-lite", version.ref = "protobuf" }
+protobuf-java = { module = "com.google.protobuf:protobuf-javalite", version.ref = "protobuf" }
+protobuf-protoc = { module = "com.google.protobuf:protoc", version.ref = "protobuf" }
+kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
+kotlin-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutine" }
+kotlin-coroutines-jdk = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-jdk8", version.ref = "coroutine" }
+androidx-documentfile = { module = "androidx.documentfile:documentfile", version = "1.0.1" }
