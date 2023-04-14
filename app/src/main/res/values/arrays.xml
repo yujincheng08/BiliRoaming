@@ -221,6 +221,7 @@
         <item>投喂支持</item>
         <item>滚动横幅</item>
         <item>电池任务</item>
+        <item>正在去买</item>
     </string-array>
     <string-array name="live_popup_values">
         <item>shoppingCard</item>
@@ -230,6 +231,7 @@
         <item>gift</item>
         <item>banner</item>
         <item>task</item>
+        <item>gotoBuy</item>
     </string-array>
     <string-array name="half_screen_quality_entries">
         <item>默认</item>

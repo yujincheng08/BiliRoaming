@@ -68,6 +68,9 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val liveRoomRecommendCardClass =
             "com.bilibili.bililive.videoliveplayer.net.beans.attentioncard.LiveRoomRecommendCard"
                 .from(mClassLoader)
+        val liveShoppingGotoBuyInfoClass =
+            "com.bilibili.bililive.room.biz.shopping.beans.LiveShoppingGotoBuyInfo"
+                .from(mClassLoader)
 
         instance.fastJsonClass?.hookAfterMethod(
             instance.fastJsonParse(),
@@ -412,6 +415,11 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         result.runCatchingOrNull {
                             setObjectField("taskInfo", null)
                         }
+                }
+
+                liveShoppingGotoBuyInfoClass -> {
+                    if (hidden && purifyLivePopups.contains("gotoBuy"))
+                        param.result = null
                 }
             }
         }

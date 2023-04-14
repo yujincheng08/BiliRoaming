@@ -115,6 +115,7 @@
         <item>投餵支持</item>
         <item>滾動橫幅</item>
         <item>電池任務</item>
+        <item>正在去買</item>
     </string-array>
     <string-array name="half_screen_quality_entries">
         <item>預設</item>
