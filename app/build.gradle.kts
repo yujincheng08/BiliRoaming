@@ -49,6 +49,10 @@ android {
     buildToolsVersion = "33.0.2"
     ndkVersion = "25.2.9519653"
 
+    buildFeatures {
+        buildConfig = true
+    }
+
     defaultConfig {
         applicationId = "me.iacn.biliroaming"
         minSdk = 24
@@ -62,7 +66,7 @@ android {
     }
 
     androidResources {
-        noCompress("libbiliroaming.so")
+        noCompress += "libbiliroaming.so"
     }
 
     buildTypes {
@@ -97,7 +101,7 @@ android {
         }
     }
 
-    packagingOptions {
+    packaging {
         resources {
             excludes += arrayOf("**")
         }
