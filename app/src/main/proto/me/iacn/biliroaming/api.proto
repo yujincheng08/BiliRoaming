@@ -873,3 +873,74 @@ message SearchNav {
   optional int32 pages = 0x3;
   optional int32 type = 0x4;
 }
+
+message FormatDescription {
+  optional int32 quality = 0x1;
+  optional string format = 0x2;
+  optional string description = 0x3;
+  optional string display_desc = 0x4;
+  optional string superscript = 0x5;
+}
+
+message VolumeInfo {}
+
+message ListenPlayInfo {
+  optional int32 qn = 0x1;
+  optional string format = 0x2;
+  optional int32 qn_type = 0x3;
+  oneof info {
+    ListenPlayDASH play_dash = 0x5;
+  }
+  optional int32 fnver = 0x6;
+  optional int32 fnval = 0x7;
+  repeated FormatDescription formats = 0x8;
+  optional int32 video_codecid = 0x9;
+  optional int64 length = 0xa;
+  optional int32 code = 0xb;
+  optional string message = 0xc;
+  optional int64 expire_time = 0xd;
+  optional VolumeInfo volume = 0xe;
+}
+
+message ListenDashSegmentBase {}
+
+message ListenDashItem {
+  optional int32 id = 0x1;
+  optional string base_url = 0x2;
+  repeated string backup_url = 0x3;
+  optional int32 bandwidth = 0x4;
+  optional string mime_type = 0x5;
+  optional string codecs = 0x6;
+  optional ListenDashSegmentBase segment_base = 0xc;
+  optional int32 codecid = 0xd;
+  optional string md5 = 0xe;
+  optional int64 size = 0xf;
+}
+
+message ListenPlayDASH {
+  optional int32 duration = 0x1;
+  optional float min_buffer_time = 0x2;
+  repeated ListenDashItem audio = 0x3;
+}
+
+message EventTracking {}
+
+message ListenPlayItem {
+  optional int32 item_type = 0x1;
+  optional int64 oid = 0x3;
+  repeated int64 sub_id = 0x4;
+  optional EventTracking et = 0x5;
+  optional int64 pos = 0x6;
+}
+
+message ListenPlayURLReq {
+  optional ListenPlayItem item = 0x1;
+  optional PlayerArgs player_args = 0x2;
+}
+
+message ListenPlayURLResp {
+  optional ListenPlayItem item = 0x1;
+  optional int32 playable = 0x2;
+  optional string message = 0x3;
+  map<int64, ListenPlayInfo> player_info = 0x4;
+}

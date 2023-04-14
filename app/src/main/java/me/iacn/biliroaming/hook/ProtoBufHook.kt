@@ -18,6 +18,7 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val blockModules = sPrefs.getBoolean("block_modules", false)
         val blockUpperRecommendAd = sPrefs.getBoolean("block_upper_recommend_ad", false)
         val disableMainPageStory = sPrefs.getBoolean("disable_main_page_story", false)
+        val unlockPlayLimit = sPrefs.getBoolean("play_arc_conf", false)
 
         if (hidden && (purifyCity || purifyCampus)) {
             listOf(
@@ -48,6 +49,9 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 ?.callMethodAs("getLike") ?: -1
             AutoLikeHook.detail = aid to like
             BangumiPlayUrlHook.qnApplied.set(false)
+            if (unlockPlayLimit)
+                param.result.callMethod("getConfig")
+                    ?.callMethod("setShowListenButton", true)
             if (hidden && removeHonor) {
                 param.result.callMethod("clearHonor")
             }
