@@ -1,5 +1,6 @@
 package me.iacn.biliroaming.hook
 
+import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.utils.*
 
 class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
@@ -37,11 +38,7 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
         }
 
-        "com.bapis.bilibili.app.view.v1.ViewMoss".hookAfterMethod(
-            mClassLoader,
-            "view",
-            "com.bapis.bilibili.app.view.v1.ViewReq"
-        ) { param ->
+        instance.viewMossClass?.hookAfterMethod("view", instance.viewReqClass) { param ->
             param.result ?: return@hookAfterMethod
             val aid = param.result.callMethod("getArc")
                 ?.callMethodAs("getAid") ?: -1L
@@ -79,8 +76,7 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
 
         if (hidden && removeCmdDms) {
-            "com.bapis.bilibili.app.view.v1.ViewMoss".hookAfterMethod(
-                mClassLoader,
+            instance.viewMossClass?.hookAfterMethod(
                 "viewProgress",
                 "com.bapis.bilibili.app.view.v1.ViewProgressReq"
             ) { param ->

@@ -376,6 +376,7 @@ message ViewReq {
   optional string spmid = 0xb;
   optional string from_spmid = 0xc;
   optional int32 autoplay = 0xd;
+  optional PlayerArgs player_args = 0xe;
 }
 
 message UserSeason {optional string attention = 0x1;}
@@ -947,4 +948,12 @@ message ListenPlayURLResp {
 
 message UGCPlayViewReply {
   optional VideoInfo video_info = 0x1;
+}
+
+message BKArcPart {
+  optional int64 oid = 0x1;
+  optional int64 sub_id = 0x2;
+  optional string title = 0x3;
+  optional int64 duration = 0x4;
+  optional int32 page = 0x5;
 }
