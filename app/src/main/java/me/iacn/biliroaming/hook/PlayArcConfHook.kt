@@ -83,7 +83,6 @@ class PlayArcConfHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     return@hookAfterMethod
                 Log.toast("听视频解锁中")
                 param.result = reconstructPlayUrlResponse(param.args[0], resp)
-                    ?: Log.toast("听视频解锁失败")
             }
         }
     }
@@ -93,7 +92,7 @@ class PlayArcConfHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val needPartItems = mutableListOf<Any>()
         resp.callMethodAs<List<Any>>("getListList").filter {
             it.callMethodAs<Int>("getPlayable") != 0
-        }?.forEach {
+        }.forEach {
             it.callMethod("setPlayable", 0)
             if (it.callMethodAs<Int>("getPartsCount") <= 0)
                 needPartItems.add(it)
@@ -148,7 +147,7 @@ class PlayArcConfHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             preferCodecType = CodeType.CODE265
         }.toByteArray().let {
             instance.playViewReqClass?.callStaticMethod("parseFrom", it)
-        } ?: return null
+        } ?: return resp
         reqObj.item.subIdList.associateWith { subId ->
             val playViewReq = commPlayViewReq.apply { callMethod("setCid", subId) }
             val playViewReply = UGCPlayViewReply.parseFrom(
@@ -200,6 +199,9 @@ class PlayArcConfHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }.let {
                     resp.javaClass.callStaticMethod("parseFrom", it.toByteArray())
                 }
-            }
-    }.onFailure { Log.e(it) }.getOrDefault(resp)
+            } ?: resp
+    }.onFailure {
+        Log.e(it)
+        Log.toast("听视频解锁失败")
+    }.getOrDefault(resp)
 }
