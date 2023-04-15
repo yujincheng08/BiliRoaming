@@ -1,5 +1,6 @@
 package me.iacn.biliroaming.hook
 
+import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.utils.*
 
 class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
@@ -18,6 +19,7 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val blockModules = sPrefs.getBoolean("block_modules", false)
         val blockUpperRecommendAd = sPrefs.getBoolean("block_upper_recommend_ad", false)
         val disableMainPageStory = sPrefs.getBoolean("disable_main_page_story", false)
+        val unlockPlayLimit = sPrefs.getBoolean("play_arc_conf", false)
 
         if (hidden && (purifyCity || purifyCampus)) {
             listOf(
@@ -36,11 +38,7 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
         }
 
-        "com.bapis.bilibili.app.view.v1.ViewMoss".hookAfterMethod(
-            mClassLoader,
-            "view",
-            "com.bapis.bilibili.app.view.v1.ViewReq"
-        ) { param ->
+        instance.viewMossClass?.hookAfterMethod("view", instance.viewReqClass) { param ->
             param.result ?: return@hookAfterMethod
             val aid = param.result.callMethod("getArc")
                 ?.callMethodAs("getAid") ?: -1L
@@ -48,6 +46,9 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 ?.callMethodAs("getLike") ?: -1
             AutoLikeHook.detail = aid to like
             BangumiPlayUrlHook.qnApplied.set(false)
+            if (unlockPlayLimit)
+                param.result.callMethod("getConfig")
+                    ?.callMethod("setShowListenButton", true)
             if (hidden && removeHonor) {
                 param.result.callMethod("clearHonor")
             }
@@ -75,8 +76,7 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
 
         if (hidden && removeCmdDms) {
-            "com.bapis.bilibili.app.view.v1.ViewMoss".hookAfterMethod(
-                mClassLoader,
+            instance.viewMossClass?.hookAfterMethod(
                 "viewProgress",
                 "com.bapis.bilibili.app.view.v1.ViewProgressReq"
             ) { param ->
