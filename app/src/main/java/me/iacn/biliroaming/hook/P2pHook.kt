@@ -1,41 +1,39 @@
 package me.iacn.biliroaming.hook
 
+import android.content.Context
 import android.os.Bundle
-import java.util.List
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.utils.*
 
 class P2pHook(classLoader: ClassLoader) : BaseHook(classLoader) {
+    private val blockPcdn = sPrefs.getBoolean("block_pcdn", false)
+    private val blockPcdnLive = sPrefs.getBoolean("block_pcdn_live", false)
     override fun startHook() {
+        if (!blockPcdn && !blockPcdnLive) return
         Log.d("startHook: P2P")
-        val blockPcdn = sPrefs.getBoolean("block_pcdn", false)
-        val blockPcdnLive = sPrefs.getBoolean("block_pcdn_live", false)
+        "tv.danmaku.ijk.media.player.IjkMediaPlayer\$IjkMediaPlayerServiceConnection".from(
+            mClassLoader
+        )?.replaceMethod("initP2PClient") {}
         if (blockPcdn) {
             "tv.danmaku.ijk.media.player.P2P".from(mClassLoader)?.run {
-                replaceMethod("resolveP2PServerUrls", Bundle::class.java) {}
-                replaceMethod("isNeedCreateClient") { false }
-                replaceMethod("getHttpServerPort") { -1 }
-                replaceMethod("isServerEffective", List::class.java, List::class.java) { false }
+                hookBeforeMethod("getInstance", Context::class.java, Bundle::class.java) { param ->
+                    param.args[0] = null
+                    param.args[1].callMethod("clear")
+                }
+                hookBeforeConstructor(Context::class.java, Bundle::class.java) { param ->
+                    param.args[0] = null
+                    param.args[1].callMethod("clear")
+                }
             }
         }
         if (blockPcdnLive) {
-            "com.bilibili.sistersplayer.p2p.P2PContext".from(mClassLoader)?.replaceMethod("setConfiguration", String::class.java) {}
-            "com.bilibili.sistersplayer.p2p.SistersPlayerLoader".from(mClassLoader)?.run {
-                hookBeforeMethod("setCanP2PUpload", Boolean::class.java) { param ->
-                    param.args[0] = false
-                }
-                replaceMethod("initP2PContext") {}
+            instance.liveRtcEnable()?.let {
+                instance.liveRtcEnableClass?.replaceMethod(it) { false }
             }
-            "com.bilibili.sistersplayer.p2p.peer.NyaPeer".from(mClassLoader)?.run {
-                replaceMethod("shouldUsedAsSeed") { false }
-                replaceMethod("acceptAnswer", String::class.java) {}
+            "com.bilibili.bililive.playercore.p2p.P2PType".from(mClassLoader)?.run {
+                hookBeforeMethod("create", Int::class.javaPrimitiveType) { it.args[0] = 0 }
+                hookBeforeMethod("createTo", Int::class.javaPrimitiveType) { it.args[0] = 0 }
             }
-            "com.bilibili.sistersplayer.p2p.tracker.GetPeersResult".from(mClassLoader)?.run {
-                replaceMethod("getPeers") {}
-                replaceMethod("getLeeches") {}
-            }
-            // optimize non p2p perf
-            instance.liveNetworkTypeClass?.replaceMethod(instance.liveNetworkType()) { "unknown" }
         }
     }
 }

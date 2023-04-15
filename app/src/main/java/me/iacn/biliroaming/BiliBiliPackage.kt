@@ -143,13 +143,13 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val latestVersionExceptionClass by Weak { "tv.danmaku.bili.update.internal.exception.LatestVersionException" from mClassLoader }
     val commentImageLoaderClass by Weak { mHookInfo.commentImageLoader.class_ from mClassLoader }
     val cardGridViewBinderClass by Weak { mHookInfo.cardGridViewBinder.class_ from mClassLoader }
-    val liveNetworkTypeClass by Weak { mHookInfo.liveNetworkType.class_ from mClassLoader }
     val roundImageViewClass by Weak {
         "com.bilibili.app.comm.comment2.comments.view.RoundImageView".from(mClassLoader)
             ?: "com.bilibili.app.comment.ext.widgets.RoundImageView".from(mClassLoader)
     }
     val playerPreloadHolderClass by Weak { mHookInfo.playerPreloadHolder.class_ from mClassLoader }
     val playerSettingHelperClass by Weak { mHookInfo.playerSettingHelper.class_ from mClassLoader }
+    val liveRtcEnableClass by Weak { mHookInfo.liveRtcHelper.liveRtcEnableClass from mClassLoader }
     val playURLMossClass by Weak { "com.bapis.bilibili.app.playurl.v1.PlayURLMoss" from mClassLoader }
     val playViewReqClass by Weak { "com.bapis.bilibili.app.playurl.v1.PlayViewReq" from mClassLoader }
     val playerMossClass by Weak { "com.bapis.bilibili.app.playerunite.v1.PlayerMoss" from mClassLoader }
@@ -304,8 +304,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     fun dataInterfacesField() = mHookInfo.cardGridViewBinder.dataInterfaces.orNull
 
-    fun liveNetworkType() = mHookInfo.liveNetworkType.method.orNull
-
     fun playerFullStoryWidgets() =
         mHookInfo.playerFullStoryWidgetList.map { it.class_.from(mClassLoader) to it.method.orNull }
 
@@ -314,6 +312,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     fun getPreload() = mHookInfo.playerPreloadHolder.get.orNull
 
     fun getDefaultQn() = mHookInfo.playerSettingHelper.getDefaultQn.orNull
+
+    fun liveRtcEnable() = mHookInfo.liveRtcHelper.liveRtcEnableMethod.orNull
 
     private fun readHookInfo(context: Context): Configs.HookInfo {
         try {
@@ -1925,24 +1925,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 bind = method { name = bindMethod.name }
                 dataInterfaces = field { name = dataInterfacesField.name }
             }
-            liveNetworkType = liveNetworkType {
-                val liveNetworkTypeMethod = dexHelper.findMethodUsingString(
-                    "getNetworkConnectivity=",
-                    false,
-                    -1,
-                    -1,
-                    null,
-                    -1,
-                    null,
-                    null,
-                    null,
-                    true
-                ).asSequence().firstNotNullOfOrNull {
-                    dexHelper.decodeMethodIndex(it)
-                } ?: return@liveNetworkType
-                class_ = class_ { name = liveNetworkTypeMethod.declaringClass.name }
-                method = method { name = liveNetworkTypeMethod.name }
-            }
             playerPreloadHolder = playerPreloadHolder {
                 val stringClassIndex = dexHelper.encodeClassIndex(String::class.java)
                 val getMethod = dexHelper.findMethodUsingString(
@@ -1991,6 +1973,24 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 } ?: return@playerSettingHelper
                 class_ = class_ { name = getDefaultQnMethod.declaringClass.name }
                 getDefaultQn = method { name = getDefaultQnMethod.name }
+            }
+            liveRtcHelper = liveRtcHelper {
+                val liveRtcEnable = dexHelper.findMethodUsingString(
+                    "systemSupportLiveP2P",
+                    true,
+                    dexHelper.encodeClassIndex(Boolean::class.java),
+                    0,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).firstOrNull()?.let {
+                    dexHelper.decodeMethodIndex(it)
+                } ?: return@liveRtcHelper
+                liveRtcEnableClass = class_ { name = liveRtcEnable.declaringClass.name }
+                liveRtcEnableMethod = method { name = liveRtcEnable.name }
             }
 
             dexHelper.close()

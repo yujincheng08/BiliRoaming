@@ -94,30 +94,8 @@
     <string name="setting">設定</string>
     <string name="block_pcdn_title">阻止影片使用 PCDN 載入</string>
     <string name="block_pcdn_summary">啟用此選項可能會稍微改善影片載入速度。在純 IPv6 網路環境或透過代理伺服器連線的情況下，建議啟用。不影響 MCDN。可能在舊版無效。</string>
-    <string name="block_pcdn_live_title">阻止直播 P2P 上傳。</string>
-    <string name="block_pcdn_live_summary">觀看熱門直播時，啟用此選項可停用P2P Peer功能，避免使用大量上傳頻寬，但在舊版可能無效。</string>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    <string name="block_pcdn_live_title">阻止直播透過 P2P 技術載入或上傳</string>
+    <string name="block_pcdn_live_summary">可能在某种程度上優化直播載入速度，同時避免佔用大量上傳頻寬。在舊版可能無效。</string>
     <string name="speed">速度</string>
     <string name="test_upos_title">UPOS伺服器測速</string>
     <string name="test_upos_summary">選擇最快的UPOS以獲得最好體驗</string>
@@ -197,7 +175,6 @@
     <string name="customize_dynamic_by_keyword">按關鍵字</string>
     <string name="keyword_group_name_content">内容</string>
     <string name="keyword_group_name_up">UP主</string>
-
     <string name="keyword_group_name_title">標題</string>
     <string name="keyword_group_name_rcmd_reason">推薦原因</string>
     <string name="keyword_group_name_category">分區</string>
@@ -233,8 +210,6 @@
     <string name="block_up_rcmd_ads_summary">封鎖影片播放過程中，浮窗出現的UP主推薦廣告</string>
     <string name="block_bangumi_page_ads_title">封鎖番劇頁面廣告</string>
     <string name="block_bangumi_page_ads_summary">封鎖番劇頁面彈窗廣告及會員購</string>
-
-
     <string name="generate_subtitle_title">生成簡中字幕</string>
     <string name="generate_subtitle_summary">根據繁體字幕自動生成簡體中文字幕</string>
     <string name="forbid_switch_live_room_title">禁止滑動切換直播間</string>
