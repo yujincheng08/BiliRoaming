@@ -319,18 +319,15 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
         }
 
-        "com.bapis.bilibili.app.view.v1.ViewMoss".findClassOrNull(mClassLoader)
-            ?.hookAfterMethod("view", "com.bapis.bilibili.app.view.v1.ViewReq") { param ->
-                param.result?.let { return@hookAfterMethod }
-                val serializedRequest = param.args[0].callMethodAs<ByteArray>("toByteArray")
-                val req = ViewReq.parseFrom(serializedRequest)
-                val reply = fixViewProto(req)
-                val serializedReply = reply?.toByteArray() ?: return@hookAfterMethod
-                param.result = (param.method as Method).returnType.callStaticMethod(
-                    "parseFrom",
-                    serializedReply
-                )
-            }
+        instance.viewMossClass?.hookAfterMethod("view", instance.viewReqClass) { param ->
+            param.result?.let { return@hookAfterMethod }
+            val serializedRequest = param.args[0].callMethodAs<ByteArray>("toByteArray")
+            val req = ViewReq.parseFrom(serializedRequest)
+            val reply = fixViewProto(req)
+            val serializedReply = reply?.toByteArray() ?: return@hookAfterMethod
+            param.result = (param.method as Method).returnType
+                .callStaticMethod("parseFrom", serializedReply)
+        }
 
         val urlHook: Hooker = fun(param) {
             val redirectUrl = param.thisObject.getObjectFieldAs<String?>("redirectUrl")

@@ -297,12 +297,9 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
             }
         }
-        "com.bapis.bilibili.app.playerunite.v1.PlayerMoss".from(mClassLoader)?.run {
+        instance.playerMossClass?.run {
             var isDownload = false
-            hookBeforeMethod(
-                "playViewUnite",
-                "com.bapis.bilibili.app.playerunite.v1.PlayViewUniteReq"
-            ) { param ->
+            hookBeforeMethod("playViewUnite", instance.playViewUniteReqClass) { param ->
                 val request = param.args[0]
                 val vod = request.callMethod("getVod") ?: return@hookBeforeMethod
                 isDownload = sPrefs.getBoolean("allow_download", false)
@@ -329,10 +326,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     }
                 }
             }
-            hookAfterMethod(
-                "playViewUnite",
-                "com.bapis.bilibili.app.playerunite.v1.PlayViewUniteReq"
-            ) { param ->
+            hookAfterMethod("playViewUnite", instance.playViewUniteReqClass) { param ->
                 if (instance.networkExceptionClass?.isInstance(param.throwable) == true)
                     return@hookAfterMethod
                 val request = param.args[0]
@@ -383,9 +377,8 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
             }
         }
-        "com.bapis.bilibili.app.playurl.v1.PlayURLMoss".from(mClassLoader)?.hookBeforeMethod(
-            "playView",
-            "com.bapis.bilibili.app.playurl.v1.PlayViewReq"
+        instance.playURLMossClass?.hookBeforeMethod(
+            "playView", instance.playViewReqClass
         ) { param ->
             val request = param.args[0]
             val isDownload = request.callMethodAs<Int>("getDownload") >= 1

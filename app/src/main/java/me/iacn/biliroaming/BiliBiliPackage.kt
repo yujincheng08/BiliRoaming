@@ -121,7 +121,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val networkExceptionClass by Weak { "com.bilibili.lib.moss.api.NetworkException" from mClassLoader }
     val brotliInputStreamClass by Weak { mHookInfo.brotliInputStream from mClassLoader }
     val arcConfClass by Weak { "com.bapis.bilibili.app.playurl.v1.ArcConf" from mClassLoader }
-    val arcConfExtraContentClass by Weak { "com.bapis.bilibili.app.playurl.v1.ExtraContent" from mClassLoader }
     val commentInvalidFragmentClass by Weak {
         "com.bilibili.bangumi.ui.page.detail.OGVCommentFragment".from(mClassLoader)
             ?: "com.bilibili.bangumi.ui.page.detail.BangumiCommentInvalidFragmentV2"
@@ -151,6 +150,13 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val playerPreloadHolderClass by Weak { mHookInfo.playerPreloadHolder.class_ from mClassLoader }
     val playerSettingHelperClass by Weak { mHookInfo.playerSettingHelper.class_ from mClassLoader }
     val liveRtcEnableClass by Weak { mHookInfo.liveRtcHelper.liveRtcEnableClass from mClassLoader }
+    val playURLMossClass by Weak { "com.bapis.bilibili.app.playurl.v1.PlayURLMoss" from mClassLoader }
+    val playViewReqClass by Weak { "com.bapis.bilibili.app.playurl.v1.PlayViewReq" from mClassLoader }
+    val playerMossClass by Weak { "com.bapis.bilibili.app.playerunite.v1.PlayerMoss" from mClassLoader }
+    val playViewUniteReqClass by Weak { "com.bapis.bilibili.app.playerunite.v1.PlayViewUniteReq" from mClassLoader }
+    val viewMossClass by Weak { "com.bapis.bilibili.app.view.v1.ViewMoss" from mClassLoader }
+    val viewReqClass by Weak { "com.bapis.bilibili.app.view.v1.ViewReq" from mClassLoader }
+    val bkArcPartClass by Weak { "com.bapis.bilibili.app.listener.v1.BKArcPart" from mClassLoader }
 
     val ids: Map<String, Int> by lazy {
         mHookInfo.mapIds.idsMap

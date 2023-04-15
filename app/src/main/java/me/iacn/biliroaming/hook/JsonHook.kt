@@ -15,6 +15,7 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
         val hidden = sPrefs.getBoolean("hidden", false)
         val purifyLivePopups = sPrefs.getStringSet("purify_live_popups", null) ?: setOf()
+        val unlockPlayLimit = sPrefs.getBoolean("play_arc_conf", false)
 
         val tabResponseClass =
             "tv.danmaku.bili.ui.main2.resource.MainResourceManager\$TabResponse".findClassOrNull(
@@ -71,6 +72,10 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val liveShoppingGotoBuyInfoClass =
             "com.bilibili.bililive.room.biz.shopping.beans.LiveShoppingGotoBuyInfo"
                 .from(mClassLoader)
+        val shareChannelsClass = "com.bilibili.lib.sharewrapper.online.api.ShareChannels"
+            .from(mClassLoader)
+        val channelItemClass = "com.bilibili.lib.sharewrapper.online.api.ShareChannels\$ChannelItem"
+            .from(mClassLoader)
 
         instance.fastJsonClass?.hookAfterMethod(
             instance.fastJsonParse(),
@@ -295,23 +300,43 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
 
                 ogvApiResponseClass -> if (sPrefs.getBoolean("allow_download", false)) {
-                    val resultObj = result.getObjectFieldAs<ArrayList<Any>>("result")
-                    for (i in resultObj) {
-                        i.setIntField("isPlayable", 1)
+                    result.getObjectFieldOrNullAs<ArrayList<*>>("result")?.forEach {
+                        it?.setIntField("isPlayable", 1)
                     }
                 }
 
                 ogvApiResponseV2Class -> if (sPrefs.getBoolean("allow_download", false)) {
-                    val epPlayableParams = result.getObjectFieldOrNull("data")
+                    result.getObjectFieldOrNull("data")
                         ?.getObjectFieldOrNullAs<MutableList<*>>("epPlayableParams")
-                    epPlayableParams?.forEach { playableParam ->
-                        playableParam.setIntField("playableType", 0)
-                    }
+                        ?.forEach { it?.setIntField("playableType", 0) }
                 }
 
-                dmAdvertClass -> if (sPrefs.getBoolean("hidden", false)
-                    && sPrefs.getBoolean("block_up_rcmd_ads", false)
-                ) result.setObjectField("ads", null)
+                dmAdvertClass -> if (hidden && sPrefs.getBoolean("block_up_rcmd_ads", false))
+                    result.setObjectField("ads", null)
+
+                shareChannelsClass -> if (unlockPlayLimit) runCatchingOrNull {
+                    val belowChannels = result.getObjectFieldAs<ArrayList<Any>?>("belowChannels")
+                        .takeUnless { it.isNullOrEmpty() } ?: return@hookAfterMethod
+                    var alreadyHas = false
+                    var toInsertIdx = -1
+                    belowChannels.forEachIndexed { idx, item ->
+                        val shareChannel = item.getObjectFieldAs<String?>("shareChannel")
+                        if (shareChannel == "PLAY_BACKGROUND_OFF")
+                            toInsertIdx = idx
+                        if (shareChannel == "LISTEN")
+                            alreadyHas = true
+                    }
+                    if (alreadyHas || toInsertIdx == -1)
+                        return@hookAfterMethod
+                    val listenChannel = channelItemClass?.new()
+                        ?.setObjectField("name", "听视频")
+                        ?.setObjectField("shareChannel", "LISTEN")
+                        ?.setObjectField(
+                            "picture",
+                            "https://i0.hdslb.com/bfs/share/f88d8c420a59ff1ca5975b38722408056e7337b7.png"
+                        ) ?: return@hookAfterMethod
+                    belowChannels.add(toInsertIdx, listenChannel)
+                }
             }
         }
 
