@@ -14,9 +14,19 @@ class PlayArcConfHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
         if (!sPrefs.getBoolean("play_arc_conf", false)) return
 
-        instance.arcConfClass?.run {
-            replaceMethod("getDisabled") { false }
-            replaceMethod("getIsSupport") { true }
+        instance.playURLMossClass?.hookAfterMethod(
+            "playView", instance.playViewReqClass
+        ) { param ->
+            param.result?.callMethod("getPlayArc")?.run {
+                arrayOf(
+                    callMethod("getCastConf"),
+                    callMethod("getBackgroundPlayConf"),
+                    callMethod("getSmallWindowConf")
+                ).forEach {
+                    it?.callMethod("setDisabled", false)
+                    it?.callMethod("setIsSupport", true)
+                }
+            }
         }
         val supportedArcConf = "com.bapis.bilibili.playershared.ArcConf"
             .from(mClassLoader)?.new()?.apply {
@@ -29,7 +39,7 @@ class PlayArcConfHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             param.result?.callMethod("getPlayArcConf")
                 ?.callMethodAs<LinkedHashMap<Int, Any?>>("internalGetMutableArcConfs")
                 ?.run {
-                    // CASTCONF,BACKGROUNDPLAY,BACKGROUNDPLAY,LISTEN
+                    // CASTCONF,BACKGROUNDPLAY,SMALLWINDOW,LISTEN
                     intArrayOf(2, 9, 23, 36).forEach { this[it] = supportedArcConf }
                 }
         }

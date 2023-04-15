@@ -120,7 +120,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val biliAccountsClass by Weak { mHookInfo.biliAccounts.class_ from mClassLoader }
     val networkExceptionClass by Weak { "com.bilibili.lib.moss.api.NetworkException" from mClassLoader }
     val brotliInputStreamClass by Weak { mHookInfo.brotliInputStream from mClassLoader }
-    val arcConfClass by Weak { "com.bapis.bilibili.app.playurl.v1.ArcConf" from mClassLoader }
     val commentInvalidFragmentClass by Weak {
         "com.bilibili.bangumi.ui.page.detail.OGVCommentFragment".from(mClassLoader)
             ?: "com.bilibili.bangumi.ui.page.detail.BangumiCommentInvalidFragmentV2"
