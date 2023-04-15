@@ -23,10 +23,9 @@ apksign {
 
 apktransform {
     copy {
-        if (it.buildType == "release") {
-            file("${it.name}/BiliRoaming_${appVerName}.apk")
-        } else {
-            null
+        when (it.buildType) {
+            "release" -> file("${it.name}/BiliRoaming_${appVerName}.apk")
+            else -> null
         }
     }
 }
@@ -45,11 +44,13 @@ cmaker {
 }
 
 android {
+    namespace = "me.iacn.biliroaming"
     compileSdk = 33
     buildToolsVersion = "33.0.2"
     ndkVersion = "25.2.9519653"
 
     buildFeatures {
+        prefab = true
         buildConfig = true
     }
 
@@ -59,14 +60,6 @@ android {
         targetSdk = 33  // Target Android T
         versionCode = appVerCode
         versionName = appVerName
-    }
-
-    buildFeatures {
-        prefab = true
-    }
-
-    androidResources {
-        noCompress += "libbiliroaming.so"
     }
 
     buildTypes {
@@ -89,6 +82,7 @@ android {
             "-Xno-call-assertions",
             "-Xno-receiver-assertions",
             "-opt-in=kotlin.RequiresOptIn",
+            "-language-version=2.0",
         )
     }
 
@@ -103,10 +97,9 @@ android {
 
     packaging {
         resources {
-            excludes += arrayOf("**")
+            excludes += "**"
         }
     }
-
 
     lint {
         checkReleaseBuilds = false
@@ -115,6 +108,7 @@ android {
     dependenciesInfo {
         includeInApk = false
     }
+
     androidResources {
         additionalParameters += arrayOf("--allow-reserved-package-id", "--package-id", "0x23")
     }
@@ -125,7 +119,6 @@ android {
             version = "3.22.1+"
         }
     }
-    namespace = "me.iacn.biliroaming"
 }
 
 protobuf {
@@ -145,14 +138,6 @@ protobuf {
                     option("lite")
                 }
             }
-        }
-    }
-}
-
-kotlin {
-    sourceSets.all {
-        languageSettings {
-            languageVersion = "2.0"
         }
     }
 }
