@@ -944,3 +944,7 @@ message ListenPlayURLResp {
   optional string message = 0x3;
   map<int64, ListenPlayInfo> player_info = 0x4;
 }
+
+message UGCPlayViewReply {
+  optional VideoInfo video_info = 0x1;
+}

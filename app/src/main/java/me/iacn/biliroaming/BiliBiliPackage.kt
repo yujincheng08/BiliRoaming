@@ -120,6 +120,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val biliAccountsClass by Weak { mHookInfo.biliAccounts.class_ from mClassLoader }
     val networkExceptionClass by Weak { "com.bilibili.lib.moss.api.NetworkException" from mClassLoader }
     val brotliInputStreamClass by Weak { mHookInfo.brotliInputStream from mClassLoader }
+    val arcConfClass by Weak { "com.bapis.bilibili.app.playurl.v1.ArcConf" from mClassLoader }
     val commentInvalidFragmentClass by Weak {
         "com.bilibili.bangumi.ui.page.detail.OGVCommentFragment".from(mClassLoader)
             ?: "com.bilibili.bangumi.ui.page.detail.BangumiCommentInvalidFragmentV2"
@@ -149,6 +150,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     }
     val playerPreloadHolderClass by Weak { mHookInfo.playerPreloadHolder.class_ from mClassLoader }
     val playerSettingHelperClass by Weak { mHookInfo.playerSettingHelper.class_ from mClassLoader }
+    val playURLMossClass by Weak { "com.bapis.bilibili.app.playurl.v1.PlayURLMoss" from mClassLoader }
+    val playViewReqClass by Weak { "com.bapis.bilibili.app.playurl.v1.PlayViewReq" from mClassLoader }
+    val playerMossClass by Weak { "com.bapis.bilibili.app.playerunite.v1.PlayerMoss" from mClassLoader }
+    val playViewUniteReqClass by Weak { "com.bapis.bilibili.app.playerunite.v1.PlayViewUniteReq" from mClassLoader }
 
     val ids: Map<String, Int> by lazy {
         mHookInfo.mapIds.idsMap

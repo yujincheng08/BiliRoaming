@@ -7,46 +7,28 @@ import me.iacn.biliroaming.utils.*
 import kotlin.math.ceil
 
 class PlayArcConfHook(classLoader: ClassLoader) : BaseHook(classLoader) {
-    private val playURLMossClass by Weak { "com.bapis.bilibili.app.playurl.v1.PlayURLMoss" from mClassLoader }
-    private val playViewReqClass by Weak { "com.bapis.bilibili.app.playurl.v1.PlayViewReq" from mClassLoader }
-    private val playURLMoss get() = playURLMossClass?.new()
+    private val playURLMoss get() = instance.playURLMossClass?.new()
 
     override fun startHook() {
         if (!sPrefs.getBoolean("play_arc_conf", false)) return
 
-        playURLMossClass?.hookAfterMethod("playView", playViewReqClass) { param ->
-            param.result?.callMethod("getPlayArc")?.run {
-                arrayOf(
-                    callMethod("getBackgroundPlayConf"),
-                    callMethod("getCastConf"),
-                    callMethod("getSmallWindowConf")
-                ).forEach {
-                    it?.callMethod("setDisabled", false)
-                    it?.callMethod("setIsSupport", true)
-                    it?.callMethod("clearExtraContent")
-                }
-            }
+        instance.arcConfClass?.run {
+            replaceMethod("getDisabled") { false }
+            replaceMethod("getIsSupport") { true }
         }
         val supportedArcConf = "com.bapis.bilibili.playershared.ArcConf"
             .from(mClassLoader)?.new()?.apply {
                 callMethod("setDisabled", false)
                 callMethod("setIsSupport", true)
             }
-        "com.bapis.bilibili.app.playerunite.v1.PlayerMoss".from(mClassLoader)?.hookAfterMethod(
-            "playViewUnite",
-            "com.bapis.bilibili.app.playerunite.v1.PlayViewUniteReq"
+        instance.playerMossClass?.hookAfterMethod(
+            "playViewUnite", instance.playViewUniteReqClass
         ) { param ->
             param.result?.callMethod("getPlayArcConf")
                 ?.callMethodAs<LinkedHashMap<Int, Any?>>("internalGetMutableArcConfs")
-                ?.let {
-                    //CASTCONF
-                    it[2] = supportedArcConf
-                    //BACKGROUNDPLAY
-                    it[9] = supportedArcConf
-                    //SMALLWINDOW
-                    it[23] = supportedArcConf
-                    //LISTEN
-                    it[36] = supportedArcConf
+                ?.run {
+                    // CASTCONF,BACKGROUNDPLAY,BACKGROUNDPLAY,LISTEN
+                    intArrayOf(2, 9, 23, 36).forEach { this[it] = supportedArcConf }
                 }
         }
         "com.bapis.bilibili.app.listener.v1.ListenerMoss".from(mClassLoader)?.hookAfterMethod(
@@ -64,16 +46,17 @@ class PlayArcConfHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 val req =
                     ListenPlayURLReq.parseFrom(param.args[0].callMethodAs<ByteArray>("toByteArray"))
                 val subId = req.item.subIdList.first()
-                val playViewReq = playViewReqClass?.callStaticMethod("parseFrom", playViewReq {
-                    epId = req.item.oid
-                    cid = subId
-                    qn = req.playerArgs.qn
-                    fnval = BangumiPlayUrlHook.MAX_FNVAL
-                    forceHost = req.playerArgs.forceHost.toInt()
-                    fourk = true
-                    preferCodecType = CodeType.CODE265
-                }.toByteArray()) ?: return@hookAfterMethod
-                val playViewReply = PlayViewReply.parseFrom(
+                val playViewReq =
+                    instance.playViewReqClass?.callStaticMethod("parseFrom", playViewReq {
+                        epId = req.item.oid
+                        cid = subId
+                        qn = req.playerArgs.qn
+                        fnval = BangumiPlayUrlHook.MAX_FNVAL
+                        forceHost = req.playerArgs.forceHost.toInt()
+                        fourk = true
+                        preferCodecType = CodeType.CODE265
+                    }.toByteArray()) ?: return@hookAfterMethod
+                val playViewReply = UGCPlayViewReply.parseFrom(
                     playURLMoss?.callMethod("playView", playViewReq)
                         ?.callMethodAs<ByteArray>("toByteArray") ?: return@hookAfterMethod
                 )
