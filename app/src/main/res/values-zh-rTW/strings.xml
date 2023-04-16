@@ -161,7 +161,7 @@
     <string name="customize_dynamic_filter_apply_to_video">過濾設定同時作用於影片分區</string>
     <string name="customize_dynamic_by_type">按類型</string>
     <string name="customize_dynamic_by_keyword">按關鍵字</string>
-    <string name="keyword_group_name_content">内容</string>
+    <string name="keyword_group_name_content">內容</string>
     <string name="keyword_group_name_up">UP主</string>
     <string name="keyword_group_name_title">標題</string>
     <string name="keyword_group_name_rcmd_reason">推薦原因</string>
@@ -182,7 +182,7 @@
     <string name="remove_video_relate_nothing_title">移除影片下方的所有內容</string>
     <string name="remove_video_relate_nothing_summary">上個選項的基礎上，將UP主投稿影片也移除</string>
     <string name="remove_video_cmd_dms_title">移除互動浮窗</string>
-    <string name="remove_video_cmd_dms_summary">移除影片播放時浮窗出現的三連關注、關聯影片、投票彈幕、評分彈幕、投資當前UP主等</string>
+    <string name="remove_video_cmd_dms_summary">移除影片播放時浮窗出現的三連關注、關聯影片、投票彈幕、評分彈幕、投資目前UP主等</string>
     <string name="block_word_search_title">封鎖評論關鍵字搜尋功能</string>
     <string name="block_word_search_summary">封鎖影片評論藍色關鍵字點擊觸發跳轉搜尋功能</string>
     <string name="disable_try_watch_vip_quality_title">禁用免費試看大會員清晰度</string>
@@ -245,14 +245,14 @@
     <string name="block_pcdn_title">阻止影片使用 PCDN 載入</string>
     <string name="block_pcdn_summary">啟用此選項可能會稍微改善影片載入速度。在純 IPv6 網路環境或透過代理伺服器連線的情況下，建議啟用。不影響 MCDN。可能在舊版無效。</string>
     <string name="block_pcdn_live_title">阻止直播透過 P2P 技術載入或上傳</string>
-    <string name="block_pcdn_live_summary">可能在某种程度上優化直播載入速度，同時避免佔用大量上傳頻寬。在舊版可能無效。</string>
-    <string name="danmaku_filter_title">彈幕屏蔽等級</string>
-    <string name="danmaku_filter_summary">恢復舊版按等級屏蔽彈幕功能，0級表示關閉本功能</string>
+    <string name="block_pcdn_live_summary">可能在某種程度上最佳化直播載入速度，同時避免佔用大量上傳頻寬。在舊版可能無效。</string>
+    <string name="danmaku_filter_title">彈幕封鎖等級</string>
+    <string name="danmaku_filter_summary">恢復舊版按等級封鎖彈幕功能，0級表示關閉本功能</string>
     <string name="danmaku_filter_weight_hint">%1$d級</string>
     <string name="half_screen_quality_title">影片半屏清晰度</string>
-    <string name="half_screen_quality_summary">設置影片半屏播放時的清晰度，設置後會大幅降低影片的首次播放載入速度，舊版播放器（半屏時進度條在框內）僅支持跟隨全螢幕清晰度，需開啟解鎖番劇限制選項</string>
+    <string name="half_screen_quality_summary">設定影片半屏播放時的清晰度，設定後會大幅降低影片的首次播放載入速度，舊版播放器（半屏時進度條在框內）僅支持跟隨全螢幕清晰度，需開啟解鎖番劇限制選項</string>
     <string name="full_screen_quality_title">影片全螢幕清晰度</string>
-    <string name="full_screen_quality_summary">設置影片全螢幕播放時預設的清晰度，當播放器畫質選項為自動時此選項不生效，需開啟解鎖番劇限制選項</string>
-    <string name="block_comment_guide_title">屏蔽評論引導</string>
-    <string name="block_comment_guide_summary">屏蔽影片詳情頁及評論頁的評論引導提示</string>
+    <string name="full_screen_quality_summary">設定影片全螢幕播放時預設的清晰度，當播放器畫質選項為自動時此選項不生效，需開啟解鎖番劇限制選項</string>
+    <string name="block_comment_guide_title">封鎖評論引導</string>
+    <string name="block_comment_guide_summary">封鎖影片詳情頁及評論頁的評論引導提示</string>
 </resources>
