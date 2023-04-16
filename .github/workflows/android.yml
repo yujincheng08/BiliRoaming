@@ -45,14 +45,15 @@ jobs:
         with:
           name: snapshot
           path: |
-              ${{ github.workspace }}/app/build/outputs/apk
-              ${{ github.workspace }}/app/build/outputs/mapping
+              app/build/outputs/apk
+              app/build/outputs/mapping
+              app/release
       - name: Post to channel
         if: github.ref == 'refs/heads/master'
         env:
           CHANNEL_ID: ${{ secrets.TELEGRAM_TO }}
           BOT_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
-          FILE: ${{ github.workspace }}/app/release/BiliRoaming_${{ env.VERSION }}.apk
+          FILE: app/release/BiliRoaming_${{ env.VERSION }}.apk
           COMMIT_MESSAGE: |+
             New push to github\!
             ```

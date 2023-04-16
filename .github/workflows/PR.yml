@@ -46,4 +46,6 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: ${{ matrix.os }}-artifact
-        path: app/build/outputs
+        path: |
+          app/build/outputs
+          app/release
