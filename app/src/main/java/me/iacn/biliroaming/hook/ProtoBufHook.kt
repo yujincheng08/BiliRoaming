@@ -20,6 +20,7 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val blockUpperRecommendAd = sPrefs.getBoolean("block_upper_recommend_ad", false)
         val disableMainPageStory = sPrefs.getBoolean("disable_main_page_story", false)
         val unlockPlayLimit = sPrefs.getBoolean("play_arc_conf", false)
+        val blockCommentGuide = sPrefs.getBoolean("block_comment_guide", false)
 
         if (hidden && (purifyCity || purifyCampus)) {
             listOf(
@@ -49,6 +50,14 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             if (unlockPlayLimit)
                 param.result.callMethod("getConfig")
                     ?.callMethod("setShowListenButton", true)
+            if (blockCommentGuide) {
+                param.result.runCatchingOrNull {
+                    callMethod("getLikeCustom")
+                        ?.callMethod("clearLikeComment")
+                    callMethod("getReplyPreface")
+                        ?.callMethod("clearBadgeType")
+                }
+            }
             if (hidden && removeHonor) {
                 param.result.callMethod("clearHonor")
             }
@@ -142,7 +151,7 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         if (disableMainPageStory) {
             "com.bapis.bilibili.app.distribution.setting.experimental.MultipleTusConfig"
                 .from(mClassLoader)?.hookAfterMethod("getTopLeft") { param ->
-                    param.result?.run {
+                    param.result?.runCatchingOrNull {
                         callMethod("clearBadge")
                         callMethod("clearListenBackgroundImage")
                         callMethod("clearListenForegroundImage")
@@ -155,6 +164,35 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         callMethod("getGotoV2")?.callMethod("setValue", 1)
                     }
                 }
+        }
+        if (blockCommentGuide) {
+            "com.bapis.bilibili.main.community.reply.v1.ReplyMoss".hookBeforeMethod(
+                mClassLoader,
+                "mainList",
+                "com.bapis.bilibili.main.community.reply.v1.MainListReq",
+                instance.mossResponseHandlerClass
+            ) { param ->
+                param.args[1] = param.args[1].mossResponseHandlerProxy { reply ->
+                    reply?.runCatchingOrNull {
+                        callMethod("getSubjectControl")?.run {
+                            callMethod("clearEmptyBackgroundTextPlain")
+                            callMethod("clearEmptyBackgroundTextHighlight")
+                            callMethod("clearEmptyBackgroundUri")
+                            callMethod("getEmptyPage")?.let { page ->
+                                page.callMethod("clearLeftButton")
+                                page.callMethod("clearRightButton")
+                                page.callMethodAs<List<Any>>("getTextsList")
+                                    .takeIf { it.size > 1 }?.let {
+                                        page.callMethod("clearTexts")
+                                        page.callMethod("addTexts", it.first().apply {
+                                            callMethod("setRaw", "还没有评论哦")
+                                        })
+                                    }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

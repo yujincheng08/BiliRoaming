@@ -4,7 +4,6 @@
     <string name="about">關於</string>
     <string name="version">版本</string>
     <string name="author">作者</string>
-
     <string name="running_status_enable">已啟用</string>
     <string name="running_status_disable">未啟用</string>
     <string name="not_running_summary">嗶哩漫遊未啟動</string>
@@ -33,17 +32,12 @@
     <string name="setting_category">設定</string>
     <string name="mini_program_title">去你大爺的小程式</string>
     <string name="mini_program_summary">不再以小程式的方式分享到QQ或者微信（同時複製分享連結變為av號）</string>
-
     <string name="update_title">更新</string>
     <string name="update_summary">點擊打開最新版下載網址</string>
-
-
-
     <string name="group_title">QQ頻道</string>
     <string name="group_summary">點擊加入QQ頻道</string>
     <string name="tg_title">TG頻道</string>
     <string name="tg_summary">點擊加入TG頻道</string>
-
     <string name="upos_title">UPOS伺服器設定</string>
     <string name="upos_summary">設定解鎖番劇的伺服器，可加快影片載入速度；當所選 UPOS 不能用時，會回退到 MCDN。</string>
     <string name="purify_splash_title">淨化啟動頁面</string>
@@ -60,7 +54,6 @@
     <string name="feature_dialog">當嗶哩漫遊被正確啟動後，打開嗶哩嗶哩，進入【我的】頁面，就能看到【嗶哩漫遊設定】；使用舊版本則打開側邊欄，長按【設定】。如果不知道如何啟動模組，請直接使用Xpatch版。</string>
     <string name="help_title">幫助</string>
     <string name="help_summary">點擊查看啟動方法、常見問題等</string>
-
     <string name="purify_search_title">淨化搜尋頁面</string>
     <string name="purify_search_summary">去除搜尋頁面的熱搜和推薦</string>
     <string name="demo">範例</string>
@@ -68,7 +61,6 @@
     <string name="os_not_support">目前系統版本不支援此功能</string>
     <string name="enable_av_title">顯示AV號</string>
     <string name="enable_av_summary">影片詳情頁顯示為AV號</string>
-
     <string name="setting_title">打開模組設定</string>
     <string name="setting_summary">啟動用戶端並打開模組設定</string>
     <string name="custom_download_thread_title">自訂同時快取數</string>
@@ -92,10 +84,6 @@
     <string name="purify_city_title">移除同城標籤</string>
     <string name="purify_campus_title">移除校園標籤</string>
     <string name="setting">設定</string>
-    <string name="block_pcdn_title">阻止影片使用 PCDN 載入</string>
-    <string name="block_pcdn_summary">啟用此選項可能會稍微改善影片載入速度。在純 IPv6 網路環境或透過代理伺服器連線的情況下，建議啟用。不影響 MCDN。可能在舊版無效。</string>
-    <string name="block_pcdn_live_title">阻止直播透過 P2P 技術載入或上傳</string>
-    <string name="block_pcdn_live_summary">可能在某种程度上優化直播載入速度，同時避免佔用大量上傳頻寬。在舊版可能無效。</string>
     <string name="speed">速度</string>
     <string name="test_upos_title">UPOS伺服器測速</string>
     <string name="test_upos_summary">選擇最快的UPOS以獲得最好體驗</string>
@@ -187,6 +175,8 @@
     <string name="remove_video_relate_promote_summary">移除影片下方的相關推廣，例如遊戲、課程、會員購、創作推廣等</string>
     <string name="remove_video_relate_only_av_title">僅展示UP主投稿影片</string>
     <string name="remove_video_relate_only_av_summary">上個選項的基礎上，僅展示UP主投稿影片，移除番劇等內容</string>
+    <string name="remove_video_honor_title">移除影片下方的獲得榮譽</string>
+    <string name="remove_video_honor_summary">移除影片下方的榮譽訊息，例如入站必刷、每週必看、全站排行榜、4K頻道精選等</string>
     <string name="remove_video_UgcSeason_title">移除影片下方的分集列表</string>
     <string name="remove_video_UgcSeason_summary">移除影片下方的UP主影片分集列表</string>
     <string name="remove_video_relate_nothing_title">移除影片下方的所有內容</string>
@@ -252,6 +242,10 @@
     <string name="remove_vip_section_summary">我的頁面將大會員橫幅移除</string>
     <string name="save_comment_image_title">筆記圖片長按儲存</string>
     <string name="save_comment_image_summary">影片筆記圖片長按儲存到本地</string>
+    <string name="block_pcdn_title">阻止影片使用 PCDN 載入</string>
+    <string name="block_pcdn_summary">啟用此選項可能會稍微改善影片載入速度。在純 IPv6 網路環境或透過代理伺服器連線的情況下，建議啟用。不影響 MCDN。可能在舊版無效。</string>
+    <string name="block_pcdn_live_title">阻止直播透過 P2P 技術載入或上傳</string>
+    <string name="block_pcdn_live_summary">可能在某种程度上優化直播載入速度，同時避免佔用大量上傳頻寬。在舊版可能無效。</string>
     <string name="danmaku_filter_title">彈幕屏蔽等級</string>
     <string name="danmaku_filter_summary">恢復舊版按等級屏蔽彈幕功能，0級表示關閉本功能</string>
     <string name="danmaku_filter_weight_hint">%1$d級</string>
@@ -259,4 +253,6 @@
     <string name="half_screen_quality_summary">設置影片半屏播放時的清晰度，設置後會大幅降低影片的首次播放載入速度，舊版播放器（半屏時進度條在框內）僅支持跟隨全螢幕清晰度，需開啟解鎖番劇限制選項</string>
     <string name="full_screen_quality_title">影片全螢幕清晰度</string>
     <string name="full_screen_quality_summary">設置影片全螢幕播放時預設的清晰度，當播放器畫質選項為自動時此選項不生效，需開啟解鎖番劇限制選項</string>
+    <string name="block_comment_guide_title">屏蔽評論引導</string>
+    <string name="block_comment_guide_summary">屏蔽影片詳情頁及評論頁的評論引導提示</string>
 </resources>

@@ -216,6 +216,11 @@
             android:key="full_screen_quality"
             android:summary="@string/full_screen_quality_summary"
             android:title="@string/full_screen_quality_title" />
+
+        <SwitchPreference
+            android:key="block_comment_guide"
+            android:summary="@string/block_comment_guide_summary"
+            android:title="@string/block_comment_guide_title" />
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/pref_backup">
         <Preference

@@ -26,7 +26,6 @@ import me.iacn.biliroaming.utils.*
 import org.json.JSONObject
 import java.io.InputStream
 import java.lang.reflect.Method
-import java.lang.reflect.Proxy
 import java.net.URL
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -420,19 +419,8 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 "com.bapis.bilibili.polymer.app.search.v1.SearchAllRequest",
                 mossResponseHandlerClass
             ) { param ->
-                val handler = param.args[1]
-                param.args[1] = Proxy.newProxyInstance(
-                    handler.javaClass.classLoader,
-                    arrayOf(mossResponseHandlerClass)
-                ) { _, m, args ->
-                    if (m.name == "onNext") {
-                        addAreaTagsV2(args[0])
-                        m(handler, *args)
-                    } else if (args == null) {
-                        m(handler)
-                    } else {
-                        m(handler, *args)
-                    }
+                param.args[1] = param.args[1].mossResponseHandlerProxy {
+                    addAreaTagsV2(it)
                 }
             }
             searchMossClass.hookBeforeMethod(

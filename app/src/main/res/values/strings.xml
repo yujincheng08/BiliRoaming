@@ -4,7 +4,6 @@
     <string name="about">关于</string>
     <string name="version">版本</string>
     <string name="author">作者</string>
-    <string name="author_list" translatable="false">iAcn/djytw/yujincheng08</string>
     <string name="running_status_enable">已启用</string>
     <string name="running_status_disable">未启用</string>
     <string name="not_running_summary">哔哩漫游未激活</string>
@@ -33,17 +32,12 @@
     <string name="setting_category">设置</string>
     <string name="mini_program_title">去你大爷的小程序</string>
     <string name="mini_program_summary">不再以小程序的方式分享到QQ或者微信（同时复制分享链接变为av号）</string>
-    <string name="version_url" translatable="false">https://api.github.com/repos/yujincheng08/BiliRoaming/releases/latest</string>
     <string name="update_title">更新</string>
     <string name="update_summary">点击打开最新版下载地址</string>
-    <string name="update_url" translatable="false">https://github.com/yujincheng08/BiliRoaming/releases/latest</string>
-    <string name="server_url" translatable="false">https://github.com/yujincheng08/BiliRoaming/wiki/%E5%85%AC%E5%85%B1%E8%A7%A3%E6%9E%90%E6%9C%8D%E5%8A%A1%E5%99%A8</string>
-    <string name="github_url" translatable="false">https://github.com/yujincheng08/BiliRoaming</string>
     <string name="group_title">QQ频道</string>
     <string name="group_summary">点击加入QQ频道</string>
     <string name="tg_title">TG频道</string>
     <string name="tg_summary">点击加入TG频道</string>
-    <string name="tg_url" translatable="false">https://t.me/biliroaming</string>
     <string name="upos_title">UPOS服务器设置</string>
     <string name="upos_summary">设置解锁番剧的服务器，可加快视频加载速度；当所选 UPOS 不能用时，会回退到 MCDN。</string>
     <string name="purify_splash_title">净化开屏页面</string>
@@ -60,7 +54,6 @@
     <string name="feature_dialog">当哔哩漫游被正确激活后，打开哔哩哔哩客户端，进入【我的】页面，就能看到【哔哩漫游设置】；使用旧版本客户端则打开侧边栏，长按【设置】。如果不知道如何激活插件，请直接使用Xpatch版。</string>
     <string name="help_title">帮助</string>
     <string name="help_summary">点击查看激活方法、常见问题等</string>
-    <string name="help_url" translatable="false">https://github.com/yujincheng08/BiliRoaming/wiki</string>
     <string name="purify_search_title">净化搜索页面</string>
     <string name="purify_search_summary">去除搜索页面的热搜和推荐</string>
     <string name="demo">示例</string>
@@ -68,7 +61,6 @@
     <string name="os_not_support">当前系统版本不支持此功能</string>
     <string name="enable_av_title">显示AV号</string>
     <string name="enable_av_summary">视频详情页显示为AV号</string>
-    <string name="group_url" translatable="false">mqqguild://guild/share?inviteCode=NVoD5&amp;from=246610</string>
     <string name="setting_title">打开模块设置</string>
     <string name="setting_summary">启动客户端并打开模块设置</string>
     <string name="custom_download_thread_title">自定义同时缓存数</string>
@@ -92,29 +84,6 @@
     <string name="purify_city_title">移除同城标签</string>
     <string name="purify_campus_title">移除校园标签</string>
     <string name="setting">设置</string>
-    <string name="ks3_host" translatable="false">upos-sz-mirrorks3.bilivideo.com</string>
-    <string name="ks3b_host" translatable="false">upos-sz-mirrorks3b.bilivideo.com</string>
-    <string name="ks3c_host" translatable="false">upos-sz-mirrorks3c.bilivideo.com</string>
-    <string name="ks32_host" translatable="false">upos-sz-mirrorks32.bilivideo.com</string>
-    <string name="kodo_host" translatable="false">upos-sz-mirrorkodo.bilivideo.com</string>
-    <string name="kodob_host" translatable="false">upos-sz-mirrorkodob.bilivideo.com</string>
-    <string name="cos_host" translatable="false">upos-sz-mirrorcos.bilivideo.com</string>
-    <string name="cosb_host" translatable="false">upos-sz-mirrorcosb.bilivideo.com</string>
-    <string name="coso1_host" translatable="false">upos-sz-mirrorcoso1.bilivideo.com</string>
-    <string name="coso2_host" translatable="false">upos-sz-mirrorcoso2.bilivideo.com</string>
-    <string name="bos_host" translatable="false">upos-sz-mirrorbos.bilivideo.com</string>
-    <!--    <string name="wcs_host">upos-sz-mirrorwcs.bilivideo.com</string>-->
-    <!--    <string name="wcsb_host">upos-sz-mirrorwcsb.bilivideo.com</string>-->
-    <string name="hw_host" translatable="false">upos-sz-mirrorhw.bilivideo.com</string>
-    <string name="hwb_host" translatable="false">upos-sz-mirrorhwb.bilivideo.com</string>
-    <!--    <string name="upbda2_host">upos-sz-upcdnbda2.bilivideo.com</string>-->
-    <!--    <string name="upws_host">upos-sz-upcdnws.bilivideo.com</string>-->
-    <string name="uphw_host" translatable="false">upos-sz-upcdnhw.bilivideo.com</string>
-    <string name="js_host" translatable="false">upos-tf-all-js.bilivideo.com</string>
-    <string name="hk_host" translatable="false">cn-hk-eq-bcache-01.bilivideo.com</string>
-    <string name="akamai_host" translatable="false">upos-hz-mirrorakam.akamaized.net</string>
-    <string name="speed_formatter" translatable="false">%sKB/s</string>
-    <string name="upos" translatable="false">UPOS</string>
     <string name="speed">速度</string>
     <string name="test_upos_title">UPOS服务器测速</string>
     <string name="test_upos_summary">选择最快的UPOS以获得最好体验</string>
@@ -194,7 +163,6 @@
     <string name="customize_dynamic_by_keyword">按关键词</string>
     <string name="keyword_group_name_content">内容</string>
     <string name="keyword_group_name_up">UP主</string>
-    <string name="keyword_group_name_uid" translatable="false">UID</string>
     <string name="keyword_group_name_title">标题</string>
     <string name="keyword_group_name_rcmd_reason">推荐原因</string>
     <string name="keyword_group_name_category">分区</string>
@@ -232,9 +200,6 @@
     <string name="block_up_rcmd_ads_summary">屏蔽视频播放过程中，浮窗出现的UP主推荐广告</string>
     <string name="block_bangumi_page_ads_title">屏蔽番剧页面广告</string>
     <string name="block_bangumi_page_ads_summary">屏蔽番剧页面弹窗广告及会员购</string>
-    <string name="subtitle_convert_failed" translatable="false">字幕转换失败，请重试</string>
-    <string name="subtitle_dict_download_failed" translatable="false">转换字典下载失败，请重试</string>
-    <string name="subtitle_append_info" translatable="false">请注意，站内宣传漫游或脚本会被拉黑</string>
     <string name="generate_subtitle_title">生成简中字幕</string>
     <string name="generate_subtitle_summary">根据繁体字幕自动生成简体中文字幕</string>
     <string name="forbid_switch_live_room_title">禁止滑动切换直播间</string>
@@ -288,4 +253,6 @@
     <string name="half_screen_quality_summary">设置视频半屏播放时的清晰度，设置后会大幅降低视频的首次播放加载速度，旧版播放器（半屏时进度条在框内）仅支持跟随全屏清晰度，需开启解锁番剧限制选项</string>
     <string name="full_screen_quality_title">视频全屏清晰度</string>
     <string name="full_screen_quality_summary">设置视频全屏播放时默认的清晰度，当播放器画质选项为自动时此选项不生效，需开启解锁番剧限制选项</string>
+    <string name="block_comment_guide_title">屏蔽评论引导</string>
+    <string name="block_comment_guide_summary">屏蔽视频详情页及评论页的评论引导提示</string>
 </resources>

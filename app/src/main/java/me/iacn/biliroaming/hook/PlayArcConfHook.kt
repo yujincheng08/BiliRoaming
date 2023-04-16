@@ -4,7 +4,6 @@ import android.net.Uri
 import me.iacn.biliroaming.*
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.utils.*
-import java.lang.reflect.Proxy
 import kotlin.math.ceil
 
 class PlayArcConfHook(classLoader: ClassLoader) : BaseHook(classLoader) {
@@ -46,24 +45,12 @@ class PlayArcConfHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         "com.bapis.bilibili.app.listener.v1.ListenerMoss".from(mClassLoader)?.run {
             val playlistHook = { param: MethodHookParam ->
                 val req = param.args[0]
-                val handler = param.args[1]
-                param.args[1] = Proxy.newProxyInstance(
-                    handler.javaClass.classLoader,
-                    arrayOf(instance.mossResponseHandlerClass)
-                ) { _, m, args ->
-                    if (m.name == "onNext") {
-                        val resp = args[0]
-                        runCatching {
-                            reconstructPlaylistResponse(req, resp)
-                        }.onFailure {
-                            Log.e(it)
-                            Log.toast("听视频解锁失败")
-                        }
-                        m(handler, *args)
-                    } else if (args == null) {
-                        m(handler)
-                    } else {
-                        m(handler, *args)
+                param.args[1] = param.args[1].mossResponseHandlerProxy { resp ->
+                    runCatching {
+                        reconstructPlaylistResponse(req, resp)
+                    }.onFailure {
+                        Log.e(it)
+                        Log.toast("听视频解锁失败")
                     }
                 }
             }

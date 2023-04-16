@@ -1,0 +1,38 @@
+<!-- Here place some not translatable string resources -->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <string name="author_list">iAcn/djytw/yujincheng08</string>
+    <string name="version_url">https://api.github.com/repos/yujincheng08/BiliRoaming/releases/latest</string>
+    <string name="update_url">https://github.com/yujincheng08/BiliRoaming/releases/latest</string>
+    <string name="server_url">https://github.com/yujincheng08/BiliRoaming/wiki/%E5%85%AC%E5%85%B1%E8%A7%A3%E6%9E%90%E6%9C%8D%E5%8A%A1%E5%99%A8</string>
+    <string name="github_url">https://github.com/yujincheng08/BiliRoaming</string>
+    <string name="tg_url">https://t.me/biliroaming</string>
+    <string name="help_url">https://github.com/yujincheng08/BiliRoaming/wiki</string>
+    <string name="group_url">mqqguild://guild/share?inviteCode=NVoD5&amp;from=246610</string>
+    <string name="ks3_host">upos-sz-mirrorks3.bilivideo.com</string>
+    <string name="ks3b_host">upos-sz-mirrorks3b.bilivideo.com</string>
+    <string name="ks3c_host">upos-sz-mirrorks3c.bilivideo.com</string>
+    <string name="ks32_host">upos-sz-mirrorks32.bilivideo.com</string>
+    <string name="kodo_host">upos-sz-mirrorkodo.bilivideo.com</string>
+    <string name="kodob_host">upos-sz-mirrorkodob.bilivideo.com</string>
+    <string name="cos_host">upos-sz-mirrorcos.bilivideo.com</string>
+    <string name="cosb_host">upos-sz-mirrorcosb.bilivideo.com</string>
+    <string name="coso1_host">upos-sz-mirrorcoso1.bilivideo.com</string>
+    <string name="coso2_host">upos-sz-mirrorcoso2.bilivideo.com</string>
+    <string name="bos_host">upos-sz-mirrorbos.bilivideo.com</string>
+    <!--    <string name="wcs_host">upos-sz-mirrorwcs.bilivideo.com</string>-->
+    <!--    <string name="wcsb_host">upos-sz-mirrorwcsb.bilivideo.com</string>-->
+    <string name="hw_host">upos-sz-mirrorhw.bilivideo.com</string>
+    <string name="hwb_host">upos-sz-mirrorhwb.bilivideo.com</string>
+    <!--    <string name="upbda2_host">upos-sz-upcdnbda2.bilivideo.com</string>-->
+    <!--    <string name="upws_host">upos-sz-upcdnws.bilivideo.com</string>-->
+    <string name="uphw_host">upos-sz-upcdnhw.bilivideo.com</string>
+    <string name="js_host">upos-tf-all-js.bilivideo.com</string>
+    <string name="hk_host">cn-hk-eq-bcache-01.bilivideo.com</string>
+    <string name="akamai_host">upos-hz-mirrorakam.akamaized.net</string>
+    <string name="speed_formatter">%sKB/s</string>
+    <string name="upos">UPOS</string>
+    <string name="keyword_group_name_uid">UID</string>
+    <string name="subtitle_convert_failed">字幕转换失败，请重试</string>
+    <string name="subtitle_dict_download_failed">转换字典下载失败，请重试</string>
+    <string name="subtitle_append_info">请注意，站内宣传漫游或脚本会被拉黑</string>
+</resources>

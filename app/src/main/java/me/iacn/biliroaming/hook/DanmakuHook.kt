@@ -2,7 +2,6 @@ package me.iacn.biliroaming.hook
 
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.utils.*
-import java.lang.reflect.Proxy
 
 class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
@@ -14,19 +13,8 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             "com.bapis.bilibili.community.service.dm.v1.DmSegMobileReq",
             instance.mossResponseHandlerClass
         ) { param ->
-            val handler = param.args[1]
-            param.args[1] = Proxy.newProxyInstance(
-                handler.javaClass.classLoader,
-                arrayOf(instance.mossResponseHandlerClass)
-            ) { _, m, args ->
-                if (m.name == "onNext") {
-                    filterDanmaku(args[0], blockWeight)
-                    m(handler, *args)
-                } else if (args == null) {
-                    m(handler)
-                } else {
-                    m(handler, *args)
-                }
+            param.args[1] = param.args[1].mossResponseHandlerProxy {
+                filterDanmaku(it, blockWeight)
             }
         }
     }

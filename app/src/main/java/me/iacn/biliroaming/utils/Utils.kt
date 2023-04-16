@@ -21,6 +21,7 @@ import java.io.File
 import java.io.IOException
 import java.io.InputStream
 import java.lang.ref.WeakReference
+import java.lang.reflect.Proxy
 import java.math.BigInteger
 import java.net.URL
 import java.util.*
@@ -358,3 +359,20 @@ val Int.dp: Int
 val currentIsLandscape: Boolean
     get() = currentContext.getSystemService(WindowManager::class.java)
         .defaultDisplay.orientation.let { it == Surface.ROTATION_90 || it == Surface.ROTATION_270 }
+
+inline fun Any.mossResponseHandlerProxy(crossinline onNext: (reply: Any?) -> Unit): Any {
+    return Proxy.newProxyInstance(
+        javaClass.classLoader,
+        arrayOf(instance.mossResponseHandlerClass)
+    ) { _, m, args ->
+        if (m.name == "onNext") {
+            val reply = args[0]
+            onNext(reply)
+            m(this, *args)
+        } else if (args == null) {
+            m(this)
+        } else {
+            m(this, *args)
+        }
+    }
+}
