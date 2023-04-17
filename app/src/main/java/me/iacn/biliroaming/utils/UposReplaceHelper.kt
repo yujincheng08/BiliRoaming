@@ -2,15 +2,46 @@ package me.iacn.biliroaming.utils
 
 import android.net.Uri
 import me.iacn.biliroaming.*
+import java.util.concurrent.TimeUnit
 
 @Suppress("UNUSED")
 object UposReplaceHelper {
+    private val isLocatedCn by lazy {
+        (runCatchingOrNull { XposedInit.country.get(5L, TimeUnit.SECONDS) } ?: "cn") == "cn"
+    }
+    private val aliUposHost by lazy { XposedInit.moduleRes.getString(R.string.ali_host) }
+    private val cosUposHost by lazy { XposedInit.moduleRes.getString(R.string.cos_host) }
     private val hwUposHost by lazy { XposedInit.moduleRes.getString(R.string.hw_host) }
+    private val akamaiUposHost by lazy { XposedInit.moduleRes.getString(R.string.akamai_host) }
+    private val aliovUposHost by lazy { XposedInit.moduleRes.getString(R.string.aliov_host) }
+    private val cosovUposHost by lazy { XposedInit.moduleRes.getString(R.string.cosov_host) }
+    private val hwovUposHost by lazy { XposedInit.moduleRes.getString(R.string.hwov_host) }
+    private val hkBcacheUposHost by lazy { XposedInit.moduleRes.getString(R.string.hk_bcache_host) }
     private val replaceAllBaseUpos = sPrefs.getBoolean("replace_all_upos_base", false)
     private val replaceAllBackupUpos = sPrefs.getBoolean("replace_all_upos_backup", false)
 
     private val uposHost by lazy {
-        sPrefs.getString("upos_host", null) ?: hwUposHost
+        sPrefs.getString("upos_host", null) ?: if (isLocatedCn) hwUposHost else aliovUposHost
+    }
+    private val uposBackupHostPair by lazy {
+        if (isLocatedCn) {
+            when (uposHost) {
+                hwUposHost -> Pair(aliUposHost, cosUposHost)
+                aliUposHost -> Pair(hwUposHost, cosUposHost)
+                // cosUposHost -> Pair(aliUposHost, hwUposHost)
+                // akamaiUposHost -> Pair(aliUposHost, hwUposHost)
+                else -> Pair(aliUposHost, hwUposHost)
+            }
+        } else {
+            when (uposHost) {
+                // akamaiUposHost -> Pair(hkBcacheUposHost, aliovUposHost)
+                aliovUposHost -> Pair(hkBcacheUposHost, hwovUposHost)
+                // cosovUposHost -> Pair(hkBcacheUposHost, aliovUposHost)
+                hwovUposHost -> Pair(hwUposHost, cosUposHost)
+                hkBcacheUposHost -> Pair(aliovUposHost, hwovUposHost)
+                else -> Pair(hkBcacheUposHost, aliovUposHost)
+            }
+        }
     }
 
     private val baseUrlCdnUposReplaceRegexPattern by lazy {
@@ -42,11 +73,25 @@ object UposReplaceHelper {
         } else this
     }
 
-    private fun List<String>.replaceBackupUrlsUpos(): List<String> {
-        return this.map { backupUrl ->
-            if (replaceAllBackupUpos || backupUrl.contains(backupUrlCdnUposReplaceRegexPattern)) {
-                backupUrl.replaceUpos(uposHost)
-            } else backupUrl
+    private fun List<String>.replaceBackupUrlsUpos(baseUrl: String): List<String> {
+        fun String.replaceBackupUrlUpos(newUpos: String): String {
+            return if (replaceAllBackupUpos || contains(backupUrlCdnUposReplaceRegexPattern)) {
+                replaceUpos(newUpos)
+            } else this
+        }
+
+        val urlReplaced: (String, String) -> String = { url, newUpos ->
+            url.replaceBackupUrlUpos(newUpos)
+        }
+        return when (this.size) {
+            2 -> listOf(
+                urlReplaced(this[0], uposBackupHostPair.first),
+                urlReplaced(this[1], uposBackupHostPair.second)
+            )
+            else -> listOf(
+                urlReplaced(baseUrl, uposBackupHostPair.first),
+                urlReplaced(baseUrl, uposBackupHostPair.second)
+            )
         }
     }
 
@@ -76,10 +121,10 @@ object UposReplaceHelper {
                 val newDUrl = durl.map { listenResponseUrl ->
                     listenResponseUrl.copy {
                         if (hasUrl()) {
-                            url = url.replaceBaseUrlUpos()
-                            val newBackupUrl = backupUrl.replaceBackupUrlsUpos()
+                            val newBackupUrl = backupUrl.replaceBackupUrlsUpos(url)
                             backupUrl.clear()
                             backupUrl.addAll(newBackupUrl)
+                            url = url.replaceBaseUrlUpos()
                         }
                     }
                 }
@@ -157,19 +202,19 @@ object UposReplaceHelper {
         if (hasDashVideo()) {
             dashVideo = dashVideo.copy {
                 if (!hasBaseUrl()) return@copy
-                baseUrl = baseUrl.replaceBaseUrlUpos()
-                val newBackupUrl = backupUrl.replaceBackupUrlsUpos()
+                val newBackupUrl = backupUrl.replaceBackupUrlsUpos(baseUrl)
                 backupUrl.clear()
                 backupUrl.addAll(newBackupUrl)
+                baseUrl = baseUrl.replaceBaseUrlUpos()
             }
         } else if (hasSegmentVideo()) {
             segmentVideo = segmentVideo.copy {
                 val newSegment = segment.map { responseUrl ->
                     responseUrl.copy {
-                        url = url.replaceBaseUrlUpos()
-                        val newBackupUrl = backupUrl.replaceBackupUrlsUpos()
+                        val newBackupUrl = backupUrl.replaceBackupUrlsUpos(url)
                         backupUrl.clear()
                         backupUrl.addAll(newBackupUrl)
+                        url = url.replaceBaseUrlUpos()
                     }
                 }
                 segment.clear()
@@ -180,18 +225,18 @@ object UposReplaceHelper {
 
     private fun DashItemKt.Dsl.reconstructDashItemUpos() {
         if (!hasBaseUrl()) return
-        baseUrl = baseUrl.replaceBaseUrlUpos()
-        val newBackupUrl = backupUrl.replaceBackupUrlsUpos()
+        val newBackupUrl = backupUrl.replaceBackupUrlsUpos(baseUrl)
         backupUrl.clear()
         backupUrl.addAll(newBackupUrl)
+        baseUrl = baseUrl.replaceBaseUrlUpos()
     }
 
     private fun ListenDashItemKt.Dsl.reconstructDashItemUpos() {
         if (!hasBaseUrl()) return
-        baseUrl = baseUrl.replaceBaseUrlUpos()
-        val newBackupUrl = backupUrl.replaceBackupUrlsUpos()
+        val newBackupUrl = backupUrl.replaceBackupUrlsUpos(baseUrl)
         backupUrl.clear()
         backupUrl.addAll(newBackupUrl)
+        baseUrl = baseUrl.replaceBaseUrlUpos()
     }
 
     private fun PlayDubbingInfoKt.Dsl.reconstructPlayDubbingInfoUpos() {
