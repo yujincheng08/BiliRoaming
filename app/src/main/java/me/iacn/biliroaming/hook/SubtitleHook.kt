@@ -1,10 +1,6 @@
 package me.iacn.biliroaming.hook
 
-import android.graphics.BlurMaskFilter
-import android.graphics.Color
-import android.graphics.Path
-import android.graphics.Rect
-import android.graphics.Typeface
+import android.graphics.*
 import android.net.Uri
 import android.text.Layout
 import android.text.SpannableString
@@ -18,11 +14,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import me.iacn.biliroaming.*
-import me.iacn.biliroaming.API.*
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
-import me.iacn.biliroaming.network.BiliRoamingApi
-import me.iacn.biliroaming.hook.BangumiSeasonHook.Companion.lastSeasonInfo
 import me.iacn.biliroaming.hook.BangumiPlayUrlHook.Companion.countDownLatch
+import me.iacn.biliroaming.hook.BangumiSeasonHook.Companion.lastSeasonInfo
+import me.iacn.biliroaming.network.BiliRoamingApi
 import me.iacn.biliroaming.utils.*
 import org.json.JSONArray
 import java.io.File
@@ -336,7 +331,10 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
             }
 
-            val dmViewReply = if (generateSubtitle) parseDmViewReply(param.result) else null
+            val fromPGC = lazy { param.args[0].callMethodAs<String>("getSpmid").contains("pgc") }
+            val dmViewReply = if (generateSubtitle || (addCloseSubtitle && fromPGC.value)) {
+                parseDmViewReply(param.result)
+            } else null
             if (generateSubtitle) {
                 val subtitles = mutableListOf<SubtitleItem>()
                 dmViewReply?.subtitle?.subtitlesList?.let { subtitles += it }
@@ -358,8 +356,8 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
             }
 
-            if (addCloseSubtitle && param.args[0]
-                    .callMethodAs<String>("getSpmid").contains("pgc")
+            if (addCloseSubtitle && fromPGC.value
+                && (!dmViewReply?.subtitle?.subtitlesList.isNullOrEmpty() || extraSubtitles.isNotEmpty())
             ) {
                 subtitleItem {
                     lan = "nodisplay"
@@ -369,7 +367,7 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
             if (extraSubtitles.isNotEmpty()) {
                 val newRes = (dmViewReply ?: parseDmViewReply(param.result)
-                ?: dmViewReply { }).copy {
+                ?: dmViewReply {}).copy {
                     subtitle = subtitle.copy {
                         subtitles += extraSubtitles
                     }
