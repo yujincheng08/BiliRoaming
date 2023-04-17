@@ -5,6 +5,7 @@ package me.iacn.biliroaming
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.Context
+import android.net.Uri
 import android.preference.ListPreference
 import android.view.LayoutInflater
 import android.view.View
@@ -16,7 +17,6 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
-import me.iacn.biliroaming.Constant.HOST_REGEX
 import me.iacn.biliroaming.XposedInit.Companion.moduleRes
 import me.iacn.biliroaming.network.BiliRoamingApi
 import me.iacn.biliroaming.network.BiliRoamingApi.getPlayUrl
@@ -141,7 +141,9 @@ class SpeedTestDialog(private val pref: ListPreference, activity: Activity) :
     private suspend fun speedTest(upos: String, rawUrl: String) = try {
         withContext(speedTestDispatcher) {
             withTimeout(5000) {
-                val url = URL(rawUrl.replace(HOST_REGEX, "://${upos}/"))
+                val url = if (upos == "\$1") URL(rawUrl) else {
+                    URL(Uri.parse(rawUrl).buildUpon().authority(upos).build().toString())
+                }
                 val connection = url.openConnection()
                 connection.connectTimeout = 5000
                 connection.readTimeout = 5000

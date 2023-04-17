@@ -25,5 +25,4 @@ object Constant {
     const val DEFAULT_CUSTOM_COLOR = -0xe6b7d
     const val infoUrl = "https://api.bilibili.com/client_info"
     const val zoneUrl = "https://api.bilibili.com/x/web-interface/zone"
-    val HOST_REGEX = Regex(""":\\?/\\?/([^/]+)\\?/""")
 }
