@@ -142,7 +142,10 @@ class SpeedTestDialog(private val pref: ListPreference, activity: Activity) :
         withContext(speedTestDispatcher) {
             withTimeout(5000) {
                 val url = if (upos == "\$1") URL(rawUrl) else {
-                    URL(Uri.parse(rawUrl).buildUpon().authority(upos).build().toString())
+                    URL(
+                        Uri.parse(rawUrl).buildUpon().authority(upos).build().toString()
+                            .replace(Regex("(bw=[^&]*)"), "bw=1280000")
+                    )
                 }
                 val connection = url.openConnection()
                 connection.connectTimeout = 5000

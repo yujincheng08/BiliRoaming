@@ -19,6 +19,7 @@ object UposReplaceHelper {
     private val hkBcacheUposHost by lazy { XposedInit.moduleRes.getString(R.string.hk_bcache_host) }
     private val replaceAllBaseUpos = sPrefs.getBoolean("replace_all_upos_base", false)
     private val replaceAllBackupUpos = sPrefs.getBoolean("replace_all_upos_backup", false)
+    private val replaceUposBw = sPrefs.getBoolean("replace_upos_bw", false)
 
     private val uposHost by lazy {
         sPrefs.getString("upos_host", null) ?: if (isLocatedCn) hwUposHost else aliovUposHost
@@ -66,18 +67,19 @@ object UposReplaceHelper {
         }.values.joinToString("|")
         Regex(regexText)
     }
+    private val replaceUrlBwParamPattern by lazy { Regex("""(bw=[^&]*)""") }
 
     private fun String.replaceBaseUrlUpos(): String {
         return if (replaceAllBaseUpos || this.contains(baseUrlCdnUposReplaceRegexPattern)) {
-            this.replaceUpos(uposHost)
-        } else this
+            this.replaceUpos(uposHost).replaceBw()
+        } else this.replaceBw()
     }
 
     private fun List<String>.replaceBackupUrlsUpos(baseUrl: String): List<String> {
         fun String.replaceBackupUrlUpos(newUpos: String): String {
             return if (replaceAllBackupUpos || contains(backupUrlCdnUposReplaceRegexPattern)) {
-                replaceUpos(newUpos)
-            } else this
+                replaceUpos(newUpos).replaceBw()
+            } else this.replaceBw()
         }
 
         val urlReplaced: (String, String) -> String = { url, newUpos ->
@@ -99,6 +101,10 @@ object UposReplaceHelper {
         val uri = Uri.parse(this)
         return uri.buildUpon().authority(uri.getQueryParameter("xy_usource") ?: newUpos).build()
             .toString()
+    }
+
+    private fun String.replaceBw(): String {
+        return if (replaceUposBw) this.replace(replaceUrlBwParamPattern, "bw=1280000") else this
     }
 
     fun Any.replaceRawVodInfoUpos(): Any? {

@@ -98,6 +98,12 @@ class UposReplaceDialog(val activity: Activity, prefs: SharedPreferences) :
             map
         }
 
+        root.addView(categoryTitle(string(R.string.upos_replace_dialog_other_title)))
+        val replaceUposBwSwitch = string(R.string.upos_replace_dialog_replace_bw_title).let {
+            switchPrefsItem(it).let { p -> root.addView(p.first); p.second }
+        }
+        replaceUposBwSwitch.isChecked = prefs.getBoolean("replace_upos_bw", true)
+
         setPositiveButton(android.R.string.ok) { _, _ ->
             prefs.edit().apply {
                 baseUrlUposReplaceSwitchMap.forEach { (key, value) ->
@@ -106,6 +112,7 @@ class UposReplaceDialog(val activity: Activity, prefs: SharedPreferences) :
                 backupUrlUposReplaceSwitchMap.forEach { (key, value) ->
                     putBoolean(key, value.first.second.isChecked)
                 }
+                putBoolean("replace_upos_bw", replaceUposBwSwitch.isChecked)
             }.apply()
             Log.toast(string(R.string.prefs_save_success_and_reboot))
         }

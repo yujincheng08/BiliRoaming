@@ -266,4 +266,6 @@
     <string name="upos_replace_dialog_replace_bcache_cdn_upos_title">取代 BCache CDN</string>
     <string name="upos_replace_dialog_replace_mirror_cdn_upos_title">取代 Mirror CDN</string>
     <string name="upos_replace_dialog_replace_all_upos_title">強制取代所有</string>
+    <string name="upos_replace_dialog_other_title">其他設定</string>
+    <string name="upos_replace_dialog_replace_bw_title">嘗試解除影片載入速度限制</string>
 </resources>
