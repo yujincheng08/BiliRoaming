@@ -2,43 +2,39 @@
 <resources>
     <string-array name="upos_entries">
         <item>不替换</item>
+        <item>ali（阿里）</item>
+        <item>alib（阿里）</item>
+        <item>alio1（阿里）</item>
         <item>cos（腾讯）</item>
         <item>cosb（腾讯）</item>
         <item>coso1（腾讯）</item>
-        <item>coso2（腾讯）</item>
-        <item>bos（腾讯）</item>
-        <item>ks3（金山）</item>
-        <item>ks3b（金山）</item>
-        <item>ks3c（金山）</item>
-        <item>ks32（金山）</item>
-        <item>kodo（七牛）</item>
-        <item>kodob（七牛）</item>
         <item>hw（华为）</item>
         <item>hwb（华为）</item>
-        <item>uphw（华为）</item>
-        <item>js（华为）</item>
-        <item>hk（香港）</item>
-        <item>akamai（海外，不能免流）</item>
+        <item>hwo1（华为）</item>
+        <item>08ct（华为）</item>
+        <item>akamai（Akamai海外）</item>
+        <item>aliov（阿里海外）</item>
+        <item>cosov（腾讯海外）</item>
+        <item>hwov（华为海外）</item>
+        <item>hk_bcache（Bilibili海外）</item>
     </string-array>
     <string-array name="upos_values">
         <item>$1</item>
+        <item>@string/ali_host</item>
+        <item>@string/alib_host</item>
+        <item>@string/alio1_host</item>
         <item>@string/cos_host</item>
         <item>@string/cosb_host</item>
         <item>@string/coso1_host</item>
-        <item>@string/coso2_host</item>
-        <item>@string/bos_host</item>
-        <item>@string/ks3_host</item>
-        <item>@string/ks3b_host</item>
-        <item>@string/ks3c_host</item>
-        <item>@string/ks32_host</item>
-        <item>@string/kodo_host</item>
-        <item>@string/kodob_host</item>
         <item>@string/hw_host</item>
         <item>@string/hwb_host</item>
-        <item>@string/uphw_host</item>
-        <item>@string/js_host</item>
-        <item>@string/hk_host</item>
+        <item>@string/hwo1_host</item>
+        <item>@string/hw_08ct_host</item>
         <item>@string/akamai_host</item>
+        <item>@string/aliov_host</item>
+        <item>@string/cosov_host</item>
+        <item>@string/hwov_host</item>
+        <item>@string/hk_bcache_host</item>
     </string-array>
     <string-array name="tab_entries">
         <item>直播</item>
