@@ -20,6 +20,7 @@ object UposReplaceHelper {
     private val replaceAllBaseUpos = sPrefs.getBoolean("replace_all_upos_base", false)
     private val replaceAllBackupUpos = sPrefs.getBoolean("replace_all_upos_backup", false)
     private val replaceUposBw = sPrefs.getBoolean("replace_upos_bw", false)
+    private val replaceOverseaUpos = sPrefs.getBoolean("replace_oversea_upos", false) && isLocatedCn
 
     private val uposHost by lazy {
         sPrefs.getString("upos_host", null) ?: if (isLocatedCn) hwUposHost else aliovUposHost
@@ -45,32 +46,35 @@ object UposReplaceHelper {
         }
     }
 
+    private val replaceOverseaUposRegexText by lazy {
+        if (replaceOverseaUpos) """|(akamai|bstar|hk-eq-bcache|(ali|hw|cos)\w*ov)""" else ""
+    }
     private val baseUrlCdnUposReplaceRegexPattern by lazy {
         val regexText = mapOf(
             "replace_pcdn_upos_base" to """(szbdyd\.com)""",
-            "replace_mcdn_upos_base" to """(.*\.mcdn\.bilivideo\.(com|cn|net))""",
-            "replace_bcache_cdn_upos_base" to """(^(https?://)cn-.*\.bilivideo\.(com|cn|net))""",
-            "replace_mirror_cdn_upos_base" to """(^(https?://)upos-(\w.*)-mirror.*\.(bilivideo|akamaized)\.(com|cn|net))""",
+            "replace_mcdn_upos_base" to """(mcdn\.bilivideo)""",
+            "replace_bcache_cdn_upos_base" to """(^(https?://)cn-.*\.bilivideo)""",
+            "replace_mirror_cdn_upos_base" to """(^(https?://)upos-\w*-mirror\w*\.(bilivideo|akamaized))""",
         ).filterKeys {
             sPrefs.getBoolean(it, false)
         }.values.joinToString("|").ifEmpty {
             sPrefs.edit().putBoolean("replace_pcdn_upos_base", true).apply()
             """(szbdyd\.com)"""
-        }
+        } + replaceOverseaUposRegexText
         Regex(regexText)
     }
     private val backupUrlCdnUposReplaceRegexPattern by lazy {
         val regexText = mapOf(
             "replace_pcdn_upos_backup" to """(szbdyd\.com)""",
-            "replace_mcdn_upos_backup" to """(.*\.mcdn\.bilivideo\.(com|cn|net))""",
-            "replace_bcache_cdn_upos_backup" to """(^(https?://)cn-.*\.bilivideo\.(com|cn|net))""",
-            "replace_mirror_cdn_upos_backup" to """(^(https?://)upos-(\w.*)-mirror.*\.(bilivideo|akamaized)\.(com|cn|net))""",
+            "replace_mcdn_upos_backup" to """(mcdn\.bilivideo)""",
+            "replace_bcache_cdn_upos_backup" to """(^(https?://)cn-.*\.bilivideo)""",
+            "replace_mirror_cdn_upos_backup" to """(^(https?://)upos-\w*-mirror\w*\.(bilivideo|akamaized))""",
         ).filterKeys {
             sPrefs.getBoolean(it, false)
         }.values.joinToString("|").ifEmpty {
             sPrefs.edit().putBoolean("replace_pcdn_upos_backup", true).apply()
             """(szbdyd\.com)"""
-        }
+        } + replaceOverseaUposRegexText
         Regex(regexText)
     }
     private val bStarPCdnUposReplaceRegexPattern by lazy {

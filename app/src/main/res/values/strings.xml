@@ -268,4 +268,5 @@
     <string name="upos_replace_dialog_replace_all_upos_title">强制替换所有</string>
     <string name="upos_replace_dialog_other_title">其他设置</string>
     <string name="upos_replace_dialog_replace_bw_title">尝试解除视频加载速度限制</string>
+    <string name="upos_replace_dialog_replace_upos_ov_title">大陆地域强制替换海外 UPOS</string>
 </resources>

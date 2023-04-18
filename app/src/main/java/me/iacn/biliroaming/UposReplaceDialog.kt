@@ -103,6 +103,10 @@ class UposReplaceDialog(val activity: Activity, prefs: SharedPreferences) :
             switchPrefsItem(it).let { p -> root.addView(p.first); p.second }
         }
         replaceUposBwSwitch.isChecked = prefs.getBoolean("replace_upos_bw", true)
+        val replaceOverseaUposSwitch = string(R.string.upos_replace_dialog_replace_upos_ov_title).let {
+            switchPrefsItem(it).let { p -> root.addView(p.first); p.second }
+        }
+        replaceOverseaUposSwitch.isChecked = prefs.getBoolean("replace_oversea_upos", isLocatedCn)
 
         setPositiveButton(android.R.string.ok) { _, _ ->
             prefs.edit().apply {
@@ -113,6 +117,7 @@ class UposReplaceDialog(val activity: Activity, prefs: SharedPreferences) :
                     putBoolean(key, value.first.second.isChecked)
                 }
                 putBoolean("replace_upos_bw", replaceUposBwSwitch.isChecked)
+                putBoolean("replace_oversea_upos", replaceOverseaUposSwitch.isChecked)
             }.apply()
             Log.toast(string(R.string.prefs_save_success_and_reboot))
         }
