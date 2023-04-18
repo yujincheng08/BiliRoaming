@@ -596,11 +596,14 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             response.callMethodOrNull("getBusiness")?.callMethodOrNull("getEpisodeInfo")
         }
         val thaiEpisodeId by lazy {
-            thaiSeason.value?.optJSONArray("modules").orEmpty().asSequence<JSONObject>()
-                .firstOrNull()
-                ?.optJSONObject("data")?.optJSONArray("episodes").orEmpty().asSequence<JSONObject>()
-                .firstOrNull()
-                ?.optLong("id") ?: 0L
+            thaiSeason.value?.let {
+                it.optJSONArray("modules").orEmpty().asSequence<JSONObject>()
+                    .firstOrNull()
+                    ?.optJSONObject("data")?.optJSONArray("episodes").orEmpty()
+                    .asSequence<JSONObject>()
+                    .firstOrNull()
+                    ?.optLong("id") ?: it.optJSONObject("new_ep")?.optLong("id")
+            } ?: 0L
         }
         // CANNOT use reflection for compatibility with Xpatch
         return Uri.Builder().run {
@@ -766,11 +769,14 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         } else {
             // thai
             business = businessInfo {
-                val season = thaiSeason.value ?: return@businessInfo
-                val episode = season.optJSONArray("modules").orEmpty()
-                    .asSequence<JSONObject>().firstOrNull()
-                    ?.optJSONObject("data")?.optJSONArray("episodes").orEmpty()
-                    .asSequence<JSONObject>().firstOrNull() ?: return@businessInfo
+                val season = thaiSeason.value
+                val episode = season?.let {
+                    it.optJSONArray("modules").orEmpty()
+                        .asSequence<JSONObject>().firstOrNull()
+                        ?.optJSONObject("data")?.optJSONArray("episodes").orEmpty()
+                        .asSequence<JSONObject>().firstOrNull()
+                        ?: it.optJSONObject("new_ep")?.apply { put("status", 2L) }
+                } ?: throw CustomServerException(mapOf("解析服务器错误" to "无法获取剧集信息"))
                 isPreview = jsonContent.optInt("is_preview", 0) == 1
                 episodeInfo = episodeInfo {
                     epId = episode.optInt("id")
