@@ -49,52 +49,58 @@ object UposReplaceHelper {
         val regexText = mapOf(
             "replace_pcdn_upos_base" to """(szbdyd\.com)""",
             "replace_mcdn_upos_base" to """(.*\.mcdn\.bilivideo\.(com|cn|net))""",
-            "replace_bcache_cdn_upos_base" to """(^(https?://)?cn-.*\.bilivideo\.(com|cn|net))""",
-            "replace_mirror_cdn_upos_base" to """(^(https?://)?upos-(sz|hz)-mirror.*\.(bilivideo|akamaized)\.(com|cn|net))""",
+            "replace_bcache_cdn_upos_base" to """(^(https?://)cn-.*\.bilivideo\.(com|cn|net))""",
+            "replace_mirror_cdn_upos_base" to """(^(https?://)upos-(\w.*)-mirror.*\.(bilivideo|akamaized)\.(com|cn|net))""",
         ).filterKeys {
             sPrefs.getBoolean(it, false)
-        }.values.joinToString("|")
+        }.values.joinToString("|").ifEmpty {
+            sPrefs.edit().putBoolean("replace_pcdn_upos_base", true).apply()
+            """(szbdyd\.com)"""
+        }
         Regex(regexText)
     }
     private val backupUrlCdnUposReplaceRegexPattern by lazy {
         val regexText = mapOf(
             "replace_pcdn_upos_backup" to """(szbdyd\.com)""",
             "replace_mcdn_upos_backup" to """(.*\.mcdn\.bilivideo\.(com|cn|net))""",
-            "replace_bcache_cdn_upos_backup" to """(^(https?://)?cn-.*\.bilivideo\.(com|cn|net))""",
-            "replace_mirror_cdn_upos_backup" to """(^(https?://)?upos-(sz|hz)-mirror.*\.(bilivideo|akamaized)\.(com|cn|net))""",
+            "replace_bcache_cdn_upos_backup" to """(^(https?://)cn-.*\.bilivideo\.(com|cn|net))""",
+            "replace_mirror_cdn_upos_backup" to """(^(https?://)upos-(\w.*)-mirror.*\.(bilivideo|akamaized)\.(com|cn|net))""",
         ).filterKeys {
             sPrefs.getBoolean(it, false)
-        }.values.joinToString("|")
+        }.values.joinToString("|").ifEmpty {
+            sPrefs.edit().putBoolean("replace_pcdn_upos_backup", true).apply()
+            """(szbdyd\.com)"""
+        }
         Regex(regexText)
+    }
+    private val bStarPCdnUposReplaceRegexPattern by lazy {
+        Regex("""^(https?://)(((\d{1,2})|(1\d{2})|(2[0-4]\d)|(25[0-5]))\.){3}((\d{1,2})|(1\d{2})|(2[0-4]\d)|(25[0-5]))""")
     }
     private val replaceUrlBwParamPattern by lazy { Regex("""(bw=[^&]*)""") }
 
-    private fun String.replaceBaseUrlUpos(): String {
-        return if (replaceAllBaseUpos || this.contains(baseUrlCdnUposReplaceRegexPattern)) {
-            this.replaceUpos(uposHost).replaceBw()
-        } else this.replaceBw()
-    }
-
-    private fun List<String>.replaceBackupUrlsUpos(baseUrl: String): List<String> {
-        fun String.replaceBackupUrlUpos(newUpos: String): String {
-            return if (replaceAllBackupUpos || contains(backupUrlCdnUposReplaceRegexPattern)) {
-                replaceUpos(newUpos).replaceBw()
-            } else this.replaceBw()
+    private fun replaceUpos(
+        baseUrl: String, backupUrls: List<String>
+    ): Pair<String, List<String>> {
+        val backupUrlReplaced: (String, String) -> String = { url, newUpos ->
+            if (replaceAllBackupUpos || url.contains(backupUrlCdnUposReplaceRegexPattern)) {
+                url.replaceUpos(newUpos).replaceBw()
+            } else url.replaceBw()
         }
-
-        val urlReplaced: (String, String) -> String = { url, newUpos ->
-            url.replaceBackupUrlUpos(newUpos)
-        }
-        return when (this.size) {
+        val newBaseUrl =
+            if (replaceAllBaseUpos || baseUrl.contains(baseUrlCdnUposReplaceRegexPattern)) {
+                baseUrl.replaceUpos(uposHost).replaceBw()
+            } else baseUrl.replaceBw()
+        val newBackupUrls = when (backupUrls.size) {
             2 -> listOf(
-                urlReplaced(this[0], uposBackupHostPair.first),
-                urlReplaced(this[1], uposBackupHostPair.second)
+                backupUrlReplaced(backupUrls[0], uposBackupHostPair.first),
+                backupUrlReplaced(backupUrls[1], uposBackupHostPair.second)
             )
             else -> listOf(
-                urlReplaced(baseUrl, uposBackupHostPair.first),
-                urlReplaced(baseUrl, uposBackupHostPair.second)
+                backupUrlReplaced(baseUrl, uposBackupHostPair.first),
+                backupUrlReplaced(baseUrl, uposBackupHostPair.second)
             )
         }
+        return Pair(newBaseUrl, newBackupUrls)
     }
 
     private fun String.replaceUpos(newUpos: String): String {
@@ -105,6 +111,12 @@ object UposReplaceHelper {
 
     private fun String.replaceBw(): String {
         return if (replaceUposBw) this.replace(replaceUrlBwParamPattern, "bw=1280000") else this
+    }
+
+    fun replaceBStarAIpUpos(baseUrl: String, backupUrls: List<String>): String {
+        return if (baseUrl.contains(bStarPCdnUposReplaceRegexPattern) && backupUrls.isNotEmpty()) {
+            backupUrls.first()
+        } else baseUrl
     }
 
     fun Any.replaceRawVodInfoUpos(): Any? {
@@ -127,10 +139,10 @@ object UposReplaceHelper {
                 val newDUrl = durl.map { listenResponseUrl ->
                     listenResponseUrl.copy {
                         if (hasUrl()) {
-                            val newBackupUrl = backupUrl.replaceBackupUrlsUpos(url)
+                            val newPair = replaceUpos(url, backupUrl)
                             backupUrl.clear()
-                            backupUrl.addAll(newBackupUrl)
-                            url = url.replaceBaseUrlUpos()
+                            backupUrl.addAll(newPair.second)
+                            url = newPair.first
                         }
                     }
                 }
@@ -208,19 +220,19 @@ object UposReplaceHelper {
         if (hasDashVideo()) {
             dashVideo = dashVideo.copy {
                 if (!hasBaseUrl()) return@copy
-                val newBackupUrl = backupUrl.replaceBackupUrlsUpos(baseUrl)
+                val newPair = replaceUpos(baseUrl, backupUrl)
                 backupUrl.clear()
-                backupUrl.addAll(newBackupUrl)
-                baseUrl = baseUrl.replaceBaseUrlUpos()
+                backupUrl.addAll(newPair.second)
+                baseUrl = newPair.first
             }
         } else if (hasSegmentVideo()) {
             segmentVideo = segmentVideo.copy {
                 val newSegment = segment.map { responseUrl ->
                     responseUrl.copy {
-                        val newBackupUrl = backupUrl.replaceBackupUrlsUpos(url)
+                        val newPair = replaceUpos(url, backupUrl)
                         backupUrl.clear()
-                        backupUrl.addAll(newBackupUrl)
-                        url = url.replaceBaseUrlUpos()
+                        backupUrl.addAll(newPair.second)
+                        url = newPair.first
                     }
                 }
                 segment.clear()
@@ -231,18 +243,18 @@ object UposReplaceHelper {
 
     private fun DashItemKt.Dsl.reconstructDashItemUpos() {
         if (!hasBaseUrl()) return
-        val newBackupUrl = backupUrl.replaceBackupUrlsUpos(baseUrl)
+        val newPair = replaceUpos(baseUrl, backupUrl)
         backupUrl.clear()
-        backupUrl.addAll(newBackupUrl)
-        baseUrl = baseUrl.replaceBaseUrlUpos()
+        backupUrl.addAll(newPair.second)
+        baseUrl = newPair.first
     }
 
     private fun ListenDashItemKt.Dsl.reconstructDashItemUpos() {
         if (!hasBaseUrl()) return
-        val newBackupUrl = backupUrl.replaceBackupUrlsUpos(baseUrl)
+        val newPair = replaceUpos(baseUrl, backupUrl)
         backupUrl.clear()
-        backupUrl.addAll(newBackupUrl)
-        baseUrl = baseUrl.replaceBaseUrlUpos()
+        backupUrl.addAll(newPair.second)
+        baseUrl = newPair.first
     }
 
     private fun PlayDubbingInfoKt.Dsl.reconstructPlayDubbingInfoUpos() {

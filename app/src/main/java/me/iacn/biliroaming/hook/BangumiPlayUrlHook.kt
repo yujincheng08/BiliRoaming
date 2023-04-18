@@ -10,6 +10,7 @@ import me.iacn.biliroaming.network.BiliRoamingApi.CustomServerException
 import me.iacn.biliroaming.network.BiliRoamingApi.getPlayUrl
 import me.iacn.biliroaming.network.BiliRoamingApi.getSeason
 import me.iacn.biliroaming.utils.*
+import me.iacn.biliroaming.utils.UposReplaceHelper.replaceBStarAIpUpos
 import me.iacn.biliroaming.utils.UposReplaceHelper.replaceRawPlayDubbingInfoUpos
 import me.iacn.biliroaming.utils.UposReplaceHelper.replaceRawVodInfoUpos
 import org.json.JSONObject
@@ -35,6 +36,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             "type.googleapis.com/bilibili.app.playerunite.pgcanymodel.PGCAnyModel"
         private val codecMap =
             mapOf(CodeType.CODE264 to 7, CodeType.CODE265 to 12, CodeType.CODEAV1 to 13)
+        val enablePgcUposReplace = sPrefs.getString("upos_host", "\$1") != "\$1"
         val supportedPlayArcIndices = arrayOf(
             1, // FILPCONF
             2, // CASTCONF
@@ -71,7 +73,6 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         if (!sPrefs.getBoolean("main_func", false)) return
         Log.d("startHook: BangumiPlayUrl")
         val blockBangumiPageAds = sPrefs.getBoolean("block_bangumi_page_ads", false)
-        val enablePgcUposReplace = sPrefs.getString("upos_host", "\$1") != "\$1"
         val halfScreenQuality = sPrefs.getString("half_screen_quality", "0")?.toInt() ?: 0
         val fullScreenQuality = sPrefs.getString("full_screen_quality", "0")?.toInt() ?: 0
 
@@ -757,15 +758,19 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             for (audio in optJSONObject("dash")?.optJSONArray("audio").orEmpty()) {
                 dashAudio += dashItem {
                     audio.run {
-                        baseUrl = optString("base_url")
+                        val rawBaseUrl = optString("base_url")
+                        val rawBackupUrls =
+                            optJSONArray("backup_url").orEmpty().asSequence<String>().toList()
+                        baseUrl = if (enablePgcUposReplace) {
+                            replaceBStarAIpUpos(rawBaseUrl, rawBackupUrls)
+                        } else rawBaseUrl
+                        backupUrl.addAll(rawBackupUrls)
                         id = optInt("id")
                         audioIds.add(id)
                         md5 = optString("md5")
                         size = optLong("size")
                         codecid = optInt("codecid")
                         bandwidth = optInt("bandwidth")
-                        for (bk in optJSONArray("backup_url").orEmpty().asSequence<String>())
-                            backupUrl += bk
                     }
                 }
             }
@@ -782,9 +787,13 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 streamList += stream {
                     dashVideo = dashVideo {
                         video.run {
-                            baseUrl = optString("base_url")
-                            backupUrl += optJSONArray("backup_url").orEmpty()
-                                .asSequence<String>().toList()
+                            val rawBaseUrl = optString("base_url")
+                            val rawBackupUrls =
+                                optJSONArray("backup_url").orEmpty().asSequence<String>().toList()
+                            baseUrl = if (enablePgcUposReplace) {
+                                replaceBStarAIpUpos(rawBaseUrl, rawBackupUrls)
+                            } else rawBaseUrl
+                            backupUrl.addAll(rawBackupUrls)
                             bandwidth = optInt("bandwidth")
                             codecid = optInt("codecid")
                             md5 = optString("md5")
@@ -828,13 +837,17 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             for (seg in optJSONArray("durl").orEmpty()) {
                                 segment += responseUrl {
                                     seg.run {
+                                        val rawBaseUrl = optString("base_url")
+                                        val rawBackupUrls =
+                                            optJSONArray("backup_url").orEmpty().asSequence<String>().toList()
+                                        url = if (enablePgcUposReplace) {
+                                            replaceBStarAIpUpos(rawBaseUrl, rawBackupUrls)
+                                        } else rawBaseUrl
+                                        backupUrl.addAll(rawBackupUrls)
                                         length = optLong("length")
-                                        backupUrl += optJSONArray("backup_url").orEmpty()
-                                            .asSequence<String>().toList()
                                         md5 = optString("md5")
                                         order = optInt("order")
                                         size = optLong("size")
-                                        url = optString("url")
                                     }
                                 }
                             }
