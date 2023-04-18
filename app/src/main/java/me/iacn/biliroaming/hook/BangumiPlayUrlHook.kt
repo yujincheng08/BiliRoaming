@@ -596,11 +596,14 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             response.callMethodOrNull("getBusiness")?.callMethodOrNull("getEpisodeInfo")
         }
         val thaiEpisodeId by lazy {
+            val newEpId by lazy {
+                thaiSeason.value?.optJSONObject("new_ep")?.optLong("id") ?: 0L
+            }
             thaiSeason.value?.optJSONArray("modules").orEmpty().asSequence<JSONObject>()
                 .firstOrNull()
                 ?.optJSONObject("data")?.optJSONArray("episodes").orEmpty().asSequence<JSONObject>()
                 .firstOrNull()
-                ?.optLong("id") ?: 0L
+                ?.optLong("id") ?: newEpId
         }
         // CANNOT use reflection for compatibility with Xpatch
         return Uri.Builder().run {
@@ -767,10 +770,27 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             // thai
             business = businessInfo {
                 val season = thaiSeason.value ?: return@businessInfo
+                val fallbackEpisode by lazy {
+                    val serverIsAreaLimited =
+                        season.optJSONObject("rights")?.optInt("area_limit") != 0
+                    val limitMessage =
+                        if (serverIsAreaLimited) "无剧集信息，解析服务器受区域限制" else "无剧集信息，解析服务器内部原因"
+                    Log.toast(
+                        "错误：$limitMessage\n已尝试加载最新一集",
+                        force = true, duration = 8, alsoLog = true
+                    )
+                    val newEpInfo = season.optJSONObject("new_ep")
+                    JSONObject().apply {
+                        put("id", newEpInfo?.optLong("id") ?: 0L)
+                        put("season_id", season.optInt("season_id"))
+                        put("status", 2L)
+                        put("title", newEpInfo?.optString("title") ?: "null")
+                    }
+                }
                 val episode = season.optJSONArray("modules").orEmpty()
                     .asSequence<JSONObject>().firstOrNull()
                     ?.optJSONObject("data")?.optJSONArray("episodes").orEmpty()
-                    .asSequence<JSONObject>().firstOrNull() ?: return@businessInfo
+                    .asSequence<JSONObject>().firstOrNull() ?: fallbackEpisode
                 isPreview = jsonContent.optInt("is_preview", 0) == 1
                 episodeInfo = episodeInfo {
                     epId = episode.optInt("id")
