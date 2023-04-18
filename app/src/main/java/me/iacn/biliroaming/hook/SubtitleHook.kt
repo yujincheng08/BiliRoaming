@@ -331,8 +331,8 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
             }
 
-            val fromPGC = lazy { param.args[0].callMethodAs<String>("getSpmid").contains("pgc") }
-            val dmViewReply = if (generateSubtitle || (addCloseSubtitle && fromPGC.value)) {
+            val fromPGC = param.args[0].callMethodAs<String>("getSpmid").contains("pgc")
+            val dmViewReply = if (generateSubtitle || (addCloseSubtitle && fromPGC)) {
                 parseDmViewReply(param.result)
             } else null
             if (generateSubtitle) {
@@ -356,7 +356,7 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
             }
 
-            if (addCloseSubtitle && fromPGC.value
+            if (addCloseSubtitle && fromPGC
                 && (!dmViewReply?.subtitle?.subtitlesList.isNullOrEmpty() || extraSubtitles.isNotEmpty())
             ) {
                 subtitleItem {
