@@ -9,6 +9,7 @@ option java_outer_classname = "API";
 option java_multiple_files = true;
 option optimize_for = LITE_RUNTIME;
 
+
 enum CodeType {
   NOCODE = 0;
   CODE264 = 1;
@@ -16,13 +17,9 @@ enum CodeType {
   CODEAV1 = 3;
 }
 
-message SceneControl {
-}
 
-message DataControl {
-  optional bool need_watch_progress = 0x1;
-}
-
+// com.bapis.bilibili.pgc.gateway.player.v1.PlayViewReq
+// com.bapis.bilibili.pgc.gateway.player.v2.PlayViewReq
 message PlayViewReq {
   optional int64 ep_id = 0x1;
   optional int64 cid = 0x2;
@@ -45,107 +42,225 @@ message PlayViewReq {
   optional int32 security_level = 0x13;
   optional int64 season_id = 0x14;
   optional DataControl data_control = 0x15;
-
+}
+message SceneControl {}
+message DataControl {
+  optional bool need_watch_progress = 0x1;
 }
 
-message ContinuePlayInfo {
-  optional int64 continue_play_ep_id = 0x1;
+
+// com.bapis.bilibili.app.playerunite.v1.PlayViewUniteReq
+message PlayViewUniteReq {
+  optional VideoVod vod = 0x1;
+  optional string spmid = 0x2;
+  optional string from_spmid = 0x3;
+  map<string, string> extra_content = 0x4;
 }
-
-message ClipInfo {
-  optional int64 material_no = 0x1;
-  optional int32 start = 0x2;
-  optional int32 end = 0x3;
-  optional ClipType clip_type = 0x4;
-  optional string toast_text = 0x5;
-  optional MultiView multi_view = 0x6;
-}
-
-enum ClipType {
-  NT_UNKNOWN = 0; 
-  CLIP_TYPE_OP = 1;
-  CLIP_TYPE_ED = 2;
-  CLIP_TYPE_HE = 3;
-  CLIP_TYPE_MULTI_VIEW = 4;
-}
-
-message MultiView {
-  optional string button_material = 0x1;
-  optional int64 ep_id = 0x2;
-  optional int64 cid = 0x3;
-  optional int64 avid = 0x4;
-}
-
-enum InlineType {
-  TYPE_UNKNOWN = 0;
-  TYPE_WHOLE = 1;
-  TYPE_HE_CLIP = 2;
-  TYPE_PREVIEW = 3;
-}
-
-message QualityExtInfo {
-
-}
-
-message RecordInfo {
-  optional string record = 0x1;
-  optional string record_icon = 0x2;
-}
-
-message UserStatus {
-}
-
-message SeasonRights {
-  optional int32 can_watch = 0x1;
-}
-
-message SeasonInfo {
-  optional int32 season_id = 0x1;
-  optional int32 season_type = 0x2;
-  optional int32 season_status = 0x3;
-  optional string cover = 0x4;
-  optional string title = 0x5;
-  optional SeasonRights rights = 0x6;
-}
-
-message EpisodeInfo {
-  optional int32 ep_id = 0x1;
+// com.bapis.bilibili.playershared.VideoVod
+message VideoVod {
+  optional int64 aid = 0x1;
   optional int64 cid = 0x2;
-  optional int64 aid = 0x3;
-  optional int64 ep_status = 0x4;
-  optional SeasonInfo season_info = 0x5;
-  optional string cover = 0x6;
-  optional string title = 0x7;
-  optional Interaction interaction = 0x8;
+  optional int64 qn = 0x3;
+  optional int32 fnver = 0x4;
+  optional int32 fnval = 0x5;
+  optional int32 download = 0x6;
+  optional int32 force_host = 0x7;
+  optional bool fourk = 0x8;
+  optional CodeType prefer_code_type = 0x9;
+  optional int64 voice_balance = 0xa;
 }
 
-message EpisodeAdvertisementInfo {
 
+message Event {}
+
+
+// com.bapis.bilibili.playershared.VodInfo, for com.bapis.bilibili.app.playerunite.v1.PlayViewUniteReply
+// com.bapis.bilibili.app.playurl.v1.VideoInfo, for com.bapis.bilibili.pgc.gateway.player.v1.PlayViewReply
+// com.bapis.bilibili.pgc.gateway.player.v2.VideoInfo, for com.bapis.bilibili.pgc.gateway.player.v2.PlayViewReply
+// com.bapis.bilibili.app.playurl.v1.VideoInfo, for com.bapis.bilibili.app.playurl.v1.PlayViewReply
+message VodInfo {
+  optional uint32 quality = 0x1;
+  optional string format = 0x2;
+  optional uint64 timelength = 0x3;
+  optional uint32 video_codecid = 0x4;
+  repeated Stream stream_list = 0x5;
+  repeated DashItem dash_audio = 0x6;
+  optional DolbyItem dolby = 0x7;
+  optional VolumeInfo volume = 0x8;
+  optional LossLessItem loss_less_item = 0x9;
+  optional bool support_project = 0xa;
+}
+// com.bapis.bilibili.app.playurl.v1.DashItem
+message DashItem {
+  optional int32 id = 0x1;
+  optional string base_url = 0x2;
+  repeated string backup_url = 0x3;
+  optional int32 bandwidth = 0x4;
+  optional int32 codecid = 0x5;
+  optional string md5 = 0x6;
+  optional int64 size = 0x7;
+  optional string frame_rate = 0x8;
+  optional string widevine_pssh = 0x9;
+}
+// com.bapis.bilibili.app.playurl.v1.Stream
+message Stream {
+  optional StreamInfo stream_info = 0x1;
+  oneof content {
+    DashVideo dash_video = 0x2;
+    SegmentVideo segment_video = 0x3;
+  }
+}
+// com.bapis.bilibili.app.playurl.v1.StreamInfo
+// com.bapis.bilibili.pgc.gateway.player.v2.StreamInfo
+// com.bapis.bilibili.playershared.StreamInfo, with 0xe 0x11
+message StreamInfo {
+  optional int32 quality = 0x1;
+  optional string format = 0x2;
+  optional string description = 0x3;
+  optional int32 err_code = 0x4;
+  optional StreamLimit limit = 0x5;
+  optional bool need_vip = 0x6;
+  optional bool need_login = 0x7;
+  optional bool intact = 0x8;
+  optional bool no_rexcode = 0x9;
+  optional int64 attribute = 0xa;
+  optional string new_description = 0xb;
+  optional string display_desc = 0xc;
+  optional string superscript = 0xd;
+  optional bool vip_free = 0xe;
+  optional string subtitle = 0xf;
+  optional Scheme scheme = 0x10;
+  optional bool support_drm = 0x11;
+}
+message StreamLimit {
+  optional string title = 0x1;
+  optional string uri = 0x2;
+  optional string msg = 0x3;
+}
+message Scheme {
+  enum ActionType {
+      UNKNOWN = 0;
+      SHOW_TOAST = 1;
+  }
+  // 
+  optional ActionType action_type = 0x1;
+  // 
+  optional string toast = 0x2;
+}
+// com.bapis.bilibili.app.playurl.v1.DashVideo
+// com.bapis.bilibili.pgc.gateway.player.v2.DashVideo
+// com.bapis.bilibili.playershared.DashVideo, with 0xc
+message DashVideo {
+  optional string base_url = 0x1;
+  repeated string backup_url = 0x2;
+  optional int32 bandwidth = 0x3;
+  optional int32 codecid = 0x4;
+  optional string md5 = 0x5;
+  optional int64 size = 0x6;
+  optional int32 audio_id = 0x7;
+  optional bool no_rexcode = 0x8;
+  optional string frame_rate = 0x9;
+  optional int32 width = 0xa;
+  optional int32 height = 0xb;
+  optional string widevine_pssh = 0xc;
+}
+// com.bapis.bilibili.app.playurl.v1.SegmentVideo
+// com.bapis.bilibili.pgc.gateway.player.v2.SegmentVideo
+// com.bapis.bilibili.playershared.SegmentVideo
+message SegmentVideo {
+  repeated ResponseUrl segment = 0x1;
+}
+// com.bapis.bilibili.app.playurl.v1.ResponseUrl
+// com.bapis.bilibili.pgc.gateway.player.v2.ResponseUrl
+// com.bapis.bilibili.playershared.ResponseUrl
+message ResponseUrl {
+  optional int32 order = 0x1;
+  optional int64 length = 0x2;
+  optional int64 size = 0x3;
+  optional string url = 0x4;
+  repeated string backup_url = 0x5;
+  optional string md5 = 0x6;
+}
+// com.bapis.bilibili.app.playurl.v1.DolbyItem
+// com.bapis.bilibili.pgc.gateway.player.v2.DolbyItem
+// com.bapis.bilibili.playershared.DolbyItem
+message DolbyItem {
+  enum Type {
+    NONE = 0;
+    COMMON = 1;
+    ATMOS = 2;
+  }
+  optional Type type = 0x1;
+  repeated DashItem audio = 0x2;
+}
+// com.bapis.bilibili.app.playurl.v1.VolumeInfo
+// com.bapis.bilibili.playershared.VolumeInfo
+message VolumeInfo {
+  optional double measured_i = 0x1;
+  optional double measured_lra = 0x2;
+  optional double measured_tp = 0x3;
+  optional double measured_threshold = 0x4;
+  optional double target_offset = 0x5;
+  optional double target_i = 0x6;
+  optional double target_tp = 0x7;
+}
+// com.bapis.bilibili.playershared.LossLessItem
+message LossLessItem {
+  optional bool is_lossless_audio = 0x1;
+  optional DashItem audio = 0x2;
+  optional bool need_vip = 0x3;
 }
 
-message BusinessInfo {
-  optional bool is_preview = 0x1;
-  optional bool bp = 0x2;
-  optional string marlin_token = 0x3;
-  optional string playback_speed_color = 0x4;
-  optional ContinuePlayInfo continue_play_info = 0x5;
-  repeated ClipInfo clip_info = 0x6;
-  optional int32 inline_type = 0x7;
-  optional int32 ep_whole_duration = 0x8;
-  optional PlayViewDimension dimension = 0x9;
-  repeated QualityExtInfo quality_ext_map = 0xa;
-  map<string, int32> ext_map = 0xb;
-  optional bool drm_tech_type = 0xc;
-  optional int32 limit_action_type = 0xd;
-  optional bool is_drm = 0xe;
-  optional RecordInfo record_info = 0xf;
-  optional int32 vip_status = 0x10;
-  optional bool is_live_pre = 0x11;
-  optional EpisodeInfo episode_info = 0x12;
-  optional EpisodeAdvertisementInfo episode_advertisement_info = 0x13;
-  optional UserStatus user_status = 0x14;
+
+// The following is Video reply related proto
+
+// com.bapis.bilibili.playershared.ArcConf, for com.bapis.bilibili.app.playerunite.v1.PlayArcConf
+// com.bapis.bilibili.app.playurl.v1.ArcConf, for com.bapis.bilibili.app.playurl.v1.PlayArcConf
+message ArcConf {
+  optional bool is_support = 0x1;
+  optional bool disabled = 0x2;
+  optional ExtraContent extra_content = 0x3;
+}
+message ExtraContent {
+  optional string disable_reason = 0x1;
+  optional uint64 disable_code = 0x2;
 }
 
+
+message ConfValue {
+  oneof value {
+    bool switch_val = 1;
+    int64 selected_val = 2;
+  }
+}
+
+
+message Dimension {
+  optional int32 width = 0x1;
+  optional int32 height = 0x2;
+  optional int32 rotate = 0x3;
+}
+
+
+message Interaction {}
+
+
+message History {}
+
+
+// com.bapis.bilibili.pgc.gateway.player.v1.PlayViewReply, without 0x5, 0x6
+// com.bapis.bilibili.pgc.gateway.player.v2.PlayViewReply
+message PlayViewReply {
+  optional VodInfo video_info = 0x1;
+  optional PlayAbilityConf play_conf = 0x2;
+  optional BusinessInfo business = 0x3;
+  optional Event event = 0x4;
+  optional ViewInfo view_info = 0x5;
+  optional PlayAbilityExtConf play_ext_conf = 0x6;
+  optional PlayExtInfo play_ext_info = 0x7;
+}
+// com.bapis.bilibili.pgc.gateway.player.v1.PlayAbilityConf, without 0x1f, 0x20
+// com.bapis.bilibili.pgc.gateway.player.v2.PlayAbilityConf
 message PlayAbilityConf {
   optional bool background_play_disable = 0x1;
   optional bool flip_disable = 0x2;
@@ -169,162 +284,101 @@ message PlayAbilityConf {
   optional bool selections_disable = 0x14;
   optional bool next_disable = 0x15;
   optional bool edit_dm_disable = 0x16;
+  optional bool small_window_disable = 0x17;
+  optional bool shake_disable = 0x18;
+  optional bool outer_dm_disable = 0x19;
+  optional bool inner_dm_disable = 0x1a;
   optional bool freya_enter_disable = 0x1b;
+  optional bool dolby_disable = 0x1c;
   optional bool freya_full_disable = 0x1d;
   optional bool skip_oped_switch_disable = 0x1e;
   optional bool record_screen_disable = 0x1f;
   optional bool color_optimize_disable = 0x20;
   optional bool dubbing_disable = 0x21;
 }
-
-message StreamLimit {
-  optional string title = 0x1;
-  optional string uri = 0x2;
-  optional string msg = 0x3;
+// com.bapis.bilibili.pgc.gateway.player.v1.BusinessInfo
+// com.bapis.bilibili.pgc.gateway.player.v2.PlayViewBusinessInfo
+message BusinessInfo {
+  optional bool is_preview = 0x1;
+  optional bool bp = 0x2;
+  optional string marlin_token = 0x3;
+  optional string playback_speed_color = 0x4;
+  optional ContinuePlayInfo continue_play_info = 0x5;
+  repeated ClipInfo clip_info = 0x6;
+  optional InlineType inline_type = 0x7;
+  optional int32 ep_whole_duration = 0x8;
+  optional Dimension dimension = 0x9;
+  repeated QualityExtInfo quality_ext_map = 0xa;
+  map<string, int32> ext_map = 0xb;
+  optional DrmTechType drm_tech_type = 0xc;
+  optional int32 limit_action_type = 0xd;
+  optional bool is_drm = 0xe;
+  optional RecordInfo record_info = 0xf;
+  optional int32 vip_status = 0x10;
+  optional bool is_live_pre = 0x11;
+  optional EpisodeInfo episode_info = 0x12;
+  optional EpisodeAdvertisementInfo episode_advertisement_info = 0x13;
+  optional UserStatus user_status = 0x14;
 }
-
-message StreamInfo {
-  optional int32 quality = 0x1;
-  optional string format = 0x2;
-  optional string description = 0x3;
-  optional int32 err_code = 0x4;
-  optional StreamLimit limit = 0x5;
-  optional bool need_vip = 0x6;
-  optional bool need_login = 0x7;
-  optional bool intact = 0x8;
-  optional bool no_rexcode = 0x9;
-  optional int64 attribute = 0xa;
-  optional string new_description = 0xb;
-  optional string display_desc = 0xc;
-  optional string superscript = 0xd;
-  optional bool vip_free = 0xe;
-  optional string subtitle = 0xf;
-  optional Scheme scheme = 0x10;
-  optional bool support_drm = 0x11;
+message ContinuePlayInfo {
+  optional int64 continue_play_ep_id = 0x1;
 }
-
-message Scheme {
-  enum ActionType {
-      UNKNOWN = 0;
-      SHOW_TOAST = 1;
-  }
-  optional ActionType action_type = 0x1;
-  optional string toast = 0x2;
+message ClipInfo {
+  optional int64 material_no = 0x1;
+  optional int32 start = 0x2;
+  optional int32 end = 0x3;
+  optional ClipType clip_type = 0x4;
+  optional string toast_text = 0x5;
+  optional MultiView multi_view = 0x6;
 }
-
-message DashVideo {
-  optional string base_url = 0x1;
-  repeated string backup_url = 0x2;
-  optional int32 bandwidth = 0x3;
-  optional int32 codecid = 0x4;
-  optional string md5 = 0x5;
-  optional int64 size = 0x6;
-  optional int32 audio_id = 0x7;
-  optional bool no_rexcode = 0x8;
-  optional string frame_rate = 0x9;
-  optional int32 width = 0xa;
-  optional int32 height = 0xb;
-  optional string widevine_pssh = 0xc;
+enum ClipType {
+  NT_UNKNOWN = 0; 
+  CLIP_TYPE_OP = 1;
+  CLIP_TYPE_ED = 2;
+  CLIP_TYPE_HE = 3;
+  CLIP_TYPE_MULTI_VIEW = 4;
 }
-
-message ResponseUrl {
-  repeated string backup_url = 0x5;
-  optional int64 length = 0x2;
-  optional string md5 = 0x6;
-  optional int32 order = 0x1;
-  optional int64 size = 0x3;
-  optional string url = 0x4;
+message MultiView {
+  optional string button_material = 0x1;
+  optional int64 ep_id = 0x2;
+  optional int64 cid = 0x3;
+  optional int64 avid = 0x4;
 }
-
-message SegmentVideo {repeated ResponseUrl segment = 0x1;}
-
-message Stream {
-  optional StreamInfo stream_info = 0x1;
-  oneof content {
-    DashVideo dash_video = 0x2;
-    SegmentVideo segment_video = 0x3;
-  }
+enum InlineType {
+  TYPE_UNKNOWN = 0;
+  TYPE_WHOLE = 1;
+  TYPE_HE_CLIP = 2;
+  TYPE_PREVIEW = 3;
 }
-
-message DashItem {
-  optional int32 id = 0x1;
-  optional string base_url = 0x2;
-  repeated string backup_url = 0x3;
-  optional int32 bandwidth = 0x4;
-  optional int32 codecid = 0x5;
-  optional string md5 = 0x6;
-  optional int64 size = 0x7;
-  optional string frame_rate = 0x8;
-  optional string widevine_pssh = 0x9;
+message QualityExtInfo {}
+message RecordInfo {
+  string record = 0x1;
+  string record_icon = 0x2;
 }
-
-message Event {}
-
-message TextInfo {
-  optional string text = 0x1;
-  optional string text_color = 0x2;
-  optional string text_color_night = 0x3;
+message EpisodeInfo {
+  optional int32 ep_id = 0x1;
+  optional int64 cid = 0x2;
+  optional int64 aid = 0x3;
+  optional int64 ep_status = 0x4;
+  optional SeasonInfo season_info = 0x5;
+  optional string cover = 0x6;
+  optional string title = 0x7;
+  optional Interaction interaction = 0x8;
 }
-
-message DialogConfig {}
-
-message ImageInfo {optional string url = 0x1;}
-
-message ButtonInfo {
-  optional string action_type = 0x7;
+message SeasonInfo {
+  optional int32 season_id = 0x1;
+  optional int32 season_type = 0x2;
+  optional int32 season_status = 0x3;
+  optional string cover = 0x4;
+  optional string title = 0x5;
+  optional SeasonRights rights = 0x6;
 }
-
-message Report {}
-
-message BottomDisplay {}
-
-message Dialog {
-  optional int64 code = 0x1;
-  optional string msg = 0x2;
-  optional string type = 0x3;
-  optional string style = 0x4;
-  optional DialogConfig config = 0x5;
-  optional TextInfo title = 0x6;
-  optional TextInfo subtitle = 0x7;
-  optional ImageInfo image = 0x8;
-  repeated ButtonInfo button = 0x9;
-  optional BusinessInfo button_desc = 0xa;
-  optional Report report = 0xb;
-  optional int32 count_down_sec = 0xc;
-  optional TextInfo right_bottom_desc = 0xd;
-  repeated BottomDisplay bottom_display = 0xe;
+message SeasonRights {
+  optional int32 can_watch = 0x1;
 }
-
-message Toast {
-  optional string text = 0x1;
-  optional ButtonInfo button = 0x2;
-}
-
-message CouponInfo {
-  optional int64 code = 0x1;
-  optional string msg = 0x2;
-  optional string type = 0x3;
-}
-
-message EndPage {
-  optional Dialog dialog = 0x1;
-  optional bool hide = 0x2;
-}
-
-message PopWin {
-  repeated ButtonInfo button = 0x3;
-}
-
-message PromptBar {
-  repeated ButtonInfo button = 0x6;
-}
-
-message PayTip {}
-
-message HighDefinitionTrialInfo {}
-
-message Animation {}
-
+message EpisodeAdvertisementInfo {}
+message UserStatus {}
+// com.bapis.bilibili.pgc.gateway.player.v2.ViewInfo, for com.bapis.bilibili.pgc.gateway.player.v2.PlayViewReply
 message ViewInfo {
   optional Dialog dialog = 0x1;
   optional Toast toast = 0x2;
@@ -340,34 +394,68 @@ message ViewInfo {
   optional Animation animation = 0xc;
   map<string, Toast> ext_toast = 0xd;
 }
-
-message FreyaConfig {}
-
+message ButtonInfo {
+  optional string action_type = 0x7;
+}
+message Dialog {
+  message DialogConfig {}
+  message ImageInfo {
+    optional string url = 0x1;
+  }
+  message Report {}
+  message TextInfo {
+    optional string text = 0x1;
+    optional string text_color = 0x2;
+    optional string text_color_night = 0x3;
+  }
+  message BottomDisplay {}
+  optional int64 code = 0x1;
+  optional string msg = 0x2;
+  optional string type = 0x3;
+  optional string style = 0x4;
+  optional DialogConfig config = 0x5;
+  optional TextInfo title = 0x6;
+  optional TextInfo subtitle = 0x7;
+  optional ImageInfo image = 0x8;
+  repeated ButtonInfo button = 0x9;
+  optional ButtonInfo button_desc = 0xa;
+  optional Report report = 0xb;
+  optional int32 count_down_sec = 0xc;
+  optional TextInfo right_bottom_desc = 0xd;
+  repeated BottomDisplay bottom_display = 0xe;
+}
+message Toast {
+  optional string text = 0x1;
+  optional ButtonInfo button = 0x2;
+}
+message CouponInfo {}
+message EndPage {
+  optional Dialog dialog = 0x1;
+  optional bool hide = 0x2;
+}
+message PopWin {
+  repeated ButtonInfo button = 0x3;
+}
+message PromptBar {
+  repeated ButtonInfo button = 0x6;
+}
+message PayTip {}
+message HighDefinitionTrialInfo {}
+message Animation {}
+// 
 message PlayAbilityExtConf {
+  message FreyaConfig {}
   optional bool allow_close_subtitle = 0x1;
   optional FreyaConfig freya_config = 0x2;
 }
-
-message PlayViewReply {
-  optional VodInfo video_info = 0x1;
-  optional PlayAbilityConf play_conf = 0x2;
-  optional BusinessInfo business = 0x3;
-  optional Event event = 0x4;
-  optional ViewInfo view_info = 0x5;
-  optional PlayAbilityExtConf play_ext_conf = 0x6;
-  optional PlayExtInfo play_ext_info = 0x7;
-}
-
 message PlayExtInfo {
   optional PlayDubbingInfo play_dubbing_info = 0x1;
 }
-
 message PlayDubbingInfo {
   optional AudioMaterialProto background_audio = 0x1;
   repeated RoleAudioProto role_audio_list = 0x2;
   optional string guide_text = 0x3;
 }
-
 message AudioMaterialProto {
   string audio_id = 1;
   string title = 2;
@@ -377,7 +465,6 @@ message AudioMaterialProto {
   string person_avatar = 6;
   repeated DashItem audio = 7;
 }
-
 message RoleAudioProto {
   int64 role_id = 1;
   string role_name = 2;
@@ -385,694 +472,8 @@ message RoleAudioProto {
   repeated AudioMaterialProto audio_material_list = 4;
 }
 
-message ExtraContent {
-  optional string disable_reason = 0x1;
-  optional uint64 disable_code = 0x2;
-}
 
-message ArcConf {
-  optional bool is_support = 0x1;
-  optional bool disabled = 0x2;
-  optional ExtraContent extra_content = 0x3;
-}
-
-message PlayArcConf {
-  map<int32, ArcConf> arc_conf = 0x1;
-  repeated int32 unsupport_scene = 0x4;
-}
-
-message PlayDeviceConf {
-  map<int32, DeviceConf> device_confs = 0x1;
-}
-
-message DeviceConf {
-  optional ConfValue conf_value = 0x1;
-}
-
-message PlayArc {
-  optional VideoType video_type = 1;
-  optional uint64 aid = 2;
-  optional uint64 cid = 3;
-  optional DrmTechType drm_tech_type = 4;
-}
-
-enum VideoType {
-  UNKNOWN = 0;
-  UGC = 1;
-  PGC = 2;
-}
-
-enum DrmTechType {
-  UNKNOWN_DRM = 0;
-  FAIR_PLAY = 1;
-  WIDE_VINE = 2;
-  BILI_DRM = 3;
-}
-
-message QnTrialInfo {}
-
-message PlayViewUniteReply {
-  optional VodInfo vod_info = 0x1;
-  optional PlayArcConf play_arc_conf = 0x2;
-  optional PlayDeviceConf play_device_conf = 0x3;
-  optional Event event = 0x4;
-  optional google.protobuf.Any supplement = 0x5;
-  optional PlayArc play_arc = 0x6;
-  optional QnTrialInfo qn_trial_info = 0x7;
-  optional History history = 0x8;
-}
-
-message VideoVod {
-  optional int64 aid = 0x1;
-  optional int64 cid = 0x2;
-  optional int64 qn = 0x3;
-  optional int32 fnver = 0x4;
-  optional int32 fnval = 0x5;
-  optional int32 download = 0x6;
-  optional int32 force_host = 0x7;
-  optional bool fourk = 0x8;
-  optional CodeType prefer_code_type = 0x9;
-  optional int64 voice_balance = 0xa;
-}
-
-message PlayViewUniteReq {
-  optional VideoVod vod = 0x1;
-  optional string spmid = 0x2;
-  optional string from_spmid = 0x3;
-  map<string, string> extra_content = 0x4;
-}
-
-message ViewReq {
-  optional int64 aid = 0x1;
-  optional string bvid = 0x2;
-  optional string from = 0x3;
-  optional string trackid = 0x4;
-  optional string ad_extra = 0x5;
-  optional int32 qn = 0x6;
-  optional int32 fnver = 0x7;
-  optional int32 fnval = 0x8;
-  optional int32 force_host = 0x9;
-  optional int32 fourk = 0xa;
-  optional string spmid = 0xb;
-  optional string from_spmid = 0xc;
-  optional int32 autoplay = 0xd;
-  optional PlayerArgs player_args = 0xe;
-}
-
-message UserSeason {optional string attention = 0x1;}
-
-message SeasonPlayer {
-  optional int64 aid = 0x1;
-  optional string vid = 0x2;
-  optional int64 cid = 0x3;
-  optional string from = 0x4;
-}
-
-message Rights {
-  optional int32 bp = 0x1;
-  optional int32 elec = 0x2;
-  optional int32 download = 0x3;
-  optional int32 movie = 0x4;
-  optional int32 pay = 0x5;
-  optional int32 hd5 = 0x6;
-  optional int32 no_reprint = 0x7;
-  optional int32 autoplay = 0x8;
-  optional int32 ugc_pay = 0x9;
-  optional int32 is_cooperation = 0xa;
-  optional int32 ugc_pay_preview = 0xb;
-  optional int32 no_background = 0xc;
-}
-
-message Stat {
-  optional int64 aid = 0x1;
-  optional int32 view = 0x2;
-  optional int32 danmaku = 0x3;
-  optional int32 reply = 0x4;
-  optional int32 fav = 0x5;
-  optional int32 coin = 0x6;
-  optional int32 share = 0x7;
-  optional int32 now_rank = 0x8;
-  optional int32 his_rank = 0x9;
-  optional int32 like = 0xa;
-  optional int32 dislike = 0xb;
-}
-
-message Author {
-  optional int64 mid = 0x1;
-  optional string name = 0x2;
-  optional string face = 0x3;
-}
-
-message Dimension {
-  optional int64 width = 0x1;
-  optional int64 height = 0x2;
-  optional int64 rotate = 0x3;
-}
-
-message PlayViewDimension {
-  optional int32 width = 0x1;
-  optional int32 height = 0x2;
-  optional int32 rotate = 0x3;
-}
-
-message StaffInfo {}
-
-message Arc {
-  optional int64 aid = 0x1;
-  optional int64 videos = 0x2;
-  optional int32 type_id = 0x3;
-  optional string type_name = 0x4;
-  optional int32 copyright = 0x5;
-  optional string pic = 0x6;
-  optional string title = 0x7;
-  optional int64 pubdate = 0x8;
-  optional int64 ctime = 0x9;
-  optional string desc = 0xa;
-  optional int32 state = 0xb;
-  optional int32 access = 0xc;
-  optional int64 attribute_v2 = 0xd;
-  optional string tag = 0xe;
-  repeated string tags = 0xf;
-  optional int64 duration = 0x10;
-  optional int64 mission_id = 0x11;
-  optional int64 order_id = 0x12;
-  optional string redirect_url = 0x13;
-  optional int64 forward = 0x14;
-  optional Rights rights = 0x15;
-  optional Author author = 0x16;
-  optional Stat stat = 0x17;
-  optional string report_result = 0x18;
-  optional string dynamic = 0x19;
-  optional int64 first_cid = 0x1a;
-  optional Dimension dimension = 0x1b;
-  repeated StaffInfo staff_info = 0x1c;
-  optional int64 season_id = 0x1d;
-  optional int32 attribute = 0x1e;
-}
-
-message Season {
-  optional string allow_download = 0x1;
-  optional int64 season_id = 0x2;
-  optional int32 is_jump = 0x3;
-  optional string title = 0x4;
-  optional string cover = 0x5;
-  optional int32 is_finish = 0x6;
-  optional int32 newest_epid = 0x7;
-  optional string newest_ep_index = 0x8;
-  optional int64 total_count = 0x9;
-  optional int32 weekday = 0xa;
-  optional UserSeason user_season = 0xb;
-  optional SeasonPlayer player = 0xc;
-  optional string ovg_playurl = 0xd;
-}
-
-message Bgm {}
-
-message CMConfig {}
-
-message CM {}
-
-message ListenerConfig {
-  optional int32 jump_style = 0x1;
-}
-
-message Config {
-  optional string relates_title = 0x1;
-  optional int32 relates_style = 0x2;
-  optional int32 relate_gif_exp = 0x3;
-  optional int32 end_page_half = 0x4;
-  optional int32 end_page_full = 0x5;
-  optional bool auto_swindow = 0x6;
-  optional bool popup_info = 0x7;
-  optional string abtest_small_window = 0x8;
-  optional int32 rec_three_point_style = 0x9;
-  optional bool is_absolute_time = 0xa;
-  optional bool new_swindow = 0xb;
-  optional bool relates_biserial = 0xc;
-  optional ListenerConfig listener_conf = 0xd;
-  optional string relates_feed_style = 0xe;
-  optional bool relates_feed_popup = 0xf;
-  optional bool relates_feed_has_next = 0x10;
-  optional int32 local_play = 0x11;
-  optional bool play_story = 0x12;
-  optional bool arc_play_story = 0x13;
-  optional string story_icon = 0x14;
-  optional bool landscape_story = 0x15;
-  optional bool arc_landscape_story = 0x16;
-  optional string landscape_icon = 0x17;
-  optional bool show_listen_button = 0x18 ;
-}
-
-message CustomConfig {}
-
-message Dislike {}
-
-message ElecRank {}
-
-message History {}
-message Honor {}
-
-message Interaction {}
-
-message Label {}
-
-message OfficialVerify {
-  optional int32 type = 0x1;
-  optional string desc = 0x2;
-}
-
-message VipLabel {
-  optional string path = 0x1;
-  optional string text = 0x2;
-  optional string label_theme = 0x3;
-}
-
-message Vip {
-  optional int32 vip_type = 0x1;
-  optional int64 due_date = 0x2;
-  optional string due_remark = 0x3;
-  optional int32 access_status = 0x4;
-  optional int32 vip_status = 0x5;
-  optional string vip_status_warn = 0x6;
-  optional int32 theme_type = 0x7;
-  optional VipLabel label = 0x8;
-}
-
-message Live {
-  optional int64 mid = 0x1;
-  optional int64 room_id = 0x2;
-  optional string uri = 0x3;
-  optional string endpage_uri = 0x4;
-}
-
-message OwnerExt {
-  optional OfficialVerify official_verify = 0x1;
-  optional Live live = 0x2;
-  optional Vip vip = 0x3;
-  repeated int64 assists = 0x4;
-  optional int64 fans = 0x5;
-  optional string arcCount = 0x6;
-}
-
-message Audio {}
-message DM {}
-message Page {
-  optional int64 cid = 0x1;
-  optional int32 page = 0x2;
-  optional string from = 0x3;
-  optional string part = 0x4;
-  optional int64 duration = 0x5;
-  optional string vid = 0x6;
-  optional string desc = 0x7;
-  optional string web_link = 0x8;
-  optional Dimension dimension = 0x9;
-}
-
-message ViewPage {
-  optional Page page = 0x1;
-  optional Audio audio = 0x2;
-  optional DM dm = 0x3;
-  optional string download_title = 0x4;
-  optional string download_subtitle = 0x5;
-}
-
-message PlayerIcon {}
-
-message RelateTab {}
-message Relate {}
-message ReqUser {}
-message Staff {}
-message TIcon {optional string icon = 0x1;}
-message Tag {
-  optional int64 id = 0x1;
-  optional string name = 0x2;
-  optional int64 likes = 0x3;
-  optional int64 hates = 0x4;
-  optional int32 liked = 0x5;
-  optional int32 hated = 0x6;
-  optional string uri = 0x7;
-  optional string tag_type = 0x8;
-}
-message UgcSeason {}
-message ViewReply {
-  optional string activity_url = 0x11;
-  optional Arc arc = 0x1;
-  optional string argue_msg = 0x14;
-  repeated Bgm bgm = 0x12;
-  optional string bvid = 0xe;
-  optional CMConfig cm_config = 0x1f;
-  repeated CM cms = 0x1e;
-  optional Config config = 0x19;
-  optional CustomConfig custom_config = 0x1d;
-  optional Dislike dislike = 0xb;
-  optional int32 encode = 0x1c;
-  optional ElecRank elec_rank = 0x8;
-  optional History history = 0x9;
-  optional Honor honor = 0xf;
-  optional Interaction interaction = 0x1b;
-  optional Label label = 0x17;
-  optional OwnerExt owner_ext = 0x3;
-  repeated ViewPage pages = 0x2;
-  optional int32 play_param = 0x16;
-  optional PlayerIcon player_icon = 0xc;
-  repeated RelateTab relate_tab = 0x10;
-  repeated Relate relates = 0xa;
-  optional ReqUser req_user = 0x4;
-
-  optional Season season = 0x7;
-  optional string share_subtitle = 0x1a;
-  optional string short_link = 0x15;
-  repeated Staff staff = 0x13;
-  map<string, TIcon> t_icon = 0x6;
-  repeated Tag tag = 0x5;
-  optional UgcSeason ugc_season = 0x18;
-  optional string vip_active = 0xd;
-}
-
-message Device {
-  optional int32 app_id = 0x1;
-  optional int32 build = 0x2;
-  optional string buvid = 0x3;
-  optional string mobi_app = 0x4;
-  optional string platform = 0x5;
-  optional string device = 0x6;
-  optional string channel = 0x7;
-  optional string brand = 0x8;
-  optional string model = 0x9;
-  optional string osver = 0xa;
-}
-
-message DmViewReq {
-  optional int32 pid = 0x1;
-  optional int64 oid = 0x2;
-  optional int32 type = 0x3;
-  optional string spmid = 0x4;
-  optional int32 is_hard_boot = 0x5;
-}
-
-message DanmakuFlagConfig {}
-
-message VideoMask {}
-
-message DanmuPlayerViewConfig {}
-
-message UserInfo {}
-
-message SubtitleItem {
-  optional int64 id = 0x1;
-  optional string id_str = 0x2;
-  optional string lan = 0x3;
-  optional string lan_doc = 0x4;
-  optional string subtitle_url = 0x5;
-  optional UserInfo author = 0x6;
-  optional int32 type = 0x7;
-  optional string lan_doc_brief = 0x8;
-}
-
-message VideoSubtitle {
-  optional string lan = 0x1;
-  optional string lan_doc = 0x2;
-  repeated SubtitleItem subtitles = 0x3;
-}
-
-message DmViewReply {
-  optional bool d = 0x1;
-  optional VideoMask mask = 0x2;
-  optional VideoSubtitle subtitle = 0x3;
-  repeated string special_dms = 0x4;
-  optional DanmakuFlagConfig ai_flag = 0x5;
-  optional DanmuPlayerViewConfig player_config = 0x6;
-  optional int32 send_box_style = 0x7;
-  optional bool allow = 0x8;
-  optional bool check_box = 0x9;
-  optional string check_box_show_msg = 0xa;
-  optional string text_placeholder = 0xb;
-  optional string input_place_holder = 0xc;
-  repeated string report_filter_content = 0xd;
-}
-
-message Pagination {
-  optional int32 page_size = 0x1;
-  optional string next = 0x2;
-}
-
-message PlayerArgs {
-  optional int64 qn = 0x1;
-  optional int64 fnver = 0x2;
-  optional int64 fnval = 0x3;
-  optional int64 force_host = 0x4;
-  optional int64 voice_balance = 0x5;
-}
-
-enum UserType {
-  ALL = 0x0;
-  UP = 0x1;
-  NORMAL_USER = 0x2;
-  AUTHENTICATED_USER = 0x3;
-}
-
-enum UserSort {
-  USER_SORT_DEFAULT = 0x0;
-  USER_SORT_FANS_DESCEND = 0x1;
-  USER_SORT_FANS_ASCEND = 0x2;
-  USER_SORT_LEVEL_DESCEND = 0x3;
-  USER_SORT_LEVEL_ASCEND = 0x4;
-}
-
-enum CategorySort {
-  CATEGORY_SORT_DEFAULT = 0x0;
-  CATEGORY_SORT_PUBLISH_TIME = 0x1;
-  CATEGORY_SORT_CLICK_COUNT = 0x2;
-  CATEGORY_SORT_COMMENT_COUNT = 0x3;
-  CATEGORY_SORT_LIKE_COUNT = 0x4;
-}
-
-message SearchByTypeRequest {
-  optional int32 type = 0x1;
-  optional string keyword = 0x2;
-  optional CategorySort category_sort = 0x3;
-  optional int64 category_id = 0x4;
-  optional UserType user_type = 0x5;
-  optional UserSort user_sort = 0x6;
-  optional Pagination pagination = 0x7;
-  optional PlayerArgs player_args = 0x8;
-}
-
-message FollowButton {
-  optional string icon = 0x1;
-  map<string, string> texts = 0x2;
-  optional string status_report = 0x3;
-}
-
-message CheckMore {
-  optional string content = 0x1;
-  optional string uri = 0x2;
-}
-
-message WatchButton {
-  optional string title = 0x1;
-  optional string link = 0x2;
-}
-
-message ReasonStyle {
-  optional string text = 0x1;
-  optional string text_color = 0x2;
-  optional string text_color_night = 0x3;
-  optional string bg_color = 0x4;
-  optional string bg_color_night = 0x5;
-  optional string border_color = 0x6;
-  optional string border_color_night = 0x7;
-  optional int32 bg_style = 0x8;
-}
-
-message Episode {
-  optional string uri = 0x1;
-  optional string param = 0x2;
-  optional string index = 0x3;
-  repeated ReasonStyle badges = 0x4;
-  optional int32 position = 0x5;
-}
-
-message EpisodeNew {
-  optional string title = 0x1;
-  optional string uri = 0x2;
-  optional string param = 0x3;
-  optional int32 is_new = 0x4;
-  repeated ReasonStyle badges = 0x5;
-  optional int32 type = 0x6;
-  optional int32 position = 0x7;
-  optional string cover = 0x8;
-  optional string label = 0x9;
-}
-
-message SearchBangumiCard {
-  optional string title = 0x1;
-  optional string cover = 0x2;
-  optional int32 media_type = 0x3;
-  optional int32 play_state = 0x4;
-  optional string area = 0x5;
-  optional string style = 0x6;
-  optional string styles = 0x7;
-  optional string cv = 0x8;
-  optional double rating = 0x9;
-  optional int32 vote = 0xa;
-  optional string target = 0xb;
-  optional string staff = 0xc;
-  optional string prompt = 0xd;
-  optional int64 ptime = 0xe;
-  optional string season_type_name = 0xf;
-  repeated Episode episodes = 0x10;
-  optional int32 is_selection = 0x11;
-  optional int32 is_atten = 0x12;
-  optional string label = 0x13;
-  optional int64 season_id = 0x14;
-  optional string out_name = 0x15;
-  optional string out_icon = 0x16;
-  optional string out_url = 0x17;
-  repeated ReasonStyle badges = 0x18;
-  optional int32 is_out = 0x19;
-  repeated EpisodeNew episodes_new = 0x1a;
-  optional WatchButton watch_button = 0x1b;
-  optional string selection_style = 0x1c;
-  optional CheckMore check_more = 0x1d;
-  optional FollowButton follow_button = 0x1e;
-  optional ReasonStyle style_label = 0x1f;
-  repeated ReasonStyle badges_v2 = 0x20;
-  optional string styles_v2 = 0x21;
-}
-
-message SearchItem {
-  optional string uri = 0x1;
-  optional string param = 0x2;
-  optional string goto = 0x3;
-  optional string link_type = 0x4;
-  optional int32 position = 0x5;
-  optional string track_id = 0x6;
-  oneof card_item {
-    SearchBangumiCard bangumi = 0x26;
-  }
-}
-
-message PaginationReply {
-  optional string next = 0x1;
-  optional string prev = 0x2;
-}
-
-message SearchByTypeResponse {
-  optional string track_id = 0x1;
-  optional int32 pages = 0x2;
-  optional string exp_str = 0x3;
-  optional string keyword = 0x4;
-  optional int32 result_is_recommend = 0x5;
-  repeated SearchItem items = 0x6;
-  optional PaginationReply pagination = 0x7;
-}
-
-message SearchNav {
-  optional string name = 0x1;
-  optional int32 total = 0x2;
-  optional int32 pages = 0x3;
-  optional int32 type = 0x4;
-}
-
-message FormatDescription {
-  optional int32 quality = 0x1;
-  optional string format = 0x2;
-  optional string description = 0x3;
-  optional string display_desc = 0x4;
-  optional string superscript = 0x5;
-}
-
-message VolumeInfo {
-  optional double measured_i = 0x1;
-  optional double measured_lra = 0x2;
-  optional double measured_tp = 0x3;
-  optional double measured_threshold = 0x4;
-  optional double target_offset = 0x5;
-  optional double target_i = 0x6;
-  optional double target_tp = 0x7;
-}
-
-message ListenPlayInfo {
-  optional int32 qn = 0x1;
-  optional string format = 0x2;
-  optional int32 qn_type = 0x3;
-  oneof info {
-    ListenPlayURL play_url = 0x4;
-    ListenPlayDASH play_dash = 0x5;
-  }
-  optional int32 fnver = 0x6;
-  optional int32 fnval = 0x7;
-  repeated FormatDescription formats = 0x8;
-  optional int32 video_codecid = 0x9;
-  optional int64 length = 0xa;
-  optional int32 code = 0xb;
-  optional string message = 0xc;
-  optional int64 expire_time = 0xd;
-  optional VolumeInfo volume = 0xe;
-}
-
-message ListenDashSegmentBase {
-  optional string initialization = 0x1;
-  optional string index_range = 0x2;
-}
-
-message ListenDashItem {
-  optional int32 id = 0x1;
-  optional string base_url = 0x2;
-  repeated string backup_url = 0x3;
-  optional int32 bandwidth = 0x4;
-  optional string mime_type = 0x5;
-  optional string codecs = 0x6;
-  optional ListenDashSegmentBase segment_base = 0xc;
-  optional int32 codecid = 0xd;
-  optional string md5 = 0xe;
-  optional int64 size = 0xf;
-}
-
-message ListenPlayDASH {
-  optional int32 duration = 0x1;
-  optional float min_buffer_time = 0x2;
-  repeated ListenDashItem audio = 0x3;
-}
-
-message ListenPlayURL {
-  repeated ListenResponseUrl durl = 0x1;
-}
-
-message ListenResponseUrl {
-  optional int32 order = 0x1;
-  optional int64 length = 0x2;
-  optional int64 size = 0x3;
-  optional string ahead = 0x4;
-  optional string vhead = 0x5;
-  optional string url = 0x6;
-  repeated string backup_url = 0x7;
-  optional string md5 = 0x8;
-}
-
-message EventTracking {}
-
-message ListenPlayItem {
-  optional int32 item_type = 0x1;
-  optional int64 oid = 0x3;
-  repeated int64 sub_id = 0x4;
-  optional EventTracking et = 0x5;
-  optional int64 pos = 0x6;
-}
-
-message ListenPlayURLReq {
-  optional ListenPlayItem item = 0x1;
-  optional PlayerArgs player_args = 0x2;
-}
-
-message ListenPlayURLResp {
-  optional ListenPlayItem item = 0x1;
-  optional int32 playable = 0x2;
-  optional string message = 0x3;
-  map<int64, ListenPlayInfo> player_info = 0x4;
-}
-
+// com.bapis.bilibili.app.playurl.v1.PlayViewReply, renamed for name collision
 message PlayViewReplyUgc {
   optional VodInfo video_info = 0x1;
   optional PlayAbilityConfUgc play_conf = 0x2;
@@ -1083,7 +484,6 @@ message PlayViewReplyUgc {
   optional AB ab = 0x7;
   optional PlayLimitUgc play_limit = 0x8;
 }
-
 message CloudConf {
   enum ConfType {
     NoType = 0;
@@ -1127,7 +527,6 @@ message CloudConf {
   optional FieldValue field_value = 0x3;
   optional ConfValue conf_value = 0x4;
 }
-
 message PlayAbilityConfUgc {
   optional CloudConf background_play_conf = 0x1; 
   optional CloudConf flip_conf = 0x2; 
@@ -1231,6 +630,635 @@ message ButtonStyle {
   optional string jump_link = 0x4;
 }
 
+
+// com.bapis.bilibili.app.playerunite.v1.PlayViewUniteReply
+message PlayViewUniteReply {
+  optional VodInfo vod_info = 0x1;
+  optional PlayArcConf play_arc_conf = 0x2;
+  optional PlayDeviceConf play_device_conf = 0x3;
+  optional Event event = 0x4;
+  optional google.protobuf.Any supplement = 0x5;
+  optional PlayArc play_arc = 0x6;
+  optional QnTrialInfo qn_trial_info = 0x7;
+  optional History history = 0x8;
+}
+
+// com.bapis.bilibili.playershared.PlayArcConf, for com.bapis.bilibili.app.playerunite.v1.PlayViewUniteReply
+message PlayArcConf {
+  map<int32, ArcConf> arc_conf = 0x1;
+  repeated int32 unsupport_scene = 0x4;
+}
+// com.bapis.bilibili.playershared.PlayDeviceConf, for com.bapis.bilibili.app.playerunite.v1.PlayViewUniteReply
+message PlayDeviceConf {
+  map<int32, DeviceConf> device_confs = 0x1;
+}
+message DeviceConf {
+  optional ConfValue conf_value = 0x1;
+}
+// com.bapis.bilibili.playershared.PlayArc, for com.bapis.bilibili.app.playerunite.v1.PlayViewUniteReply
+message PlayArc {
+  optional VideoType video_type = 0x1;
+  optional uint64 aid = 0x2;
+  optional uint64 cid = 0x3;
+  optional DrmTechType drm_tech_type = 0x4;
+}
+enum VideoType {
+  UNKNOWN = 0;
+  UGC = 1;
+  PGC = 2;
+}
+enum DrmTechType {
+  UNKNOWN_DRM = 0;
+  FAIR_PLAY = 1;
+  WIDE_VINE = 2;
+  BILI_DRM = 3;
+}
+// com.bapis.bilibili.playershared.QnTrialInfo, for com.bapis.bilibili.app.playerunite.v1.PlayViewUniteReply
+message QnTrialInfo {}
+// 
+
+// The following is other proto 
+
+// com.bapis.bilibili.app.view.v1.ViewReq
+message ViewReq {
+  optional int64 aid = 0x1;
+  optional string bvid = 0x2;
+  optional string from = 0x3;
+  optional string trackid = 0x4;
+  optional string ad_extra = 0x5;
+  optional int32 qn = 0x6;
+  optional int32 fnver = 0x7;
+  optional int32 fnval = 0x8;
+  optional int32 force_host = 0x9;
+  optional int32 fourk = 0xa;
+  optional string spmid = 0xb;
+  optional string from_spmid = 0xc;
+  optional int32 autoplay = 0xd;
+  optional PlayerArgs player_args = 0xe;
+}
+
+
+// com.bapis.bilibili.app.view.v1.ViewReply
+message ViewReply {
+  message ReqUser {}
+  message ElecRank {}
+  message Relate {}
+  message Dislike {}
+  message PlayerIcon {}
+  message Honor {}
+  message RelateTab {}
+  message Bgm {}
+  message Staff {}
+  message Label {}
+  message UgcSeason {}
+  message Interaction {}
+  message CustomConfig {}
+  message CM {}
+  message CMConfig {}
+  optional Arc arc = 0x1;
+  repeated ViewPage pages = 0x2;
+  optional OwnerExt owner_ext = 0x3;
+  optional ReqUser req_user = 0x4;
+  repeated Tag tag = 0x5;
+  map<string, TIcon> t_icon = 0x6;
+  optional Season season = 0x7;
+  optional ElecRank elec_rank = 0x8;
+  optional History history = 0x9;
+  repeated Relate relates = 0xa;
+  optional Dislike dislike = 0xb;
+  optional PlayerIcon player_icon = 0xc;
+  optional string vip_active = 0xd;
+  optional string bvid = 0xe;
+  optional Honor honor = 0xf;
+  repeated RelateTab relate_tab = 0x10;
+  optional string activity_url = 0x11;
+  repeated Bgm bgm = 0x12;
+  repeated Staff staff = 0x13;
+  optional string argue_msg = 0x14;
+  optional string short_link = 0x15;
+  optional int32 play_param = 0x16;
+  optional Label label = 0x17;
+  optional UgcSeason ugc_season = 0x18;
+  optional Config config = 0x19;
+  optional string share_subtitle = 0x1a;
+  optional Interaction interaction = 0x1b;
+  optional int32 encode = 0x1c;
+  optional CustomConfig custom_config = 0x1d;
+  repeated CM cms = 0x1e;
+  optional CMConfig cm_config = 0x1f;
+}
+// com.bapis.bilibili.app.archive.v1.Arc, for com.bapis.bilibili.app.view.v1.ViewReply
+message Arc {
+  optional int64 aid = 0x1;
+  optional int64 videos = 0x2;
+  optional int32 type_id = 0x3;
+  optional string type_name = 0x4;
+  optional int32 copyright = 0x5;
+  optional string pic = 0x6;
+  optional string title = 0x7;
+  optional int64 pubdate = 0x8;
+  optional int64 ctime = 0x9;
+  optional string desc = 0xa;
+  optional int32 state = 0xb;
+  optional int32 access = 0xc;
+  optional int64 attribute_v2 = 0xd;
+  optional string tag = 0xe;
+  repeated string tags = 0xf;
+  optional int64 duration = 0x10;
+  optional int64 mission_id = 0x11;
+  optional int64 order_id = 0x12;
+  optional string redirect_url = 0x13;
+  optional int64 forward = 0x14;
+  optional Rights rights = 0x15;
+  optional Author author = 0x16;
+  optional Stat stat = 0x17;
+  optional string report_result = 0x18;
+  optional string dynamic = 0x19;
+  optional int64 first_cid = 0x1a;
+  optional Dimension dimension = 0x1b;
+  repeated StaffInfo staff_info = 0x1c;
+  optional int64 season_id = 0x1d;
+  optional int32 attribute = 0x1e;
+}
+message StaffInfo {}
+message Rights {
+  optional int32 bp = 0x1;
+  optional int32 elec = 0x2;
+  optional int32 download = 0x3;
+  optional int32 movie = 0x4;
+  optional int32 pay = 0x5;
+  optional int32 hd5 = 0x6;
+  optional int32 no_reprint = 0x7;
+  optional int32 autoplay = 0x8;
+  optional int32 ugc_pay = 0x9;
+  optional int32 is_cooperation = 0xa;
+  optional int32 ugc_pay_preview = 0xb;
+  optional int32 no_background = 0xc;
+}
+message Author {
+  optional int64 mid = 0x1;
+  optional string name = 0x2;
+  optional string face = 0x3;
+}
+message Stat {
+  optional int64 aid = 0x1;
+  optional int32 view = 0x2;
+  optional int32 danmaku = 0x3;
+  optional int32 reply = 0x4;
+  optional int32 fav = 0x5;
+  optional int32 coin = 0x6;
+  optional int32 share = 0x7;
+  optional int32 now_rank = 0x8;
+  optional int32 his_rank = 0x9;
+  optional int32 like = 0xa;
+  optional int32 dislike = 0xb;
+}
+
+
+// com.bapis.bilibili.app.view.v1.ViewPage, for com.bapis.bilibili.app.view.v1.ViewReply
+message ViewPage {
+  optional Page page = 0x1;
+  optional Audio audio = 0x2;
+  optional DM dm = 0x3;
+  optional string download_title = 0x4;
+  optional string download_subtitle = 0x5;
+}
+message Page {
+  optional int64 cid = 0x1;
+  optional int32 page = 0x2;
+  optional string from = 0x3;
+  optional string part = 0x4;
+  optional int64 duration = 0x5;
+  optional string vid = 0x6;
+  optional string desc = 0x7;
+  optional string web_link = 0x8;
+  optional Dimension dimension = 0x9;
+}
+message Audio {}
+message DM {}
+
+
+// com.bapis.bilibili.app.view.v1.OnwerExt, for com.bapis.bilibili.app.view.v1.ViewReply
+message OwnerExt {
+  optional OfficialVerify official_verify = 0x1;
+  optional Live live = 0x2;
+  optional Vip vip = 0x3;
+  repeated int64 assists = 0x4;
+  optional int64 fans = 0x5;
+  optional string arcCount = 0x6;
+}
+message OfficialVerify {
+  optional int32 type = 0x1;
+  optional string desc = 0x2;
+}
+message Live {
+  optional int64 mid = 0x1;
+  optional int64 room_id = 0x2;
+  optional string uri = 0x3;
+  optional string endpage_uri = 0x4;
+}
+message Vip {
+  optional int32 vip_type = 0x1;
+  optional int64 due_date = 0x2;
+  optional string due_remark = 0x3;
+  optional int32 access_status = 0x4;
+  optional int32 vip_status = 0x5;
+  optional string vip_status_warn = 0x6;
+  optional int32 theme_type = 0x7;
+  optional VipLabel label = 0x8;
+}
+message VipLabel {
+  optional string path = 0x1;
+  optional string text = 0x2;
+  optional string label_theme = 0x3;
+}
+// com.bapis.bilibili.app.view.v1.Tag, for com.bapis.bilibili.app.view.v1.ViewReply
+message Tag {
+  optional int64 id = 0x1;
+  optional string name = 0x2;
+  optional int64 likes = 0x3;
+  optional int64 hates = 0x4;
+  optional int32 liked = 0x5;
+  optional int32 hated = 0x6;
+  optional string uri = 0x7;
+  optional string tag_type = 0x8;
+}
+// com.bapis.bilibili.app.view.v1.TIcon, for com.bapis.bilibili.app.view.v1.ViewReply
+message TIcon {
+  optional string icon = 0x1;
+}
+// com.bapis.bilibili.app.view.v1.Season, for com.bapis.bilibili.app.view.v1.ViewReply
+message Season {
+  optional string allow_download = 0x1;
+  optional int64 season_id = 0x2;
+  optional int32 is_jump = 0x3;
+  optional string title = 0x4;
+  optional string cover = 0x5;
+  optional int32 is_finish = 0x6;
+  optional int32 newest_epid = 0x7;
+  optional string newest_ep_index = 0x8;
+  optional int64 total_count = 0x9;
+  optional int32 weekday = 0xa;
+  optional UserSeason user_season = 0xb;
+  optional SeasonPlayer player = 0xc;
+  optional string ovg_playurl = 0xd;
+}
+// com.bapis.bilibili.app.view.v1.UserSeason
+message UserSeason {
+  optional string attention = 0x1;
+}
+// com.bapis.bilibili.app.view.v1.SeasonPlayer
+message SeasonPlayer {
+  optional int64 aid = 0x1;
+  optional string vid = 0x2;
+  optional int64 cid = 0x3;
+  optional string from = 0x4;
+}
+// com.bapis.bilibili.app.view.v1.Config, for com.bapis.bilibili.app.view.v1.ViewReply
+message Config {
+  optional string relates_title = 0x1;
+  optional int32 relates_style = 0x2;
+  optional int32 relate_gif_exp = 0x3;
+  optional int32 end_page_half = 0x4;
+  optional int32 end_page_full = 0x5;
+  optional bool auto_swindow = 0x6;
+  optional bool popup_info = 0x7;
+  optional string abtest_small_window = 0x8;
+  optional int32 rec_three_point_style = 0x9;
+  optional bool is_absolute_time = 0xa;
+  optional bool new_swindow = 0xb;
+  optional bool relates_biserial = 0xc;
+  optional ListenerConfig listener_conf = 0xd;
+  optional string relates_feed_style = 0xe;
+  optional bool relates_feed_popup = 0xf;
+  optional bool relates_feed_has_next = 0x10;
+  optional int32 local_play = 0x11;
+  optional bool play_story = 0x12;
+  optional bool arc_play_story = 0x13;
+  optional string story_icon = 0x14;
+  optional bool landscape_story = 0x15;
+  optional bool arc_landscape_story = 0x16;
+  optional string landscape_icon = 0x17;
+  optional bool show_listen_button = 0x18 ;
+}
+// com.bapis.bilibili.app.view.v1.ListenerConfig
+message ListenerConfig {
+  optional int32 jump_style = 0x1;
+}
+
+
+// unknown
+message Device {
+  optional int32 app_id = 0x1;
+  optional int32 build = 0x2;
+  optional string buvid = 0x3;
+  optional string mobi_app = 0x4;
+  optional string platform = 0x5;
+  optional string device = 0x6;
+  optional string channel = 0x7;
+  optional string brand = 0x8;
+  optional string model = 0x9;
+  optional string osver = 0xa;
+}
+
+
+// com.bapis.bilibili.community.service.dm.v1.DmViewReq 
+message DmViewReq {
+  optional int32 pid = 0x1;
+  optional int64 oid = 0x2;
+  optional int32 type = 0x3;
+  optional string spmid = 0x4;
+  optional int32 is_hard_boot = 0x5;
+}
+
+
+// com.bapis.bilibili.community.service.dm.v1.DmViewReply 
+message DmViewReply {
+  optional bool closed = 0x1;
+  optional VideoMask mask = 0x2;
+  optional VideoSubtitle subtitle = 0x3;
+  repeated string special_dms = 0x4;
+  optional DanmakuFlagConfig ai_flag = 0x5;
+  optional DanmuPlayerViewConfig player_config = 0x6;
+  optional int32 send_box_style = 0x7;
+  optional bool allow = 0x8;
+  optional bool check_box = 0x9;
+  optional string check_box_show_msg = 0xa;
+  optional string text_placeholder = 0xb;
+  optional string input_place_holder = 0xc;
+  repeated string report_filter_content = 0xd;
+}
+message VideoMask {}
+message VideoSubtitle {
+  optional string lan = 0x1;
+  optional string lan_doc = 0x2;
+  repeated SubtitleItem subtitles = 0x3;
+}
+message SubtitleItem {
+  optional int64 id = 0x1;
+  optional string id_str = 0x2;
+  optional string lan = 0x3;
+  optional string lan_doc = 0x4;
+  optional string subtitle_url = 0x5;
+  optional UserInfo author = 0x6;
+  optional int32 type = 0x7;
+  optional string lan_doc_brief = 0x8;
+}
+message UserInfo {}
+message DanmakuFlagConfig {}
+message DanmuPlayerViewConfig {}
+
+
+// com.bapis.bilibili.polymer.app.search.v1.SearchByTypeRequest 
+message SearchByTypeRequest {
+  optional int32 type = 0x1;
+  optional string keyword = 0x2;
+  optional CategorySort category_sort = 0x3;
+  optional int64 category_id = 0x4;
+  optional UserType user_type = 0x5;
+  optional UserSort user_sort = 0x6;
+  optional Pagination pagination = 0x7;
+  optional PlayerArgs player_args = 0x8;
+}
+enum CategorySort {
+  CATEGORY_SORT_DEFAULT = 0x0;
+  CATEGORY_SORT_PUBLISH_TIME = 0x1;
+  CATEGORY_SORT_CLICK_COUNT = 0x2;
+  CATEGORY_SORT_COMMENT_COUNT = 0x3;
+  CATEGORY_SORT_LIKE_COUNT = 0x4;
+}
+enum UserType {
+  ALL = 0x0;
+  UP = 0x1;
+  NORMAL_USER = 0x2;
+  AUTHENTICATED_USER = 0x3;
+}
+enum UserSort {
+  USER_SORT_DEFAULT = 0x0;
+  USER_SORT_FANS_DESCEND = 0x1;
+  USER_SORT_FANS_ASCEND = 0x2;
+  USER_SORT_LEVEL_DESCEND = 0x3;
+  USER_SORT_LEVEL_ASCEND = 0x4;
+}
+// com.bapis.bilibili.pagination.Pagination, for com.bapis.bilibili.polymer.app.search.v1.SearchByTypeRequest
+message Pagination {
+  optional int32 page_size = 0x1;
+  optional string next = 0x2;
+}
+// com.bapis.bilibili.app.archive.middleware.v1.PlayerArgs, for com.bapis.bilibili.polymer.app.search.v1.SearchByTypeRequest
+message PlayerArgs {
+  optional int64 qn = 0x1;
+  optional int64 fnver = 0x2;
+  optional int64 fnval = 0x3;
+  optional int64 force_host = 0x4;
+  optional int64 voice_balance = 0x5;
+}
+
+
+// com.bapis.bilibili.polymer.app.search.v1.SearchByTypeResponse
+message SearchByTypeResponse {
+  optional string track_id = 0x1;
+  optional int32 pages = 0x2;
+  optional string exp_str = 0x3;
+  optional string keyword = 0x4;
+  optional int32 result_is_recommend = 0x5;
+  repeated SearchItem items = 0x6;
+  optional PaginationReply pagination = 0x7;
+}
+// com.bapis.bilibili.polymer.app.search.v1.PaginationReply
+message PaginationReply {
+  optional string next = 0x1;
+  optional string prev = 0x2;
+}
+// com.bapis.bilibili.polymer.app.search.v1.Item, renamed for name collision
+message SearchItem {
+  optional string uri = 0x1;
+  optional string param = 0x2;
+  optional string goto = 0x3;
+  optional string link_type = 0x4;
+  optional int32 position = 0x5;
+  optional string track_id = 0x6;
+  oneof card_item {
+    SearchBangumiCard bangumi = 0x26;
+  }
+}
+
+
+// com.bapis.bilibili.polymer.app.search.v1.SearchBangumiCard 
+message SearchBangumiCard {
+  optional string title = 0x1;
+  optional string cover = 0x2;
+  optional int32 media_type = 0x3;
+  optional int32 play_state = 0x4;
+  optional string area = 0x5;
+  optional string style = 0x6;
+  optional string styles = 0x7;
+  optional string cv = 0x8;
+  optional double rating = 0x9;
+  optional int32 vote = 0xa;
+  optional string target = 0xb;
+  optional string staff = 0xc;
+  optional string prompt = 0xd;
+  optional int64 ptime = 0xe;
+  optional string season_type_name = 0xf;
+  repeated Episode episodes = 0x10;
+  optional int32 is_selection = 0x11;
+  optional int32 is_atten = 0x12;
+  optional string label = 0x13;
+  optional int64 season_id = 0x14;
+  optional string out_name = 0x15;
+  optional string out_icon = 0x16;
+  optional string out_url = 0x17;
+  repeated ReasonStyle badges = 0x18;
+  optional int32 is_out = 0x19;
+  repeated EpisodeNew episodes_new = 0x1a;
+  optional WatchButton watch_button = 0x1b;
+  optional string selection_style = 0x1c;
+  optional CheckMore check_more = 0x1d;
+  optional FollowButton follow_button = 0x1e;
+  optional ReasonStyle style_label = 0x1f;
+  repeated ReasonStyle badges_v2 = 0x20;
+  optional string styles_v2 = 0x21;
+}
+// com.bapis.bilibili.polymer.app.search.v1.Episode, for com.bapis.bilibili.polymer.app.search.v1.SearchBangumiCard
+message Episode {
+  optional string uri = 0x1;
+  optional string param = 0x2;
+  optional string index = 0x3;
+  repeated ReasonStyle badges = 0x4;
+  optional int32 position = 0x5;
+}
+// com.bapis.bilibili.polymer.app.search.v1.ReasonStyle, for com.bapis.bilibili.polymer.app.search.v1.SearchBangumiCard
+message ReasonStyle {
+  optional string text = 0x1;
+  optional string text_color = 0x2;
+  optional string text_color_night = 0x3;
+  optional string bg_color = 0x4;
+  optional string bg_color_night = 0x5;
+  optional string border_color = 0x6;
+  optional string border_color_night = 0x7;
+  optional int32 bg_style = 0x8;
+}
+// com.bapis.bilibili.polymer.app.search.v1.EpisodeNew, for com.bapis.bilibili.polymer.app.search.v1.SearchBangumiCard
+message EpisodeNew {
+  optional string title = 0x1;
+  optional string uri = 0x2;
+  optional string param = 0x3;
+  optional int32 is_new = 0x4;
+  repeated ReasonStyle badges = 0x5;
+  optional int32 type = 0x6;
+  optional int32 position = 0x7;
+  optional string cover = 0x8;
+  optional string label = 0x9;
+}
+// com.bapis.bilibili.polymer.app.search.v1.WatchButton, for com.bapis.bilibili.polymer.app.search.v1.SearchBangumiCard
+message WatchButton {
+  optional string title = 0x1;
+  optional string link = 0x2;
+}
+// com.bapis.bilibili.polymer.app.search.v1.CheckMore, for com.bapis.bilibili.polymer.app.search.v1.SearchBangumiCard
+message CheckMore {
+  optional string content = 0x1;
+  optional string uri = 0x2;
+}
+// com.bapis.bilibili.polymer.app.search.v1.FollowButton, for com.bapis.bilibili.polymer.app.search.v1.SearchBangumiCard
+message FollowButton {
+  optional string icon = 0x1;
+  map<string, string> texts = 0x2;
+  optional string status_report = 0x3;
+}
+
+
+// com.bapis.bilibili.polymer.app.search.v1.Nav, renamed for name collision
+message SearchNav {
+  optional string name = 0x1;
+  optional int32 total = 0x2;
+  optional int32 pages = 0x3;
+  optional int32 type = 0x4;
+}
+
+
+// com.bapis.bilibili.app.listener.v1.PlayURLReq
+message ListenPlayURLReq {
+  optional ListenPlayItem item = 0x1;
+  optional PlayerArgs player_args = 0x2;
+}
+message ListenPlayItem {
+  optional int32 item_type = 0x1;
+  optional int64 oid = 0x3;
+  repeated int64 sub_id = 0x4;
+  optional EventTracking et = 0x5;
+  optional int64 pos = 0x6;
+}
+message EventTracking {}
+// com.bapis.bilibili.app.listener.v1.PlayURLResp
+message ListenPlayURLResp {
+  optional ListenPlayItem item = 0x1;
+  optional int32 playable = 0x2;
+  optional string message = 0x3;
+  map<int64, ListenPlayInfo> player_info = 0x4;
+}
+// com.bapis.bilibili.app.listener.v1.PlayInfo
+message ListenPlayInfo {
+  optional int32 qn = 0x1;
+  optional string format = 0x2;
+  optional int32 qn_type = 0x3;
+  oneof info {
+    ListenPlayURL play_url = 0x4;
+    ListenPlayDASH play_dash = 0x5;
+  }
+  optional int32 fnver = 0x6;
+  optional int32 fnval = 0x7;
+  repeated FormatDescription formats = 0x8;
+  optional int32 video_codecid = 0x9;
+  optional int64 length = 0xa;
+  optional int32 code = 0xb;
+  optional string message = 0xc;
+  optional int64 expire_time = 0xd;
+  optional VolumeInfo volume = 0xe;
+}
+message ListenPlayURL {
+  repeated ListenResponseUrl durl = 0x1;
+}
+message ListenResponseUrl {
+  optional int32 order = 0x1;
+  optional int64 length = 0x2;
+  optional int64 size = 0x3;
+  optional string ahead = 0x4;
+  optional string vhead = 0x5;
+  optional string url = 0x6;
+  repeated string backup_url = 0x7;
+  optional string md5 = 0x8;
+}
+message ListenPlayDASH {
+  optional int32 duration = 0x1;
+  optional float min_buffer_time = 0x2;
+  repeated ListenDashItem audio = 0x3;
+}
+message ListenDashItem {
+  optional int32 id = 0x1;
+  optional string base_url = 0x2;
+  repeated string backup_url = 0x3;
+  optional int32 bandwidth = 0x4;
+  optional string mime_type = 0x5;
+  optional string codecs = 0x6;
+  optional ListenDashSegmentBase segment_base = 0xc;
+  optional int32 codecid = 0xd;
+  optional string md5 = 0xe;
+  optional int64 size = 0xf;
+}
+message ListenDashSegmentBase {
+  optional string initialization = 0x1;
+  optional string index_range = 0x2;
+}
+message FormatDescription {
+  optional int32 quality = 0x1;
+  optional string format = 0x2;
+  optional string description = 0x3;
+  optional string display_desc = 0x4;
+  optional string superscript = 0x5;
+}
+
 message BKArcPart {
   optional int64 oid = 0x1;
   optional int64 sub_id = 0x2;
@@ -1238,43 +1266,3 @@ message BKArcPart {
   optional int64 duration = 0x4;
   optional int32 page = 0x5;
 }
-
-message VodInfo {
-  optional uint32 quality = 0x1;
-  optional string format = 0x2;
-  optional uint64 timelength = 0x3;
-  optional uint32 video_codecid = 0x4;
-  repeated Stream stream_list = 0x5;
-  repeated DashItem dash_audio = 0x6;
-  optional DolbyItem dolby = 0x7;
-  optional VolumeInfo volume = 0x8;
-  optional LossLessItem loss_less_item = 0x9;
-  optional bool support_project = 0xa;
-}
-
-message DolbyItem {
-  enum Type {
-    NONE = 0;
-    COMMON = 1;
-    ATMOS = 2;
-  }
-  optional Type type = 0x1;
-  repeated DashItem audio = 0x2;
-}
-
-message LossLessItem {
-  optional bool is_lossless_audio = 0x1;
-  optional DashItem audio = 0x2;
-  optional bool need_vip = 0x3;
-}
-
-message ConfValue {
-  oneof value {
-    bool switch_val = 1;
-    int64 selected_val = 2;
-  }
-}
-
-
-
-
