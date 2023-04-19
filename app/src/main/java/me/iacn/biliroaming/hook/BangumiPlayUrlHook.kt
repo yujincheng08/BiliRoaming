@@ -37,6 +37,35 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             "type.googleapis.com/bilibili.app.playerunite.pgcanymodel.PGCAnyModel"
         private val codecMap =
             mapOf(CodeType.CODE264 to 7, CodeType.CODE265 to 12, CodeType.CODEAV1 to 13)
+        val supportPlayArcIndices = arrayOf(
+            1, // FILPCONF
+            2, // CASTCONF
+            3, // FEEDBACK
+            4, // SUBTITLE
+            5, // PLAYBACKRATE
+            6, // TIMEUP
+            7, // PLAYBACKMODE
+            8, // SCALEMODE
+            9, // BACKGROUNDPLAY
+            10, // LIKE
+            12, // COIN
+            14, // SHARE
+            15, // SCREENSHOT
+            16, // LOCKSCREEN
+            17, // RECOMMEND
+            18, // PLAYBACKSPEED
+            19, // DEFINITION
+            20, // SELECTIONS
+            21, // NEXT
+            22, // EDITDM
+            23, // SMALLWINDOW
+            25, // OUTERDM
+            26, // INNERDM
+            29, // COLORFILTER
+            31, // FREYAENTER
+            32, // FREYAFULLENTER
+            34, // RECORDSCREEN
+        )
     }
 
     private val defaultQn: Int?
@@ -705,33 +734,10 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 value = newSupplement.toByteString()
             }
             playArcConf = playArcConf {
-                arcConf[1] = arcConf { isSupport = true } //FLIPCONF
-                arcConf[2] = arcConf { isSupport = true } //CASTCONF
-                arcConf[3] = arcConf { isSupport = true } //FEEDBACK
-                arcConf[4] = arcConf { isSupport = true } //SUBTITLE
-                arcConf[5] = arcConf { isSupport = true } //PLAYBACKRATE
-                arcConf[6] = arcConf { isSupport = true } //TIMEUP
-                arcConf[7] = arcConf { isSupport = true } //PLAYBACKMODE
-                arcConf[8] = arcConf { isSupport = true } //SCALEMODE
-                arcConf[9] = arcConf { isSupport = true } //BACKGROUNDPLAY
-                arcConf[10] = arcConf { isSupport = true } //LIKE
-                arcConf[12] = arcConf { isSupport = true } //COIN
-                arcConf[14] = arcConf { isSupport = true } //SHARE
-                arcConf[15] = arcConf { isSupport = true } //SCREENSHOT
-                arcConf[16] = arcConf { isSupport = true } //LOCKSCREEN
-                arcConf[17] = arcConf { isSupport = true } //RECOMMEND
-                arcConf[18] = arcConf { isSupport = true } //PLAYBACKSPEED
-                arcConf[19] = arcConf { isSupport = true } //DEFINITION
-                arcConf[20] = arcConf { isSupport = true } //SELECTIONS
-                arcConf[21] = arcConf { isSupport = true } //NEXT
-                arcConf[22] = arcConf { isSupport = true } //EDITDM
-                arcConf[23] = arcConf { isSupport = true } //SMALLWINDOW
-                arcConf[25] = arcConf { isSupport = true } //OUTERDM
-                arcConf[26] = arcConf { isSupport = true } //INNERDM
-                arcConf[29] = arcConf { isSupport = true } //COLORFILTER
-                arcConf[31] = arcConf { disabled = true } //FREYAENTER
-                arcConf[32] = arcConf { disabled = true } //FREYAFULLENTER
-                arcConf[34] = arcConf { isSupport = true } //RECORDSCREEN
+                val conf = arcConf { isSupport = true }
+                for (i in supportPlayArcIndices) {
+                    arcConf[i] = conf
+                }
             }
         }.toByteArray()
         response.javaClass.callStaticMethod("parseFrom", newRes)
