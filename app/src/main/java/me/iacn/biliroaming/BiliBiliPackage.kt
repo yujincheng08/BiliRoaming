@@ -149,10 +149,12 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val playerPreloadHolderClass by Weak { mHookInfo.playerPreloadHolder.class_ from mClassLoader }
     val playerSettingHelperClass by Weak { mHookInfo.playerSettingHelper.class_ from mClassLoader }
     val liveRtcEnableClass by Weak { mHookInfo.liveRtcHelper.liveRtcEnableClass from mClassLoader }
-    val playURLMossClass by Weak { "com.bapis.bilibili.app.playurl.v1.PlayURLMoss" from mClassLoader }
-    val playViewReqClass by Weak { "com.bapis.bilibili.app.playurl.v1.PlayViewReq" from mClassLoader }
-    val playerMossClass by Weak { "com.bapis.bilibili.app.playerunite.v1.PlayerMoss" from mClassLoader }
+    val playerUgcMossClass by Weak { "com.bapis.bilibili.app.playurl.v1.PlayURLMoss" from mClassLoader }
+    val playViewUgcReqClass by Weak { "com.bapis.bilibili.app.playurl.v1.PlayViewReq" from mClassLoader }
+    val playerUniteMossClass by Weak { "com.bapis.bilibili.app.playerunite.v1.PlayerMoss" from mClassLoader }
     val playViewUniteReqClass by Weak { "com.bapis.bilibili.app.playerunite.v1.PlayViewUniteReq" from mClassLoader }
+    val listenerMossClass by Weak { "com.bapis.bilibili.app.listener.v1.ListenerMoss" from mClassLoader }
+    val listenerPlayURLReqClass by Weak { "com.bapis.bilibili.app.listener.v1.PlayURLReq" from mClassLoader }
     val viewMossClass by Weak { "com.bapis.bilibili.app.view.v1.ViewMoss" from mClassLoader }
     val viewReqClass by Weak { "com.bapis.bilibili.app.view.v1.ViewReq" from mClassLoader }
     val bkArcPartClass by Weak { "com.bapis.bilibili.app.listener.v1.BKArcPart" from mClassLoader }

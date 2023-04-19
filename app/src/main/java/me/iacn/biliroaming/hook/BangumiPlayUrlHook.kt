@@ -290,7 +290,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }.onFailure { Log.e(it) }
             }
         }
-        instance.playerMossClass?.run {
+        instance.playerUniteMossClass?.run {
             var isDownload = false
             hookBeforeMethod("playViewUnite", instance.playViewUniteReqClass) { param ->
                 val request = param.args[0]
@@ -377,8 +377,8 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }.onFailure { Log.e(it) }
             }
         }
-        instance.playURLMossClass?.hookBeforeMethod(
-            "playView", instance.playViewReqClass
+        instance.playerUgcMossClass?.hookBeforeMethod(
+            "playView", instance.playViewUgcReqClass
         ) { param ->
             val request = param.args[0]
             val isDownload = request.callMethodAs<Int>("getDownload") >= 1

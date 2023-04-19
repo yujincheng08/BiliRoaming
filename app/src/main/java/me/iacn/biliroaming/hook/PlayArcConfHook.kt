@@ -7,14 +7,14 @@ import me.iacn.biliroaming.utils.*
 import kotlin.math.ceil
 
 class PlayArcConfHook(classLoader: ClassLoader) : BaseHook(classLoader) {
-    private val playURLMoss get() = instance.playURLMossClass?.new()
+    private val playerUgcMoss get() = instance.playerUgcMossClass?.new()
     private val viewMoss get() = instance.viewMossClass?.new()
 
     override fun startHook() {
         if (!sPrefs.getBoolean("play_arc_conf", false)) return
 
-        instance.playURLMossClass?.hookAfterMethod(
-            "playView", instance.playViewReqClass
+        instance.playerUgcMossClass?.hookAfterMethod(
+            "playView", instance.playViewUgcReqClass
         ) { param ->
             param.result?.callMethod("getPlayArc")?.run {
                 arrayOf(
@@ -32,7 +32,7 @@ class PlayArcConfHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 callMethod("setDisabled", false)
                 callMethod("setIsSupport", true)
             }
-        instance.playerMossClass?.hookAfterMethod(
+        instance.playerUniteMossClass?.hookAfterMethod(
             "playViewUnite", instance.playViewUniteReqClass
         ) { param ->
             param.result?.callMethod("getPlayArcConf")
@@ -42,7 +42,7 @@ class PlayArcConfHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     intArrayOf(2, 9, 23, 36).forEach { this[it] = supportedArcConf }
                 }
         }
-        "com.bapis.bilibili.app.listener.v1.ListenerMoss".from(mClassLoader)?.run {
+        instance.listenerMossClass?.run {
             val playlistHook = { param: MethodHookParam ->
                 val req = param.args[0]
                 param.args[1] = param.args[1].mossResponseHandlerProxy { resp ->
@@ -74,7 +74,7 @@ class PlayArcConfHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             )
             hookAfterMethod(
                 "playURL",
-                "com.bapis.bilibili.app.listener.v1.PlayURLReq"
+                instance.listenerPlayURLReqClass
             ) { param ->
                 if (instance.networkExceptionClass?.isInstance(param.throwable) == true)
                     return@hookAfterMethod
@@ -155,23 +155,23 @@ class PlayArcConfHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             fourk = true
             preferCodecType = CodeType.CODE265
         }.toByteArray().let {
-            instance.playViewReqClass?.callStaticMethod("parseFrom", it)
+            instance.playViewUgcReqClass?.callStaticMethod("parseFrom", it)
         } ?: return@runCatching resp
         reqObj.item.subIdList.associateWith { subId ->
             val playViewReq = commPlayViewReq.apply { callMethod("setCid", subId) }
-            val playViewReply = PlayViewReplyUgc.parseFrom(
-                playURLMoss?.callMethod("playView", playViewReq)
+            val playViewReplyUgc = PlayViewReplyUgc.parseFrom(
+                playerUgcMoss?.callMethod("playView", playViewReq)
                     ?.callMethodAs<ByteArray>("toByteArray") ?: return@associateWith null
             )
             listenPlayInfo {
                 var deadline = 0L
                 fnval = reqObj.playerArgs.fnval.toInt()
-                format = playViewReply.videoInfo.format
-                length = playViewReply.videoInfo.timelength
-                qn = playViewReply.videoInfo.quality
-                videoCodecid = playViewReply.videoInfo.videoCodecid
+                format = playViewReplyUgc.videoInfo.format
+                length = playViewReplyUgc.videoInfo.timelength
+                qn = playViewReplyUgc.videoInfo.quality
+                videoCodecid = playViewReplyUgc.videoInfo.videoCodecid
                 playDash = listenPlayDASH {
-                    playViewReply.videoInfo.dashAudioList.map {
+                    playViewReplyUgc.videoInfo.dashAudioList.map {
                         listenDashItem {
                             id = it.id
                             size = it.size
@@ -183,10 +183,10 @@ class PlayArcConfHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                     ?.toLongOrNull() ?: 0
                         }
                     }.let { audio.addAll(it) }
-                    duration = ceil(playViewReply.videoInfo.timelength / 1000.0).toInt()
+                    duration = ceil(playViewReplyUgc.videoInfo.timelength / 1000.0).toInt()
                     minBufferTime = 0.0F
                 }
-                playViewReply.videoInfo.streamListList.map {
+                playViewReplyUgc.videoInfo.streamListList.map {
                     formatDescription {
                         it.streamInfo.let { si ->
                             description = si.description

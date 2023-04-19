@@ -255,6 +255,8 @@
     <string name="full_screen_quality_summary">设置视频全屏播放时默认的清晰度，当播放器画质选项为自动时此选项不生效，需开启解锁番剧限制选项</string>
     <string name="block_comment_guide_title">屏蔽评论引导</string>
     <string name="block_comment_guide_summary">屏蔽视频详情页及评论页的评论引导提示</string>
+    <string name="enable_ugc_upos_replace_title">为 UGC 视频启用 UPOS 替换</string>
+    <string name="enable_ugc_upos_replace_summary">可优化普通视频加载速度。需开启阻止视频通过 PCDN 加载。</string>
     <string name="upos_replace_dialog_title">视频 UPOS 替换高级设置</string>
     <string name="upos_replace_dialog_summary">如不清楚选项作用，请保持默认即可</string>
     <string name="upos_replace_dialog_base_title">主 Playurl 替换条件</string>
