@@ -167,7 +167,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         val req = PlayViewReq.parseFrom(serializedRequest)
                         val seasonId = req.seasonId.toString().takeIf { it != "0" }
                             ?: lastSeasonInfo["season_id"] ?: "0"
-                        val (thaiSeason, thaiEp) = getThaiSeason(seasonId)
+                        val (thaiSeason, thaiEp) = getThaiSeason(seasonId, req.epId)
                         val content = getPlayUrl(reconstructQuery(req, response, thaiEp))
                         countDownLatch?.countDown()
                         content?.let {
@@ -244,7 +244,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         val req = PlayViewReq.parseFrom(serializedRequest)
                         val seasonId = req.seasonId.toString().takeIf { it != "0" }
                             ?: lastSeasonInfo["season_id"] ?: "0"
-                        val (thaiSeason, thaiEp) = getThaiSeason(seasonId)
+                        val (thaiSeason, thaiEp) = getThaiSeason(seasonId, req.epId)
                         val content = getPlayUrl(reconstructQuery(req, response, thaiEp))
                         countDownLatch?.countDown()
                         content?.let {
@@ -318,7 +318,8 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         val req = PlayViewUniteReq.parseFrom(serializedRequest)
                         val seasonId = req.extraContentMap["season_id"].takeIf { it != "0" }
                             ?: lastSeasonInfo["season_id"] ?: "0"
-                        val (thaiSeason, thaiEp) = getThaiSeason(seasonId)
+                        val reqEpId = req.extraContentMap["ep_id"]?.toLongOrNull() ?: 0L
+                        val (thaiSeason, thaiEp) = getThaiSeason(seasonId, reqEpId)
                         val content = getPlayUrl(reconstructQueryUnite(req, supplement, thaiEp))
                         countDownLatch?.countDown()
                         content?.let {
@@ -362,19 +363,22 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
     }
 
-    private fun getThaiSeason(seasonId: String): Pair<Lazy<JSONObject>, Lazy<JSONObject>> {
+    private fun getThaiSeason(
+        seasonId: String, reqEpId: Long
+    ): Pair<Lazy<JSONObject>, Lazy<JSONObject>> {
         val season = lazy {
             getSeason(mapOf("season_id" to seasonId), true)
                 ?.toJSONObject()?.optJSONObject("result")
                 ?: throw CustomServerException(mapOf("解析服务器错误" to "无法获取剧集信息"))
         }
         val ep = lazy {
-            season.value.let {
-                it.optJSONArray("modules").orEmpty()
-                    .asSequence<JSONObject>().firstOrNull()
-                    ?.optJSONObject("data")?.optJSONArray("episodes").orEmpty()
-                    .asSequence<JSONObject>().firstOrNull()
-                    ?: it.optJSONObject("new_ep")?.apply { put("status", 2L) }
+            season.value.let { s ->
+                s.optJSONArray("modules").orEmpty().asSequence<JSONObject>().flatMap {
+                    it.optJSONObject("data")?.optJSONArray("episodes")
+                        .orEmpty().asSequence<JSONObject>()
+                }.let { es ->
+                    es.firstOrNull { if (reqEpId != 0L) it.optLong("id") == reqEpId else true }
+                } ?: s.optJSONObject("new_ep")?.apply { put("status", 2L) }
             } ?: throw CustomServerException(mapOf("解析服务器错误" to "无法获取剧集信息"))
         }
         return season to ep
@@ -569,7 +573,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         // CANNOT use reflection for compatibility with Xpatch
         return Uri.Builder().run {
             appendQueryParameter("ep_id", req.extraContentMap["ep_id"].let {
-                if (!it.isNullOrEmpty() && it != "0") it.toInt() else episodeInfo.epId
+                if (!it.isNullOrEmpty() && it != "0") it.toLong() else episodeInfo.epId
             }.let {
                 if (it != 0) it else thaiEp.value.optLong("id")
             }.toString())
