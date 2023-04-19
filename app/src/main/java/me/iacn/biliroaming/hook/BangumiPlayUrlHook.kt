@@ -186,15 +186,10 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     try {
                         val serializedRequest = request.callMethodAs<ByteArray>("toByteArray")
                         val req = PlayViewReq.parseFrom(serializedRequest)
-                        val thaiSeason = lazy {
-                            val seasonId = req.seasonId.toString().takeIf { it != "0" }
-                                ?: lastSeasonInfo["season_id"] ?: "0"
-                            getSeason(
-                                mapOf("season_id" to seasonId, "ep_id" to req.epId.toString()),
-                                true
-                            )?.toJSONObject()?.optJSONObject("result")
-                        }
-                        val content = getPlayUrl(reconstructQuery(req, response, thaiSeason))
+                        val seasonId = req.seasonId.toString().takeIf { it != "0" }
+                            ?: lastSeasonInfo["season_id"] ?: "0"
+                        val (thaiSeason, thaiEpId) = getThaiSeason(seasonId)
+                        val content = getPlayUrl(reconstructQuery(req, response, thaiEpId))
                         countDownLatch?.countDown()
                         content?.let {
                             Log.toast("已从代理服务器获取播放地址\n如加载缓慢或黑屏，可去漫游设置中测速并设置 UPOS")
@@ -267,15 +262,10 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     try {
                         val serializedRequest = request.callMethodAs<ByteArray>("toByteArray")
                         val req = PlayViewReq.parseFrom(serializedRequest)
-                        val thaiSeason = lazy {
-                            val seasonId = req.seasonId.toString().takeIf { it != "0" }
-                                ?: lastSeasonInfo["season_id"] ?: "0"
-                            getSeason(
-                                mapOf("season_id" to seasonId, "ep_id" to req.epId.toString()),
-                                true
-                            )?.toJSONObject()?.optJSONObject("result")
-                        }
-                        val content = getPlayUrl(reconstructQuery(req, response, thaiSeason))
+                        val seasonId = req.seasonId.toString().takeIf { it != "0" }
+                            ?: lastSeasonInfo["season_id"] ?: "0"
+                        val (thaiSeason, thaiEpId) = getThaiSeason(seasonId)
+                        val content = getPlayUrl(reconstructQuery(req, response, thaiEpId))
                         countDownLatch?.countDown()
                         content?.let {
                             Log.toast("已从代理服务器获取播放地址\n如加载缓慢或黑屏，可去漫游设置中测速并设置 UPOS")
@@ -345,16 +335,10 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     try {
                         val serializedRequest = request.callMethodAs<ByteArray>("toByteArray")
                         val req = PlayViewUniteReq.parseFrom(serializedRequest)
-                        val thaiSeason = lazy {
-                            val seasonId = req.extraContentMap["season_id"].takeIf { it != "0" }
-                                ?: lastSeasonInfo["season_id"] ?: "0"
-                            val epId = req.extraContentMap["ep_id"]
-                            getSeason(
-                                mapOf("season_id" to seasonId, "ep_id" to epId),
-                                true
-                            )?.toJSONObject()?.optJSONObject("result")
-                        }
-                        val content = getPlayUrl(reconstructQueryUnite(req, supplement, thaiSeason))
+                        val seasonId = req.extraContentMap["season_id"].takeIf { it != "0" }
+                            ?: lastSeasonInfo["season_id"] ?: "0"
+                        val (thaiSeason, thaiEpId) = getThaiSeason(seasonId)
+                        val content = getPlayUrl(reconstructQueryUnite(req, supplement, thaiEpId))
                         countDownLatch?.countDown()
                         content?.let {
                             Log.toast("已从代理服务器获取播放地址\n如加载缓慢或黑屏，可去漫游设置中测速并设置 UPOS")
@@ -395,6 +379,25 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
             }
         }
+    }
+
+    private fun getThaiSeason(seasonId: String): Pair<Lazy<JSONObject?>, Lazy<Long>> {
+        val season = lazy {
+            getSeason(mapOf("season_id" to seasonId), true)
+                ?.toJSONObject()?.optJSONObject("result")
+        }
+        val latestEpId = lazy {
+            season.value?.let {
+                it.optJSONObject("new_ep")?.optLong("id") ?: it.optJSONArray("modules").orEmpty()
+                    .asSequence<JSONObject>()
+                    .lastOrNull()
+                    ?.optJSONObject("data")?.optJSONArray("episodes").orEmpty()
+                    .asSequence<JSONObject>()
+                    .lastOrNull()
+                    ?.optLong("id")
+            } ?: 0L
+        }
+        return season to latestEpId
     }
 
     private fun needProxy(response: Any): Boolean {
@@ -590,32 +593,22 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private fun reconstructQuery(
         req: PlayViewReq,
         response: Any,
-        thaiSeason: Lazy<JSONObject?>
+        thaiEpId: Lazy<Long>
     ): String? {
         val episodeInfo by lazy {
             response.callMethodOrNull("getBusiness")?.callMethodOrNull("getEpisodeInfo")
-        }
-        val thaiEpisodeId by lazy {
-            thaiSeason.value?.let {
-                it.optJSONArray("modules").orEmpty().asSequence<JSONObject>()
-                    .firstOrNull()
-                    ?.optJSONObject("data")?.optJSONArray("episodes").orEmpty()
-                    .asSequence<JSONObject>()
-                    .firstOrNull()
-                    ?.optLong("id") ?: it.optJSONObject("new_ep")?.optLong("id")
-            } ?: 0L
         }
         // CANNOT use reflection for compatibility with Xpatch
         return Uri.Builder().run {
             appendQueryParameter("ep_id", req.epId.let {
                 if (it != 0L) it else episodeInfo?.callMethodOrNullAs<Int>("getEpId") ?: 0
             }.let {
-                if (it != 0) it else thaiEpisodeId.toInt()
+                if (it != 0) it else thaiEpId.value.toInt()
             }.toString())
             appendQueryParameter("cid", req.cid.let {
                 if (it != 0L) it else episodeInfo?.callMethodOrNullAs<Long>("getCid") ?: 0
             }.let {
-                if (it != 0L) it else thaiEpisodeId.toInt()
+                if (it != 0L) it else thaiEpId.value.toInt()
             }.toString())
             appendQueryParameter("qn", req.qn.toString())
             appendQueryParameter("fnver", req.fnver.toString())
@@ -629,27 +622,20 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private fun reconstructQueryUnite(
         req: PlayViewUniteReq,
         supplement: PlayViewReply,
-        thaiSeason: Lazy<JSONObject?>
+        thaiEpId: Lazy<Long>
     ): String? {
         val episodeInfo = supplement.business.episodeInfo
-        val thaiEpisodeId by lazy {
-            thaiSeason.value?.optJSONArray("modules").orEmpty().asSequence<JSONObject>()
-                .firstOrNull()
-                ?.optJSONObject("data")?.optJSONArray("episodes").orEmpty().asSequence<JSONObject>()
-                .firstOrNull()
-                ?.optLong("id") ?: 0L
-        }
         // CANNOT use reflection for compatibility with Xpatch
         return Uri.Builder().run {
             appendQueryParameter("ep_id", req.extraContentMap["ep_id"].let {
                 if (!it.isNullOrEmpty() && it != "0") it.toInt() else episodeInfo.epId
             }.let {
-                if (it != 0) it else thaiEpisodeId.toInt()
+                if (it != 0) it else thaiEpId.value.toInt()
             }.toString())
             appendQueryParameter("cid", req.vod.cid.let {
                 if (it != 0L) it else episodeInfo.cid
             }.let {
-                if (it != 0L) it else thaiEpisodeId.toInt()
+                if (it != 0L) it else thaiEpId.value.toInt()
             }.toString())
             appendQueryParameter("qn", req.vod.qn.toString())
             appendQueryParameter("fnver", req.vod.fnver.toString())
