@@ -49,11 +49,38 @@ message PlayViewReq {
 }
 
 message ContinuePlayInfo {
-
+  optional int64 continue_play_ep_id = 0x1;
 }
 
 message ClipInfo {
+  optional int64 material_no = 0x1;
+  optional int32 start = 0x2;
+  optional int32 end = 0x3;
+  optional ClipType clip_type = 0x4;
+  optional string toast_text = 0x5;
+  optional MultiView multi_view = 0x6;
+}
 
+enum ClipType {
+  NT_UNKNOWN = 0; 
+  CLIP_TYPE_OP = 1;
+  CLIP_TYPE_ED = 2;
+  CLIP_TYPE_HE = 3;
+  CLIP_TYPE_MULTI_VIEW = 4;
+}
+
+message MultiView {
+  optional string button_material = 0x1;
+  optional int64 ep_id = 0x2;
+  optional int64 cid = 0x3;
+  optional int64 avid = 0x4;
+}
+
+enum InlineType {
+  TYPE_UNKNOWN = 0;
+  TYPE_WHOLE = 1;
+  TYPE_HE_CLIP = 2;
+  TYPE_PREVIEW = 3;
 }
 
 message QualityExtInfo {
@@ -61,7 +88,8 @@ message QualityExtInfo {
 }
 
 message RecordInfo {
-
+  optional string record = 0x1;
+  optional string record_icon = 0x2;
 }
 
 message UserStatus {
@@ -143,6 +171,10 @@ message PlayAbilityConf {
   optional bool edit_dm_disable = 0x16;
   optional bool freya_enter_disable = 0x1b;
   optional bool freya_full_disable = 0x1d;
+  optional bool skip_oped_switch_disable = 0x1e;
+  optional bool record_screen_disable = 0x1f;
+  optional bool color_optimize_disable = 0x20;
+  optional bool dubbing_disable = 0x21;
 }
 
 message StreamLimit {
@@ -165,6 +197,19 @@ message StreamInfo {
   optional string new_description = 0xb;
   optional string display_desc = 0xc;
   optional string superscript = 0xd;
+  optional bool vip_free = 0xe;
+  optional string subtitle = 0xf;
+  optional Scheme scheme = 0x10;
+  optional bool support_drm = 0x11;
+}
+
+message Scheme {
+  enum ActionType {
+      UNKNOWN = 0;
+      SHOW_TOAST = 1;
+  }
+  optional ActionType action_type = 0x1;
+  optional string toast = 0x2;
 }
 
 message DashVideo {
@@ -176,6 +221,10 @@ message DashVideo {
   optional int64 size = 0x6;
   optional int32 audio_id = 0x7;
   optional bool no_rexcode = 0x8;
+  optional string frame_rate = 0x9;
+  optional int32 width = 0xa;
+  optional int32 height = 0xb;
+  optional string widevine_pssh = 0xc;
 }
 
 message ResponseUrl {
@@ -205,15 +254,8 @@ message DashItem {
   optional int32 codecid = 0x5;
   optional string md5 = 0x6;
   optional int64 size = 0x7;
-}
-
-message VideoInfo {
-  optional int32 quality = 0x1;
-  optional string format = 0x2;
-  optional int64 timelength = 0x3;
-  optional int32 video_codecid = 0x4;
-  repeated Stream stream_list = 0x5;
-  repeated DashItem dash_audio = 0x6;
+  optional string frame_rate = 0x8;
+  optional string widevine_pssh = 0x9;
 }
 
 message Event {}
@@ -307,15 +349,46 @@ message PlayAbilityExtConf {
 }
 
 message PlayViewReply {
-  optional VideoInfo video_info = 0x1;
+  optional VodInfo video_info = 0x1;
   optional PlayAbilityConf play_conf = 0x2;
   optional BusinessInfo business = 0x3;
   optional Event event = 0x4;
   optional ViewInfo view_info = 0x5;
   optional PlayAbilityExtConf play_ext_conf = 0x6;
+  optional PlayExtInfo play_ext_info = 0x7;
 }
 
-message ExtraContent {}
+message PlayExtInfo {
+  optional PlayDubbingInfo play_dubbing_info = 0x1;
+}
+
+message PlayDubbingInfo {
+  optional AudioMaterialProto background_audio = 0x1;
+  repeated RoleAudioProto role_audio_list = 0x2;
+  optional string guide_text = 0x3;
+}
+
+message AudioMaterialProto {
+  string audio_id = 1;
+  string title = 2;
+  string edition = 3;
+  uint64 person_id = 4;
+  string person_name = 5;
+  string person_avatar = 6;
+  repeated DashItem audio = 7;
+}
+
+message RoleAudioProto {
+  int64 role_id = 1;
+  string role_name = 2;
+  string role_avatar = 3;
+  repeated AudioMaterialProto audio_material_list = 4;
+}
+
+message ExtraContent {
+  optional string disable_reason = 0x1;
+  optional uint64 disable_code = 0x2;
+}
 
 message ArcConf {
   optional bool is_support = 0x1;
@@ -325,14 +398,41 @@ message ArcConf {
 
 message PlayArcConf {
   map<int32, ArcConf> arc_conf = 0x1;
+  repeated int32 unsupport_scene = 0x4;
 }
 
-message PlayDeviceConf {}
-message PlayArc {}
+message PlayDeviceConf {
+  map<int32, DeviceConf> device_confs = 0x1;
+}
+
+message DeviceConf {
+  optional ConfValue conf_value = 0x1;
+}
+
+message PlayArc {
+  optional VideoType video_type = 1;
+  optional uint64 aid = 2;
+  optional uint64 cid = 3;
+  optional DrmTechType drm_tech_type = 4;
+}
+
+enum VideoType {
+  UNKNOWN = 0;
+  UGC = 1;
+  PGC = 2;
+}
+
+enum DrmTechType {
+  UNKNOWN_DRM = 0;
+  FAIR_PLAY = 1;
+  WIDE_VINE = 2;
+  BILI_DRM = 3;
+}
+
 message QnTrialInfo {}
 
 message PlayViewUniteReply {
-  optional VideoInfo vod_info = 0x1;
+  optional VodInfo vod_info = 0x1;
   optional PlayArcConf play_arc_conf = 0x2;
   optional PlayDeviceConf play_device_conf = 0x3;
   optional Event event = 0x4;
@@ -883,13 +983,22 @@ message FormatDescription {
   optional string superscript = 0x5;
 }
 
-message VolumeInfo {}
+message VolumeInfo {
+  optional double measured_i = 0x1;
+  optional double measured_lra = 0x2;
+  optional double measured_tp = 0x3;
+  optional double measured_threshold = 0x4;
+  optional double target_offset = 0x5;
+  optional double target_i = 0x6;
+  optional double target_tp = 0x7;
+}
 
 message ListenPlayInfo {
   optional int32 qn = 0x1;
   optional string format = 0x2;
   optional int32 qn_type = 0x3;
   oneof info {
+    ListenPlayURL play_url = 0x4;
     ListenPlayDASH play_dash = 0x5;
   }
   optional int32 fnver = 0x6;
@@ -903,7 +1012,10 @@ message ListenPlayInfo {
   optional VolumeInfo volume = 0xe;
 }
 
-message ListenDashSegmentBase {}
+message ListenDashSegmentBase {
+  optional string initialization = 0x1;
+  optional string index_range = 0x2;
+}
 
 message ListenDashItem {
   optional int32 id = 0x1;
@@ -922,6 +1034,21 @@ message ListenPlayDASH {
   optional int32 duration = 0x1;
   optional float min_buffer_time = 0x2;
   repeated ListenDashItem audio = 0x3;
+}
+
+message ListenPlayURL {
+  repeated ListenResponseUrl durl = 0x1;
+}
+
+message ListenResponseUrl {
+  optional int32 order = 0x1;
+  optional int64 length = 0x2;
+  optional int64 size = 0x3;
+  optional string ahead = 0x4;
+  optional string vhead = 0x5;
+  optional string url = 0x6;
+  repeated string backup_url = 0x7;
+  optional string md5 = 0x8;
 }
 
 message EventTracking {}
@@ -946,8 +1073,162 @@ message ListenPlayURLResp {
   map<int64, ListenPlayInfo> player_info = 0x4;
 }
 
-message UGCPlayViewReply {
-  optional VideoInfo video_info = 0x1;
+message PlayViewReplyUgc {
+  optional VodInfo video_info = 0x1;
+  optional PlayAbilityConfUgc play_conf = 0x2;
+  optional UpgradeLimitUgc upgrade_limit = 0x3;
+  optional ChronosUgc chronos = 0x4;
+  optional PlayArcConfUgc play_arc = 0x5;
+  optional Event event = 0x6;
+  optional AB ab = 0x7;
+  optional PlayLimitUgc play_limit = 0x8;
+}
+
+message CloudConf {
+  enum ConfType {
+    NoType = 0;
+    FLIPCONF = 1;
+    CASTCONF = 2;
+    FEEDBACK = 3;
+    SUBTITLE = 4;
+    PLAYBACKRATE = 5;
+    TIMEUP = 6;
+    PLAYBACKMODE = 7;
+    SCALEMODE = 8;
+    BACKGROUNDPLAY = 9;
+    LIKE = 10;
+    DISLIKE = 11;
+    COIN = 12;
+    ELEC = 13;
+    SHARE = 14;
+    SCREENSHOT = 15;
+    LOCKSCREEN = 16;
+    RECOMMEND = 17;
+    PLAYBACKSPEED = 18;
+    DEFINITION = 19;
+    SELECTIONS = 20;
+    NEXT = 21;
+    EDITDM = 22;
+    SMALLWINDOW = 23;
+    SHAKE = 24;
+    OUTERDM = 25;
+    INNERDM = 26;
+    PANORAMA = 27;
+    DOLBY = 28;
+    COLORFILTER = 29;
+  }
+  message FieldValue {
+    oneof value {
+      bool switch = 0x1;
+    }
+  }
+  optional bool show = 0x1;
+  optional ConfType conf_type = 0x2;
+  optional FieldValue field_value = 0x3;
+  optional ConfValue conf_value = 0x4;
+}
+
+message PlayAbilityConfUgc {
+  optional CloudConf background_play_conf = 0x1; 
+  optional CloudConf flip_conf = 0x2; 
+  optional CloudConf cast_conf = 0x3; 
+  optional CloudConf feedback_conf = 0x4; 
+  optional CloudConf subtitle_conf = 0x5; 
+  optional CloudConf playback_rate_conf = 0x6; 
+  optional CloudConf time_up_conf = 0x7; 
+  optional CloudConf playback_mode_conf = 0x8; 
+  optional CloudConf scale_mode_conf = 0x9; 
+  optional CloudConf like_conf = 0xa;
+  optional CloudConf dislike_conf = 0xb;
+  optional CloudConf coin_conf = 0xc;
+  optional CloudConf elec_conf = 0xd;
+  optional CloudConf share_conf = 0xe;
+  optional CloudConf screen_shot_conf = 0xf;
+  optional CloudConf lock_screen_conf = 0x10;
+  optional CloudConf recommend_conf = 0x11;
+  optional CloudConf playback_speed_conf = 0x12;
+  optional CloudConf definition_conf = 0x13;
+  optional CloudConf selections_conf = 0x14;
+  optional CloudConf next_conf = 0x15;
+  optional CloudConf edit_dm_conf = 0x16;
+  optional CloudConf small_window_conf = 0x17;
+  optional CloudConf shake_conf = 0x18;
+  optional CloudConf outer_dm_conf = 0x19;
+  optional CloudConf inner_dm_conf = 0x1a;
+  optional CloudConf panorama_conf = 0x1b;
+  optional CloudConf dolby_conf = 0x1c;
+  optional CloudConf color_filter_conf = 0x1d;
+}
+message UpgradeLimitUgc {
+  optional int32 code = 0x1;
+  optional string message = 0x2;
+  optional string image = 0x3;
+  optional UpgradeButton button = 0x4;
+}
+message UpgradeButton {
+  optional string title = 0x1;
+  optional string link = 0x2;
+}
+message ChronosUgc {
+  optional string md5 = 0x1;
+  optional string file = 0x2;
+}
+message PlayArcConfUgc {
+  optional ArcConf background_play_conf = 0x1; 
+  optional ArcConf flip_conf = 0x2; 
+  optional ArcConf cast_conf = 0x3; 
+  optional ArcConf feedback_conf = 0x4; 
+  optional ArcConf subtitle_conf = 0x5; 
+  optional ArcConf playback_rate_conf = 0x6; 
+  optional ArcConf time_up_conf = 0x7; 
+  optional ArcConf playback_mode_conf = 0x8; 
+  optional ArcConf scale_mode_conf = 0x9; 
+  optional ArcConf like_conf = 0xa;
+  optional ArcConf dislike_conf = 0xb;
+  optional ArcConf coin_conf = 0xc;
+  optional ArcConf elec_conf = 0xd;
+  optional ArcConf share_conf = 0xe;
+  optional ArcConf screen_shot_conf = 0xf;
+  optional ArcConf lock_screen_conf = 0x10;
+  optional ArcConf recommend_conf = 0x11;
+  optional ArcConf playback_speed_conf = 0x12;
+  optional ArcConf definition_conf = 0x13;
+  optional ArcConf selections_conf = 0x14;
+  optional ArcConf next_conf = 0x15;
+  optional ArcConf edit_dm_conf = 0x16;
+  optional ArcConf small_window_conf = 0x17;
+  optional ArcConf shake_conf = 0x18;
+  optional ArcConf outer_dm_conf = 0x19;
+  optional ArcConf inner_dm_conf = 0x1a;
+  optional ArcConf panorama_conf = 0x1b;
+  optional ArcConf dolby_conf = 0x1c;
+  optional ArcConf screen_recording_conf = 0x1d;
+  optional ArcConf color_filter_conf = 0x1e;
+}
+message AB {
+  message Glance {
+    optional bool can_watch = 0x1;
+    optional int64 times = 0x2;
+    optional int64 duration = 0x3;
+  } 
+  optional Glance glance = 0x1;
+  optional int32 group = 0x2;
+}
+message PlayLimitUgc {
+  optional PlayLimitCode code = 0x1;
+  optional string message = 0x2;
+  optional string sub_message = 0x3;
+  optional ButtonStyle button = 0x4;
+}
+enum PlayLimitCode {
+  PLCUnkown = 0;
+  PLCUgcNotPayed = 1;
+}
+message ButtonStyle {
+  optional string text = 0x1;
+  optional string text_color = 0x2;
+  optional string bg_color = 0x3;
+  optional string jump_link = 0x4;
 }
 
 message BKArcPart {
@@ -957,3 +1238,43 @@ message BKArcPart {
   optional int64 duration = 0x4;
   optional int32 page = 0x5;
 }
+
+message VodInfo {
+  optional uint32 quality = 0x1;
+  optional string format = 0x2;
+  optional uint64 timelength = 0x3;
+  optional uint32 video_codecid = 0x4;
+  repeated Stream stream_list = 0x5;
+  repeated DashItem dash_audio = 0x6;
+  optional DolbyItem dolby = 0x7;
+  optional VolumeInfo volume = 0x8;
+  optional LossLessItem loss_less_item = 0x9;
+  optional bool support_project = 0xa;
+}
+
+message DolbyItem {
+  enum Type {
+    NONE = 0;
+    COMMON = 1;
+    ATMOS = 2;
+  }
+  optional Type type = 0x1;
+  repeated DashItem audio = 0x2;
+}
+
+message LossLessItem {
+  optional bool is_lossless_audio = 0x1;
+  optional DashItem audio = 0x2;
+  optional bool need_vip = 0x3;
+}
+
+message ConfValue {
+  oneof value {
+    bool switch_val = 1;
+    int64 selected_val = 2;
+  }
+}
+
+
+
+

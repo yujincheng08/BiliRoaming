@@ -159,7 +159,7 @@ class PlayArcConfHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         } ?: return@runCatching resp
         reqObj.item.subIdList.associateWith { subId ->
             val playViewReq = commPlayViewReq.apply { callMethod("setCid", subId) }
-            val playViewReply = UGCPlayViewReply.parseFrom(
+            val playViewReply = PlayViewReplyUgc.parseFrom(
                 playURLMoss?.callMethod("playView", playViewReq)
                     ?.callMethodAs<ByteArray>("toByteArray") ?: return@associateWith null
             )

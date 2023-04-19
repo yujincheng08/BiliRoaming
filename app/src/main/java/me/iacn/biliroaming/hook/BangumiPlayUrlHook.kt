@@ -466,7 +466,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             response.javaClass.callStaticMethod("parseFrom", newRes)
         } ?: response
 
-    private fun VideoInfoKt.Dsl.fixDownloadProto(checkBaseUrl: Boolean = false) {
+    private fun VodInfoKt.Dsl.fixDownloadProto(checkBaseUrl: Boolean = false) {
         var audioId = 0
         var setted = false
         val checkConnection = fun(url: String) = runCatchingOrNull {
@@ -616,7 +616,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 freyaEnterDisable = true
                 freyaFullDisable = true
             }
-            videoInfo = jsonContent.toVideoInfo(req.preferCodecType, isDownload)
+            videoInfo = jsonContent.toVodInfo(req.preferCodecType, isDownload)
             fixBusinessProto(thaiSeason, thaiEp, jsonContent)
             viewInfo = viewInfo {}
         }.toByteArray()
@@ -642,7 +642,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
         val serializedResponse = response.callMethodAs<ByteArray>("toByteArray")
         val newRes = PlayViewUniteReply.parseFrom(serializedResponse).copy {
-            vodInfo = jsonContent.toVideoInfo(req.vod.preferCodeType, isDownload)
+            vodInfo = jsonContent.toVodInfo(req.vod.preferCodeType, isDownload)
             val newSupplement = supplement.copy {
                 fixBusinessProto(thaiSeason, thaiEp, jsonContent)
                 viewInfo = viewInfo {}
@@ -703,7 +703,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
     }
 
-    private fun JSONObject.toVideoInfo(preferCodec: CodeType, isDownload: Boolean) = videoInfo {
+    private fun JSONObject.toVodInfo(preferCodec: CodeType, isDownload: Boolean) = vodInfo {
         val qualityList = optJSONArray("accept_quality")
             ?.asSequence<Int>()?.toList().orEmpty()
         val type = optString("type")
@@ -763,7 +763,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     }
                     streamInfo = streamInfo {
                         quality = video.optInt("id")
-                        val deltaQn = abs(quality - this@videoInfo.quality)
+                        val deltaQn = abs(quality - this@vodInfo.quality)
                         if (deltaQn < minDeltaQn) {
                             bestMatchQn = quality
                             minDeltaQn = deltaQn
