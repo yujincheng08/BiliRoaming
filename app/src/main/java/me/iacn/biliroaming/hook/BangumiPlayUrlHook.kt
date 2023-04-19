@@ -10,11 +10,7 @@ import me.iacn.biliroaming.network.BiliRoamingApi.CustomServerException
 import me.iacn.biliroaming.network.BiliRoamingApi.getPlayUrl
 import me.iacn.biliroaming.network.BiliRoamingApi.getSeason
 import me.iacn.biliroaming.utils.*
-import org.json.JSONArray
-import org.json.JSONException
 import org.json.JSONObject
-import java.io.ByteArrayInputStream
-import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.concurrent.CountDownLatch
@@ -96,50 +92,6 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
             }
         }
-        instance.urlConnectionClass?.hookAfterMethod("getInputStream") { param ->
-            // Found from "b.ecy" in version 5.39.1
-            val connection = param.thisObject as HttpURLConnection
-            val urlString = connection.url.toString()
-            if (!urlString.startsWith("https://api.bilibili.com/pgc/player/api/playurl") &&
-                !urlString.startsWith("https://apiintl.biliapi.net/intl/gateway/ogv/player/api/playurl")
-            )
-                return@hookAfterMethod
-            if (urlString.contains("&test=true")) return@hookAfterMethod
-            val queryString = urlString.substring(urlString.indexOf("?") + 1)
-            if ((!queryString.contains("ep_id=") && !queryString.contains("module=bangumi"))
-                || queryString.contains("ep_id=0") /*workaround*/) return@hookAfterMethod
-            var content = getStreamContent(param.result as InputStream)
-            if (content == null || !isLimitWatchingArea(content)) {
-                if (urlString.contains("dl_fix=1") || urlString.contains("dl=1")) {
-                    content = content?.let { fixDownload(it) }
-                }
-                param.result = ByteArrayInputStream(content?.toByteArray())
-                return@hookAfterMethod
-            }
-            try {
-                // Replace because in Android R, the sign query hook may not success.
-                // As a workaround, the request will fallback to request from proxy server.
-                // If biliplus is down, we can still get result from proxy server.
-                // However, the speed may not be fast.
-                content = getPlayUrl(queryString.replace("dl=1", "dl_fix=1"))
-                countDownLatch?.countDown()
-                content = content?.let {
-                    if (urlString.contains("dl_fix=1") || urlString.contains("dl=1")) {
-                        fixDownload(it)
-                    } else content
-                }
-                content?.let {
-                    Log.toast("已从代理服务器获取播放地址\n如加载缓慢或黑屏，可去漫游设置中测速并设置 UPOS")
-                    param.result = ByteArrayInputStream(it.toByteArray())
-                } ?: run {
-                    Log.w("Failed to get play url")
-                    Log.toast("获取播放地址失败")
-                }
-            } catch (e: CustomServerException) {
-                Log.toast("请求解析服务器发生错误: ${e.message}", alsoLog = true)
-            }
-        }
-
         instance.retrofitResponseClass?.hookBeforeAllConstructors { param ->
             val url = getRetrofitUrl(param.args[0]) ?: return@hookBeforeAllConstructors
             val body = param.args[1] ?: return@hookBeforeAllConstructors
@@ -511,36 +463,6 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             response.javaClass.callStaticMethod("parseFrom", newRes)
         } ?: response
 
-    private fun fixDownload(content: String): String {
-        val json = JSONObject(content)
-        if (json.optString("type") != "DASH" && !json.has("dash")) return content
-        val quality = json.optInt("quality")
-        val dash = json.optJSONObject("dash")
-        val videos = dash?.optJSONArray("video")
-        val audios = dash?.optJSONArray("audio")
-        var preservedVideo: JSONObject? = null
-        var audioId = 0
-        for (video in videos.orEmpty()) {
-            if (video.optInt("id") == quality
-                && video.optInt("codecid") == json.optInt("video_codecid")
-            ) {
-                preservedVideo = video
-            }
-        }
-
-        var preservedAudio: JSONObject? = null
-        for (audio in audios.orEmpty()) {
-            if (audio.optInt("id") > audioId) {
-                audioId = audio.optInt("id")
-                preservedAudio = audio
-            }
-        }
-
-        dash?.put("video", JSONArray(arrayOf(preservedVideo)))
-        dash?.put("audio", JSONArray(arrayOf(preservedAudio)))
-        return json.toString()
-    }
-
     private fun VideoInfoKt.Dsl.fixDownloadProto(checkBaseUrl: Boolean = false) {
         var audioId = 0
         var setted = false
@@ -603,15 +525,6 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }.toByteArray()
         response.javaClass.callStaticMethod("parseFrom", newRes)
     } ?: response
-
-    private fun isLimitWatchingArea(jsonText: String) = try {
-        val json = JSONObject(jsonText)
-        val code = json.optInt("code")
-        code == -10403
-    } catch (e: JSONException) {
-        Log.e(e)
-        false
-    }
 
     private fun needForceProxy(response: Any): Boolean {
         sPrefs.getString("cn_server_accessKey", null) ?: return false
