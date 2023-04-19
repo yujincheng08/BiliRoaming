@@ -19,7 +19,7 @@
     <string name="teenagers_mode_dialog_summary">仍可從側滑選單進入青少年模式</string>
     <string name="allow_download_title">允許下載版權番劇</string>
     <string name="allow_download_summary">使版權番劇可以快取（同時修復概念版不能投影的問題）</string>
-    <string name="cdn_category">加速CDN設定</string>
+    <string name="cdn_category">加速 CDN 設定</string>
     <string name="hidden_title">啟用隱藏功能</string>
     <string name="hidden_summary">打開後可以使用隱藏功能</string>
     <string name="purify_game_title">淨化遊戲中心</string>
@@ -38,8 +38,8 @@
     <string name="group_summary">點擊加入QQ頻道</string>
     <string name="tg_title">TG頻道</string>
     <string name="tg_summary">點擊加入TG頻道</string>
-    <string name="upos_title">UPOS伺服器設定</string>
-    <string name="upos_summary">設定解鎖番劇的伺服器，可加快影片載入速度；當所選 UPOS 不能用時，會回退到 MCDN。</string>
+    <string name="upos_title">UPOS 伺服器設定</string>
+    <string name="upos_summary">設置加載影片使用的 UPOS，可加快影片加載速度。\n注意，海外 UPOS 不支持免流。</string>
     <string name="purify_splash_title">淨化啟動頁面</string>
     <string name="purify_splash_summary">去除啟動程式時的推廣</string>
     <string name="custom_splash_title">取代啟動圖</string>
@@ -85,8 +85,8 @@
     <string name="purify_campus_title">移除校園標籤</string>
     <string name="setting">設定</string>
     <string name="speed">速度</string>
-    <string name="test_upos_title">UPOS伺服器測速</string>
-    <string name="test_upos_summary">選擇最快的UPOS以獲得最好體驗</string>
+    <string name="test_upos_title">UPOS 伺服器測速</string>
+    <string name="test_upos_summary">選擇最快的 UPOS 以獲得最好體驗</string>
     <string name="search_area_title">開啟其它地區番劇搜尋</string>
     <string name="search_area_summary">在搜尋頁面新增其它地區番劇搜尋結果，需要解析伺服器支援</string>
     <string name="customize_bottom_bar_title">自訂底欄</string>
@@ -255,4 +255,13 @@
     <string name="full_screen_quality_summary">設定影片全螢幕播放時預設的清晰度，當播放器畫質選項為自動時此選項不生效，需開啟解鎖番劇限制選項</string>
     <string name="block_comment_guide_title">封鎖評論引導</string>
     <string name="block_comment_guide_summary">封鎖影片詳情頁及評論頁的評論引導提示</string>
+    <string name="upos_replace_dialog_title">影片 UPOS 取代進階設定</string>
+    <string name="upos_replace_dialog_summary">如不清楚選項作用，請保持預設即可。</string>
+    <string name="upos_replace_dialog_base_title">主 Playurl 取代條件</string>
+    <string name="upos_replace_dialog_backup_title">備 Playurl 取代條件</string>
+    <string name="upos_replace_dialog_replace_pcdn_upos_title">取代 PCDN</string>
+    <string name="upos_replace_dialog_replace_mcdn_upos_title">取代 MCDN</string>
+    <string name="upos_replace_dialog_replace_bcache_cdn_upos_title">取代 BCache CDN</string>
+    <string name="upos_replace_dialog_replace_mirror_cdn_upos_title">取代 Mirror CDN</string>
+    <string name="upos_replace_dialog_replace_all_upos_title">強制取代所有</string>
 </resources>

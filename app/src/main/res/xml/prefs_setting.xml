@@ -455,6 +455,11 @@
             android:key="block_pcdn_live"
             android:summary="@string/block_pcdn_live_summary"
             android:title="@string/block_pcdn_live_title" />
+        <Preference
+            android:dependency="hidden"
+            android:key="upos_replace_dialog"
+            android:summary="@string/upos_replace_dialog_summary"
+            android:title="@string/upos_replace_dialog_title" />
     </PreferenceCategory>
 
     <PreferenceCategory

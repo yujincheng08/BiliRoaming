@@ -6,10 +6,7 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Activity.RESULT_CANCELED
 import android.app.AlertDialog
-import android.content.ActivityNotFoundException
-import android.content.Context
-import android.content.Intent
-import android.content.SharedPreferences
+import android.content.*
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.net.Uri
@@ -86,6 +83,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("custom_link")?.onPreferenceClickListener = this
             findPreference("add_custom_button")?.onPreferenceChangeListener = this
             findPreference("customize_dynamic")?.onPreferenceClickListener = this
+            findPreference("upos_replace_dialog")?.onPreferenceClickListener = this
             checkCompatibleVersion()
             checkUpdate()
         }
@@ -661,6 +659,19 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             return true
         }
 
+        private fun onUposReplaceSettingClick(): Boolean {
+            UposReplaceDialog(activity, prefs).create().also { dialog ->
+                dialog.setOnShowListener {
+                    dialog.window?.clearFlags(
+                        WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+                                or WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM
+                    )
+                    dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE)
+                }
+            }.show()
+            return true
+        }
+
         @Deprecated("Deprecated in Java")
         override fun onPreferenceClick(preference: Preference) = when (preference.key) {
             "version" -> onVersionClick()
@@ -678,6 +689,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             "custom_link" -> onCustomLinkClick()
             "customize_dynamic" -> onCustomDynamicClick()
             "danmaku_filter" -> onDanmakuFilterClick()
+            "upos_replace_dialog" -> onUposReplaceSettingClick()
             else -> false
         }
     }
