@@ -423,88 +423,13 @@ object BiliRoamingApi {
         }
     }
 
-    private val mcdn by lazy {
-        listOf(
-            (sPrefs.getString("upos_host", null)
-                ?: XposedInit.moduleRes.getString(R.string.cos_host)) to ""
-        ) + if (runCatchingOrNull { XposedInit.country.get(5L, TimeUnit.SECONDS) } == "cn") {
-            val uri = Uri.Builder()
-                .scheme("https")
-                .encodedAuthority("api.bilibili.com/pgc/player/api/playurl")
-                .encodedQuery(signQuery(mainlandTestParams, emptyMap()))
-                .toString()
-
-            getContent(uri)?.toJSONObject()?.optJSONObject("dash")?.optJSONArray("video")
-                ?.asSequence<JSONObject>()
-                ?.toList()
-                ?.flatMap {
-                    listOfNotNull(it.optString("base_url")) + (it.optJSONArray("backup_url")
-                        ?.asSequence<String>()?.toList() ?: emptyList())
-                }?.mapNotNull {
-                    Uri.parse(it).run {
-                        encodedAuthority?.let {
-                            encodedAuthority to (query?.substringBefore("&e=", "") ?: "")
-                        }
-                    }
-                }?.distinct() ?: emptyList()
-        } else listOf(XposedInit.moduleRes.getString(R.string.akamai_host) to "")
-    }
-
-    private fun replaceUPOS(stream: JSONObject) {
-        val baseAuthority = mcdn[0]
-        if (baseAuthority.first == "\$1") return
-        val base = Uri.parse(stream.optString("base_url"))
-        stream.put(
-            "base_url",
-            Uri.Builder().scheme("https").encodedAuthority(baseAuthority.first)
-                .encodedPath(base.encodedPath)
-                .query(baseAuthority.second)
-                .encodedQuery(base.encodedQuery).toString()
-        )
-        if (mcdn.size <= 1) return
-        val backup = stream.optJSONArray("backup_url")?.asSequence<String>() ?: emptySequence()
-        val newBackup = mutableListOf<String>()
-        backup.mapTo(newBackup) {
-            val url = Uri.parse(it)
-            Uri.Builder().scheme("https").encodedAuthority(baseAuthority.first)
-                .encodedPath(url.encodedPath)
-                .query(baseAuthority.second).encodedQuery(url.encodedQuery).toString()
-        }
-        mcdn.subList(1, mcdn.size).mapTo(newBackup) {
-            Uri.Builder().scheme("https").encodedAuthority(it.first)
-                .encodedPath(base.encodedPath)
-                .query(it.second).encodedQuery(base.encodedQuery).toString()
-        }
-        newBackup.add(base.toString())
-        newBackup.addAll(backup)
-        stream.put("backup_url", JSONArray(newBackup))
-    }
-
-    @JvmStatic
-    fun getPlayUrl(queryString: String?, priorityArea: Array<String>? = null): String? {
-        return getFromCustomUrl(queryString, priorityArea)?.let {
-            runCatchingOrNull {
-                JSONObject(it).let { json -> json.optJSONObject("result") ?: json }.apply {
-                    optJSONObject("dash")?.run {
-                        for (video in optJSONArray("video").orEmpty()) {
-                            replaceUPOS(video)
-                        }
-                        for (audio in optJSONArray("audio").orEmpty()) {
-                            replaceUPOS(audio)
-                        }
-                    }
-                }.toString()
-            } ?: throw CustomServerException(mapOf("default" to "Not valid json $it"))
-        }
-    }
-
     class CustomServerException(val errors: Map<String, String>) : Throwable() {
         override val message: String
             get() = errors.asSequence().joinToString("\n") { "${it.key}: ${it.value}" }.trim()
     }
 
     @JvmStatic
-    private fun getFromCustomUrl(queryString: String?, priorityArea: Array<String>?): String? {
+    fun getPlayUrl(queryString: String?, priorityArea: Array<String>? = null): String? {
         queryString ?: return null
         val twUrl = sPrefs.getString("tw_server", null)
         val hkUrl = sPrefs.getString("hk_server", null)

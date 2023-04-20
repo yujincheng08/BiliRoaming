@@ -63,6 +63,13 @@ object UposReplaceHelper {
         return this.javaClass.callStaticMethodOrNull("parseFrom", newSerializedVodInfo)
     }
 
+    fun Any.replaceRawPlayDubbingInfoUpos(): Any? {
+        val serializedPlayDubbingInfo = this.callMethodAs<ByteArray>("toByteArray")
+        val newSerializedPlayDubbingInfo = PlayDubbingInfo.parseFrom(serializedPlayDubbingInfo)
+            .copy { reconstructPlayDubbingInfoUpos() }.toByteArray()
+        return this.javaClass.callStaticMethodOrNull("parseFrom", newSerializedPlayDubbingInfo)
+    }
+
     fun ListenPlayInfoKt.Dsl.reconstructListenPlayInfoUpos() {
         if (hasPlayUrl()) {
             playUrl = playUrl.copy {
@@ -185,5 +192,31 @@ object UposReplaceHelper {
         val newBackupUrl = backupUrl.replaceBackupUrlsUpos()
         backupUrl.clear()
         backupUrl.addAll(newBackupUrl)
+    }
+
+    private fun PlayDubbingInfoKt.Dsl.reconstructPlayDubbingInfoUpos() {
+        if (!hasBackgroundAudio() || roleAudioList.isEmpty()) return
+        backgroundAudio = backgroundAudio.copy { reconstructAudioMaterialUpos() }
+        roleAudioList.map { roleAudio ->
+            roleAudio.copy {
+                val newAudioMaterialList = this.audioMaterialList.map { audioMaterial ->
+                    audioMaterial.copy { reconstructAudioMaterialUpos() }
+                }
+                this.audioMaterialList.clear()
+                this.audioMaterialList.addAll(newAudioMaterialList)
+            }
+        }.apply {
+            roleAudioList.clear()
+            roleAudioList.addAll(this)
+        }
+    }
+
+    private fun AudioMaterialProtoKt.Dsl.reconstructAudioMaterialUpos() {
+        audio.map { dashItem ->
+            dashItem.copy { reconstructDashItemUpos() }
+        }.apply {
+            audio.clear()
+            audio.addAll(this)
+        }
     }
 }

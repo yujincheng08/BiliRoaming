@@ -10,6 +10,8 @@ import me.iacn.biliroaming.network.BiliRoamingApi.CustomServerException
 import me.iacn.biliroaming.network.BiliRoamingApi.getPlayUrl
 import me.iacn.biliroaming.network.BiliRoamingApi.getSeason
 import me.iacn.biliroaming.utils.*
+import me.iacn.biliroaming.utils.UposReplaceHelper.replaceRawPlayDubbingInfoUpos
+import me.iacn.biliroaming.utils.UposReplaceHelper.replaceRawVodInfoUpos
 import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
@@ -69,6 +71,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         if (!sPrefs.getBoolean("main_func", false)) return
         Log.d("startHook: BangumiPlayUrl")
         val blockBangumiPageAds = sPrefs.getBoolean("block_bangumi_page_ads", false)
+        val enablePgcUposReplace = sPrefs.getString("upos_host", "\$1") != "\$1"
         val halfScreenQuality = sPrefs.getString("half_screen_quality", "0")?.toInt() ?: 0
         val fullScreenQuality = sPrefs.getString("full_screen_quality", "0")?.toInt() ?: 0
 
@@ -190,6 +193,13 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 } else if (blockBangumiPageAds) {
                     param.result = purifyViewInfo(response)
                 }
+                if (!enablePgcUposReplace) return@hookAfterMethod
+                param.result.runCatching {
+                    this.callMethod("getVideoInfo")?.let { vodInfo ->
+                        val newVodInfo = vodInfo.replaceRawVodInfoUpos() ?: return@hookAfterMethod
+                        this.callMethod("setVideoInfo", newVodInfo)
+                    }
+                }.onFailure { Log.e(it) }
             }
         }
         "com.bapis.bilibili.pgc.gateway.player.v2.PlayURLMoss".findClassOrNull(mClassLoader)?.run {
@@ -266,6 +276,18 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 } else if (blockBangumiPageAds) {
                     param.result = purifyViewInfo(response)
                 }
+                if (!enablePgcUposReplace) return@hookAfterMethod
+                param.result.runCatching {
+                    this.callMethod("getVideoInfo")?.let { vodInfo ->
+                        val newVodInfo = vodInfo.replaceRawVodInfoUpos() ?: return@hookAfterMethod
+                        this.callMethod("setVideoInfo", newVodInfo)
+                    }
+                    this.callMethodOrNull("getPlayExtInfo")?.let { playExtInfo ->
+                        val newDubbingInfo = playExtInfo.callMethodOrNull("getPlayDubbingInfo")
+                            ?.run { replaceRawPlayDubbingInfoUpos() } ?: return@hookAfterMethod
+                        playExtInfo.callMethodOrNull("setPlayDubbingInfo", newDubbingInfo)
+                    }
+                }.onFailure { Log.e(it) }
             }
         }
         instance.playerMossClass?.run {
@@ -341,6 +363,18 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 } else if (blockBangumiPageAds) {
                     param.result = purifyViewInfo(response, supplement)
                 }
+                if (!enablePgcUposReplace) return@hookAfterMethod
+                param.result.runCatching {
+                    this.callMethod("getVideoInfo")?.let { vodInfo ->
+                        val newVodInfo = vodInfo.replaceRawVodInfoUpos() ?: return@hookAfterMethod
+                        this.callMethod("setVideoInfo", newVodInfo)
+                    }
+                    supplementAny?.callMethodOrNull("getPlayExtInfo")?.let { playExtInfo ->
+                        val newDubbingInfo = playExtInfo.callMethodOrNull("getPlayDubbingInfo")
+                            ?.run { replaceRawPlayDubbingInfoUpos() } ?: return@hookAfterMethod
+                        playExtInfo.callMethodOrNull("setPlayDubbingInfo", newDubbingInfo)
+                    }
+                }.onFailure { Log.e(it) }
             }
         }
         instance.playURLMossClass?.hookBeforeMethod(
