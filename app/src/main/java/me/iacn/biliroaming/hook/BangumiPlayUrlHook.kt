@@ -367,7 +367,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         seasonId: String, reqEpId: Long
     ): Pair<Lazy<JSONObject>, Lazy<JSONObject>> {
         val season = lazy {
-            getSeason(mapOf("season_id" to seasonId), true)
+            getSeason(mapOf("season_id" to seasonId, "ep_id" to reqEpId.toString()), true)
                 ?.toJSONObject()?.optJSONObject("result")
                 ?: throw CustomServerException(mapOf("解析服务器错误" to "无法获取剧集信息"))
         }
