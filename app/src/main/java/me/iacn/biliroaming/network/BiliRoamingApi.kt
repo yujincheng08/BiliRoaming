@@ -67,7 +67,7 @@ object BiliRoamingApi {
     fun getSeason(info: Map<String, String?>, hiddenHint: Boolean): String? {
         val seasonId = info.getOrDefault("season_id", null)?.toInt()
         val cache = seasonCache.get()
-        val cacheTuple = if (seasonId != null) {
+        val cacheTuple = if (seasonId != null && seasonId != 0) {
             if (cache?.first == seasonId) {
                 cache.third.await()
                 return cache.second.get()
@@ -90,7 +90,10 @@ object BiliRoamingApi {
                     builder.encodedAuthority(BILI_HIDDEN_SEASON_URL).toString()
                 )?.toJSONObject()
             } else it
-        } ?: return null
+        } ?: run {
+            cacheTuple?.third?.countDown()
+            return null
+        }
         var fixThailandSeasonFlag = false
         seasonJson.optJSONObject("result")?.also {
             if (hidden) fixHiddenSeason(it)
