@@ -876,9 +876,9 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
                 dimension = dimension {
                     result.optJSONObject("dimension")?.run {
-                        width = optLong("width").toInt()
-                        height = optLong("height").toInt()
-                        rotate = optLong("rotate").toInt()
+                        width = optInt("width")
+                        height = optInt("height")
+                        rotate = optInt("rotate")
                     }
                 }
                 stat = stat {
@@ -949,9 +949,9 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         }
                         dimension = dimension {
                             page.optJSONObject("dimension")?.run {
-                                width = optLong("width").toInt()
-                                height = optLong("height").toInt()
-                                rotate = optLong("rotate").toInt()
+                                width = optInt("width")
+                                height = optInt("height")
+                                rotate = optInt("rotate")
                             }
                         }
                     }

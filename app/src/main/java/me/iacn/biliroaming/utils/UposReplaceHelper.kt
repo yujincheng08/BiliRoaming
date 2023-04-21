@@ -9,18 +9,19 @@ object UposReplaceHelper {
     private val isLocatedCn by lazy {
         (runCatchingOrNull { XposedInit.country.get(5L, TimeUnit.SECONDS) } ?: "cn") == "cn"
     }
+
     private val aliUposHost by lazy { XposedInit.moduleRes.getString(R.string.ali_host) }
     private val cosUposHost by lazy { XposedInit.moduleRes.getString(R.string.cos_host) }
     private val hwUposHost by lazy { XposedInit.moduleRes.getString(R.string.hw_host) }
-    private val akamaiUposHost by lazy { XposedInit.moduleRes.getString(R.string.akamai_host) }
     private val aliovUposHost by lazy { XposedInit.moduleRes.getString(R.string.aliov_host) }
-    private val cosovUposHost by lazy { XposedInit.moduleRes.getString(R.string.cosov_host) }
     private val hwovUposHost by lazy { XposedInit.moduleRes.getString(R.string.hwov_host) }
     private val hkBcacheUposHost by lazy { XposedInit.moduleRes.getString(R.string.hk_bcache_host) }
-    private val replaceAllBaseUpos = sPrefs.getBoolean("replace_all_upos_base", false)
-    private val replaceAllBackupUpos = sPrefs.getBoolean("replace_all_upos_backup", false)
-    private val replaceUposBw = sPrefs.getBoolean("replace_upos_bw", false)
-    private val replaceOverseaUpos = sPrefs.getBoolean("replace_oversea_upos", false) && isLocatedCn
+    private val replaceAllBaseUpos by lazy { sPrefs.getBoolean("replace_all_upos_base", false) }
+    private val replaceAllBackupUpos by lazy { sPrefs.getBoolean("replace_all_upos_backup", false) }
+    private val replaceUposBw by lazy { sPrefs.getBoolean("replace_upos_bw", false) }
+    private val replaceOverseaUpos by lazy {
+        sPrefs.getBoolean("replace_oversea_upos", false) && isLocatedCn
+    }
 
     private val uposHost by lazy {
         sPrefs.getString("upos_host", null) ?: if (isLocatedCn) hwUposHost else aliovUposHost
@@ -30,15 +31,11 @@ object UposReplaceHelper {
             when (uposHost) {
                 hwUposHost -> Pair(aliUposHost, cosUposHost)
                 aliUposHost -> Pair(hwUposHost, cosUposHost)
-                // cosUposHost -> Pair(aliUposHost, hwUposHost)
-                // akamaiUposHost -> Pair(aliUposHost, hwUposHost)
                 else -> Pair(aliUposHost, hwUposHost)
             }
         } else {
             when (uposHost) {
-                // akamaiUposHost -> Pair(hkBcacheUposHost, aliovUposHost)
                 aliovUposHost -> Pair(hkBcacheUposHost, hwovUposHost)
-                // cosovUposHost -> Pair(hkBcacheUposHost, aliovUposHost)
                 hwovUposHost -> Pair(hwUposHost, cosUposHost)
                 hkBcacheUposHost -> Pair(aliovUposHost, hwovUposHost)
                 else -> Pair(hkBcacheUposHost, aliovUposHost)
@@ -104,7 +101,7 @@ object UposReplaceHelper {
                 backupUrlReplaced(baseUrl, uposBackupHostPair.second)
             )
         }
-        return Pair(newBaseUrl, newBackupUrls)
+        return (newBaseUrl to newBackupUrls)
     }
 
     private fun String.replaceUpos(newUpos: String): String {
@@ -140,77 +137,52 @@ object UposReplaceHelper {
     fun ListenPlayInfoKt.Dsl.reconstructListenPlayInfoUpos() {
         if (hasPlayUrl()) {
             playUrl = playUrl.copy {
-                val newDUrl = durl.map { listenResponseUrl ->
+                durl.map { listenResponseUrl ->
                     listenResponseUrl.copy {
-                        if (hasUrl()) {
-                            val newPair = replaceUpos(url, backupUrl)
-                            backupUrl.clear()
-                            backupUrl.addAll(newPair.second)
-                            url = newPair.first
-                        }
+                        val newPair = replaceUpos(url, backupUrl)
+                        backupUrl.clear()
+                        backupUrl.addAll(newPair.second)
+                        url = newPair.first
                     }
+                }.apply {
+                    durl.clear()
+                    durl.addAll(this)
                 }
-                durl.clear()
-                durl.addAll(newDUrl)
             }
         } else if (hasPlayDash()) {
             playDash = playDash.copy {
-                val newAudio = audio.map { dashItem ->
+                audio.map { dashItem ->
                     dashItem.copy { reconstructDashItemUpos() }
+                }.apply {
+                    audio.clear()
+                    audio.addAll(this)
                 }
-                audio.clear()
-                audio.addAll(newAudio)
-            }
-        }
-    }
-
-    private fun VodInfo.reconstructVodUpos() = vodInfo {
-        val newStreamList = streamList.map { stream ->
-            stream.copy { reconstructStreamUpos() }
-        }
-        val newDashAudio = dashAudio.map { dashItem ->
-            dashItem.copy { reconstructDashItemUpos() }
-        }
-        streamList.clear()
-        dashAudio.clear()
-        streamList.addAll(newStreamList)
-        dashAudio.addAll(newDashAudio)
-        // segment video not support Dolby or LossLess
-        if (hasDolby()) {
-            dolby = dolby.copy {
-                val newAudio = audio.map { dashItem ->
-                    dashItem.copy { reconstructDashItemUpos() }
-                }
-                audio.clear()
-                audio.addAll(newAudio)
-            }
-        }
-        if (hasLossLessItem()) {
-            lossLessItem = lossLessItem.copy {
-                audio = audio.copy { reconstructDashItemUpos() }
             }
         }
     }
 
     private fun VodInfoKt.Dsl.reconstructVodUpos() {
-        val newStreamList = streamList.map { stream ->
+        streamList.map { stream ->
             stream.copy { reconstructStreamUpos() }
+        }.apply {
+            streamList.clear()
+            streamList.addAll(this)
         }
-        val newDashAudio = dashAudio.map { dashItem ->
+        dashAudio.map { dashItem ->
             dashItem.copy { reconstructDashItemUpos() }
+        }.apply {
+            dashAudio.clear()
+            dashAudio.addAll(this)
         }
-        streamList.clear()
-        dashAudio.clear()
-        streamList.addAll(newStreamList)
-        dashAudio.addAll(newDashAudio)
         // segment video not support Dolby or LossLess
         if (hasDolby()) {
             dolby = dolby.copy {
-                val newAudio = audio.map { dashItem ->
+                audio.map { dashItem ->
                     dashItem.copy { reconstructDashItemUpos() }
+                }.apply {
+                    audio.clear()
+                    audio.addAll(this)
                 }
-                audio.clear()
-                audio.addAll(newAudio)
             }
         }
         if (hasLossLessItem()) {
@@ -223,24 +195,24 @@ object UposReplaceHelper {
     private fun StreamKt.Dsl.reconstructStreamUpos() {
         if (hasDashVideo()) {
             dashVideo = dashVideo.copy {
-                if (!hasBaseUrl()) return@copy
                 val newPair = replaceUpos(baseUrl, backupUrl)
+                baseUrl = newPair.first
                 backupUrl.clear()
                 backupUrl.addAll(newPair.second)
-                baseUrl = newPair.first
             }
         } else if (hasSegmentVideo()) {
             segmentVideo = segmentVideo.copy {
-                val newSegment = segment.map { responseUrl ->
+                segment.map { responseUrl ->
                     responseUrl.copy {
                         val newPair = replaceUpos(url, backupUrl)
+                        url = newPair.first
                         backupUrl.clear()
                         backupUrl.addAll(newPair.second)
-                        url = newPair.first
                     }
+                }.apply {
+                    segment.clear()
+                    segment.addAll(this)
                 }
-                segment.clear()
-                segment.addAll(newSegment)
             }
         }
     }
@@ -248,17 +220,17 @@ object UposReplaceHelper {
     private fun DashItemKt.Dsl.reconstructDashItemUpos() {
         if (!hasBaseUrl()) return
         val newPair = replaceUpos(baseUrl, backupUrl)
+        baseUrl = newPair.first
         backupUrl.clear()
         backupUrl.addAll(newPair.second)
-        baseUrl = newPair.first
     }
 
     private fun ListenDashItemKt.Dsl.reconstructDashItemUpos() {
         if (!hasBaseUrl()) return
         val newPair = replaceUpos(baseUrl, backupUrl)
+        baseUrl = newPair.first
         backupUrl.clear()
         backupUrl.addAll(newPair.second)
-        baseUrl = newPair.first
     }
 
     private fun PlayDubbingInfoKt.Dsl.reconstructPlayDubbingInfoUpos() {

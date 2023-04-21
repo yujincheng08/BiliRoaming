@@ -34,10 +34,7 @@ class SpeedTestResult(val name: String, val value: String?, var speed: String)
 
 class SpeedTestAdapter(context: Context) : ArrayAdapter<SpeedTestResult>(context, 0) {
     class ViewHolder(
-        var name: String?,
-        var value: String?,
-        val nameView: TextView,
-        val speedView: TextView
+        var name: String?, var value: String?, val nameView: TextView, val speedView: TextView
     )
 
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
@@ -63,14 +60,10 @@ class SpeedTestAdapter(context: Context) : ArrayAdapter<SpeedTestResult>(context
     fun sort() = sort { a, b ->
         val aSpeed = a.speed.toLongOrNull()
         val bSpeed = b.speed.toLongOrNull()
-        if (aSpeed == null && bSpeed == null)
-            0
-        else if (aSpeed == null)
-            1
-        else if (bSpeed == null)
-            -1
-        else
-            (bSpeed - aSpeed).toInt()
+        if (aSpeed == null && bSpeed == null) 0
+        else if (aSpeed == null) 1
+        else if (bSpeed == null) -1
+        else (bSpeed - aSpeed).toInt()
     }
 }
 

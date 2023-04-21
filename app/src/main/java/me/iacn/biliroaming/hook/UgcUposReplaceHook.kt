@@ -48,11 +48,9 @@ class UgcUposReplaceHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         instance.listenerMossClass?.hookAfterMethod(
             "playURL", instance.listenerPlayURLReqClass
         ) { param ->
-            if (instance.networkExceptionClass?.isInstance(param.throwable) == true)
-                return@hookAfterMethod
+            if (instance.networkExceptionClass?.isInstance(param.throwable) == true) return@hookAfterMethod
             // if not playable then unlock limitation, which will be handled elsewhere
-            if (param.result.callMethodOrNull("getPlayable") != 0)
-                return@hookAfterMethod
+            if (param.result.callMethodOrNull("getPlayable") != 0) return@hookAfterMethod
             param.result.runCatching {
                 this.callMethodAs<MutableMap<Long, Any>>("getMutablePlayerInfoMap").entries.forEach { entry ->
                     val listenPlayInfo = entry.value
