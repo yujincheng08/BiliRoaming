@@ -66,6 +66,12 @@ class PlayArcConfHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 instance.mossResponseHandlerClass,
                 hooker = playlistHook
             )
+            hookBeforeMethod(
+                "playHistory",
+                "com.bapis.bilibili.app.listener.v1.PlayHistoryReq",
+                instance.mossResponseHandlerClass,
+                hooker = playlistHook
+            )
             hookAfterMethod(
                 "playURL",
                 "com.bapis.bilibili.app.listener.v1.PlayURLReq"
@@ -96,10 +102,16 @@ class PlayArcConfHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
         if (needPartItems.isEmpty())
             return
-        val playerArgs = PlayerArgs.parseFrom(
-            req.callMethod("getPlayerArgs")
-                ?.callMethodAs<ByteArray>("toByteArray") ?: return
-        )
+        val playerArgs = runCatchingOrNull {
+            PlayerArgs.parseFrom(
+                req.callMethod("getPlayerArgs")
+                    ?.callMethodAs<ByteArray>("toByteArray")
+            )
+        } ?: playerArgs {
+            fnval = BangumiPlayUrlHook.MAX_FNVAL.toLong()
+            forceHost = 2
+            qn = 64
+        }
         val commViewReq = viewReq {
             fnval = playerArgs.fnval.toInt()
             forceHost = playerArgs.forceHost.toInt()
@@ -144,7 +156,7 @@ class PlayArcConfHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             preferCodecType = CodeType.CODE265
         }.toByteArray().let {
             instance.playViewReqClass?.callStaticMethod("parseFrom", it)
-        } ?: return resp
+        } ?: return@runCatching resp
         reqObj.item.subIdList.associateWith { subId ->
             val playViewReq = commPlayViewReq.apply { callMethod("setCid", subId) }
             val playViewReply = UGCPlayViewReply.parseFrom(
