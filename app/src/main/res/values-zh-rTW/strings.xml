@@ -39,7 +39,7 @@
     <string name="tg_title">TG頻道</string>
     <string name="tg_summary">點擊加入TG頻道</string>
     <string name="upos_title">UPOS 伺服器設定</string>
-    <string name="upos_summary">設置加載影片使用的 UPOS，可加快影片加載速度。\n注意，海外 UPOS 不支持免流。</string>
+    <string name="upos_summary">設定載入影片使用的 UPOS，可加快影片載入速度。\n注意，海外 UPOS 不支援免流。</string>
     <string name="purify_splash_title">淨化啟動頁面</string>
     <string name="purify_splash_summary">去除啟動程式時的推廣</string>
     <string name="custom_splash_title">取代啟動圖</string>
