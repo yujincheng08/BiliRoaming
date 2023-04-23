@@ -307,7 +307,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 val supplementAny = response.callMethod("getSupplement")
                 val typeUrl = supplementAny?.callMethodAs<String>("getTypeUrl")
                 // Only handle pgc video
-                if (!typeUrl.isNullOrEmpty() && typeUrl != PGC_ANY_MODEL_TYPE_URL)
+                if (param.result != null && typeUrl != PGC_ANY_MODEL_TYPE_URL)
                     return@hookAfterMethod
                 val supplement = supplementAny?.callMethod("getValue")
                     ?.callMethodAs<ByteArray>("toByteArray")
