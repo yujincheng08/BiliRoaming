@@ -221,6 +221,11 @@
             android:key="block_comment_guide"
             android:summary="@string/block_comment_guide_summary"
             android:title="@string/block_comment_guide_title" />
+
+        <SwitchPreference
+            android:key="remember_lossless_setting"
+            android:summary="@string/remember_lossless_setting_summary"
+            android:title="@string/remember_lossless_setting_title" />
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/pref_backup">
         <Preference

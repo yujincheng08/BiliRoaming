@@ -1,8 +1,5 @@
 package me.iacn.biliroaming.hook
 
-import android.app.AndroidAppHelper
-import android.content.Context
-import android.content.SharedPreferences
 import android.graphics.Color
 import android.util.SparseArray
 import android.view.View
@@ -159,11 +156,6 @@ class CustomThemeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     companion object {
         private const val CUSTOM_THEME_ID1 = 114514 // ん？
         private const val CUSTOM_THEME_ID2 = 1919810 // ん？
-
-        @Suppress("DEPRECATION")
-        private val biliPrefs: SharedPreferences
-            get() = AndroidAppHelper.currentApplication()
-                .getSharedPreferences("bili_preference", Context.MODE_MULTI_PROCESS)
 
         private var customColor: Int
             get() = biliPrefs.getInt(CUSTOM_COLOR_KEY, DEFAULT_CUSTOM_COLOR)

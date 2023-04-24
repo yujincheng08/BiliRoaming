@@ -3,6 +3,7 @@ package me.iacn.biliroaming.utils
 import android.annotation.SuppressLint
 import android.app.AndroidAppHelper
 import android.content.Context
+import android.content.SharedPreferences
 import android.content.pm.PackageManager.GET_META_DATA
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -114,12 +115,16 @@ val logFile by lazy { File(currentContext.externalCacheDir, "log.txt") }
 val oldLogFile by lazy { File(currentContext.externalCacheDir, "old_log.txt") }
 
 @Suppress("DEPRECATION")
-val sPrefs
-    get() = currentContext.getSharedPreferences("biliroaming", Context.MODE_MULTI_PROCESS)!!
+val sPrefs: SharedPreferences
+    get() = currentContext.getSharedPreferences("biliroaming", Context.MODE_MULTI_PROCESS)
 
 @Suppress("DEPRECATION")
-val sCaches
-    get() = currentContext.getSharedPreferences("biliroaming_cache", Context.MODE_MULTI_PROCESS)!!
+val sCaches: SharedPreferences
+    get() = currentContext.getSharedPreferences("biliroaming_cache", Context.MODE_MULTI_PROCESS)
+
+@Suppress("DEPRECATION")
+val biliPrefs: SharedPreferences
+    get() = currentContext.getSharedPreferences("bili_preference", Context.MODE_MULTI_PROCESS)
 
 fun checkErrorToast(json: JSONObject, isCustomServer: Boolean = false) {
     if (json.optInt("code", 0) != 0) {
