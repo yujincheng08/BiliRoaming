@@ -486,6 +486,8 @@ val Member.isNotStatic: Boolean
     inline get() = !isStatic
 val Member.isAbstract: Boolean
     inline get() = Modifier.isAbstract(modifiers)
+val Member.isPrivate: Boolean
+    inline get() = Modifier.isPrivate(modifiers)
 val Class<*>.isAbstract: Boolean
     inline get() = !isPrimitive && Modifier.isAbstract(modifiers)
 val Class<*>.isFinal: Boolean

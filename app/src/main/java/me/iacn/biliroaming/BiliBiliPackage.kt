@@ -156,6 +156,11 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val viewMossClass by Weak { "com.bapis.bilibili.app.view.v1.ViewMoss" from mClassLoader }
     val viewReqClass by Weak { "com.bapis.bilibili.app.view.v1.ViewReq" from mClassLoader }
     val bkArcPartClass by Weak { "com.bapis.bilibili.app.listener.v1.BKArcPart" from mClassLoader }
+    val builtInThemesClass by Weak { mHookInfo.builtInThemes.class_ from mClassLoader }
+    val themeColorsConstructor by Weak {
+        mHookInfo.themeColors.from(mClassLoader)?.declaredConstructors?.firstOrNull { it.isPrivate }
+            ?.apply { isAccessible = true }
+    }
 
     val ids: Map<String, Int> by lazy {
         mHookInfo.mapIds.idsMap
@@ -313,6 +318,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     fun getDefaultQn() = mHookInfo.playerSettingHelper.getDefaultQn.orNull
 
     fun liveRtcEnable() = mHookInfo.liveRtcHelper.liveRtcEnableMethod.orNull
+
+    fun allThemesField() = mHookInfo.builtInThemes.all.orNull
 
     private fun readHookInfo(context: Context): Configs.HookInfo {
         try {
@@ -1990,6 +1997,57 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 } ?: return@liveRtcHelper
                 liveRtcEnableClass = class_ { name = liveRtcEnable.declaringClass.name }
                 liveRtcEnableMethod = method { name = liveRtcEnable.name }
+            }
+            val themeColorsClass = dexHelper.findMethodUsingString(
+                "GarbThemeColors(garb=",
+                false,
+                -1,
+                -1,
+                null,
+                -1,
+                null,
+                null,
+                null,
+                true
+            ).firstOrNull()?.let {
+                dexHelper.decodeMethodIndex(it)
+            }?.declaringClass?.also {
+                themeColors = class_ { name = it.name }
+            }
+            builtInThemes = builtInThemes {
+                val themeColorsConstIdx = themeColorsClass?.declaredConstructors?.maxByOrNull {
+                    it.parameterTypes.size
+                }?.let { dexHelper.encodeMethodIndex(it) } ?: return@builtInThemes
+                val clazz = dexHelper.findMethodInvoked(
+                    themeColorsConstIdx,
+                    -1,
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).firstOrNull()?.run {
+                    dexHelper.findMethodInvoking(
+                        this,
+                        dexHelper.encodeClassIndex(Map::class.java),
+                        0,
+                        null,
+                        -1,
+                        null,
+                        null,
+                        null,
+                        true
+                    ).firstOrNull()?.let {
+                        dexHelper.decodeMethodIndex(it)
+                    }
+                }?.declaringClass ?: return@builtInThemes
+                val field = clazz.declaredFields.firstOrNull {
+                    it.type == Map::class.java
+                } ?: return@builtInThemes
+                class_ = class_ { name = clazz.name }
+                all = field { name = field.name }
             }
 
             dexHelper.close()
