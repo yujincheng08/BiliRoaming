@@ -1,11 +1,9 @@
 package me.iacn.biliroaming.hook
 
-import android.app.AndroidAppHelper
-import android.content.Context
-import android.content.SharedPreferences
 import android.graphics.Color
 import android.util.SparseArray
 import android.view.View
+import androidx.annotation.ColorInt
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.ColorChooseDialog
 import me.iacn.biliroaming.Constant.CURRENT_COLOR_KEY
@@ -34,6 +32,13 @@ class CustomThemeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val primaryColor = customColor
         colorArray?.put(CUSTOM_THEME_ID1, generateColorArray(primaryColor))
         colorArray?.put(CUSTOM_THEME_ID2, generateColorArray(primaryColor))
+
+        val allThemes =
+            instance.builtInThemesClass?.getStaticObjectFieldAs<MutableMap<Long, Any>>(instance.allThemesField())
+        primaryColor.toTheme()?.let {
+            allThemes?.put(CUSTOM_THEME_ID1.toLong(), it)
+            allThemes?.put(CUSTOM_THEME_ID2.toLong(), it)
+        }
 
         instance.skinList()?.let {
             "tv.danmaku.bili.ui.theme.ThemeStoreActivity".hookBeforeMethod(
@@ -71,15 +76,13 @@ class CustomThemeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     val colors = generateColorArray(color)
                     colorArray?.put(CUSTOM_THEME_ID1, colors)
                     colorArray?.put(CUSTOM_THEME_ID2, colors)
+                    color.toTheme()?.let {
+                        allThemes?.put(CUSTOM_THEME_ID1.toLong(), it)
+                        allThemes?.put(CUSTOM_THEME_ID2.toLong(), it)
+                    }
                     val newId = if (mId == CUSTOM_THEME_ID1) CUSTOM_THEME_ID2 else CUSTOM_THEME_ID1
                     biliSkin.setIntField("mId", newId)
                     customColor = color
-                    Log.d(
-                        "Update new color: mId = $newId, " +
-                                "color = 0x${
-                                    Integer.toHexString(color).uppercase(Locale.getDefault())
-                                }"
-                    )
                     try {
                         param.invokeOriginalMethod()
                     } catch (e: Exception) {
@@ -160,11 +163,6 @@ class CustomThemeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         private const val CUSTOM_THEME_ID1 = 114514 // ん？
         private const val CUSTOM_THEME_ID2 = 1919810 // ん？
 
-        @Suppress("DEPRECATION")
-        private val biliPrefs: SharedPreferences
-            get() = AndroidAppHelper.currentApplication()
-                .getSharedPreferences("bili_preference", Context.MODE_MULTI_PROCESS)
-
         private var customColor: Int
             get() = biliPrefs.getInt(CUSTOM_COLOR_KEY, DEFAULT_CUSTOM_COLOR)
             set(value) = biliPrefs.edit().putInt(CUSTOM_COLOR_KEY, value).apply()
@@ -190,18 +188,36 @@ class CustomThemeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             colors[0] = primaryColor
 
             // Decrease brightness
-            System.arraycopy(hsv, 0, result, 0, hsv.size)
+            hsv.copyInto(result)
             result[2] -= result[2] * 0.2f
             colors[1] = Color.HSVToColor(result)
 
             // Increase brightness
-            System.arraycopy(hsv, 0, result, 0, hsv.size)
+            hsv.copyInto(result)
             result[2] += result[2] * 0.1f
             colors[2] = Color.HSVToColor(result)
 
             // Increase transparency
             colors[3] = -0x4c000000 or 0xFFFFFF and colors[1]
             return colors
+        }
+
+        private fun @receiver:ColorInt Int.pack() = toLong() and 0xFFFFFFFF shl 32
+        private fun @receiver:ColorInt Int.toTheme() = instance.themeColorsConstructor?.run {
+            parameterTypes.let {
+                newInstance(
+                    it[0].new(),            // garb
+                    it[1].enumConstants[0], // currentDayNight ThemeDayNight#Day
+                    pack(),                 // primary !!important
+                    pack(),                 // secondary !!important
+                    Color.WHITE.pack(),     // background !!important
+                    Color.WHITE.pack(),     // textTitle !!important
+                    Color.WHITE.pack(),     // textSubtitle
+                    Color.WHITE.pack(),     // textOther
+                    Color.WHITE.pack(),     // actionIcon !!important
+                    true,                   // isPure
+                )
+            }
         }
     }
 }

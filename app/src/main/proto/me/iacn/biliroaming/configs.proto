@@ -256,6 +256,11 @@ message LiveRtcHelper {
   optional Method live_rtc_enable_method = 2;
 }
 
+message BuiltInThemes {
+  optional Class class = 1;
+  optional Field all = 2;
+}
+
 message HookInfo {
   int64 last_update_time = 1;
   optional MapIds map_ids = 2;
@@ -313,4 +318,6 @@ message HookInfo {
   optional PlayerPreloadHolder player_preload_holder = 83;
   optional PlayerSettingHelper player_setting_helper = 84;
   optional LiveRtcHelper live_rtc_helper = 85;
+  optional Class theme_colors = 86;
+  optional BuiltInThemes built_in_themes = 87;
 }
