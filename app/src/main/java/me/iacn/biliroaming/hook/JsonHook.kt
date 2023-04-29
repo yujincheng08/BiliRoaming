@@ -25,6 +25,7 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             "tv.danmaku.bili.ui.main2.api.AccountMine".findClassOrNull(mClassLoader)
         val splashClass = "tv.danmaku.bili.ui.splash.SplashData".findClassOrNull(mClassLoader)
             ?: "tv.danmaku.bili.ui.splash.ad.model.SplashData".findClassOrNull(mClassLoader)
+        val splashShowClass = "tv.danmaku.bili.ui.splash.ad.model.SplashShowData".findClassOrNull(mClassLoader)
         val tabClass =
             "tv.danmaku.bili.ui.main2.resource.MainResourceManager\$Tab".findClassOrNull(
                 mClassLoader
@@ -243,7 +244,7 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         result.setObjectField("garbEntrance", null)
                     }
                 }
-                splashClass -> if (sPrefs.getBoolean("purify_splash", false) &&
+                splashClass, splashShowClass -> if (sPrefs.getBoolean("purify_splash", false) &&
                     sPrefs.getBoolean("hidden", false)
                 ) {
                     result.getObjectFieldOrNullAs<MutableList<*>>("splashList")?.clear()
