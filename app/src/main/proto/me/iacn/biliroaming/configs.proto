@@ -261,6 +261,11 @@ message BuiltInThemes {
   optional Field all = 2;
 }
 
+message BiliGlobalPreference {
+  optional Class class = 1;
+  optional Method get = 2;
+}
+
 message HookInfo {
   int64 last_update_time = 1;
   optional MapIds map_ids = 2;
@@ -320,4 +325,5 @@ message HookInfo {
   optional LiveRtcHelper live_rtc_helper = 85;
   optional Class theme_colors = 86;
   optional BuiltInThemes built_in_themes = 87;
+  optional BiliGlobalPreference bili_global_preference = 88;
 }

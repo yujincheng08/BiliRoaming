@@ -5,6 +5,7 @@ package me.iacn.biliroaming
 import android.app.AndroidAppHelper
 import android.app.Notification
 import android.content.Context
+import android.content.SharedPreferences
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.text.style.ClickableSpan
@@ -161,6 +162,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         mHookInfo.themeColors.from(mClassLoader)?.declaredConstructors?.firstOrNull { it.isPrivate }
             ?.apply { isAccessible = true }
     }
+    val biliGlobalPreferenceClass by Weak { mHookInfo.biliGlobalPreference.class_ from mClassLoader }
 
     val ids: Map<String, Int> by lazy {
         mHookInfo.mapIds.idsMap
@@ -320,6 +322,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     fun liveRtcEnable() = mHookInfo.liveRtcHelper.liveRtcEnableMethod.orNull
 
     fun allThemesField() = mHookInfo.builtInThemes.all.orNull
+
+    fun getBLKVPrefs() = mHookInfo.biliGlobalPreference.get.orNull
 
     private fun readHookInfo(context: Context): Configs.HookInfo {
         try {
@@ -2048,6 +2052,28 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 } ?: return@builtInThemes
                 class_ = class_ { name = clazz.name }
                 all = field { name = field.name }
+            }
+            biliGlobalPreference = biliGlobalPreference {
+                val clazz = "com.bilibili.base.BiliGlobalPreferenceHelper".from(classloader)
+                    ?: dexHelper.findMethodUsingString(
+                        "instance.bili_preference",
+                        false,
+                        -1,
+                        -1,
+                        null,
+                        -1,
+                        null,
+                        null,
+                        null,
+                        false
+                    ).asSequence().firstNotNullOfOrNull { idx ->
+                        dexHelper.decodeMethodIndex(idx)?.declaringClass?.takeIf { !it.superclass.isAbstract }
+                    } ?: return@biliGlobalPreference
+                val method = clazz.declaredMethods.firstOrNull {
+                    it.isStatic && it.parameterTypes.isEmpty() && it.returnType == SharedPreferences::class.java
+                } ?: return@biliGlobalPreference
+                class_ = class_ { name = clazz.name }
+                get = method { name = method.name }
             }
 
             dexHelper.close()

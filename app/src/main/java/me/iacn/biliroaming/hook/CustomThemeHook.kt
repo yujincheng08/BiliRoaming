@@ -168,7 +168,7 @@ class CustomThemeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             set(value) = biliPrefs.edit().putInt(CUSTOM_COLOR_KEY, value).apply()
 
         private val currentKey: Int
-            get() = biliPrefs.getInt(CURRENT_COLOR_KEY, 0)
+            get() = blkvPrefs.getInt(CURRENT_COLOR_KEY, 0)
 
         /**
          * Color Array
