@@ -126,6 +126,10 @@ val sCaches: SharedPreferences
 val biliPrefs: SharedPreferences
     get() = currentContext.getSharedPreferences("bili_preference", Context.MODE_MULTI_PROCESS)
 
+val blkvPrefs: SharedPreferences
+    get() = instance.biliGlobalPreferenceClass?.callStaticMethodAs(instance.getBLKVPrefs())
+        ?: biliPrefs
+
 fun checkErrorToast(json: JSONObject, isCustomServer: Boolean = false) {
     if (json.optInt("code", 0) != 0) {
         Log.toast(

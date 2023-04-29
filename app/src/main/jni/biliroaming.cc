@@ -941,10 +941,8 @@ Java_me_iacn_biliroaming_utils_DexHelper_encodeMethodIndex(JNIEnv *env,
   auto name = env->GetStringUTFChars(java_name, nullptr);
   auto clazz =
       (jclass)env->CallObjectMethod(method, get_declaring_class_method);
-  auto clazz_java_name = (jstring)env->CallObjectMethod(clazz, get_class_name_method);
-  auto clazz_name = env->GetStringUTFChars(clazz_java_name, nullptr);
-  std::string clazz_name_str = clazz_name;
-  auto real_name = clazz_name_str == name ? "<init>" : name;
+  auto constructor_clazz = env->FindClass("java/lang/reflect/Constructor");
+  auto real_name = env->IsInstanceOf(method, constructor_clazz) ? "<init>" : name;
   auto params =
       (jobjectArray)env->CallObjectMethod(method, get_parameters_method);
   auto param_len = env->GetArrayLength(params);
@@ -963,7 +961,6 @@ Java_me_iacn_biliroaming_utils_DexHelper_encodeMethodIndex(JNIEnv *env,
   auto res = helper->CreateMethodIndex(GetClassDescriptor(env, clazz), real_name,
                                        params_name);
   env->ReleaseStringUTFChars(java_name, name);
-  env->ReleaseStringUTFChars(clazz_java_name, clazz_name);
   return static_cast<jlong>(res);
 }
 
