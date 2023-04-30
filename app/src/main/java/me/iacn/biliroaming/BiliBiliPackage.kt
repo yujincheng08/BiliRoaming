@@ -163,6 +163,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             ?.apply { isAccessible = true }
     }
     val biliGlobalPreferenceClass by Weak { mHookInfo.biliGlobalPreference.class_ from mClassLoader }
+    val dmMossClass by Weak { "com.bapis.bilibili.community.service.dm.v1.DMMoss" from mClassLoader }
 
     val ids: Map<String, Int> by lazy {
         mHookInfo.mapIds.idsMap

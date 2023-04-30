@@ -290,7 +290,7 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     private fun hookSubtitleList() {
-        "com.bapis.bilibili.community.service.dm.v1.DMMoss".from(mClassLoader)?.hookAfterMethod(
+        instance.dmMossClass?.hookAfterMethod(
             "dmView", "com.bapis.bilibili.community.service.dm.v1.DmViewReq",
         ) { param ->
             val parseDmViewReply = { r: Any? ->
