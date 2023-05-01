@@ -98,6 +98,9 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     callMethod("clearVideoGuide")
                 }
             }
+            instance.viewMossClass?.replaceMethod(
+                "tFInfo", "com.bapis.bilibili.app.view.v1.TFInfoReq"
+            ) { null }
             instance.dmMossClass?.hookAfterMethod(
                 "dmView", "com.bapis.bilibili.community.service.dm.v1.DmViewReq",
             ) { it.result?.callMethod("clearActivityMeta") }
