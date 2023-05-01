@@ -117,7 +117,7 @@
     <string name="revert_live_room_feed_title">強制舊版直播間樣式</string>
     <string name="revert_live_room_feed_summary">強制直播間使用舊版樣式</string>
     <string name="block_video_ad_title">封鎖影片下方推薦</string>
-    <string name="block_video_ad_summary">封鎖影片下方推薦欄</string>
+    <string name="block_video_ad_summary">封鎖影片下方推薦欄，開啟後會同時屏蔽評論區頂部推廣橫幅</string>
     <string name="hide_long_duration_recommend_title">隱藏首頁影片時長大於</string>
     <string name="hide_short_duration_recommend_title">隱藏首頁影片時長小於</string>
     <string name="hide_duration_recommend_summary">隱藏首頁推送指定時長的影片（秒）</string>

@@ -117,7 +117,7 @@
     <string name="revert_live_room_feed_title">强制旧版直播间样式</string>
     <string name="revert_live_room_feed_summary">强制直播间使用旧版样式</string>
     <string name="block_video_ad_title">屏蔽视频下方推荐</string>
-    <string name="block_video_ad_summary">屏蔽视频下方推荐栏</string>
+    <string name="block_video_ad_summary">屏蔽视频下方推荐栏，开启后会同时屏蔽评论区顶部推广横幅</string>
     <string name="hide_long_duration_recommend_title">隐藏首页视频时长大于</string>
     <string name="hide_short_duration_recommend_title">隐藏首页视频时长小于</string>
     <string name="hide_duration_recommend_summary">隐藏首页推送指定时长的视频（秒）</string>
