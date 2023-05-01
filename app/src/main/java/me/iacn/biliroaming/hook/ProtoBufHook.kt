@@ -88,25 +88,19 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             instance.viewMossClass?.hookAfterMethod(
                 "viewProgress",
                 "com.bapis.bilibili.app.view.v1.ViewProgressReq"
-            ) { param ->
-                param.result?.callMethod("getVideoGuide")?.run {
-                    callMethod("clearAttention")
-                    callMethod("clearCommandDms")
-                    callMethod("clearContractCard")
-                }
-            }
+            ) { it.result?.callMethod("clearVideoGuide") }
             "com.bapis.bilibili.app.viewunite.v1.ViewMoss".from(mClassLoader)?.hookAfterMethod(
                 "viewProgress",
                 "com.bapis.bilibili.app.viewunite.v1.ViewProgressReq"
             ) { param ->
-                param.result?.callMethod("getDm")?.run {
-                    callMethod("clearAttention")
-                    callMethod("clearCommandDms")
-                }
-                param.result?.callMethod("getVideoGuide")?.run {
-                    callMethod("clearContractCard")
+                param.result?.run {
+                    callMethod("clearDm")
+                    callMethod("clearVideoGuide")
                 }
             }
+            instance.dmMossClass?.hookAfterMethod(
+                "dmView", "com.bapis.bilibili.community.service.dm.v1.DmViewReq",
+            ) { it.result?.callMethod("clearActivityMeta") }
         }
         if (hidden && purifySearch) {
             "com.bapis.bilibili.app.interfaces.v1.SearchMoss".hookAfterMethod(

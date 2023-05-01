@@ -181,8 +181,8 @@
     <string name="remove_video_UgcSeason_summary">移除影片下方的UP主影片分集列表</string>
     <string name="remove_video_relate_nothing_title">移除影片下方的所有內容</string>
     <string name="remove_video_relate_nothing_summary">上個選項的基礎上，將UP主投稿影片也移除</string>
-    <string name="remove_video_cmd_dms_title">移除互動浮窗</string>
-    <string name="remove_video_cmd_dms_summary">移除影片播放時浮窗出現的三連關注、關聯影片、投票彈幕、評分彈幕、投資目前UP主等</string>
+    <string name="remove_video_cmd_dms_title">移除影片浮窗</string>
+    <string name="remove_video_cmd_dms_summary">移除影片播放時出現的浮窗，包括三連關注、關聯影片、投票彈幕、評分彈幕、投資目前UP主、跳轉應用程式等</string>
     <string name="block_word_search_title">封鎖評論關鍵字搜尋功能</string>
     <string name="block_word_search_summary">封鎖影片評論藍色關鍵字點擊觸發跳轉搜尋功能</string>
     <string name="disable_try_watch_vip_quality_title">禁用免費試看大會員清晰度</string>
