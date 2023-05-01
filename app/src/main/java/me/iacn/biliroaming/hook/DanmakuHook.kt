@@ -8,7 +8,7 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
         val blockWeight = sPrefs.getInt("danmaku_filter_weight", 0)
             .takeIf { it > 0 } ?: return
-        "com.bapis.bilibili.community.service.dm.v1.DMMoss".from(mClassLoader)?.hookBeforeMethod(
+        instance.dmMossClass?.hookBeforeMethod(
             "dmSegMobile",
             "com.bapis.bilibili.community.service.dm.v1.DmSegMobileReq",
             instance.mossResponseHandlerClass

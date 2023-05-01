@@ -117,7 +117,7 @@
     <string name="revert_live_room_feed_title">强制旧版直播间样式</string>
     <string name="revert_live_room_feed_summary">强制直播间使用旧版样式</string>
     <string name="block_video_ad_title">屏蔽视频下方推荐</string>
-    <string name="block_video_ad_summary">屏蔽视频下方推荐栏</string>
+    <string name="block_video_ad_summary">屏蔽视频下方推荐栏，开启后会同时屏蔽评论区顶部推广横幅</string>
     <string name="hide_long_duration_recommend_title">隐藏首页视频时长大于</string>
     <string name="hide_short_duration_recommend_title">隐藏首页视频时长小于</string>
     <string name="hide_duration_recommend_summary">隐藏首页推送指定时长的视频（秒）</string>
@@ -182,7 +182,7 @@
     <string name="remove_video_relate_nothing_title">移除视频下方的所有内容</string>
     <string name="remove_video_relate_nothing_summary">上个选项的基础上，将UP主投稿视频也移除</string>
     <string name="remove_video_cmd_dms_title">移除视频浮窗</string>
-    <string name="remove_video_cmd_dms_summary">移除视频播放时出现的浮窗，包括三连关注、关联视频、投票弹幕、评分弹幕、投资当前UP主、跳转其他应用等</string>
+    <string name="remove_video_cmd_dms_summary">移除视频播放时出现的浮窗，包括三连关注、关联视频、投票弹幕、评分弹幕、投资当前UP主、跳转其他应用、免流引导等</string>
     <string name="block_word_search_title">屏蔽评论关键词搜索功能</string>
     <string name="block_word_search_summary">屏蔽视频评论蓝色关键词点击触发跳转搜索功能</string>
     <string name="disable_try_watch_vip_quality_title">禁用免费试看大会员清晰度</string>
