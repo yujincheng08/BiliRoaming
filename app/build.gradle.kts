@@ -126,8 +126,6 @@ protobuf {
         artifact = libs.protobuf.protoc.get().toString()
     }
 
-    generatedFilesBaseDir = "$projectDir/src/generated"
-
     generateProtoTasks {
         all().forEach { task ->
             task.builtins {
@@ -161,18 +159,20 @@ dependencies {
 
 val adbExecutable: String = androidComponents.sdkComponents.adb.get().asFile.absolutePath
 
-val restartBiliBili = task("restartBiliBili").doLast {
-    exec {
-        commandLine(adbExecutable, "shell", "am", "force-stop", "tv.danmaku.bili")
-    }
-    exec {
-        commandLine(
-            adbExecutable,
-            "shell",
-            "am",
-            "start",
-            "$(pm resolve-activity --components tv.danmaku.bili)"
-        )
+val restartBiliBili = task("restartBiliBili").apply {
+    doLast {
+        exec {
+            commandLine(adbExecutable, "shell", "am", "force-stop", "tv.danmaku.bili")
+        }
+        exec {
+            commandLine(
+                adbExecutable,
+                "shell",
+                "am",
+                "start",
+                "$(pm resolve-activity --components tv.danmaku.bili)"
+            )
+        }
     }
 }
 
