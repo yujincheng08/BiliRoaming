@@ -73,6 +73,23 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         filterMap[it].orEmpty()
     }
 
+    companion object {
+        private const val REASON_ID_TITLE = 1145140L
+        private const val REASON_ID_RCMD_REASON = 1145141L
+        private const val REASON_ID_UP_ID = 1145142L
+        private const val REASON_ID_UP_NAME = 1145143L
+        private const val REASON_ID_CATEGORY_NAME = 1145144L
+        private const val REASON_ID_CHANNEL_NAME = 1145145L
+        private val blockReasonIds = arrayOf(
+            REASON_ID_TITLE,
+            REASON_ID_RCMD_REASON,
+            REASON_ID_UP_ID,
+            REASON_ID_UP_NAME,
+            REASON_ID_CATEGORY_NAME,
+            REASON_ID_CHANNEL_NAME,
+        )
+    }
+
     private fun String.isNum() = all { it.isDigit() }
 
     private fun toLong(str: String): Long {
@@ -213,23 +230,127 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         return false
     }
 
+    private fun appendReasons(items: ArrayList<Any>) {
+        for (item in items) {
+            val title = item.getObjectFieldAs<String?>("title").orEmpty()
+            val rcmdReason = item.runCatchingOrNull {
+                getObjectField("rcmdReason")?.getObjectFieldAs<String?>("text")
+            }.orEmpty()
+            val args = item.getObjectField("args")
+            val upId = args?.getLongField("upId") ?: 0L
+            val upName = if (item.getObjectField("goTo") == "picture") {
+                item.runCatchingOrNull { getObjectFieldAs<String?>("desc") }.orEmpty()
+            } else {
+                args?.getObjectFieldAs<String?>("upName").orEmpty()
+            }
+            val categoryName = args?.getObjectFieldAs<String?>("rname").orEmpty()
+            val channelName = args?.getObjectFieldAs<String?>("tname").orEmpty()
+            val treePoint = item.getObjectFieldAs<MutableList<Any>?>("threePoint") ?: continue
+            instance.treePointItemClass?.new()?.apply {
+                setObjectField("title", "漫游屏蔽")
+                setObjectField("subtitle", "(本地屏蔽，重启生效)")
+                setObjectField("type", "dislike")
+                val reasons = mutableListOf<Any>()
+                if (title.isNotEmpty()) {
+                    instance.dislikeReasonClass?.new()?.apply {
+                        setLongField("id", REASON_ID_TITLE)
+                        setObjectField("name", "标题:$title")
+                    }?.let { reasons.add(it) }
+                }
+                if (rcmdReason.isNotEmpty()) {
+                    instance.dislikeReasonClass?.new()?.apply {
+                        setLongField("id", REASON_ID_RCMD_REASON)
+                        setObjectField("name", "推荐原因:$rcmdReason")
+                    }?.let { reasons.add(it) }
+                }
+                if (upId != 0L) {
+                    instance.dislikeReasonClass?.new()?.apply {
+                        setLongField("id", REASON_ID_UP_ID)
+                        setObjectField("name", "UID:$upId")
+                    }?.let { reasons.add(it) }
+                }
+                if (upName.isNotEmpty()) {
+                    instance.dislikeReasonClass?.new()?.apply {
+                        setLongField("id", REASON_ID_UP_NAME)
+                        setObjectField("name", "UP主:$upName")
+                    }?.let { reasons.add(it) }
+                }
+                if (categoryName.isNotEmpty()) {
+                    instance.dislikeReasonClass?.new()?.apply {
+                        setLongField("id", REASON_ID_CATEGORY_NAME)
+                        setObjectField("name", "分区:$categoryName")
+                    }?.let { reasons.add(it) }
+                }
+                if (channelName.isNotEmpty()) {
+                    instance.dislikeReasonClass?.new()?.apply {
+                        setLongField("id", REASON_ID_CHANNEL_NAME)
+                        setObjectField("name", "频道:$channelName")
+                    }?.let { reasons.add(it) }
+                }
+                setObjectField("reasons", reasons)
+            }?.let { treePoint.add(it) }
+        }
+    }
+
     override fun startHook() {
         Log.d("startHook: Pegasus")
         instance.pegasusFeedClass?.hookAfterMethod(
             instance.pegasusFeed(),
             instance.responseBodyClass
         ) { param ->
-            param.result.getObjectField("data")?.getObjectFieldAs<ArrayList<Any>>("items")
-                ?.let { arr ->
-                    arr.removeAll {
-                        filter.any { item ->
-                            item in it.getObjectFieldOrNullAs<String>("cardGoto")
-                                .orEmpty() || item in it.getObjectFieldOrNullAs<String>("cardType")
-                                .orEmpty() || item in it.getObjectFieldOrNullAs<String>("goTo")
-                                .orEmpty()
-                        } || isLowCountVideo(it) || isContainsBlockKwd(it) || durationVideo(it)
+            param.result.getObjectField("data")?.getObjectFieldAs<ArrayList<Any>>("items")?.run {
+                removeAll {
+                    filter.any { item ->
+                        item in it.getObjectFieldOrNullAs<String>("cardGoto")
+                            .orEmpty() || item in it.getObjectFieldOrNullAs<String>("cardType")
+                            .orEmpty() || item in it.getObjectFieldOrNullAs<String>("goTo")
+                            .orEmpty()
+                    } || isLowCountVideo(it) || isContainsBlockKwd(it) || durationVideo(it)
+                }
+                appendReasons(this)
+            }
+        }
+        instance.cardClickProcessorClass?.declaredMethods
+            ?.find { it.name == instance.onFeedClicked() }?.hookBeforeMethod { param ->
+                val reason = param.args[2]
+                if (reason == null || reason.getLongField("id") !in blockReasonIds)
+                    return@hookBeforeMethod
+                val id = reason.getLongField("id")
+                val name = reason.getObjectFieldAs<String?>("name").orEmpty()
+                val value = name.substringAfter(":")
+                when (id) {
+                    REASON_ID_TITLE -> {
+                        val validValue =
+                            if (kwdFilterTitleRegexMode) Regex.escape(value) else value
+                        sPrefs.appendStringForSet("home_filter_keywords_title", validValue)
+                    }
+
+                    REASON_ID_RCMD_REASON -> {
+                        val validValue =
+                            if (kwdFilterReasonRegexMode) Regex.escape(value) else value
+                        sPrefs.appendStringForSet("home_filter_keywords_reason", validValue)
+                    }
+
+                    REASON_ID_UP_ID -> {
+                        sPrefs.appendStringForSet("home_filter_keywords_uid", value)
+                    }
+
+                    REASON_ID_UP_NAME -> {
+                        val validValue =
+                            if (kwdFilterUpnameRegexMode) Regex.escape(value) else value
+                        sPrefs.appendStringForSet("home_filter_keywords_up", validValue)
+                    }
+
+                    REASON_ID_CATEGORY_NAME -> {
+                        sPrefs.appendStringForSet("home_filter_keywords_category", value)
+                    }
+
+                    REASON_ID_CHANNEL_NAME -> {
+                        sPrefs.appendStringForSet("home_filter_keywords_channel", value)
                     }
                 }
-        }
+                Log.toast("添加成功", force = true)
+                param.result = null
+            }
     }
 }

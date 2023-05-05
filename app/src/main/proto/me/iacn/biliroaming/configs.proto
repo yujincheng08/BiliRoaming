@@ -266,6 +266,11 @@ message BiliGlobalPreference {
   optional Method get = 2;
 }
 
+message CardClickProcessor {
+  optional Class class = 1;
+  optional Method on_feed_clicked = 2;
+}
+
 message HookInfo {
   int64 last_update_time = 1;
   optional MapIds map_ids = 2;
@@ -326,4 +331,5 @@ message HookInfo {
   optional Class theme_colors = 86;
   optional BuiltInThemes built_in_themes = 87;
   optional BiliGlobalPreference bili_global_preference = 88;
+  optional CardClickProcessor card_click_processor = 89;
 }
