@@ -255,4 +255,5 @@
     <string name="full_screen_quality_summary">設定影片全螢幕播放時預設的清晰度，當播放器畫質選項為自動時此選項不生效，需開啟解鎖番劇限制選項</string>
     <string name="block_comment_guide_title">封鎖評論引導</string>
     <string name="block_comment_guide_summary">封鎖影片詳情頁及評論頁的評論引導提示</string>
+    <string name="customize_dynamic_rm_blocked_title">屏蔽無權查看動態(例如充電專屬)</string>
 </resources>

@@ -185,6 +185,7 @@
         <item>话题推荐</item>
         <item>付费更新</item>
         <item>话题集合</item>
+        <item>通知</item>
     </string-array>
     <string-array name="dynamic_values">
         <item>1</item>
@@ -212,6 +213,7 @@
         <item>23</item>
         <item>24</item>
         <item>25</item>
+        <item>26</item>
     </string-array>
     <string-array name="live_popup_entries">
         <item>购物卡片</item>
