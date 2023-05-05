@@ -17,7 +17,7 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
     private val kwdFilterTitleList by lazy {
         migrateHomeFilterPrefsIfNeeded()
-        sPrefs.getStringSet("home_filter_keywords_title", null) ?: setOf()
+        sPrefs.getStringSet("home_filter_keywords_title", null).orEmpty()
     }
     private val kwdFilterTitleRegexes by lazy { kwdFilterTitleList.map { it.toRegex() } }
     private val kwdFilterTitleRegexMode by lazy {
@@ -25,7 +25,7 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
     private val kwdFilterReasonList by lazy {
         migrateHomeFilterPrefsIfNeeded()
-        sPrefs.getStringSet("home_filter_keywords_reason", null) ?: setOf()
+        sPrefs.getStringSet("home_filter_keywords_reason", null).orEmpty()
     }
     private val kwdFilterReasonRegexes by lazy { kwdFilterReasonList.map { it.toRegex() } }
     private val kwdFilterReasonRegexMode by lazy {
@@ -34,11 +34,11 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private val kwdFilterUidList by lazy {
         migrateHomeFilterPrefsIfNeeded()
         sPrefs.getStringSet("home_filter_keywords_uid", null)
-            ?.mapNotNull { it.toLongOrNull() } ?: listOf()
+            ?.mapNotNull { it.toLongOrNull() }.orEmpty()
     }
     private val kwdFilterUpnameList by lazy {
         migrateHomeFilterPrefsIfNeeded()
-        sPrefs.getStringSet("home_filter_keywords_up", null) ?: setOf()
+        sPrefs.getStringSet("home_filter_keywords_up", null).orEmpty()
     }
     private val kwdFilterUpnameRegexes by lazy { kwdFilterUpnameList.map { it.toRegex() } }
     private val kwdFilterUpnameRegexMode by lazy {
@@ -46,11 +46,11 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
     private val kwdFilterRnameList by lazy {
         migrateHomeFilterPrefsIfNeeded()
-        sPrefs.getStringSet("home_filter_keywords_category", null) ?: setOf()
+        sPrefs.getStringSet("home_filter_keywords_category", null).orEmpty()
     }
     private val kwdFilterTnameList by lazy {
         migrateHomeFilterPrefsIfNeeded()
-        sPrefs.getStringSet("home_filter_keywords_channel", null) ?: setOf()
+        sPrefs.getStringSet("home_filter_keywords_channel", null).orEmpty()
     }
 
     private val filterMap = mapOf(

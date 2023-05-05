@@ -6,19 +6,19 @@ class DynamicHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     private val purifyTypes = run {
         sPrefs.getStringSet("customize_dynamic_type", null)
-            ?.map { it.toInt() } ?: listOf()
+            ?.map { it.toInt() }.orEmpty()
     }
     private val purifyContents = run {
-        sPrefs.getStringSet("customize_dynamic_keyword_content", null) ?: setOf()
+        sPrefs.getStringSet("customize_dynamic_keyword_content", null).orEmpty()
     }
     private val purifyContentRegexes by lazy { purifyContents.map { it.toRegex() } }
     private val contentRegexMode = sPrefs.getBoolean("dynamic_content_regex_mode", false)
     private val purifyUpNames = run {
-        sPrefs.getStringSet("customize_dynamic_keyword_upname", null) ?: setOf()
+        sPrefs.getStringSet("customize_dynamic_keyword_upname", null).orEmpty()
     }
     private val purifyUidList = run {
         sPrefs.getStringSet("customize_dynamic_keyword_uid", null)
-            ?.mapNotNull { it.toLongOrNull() } ?: listOf()
+            ?.mapNotNull { it.toLongOrNull() }.orEmpty()
     }
     private val removeTopicOfAll = sPrefs.getBoolean("customize_dynamic_all_rm_topic", false)
     private val removeUpOfAll = sPrefs.getBoolean("customize_dynamic_all_rm_up", false)
@@ -98,7 +98,7 @@ class DynamicHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 val modulesText = e.callMethodAs<List<Any>>("getModulesList")
                     .joinToString(separator = "") {
                         it.callMethod("getModuleDesc")
-                            ?.callMethodAs<String>("getText") ?: ""
+                            ?.callMethodAs<String>("getText").orEmpty()
                     }
                 if (modulesText.isNotEmpty() && if (contentRegexMode)
                         purifyContentRegexes.any { modulesText.contains(it) }
