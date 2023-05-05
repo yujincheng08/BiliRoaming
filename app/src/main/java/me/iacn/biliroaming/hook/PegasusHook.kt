@@ -230,8 +230,8 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         return false
     }
 
-    private fun appendReasons(items: ArrayList<Any>) {
-        for (item in items) {
+    private fun ArrayList<Any>.appendReasons() {
+        for (item in this) {
             val title = item.getObjectFieldAs<String?>("title").orEmpty()
             val rcmdReason = item.runCatchingOrNull {
                 getObjectField("rcmdReason")?.getObjectFieldAs<String?>("text")
@@ -307,7 +307,7 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             .orEmpty()
                     } || isLowCountVideo(it) || isContainsBlockKwd(it) || durationVideo(it)
                 }
-                appendReasons(this)
+                appendReasons()
             }
         }
         instance.cardClickProcessorClass?.declaredMethods
