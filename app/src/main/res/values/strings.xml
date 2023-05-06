@@ -159,6 +159,7 @@
     <string name="customize_dynamic_all_rm_up_title">移除最常访问（综合）</string>
     <string name="customize_dynamic_video_rm_up_title">移除最常访问（视频）</string>
     <string name="customize_dynamic_filter_apply_to_video">过滤设置同时作用于视频分区</string>
+    <string name="customize_dynamic_rm_blocked_title">屏蔽无权查看动态(例如充电专属)</string>
     <string name="customize_dynamic_by_type">按类型</string>
     <string name="customize_dynamic_by_keyword">按关键词</string>
     <string name="keyword_group_name_content">内容</string>
@@ -255,5 +256,4 @@
     <string name="full_screen_quality_summary">设置视频全屏播放时默认的清晰度，当播放器画质选项为自动时此选项不生效，需开启解锁番剧限制选项</string>
     <string name="block_comment_guide_title">屏蔽评论引导</string>
     <string name="block_comment_guide_summary">屏蔽视频详情页及评论页的评论引导提示</string>
-    <string name="customize_dynamic_rm_blocked_title">屏蔽无权查看动态(例如充电专属)</string>
 </resources>
