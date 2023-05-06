@@ -397,6 +397,22 @@ fun <T> T.setBooleanField(field: String?, value: Boolean) = apply {
     setBooleanField(this, field, value)
 }
 
+fun <T> T.trySetIntField(field: String?, value: Int) = apply {
+    runCatchingOrNull { setIntField(this, field, value) }
+}
+
+fun <T> T.trySetLongField(field: String?, value: Long) = apply {
+    runCatchingOrNull { setLongField(this, field, value) }
+}
+
+fun <T> T.trySetObjectField(field: String?, value: Any?) = apply {
+    runCatchingOrNull { setObjectField(this, field, value) }
+}
+
+fun <T> T.trySetBooleanField(field: String?, value: Boolean) = apply {
+    runCatchingOrNull { setBooleanField(this, field, value) }
+}
+
 inline fun XResources.hookLayout(
     id: Int,
     crossinline hooker: (XC_LayoutInflated.LayoutInflatedParam) -> Unit

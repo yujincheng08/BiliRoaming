@@ -40,6 +40,7 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         migrateHomeFilterPrefsIfNeeded()
         sPrefs.getStringSet("home_filter_keywords_channel", null).orEmpty()
     }
+    private val disableAutoRefresh = sPrefs.getBoolean("disable_auto_refresh", false)
 
     private val filterMap = mapOf(
         "advertisement" to listOf("ad"),
@@ -82,7 +83,7 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     private fun String.toLong() = runCatchingOrNull {
         when {
-            isNum() -> return toDouble().toLong()
+            isNum() -> toDouble().toLong()
             contains("万") -> (replace("万", "").toDouble() * 10_000).toLong()
             contains("亿") -> (replace("亿", "").toDouble() * 100_000_000).toLong()
             else -> -1L
@@ -247,13 +248,27 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
     }
 
+    private fun Any.disableAutoRefresh() {
+        if (!disableAutoRefresh) return
+        // only exist on android and android_i now
+        trySetLongField("autoRefreshTimeByActive", -1L)
+        trySetLongField("autoRefreshTimeByAppear", -1L)
+        trySetIntField("autoRefreshTimeByBehavior", -1)
+        // only exist on android now
+        trySetIntField("autoRefreshByBehavior", -1)
+        // only exist on android_hd now
+        trySetIntField("auto_refresh_time", 0)
+    }
+
     override fun startHook() {
         Log.d("startHook: Pegasus")
         instance.pegasusFeedClass?.hookAfterMethod(
             instance.pegasusFeed(),
             instance.responseBodyClass
         ) { param ->
-            param.result.getObjectField("data")?.getObjectFieldAs<ArrayList<Any>>("items")?.run {
+            param.result ?: return@hookAfterMethod
+            val data = param.result.getObjectField("data")
+            data?.getObjectFieldAs<ArrayList<Any>>("items")?.run {
                 removeAll {
                     val cardGoto = it.getObjectFieldAs<String?>("cardGoto").orEmpty()
                     val cardType = it.getObjectFieldAs<String?>("cardType").orEmpty()
@@ -264,6 +279,7 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
                 appendReasons()
             }
+            data?.getObjectField("config")?.disableAutoRefresh()
         }
         instance.cardClickProcessorClass?.declaredMethods
             ?.find { it.name == instance.onFeedClicked() }?.hookBeforeMethod { param ->
