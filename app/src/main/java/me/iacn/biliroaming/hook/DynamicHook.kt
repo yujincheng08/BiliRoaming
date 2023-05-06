@@ -87,8 +87,9 @@ class DynamicHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
 
             val extend = e.callMethod("getExtend") ?: continue
-            if (rmBlocked && extend.callMethodOrNull("getOnlyFansProperty")
-                    ?.callMethodOrNull("getHasPrivilege") == false
+            if (rmBlocked
+                && extend.callMethodOrNull("hasOnlyFansProperty") == true
+                && extend.callMethod("getOnlyFansProperty")?.callMethod("getHasPrivilege") == false
             ) {
                 idxList.add(idx)
                 continue
