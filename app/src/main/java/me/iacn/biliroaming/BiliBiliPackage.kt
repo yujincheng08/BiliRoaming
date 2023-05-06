@@ -164,6 +164,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     }
     val biliGlobalPreferenceClass by Weak { mHookInfo.biliGlobalPreference.class_ from mClassLoader }
     val dmMossClass by Weak { "com.bapis.bilibili.community.service.dm.v1.DMMoss" from mClassLoader }
+    val treePointItemClass by Weak { "com.bilibili.app.comm.list.common.data.ThreePointItem" from mClassLoader }
+    val dislikeReasonClass by Weak { "com.bilibili.app.comm.list.common.data.DislikeReason" from mClassLoader }
+    val cardClickProcessorClass by Weak { mHookInfo.cardClickProcessor.class_ from mClassLoader }
 
     val ids: Map<String, Int> by lazy {
         mHookInfo.mapIds.idsMap
@@ -325,6 +328,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     fun allThemesField() = mHookInfo.builtInThemes.all.orNull
 
     fun getBLKVPrefs() = mHookInfo.biliGlobalPreference.get.orNull
+
+    fun onFeedClicked() = mHookInfo.cardClickProcessor.onFeedClicked.orNull
 
     private fun readHookInfo(context: Context): Configs.HookInfo {
         try {
@@ -2075,6 +2080,24 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 } ?: return@biliGlobalPreference
                 class_ = class_ { name = clazz.name }
                 get = method { name = method.name }
+            }
+            cardClickProcessor = cardClickProcessor {
+                val method = dexHelper.findMethodUsingString(
+                    "action:feed:dislike_reason",
+                    false,
+                    -1,
+                    5,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).firstOrNull()?.let {
+                    dexHelper.decodeMethodIndex(it)
+                } ?: return@cardClickProcessor
+                class_ = class_ { name = method.declaringClass.name }
+                onFeedClicked = method { name = method.name }
             }
 
             dexHelper.close()

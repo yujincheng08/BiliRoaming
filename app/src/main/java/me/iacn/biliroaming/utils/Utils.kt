@@ -385,3 +385,10 @@ inline fun Any.mossResponseHandlerProxy(crossinline onNext: (reply: Any?) -> Uni
         }
     }
 }
+
+@SuppressLint("ApplySharedPref")
+fun SharedPreferences.appendStringForSet(key: String, value: String, commit: Boolean = false) {
+    getStringSet(key, null).orEmpty().let {
+        edit().putStringSet(key, it + value).apply { if (commit) commit() else apply() }
+    }
+}
