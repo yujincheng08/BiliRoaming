@@ -332,4 +332,5 @@ message HookInfo {
   optional BuiltInThemes built_in_themes = 87;
   optional BiliGlobalPreference bili_global_preference = 88;
   optional CardClickProcessor card_click_processor = 89;
+  optional Class publish_to_following_config = 90;
 }

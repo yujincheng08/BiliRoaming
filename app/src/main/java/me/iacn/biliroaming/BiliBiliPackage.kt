@@ -167,6 +167,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val treePointItemClass by Weak { "com.bilibili.app.comm.list.common.data.ThreePointItem" from mClassLoader }
     val dislikeReasonClass by Weak { "com.bilibili.app.comm.list.common.data.DislikeReason" from mClassLoader }
     val cardClickProcessorClass by Weak { mHookInfo.cardClickProcessor.class_ from mClassLoader }
+    val publishToFollowingConfigClass by Weak { mHookInfo.publishToFollowingConfig from mClassLoader }
 
     val ids: Map<String, Int> by lazy {
         mHookInfo.mapIds.idsMap
@@ -2098,6 +2099,22 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 } ?: return@cardClickProcessor
                 class_ = class_ { name = method.declaringClass.name }
                 onFeedClicked = method { name = method.name }
+            }
+            dexHelper.findMethodUsingString(
+                "PublishToFollowingConfig(visible=",
+                false,
+                -1,
+                -1,
+                null,
+                -1,
+                null,
+                null,
+                null,
+                true
+            ).firstOrNull()?.let {
+                dexHelper.decodeMethodIndex(it)?.declaringClass
+            }?.let {
+                publishToFollowingConfig = class_ { name = it.name }
             }
 
             dexHelper.close()

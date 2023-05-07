@@ -226,6 +226,11 @@
             android:key="disable_auto_refresh"
             android:summary="@string/disable_auto_refresh_summary"
             android:title="@string/disable_auto_refresh_title" />
+
+        <SwitchPreference
+            android:key="disable_auto_select"
+            android:summary="@string/disable_auto_select_summary"
+            android:title="@string/disable_auto_select_title" />
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/pref_backup">
         <Preference

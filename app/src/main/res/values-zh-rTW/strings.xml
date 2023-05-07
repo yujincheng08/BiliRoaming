@@ -258,4 +258,6 @@
     <string name="block_comment_guide_summary">封鎖影片詳情頁及評論頁的評論引導提示</string>
     <string name="disable_auto_refresh_title">禁止首頁自動刷新</string>
     <string name="disable_auto_refresh_summary">禁止首頁內容在退至後台、切換其他頁面一段時間後返回或熱重啟時自動刷新</string>
+    <string name="disable_auto_select_title">禁止自動轉到動態</string>
+    <string name="disable_auto_select_summary">禁止評論帶圖時自動勾選轉到動態</string>
 </resources>
