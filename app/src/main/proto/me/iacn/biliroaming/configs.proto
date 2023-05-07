@@ -271,6 +271,11 @@ message CardClickProcessor {
   optional Method on_feed_clicked = 2;
 }
 
+message LiveServiceGenerator {
+  optional Class class = 1;
+  optional Method create_service = 2;
+}
+
 message HookInfo {
   int64 last_update_time = 1;
   optional MapIds map_ids = 2;
@@ -332,4 +337,5 @@ message HookInfo {
   optional BuiltInThemes built_in_themes = 87;
   optional BiliGlobalPreference bili_global_preference = 88;
   optional CardClickProcessor card_click_processor = 89;
+  optional LiveServiceGenerator live_service_generator = 90;
 }

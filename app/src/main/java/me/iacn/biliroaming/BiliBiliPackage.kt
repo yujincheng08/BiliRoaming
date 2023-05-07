@@ -167,6 +167,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val treePointItemClass by Weak { "com.bilibili.app.comm.list.common.data.ThreePointItem" from mClassLoader }
     val dislikeReasonClass by Weak { "com.bilibili.app.comm.list.common.data.DislikeReason" from mClassLoader }
     val cardClickProcessorClass by Weak { mHookInfo.cardClickProcessor.class_ from mClassLoader }
+    val liveServiceGeneratorClass by Weak { mHookInfo.liveServiceGenerator.class_ from mClassLoader }
 
     val ids: Map<String, Int> by lazy {
         mHookInfo.mapIds.idsMap
@@ -330,6 +331,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     fun getBLKVPrefs() = mHookInfo.biliGlobalPreference.get.orNull
 
     fun onFeedClicked() = mHookInfo.cardClickProcessor.onFeedClicked.orNull
+
+    fun liveCreateService() = mHookInfo.liveServiceGenerator.createService.orNull
 
     private fun readHookInfo(context: Context): Configs.HookInfo {
         try {
@@ -2098,6 +2101,15 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 } ?: return@cardClickProcessor
                 class_ = class_ { name = method.declaringClass.name }
                 onFeedClicked = method { name = method.name }
+            }
+            liveServiceGenerator = liveServiceGenerator {
+                val clazz = "com.bilibili.bililive.infra.network.ServiceGenerator".from(classloader)
+                    ?: return@liveServiceGenerator
+                val method = clazz.declaredMethods.firstOrNull { m ->
+                    m.parameterTypes.let { it.size == 1 && it[0] == Class::class.java }
+                } ?: return@liveServiceGenerator
+                class_ = class_ { name = clazz.name }
+                createService = method { name = method.name }
             }
 
             dexHelper.close()

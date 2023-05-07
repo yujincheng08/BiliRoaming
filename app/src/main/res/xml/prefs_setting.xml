@@ -218,6 +218,11 @@
             android:title="@string/full_screen_quality_title" />
 
         <SwitchPreference
+            android:key="high_live_quality"
+            android:summary="@string/high_live_quality_summary"
+            android:title="@string/high_live_quality_title" />
+
+        <SwitchPreference
             android:key="block_comment_guide"
             android:summary="@string/block_comment_guide_summary"
             android:title="@string/block_comment_guide_title" />

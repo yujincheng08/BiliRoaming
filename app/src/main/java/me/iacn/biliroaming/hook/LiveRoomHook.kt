@@ -4,9 +4,35 @@ import android.os.Bundle
 import android.view.MotionEvent
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.utils.*
+import java.lang.reflect.Proxy
 
 class LiveRoomHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
+        if (sPrefs.getBoolean("high_live_quality", false)) {
+            instance.liveServiceGeneratorClass?.hookAfterMethod(
+                instance.liveCreateService(), Class::class.java
+            ) { param ->
+                val type = param.args[0] as Class<*>
+                val service = param.result
+                param.result = Proxy.newProxyInstance(
+                    service.javaClass.classLoader, arrayOf(type),
+                ) { _, m, args ->
+                    if (m.name == "getRoomPlayInfoV2") {
+                        val noPlayUrl = args[1] as Int
+                        val qn = args[2] as Int
+                        if (noPlayUrl == 1 && qn == 0) {
+                            args[1] = 0
+                            args[2] = 10000 // 原画
+                        }
+                        m(service, *args)
+                    } else if (args == null) {
+                        m(service)
+                    } else {
+                        m(service, *args)
+                    }
+                }
+            }
+        }
         if (sPrefs.getBoolean("forbid_switch_live_room", false)) {
             instance.livePagerRecyclerViewClass?.replaceMethod(
                 "onInterceptTouchEvent",

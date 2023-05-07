@@ -254,6 +254,8 @@
     <string name="half_screen_quality_summary">設定影片半屏播放時的清晰度，設定後會大幅降低影片的首次播放載入速度，舊版播放器（半屏時進度條在框內）僅支持跟隨全螢幕清晰度，需開啟解鎖番劇限制選項</string>
     <string name="full_screen_quality_title">影片全螢幕清晰度</string>
     <string name="full_screen_quality_summary">設定影片全螢幕播放時預設的清晰度，當播放器畫質選項為自動時此選項不生效，需開啟解鎖番劇限制選項</string>
+    <string name="high_live_quality_title">直播原畫清晰度</string>
+    <string name="high_live_quality_summary">將直播預設的清晰度更改為原畫</string>
     <string name="block_comment_guide_title">封鎖評論引導</string>
     <string name="block_comment_guide_summary">封鎖影片詳情頁及評論頁的評論引導提示</string>
     <string name="disable_auto_refresh_title">禁止首頁自動刷新</string>
