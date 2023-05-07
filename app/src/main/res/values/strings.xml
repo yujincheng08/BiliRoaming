@@ -256,4 +256,6 @@
     <string name="full_screen_quality_summary">设置视频全屏播放时默认的清晰度，当播放器画质选项为自动时此选项不生效，需开启解锁番剧限制选项</string>
     <string name="block_comment_guide_title">屏蔽评论引导</string>
     <string name="block_comment_guide_summary">屏蔽视频详情页及评论页的评论引导提示</string>
+    <string name="disable_auto_refresh_title">禁止首页自动刷新</string>
+    <string name="disable_auto_refresh_summary">禁止首页内容在退至后台、切换其他页面一段时间后返回或热重启时自动刷新</string>
 </resources>

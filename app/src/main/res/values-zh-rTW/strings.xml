@@ -256,4 +256,6 @@
     <string name="full_screen_quality_summary">設定影片全螢幕播放時預設的清晰度，當播放器畫質選項為自動時此選項不生效，需開啟解鎖番劇限制選項</string>
     <string name="block_comment_guide_title">封鎖評論引導</string>
     <string name="block_comment_guide_summary">封鎖影片詳情頁及評論頁的評論引導提示</string>
+    <string name="disable_auto_refresh_title">禁止首頁自動刷新</string>
+    <string name="disable_auto_refresh_summary">禁止首頁內容在退至後台、切換其他頁面一段時間後返回或熱重啟時自動刷新</string>
 </resources>
