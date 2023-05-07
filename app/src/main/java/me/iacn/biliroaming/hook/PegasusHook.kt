@@ -251,13 +251,19 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private fun Any.disableAutoRefresh() {
         if (!disableAutoRefresh) return
         // only exist on android and android_i now
-        trySetLongField("autoRefreshTimeByActive", -1L)
-        trySetLongField("autoRefreshTimeByAppear", -1L)
-        trySetIntField("autoRefreshTimeByBehavior", -1)
+        runCatchingOrNull {
+            setLongField("autoRefreshTimeByActive", -1L)
+            setLongField("autoRefreshTimeByAppear", -1L)
+            setIntField("autoRefreshTimeByBehavior", -1)
+        }
         // only exist on android now
-        trySetIntField("autoRefreshByBehavior", -1)
+        runCatchingOrNull {
+            setIntField("autoRefreshByBehavior", -1)
+        }
         // only exist on android_hd now
-        trySetIntField("auto_refresh_time", 0)
+        runCatchingOrNull {
+            setIntField("auto_refresh_time", 0)
+        }
     }
 
     override fun startHook() {
