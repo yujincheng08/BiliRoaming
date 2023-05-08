@@ -4,6 +4,8 @@ import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.utils.*
 
 class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
+    private val hidden = sPrefs.getBoolean("hidden", false)
+
     private val filterSet = sPrefs.getStringSet("customize_home_recommend", emptySet()).orEmpty()
 
     private val hideLowPlayCountLimit = sPrefs.getLong("hide_low_play_count_recommend_limit", 0)
@@ -41,6 +43,10 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         sPrefs.getStringSet("home_filter_keywords_channel", null).orEmpty()
     }
     private val disableAutoRefresh = sPrefs.getBoolean("disable_auto_refresh", false)
+    private val removeRelatePromote = sPrefs.getBoolean("remove_video_relate_promote", false)
+    private val removeRelateOnlyAv = sPrefs.getBoolean("remove_video_relate_only_av", false)
+    private val removeRelateNothing = sPrefs.getBoolean("remove_video_relate_nothing", false)
+    private val applyToRelate = sPrefs.getBoolean("home_filter_apply_to_relate", false)
 
     private val filterMap = mapOf(
         "advertisement" to listOf("ad"),
@@ -79,9 +85,9 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         )
     }
 
-    private fun String.isNum() = all { it.isDigit() }
+    private fun String.isNum() = isNotEmpty() && all { it.isDigit() }
 
-    private fun String.toLong() = runCatchingOrNull {
+    private fun String.toPlayCount() = runCatchingOrNull {
         when {
             isNum() -> toDouble().toLong()
             contains("万") -> (replace("万", "").toDouble() * 10_000).toLong()
@@ -96,8 +102,8 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val text = obj.runCatchingOrNull {
             getObjectFieldAs<String?>("coverLeftText1")
         }.orEmpty()
-        text.toLong().let {
-            return if (it == -1L) false
+        return text.toPlayCount().let {
+            if (it == -1L) false
             else it < hideLowPlayCountLimit
         }
     }
@@ -108,9 +114,9 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             return false
         val duration = obj.getObjectField("playerArgs")
             ?.getObjectFieldAs("fakeDuration") ?: 0
-        if (hideLongDurationLimit != 0 && duration > hideLongDurationLimit) return true
-        if (hideShortDurationLimit != 0 && duration < hideShortDurationLimit) return true
-        return false
+        if (hideLongDurationLimit != 0 && duration > hideLongDurationLimit)
+            return true
+        return hideShortDurationLimit != 0 && duration < hideShortDurationLimit
     }
 
     private fun isContainsBlockKwd(obj: Any): Boolean {
@@ -200,7 +206,7 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val reasons = mutableListOf<Any>()
         instance.treePointItemClass?.new()?.apply {
             setObjectField("title", "漫游屏蔽")
-            setObjectField("subtitle", "(本地屏蔽，重启生效)")
+            setObjectField("subtitle", "(本地屏蔽，重启生效，可前往首页推送过滤器查看)")
             setObjectField("type", "dislike")
             if (title.isNotEmpty()) {
                 instance.dislikeReasonClass?.new()?.apply {
@@ -266,6 +272,74 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
     }
 
+    private fun isPromoteRelate(item: Any) = removeRelatePromote
+            && (item.callMethod("getFromSourceType") == 2L ||
+            item.callMethod("getGoto") == "cm")
+
+    private fun isNotAvRelate(item: Any) = removeRelatePromote && removeRelateOnlyAv
+            && item.callMethod("getGoto") != "av"
+
+    private fun isLowCountRelate(item: Any): Boolean {
+        if (hideLowPlayCountLimit == 0L) return false
+        val text = item.callMethod("getStatV2")?.callMethod("getViewVt")
+            ?.callMethodAs<String>("getText").orEmpty()
+        return text.toPlayCount().let {
+            if (it == -1L) false
+            else it < hideLowPlayCountLimit
+        }
+    }
+
+    private fun isDurationInvalidRelate(item: Any): Boolean {
+        if (hideLongDurationLimit == 0 && hideShortDurationLimit == 0)
+            return false
+        val duration = item.callMethodAs("getDuration") ?: 0L
+        if (hideLongDurationLimit != 0 && duration > hideLongDurationLimit)
+            return true
+        return hideShortDurationLimit != 0 && duration < hideShortDurationLimit
+    }
+
+    private fun isContainsBlockKwdRelate(item: Any): Boolean {
+        if (kwdFilterTitleList.isNotEmpty()) {
+            val title = item.callMethodAs<String>("getTitle")
+            if (kwdFilterTitleRegexMode && title.isNotEmpty()) {
+                if (kwdFilterTitleRegexes.any { title.contains(it) })
+                    return true
+            } else if (title.isNotEmpty()) {
+                if (kwdFilterTitleList.any { title.contains(it) })
+                    return true
+            }
+        }
+        if (kwdFilterUidList.isNotEmpty()) {
+            val uid = item.callMethod("getAuthor")
+                ?.callMethodAs("getMid") ?: 0L
+            if (uid != 0L && kwdFilterUidList.any { it == uid })
+                return true
+        }
+        if (kwdFilterUpnameList.isNotEmpty()) {
+            val upname = item.callMethod("getAuthor")
+                ?.callMethodAs<String>("getName").orEmpty()
+            if (kwdFilterUpnameRegexMode && upname.isNotEmpty()) {
+                if (kwdFilterUpnameRegexes.any { upname.contains(it) })
+                    return true
+            } else if (upname.isNotEmpty()) {
+                if (kwdFilterUpnameList.any { upname.contains(it) })
+                    return true
+            }
+        }
+        if (kwdFilterReasonList.isNotEmpty()) {
+            val reason = item.callMethod("getRcmdReasonStyle")
+                ?.callMethodAs<String>("getText").orEmpty()
+            if (kwdFilterReasonRegexMode && reason.isNotEmpty()) {
+                if (kwdFilterReasonRegexes.any { reason.contains(it) })
+                    return true
+            } else if (reason.isNotEmpty()) {
+                if (kwdFilterReasonList.any { reason.contains(it) })
+                    return true
+            }
+        }
+        return false
+    }
+
     override fun startHook() {
         Log.d("startHook: Pegasus")
         instance.pegasusFeedClass?.hookAfterMethod(
@@ -274,6 +348,8 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         ) { param ->
             param.result ?: return@hookAfterMethod
             val data = param.result.getObjectField("data")
+            data?.getObjectField("config")?.disableAutoRefresh()
+            if (!hidden) return@hookAfterMethod
             data?.getObjectFieldAs<ArrayList<Any>>("items")?.run {
                 removeAll {
                     val cardGoto = it.getObjectFieldAs<String?>("cardGoto").orEmpty()
@@ -285,7 +361,29 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
                 appendReasons()
             }
-            data?.getObjectField("config")?.disableAutoRefresh()
+        }
+        if (!hidden) return
+        fun MutableList<Any>.filter() = removeAll {
+            isPromoteRelate(it) || isNotAvRelate(it) || (applyToRelate && (isLowCountRelate(it)
+                    || isDurationInvalidRelate(it) || isContainsBlockKwdRelate(it)))
+        }
+        instance.viewMossClass?.hookAfterMethod("view", instance.viewReqClass) { param ->
+            param.result ?: return@hookAfterMethod
+            if (removeRelatePromote && removeRelateOnlyAv && removeRelateNothing) {
+                param.result.callMethod("clearRelates")
+                param.result.callMethod("clearPagination")
+                return@hookAfterMethod
+            }
+            param.result.callMethod("ensureRelatesIsMutable")
+            param.result.callMethodAs<MutableList<Any>>("getRelatesList").filter()
+        }
+        instance.viewMossClass?.hookAfterMethod(
+            "relatesFeed",
+            "com.bapis.bilibili.app.view.v1.RelatesFeedReq"
+        ) { param ->
+            param.result ?: return@hookAfterMethod
+            param.result.callMethod("ensureListIsMutable")
+            param.result.callMethodAs<MutableList<Any>>("getListList").filter()
         }
         instance.cardClickProcessorClass?.declaredMethods
             ?.find { it.name == instance.onFeedClicked() }?.hookBeforeMethod { param ->

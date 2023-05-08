@@ -7,11 +7,8 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
         val hidden = sPrefs.getBoolean("hidden", false)
         val purifyCity = sPrefs.getBoolean("purify_city", false)
-        val removeRelatePromote = sPrefs.getBoolean("remove_video_relate_promote", false)
-        val removeRelateOnlyAv = sPrefs.getBoolean("remove_video_relate_only_av", false)
         val removeHonor = sPrefs.getBoolean("remove_video_honor", false)
         val removeUgcSeason = sPrefs.getBoolean("remove_video_UgcSeason", false)
-        val removeRelateNothing = sPrefs.getBoolean("remove_video_relate_nothing", false)
         val removeCmdDms = sPrefs.getBoolean("remove_video_cmd_dms", false)
         val purifySearch = sPrefs.getBoolean("purify_search", false)
         val purifyCampus = sPrefs.getBoolean("purify_campus", false)
@@ -63,24 +60,6 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
             if (hidden && removeUgcSeason) {
                 param.result.callMethod("clearUgcSeason")
-            }
-            if (hidden && removeRelatePromote && removeRelateOnlyAv && removeRelateNothing) {
-                param.result.callMethod("clearRelates")
-                return@hookAfterMethod
-            }
-            buildSet {
-                param.result.callMethodAs<List<*>?>("getRelatesList")
-                    ?.onEachIndexed { idx, r ->
-                        if (hidden && removeRelatePromote
-                            && (r?.callMethodAs<Long?>("getFromSourceType") == 2L ||
-                                    r?.callMethodAs<String?>("getGoto") == "cm")
-                        ) add(idx)
-                        if (hidden && removeRelatePromote && removeRelateOnlyAv
-                            && r?.callMethodAs<String?>("getGoto").let { it != "av" }
-                        ) add(idx)
-                    }
-            }.reversed().forEach {
-                param.result.callMethod("removeRelates", it)
             }
         }
 

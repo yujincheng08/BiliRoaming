@@ -75,7 +75,8 @@ class DynamicHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     private fun filterDynamic(reply: Any) {
         val dynamicList = reply.callMethod("getDynamicList") ?: return
-        val contentList = dynamicList.callMethodAs<List<Any>>("getListList")
+        dynamicList.callMethod("ensureListIsMutable")
+        val contentList = dynamicList.callMethodAs<MutableList<Any>>("getListList")
         val idxList = mutableSetOf<Int>()
         for ((idx, e) in contentList.withIndex()) {
             if (purifyTypes.isNotEmpty()) {
@@ -157,7 +158,7 @@ class DynamicHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
         }
         idxList.reversed().forEach {
-            dynamicList.callMethod("removeList", it)
+            contentList.removeAt(it)
         }
     }
 }
