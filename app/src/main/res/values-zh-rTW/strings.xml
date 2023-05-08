@@ -117,7 +117,7 @@
     <string name="revert_live_room_feed_title">強制舊版直播間樣式</string>
     <string name="revert_live_room_feed_summary">強制直播間使用舊版樣式</string>
     <string name="block_video_ad_title">封鎖影片下方推薦</string>
-    <string name="block_video_ad_summary">封鎖影片下方推薦欄，開啟後會同時屏蔽評論區頂部推廣橫幅</string>
+    <string name="block_video_ad_summary">封鎖影片下方推薦欄，開啟後會同時封鎖評論區頂部推廣橫幅</string>
     <string name="hide_long_duration_recommend_title">隱藏首頁影片時長大於</string>
     <string name="hide_short_duration_recommend_title">隱藏首頁影片時長小於</string>
     <string name="hide_duration_recommend_summary">隱藏首頁推送指定時長的影片（秒）</string>
@@ -159,7 +159,7 @@
     <string name="customize_dynamic_all_rm_up_title">移除最常訪問（綜合）</string>
     <string name="customize_dynamic_video_rm_up_title">移除最常訪問（影片）</string>
     <string name="customize_dynamic_filter_apply_to_video">過濾設定同時作用於影片分區</string>
-    <string name="customize_dynamic_rm_blocked_title">屏蔽無權查看動態(例如充電專屬)</string>
+    <string name="customize_dynamic_rm_blocked_title">封鎖無權查看動態(例如充電專屬)</string>
     <string name="customize_dynamic_by_type">按類型</string>
     <string name="customize_dynamic_by_keyword">按關鍵字</string>
     <string name="keyword_group_name_content">內容</string>
@@ -186,7 +186,7 @@
     <string name="remove_video_cmd_dms_summary">移除影片播放時出現的浮窗，包括三連關注、關聯影片、投票彈幕、評分彈幕、投資目前UP主、跳轉應用程式、免流引導等</string>
     <string name="block_word_search_title">封鎖評論關鍵字搜尋功能</string>
     <string name="block_word_search_summary">封鎖影片評論藍色關鍵字點擊觸發跳轉搜尋功能</string>
-    <string name="disable_try_watch_vip_quality_title">禁用免費試看大會員清晰度</string>
+    <string name="disable_try_watch_vip_quality_title">禁用免費試看大會員解析度</string>
     <string name="disable_try_watch_vip_quality_desc">鼠鼠我呀，真的不想每30天點一次不再試看呢</string>
     <string name="allow_mini_play_title">允許解鎖的番劇小窗播放</string>
     <string name="force_browser_title">在外部瀏覽器打開連結</string>
@@ -250,15 +250,15 @@
     <string name="danmaku_filter_title">彈幕封鎖等級</string>
     <string name="danmaku_filter_summary">恢復舊版按等級封鎖彈幕功能，0級表示關閉本功能</string>
     <string name="danmaku_filter_weight_hint">%1$d級</string>
-    <string name="half_screen_quality_title">影片半屏清晰度</string>
-    <string name="half_screen_quality_summary">設定影片半屏播放時的清晰度，設定後會大幅降低影片的首次播放載入速度，舊版播放器（半屏時進度條在框內）僅支持跟隨全螢幕清晰度，需開啟解鎖番劇限制選項</string>
-    <string name="full_screen_quality_title">影片全螢幕清晰度</string>
-    <string name="full_screen_quality_summary">設定影片全螢幕播放時預設的清晰度，當播放器畫質選項為自動時此選項不生效，需開啟解鎖番劇限制選項</string>
+    <string name="half_screen_quality_title">影片半屏解析度</string>
+    <string name="half_screen_quality_summary">設定影片半屏播放時的解析度，設定後會大幅降低影片的首次播放載入速度，舊版播放器（半屏時進度條在框內）僅支援跟隨全螢幕解析度，需開啟解鎖番劇限制選項</string>
+    <string name="full_screen_quality_title">影片全螢幕解析度</string>
+    <string name="full_screen_quality_summary">設定影片全螢幕播放時預設的解析度，當播放器畫質選項為自動時此選項不生效，需開啟解鎖番劇限制選項</string>
     <string name="block_comment_guide_title">封鎖評論引導</string>
     <string name="block_comment_guide_summary">封鎖影片詳情頁及評論頁的評論引導提示</string>
-    <string name="disable_auto_refresh_title">禁止首頁自動刷新</string>
-    <string name="disable_auto_refresh_summary">禁止首頁內容在退至後台、切換其他頁面一段時間後返回或熱重啟時自動刷新</string>
+    <string name="disable_auto_refresh_title">禁止首頁自動重新整理</string>
+    <string name="disable_auto_refresh_summary">禁止首頁內容在退至後台、切換其他頁面一段時間後返回或熱重啟時自動重新整理</string>
     <string name="disable_auto_select_title">禁止自動轉到動態</string>
     <string name="disable_auto_select_summary">禁止評論帶圖時自動勾選轉到動態</string>
-    <string name="apply_to_relate_title">同時應用於影片下方推薦</string>
+    <string name="apply_to_relate_title">同時套用於影片下方推薦</string>
 </resources>
