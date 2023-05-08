@@ -120,7 +120,7 @@
     </string-array>
     <string-array name="half_screen_quality_entries">
         <item>預設</item>
-        <item>跟隨全螢幕清晰度</item>
+        <item>跟隨全螢幕解析度</item>
         <item>240P</item>
         <item>360P</item>
         <item>480P</item>
