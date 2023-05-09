@@ -5,12 +5,12 @@ import android.content.Context
 import android.graphics.Color
 import android.text.Editable
 import android.text.TextWatcher
-import android.view.LayoutInflater
 import android.view.View
 import android.widget.EditText
 import android.widget.SeekBar
 import android.widget.SeekBar.OnSeekBarChangeListener
 import android.widget.TextView
+import me.iacn.biliroaming.utils.inflateLayout
 
 /**
  * Created by iAcn on 2019/7/14
@@ -19,7 +19,7 @@ import android.widget.TextView
  * Copy & Modify from ColorChooseDialog on 2021/7/6
  */
 class ARGBColorChooseDialog(context: Context, defColor: Int) : AlertDialog.Builder(context) {
-    private val view = getView(context)
+    private val view = context.inflateLayout(R.layout.dialog_argb_color_choose)
     private val sampleView: View = view.findViewById(R.id.view_sample2)
     private val etColor: EditText = view.findViewById(R.id.et_color2)
     private val sbColorA: SeekBar = view.findViewById(R.id.sb_colorA2)
@@ -37,12 +37,6 @@ class ARGBColorChooseDialog(context: Context, defColor: Int) : AlertDialog.Build
             sbColorG.progress,
             sbColorB.progress
         )
-
-    private fun getView(context: Context): View {
-        val layout = XposedInit.moduleRes.getLayout(R.layout.dialog_argb_color_choose)
-        val inflater = LayoutInflater.from(context)
-        return inflater.inflate(layout, null)
-    }
 
     private fun setEditTextListener() {
         etColor.addTextChangedListener(object : TextWatcher {

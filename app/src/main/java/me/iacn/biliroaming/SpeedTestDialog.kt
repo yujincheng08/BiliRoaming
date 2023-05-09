@@ -7,7 +7,6 @@ import android.app.AlertDialog
 import android.content.Context
 import android.net.Uri
 import android.preference.ListPreference
-import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
@@ -17,15 +16,11 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
-import me.iacn.biliroaming.XposedInit.Companion.moduleRes
 import me.iacn.biliroaming.network.BiliRoamingApi
 import me.iacn.biliroaming.network.BiliRoamingApi.getPlayUrl
 import me.iacn.biliroaming.network.BiliRoamingApi.mainlandTestParams
 import me.iacn.biliroaming.network.BiliRoamingApi.overseaTestParams
-import me.iacn.biliroaming.utils.Log
-import me.iacn.biliroaming.utils.runCatchingOrNull
-import me.iacn.biliroaming.utils.sPrefs
-import me.iacn.biliroaming.utils.toJSONObject
+import me.iacn.biliroaming.utils.*
 import java.net.URL
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -41,9 +36,7 @@ class SpeedTestAdapter(context: Context) : ArrayAdapter<SpeedTestResult>(context
     )
 
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
-        val layout = moduleRes.getLayout(R.layout.cdn_speedtest_item)
-        val inflater = LayoutInflater.from(context)
-        val view = convertView ?: inflater.inflate(layout, null).apply {
+        val view = convertView ?: context.inflateLayout(R.layout.cdn_speedtest_item).apply {
             tag = ViewHolder(
                 getItem(position)?.name,
                 getItem(position)?.value,
@@ -85,9 +78,7 @@ class SpeedTestDialog(private val pref: ListPreference, activity: Activity) :
     init {
         view.adapter = adapter
 
-        val layout = moduleRes.getLayout(R.layout.cdn_speedtest_item)
-        val inflater = LayoutInflater.from(context)
-        view.addHeaderView(inflater.inflate(layout, null).apply {
+        view.addHeaderView(context.inflateLayout(R.layout.cdn_speedtest_item).apply {
             findViewById<TextView>(R.id.upos_name).text = context.getString(R.string.upos)
             findViewById<TextView>(R.id.upos_speed).text = context.getString(R.string.speed)
         }, null, false)

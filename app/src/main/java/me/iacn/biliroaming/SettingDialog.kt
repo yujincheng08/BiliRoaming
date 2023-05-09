@@ -12,25 +12,26 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.graphics.Bitmap
 import android.graphics.Color
+import android.graphics.Point
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.preference.*
 import android.provider.MediaStore
-import android.view.LayoutInflater
+import android.text.Editable
+import android.text.TextWatcher
+import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
-import android.widget.EditText
-import android.widget.SeekBar
+import android.view.inputmethod.InputMethodManager
+import android.widget.*
 import android.widget.SeekBar.OnSeekBarChangeListener
-import android.widget.TextView
 import androidx.documentfile.provider.DocumentFile
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
-import me.iacn.biliroaming.XposedInit.Companion.modulePath
-import me.iacn.biliroaming.XposedInit.Companion.moduleRes
 import me.iacn.biliroaming.hook.JsonHook
 import me.iacn.biliroaming.hook.SplashHook
 import me.iacn.biliroaming.utils.*
@@ -50,6 +51,9 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         private lateinit var biliprefs: SharedPreferences
         private var counter: Int = 0
         private var customSubtitleDialog: CustomSubtitleDialog? = null
+        private val preferenceItems = mutableListOf<PreferenceItem>()
+        private lateinit var searchPopupWindow: ListPopupWindow
+        private lateinit var searchAdapter: SearchResultAdapter
 
         @Deprecated("Deprecated in Java")
         override fun onCreate(savedInstanceState: Bundle?) {
@@ -88,6 +92,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("customize_dynamic")?.onPreferenceClickListener = this
             checkCompatibleVersion()
             checkUpdate()
+            loadSearchItems(preferenceScreen)
         }
 
         @Deprecated("Deprecated in Java")
@@ -96,25 +101,166 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             scope.cancel()
         }
 
+        override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
+            super.onViewCreated(view, savedInstanceState)
+            initSearchPopupWindow()
+        }
+
+        private fun initSearchPopupWindow() {
+            searchAdapter = SearchResultAdapter(context)
+            val listView = view?.findViewById<ListView>(android.R.id.list) ?: return
+            val searchView = context.inflateLayout(R.layout.search)
+            listView.addHeaderView(searchView)
+            val editView = searchView.findViewById<EditText>(R.id.search)
+            val clearView = searchView.findViewById<View>(R.id.clear)
+            editView.addTextChangedListener(object : TextWatcher {
+                override fun onTextChanged(
+                    s: CharSequence?, start: Int, before: Int, count: Int
+                ) = onSearchTextChanged(s?.toString().orEmpty())
+
+                override fun afterTextChanged(s: Editable?) {}
+                override fun beforeTextChanged(
+                    s: CharSequence?, start: Int, count: Int, after: Int
+                ) {
+                }
+            })
+            clearView.setOnClickListener {
+                editView.setText("")
+            }
+            searchPopupWindow = object : ListPopupWindow(context, null) {
+                init {
+                    isModal = true
+                    val displayWidth = context.getSystemService(WindowManager::class.java)?.let {
+                        Point().apply { it.defaultDisplay.getSize(this) }.x
+                    } ?: 0
+                    width = if (displayWidth != 0) {
+                        displayWidth - 36.dp
+                    } else ViewGroup.LayoutParams.MATCH_PARENT
+                    height = ViewGroup.LayoutParams.WRAP_CONTENT
+                    setAdapter(searchAdapter)
+                    anchorView = searchView
+                    setOnItemClickListener { parent, _, position, _ ->
+                        dismiss()
+                        val item = parent.getItemAtPosition(position) as? PreferenceItem
+                            ?: return@setOnItemClickListener
+                        scope.launch {
+                            delay(200)
+                            selectPreference(item)
+                        }
+                    }
+                    inputMethodMode = INPUT_METHOD_NOT_NEEDED
+                    softInputMode = WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN
+                }
+
+                override fun show() {
+                    super.show()
+                    val ta = context.obtainStyledAttributes(intArrayOf(android.R.attr.listDivider))
+                    getListView()?.divider = ta.getDrawable(0)
+                    ta.recycle()
+                }
+            }
+        }
+
+        private var position = 1
+        private fun loadSearchItems(preferenceGroup: PreferenceGroup) {
+            for (i in 0 until preferenceGroup.preferenceCount) {
+                val preference = preferenceGroup.getPreference(i)
+                val entries = when (preference) {
+                    is ListPreference -> preference.entries
+                    is MultiSelectListPreference -> preference.entries
+                    else -> arrayOf()
+                }.orEmpty().toList()
+                val preferenceItem = PreferenceItem(
+                    preference.key.orEmpty(),
+                    preference.title?.toString().orEmpty(),
+                    preference.summary?.toString().orEmpty(),
+                    entries,
+                    position++,
+                    isGroup = preference is PreferenceGroup,
+                )
+                preferenceItems.add(preferenceItem)
+                if (preference is PreferenceGroup) {
+                    loadSearchItems(preference)
+                }
+            }
+        }
+
+        private fun PreferenceItem.similarWith(text: String): Boolean {
+            return text.isNotEmpty() && ((title.isNotEmpty() && text in title)
+                    || (summary.isNotEmpty() && text in summary)
+                    || (entries.isNotEmpty() && entries.any { text in it }))
+        }
+
+        private fun onSearchTextChanged(text: String) {
+            Log.d("kofua, onSearchTextChanged, text: $text")
+            val listView = view?.findViewById<ListView>(android.R.id.list) ?: return
+            if (text.isEmpty()) {
+                listView.setSelection(0)
+                searchPopupWindow.dismiss()
+                return
+            }
+            searchAdapter.clear()
+            val results = preferenceItems.filter { it.similarWith(text) }
+            searchAdapter.addAll(results)
+            if (results.isEmpty()) {
+                searchPopupWindow.dismiss()
+            } else {
+                val searchView = listView.findViewById<EditText>(R.id.search)
+                context.getSystemService(InputMethodManager::class.java)
+                    ?.takeIf { it.isActive }
+                    ?.hideSoftInputFromWindow(searchView.windowToken, 0)
+                scope.launch {
+                    delay(200)
+                    searchPopupWindow.show()
+                }
+            }
+        }
+
+        private fun selectPreference(preference: PreferenceItem) {
+            val listView = view?.findViewById<ListView>(android.R.id.list) ?: return
+            listView.setSelection(preference.position)
+            listView.post {
+                val view = listView.getViewByPosition(preference.position)
+                view.setRippleBackground()
+                val background = view.background
+                scope.launch {
+                    delay(100)
+                    repeat(3) {
+                        val state = intArrayOf(
+                            android.R.attr.state_pressed,
+                            android.R.attr.state_enabled
+                        )
+                        background.setState(state)
+                        delay(300)
+                        background.setState(intArrayOf())
+                        delay(100)
+                    }
+                }
+            }
+        }
+
         private fun checkUpdate() {
             val url = URL(context.getString(R.string.version_url))
             scope.launch {
                 val result = fetchJson(url) ?: return@launch
                 val newestVer = result.optString("name")
-                if (newestVer.isNotEmpty() && BuildConfig.VERSION_NAME != newestVer) {
-                    findPreference("version").summary = "${BuildConfig.VERSION_NAME}（最新版$newestVer）"
+                val versionName = BuildConfig.VERSION_NAME
+                if (newestVer.isNotEmpty() && versionName != newestVer) {
+                    findPreference("version").summary = "${versionName}（最新版$newestVer）"
                     (findPreference("about") as PreferenceCategory).addPreference(
-                        Preference(
-                            activity
-                        ).apply {
+                        Preference(activity).apply {
                             key = "update"
                             title = context.getString(R.string.update_title)
-                            summary = result.optString("body").substringAfterLast("更新日志\r\n").run {
-                                ifEmpty { context.getString(R.string.update_summary) }
-                            }
+                            summary =
+                                result.optString("body").substringAfterLast("更新日志\r\n").run {
+                                    ifEmpty { context.getString(R.string.update_summary) }
+                                }
                             onPreferenceClickListener = this@PrefsFragment
                             order = 1
                         })
+                    position = 1
+                    preferenceItems.clear()
+                    loadSearchItems(preferenceScreen)
                 }
             }
         }
@@ -220,14 +366,17 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     if (newValue as Boolean)
                         selectImage(SPLASH_SELECTION)
                 }
+
                 "custom_splash_logo" -> {
                     if (newValue as Boolean)
                         selectImage(LOGO_SELECTION)
                 }
+
                 "custom_subtitle" -> {
                     if (newValue as Boolean)
                         showCustomSubtitle()
                 }
+
                 "add_custom_button" -> {
                     if (newValue as Boolean)
                         onAddCustomButtonClick()
@@ -257,8 +406,10 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     val destFile = when (requestCode) {
                         SPLASH_SELECTION ->
                             File(currentContext.filesDir, SplashHook.SPLASH_IMAGE)
+
                         LOGO_SELECTION ->
                             File(currentContext.filesDir, SplashHook.LOGO_IMAGE)
+
                         else -> null
                     } ?: return
                     val uri = data?.data
@@ -273,6 +424,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     val dest = FileOutputStream(destFile)
                     stream.writeTo(dest)
                 }
+
                 PREF_EXPORT, PREF_IMPORT -> {
                     val file = File(currentContext.filesDir, "../shared_prefs/biliroaming.xml")
                     val uri = data?.data
@@ -280,19 +432,21 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     when (requestCode) {
                         PREF_IMPORT -> {
                             try {
-                                file.outputStream().use { out ->
-                                    activity.contentResolver.openInputStream(uri)?.copyTo(out)
+                                file.outputStream().use { output ->
+                                    activity.contentResolver.openInputStream(uri)
+                                        ?.use { it.copyTo(output) }
                                 }
                             } catch (e: Exception) {
                                 Log.toast(e.message ?: "未知错误", true, alsoLog = true)
                             }
                             Log.toast("请至少重新打开哔哩漫游设置", true)
                         }
+
                         PREF_EXPORT -> {
                             try {
-                                file.inputStream().use { `in` ->
+                                file.inputStream().use { input ->
                                     activity.contentResolver.openOutputStream(uri)
-                                        ?.let { `in`.copyTo(it) }
+                                        ?.use { input.copyTo(it) }
                                 }
                             } catch (e: Exception) {
                                 Log.toast(e.message ?: "未知错误", true, alsoLog = true)
@@ -300,6 +454,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                         }
                     }
                 }
+
                 VIDEO_EXPORT -> {
                     val videosToExport = VideoExportDialog.videosToExport
                     VideoExportDialog.videosToExport = emptySet()
@@ -344,9 +499,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
 
         private fun onCustomServerClick(): Boolean {
             AlertDialog.Builder(activity).run {
-                val layout = moduleRes.getLayout(R.layout.customize_backup_dialog)
-                val inflater = LayoutInflater.from(context)
-                val view = inflater.inflate(layout, null)
+                val view = context.inflateLayout(R.layout.customize_backup_dialog)
                 val editTexts = arrayOf(
                     view.findViewById<EditText>(R.id.cn_server),
                     view.findViewById(R.id.hk_server),
@@ -380,8 +533,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
 
         private fun onDanmakuFilterClick(): Boolean {
             AlertDialog.Builder(activity).run {
-                val view = LayoutInflater.from(context)
-                    .inflate(R.layout.danmaku_filter_dialog, null)
+                val view = context.inflateLayout(R.layout.danmaku_filter_dialog)
                 val seekBar = view.findViewById<SeekBar>(R.id.seekBar)
                 val tvHint = view.findViewById<TextView>(R.id.tvHint)
                 seekBar.setOnSeekBarChangeListener(object : OnSeekBarChangeListener {
@@ -481,9 +633,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
 
         private fun onCustomizeAccessKeyClick(): Boolean {
             AlertDialog.Builder(activity).run {
-                val layout = moduleRes.getLayout(R.layout.customize_backup_dialog)
-                val inflater = LayoutInflater.from(context)
-                val view = inflater.inflate(layout, null)
+                val view = context.inflateLayout(R.layout.customize_backup_dialog)
                 val editTexts = arrayOf(
                     view.findViewById<EditText>(R.id.cn_server),
                     view.findViewById(R.id.hk_server),
@@ -621,9 +771,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
 
         private fun onAddCustomButtonClick(): Boolean {
             AlertDialog.Builder(activity).run {
-                val layout = moduleRes.getLayout(R.layout.custom_button)
-                val inflater = LayoutInflater.from(context)
-                val view = inflater.inflate(layout, null)
+                val view = context.inflateLayout(R.layout.custom_button)
                 val editTexts = arrayOf(
                     view.findViewById<EditText>(R.id.custom_button_id),
                     view.findViewById(R.id.custom_button_title),
@@ -684,7 +832,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
 
     init {
         val activity = context as Activity
-        addModulePath(context)
+        activity.addModuleAssets()
         val prefsFragment = PrefsFragment()
         activity.fragmentManager.beginTransaction().add(prefsFragment, "Setting").commit()
         activity.fragmentManager.executePendingTransactions()
@@ -693,9 +841,8 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
 
         val unhook =
             Preference::class.java.hookAfterMethod("onCreateView", ViewGroup::class.java) { param ->
-                if (PreferenceCategory::class.java.isInstance(param.thisObject) && TextView::class.java.isInstance(
-                        param.result
-                    )
+                if (PreferenceCategory::class.java.isInstance(param.thisObject)
+                    && TextView::class.java.isInstance(param.result)
                 ) {
                     val textView = param.result as TextView
                     if (textView.textColors.defaultColor == -13816531)
@@ -708,10 +855,31 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         setNegativeButton("返回") { _, _ ->
             unhook?.unhook()
         }
+        setNeutralButton("回到顶部", null)
         setPositiveButton("确定并重启客户端") { _, _ ->
             unhook?.unhook()
             prefsFragment.preferenceManager.forceSavePreference()
             restartApplication(activity)
+        }
+    }
+
+    data class PreferenceItem(
+        val key: String = "",
+        val title: String = "",
+        val summary: String = "",
+        val entries: List<CharSequence> = listOf(),
+        val position: Int = 0,
+        val isGroup: Boolean = false,
+    )
+
+    class SearchResultAdapter(context: Context) : ArrayAdapter<PreferenceItem>(context, 0) {
+        override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+            return (convertView ?: context.inflateLayout(R.layout.search_result_item)).apply {
+                getItem(position).let {
+                    findViewById<TextView>(R.id.title).text = it?.title
+                    findViewById<TextView>(R.id.summary).text = it?.summary
+                }
+            }
         }
     }
 
@@ -739,13 +907,20 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             }
         }
 
-        @JvmStatic
-        fun addModulePath(context: Context) {
-            val assets = context.resources.assets
-            assets.callMethod(
-                "addAssetPath",
-                modulePath
-            )
+        fun show(context: Context) {
+            SettingDialog(context).create().apply {
+                setOnShowListener {
+                    window?.clearFlags(
+                        WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+                                or WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM
+                    )
+                    window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE)
+                    getButton(AlertDialog.BUTTON_NEUTRAL)?.setOnClickListener {
+                        window?.findViewById<ListView>(android.R.id.list)
+                            ?.setSelection(0)
+                    }
+                }
+            }.show()
         }
 
         const val SPLASH_SELECTION = 0
@@ -754,5 +929,4 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         const val PREF_EXPORT = 3
         const val VIDEO_EXPORT = 4
     }
-
 }

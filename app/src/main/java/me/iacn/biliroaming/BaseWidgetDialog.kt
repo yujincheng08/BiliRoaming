@@ -11,9 +11,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.widget.*
-import me.iacn.biliroaming.utils.addBackgroundRipple
 import me.iacn.biliroaming.utils.children
 import me.iacn.biliroaming.utils.dp
+import me.iacn.biliroaming.utils.setRippleBackground
 
 open class BaseWidgetDialog(context: Context) : AlertDialog.Builder(context) {
     protected fun string(resId: Int) = context.getString(resId)
@@ -248,7 +248,7 @@ open class BaseWidgetDialog(context: Context) : AlertDialog.Builder(context) {
             )
         }
         layout.setOnClickListener { switcher.toggle() }
-        layout.addBackgroundRipple()
+        layout.setRippleBackground()
         layout.addView(titleView)
         layout.addView(switcher)
         return Pair(layout, switcher)

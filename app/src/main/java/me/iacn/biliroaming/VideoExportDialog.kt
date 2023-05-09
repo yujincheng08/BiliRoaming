@@ -9,15 +9,14 @@ import android.app.Fragment
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
-import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.CheckBox
 import android.widget.ListView
 import android.widget.TextView
-import me.iacn.biliroaming.XposedInit.Companion.moduleRes
 import me.iacn.biliroaming.utils.Log
+import me.iacn.biliroaming.utils.inflateLayout
 import me.iacn.biliroaming.utils.toJSONObject
 import java.io.File
 
@@ -117,9 +116,7 @@ class VideoExportDialog(activity: Activity, fragment: Fragment) : AlertDialog.Bu
     ) : ArrayAdapter<VideoEntry>(context, 0) {
         @SuppressLint("SetTextI18n")
         override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
-            val layout = moduleRes.getLayout(R.layout.video_choose)
-            val inflater = LayoutInflater.from(context)
-            return convertView ?: inflater.inflate(layout, null).apply {
+            return (convertView ?: context.inflateLayout(R.layout.video_choose)).apply {
                 allVideos[position].let {
                     findViewById<TextView>(R.id.tv_title).text = it.title
                     findViewById<TextView>(R.id.tv_pageTitle).text = it.pageTitle

@@ -11,25 +11,20 @@ import android.content.SharedPreferences
 import android.graphics.Color
 import android.text.SpannableString
 import android.text.Spanned
-import android.view.LayoutInflater
 import android.view.View
-import android.widget.Button
-import android.widget.CheckBox
-import android.widget.EditText
-import android.widget.Switch
-import android.widget.TextView
+import android.widget.*
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.hook.SubtitleHook
 import me.iacn.biliroaming.utils.Log
+import me.iacn.biliroaming.utils.inflateLayout
 
-class CustomSubtitleDialog(val activity: Activity, fragment: Fragment, prefs: SharedPreferences) :
+class CustomSubtitleDialog(activity: Activity, fragment: Fragment, prefs: SharedPreferences) :
     AlertDialog.Builder(activity) {
     private var fontStatus: TextView? = null
 
     init {
         val oldClient = instance.cronCanvasClass == null
-        val layout = activity.resources.getLayout(R.layout.custom_subtitle_dialog)
-        val view = LayoutInflater.from(context).inflate(layout, null)
+        val view = context.inflateLayout(R.layout.custom_subtitle_dialog)
         val noBgSwitch = view.findViewById<Switch>(R.id.noBg).apply {
             isSoundEffectsEnabled = false
             isHapticFeedbackEnabled = false
@@ -88,21 +83,21 @@ class CustomSubtitleDialog(val activity: Activity, fragment: Fragment, prefs: Sh
             view.findViewById<TextView>(R.id.tv_pvTp).text = spannableString
         }
         view.findViewById<Button>(R.id.btn_chooseColorBc).setOnClickListener {
-            ARGBColorChooseDialog(activity, Color.parseColor("#${backgroundColor.text}")).apply {
+            ARGBColorChooseDialog(context, Color.parseColor("#${backgroundColor.text}")).apply {
                 setPositiveButton(android.R.string.ok) { _, _ ->
                     backgroundColor.setText(String.format("%08X", 0xFFFFFFFF.toInt() and color))
                 }
             }.show()
         }
         view.findViewById<Button>(R.id.btn_chooseColorFc).setOnClickListener {
-            ARGBColorChooseDialog(activity, Color.parseColor("#${fontColor.text}")).apply {
+            ARGBColorChooseDialog(context, Color.parseColor("#${fontColor.text}")).apply {
                 setPositiveButton(android.R.string.ok) { _, _ ->
                     fontColor.setText(String.format("%08X", 0xFFFFFFFF.toInt() and color))
                 }
             }.show()
         }
         view.findViewById<Button>(R.id.btn_chooseColorSc).setOnClickListener {
-            ARGBColorChooseDialog(activity, Color.parseColor("#${strokeColor.text}")).apply {
+            ARGBColorChooseDialog(context, Color.parseColor("#${strokeColor.text}")).apply {
                 setPositiveButton(android.R.string.ok) { _, _ ->
                     strokeColor.setText(String.format("%08X", 0xFFFFFFFF.toInt() and color))
                 }
@@ -180,15 +175,15 @@ class CustomSubtitleDialog(val activity: Activity, fragment: Fragment, prefs: Sh
 
     private fun refreshFontStatus() {
         fontStatus?.text = if (SubtitleHook.fontFile.isFile)
-            activity.getString(R.string.custom_subtitle_status_custom)
+            context.getString(R.string.custom_subtitle_status_custom)
         else
-            activity.getString(R.string.custom_subtitle_status_default)
+            context.getString(R.string.custom_subtitle_status_default)
     }
 
     fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         val uri = data?.data
         if (requestCode != 2338 || resultCode != Activity.RESULT_OK || uri == null) return
-        activity.contentResolver.openInputStream(uri)?.use {
+        context.contentResolver.openInputStream(uri)?.use {
             val fontFile = SubtitleHook.fontFile.apply { delete() }
             it.copyTo(fontFile.outputStream())
             refreshFontStatus()
