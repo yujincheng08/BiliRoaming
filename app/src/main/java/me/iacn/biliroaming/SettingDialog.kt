@@ -13,13 +13,18 @@ import android.content.SharedPreferences
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.Point
+import android.graphics.Typeface
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.preference.*
 import android.provider.MediaStore
 import android.text.Editable
+import android.text.SpannableStringBuilder
+import android.text.Spanned
 import android.text.TextWatcher
+import android.text.style.ForegroundColorSpan
+import android.text.style.StyleSpan
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
@@ -125,7 +130,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             editView.addTextChangedListener(object : TextWatcher {
                 override fun onTextChanged(
                     s: CharSequence?, start: Int, before: Int, count: Int
-                ) = onSearchTextChanged(s?.toString()?.trim().orEmpty())
+                ) = search(s?.toString()?.trim().orEmpty())
 
                 override fun afterTextChanged(s: Editable?) {}
                 override fun beforeTextChanged(
@@ -135,8 +140,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             })
             editView.setOnEditorActionListener { v, actionId, _ ->
                 if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-                    val text = v.text.toString().trim()
-                    onSearchTextChanged(text)
+                    search(v.text.toString().trim())
                     true
                 } else false
             }
@@ -260,7 +264,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             else -> false
         }
 
-        private fun onSearchTextChanged(text: String) {
+        private fun search(text: String) {
             searchJob?.cancel(null)
             searchJob = null
             val listView = view?.findViewById<ListView>(android.R.id.list) ?: return
@@ -923,30 +927,33 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
 
         prefsFragment.onActivityCreated(null)
 
-        val unhook =
-            Preference::class.java.hookAfterMethod("onCreateView", ViewGroup::class.java) { param ->
-                if (PreferenceCategory::class.java.isInstance(param.thisObject)
-                    && TextView::class.java.isInstance(param.result)
-                ) {
-                    val textView = param.result as TextView
-                    if (textView.textColors.defaultColor == -13816531)
-                        textView.setTextColor(Color.GRAY)
-                }
+        val unhook = Preference::class.java.hookAfterMethod(
+            "onCreateView", ViewGroup::class.java
+        ) { param ->
+            if (PreferenceCategory::class.java.isInstance(param.thisObject)
+                && TextView::class.java.isInstance(param.result)
+            ) {
+                val textView = param.result as TextView
+                if (textView.textColors.defaultColor == -13816531)
+                    textView.setTextColor(Color.GRAY)
             }
+        }
 
         setView(prefsFragment.view)
         setTitle("哔哩漫游设置")
-        setNegativeButton("返回") { _, _ ->
-            unhook?.unhook()
-        }
+        setNegativeButton("返回", null)
         setNeutralButton("回到顶部", null)
         setPositiveButton("确定并重启客户端") { _, _ ->
-            unhook?.unhook()
             prefsFragment.preferenceManager.forceSavePreference()
             restartApplication(activity)
         }
+        setOnDismissListener {
+            unhook?.unhook()
+        }
     }
 
+    enum class HintType { TITLE, SUMMARY, ENTRY, EXTRA }
+    data class Hint(val type: HintType, val hint: String, val fullText: String)
     data class SearchItem(
         val key: String = "",
         val title: String = "",
@@ -955,26 +962,40 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         val position: Int = 0,
         val isGroup: Boolean = false,
         val extra: MutableList<String> = mutableListOf(),
-        var cacheScore: Int = 0,
     ) {
+        var cacheScore: Int = 0
+        val hints: MutableList<Hint> = mutableListOf()
+
         fun getScoreBy(text: String): Int {
+            hints.clear()
             if (text.isEmpty()) {
                 cacheScore = 0
                 return 0
             }
             if (isGroup) {
-                val score = if (text in title) 10 else 0
+                val score = if (text in title) {
+                    hints.add(Hint(HintType.TITLE, text, title))
+                    10
+                } else 0
                 cacheScore = score
                 return score
             }
             var score = 0
-            if (title.isNotEmpty() && text in title)
+            if (title.isNotEmpty() && text in title) {
+                hints.add(Hint(HintType.TITLE, text, title))
                 score += 50
-            if (summary.isNotEmpty() && text in summary)
+            }
+            if (summary.isNotEmpty() && text in summary) {
+                hints.add(Hint(HintType.SUMMARY, text, summary))
                 score += 40
-            if (entries.isNotEmpty() && entries.any { text in it })
+            }
+            if (entries.isNotEmpty() && entries.firstOrNull { text in it }?.also {
+                    hints.add(Hint(HintType.ENTRY, text, it.toString()))
+                } != null)
                 score += 30
-            if (extra.isNotEmpty() && extra.any { text in it })
+            if (extra.isNotEmpty() && extra.firstOrNull { text in it }?.also {
+                    hints.add(Hint(HintType.EXTRA, text, it))
+                } != null)
                 score += 20
             cacheScore = score
             return score
@@ -984,11 +1005,68 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
     class SearchResultAdapter(context: Context) : ArrayAdapter<SearchItem>(context, 0) {
         override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
             return (convertView ?: context.inflateLayout(R.layout.search_result_item)).apply {
-                getItem(position).let {
-                    findViewById<TextView>(R.id.title).text = it?.title
-                    findViewById<TextView>(R.id.summary).text = it?.summary
+                val item = getItem(position)
+                val title = item?.title.orEmpty()
+                val summary = item?.summary.orEmpty()
+                val hints = item?.hints.orEmpty()
+                val titleView = findViewById<TextView>(R.id.title)
+                val summaryView = findViewById<TextView>(R.id.summary)
+                val hintView = findViewById<TextView>(R.id.hint)
+                val titleHint = hints.firstOrNull { it.type == HintType.TITLE }
+                val summaryHint = hints.firstOrNull { it.type == HintType.SUMMARY }
+                val otherHint = hints.firstOrNull {
+                    it.type == HintType.ENTRY || it.type == HintType.EXTRA
+                }
+                if (summary.isEmpty()) {
+                    summaryView.visibility = View.GONE
+                } else {
+                    summaryView.visibility = View.VISIBLE
+                }
+                if (otherHint == null) {
+                    hintView.visibility = View.GONE
+                } else {
+                    hintView.visibility = View.VISIBLE
+                }
+                titleView.setTextWithHint(title, titleHint)
+                if (titleHint == null) {
+                    summaryView.setTextWithHint(summary, summaryHint)
+                } else {
+                    summaryView.setTextWithHint(summary, null)
+                }
+                if (otherHint != null) {
+                    hintView.setTextWithHint(otherHint.fullText, otherHint)
                 }
             }
+        }
+
+        private fun TextView.setTextWithHint(text: String, hint: Hint?) {
+            if (hint == null || hint.hint.isEmpty()) {
+                this.text = text
+                return
+            }
+            var hintText = hint.hint
+            val normalColor = textColors.defaultColor
+            val hintColor = context.getColor(R.color.text_search_hint)
+            val splits = text.split(hintText, limit = 2)
+            val leftText = splits[0]
+            hintText = if (splits.size == 1) "" else hintText
+            val rightText = if (splits.size == 1) "" else splits[1]
+            SpannableStringBuilder().apply {
+                val normalSpan = ForegroundColorSpan(normalColor)
+                val flags = Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                if (leftText.isNotEmpty())
+                    append(leftText, normalSpan, flags)
+                if (hintText.isNotEmpty()) {
+                    val start = length
+                    val colorSpan = ForegroundColorSpan(hintColor)
+                    val boldSpan = StyleSpan(Typeface.BOLD)
+                    append(hintText)
+                    setSpan(colorSpan, start, length, flags)
+                    setSpan(boldSpan, start, length, flags)
+                }
+                if (rightText.isNotEmpty())
+                    append(rightText, normalSpan, flags)
+            }.let { this.text = it }
         }
     }
 
