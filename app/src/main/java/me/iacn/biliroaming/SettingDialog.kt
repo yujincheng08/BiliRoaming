@@ -22,6 +22,7 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewTreeObserver
 import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
@@ -52,6 +53,8 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         private lateinit var searchPopupWindow: ListPopupWindow
         private lateinit var searchAdapter: SearchResultAdapter
         private var searchJob: Job? = null
+        private var listViewHeight: Int = 0
+        private var itemHeight: Int = 0
 
         @Deprecated("Deprecated in Java")
         override fun onCreate(savedInstanceState: Bundle?) {
@@ -103,6 +106,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
             super.onViewCreated(view, savedInstanceState)
             initSearchPopupWindow()
+            registerLayoutChecker()
         }
 
         private fun initSearchPopupWindow() {
@@ -164,6 +168,20 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     ta.recycle()
                 }
             }
+        }
+
+        private fun registerLayoutChecker() {
+            val listView = view?.findViewById<ListView>(android.R.id.list) ?: return
+            listView.viewTreeObserver.addOnPreDrawListener(object :
+                ViewTreeObserver.OnPreDrawListener {
+                override fun onPreDraw(): Boolean {
+                    val item = listView.getChildAt(3)
+                    listViewHeight = listView.height
+                    itemHeight = item?.height ?: 0
+                    item.viewTreeObserver.removeOnPreDrawListener(this)
+                    return true
+                }
+            })
         }
 
         private var position = 1
@@ -276,7 +294,11 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
 
         private fun selectPreference(searchItem: SearchItem) {
             val listView = view?.findViewById<ListView>(android.R.id.list) ?: return
-            listView.forceSetSelection(searchItem.position)
+            // vertical center screen position
+            val top = if (listViewHeight != 0 && itemHeight != 0) {
+                ((listViewHeight - itemHeight) / 2).coerceAtLeast(0)
+            } else 0
+            listView.forceSetSelection(searchItem.position, top)
             listView.post {
                 val view = listView.getViewByPosition(searchItem.position)
                 val origBg = view.background

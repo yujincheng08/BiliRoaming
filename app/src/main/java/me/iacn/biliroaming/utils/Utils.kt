@@ -405,10 +405,10 @@ fun ListView.getViewByPosition(pos: Int): View {
     }
 }
 
-fun ListView.forceSetSelection(pos: Int) {
+fun ListView.forceSetSelection(pos: Int, top: Int = 0) {
     // stop scrolling
     smoothScrollBy(0, 0)
-    setSelection(pos)
+    setSelectionFromTop(pos, top)
 }
 
 fun Context.inflateLayout(
