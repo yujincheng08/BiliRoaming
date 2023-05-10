@@ -24,6 +24,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
 import android.view.WindowManager
+import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
 import android.widget.SeekBar.OnSeekBarChangeListener
@@ -124,7 +125,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             editView.addTextChangedListener(object : TextWatcher {
                 override fun onTextChanged(
                     s: CharSequence?, start: Int, before: Int, count: Int
-                ) = onSearchTextChanged(s?.toString().orEmpty())
+                ) = onSearchTextChanged(s?.toString()?.trim().orEmpty())
 
                 override fun afterTextChanged(s: Editable?) {}
                 override fun beforeTextChanged(
@@ -132,6 +133,13 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 ) {
                 }
             })
+            editView.setOnEditorActionListener { v, actionId, _ ->
+                if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                    val text = v.text.toString().trim()
+                    onSearchTextChanged(text)
+                    true
+                } else false
+            }
             clearView.setOnClickListener {
                 editView.setText("")
             }
@@ -252,13 +260,6 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             else -> false
         }
 
-        private fun SearchItem.similarWith(text: String): Boolean {
-            return text.isNotEmpty() && ((title.isNotEmpty() && text in title)
-                    || (summary.isNotEmpty() && text in summary)
-                    || (entries.isNotEmpty() && entries.any { text in it })
-                    || (extra.isNotEmpty() && extra.any { text in it }))
-        }
-
         private fun onSearchTextChanged(text: String) {
             searchJob?.cancel(null)
             searchJob = null
@@ -272,7 +273,8 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 // wait a while, in case user are clearing
                 delay(100)
                 if (!isActive) return@launch
-                val results = searchItems.filter { it.similarWith(text) }
+                val results = searchItems.sortedByDescending { it.getScoreBy(text) }
+                    .filterNot { it.cacheScore == 0 }
                 searchAdapter.clear()
                 searchAdapter.addAll(results)
                 if (results.isEmpty()) {
@@ -953,7 +955,31 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         val position: Int = 0,
         val isGroup: Boolean = false,
         val extra: MutableList<String> = mutableListOf(),
-    )
+        var cacheScore: Int = 0,
+    ) {
+        fun getScoreBy(text: String): Int {
+            if (text.isEmpty()) {
+                cacheScore = 0
+                return 0
+            }
+            if (isGroup) {
+                val score = if (text in title) 10 else 0
+                cacheScore = score
+                return score
+            }
+            var score = 0
+            if (title.isNotEmpty() && text in title)
+                score += 50
+            if (summary.isNotEmpty() && text in summary)
+                score += 40
+            if (entries.isNotEmpty() && entries.any { text in it })
+                score += 30
+            if (extra.isNotEmpty() && extra.any { text in it })
+                score += 20
+            cacheScore = score
+            return score
+        }
+    }
 
     class SearchResultAdapter(context: Context) : ArrayAdapter<SearchItem>(context, 0) {
         override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
