@@ -246,9 +246,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             searchJob = null
             val listView = view?.findViewById<ListView>(android.R.id.list) ?: return
             if (text.isEmpty()) {
-                // stop scrolling
-                listView.smoothScrollBy(0, 0)
-                listView.setSelection(0)
+                listView.forceSetSelection(0)
                 searchPopupWindow.dismiss()
                 return
             }
@@ -278,9 +276,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
 
         private fun selectPreference(searchItem: SearchItem) {
             val listView = view?.findViewById<ListView>(android.R.id.list) ?: return
-            // stop scrolling
-            listView.smoothScrollBy(0, 0)
-            listView.setSelection(searchItem.position)
+            listView.forceSetSelection(searchItem.position)
             listView.post {
                 val view = listView.getViewByPosition(searchItem.position)
                 val origBg = view.background
@@ -981,11 +977,8 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     )
                     window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE)
                     getButton(AlertDialog.BUTTON_NEUTRAL)?.setOnClickListener {
-                        window?.findViewById<ListView>(android.R.id.list)?.run {
-                            // stop scrolling
-                            smoothScrollBy(0, 0)
-                            setSelection(0)
-                        }
+                        window?.findViewById<ListView>(android.R.id.list)
+                            ?.forceSetSelection(0)
                     }
                 }
             }.show()

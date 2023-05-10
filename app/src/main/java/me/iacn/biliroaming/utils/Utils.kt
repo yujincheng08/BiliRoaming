@@ -405,6 +405,12 @@ fun ListView.getViewByPosition(pos: Int): View {
     }
 }
 
+fun ListView.forceSetSelection(pos: Int) {
+    // stop scrolling
+    smoothScrollBy(0, 0)
+    setSelection(pos)
+}
+
 fun Context.inflateLayout(
     @LayoutRes resource: Int,
     root: ViewGroup? = null,
