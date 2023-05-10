@@ -10,7 +10,6 @@ import me.iacn.biliroaming.Constant.CURRENT_COLOR_KEY
 import me.iacn.biliroaming.Constant.CUSTOM_COLOR_KEY
 import me.iacn.biliroaming.Constant.DEFAULT_CUSTOM_COLOR
 import me.iacn.biliroaming.utils.*
-import java.util.*
 
 /**
  * Created by iAcn on 2019/7/14
@@ -70,6 +69,7 @@ class CustomThemeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             val mId = biliSkin.getIntField("mId")
             // Make colors updated immediately
             if (mId == CUSTOM_THEME_ID1 || mId == CUSTOM_THEME_ID2) {
+                view.context.addModuleAssets()
                 val colorDialog = ColorChooseDialog(view.context, customColor)
                 colorDialog.setPositiveButton("确定") { _, _ ->
                     val color = colorDialog.color

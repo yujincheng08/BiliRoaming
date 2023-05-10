@@ -21,6 +21,7 @@ import me.iacn.biliroaming.network.BiliRoamingApi.getPlayUrl
 import me.iacn.biliroaming.network.BiliRoamingApi.mainlandTestParams
 import me.iacn.biliroaming.network.BiliRoamingApi.overseaTestParams
 import me.iacn.biliroaming.utils.*
+import org.json.JSONObject
 import java.net.URL
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -157,18 +158,23 @@ class SpeedTestDialog(private val pref: ListPreference, activity: Activity) :
         0L
     }
 
-    private fun getTestUrl(): String? {
-        val json = try {
-            if (runCatchingOrNull { XposedInit.country.get(5L, TimeUnit.SECONDS) } == "cn")
-                getPlayUrl(overseaTestParams, arrayOf("hk", "tw"))
-            else getPlayUrl(mainlandTestParams, arrayOf("cn"))
-        } catch (e: BiliRoamingApi.CustomServerException) {
-            Log.w("请求解析服务器发生错误: ${e.message}")
-            return null
+    private suspend fun getTestUrl() = try {
+        withContext(speedTestDispatcher) {
+            withTimeout(5000) {
+                val cn = runCatchingOrNull { XposedInit.country.get(5L, TimeUnit.SECONDS) } == "cn"
+                val json = if (cn) {
+                    getPlayUrl(overseaTestParams, arrayOf("hk", "tw"))
+                } else getPlayUrl(mainlandTestParams, arrayOf("cn"))
+                json?.toJSONObject()?.optJSONObject("dash")?.getJSONArray("audio")
+                    ?.asSequence<JSONObject>()
+                    ?.minWithOrNull { a, b -> a.optInt("bandwidth") - b.optInt("bandwidth") }
+                    ?.optString("base_url")?.replace("https", "http")
+            }
         }
-        return json?.toJSONObject()?.optJSONObject("dash")?.getJSONArray("audio")?.run {
-            (0 until length()).map { idx -> optJSONObject(idx) }
-        }?.minWithOrNull { a, b -> a.optInt("bandwidth") - b.optInt("bandwidth") }
-            ?.optString("base_url")?.replace("https", "http")
+    } catch (e: BiliRoamingApi.CustomServerException) {
+        Log.w("请求解析服务器发生错误: ${e.message}")
+        null
+    } catch (e: Throwable) {
+        null
     }
 }

@@ -27,10 +27,7 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.*
 import android.widget.SeekBar.OnSeekBarChangeListener
 import androidx.documentfile.provider.DocumentFile
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.hook.JsonHook
 import me.iacn.biliroaming.hook.SplashHook
@@ -51,9 +48,10 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         private lateinit var biliprefs: SharedPreferences
         private var counter: Int = 0
         private var customSubtitleDialog: CustomSubtitleDialog? = null
-        private val preferenceItems = mutableListOf<PreferenceItem>()
+        private val searchItems = mutableListOf<SearchItem>()
         private lateinit var searchPopupWindow: ListPopupWindow
         private lateinit var searchAdapter: SearchResultAdapter
+        private var searchJob: Job? = null
 
         @Deprecated("Deprecated in Java")
         override fun onCreate(savedInstanceState: Bundle?) {
@@ -91,8 +89,8 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("add_custom_button")?.onPreferenceChangeListener = this
             findPreference("customize_dynamic")?.onPreferenceClickListener = this
             checkCompatibleVersion()
-            checkUpdate()
             loadSearchItems(preferenceScreen)
+            checkUpdate()
         }
 
         @Deprecated("Deprecated in Java")
@@ -101,6 +99,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             scope.cancel()
         }
 
+        @Deprecated("Deprecated in Java")
         override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
             super.onViewCreated(view, savedInstanceState)
             initSearchPopupWindow()
@@ -113,6 +112,11 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             listView.addHeaderView(searchView)
             val editView = searchView.findViewById<EditText>(R.id.search)
             val clearView = searchView.findViewById<View>(R.id.clear)
+            searchView.setOnClickListener {
+                editView.requestFocus()
+                context.getSystemService(InputMethodManager::class.java)
+                    ?.showSoftInput(editView, 0)
+            }
             editView.addTextChangedListener(object : TextWatcher {
                 override fun onTextChanged(
                     s: CharSequence?, start: Int, before: Int, count: Int
@@ -141,9 +145,10 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     anchorView = searchView
                     setOnItemClickListener { parent, _, position, _ ->
                         dismiss()
-                        val item = parent.getItemAtPosition(position) as? PreferenceItem
+                        val item = parent.getItemAtPosition(position) as? SearchItem
                             ?: return@setOnItemClickListener
                         scope.launch {
+                            // wait popup to be dismissed
                             delay(200)
                             selectPreference(item)
                         }
@@ -170,7 +175,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     is MultiSelectListPreference -> preference.entries
                     else -> arrayOf()
                 }.orEmpty().toList()
-                val preferenceItem = PreferenceItem(
+                val searchItem = SearchItem(
                     preference.key.orEmpty(),
                     preference.title?.toString().orEmpty(),
                     preference.summary?.toString().orEmpty(),
@@ -178,52 +183,111 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     position++,
                     isGroup = preference is PreferenceGroup,
                 )
-                preferenceItems.add(preferenceItem)
+                searchItem.appendExtraKeywords()
+                searchItems.add(searchItem)
                 if (preference is PreferenceGroup) {
                     loadSearchItems(preference)
                 }
             }
         }
 
-        private fun PreferenceItem.similarWith(text: String): Boolean {
+        private fun SearchItem.appendExtraKeywords() = when (key) {
+            "custom_subtitle" -> {
+                extra.add(context.getString(R.string.custom_subtitle_remove_bg))
+                extra.add(context.getString(R.string.custom_subtitle_bold))
+                extra.add(context.getString(R.string.custom_subtitle_font_size))
+                extra.add(context.getString(R.string.custom_subtitle_stroke_color))
+                extra.add(context.getString(R.string.custom_subtitle_stroke_width))
+                extra.add(context.getString(R.string.custom_subtitle_offset))
+            }
+
+            "home_filter" -> {
+                extra.add(context.getString(R.string.apply_to_relate_title))
+                extra.add(context.getString(R.string.hide_low_play_count_recommend_title))
+                extra.add(context.getString(R.string.hide_low_play_count_recommend_summary))
+                extra.add(context.getString(R.string.hide_short_duration_recommend_title))
+                extra.add(context.getString(R.string.hide_long_duration_recommend_title))
+                extra.add(context.getString(R.string.hide_duration_recommend_summary))
+                extra.add(context.getString(R.string.keywords_filter_recommend_summary))
+            }
+
+            "customize_bottom_bar" -> {
+                extra.addAll(JsonHook.bottomItems.mapNotNull { it.name })
+            }
+
+            "customize_drawer" -> {
+                extra.addAll(JsonHook.drawerItems.mapNotNull { it.name })
+            }
+
+            "customize_dynamic" -> {
+                extra.add(context.getString(R.string.customize_dynamic_prefer_video_tab))
+                extra.add(context.getString(R.string.purify_city_title))
+                extra.add(context.getString(R.string.purify_campus_title))
+                extra.add(context.getString(R.string.customize_dynamic_all_rm_topic_title))
+                extra.add(context.getString(R.string.customize_dynamic_all_rm_up_title))
+                extra.add(context.getString(R.string.customize_dynamic_video_rm_up_title))
+                extra.add(context.getString(R.string.customize_dynamic_filter_apply_to_video))
+                extra.add(context.getString(R.string.customize_dynamic_rm_blocked_title))
+                extra.addAll(context.resources.getStringArray(R.array.dynamic_entries))
+            }
+
+            else -> false
+        }
+
+        private fun SearchItem.similarWith(text: String): Boolean {
             return text.isNotEmpty() && ((title.isNotEmpty() && text in title)
                     || (summary.isNotEmpty() && text in summary)
-                    || (entries.isNotEmpty() && entries.any { text in it }))
+                    || (entries.isNotEmpty() && entries.any { text in it })
+                    || (extra.isNotEmpty() && extra.any { text in it }))
         }
 
         private fun onSearchTextChanged(text: String) {
-            Log.d("kofua, onSearchTextChanged, text: $text")
+            searchJob?.cancel(null)
+            searchJob = null
             val listView = view?.findViewById<ListView>(android.R.id.list) ?: return
             if (text.isEmpty()) {
+                // stop scrolling
+                listView.smoothScrollBy(0, 0)
                 listView.setSelection(0)
                 searchPopupWindow.dismiss()
                 return
             }
-            searchAdapter.clear()
-            val results = preferenceItems.filter { it.similarWith(text) }
-            searchAdapter.addAll(results)
-            if (results.isEmpty()) {
-                searchPopupWindow.dismiss()
-            } else {
-                val searchView = listView.findViewById<EditText>(R.id.search)
-                context.getSystemService(InputMethodManager::class.java)
-                    ?.takeIf { it.isActive }
-                    ?.hideSoftInputFromWindow(searchView.windowToken, 0)
-                scope.launch {
+            searchJob = scope.launch {
+                // wait a while, in case user are clearing
+                delay(100)
+                if (!isActive) return@launch
+                val results = searchItems.filter { it.similarWith(text) }
+                searchAdapter.clear()
+                searchAdapter.addAll(results)
+                if (results.isEmpty()) {
+                    searchPopupWindow.dismiss()
+                } else {
+                    if (!isActive) return@launch
+                    val searchView = listView.findViewById<EditText>(R.id.search)
+                    context.getSystemService(InputMethodManager::class.java)
+                        ?.takeIf { it.isActive }
+                        ?.hideSoftInputFromWindow(searchView.windowToken, 0)
+                    if (!isActive) return@launch
+                    // wait keyboard to be hidden
                     delay(200)
+                    if (!isActive) return@launch
                     searchPopupWindow.show()
                 }
             }
         }
 
-        private fun selectPreference(preference: PreferenceItem) {
+        private fun selectPreference(preference: SearchItem) {
             val listView = view?.findViewById<ListView>(android.R.id.list) ?: return
+            // stop scrolling
+            listView.smoothScrollBy(0, 0)
             listView.setSelection(preference.position)
             listView.post {
                 val view = listView.getViewByPosition(preference.position)
+                val origBg = view.background
                 view.setRippleBackground()
                 val background = view.background
                 scope.launch {
+                    // wait selection
                     delay(100)
                     repeat(3) {
                         val state = intArrayOf(
@@ -233,8 +297,12 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                         background.setState(state)
                         delay(300)
                         background.setState(intArrayOf())
-                        delay(100)
+                        // wait effect disappear
+                        delay(200)
                     }
+                }.invokeOnCompletion {
+                    // restore original background
+                    view.background = origBg
                 }
             }
         }
@@ -259,7 +327,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                             order = 1
                         })
                     position = 1
-                    preferenceItems.clear()
+                    searchItems.clear()
                     loadSearchItems(preferenceScreen)
                 }
             }
@@ -479,8 +547,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
 
         private fun onVersionClick(): Boolean {
             if (prefs.getBoolean("hidden", false) || counter == 7) return true
-            counter++
-            if (counter == 7) {
+            if (++counter == 7) {
                 prefs.edit()?.putBoolean("hidden", true)?.apply()
                 Log.toast("已开启隐藏功能，重启应用生效", true)
             } else if (counter >= 4) {
@@ -680,11 +747,8 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             }
             AlertDialog.Builder(activity)
                 .setTitle(context.getString(R.string.share_log_title))
-                .setItems(arrayOf("log.txt", "old_log.txt (崩溃相关发这个)")) { _, witch ->
-                    val toShareLog = when (witch) {
-                        0 -> logFile
-                        else -> oldLogFile
-                    }
+                .setItems(arrayOf("log.txt", "old_log.txt (崩溃相关发这个)")) { _, which ->
+                    val toShareLog = if (which == 0) logFile else oldLogFile
                     if (toShareLog.exists()) {
                         toShareLog.copyTo(
                             File(activity.cacheDir, "boxing/log.txt"),
@@ -863,16 +927,17 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         }
     }
 
-    data class PreferenceItem(
+    data class SearchItem(
         val key: String = "",
         val title: String = "",
         val summary: String = "",
         val entries: List<CharSequence> = listOf(),
         val position: Int = 0,
         val isGroup: Boolean = false,
+        val extra: MutableList<String> = mutableListOf(),
     )
 
-    class SearchResultAdapter(context: Context) : ArrayAdapter<PreferenceItem>(context, 0) {
+    class SearchResultAdapter(context: Context) : ArrayAdapter<SearchItem>(context, 0) {
         override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
             return (convertView ?: context.inflateLayout(R.layout.search_result_item)).apply {
                 getItem(position).let {
@@ -916,8 +981,11 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     )
                     window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE)
                     getButton(AlertDialog.BUTTON_NEUTRAL)?.setOnClickListener {
-                        window?.findViewById<ListView>(android.R.id.list)
-                            ?.setSelection(0)
+                        window?.findViewById<ListView>(android.R.id.list)?.run {
+                            // stop scrolling
+                            smoothScrollBy(0, 0)
+                            setSelection(0)
+                        }
                     }
                 }
             }.show()
