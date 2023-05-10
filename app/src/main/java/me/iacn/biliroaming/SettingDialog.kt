@@ -276,13 +276,13 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             }
         }
 
-        private fun selectPreference(preference: SearchItem) {
+        private fun selectPreference(searchItem: SearchItem) {
             val listView = view?.findViewById<ListView>(android.R.id.list) ?: return
             // stop scrolling
             listView.smoothScrollBy(0, 0)
-            listView.setSelection(preference.position)
+            listView.setSelection(searchItem.position)
             listView.post {
-                val view = listView.getViewByPosition(preference.position)
+                val view = listView.getViewByPosition(searchItem.position)
                 val origBg = view.background
                 view.setRippleBackground()
                 val background = view.background
