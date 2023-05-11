@@ -1,4 +1,4 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">哔哩漫游</string>
     <string name="xposed_description">解锁B站港澳台番剧限制</string>
     <string name="about">关于</string>
@@ -261,5 +261,5 @@
     <string name="disable_auto_select_title">禁止自动转到动态</string>
     <string name="disable_auto_select_summary">禁止评论带图时自动勾选转到动态</string>
     <string name="apply_to_relate_title">同时应用于视频下方推荐</string>
-    <string name="search_hint">搜索</string>
+    <string name="search_hint" tools:ignore="TypographyEllipsis">搜索...</string>
 </resources>
