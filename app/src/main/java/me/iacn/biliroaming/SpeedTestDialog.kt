@@ -26,32 +26,17 @@ import java.net.URL
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
-class SpeedTestResult(val name: String, val value: String?, var speed: String)
+data class SpeedTestResult(val name: String, val value: String, var speed: String)
 
 class SpeedTestAdapter(context: Context) : ArrayAdapter<SpeedTestResult>(context, 0) {
-    class ViewHolder(
-        var name: String?,
-        var value: String?,
-        val nameView: TextView,
-        val speedView: TextView
-    )
-
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
-        val view = convertView ?: context.inflateLayout(R.layout.cdn_speedtest_item).apply {
-            tag = ViewHolder(
-                getItem(position)?.name,
-                getItem(position)?.value,
-                findViewById(R.id.upos_name),
-                findViewById(R.id.upos_speed)
-            )
+        return (convertView ?: context.inflateLayout(R.layout.cdn_speedtest_item)).apply {
+            getItem(position).let {
+                findViewById<TextView>(R.id.upos_name).text = it?.name
+                findViewById<TextView>(R.id.upos_speed).text =
+                    context.getString(R.string.speed_formatter, it?.speed)
+            }
         }
-        val holder = view.tag as ViewHolder
-        holder.name = getItem(position)?.name
-        holder.value = getItem(position)?.value
-        holder.nameView.text = holder.name
-        holder.speedView.text =
-            context.getString(R.string.speed_formatter).format(getItem(position)?.speed)
-        return view
     }
 
     fun sort() = sort { a, b ->
@@ -84,7 +69,7 @@ class SpeedTestDialog(private val pref: ListPreference, activity: Activity) :
             findViewById<TextView>(R.id.upos_speed).text = context.getString(R.string.speed)
         }, null, false)
 
-        view.setPadding(50, 20, 50, 20)
+        view.setPadding(16.dp, 10.dp, 16.dp, 10.dp)
 
         setView(view)
 
@@ -94,12 +79,13 @@ class SpeedTestDialog(private val pref: ListPreference, activity: Activity) :
             scope.cancel()
         }
 
-        view.setOnItemClickListener { _, view, _, _ ->
-            val (name, value) = (view.tag as SpeedTestAdapter.ViewHolder).run { name to value }
+        view.setOnItemClickListener { _, _, pos, _ ->
+            val (name, value, _) = adapter.getItem(pos - 1/*headerView*/)
+                ?: return@setOnItemClickListener
             Log.d("Use UPOS $name: $value")
             pref.value = value
             sPrefs.edit().putString(pref.key, value).apply()
-            Log.toast("已启用UPOS服务器：${name}")
+            Log.toast("已启用UPOS服务器：${name}", force = true)
         }
 
         setTitle("CDN测速")
