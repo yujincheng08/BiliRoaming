@@ -411,6 +411,12 @@ fun ListView.forceSetSelection(pos: Int, top: Int = 0) {
     setSelectionFromTop(pos, top)
 }
 
+inline var View.isVisible: Boolean
+    get() = visibility == View.VISIBLE
+    set(value) {
+        visibility = if (value) View.VISIBLE else View.GONE
+    }
+
 fun Context.inflateLayout(
     @LayoutRes resource: Int,
     root: ViewGroup? = null,

@@ -1012,21 +1012,21 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 val titleView = findViewById<TextView>(R.id.title)
                 val summaryView = findViewById<TextView>(R.id.summary)
                 val hintView = findViewById<TextView>(R.id.hint)
-                val titleHint = hints.firstOrNull { it.type == HintType.TITLE }
-                val summaryHint = hints.firstOrNull { it.type == HintType.SUMMARY }
-                val otherHint = hints.firstOrNull {
-                    it.type == HintType.ENTRY || it.type == HintType.EXTRA
+                var titleHint: Hint? = null
+                var summaryHint: Hint? = null
+                var otherHint: Hint? = null
+                for (hint in hints) {
+                    if (titleHint != null && summaryHint != null && otherHint != null)
+                        break
+                    if (titleHint == null && hint.type == HintType.TITLE)
+                        titleHint = hint
+                    if (summaryHint == null && hint.type == HintType.SUMMARY)
+                        summaryHint = hint
+                    if (otherHint == null && hint.type.let { it == HintType.ENTRY || it == HintType.EXTRA })
+                        otherHint = hint
                 }
-                if (summary.isEmpty()) {
-                    summaryView.visibility = View.GONE
-                } else {
-                    summaryView.visibility = View.VISIBLE
-                }
-                if (otherHint == null) {
-                    hintView.visibility = View.GONE
-                } else {
-                    hintView.visibility = View.VISIBLE
-                }
+                summaryView.isVisible = summary.isNotEmpty()
+                hintView.isVisible = otherHint != null
                 titleView.setTextWithHint(title, titleHint)
                 if (titleHint == null) {
                     summaryView.setTextWithHint(summary, summaryHint)
