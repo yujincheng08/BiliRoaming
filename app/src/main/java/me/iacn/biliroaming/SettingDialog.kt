@@ -55,7 +55,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         private lateinit var biliprefs: SharedPreferences
         private var counter: Int = 0
         private var customSubtitleDialog: CustomSubtitleDialog? = null
-        private val searchItems = mutableListOf<SearchItem>()
+        private var searchItems = listOf<SearchItem>()
         private lateinit var searchPopupWindow: ListPopupWindow
         private lateinit var searchAdapter: SearchResultAdapter
         private var searchJob: Job? = null
@@ -98,7 +98,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("add_custom_button")?.onPreferenceChangeListener = this
             findPreference("customize_dynamic")?.onPreferenceClickListener = this
             checkCompatibleVersion()
-            loadSearchItems(preferenceScreen)
+            loadSearchItems()
             checkUpdate()
         }
 
@@ -117,9 +117,8 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
 
         private fun initSearchPopupWindow() {
             searchAdapter = SearchResultAdapter(context)
-            val listView = view?.findViewById<ListView>(android.R.id.list) ?: return
             val searchView = context.inflateLayout(R.layout.search)
-            listView.addHeaderView(searchView)
+            (view as? ViewGroup)?.addView(searchView, 0)
             val editView = searchView.findViewById<EditText>(R.id.search)
             val clearView = searchView.findViewById<View>(R.id.clear)
             searchView.setOnClickListener {
@@ -153,10 +152,8 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     val displayWidth = context.getSystemService(WindowManager::class.java)?.let {
                         Point().apply { it.defaultDisplay.getSize(this) }.x
                     } ?: 0
-                    width = if (displayWidth != 0) {
-                        displayWidth - 36.dp
-                    } else ViewGroup.LayoutParams.MATCH_PARENT
-                    height = ViewGroup.LayoutParams.WRAP_CONTENT
+                    width = (displayWidth - 36.dp).takeIf { it > 0 } ?: MATCH_PARENT
+                    height = WRAP_CONTENT
                     setAdapter(searchAdapter)
                     anchorView = searchView
                     setOnItemClickListener { parent, _, position, _ ->
@@ -176,7 +173,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 override fun show() {
                     super.show()
                     val ta = context.obtainStyledAttributes(intArrayOf(android.R.attr.listDivider))
-                    getListView()?.divider = ta.getDrawable(0)
+                    listView?.divider = ta.getDrawable(0)
                     ta.recycle()
                 }
             }
@@ -187,7 +184,8 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             listView.viewTreeObserver.addOnPreDrawListener(object :
                 ViewTreeObserver.OnPreDrawListener {
                 override fun onPreDraw(): Boolean {
-                    val item = listView.getChildAt(3)
+                    // item: 允许下载版权番剧
+                    val item = listView.getChildAt(2)
                     listViewHeight = listView.height
                     itemHeight = item?.height ?: 0
                     item.viewTreeObserver.removeOnPreDrawListener(this)
@@ -196,29 +194,32 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             })
         }
 
-        private var position = 1
-        private fun loadSearchItems(preferenceGroup: PreferenceGroup) {
-            for (i in 0 until preferenceGroup.preferenceCount) {
-                val preference = preferenceGroup.getPreference(i)
-                val entries = when (preference) {
-                    is ListPreference -> preference.entries
-                    is MultiSelectListPreference -> preference.entries
-                    else -> arrayOf()
-                }.orEmpty().toList()
-                val searchItem = SearchItem(
-                    preference.key.orEmpty(),
-                    preference.title?.toString().orEmpty(),
-                    preference.summary?.toString().orEmpty(),
-                    entries,
-                    position++,
-                    isGroup = preference is PreferenceGroup,
-                )
-                searchItem.appendExtraKeywords()
-                searchItems.add(searchItem)
-                if (preference is PreferenceGroup) {
-                    loadSearchItems(preference)
+        private fun loadSearchItems() {
+            var pos = 0
+            fun retrieve(group: PreferenceGroup): List<SearchItem> = buildList {
+                for (i in 0 until group.preferenceCount) {
+                    val preference = group.getPreference(i)
+                    val entries = when (preference) {
+                        is ListPreference -> preference.entries
+                        is MultiSelectListPreference -> preference.entries
+                        else -> arrayOf()
+                    }.orEmpty().toList()
+                    val searchItem = SearchItem(
+                        preference.key.orEmpty(),
+                        preference.title?.toString().orEmpty(),
+                        preference.summary?.toString().orEmpty(),
+                        entries,
+                        pos++,
+                        isGroup = preference is PreferenceGroup,
+                    )
+                    searchItem.appendExtraKeywords()
+                    add(searchItem)
+                    if (preference is PreferenceGroup) {
+                        addAll(retrieve(preference))
+                    }
                 }
             }
+            searchItems = retrieve(preferenceScreen)
         }
 
         private fun SearchItem.appendExtraKeywords() = when (key) {
@@ -285,10 +286,11 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     searchPopupWindow.dismiss()
                 } else {
                     if (!isActive) return@launch
-                    val searchView = listView.findViewById<EditText>(R.id.search)
-                    context.getSystemService(InputMethodManager::class.java)
-                        ?.takeIf { it.isActive }
-                        ?.hideSoftInputFromWindow(searchView.windowToken, 0)
+                    view?.findFocus()?.let { focus ->
+                        context.getSystemService(InputMethodManager::class.java)
+                            ?.takeIf { it.isActive }
+                            ?.hideSoftInputFromWindow(focus.windowToken, 0)
+                    }
                     if (!isActive) return@launch
                     // wait keyboard to be hidden
                     delay(200)
@@ -350,9 +352,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                             onPreferenceClickListener = this@PrefsFragment
                             order = 1
                         })
-                    position = 1
-                    searchItems.clear()
-                    loadSearchItems(preferenceScreen)
+                    loadSearchItems()
                 }
             }
         }
