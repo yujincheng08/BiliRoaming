@@ -862,8 +862,8 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
     }
 
     enum class HintType { TITLE, SUMMARY, OTHER }
-    data class Hint(val type: HintType, val hint: String, val startIdx: Int, val text: CharSequence)
-    data class SearchItem(
+    class Hint(val hint: String, val startIdx: Int, val fullText: CharSequence)
+    class SearchItem(
         val preference: Preference,
         val key: String = "",
         val title: CharSequence = "",
@@ -873,7 +873,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         val extra: MutableList<String> = mutableListOf(),
     ) {
         var cacheScore = 0
-        private val hints = mutableListOf<Hint>()
+        private val hints = mutableMapOf<HintType, Hint>()
 
         fun calcScoreBy(text: String): Int {
             hints.clear()
@@ -883,20 +883,20 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             }
             var score = 0
             if (title.isNotEmpty() && title.indexOf(text, ignoreCase = true).takeIf { it != -1 }
-                    ?.also { hints.add(Hint(HintType.TITLE, text, it, title)) } != null
+                    ?.also { hints[HintType.TITLE] = Hint(text, it, title) } != null
             ) score += 50
             if (summary.isNotEmpty() && summary.indexOf(text, ignoreCase = true).takeIf { it != -1 }
-                    ?.also { hints.add(Hint(HintType.SUMMARY, text, it, summary)) } != null
+                    ?.also { hints[HintType.SUMMARY] = Hint(text, it, summary) } != null
             ) score += 40
             if (entries.isNotEmpty() && entries.firstNotNullOfOrNull { e ->
                     e.indexOf(text, ignoreCase = true).takeIf { it != -1 }
-                        ?.also { hints.add(Hint(HintType.OTHER, text, it, e)) }
+                        ?.also { hints[HintType.OTHER] = Hint(text, it, e) }
                 } != null) {
                 score += 30
             }
             if (extra.isNotEmpty() && extra.firstNotNullOfOrNull { e ->
                     e.indexOf(text, ignoreCase = true).takeIf { it != -1 }
-                        ?.also { hints.add(Hint(HintType.OTHER, text, it, e)) }
+                        ?.also { hints.putIfAbsent(HintType.OTHER, Hint(text, it, e)) }
                 } != null) {
                 score += 20
             }
@@ -910,9 +910,9 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 preference.summary = summary
                 return
             }
-            val titleHint = hints.firstOrNull { it.type == HintType.TITLE }
-            val summaryHint = hints.firstOrNull { it.type == HintType.SUMMARY }
-            val otherHint = hints.firstOrNull { it.type == HintType.OTHER }
+            val titleHint = hints[HintType.TITLE]
+            val summaryHint = hints[HintType.SUMMARY]
+            val otherHint = hints[HintType.OTHER]
             preference.title = title.withHint(titleHint)
             if (titleHint == null) {
                 if (otherHint == null) {
@@ -922,7 +922,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     // summary with linebreak and other hint
                     preference.summary = SpannableStringBuilder(summary).apply {
                         if (isNotEmpty()) appendLine()
-                        append(otherHint.text.withHint(otherHint))
+                        append(otherHint.fullText.withHint(otherHint, true))
                     }
                 }
             } else {
@@ -931,7 +931,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             }
         }
 
-        private fun CharSequence.withHint(hint: Hint?): CharSequence {
+        private fun CharSequence.withHint(hint: Hint?, other: Boolean = false): CharSequence {
             if (hint == null || hint.hint.isEmpty())
                 return this
             val startIdx = hint.startIdx
@@ -945,7 +945,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             return SpannableStringBuilder(this).apply {
                 setSpan(colorSpan, startIdx, endIdx, flags)
                 setSpan(boldSpan, startIdx, endIdx, flags)
-                if (hint.type == HintType.OTHER) {
+                if (other) {
                     // to make other text smaller and append to summary
                     val sizeSpan = AbsoluteSizeSpan(12.sp, false)
                     setSpan(sizeSpan, 0, length, flags)
