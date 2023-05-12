@@ -12,7 +12,6 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.graphics.Bitmap
 import android.graphics.Color
-import android.graphics.Point
 import android.graphics.Typeface
 import android.net.Uri
 import android.os.Build
@@ -23,11 +22,11 @@ import android.text.Editable
 import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.TextWatcher
+import android.text.style.AbsoluteSizeSpan
 import android.text.style.ForegroundColorSpan
 import android.text.style.StyleSpan
 import android.view.View
 import android.view.ViewGroup
-import android.view.ViewTreeObserver
 import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
@@ -55,12 +54,15 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         private lateinit var biliprefs: SharedPreferences
         private var counter: Int = 0
         private var customSubtitleDialog: CustomSubtitleDialog? = null
+        private lateinit var listView: ListView
+        private lateinit var adapter: BaseAdapter
         private var searchItems = listOf<SearchItem>()
-        private lateinit var searchPopupWindow: ListPopupWindow
-        private lateinit var searchAdapter: SearchResultAdapter
-        private var searchJob: Job? = null
-        private var listViewHeight: Int = 0
-        private var itemHeight: Int = 0
+
+        private var ListAdapter.preferenceList: List<Preference>
+            get() = getObjectFieldAs("mPreferenceList")
+            set(value) {
+                setObjectField("mPreferenceList", value)
+            }
 
         @Deprecated("Deprecated in Java")
         override fun onCreate(savedInstanceState: Bundle?) {
@@ -98,7 +100,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("add_custom_button")?.onPreferenceChangeListener = this
             findPreference("customize_dynamic")?.onPreferenceClickListener = this
             checkCompatibleVersion()
-            loadSearchItems()
+            searchItems = retrieve(preferenceScreen)
             checkUpdate()
         }
 
@@ -109,117 +111,34 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         }
 
         @Deprecated("Deprecated in Java")
-        override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
-            super.onViewCreated(view, savedInstanceState)
-            initSearchPopupWindow()
-            registerLayoutChecker()
+        override fun onActivityCreated(savedInstanceState: Bundle?) {
+            super.onActivityCreated(savedInstanceState)
+            listView = view?.findViewById(android.R.id.list) ?: return
+            adapter = listView.adapter as BaseAdapter
         }
 
-        private fun initSearchPopupWindow() {
-            searchAdapter = SearchResultAdapter(context)
-            val searchView = context.inflateLayout(R.layout.search)
-            (view as? ViewGroup)?.addView(searchView, 0)
-            val editView = searchView.findViewById<EditText>(R.id.search)
-            val clearView = searchView.findViewById<View>(R.id.clear)
-            searchView.setOnClickListener {
-                editView.requestFocus()
-                context.getSystemService(InputMethodManager::class.java)
-                    ?.showSoftInput(editView, 0)
-            }
-            editView.addTextChangedListener(object : TextWatcher {
-                override fun onTextChanged(
-                    s: CharSequence?, start: Int, before: Int, count: Int
-                ) = search(s?.toString()?.trim().orEmpty())
-
-                override fun afterTextChanged(s: Editable?) {}
-                override fun beforeTextChanged(
-                    s: CharSequence?, start: Int, count: Int, after: Int
-                ) {
-                }
-            })
-            editView.setOnEditorActionListener { v, actionId, _ ->
-                if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-                    search(v.text.toString().trim())
-                    true
-                } else false
-            }
-            clearView.setOnClickListener {
-                editView.setText("")
-            }
-            searchPopupWindow = object : ListPopupWindow(context, null) {
-                init {
-                    isModal = true
-                    val displayWidth = context.getSystemService(WindowManager::class.java)?.let {
-                        Point().apply { it.defaultDisplay.getSize(this) }.x
-                    } ?: 0
-                    width = (displayWidth - 36.dp).takeIf { it > 0 } ?: MATCH_PARENT
-                    height = WRAP_CONTENT
-                    setAdapter(searchAdapter)
-                    anchorView = searchView
-                    setOnItemClickListener { parent, _, position, _ ->
-                        dismiss()
-                        val item = parent.getItemAtPosition(position) as? SearchItem
-                            ?: return@setOnItemClickListener
-                        scope.launch {
-                            // wait popup to be dismissed
-                            delay(200)
-                            selectPreference(item)
-                        }
-                    }
-                    inputMethodMode = INPUT_METHOD_NOT_NEEDED
-                    softInputMode = WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN
-                }
-
-                override fun show() {
-                    super.show()
-                    val ta = context.obtainStyledAttributes(intArrayOf(android.R.attr.listDivider))
-                    listView?.divider = ta.getDrawable(0)
-                    ta.recycle()
+        private fun retrieve(group: PreferenceGroup): List<SearchItem> = buildList {
+            for (i in 0 until group.preferenceCount) {
+                val preference = group.getPreference(i)
+                val entries = when (preference) {
+                    is ListPreference -> preference.entries
+                    is MultiSelectListPreference -> preference.entries
+                    else -> arrayOf()
+                }.orEmpty().toList()
+                val searchItem = SearchItem(
+                    preference,
+                    preference.key.orEmpty(),
+                    preference.title?.toString().orEmpty(),
+                    preference.summary?.toString().orEmpty(),
+                    entries,
+                    isGroup = preference is PreferenceGroup,
+                )
+                searchItem.appendExtraKeywords()
+                add(searchItem)
+                if (preference is PreferenceGroup) {
+                    addAll(retrieve(preference))
                 }
             }
-        }
-
-        private fun registerLayoutChecker() {
-            val listView = view?.findViewById<ListView>(android.R.id.list) ?: return
-            listView.viewTreeObserver.addOnPreDrawListener(object :
-                ViewTreeObserver.OnPreDrawListener {
-                override fun onPreDraw(): Boolean {
-                    // item: 允许下载版权番剧
-                    val item = listView.getChildAt(2)
-                    listViewHeight = listView.height
-                    itemHeight = item?.height ?: 0
-                    item.viewTreeObserver.removeOnPreDrawListener(this)
-                    return true
-                }
-            })
-        }
-
-        private fun loadSearchItems() {
-            var pos = 0
-            fun retrieve(group: PreferenceGroup): List<SearchItem> = buildList {
-                for (i in 0 until group.preferenceCount) {
-                    val preference = group.getPreference(i)
-                    val entries = when (preference) {
-                        is ListPreference -> preference.entries
-                        is MultiSelectListPreference -> preference.entries
-                        else -> arrayOf()
-                    }.orEmpty().toList()
-                    val searchItem = SearchItem(
-                        preference.key.orEmpty(),
-                        preference.title?.toString().orEmpty(),
-                        preference.summary?.toString().orEmpty(),
-                        entries,
-                        pos++,
-                        isGroup = preference is PreferenceGroup,
-                    )
-                    searchItem.appendExtraKeywords()
-                    add(searchItem)
-                    if (preference is PreferenceGroup) {
-                        addAll(retrieve(preference))
-                    }
-                }
-            }
-            searchItems = retrieve(preferenceScreen)
         }
 
         private fun SearchItem.appendExtraKeywords() = when (key) {
@@ -262,75 +181,23 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 extra.addAll(context.resources.getStringArray(R.array.dynamic_entries))
             }
 
+            "pref_import", "pref_export" -> {
+                extra.add(context.getString(R.string.pref_backup))
+            }
+
             else -> false
         }
 
-        private fun search(text: String) {
-            searchJob?.cancel(null)
-            searchJob = null
-            val listView = view?.findViewById<ListView>(android.R.id.list) ?: return
-            if (text.isEmpty()) {
-                listView.forceSetSelection(0)
-                searchPopupWindow.dismiss()
-                return
+        fun search(text: String) {
+            val preferences = if (text.isEmpty()) {
+                searchItems.map { it.restore(); it.preference }
+            } else {
+                searchItems.sortedByDescending { it.calcScoreBy(text) }
+                    .filterNot { it.cacheScore == 0 }.map { it.applyHint(); it.preference }
             }
-            searchJob = scope.launch {
-                // wait a while, in case user are clearing
-                delay(100)
-                if (!isActive) return@launch
-                val results = searchItems.sortedByDescending { it.getScoreBy(text) }
-                    .filterNot { it.cacheScore == 0 }
-                searchAdapter.clear()
-                searchAdapter.addAll(results)
-                if (results.isEmpty()) {
-                    searchPopupWindow.dismiss()
-                } else {
-                    if (!isActive) return@launch
-                    view?.findFocus()?.let { focus ->
-                        context.getSystemService(InputMethodManager::class.java)
-                            ?.takeIf { it.isActive }
-                            ?.hideSoftInputFromWindow(focus.windowToken, 0)
-                    }
-                    if (!isActive) return@launch
-                    // wait keyboard to be hidden
-                    delay(200)
-                    if (!isActive) return@launch
-                    searchPopupWindow.show()
-                }
-            }
-        }
-
-        private fun selectPreference(searchItem: SearchItem) {
-            val listView = view?.findViewById<ListView>(android.R.id.list) ?: return
-            // vertical center screen position
-            val top = if (listViewHeight != 0 && itemHeight != 0) {
-                ((listViewHeight - itemHeight) / 2).coerceAtLeast(0)
-            } else 0
-            listView.forceSetSelection(searchItem.position, top)
-            listView.post {
-                val view = listView.getViewByPosition(searchItem.position)
-                val origBg = view.background
-                view.setRippleBackground()
-                val background = view.background
-                scope.launch {
-                    // wait selection
-                    delay(100)
-                    repeat(3) {
-                        val state = intArrayOf(
-                            android.R.attr.state_pressed,
-                            android.R.attr.state_enabled
-                        )
-                        background.setState(state)
-                        delay(300)
-                        background.setState(intArrayOf())
-                        // wait effect disappear
-                        delay(200)
-                    }
-                }.invokeOnCompletion {
-                    // restore original background
-                    view.background = origBg
-                }
-            }
+            adapter.preferenceList = preferences
+            adapter.notifyDataSetChanged()
+            listView.forceSetSelection(0)
         }
 
         private fun checkUpdate() {
@@ -345,14 +212,12 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                         Preference(activity).apply {
                             key = "update"
                             title = context.getString(R.string.update_title)
-                            summary =
-                                result.optString("body").substringAfterLast("更新日志\r\n").run {
-                                    ifEmpty { context.getString(R.string.update_summary) }
-                                }
+                            summary = result.optString("body").substringAfterLast("更新日志\r\n")
+                                .ifEmpty { context.getString(R.string.update_summary) }
                             onPreferenceClickListener = this@PrefsFragment
                             order = 1
                         })
-                    loadSearchItems()
+                    searchItems = retrieve(preferenceScreen)
                 }
             }
         }
@@ -918,9 +783,53 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         }
     }
 
+    private fun getContentView(fragment: PrefsFragment): View {
+        val contentView = LinearLayout(fragment.context).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            )
+        }
+        val searchView = context.inflateLayout(R.layout.search)
+        val editView = searchView.findViewById<EditText>(R.id.search)
+        val clearView = searchView.findViewById<View>(R.id.clear)
+        searchView.setOnClickListener {
+            editView.requestFocus()
+            context.getSystemService(InputMethodManager::class.java)
+                ?.showSoftInput(editView, 0)
+        }
+        editView.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) {}
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(
+                s: CharSequence?, start: Int, before: Int, count: Int
+            ) = fragment.search(s?.toString()?.trim().orEmpty())
+        })
+        editView.setOnEditorActionListener { v, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                fragment.search(v.text.toString().trim())
+                true
+            } else false
+        }
+        clearView.setOnClickListener {
+            editView.setText("")
+        }
+        contentView.addView(searchView)
+        contentView.addView(fragment.view)
+        return contentView
+    }
+
     init {
         val activity = context as Activity
         activity.addModuleAssets()
+
+        // dirty way to make list preference summary span style take effect,
+        // we have no other choice, see ListPreference#getSummary
+        val summaryHook = ListPreference::class.java.hookBeforeMethod("getSummary") { param ->
+            param.thisObject.setObjectField("mSummary", null)
+        }
+
         val prefsFragment = PrefsFragment()
         activity.fragmentManager.beginTransaction().add(prefsFragment, "Setting").commit()
         activity.fragmentManager.executePendingTransactions()
@@ -939,134 +848,114 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             }
         }
 
-        setView(prefsFragment.view)
+        setView(getContentView(prefsFragment))
         setTitle("哔哩漫游设置")
         setNegativeButton("返回", null)
-        setNeutralButton("回到顶部", null)
         setPositiveButton("确定并重启客户端") { _, _ ->
             prefsFragment.preferenceManager.forceSavePreference()
             restartApplication(activity)
         }
         setOnDismissListener {
             unhook?.unhook()
+            summaryHook?.unhook()
         }
     }
 
-    enum class HintType { TITLE, SUMMARY, ENTRY, EXTRA }
-    data class Hint(val type: HintType, val hint: String, val fullText: String)
+    enum class HintType { TITLE, SUMMARY, OTHER }
+    data class Hint(val type: HintType, val hint: String, val startIdx: Int, val text: CharSequence)
     data class SearchItem(
+        val preference: Preference,
         val key: String = "",
-        val title: String = "",
-        val summary: String = "",
+        val title: CharSequence = "",
+        val summary: CharSequence = "",
         val entries: List<CharSequence> = listOf(),
-        val position: Int = 0,
         val isGroup: Boolean = false,
         val extra: MutableList<String> = mutableListOf(),
     ) {
-        var cacheScore: Int = 0
-        val hints: MutableList<Hint> = mutableListOf()
+        var cacheScore = 0
+        private val hints = mutableListOf<Hint>()
 
-        fun getScoreBy(text: String): Int {
+        fun calcScoreBy(text: String): Int {
             hints.clear()
-            if (text.isEmpty()) {
+            if (text.isEmpty() || isGroup) {
                 cacheScore = 0
                 return 0
             }
-            if (isGroup) {
-                val score = if (text in title) {
-                    hints.add(Hint(HintType.TITLE, text, title))
-                    10
-                } else 0
-                cacheScore = score
-                return score
-            }
             var score = 0
-            if (title.isNotEmpty() && text in title) {
-                hints.add(Hint(HintType.TITLE, text, title))
-                score += 50
-            }
-            if (summary.isNotEmpty() && text in summary) {
-                hints.add(Hint(HintType.SUMMARY, text, summary))
-                score += 40
-            }
-            if (entries.isNotEmpty() && entries.firstOrNull { text in it }?.also {
-                    hints.add(Hint(HintType.ENTRY, text, it.toString()))
-                } != null)
+            if (title.isNotEmpty() && title.indexOf(text, ignoreCase = true).takeIf { it != -1 }
+                    ?.also { hints.add(Hint(HintType.TITLE, text, it, title)) } != null
+            ) score += 50
+            if (summary.isNotEmpty() && summary.indexOf(text, ignoreCase = true).takeIf { it != -1 }
+                    ?.also { hints.add(Hint(HintType.SUMMARY, text, it, summary)) } != null
+            ) score += 40
+            if (entries.isNotEmpty() && entries.firstNotNullOfOrNull { e ->
+                    e.indexOf(text, ignoreCase = true).takeIf { it != -1 }
+                        ?.also { hints.add(Hint(HintType.OTHER, text, it, e)) }
+                } != null) {
                 score += 30
-            if (extra.isNotEmpty() && extra.firstOrNull { text in it }?.also {
-                    hints.add(Hint(HintType.EXTRA, text, it))
-                } != null)
+            }
+            if (extra.isNotEmpty() && extra.firstNotNullOfOrNull { e ->
+                    e.indexOf(text, ignoreCase = true).takeIf { it != -1 }
+                        ?.also { hints.add(Hint(HintType.OTHER, text, it, e)) }
+                } != null) {
                 score += 20
+            }
             cacheScore = score
             return score
         }
-    }
 
-    class SearchResultAdapter(context: Context) : ArrayAdapter<SearchItem>(context, 0) {
-        override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
-            return (convertView ?: context.inflateLayout(R.layout.search_result_item)).apply {
-                val item = getItem(position)
-                val title = item?.title.orEmpty()
-                val summary = item?.summary.orEmpty()
-                val hints = item?.hints.orEmpty()
-                val titleView = findViewById<TextView>(R.id.title)
-                val summaryView = findViewById<TextView>(R.id.summary)
-                val hintView = findViewById<TextView>(R.id.hint)
-                var titleHint: Hint? = null
-                var summaryHint: Hint? = null
-                var otherHint: Hint? = null
-                for (hint in hints) {
-                    if (titleHint != null && summaryHint != null && otherHint != null)
-                        break
-                    if (titleHint == null && hint.type == HintType.TITLE)
-                        titleHint = hint
-                    if (summaryHint == null && hint.type == HintType.SUMMARY)
-                        summaryHint = hint
-                    if (otherHint == null && hint.type.let { it == HintType.ENTRY || it == HintType.EXTRA })
-                        otherHint = hint
-                }
-                summaryView.isVisible = summary.isNotEmpty()
-                hintView.isVisible = otherHint != null
-                titleView.setTextWithHint(title, titleHint)
-                if (titleHint == null) {
-                    summaryView.setTextWithHint(summary, summaryHint)
+        fun applyHint() {
+            if (hints.isEmpty()) {
+                preference.title = title
+                preference.summary = summary
+                return
+            }
+            val titleHint = hints.firstOrNull { it.type == HintType.TITLE }
+            val summaryHint = hints.firstOrNull { it.type == HintType.SUMMARY }
+            val otherHint = hints.firstOrNull { it.type == HintType.OTHER }
+            preference.title = title.withHint(titleHint)
+            if (titleHint == null) {
+                if (otherHint == null) {
+                    // only summary with hint
+                    preference.summary = summary.withHint(summaryHint)
                 } else {
-                    summaryView.setTextWithHint(summary, null)
+                    // summary with linebreak and other hint
+                    preference.summary = SpannableStringBuilder(summary).apply {
+                        if (isNotEmpty()) appendLine()
+                        append(otherHint.text.withHint(otherHint))
+                    }
                 }
-                if (otherHint != null) {
-                    hintView.setTextWithHint(otherHint.fullText, otherHint)
+            } else {
+                // only title hint, summary keep original
+                preference.summary = summary
+            }
+        }
+
+        private fun CharSequence.withHint(hint: Hint?): CharSequence {
+            if (hint == null || hint.hint.isEmpty())
+                return this
+            val startIdx = hint.startIdx
+            if (startIdx == -1) return this
+            val endIdx = startIdx + hint.hint.length
+            if (endIdx > length) return this
+            val flags = Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            val hintColor = preference.context.getColor(R.color.text_search_hint)
+            val colorSpan = ForegroundColorSpan(hintColor)
+            val boldSpan = StyleSpan(Typeface.BOLD)
+            return SpannableStringBuilder(this).apply {
+                setSpan(colorSpan, startIdx, endIdx, flags)
+                setSpan(boldSpan, startIdx, endIdx, flags)
+                if (hint.type == HintType.OTHER) {
+                    // to make other text smaller and append to summary
+                    val sizeSpan = AbsoluteSizeSpan(12.sp, false)
+                    setSpan(sizeSpan, 0, length, flags)
                 }
             }
         }
 
-        private fun TextView.setTextWithHint(text: String, hint: Hint?) {
-            if (hint == null || hint.hint.isEmpty()) {
-                this.text = text
-                return
-            }
-            var hintText = hint.hint
-            val normalColor = textColors.defaultColor
-            val hintColor = context.getColor(R.color.text_search_hint)
-            val splits = text.split(hintText, limit = 2)
-            val leftText = splits[0]
-            hintText = if (splits.size == 1) "" else hintText
-            val rightText = if (splits.size == 1) "" else splits[1]
-            SpannableStringBuilder().apply {
-                val normalSpan = ForegroundColorSpan(normalColor)
-                val flags = Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-                if (leftText.isNotEmpty())
-                    append(leftText, normalSpan, flags)
-                if (hintText.isNotEmpty()) {
-                    val start = length
-                    val colorSpan = ForegroundColorSpan(hintColor)
-                    val boldSpan = StyleSpan(Typeface.BOLD)
-                    append(hintText)
-                    setSpan(colorSpan, start, length, flags)
-                    setSpan(boldSpan, start, length, flags)
-                }
-                if (rightText.isNotEmpty())
-                    append(rightText, normalSpan, flags)
-            }.let { this.text = it }
+        fun restore() {
+            preference.title = title
+            preference.summary = summary
         }
     }
 
@@ -1095,19 +984,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         }
 
         fun show(context: Context) {
-            SettingDialog(context).create().apply {
-                setOnShowListener {
-                    window?.clearFlags(
-                        WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
-                                or WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM
-                    )
-                    window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE)
-                    getButton(AlertDialog.BUTTON_NEUTRAL)?.setOnClickListener {
-                        window?.findViewById<ListView>(android.R.id.list)
-                            ?.forceSetSelection(0)
-                    }
-                }
-            }.show()
+            SettingDialog(context).show()
         }
 
         const val SPLASH_SELECTION = 0

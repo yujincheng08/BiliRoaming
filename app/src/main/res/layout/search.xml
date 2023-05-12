@@ -1,51 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/contentLayout"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="48dp"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
     android:paddingLeft="16dp"
     android:paddingTop="8dp"
     android:paddingRight="16dp"
     android:paddingBottom="8dp">
 
-    <LinearLayout
-        android:id="@+id/contentLayout"
-        android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:background="@drawable/bg_search_preference"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:padding="8dp">
+    <EditText
+        android:id="@+id/search"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_marginEnd="8dp"
+        android:layout_weight="1"
+        android:background="@null"
+        android:hint="@string/search_hint"
+        android:imeOptions="actionSearch"
+        android:inputType="textNoSuggestions"
+        android:maxLength="20"
+        android:textColor="?android:attr/textColorPrimary" />
 
-        <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:src="@drawable/ic_search"
-            android:tint="?android:attr/textColorPrimary" />
-
-        <EditText
-            android:id="@+id/search"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_marginLeft="8dp"
-            android:layout_marginRight="8dp"
-            android:layout_weight="1"
-            android:background="@null"
-            android:hint="@string/search_hint"
-            android:imeOptions="actionSearch"
-            android:inputType="textNoSuggestions"
-            android:maxLength="20"
-            android:textColor="?android:attr/textColorPrimary" />
-
-        <ImageView
-            android:id="@+id/clear"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="4dp"
-            android:background="?android:attr/selectableItemBackgroundBorderless"
-            android:padding="4dp"
-            android:src="@drawable/ic_clear"
-            android:tint="?android:attr/textColorPrimary"
-            android:visibility="visible" />
-    </LinearLayout>
-</FrameLayout>
+    <ImageView
+        android:id="@+id/clear"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:padding="4dp"
+        android:src="@drawable/ic_clear"
+        android:tint="?android:attr/textColorPrimary"
+        android:visibility="visible" />
+</LinearLayout>

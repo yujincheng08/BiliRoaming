@@ -347,7 +347,6 @@ fun Window.blurBackground() {
         override fun onViewDetachedFromWindow(v: View) {
             windowManager.removeCrossWindowBlurEnabledListener(blurEnableListener)
         }
-
     })
     addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
 }
@@ -395,27 +394,11 @@ fun SharedPreferences.appendStringForSet(key: String, value: String, commit: Boo
     }
 }
 
-fun ListView.getViewByPosition(pos: Int): View {
-    val firstPos = firstVisiblePosition
-    val lastPos = firstPos + childCount - 1
-    return if (pos < firstPos || pos > lastPos) {
-        adapter.getView(pos, null, this)
-    } else {
-        getChildAt(pos - firstPos)
-    }
-}
-
 fun ListView.forceSetSelection(pos: Int, top: Int = 0) {
     // stop scrolling
     smoothScrollBy(0, 0)
     setSelectionFromTop(pos, top)
 }
-
-inline var View.isVisible: Boolean
-    get() = visibility == View.VISIBLE
-    set(value) {
-        visibility = if (value) View.VISIBLE else View.GONE
-    }
 
 fun Context.inflateLayout(
     @LayoutRes resource: Int,
