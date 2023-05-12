@@ -124,7 +124,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     is ListPreference -> preference.entries
                     is MultiSelectListPreference -> preference.entries
                     else -> arrayOf()
-                }.orEmpty().toList()
+                }.orEmpty()
                 val searchItem = SearchItem(
                     preference,
                     preference.key.orEmpty(),
@@ -865,11 +865,11 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
     class Hint(val hint: String, val startIdx: Int, val fullText: CharSequence)
     class SearchItem(
         val preference: Preference,
-        val key: String = "",
-        private val title: CharSequence = "",
-        private val summary: CharSequence = "",
-        private val entries: List<CharSequence> = listOf(),
-        private val isGroup: Boolean = false,
+        val key: String,
+        private val title: CharSequence,
+        private val summary: CharSequence,
+        private val entries: Array<out CharSequence>,
+        private val isGroup: Boolean,
         val extra: MutableList<String> = mutableListOf(),
     ) {
         var cacheScore = 0
