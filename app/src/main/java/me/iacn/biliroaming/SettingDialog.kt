@@ -128,8 +128,8 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 val searchItem = SearchItem(
                     preference,
                     preference.key.orEmpty(),
-                    preference.title?.toString().orEmpty(),
-                    preference.summary?.toString().orEmpty(),
+                    preference.title ?: "",
+                    preference.summary ?: "",
                     entries,
                     preference is PreferenceGroup,
                 )
