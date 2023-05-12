@@ -873,6 +873,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         val extra: MutableList<String> = mutableListOf(),
     ) {
         var cacheScore = 0
+            private set
         private val hints = mutableMapOf<HintType, Hint>()
 
         fun calcScoreBy(text: String): Int {
