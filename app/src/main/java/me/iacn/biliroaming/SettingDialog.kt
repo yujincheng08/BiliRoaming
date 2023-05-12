@@ -207,6 +207,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 val newestVer = result.optString("name")
                 val versionName = BuildConfig.VERSION_NAME
                 if (newestVer.isNotEmpty() && versionName != newestVer) {
+                    searchItems.forEach { it.restore() }
                     findPreference("version").summary = "${versionName}（最新版$newestVer）"
                     (findPreference("about") as PreferenceCategory).addPreference(
                         Preference(activity).apply {
@@ -217,7 +218,6 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                             onPreferenceClickListener = this@PrefsFragment
                             order = 1
                         })
-                    searchItems.forEach { it.restore() }
                     searchItems = retrieve(preferenceScreen)
                 }
             }
