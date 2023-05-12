@@ -825,7 +825,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         activity.addModuleAssets()
 
         // dirty way to make list preference summary span style take effect,
-        // we have no other choice, see ListPreference#getSummary
+        // we have no choice, see ListPreference#getSummary
         val summaryHook = ListPreference::class.java.hookBeforeMethod("getSummary") { param ->
             param.thisObject.setObjectField("mSummary", null)
         }
