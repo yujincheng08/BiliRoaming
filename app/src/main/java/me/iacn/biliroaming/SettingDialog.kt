@@ -918,16 +918,21 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 preference.summary = summary
                 return
             }
-            if (otherHint == null) {
+            if (summaryHint != null) {
                 // only summary with hint
                 preference.summary = summary.withHint(summaryHint)
                 return
             }
-            // summary with linebreak and other hint
-            preference.summary = SpannableStringBuilder(summary).apply {
-                if (isNotEmpty()) appendLine()
-                append(otherHint.fullText.withHint(otherHint, true))
+            if (otherHint != null) {
+                // summary with linebreak and other hint
+                preference.summary = SpannableStringBuilder(summary).apply {
+                    if (isNotEmpty()) appendLine()
+                    append(otherHint.fullText.withHint(otherHint, true))
+                }
+                return
             }
+            // no hint, summary keep original
+            preference.summary = summary
         }
 
         private fun CharSequence.withHint(hint: Hint?, other: Boolean = false): CharSequence {
