@@ -131,7 +131,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     preference.title?.toString().orEmpty(),
                     preference.summary?.toString().orEmpty(),
                     entries,
-                    isGroup = preference is PreferenceGroup,
+                    preference is PreferenceGroup,
                 )
                 searchItem.appendExtraKeywords()
                 add(searchItem)
@@ -791,10 +791,10 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 FrameLayout.LayoutParams.MATCH_PARENT
             )
         }
-        val searchView = context.inflateLayout(R.layout.search)
-        val editView = searchView.findViewById<EditText>(R.id.search)
-        val clearView = searchView.findViewById<View>(R.id.clear)
-        searchView.setOnClickListener {
+        val searchBar = context.inflateLayout(R.layout.search_bar)
+        val editView = searchBar.findViewById<EditText>(R.id.search)
+        val clearView = searchBar.findViewById<View>(R.id.clear)
+        searchBar.setOnClickListener {
             editView.requestFocus()
             context.getSystemService(InputMethodManager::class.java)
                 ?.showSoftInput(editView, 0)
@@ -815,7 +815,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         clearView.setOnClickListener {
             editView.setText("")
         }
-        contentView.addView(searchView)
+        contentView.addView(searchBar)
         contentView.addView(fragment.view)
         return contentView
     }
@@ -866,10 +866,10 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
     class SearchItem(
         val preference: Preference,
         val key: String = "",
-        val title: CharSequence = "",
-        val summary: CharSequence = "",
-        val entries: List<CharSequence> = listOf(),
-        val isGroup: Boolean = false,
+        private val title: CharSequence = "",
+        private val summary: CharSequence = "",
+        private val entries: List<CharSequence> = listOf(),
+        private val isGroup: Boolean = false,
         val extra: MutableList<String> = mutableListOf(),
     ) {
         var cacheScore = 0
@@ -906,28 +906,27 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
 
         fun applyHint() {
             if (hints.isEmpty()) {
-                preference.title = title
-                preference.summary = summary
+                restore()
                 return
             }
             val titleHint = hints[HintType.TITLE]
             val summaryHint = hints[HintType.SUMMARY]
             val otherHint = hints[HintType.OTHER]
             preference.title = title.withHint(titleHint)
-            if (titleHint == null) {
-                if (otherHint == null) {
-                    // only summary with hint
-                    preference.summary = summary.withHint(summaryHint)
-                } else {
-                    // summary with linebreak and other hint
-                    preference.summary = SpannableStringBuilder(summary).apply {
-                        if (isNotEmpty()) appendLine()
-                        append(otherHint.fullText.withHint(otherHint, true))
-                    }
-                }
-            } else {
+            if (titleHint != null) {
                 // only title hint, summary keep original
                 preference.summary = summary
+                return
+            }
+            if (otherHint == null) {
+                // only summary with hint
+                preference.summary = summary.withHint(summaryHint)
+                return
+            }
+            // summary with linebreak and other hint
+            preference.summary = SpannableStringBuilder(summary).apply {
+                if (isNotEmpty()) appendLine()
+                append(otherHint.fullText.withHint(otherHint, true))
             }
         }
 
