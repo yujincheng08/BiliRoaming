@@ -192,8 +192,8 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             val preferences = if (text.isEmpty()) {
                 searchItems.map { it.restore(); it.preference }
             } else {
-                searchItems.sortedByDescending { it.calcScoreBy(text) }
-                    .filterNot { it.cacheScore == 0 }.map { it.applyHint(); it.preference }
+                searchItems.sortedByDescending { it.calcScoreAndApplyHintBy(text) }
+                    .filterNot { it.cacheScore == 0 }.map { it.preference }
             }
             adapter.preferenceList = preferences
             adapter.notifyDataSetChanged()
@@ -862,7 +862,6 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         }
     }
 
-    enum class HintType { TITLE, SUMMARY, OTHER }
     class Hint(val hint: String, val startIdx: Int, val fullText: CharSequence)
     class SearchItem(
         val preference: Preference,
@@ -875,45 +874,49 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
     ) {
         var cacheScore = 0
             private set
-        private val hints = mutableMapOf<HintType, Hint>()
 
-        fun calcScoreBy(text: String): Int {
-            hints.clear()
+        fun calcScoreAndApplyHintBy(text: String): Int {
             if (text.isEmpty() || isGroup) {
                 cacheScore = 0
                 return 0
             }
             var score = 0
+            var titleHint: Hint? = null
+            var summaryHint: Hint? = null
+            var otherHint: Hint? = null
             if (title.isNotEmpty() && title.indexOf(text, ignoreCase = true).takeIf { it != -1 }
-                    ?.also { hints[HintType.TITLE] = Hint(text, it, title) } != null
+                    ?.also { titleHint = Hint(text, it, title) } != null
             ) score += 12
             if (summary.isNotEmpty() && summary.indexOf(text, ignoreCase = true).takeIf { it != -1 }
-                    ?.also { hints[HintType.SUMMARY] = Hint(text, it, summary) } != null
+                    ?.also { summaryHint = Hint(text, it, summary) } != null
             ) score += 6
             if (entries.isNotEmpty() && entries.firstNotNullOfOrNull { e ->
                     e.indexOf(text, ignoreCase = true).takeIf { it != -1 }
-                        ?.also { hints[HintType.OTHER] = Hint(text, it, e) }
+                        ?.also { otherHint = Hint(text, it, e) }
                 } != null) {
                 score += 3
             }
             if (extra.isNotEmpty() && extra.firstNotNullOfOrNull { e ->
                     e.indexOf(text, ignoreCase = true).takeIf { it != -1 }
-                        ?.also { hints.putIfAbsent(HintType.OTHER, Hint(text, it, e)) }
+                        ?.also { if (otherHint == null) otherHint = Hint(text, it, e) }
                 } != null) {
                 score += 2
             }
             cacheScore = score
+            applyHint(titleHint, summaryHint, otherHint)
             return score
         }
 
-        fun applyHint() {
-            if (hints.isEmpty()) {
+        fun restore() {
+            preference.title = title
+            preference.summary = summary
+        }
+
+        private fun applyHint(titleHint: Hint?, summaryHint: Hint?, otherHint: Hint?) {
+            if (titleHint == null && summaryHint == null && otherHint == null) {
                 restore()
                 return
             }
-            val titleHint = hints[HintType.TITLE]
-            val summaryHint = hints[HintType.SUMMARY]
-            val otherHint = hints[HintType.OTHER]
             preference.title = title.withHint(titleHint)
             if (titleHint != null) {
                 // only title hint, summary keep original
@@ -957,11 +960,6 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     setSpan(sizeSpan, 0, length, flags)
                 }
             }
-        }
-
-        fun restore() {
-            preference.title = title
-            preference.summary = summary
         }
     }
 
