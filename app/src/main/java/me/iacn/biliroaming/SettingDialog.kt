@@ -217,6 +217,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                             onPreferenceClickListener = this@PrefsFragment
                             order = 1
                         })
+                    searchItems.forEach { it.restore() }
                     searchItems = retrieve(preferenceScreen)
                 }
             }
