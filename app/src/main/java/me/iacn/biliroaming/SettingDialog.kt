@@ -884,21 +884,21 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             var score = 0
             if (title.isNotEmpty() && title.indexOf(text, ignoreCase = true).takeIf { it != -1 }
                     ?.also { hints[HintType.TITLE] = Hint(text, it, title) } != null
-            ) score += 50
+            ) score += 12
             if (summary.isNotEmpty() && summary.indexOf(text, ignoreCase = true).takeIf { it != -1 }
                     ?.also { hints[HintType.SUMMARY] = Hint(text, it, summary) } != null
-            ) score += 40
+            ) score += 6
             if (entries.isNotEmpty() && entries.firstNotNullOfOrNull { e ->
                     e.indexOf(text, ignoreCase = true).takeIf { it != -1 }
                         ?.also { hints[HintType.OTHER] = Hint(text, it, e) }
                 } != null) {
-                score += 30
+                score += 3
             }
             if (extra.isNotEmpty() && extra.firstNotNullOfOrNull { e ->
                     e.indexOf(text, ignoreCase = true).takeIf { it != -1 }
                         ?.also { hints.putIfAbsent(HintType.OTHER, Hint(text, it, e)) }
                 } != null) {
-                score += 20
+                score += 2
             }
             cacheScore = score
             return score
