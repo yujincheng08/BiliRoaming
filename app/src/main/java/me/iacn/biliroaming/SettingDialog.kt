@@ -836,11 +836,9 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
 
         private fun applyHint(titleHint: Hint?, summaryHint: Hint?, otherHint: Hint?) {
             preference.title = title.withHint(titleHint)
-            if (titleHint != null) {
-                preference.summary = summary
-            } else if (summaryHint != null) {
+            if (titleHint == null && summaryHint != null) {
                 preference.summary = summary.withHint(summaryHint)
-            } else if (otherHint != null) {
+            } else if (titleHint == null && otherHint != null) {
                 preference.summary = SpannableStringBuilder(summary).apply {
                     if (isNotEmpty()) appendLine()
                     append(otherHint.fullText.withHint(otherHint, true))
