@@ -74,7 +74,7 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             ) { param ->
                 param.result?.run {
                     callMethod("clearDm")
-                    callMethod("clearVideoGuide")
+                    callMethod("getVideoGuide")?.callMethod("clearContractCard")
                 }
             }
             instance.viewMossClass?.replaceMethod(
