@@ -784,6 +784,95 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         }
     }
 
+    class Hint(val hint: String, val startIdx: Int, val fullText: CharSequence)
+    class SearchItem(
+        val preference: Preference,
+        val key: String,
+        private val title: CharSequence,
+        private val summary: CharSequence,
+        private val entries: Array<out CharSequence>,
+        private val isGroup: Boolean,
+        val extra: MutableList<String> = mutableListOf(),
+    ) {
+        var cacheScore = 0
+            private set
+
+        fun calcScoreAndApplyHintBy(text: String): Int {
+            if (text.isEmpty() || isGroup) {
+                cacheScore = 0
+                return 0
+            }
+            var score = 0
+            var titleHint: Hint? = null
+            var summaryHint: Hint? = null
+            var otherHint: Hint? = null
+            if (title.isNotEmpty() && title.indexOf(text, ignoreCase = true).takeIf { it != -1 }
+                    ?.also { titleHint = Hint(text, it, title) } != null
+            ) score += 12
+            if (summary.isNotEmpty() && summary.indexOf(text, ignoreCase = true).takeIf { it != -1 }
+                    ?.also { summaryHint = Hint(text, it, summary) } != null
+            ) score += 6
+            if (entries.isNotEmpty() && entries.firstNotNullOfOrNull { e ->
+                    e.indexOf(text, ignoreCase = true).takeIf { it != -1 }
+                        ?.also { otherHint = Hint(text, it, e) }
+                } != null) {
+                score += 3
+            }
+            if (extra.isNotEmpty() && extra.firstNotNullOfOrNull { e ->
+                    e.indexOf(text, ignoreCase = true).takeIf { it != -1 }
+                        ?.also { if (otherHint == null) otherHint = Hint(text, it, e) }
+                } != null) {
+                score += 2
+            }
+            cacheScore = score
+            applyHint(titleHint, summaryHint, otherHint)
+            return score
+        }
+
+        fun restore() {
+            preference.title = title
+            preference.summary = summary
+        }
+
+        private fun applyHint(titleHint: Hint?, summaryHint: Hint?, otherHint: Hint?) {
+            preference.title = title.withHint(titleHint)
+            if (titleHint != null) {
+                preference.summary = summary
+            } else if (summaryHint != null) {
+                preference.summary = summary.withHint(summaryHint)
+            } else if (otherHint != null) {
+                preference.summary = SpannableStringBuilder(summary).apply {
+                    if (isNotEmpty()) appendLine()
+                    append(otherHint.fullText.withHint(otherHint, true))
+                }
+            } else {
+                preference.summary = summary
+            }
+        }
+
+        private fun CharSequence.withHint(hint: Hint?, other: Boolean = false): CharSequence {
+            if (hint == null || hint.hint.isEmpty())
+                return this
+            val startIdx = hint.startIdx
+            if (startIdx == -1) return this
+            val endIdx = startIdx + hint.hint.length
+            if (endIdx > length) return this
+            val flags = Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            val hintColor = preference.context.getColor(R.color.text_search_hint)
+            val colorSpan = ForegroundColorSpan(hintColor)
+            val boldSpan = StyleSpan(Typeface.BOLD)
+            return SpannableStringBuilder(this).apply {
+                setSpan(colorSpan, startIdx, endIdx, flags)
+                setSpan(boldSpan, startIdx, endIdx, flags)
+                if (other) {
+                    // to make other text smaller and append to summary
+                    val sizeSpan = AbsoluteSizeSpan(12.sp, false)
+                    setSpan(sizeSpan, 0, length, flags)
+                }
+            }
+        }
+    }
+
     private fun getContentView(fragment: PrefsFragment): View {
         val contentView = LinearLayout(fragment.context).apply {
             orientation = LinearLayout.VERTICAL
@@ -859,107 +948,6 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         setOnDismissListener {
             unhook?.unhook()
             summaryHook?.unhook()
-        }
-    }
-
-    class Hint(val hint: String, val startIdx: Int, val fullText: CharSequence)
-    class SearchItem(
-        val preference: Preference,
-        val key: String,
-        private val title: CharSequence,
-        private val summary: CharSequence,
-        private val entries: Array<out CharSequence>,
-        private val isGroup: Boolean,
-        val extra: MutableList<String> = mutableListOf(),
-    ) {
-        var cacheScore = 0
-            private set
-
-        fun calcScoreAndApplyHintBy(text: String): Int {
-            if (text.isEmpty() || isGroup) {
-                cacheScore = 0
-                return 0
-            }
-            var score = 0
-            var titleHint: Hint? = null
-            var summaryHint: Hint? = null
-            var otherHint: Hint? = null
-            if (title.isNotEmpty() && title.indexOf(text, ignoreCase = true).takeIf { it != -1 }
-                    ?.also { titleHint = Hint(text, it, title) } != null
-            ) score += 12
-            if (summary.isNotEmpty() && summary.indexOf(text, ignoreCase = true).takeIf { it != -1 }
-                    ?.also { summaryHint = Hint(text, it, summary) } != null
-            ) score += 6
-            if (entries.isNotEmpty() && entries.firstNotNullOfOrNull { e ->
-                    e.indexOf(text, ignoreCase = true).takeIf { it != -1 }
-                        ?.also { otherHint = Hint(text, it, e) }
-                } != null) {
-                score += 3
-            }
-            if (extra.isNotEmpty() && extra.firstNotNullOfOrNull { e ->
-                    e.indexOf(text, ignoreCase = true).takeIf { it != -1 }
-                        ?.also { if (otherHint == null) otherHint = Hint(text, it, e) }
-                } != null) {
-                score += 2
-            }
-            cacheScore = score
-            applyHint(titleHint, summaryHint, otherHint)
-            return score
-        }
-
-        fun restore() {
-            preference.title = title
-            preference.summary = summary
-        }
-
-        private fun applyHint(titleHint: Hint?, summaryHint: Hint?, otherHint: Hint?) {
-            if (titleHint == null && summaryHint == null && otherHint == null) {
-                restore()
-                return
-            }
-            preference.title = title.withHint(titleHint)
-            if (titleHint != null) {
-                // only title hint, summary keep original
-                preference.summary = summary
-                return
-            }
-            if (summaryHint != null) {
-                // only summary with hint
-                preference.summary = summary.withHint(summaryHint)
-                return
-            }
-            if (otherHint != null) {
-                // summary with linebreak and other hint
-                preference.summary = SpannableStringBuilder(summary).apply {
-                    if (isNotEmpty()) appendLine()
-                    append(otherHint.fullText.withHint(otherHint, true))
-                }
-                return
-            }
-            // no hint, summary keep original
-            preference.summary = summary
-        }
-
-        private fun CharSequence.withHint(hint: Hint?, other: Boolean = false): CharSequence {
-            if (hint == null || hint.hint.isEmpty())
-                return this
-            val startIdx = hint.startIdx
-            if (startIdx == -1) return this
-            val endIdx = startIdx + hint.hint.length
-            if (endIdx > length) return this
-            val flags = Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-            val hintColor = preference.context.getColor(R.color.text_search_hint)
-            val colorSpan = ForegroundColorSpan(hintColor)
-            val boldSpan = StyleSpan(Typeface.BOLD)
-            return SpannableStringBuilder(this).apply {
-                setSpan(colorSpan, startIdx, endIdx, flags)
-                setSpan(boldSpan, startIdx, endIdx, flags)
-                if (other) {
-                    // to make other text smaller and append to summary
-                    val sizeSpan = AbsoluteSizeSpan(12.sp, false)
-                    setSpan(sizeSpan, 0, length, flags)
-                }
-            }
         }
     }
 
