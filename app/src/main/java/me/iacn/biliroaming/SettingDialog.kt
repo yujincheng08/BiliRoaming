@@ -12,25 +12,29 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.graphics.Bitmap
 import android.graphics.Color
+import android.graphics.Typeface
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.preference.*
 import android.provider.MediaStore
-import android.view.LayoutInflater
+import android.text.Editable
+import android.text.SpannableStringBuilder
+import android.text.Spanned
+import android.text.TextWatcher
+import android.text.style.AbsoluteSizeSpan
+import android.text.style.ForegroundColorSpan
+import android.text.style.StyleSpan
+import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
-import android.widget.EditText
-import android.widget.SeekBar
+import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
+import android.widget.*
 import android.widget.SeekBar.OnSeekBarChangeListener
-import android.widget.TextView
 import androidx.documentfile.provider.DocumentFile
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
-import me.iacn.biliroaming.XposedInit.Companion.modulePath
-import me.iacn.biliroaming.XposedInit.Companion.moduleRes
 import me.iacn.biliroaming.hook.JsonHook
 import me.iacn.biliroaming.hook.SplashHook
 import me.iacn.biliroaming.utils.*
@@ -50,6 +54,15 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         private lateinit var biliprefs: SharedPreferences
         private var counter: Int = 0
         private var customSubtitleDialog: CustomSubtitleDialog? = null
+        private lateinit var listView: ListView
+        private lateinit var adapter: BaseAdapter
+        private var searchItems = listOf<SearchItem>()
+
+        private var ListAdapter.preferenceList: List<Preference>
+            get() = getObjectFieldAs("mPreferenceList")
+            set(value) {
+                setObjectField("mPreferenceList", value)
+            }
 
         @Deprecated("Deprecated in Java")
         override fun onCreate(savedInstanceState: Bundle?) {
@@ -87,6 +100,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("add_custom_button")?.onPreferenceChangeListener = this
             findPreference("customize_dynamic")?.onPreferenceClickListener = this
             checkCompatibleVersion()
+            searchItems = retrieve(preferenceScreen)
             checkUpdate()
         }
 
@@ -96,25 +110,115 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             scope.cancel()
         }
 
+        @Deprecated("Deprecated in Java")
+        override fun onActivityCreated(savedInstanceState: Bundle?) {
+            super.onActivityCreated(savedInstanceState)
+            listView = view?.findViewById(android.R.id.list) ?: return
+            adapter = listView.adapter as BaseAdapter
+        }
+
+        private fun retrieve(group: PreferenceGroup): List<SearchItem> = buildList {
+            for (i in 0 until group.preferenceCount) {
+                val preference = group.getPreference(i)
+                val entries = when (preference) {
+                    is ListPreference -> preference.entries
+                    is MultiSelectListPreference -> preference.entries
+                    else -> arrayOf()
+                }.orEmpty()
+                val searchItem = SearchItem(
+                    preference,
+                    preference.key.orEmpty(),
+                    preference.title ?: "",
+                    preference.summary ?: "",
+                    entries,
+                    preference is PreferenceGroup,
+                )
+                searchItem.appendExtraKeywords()
+                add(searchItem)
+                if (preference is PreferenceGroup) {
+                    addAll(retrieve(preference))
+                }
+            }
+        }
+
+        private fun SearchItem.appendExtraKeywords() = when (key) {
+            "custom_subtitle" -> {
+                extra.add(context.getString(R.string.custom_subtitle_remove_bg))
+                extra.add(context.getString(R.string.custom_subtitle_bold))
+                extra.add(context.getString(R.string.custom_subtitle_font_size))
+                extra.add(context.getString(R.string.custom_subtitle_stroke_color))
+                extra.add(context.getString(R.string.custom_subtitle_stroke_width))
+                extra.add(context.getString(R.string.custom_subtitle_offset))
+            }
+
+            "home_filter" -> {
+                extra.add(context.getString(R.string.apply_to_relate_title))
+                extra.add(context.getString(R.string.hide_low_play_count_recommend_title))
+                extra.add(context.getString(R.string.hide_low_play_count_recommend_summary))
+                extra.add(context.getString(R.string.hide_short_duration_recommend_title))
+                extra.add(context.getString(R.string.hide_long_duration_recommend_title))
+                extra.add(context.getString(R.string.hide_duration_recommend_summary))
+                extra.add(context.getString(R.string.keywords_filter_recommend_summary))
+            }
+
+            "customize_bottom_bar" -> {
+                extra.addAll(JsonHook.bottomItems.mapNotNull { it.name })
+            }
+
+            "customize_drawer" -> {
+                extra.addAll(JsonHook.drawerItems.mapNotNull { it.name })
+            }
+
+            "customize_dynamic" -> {
+                extra.add(context.getString(R.string.customize_dynamic_prefer_video_tab))
+                extra.add(context.getString(R.string.purify_city_title))
+                extra.add(context.getString(R.string.purify_campus_title))
+                extra.add(context.getString(R.string.customize_dynamic_all_rm_topic_title))
+                extra.add(context.getString(R.string.customize_dynamic_all_rm_up_title))
+                extra.add(context.getString(R.string.customize_dynamic_video_rm_up_title))
+                extra.add(context.getString(R.string.customize_dynamic_filter_apply_to_video))
+                extra.add(context.getString(R.string.customize_dynamic_rm_blocked_title))
+                extra.addAll(context.resources.getStringArray(R.array.dynamic_entries))
+            }
+
+            "pref_import", "pref_export" -> {
+                extra.add(context.getString(R.string.pref_backup))
+            }
+
+            else -> false
+        }
+
+        fun search(text: String) {
+            val preferences = if (text.isEmpty()) {
+                searchItems.map { it.restore(); it.preference }
+            } else {
+                searchItems.sortedByDescending { it.calcScoreAndApplyHintBy(text) }
+                    .filterNot { it.cacheScore == 0 }.map { it.preference }
+            }
+            adapter.preferenceList = preferences
+            adapter.notifyDataSetChanged()
+            listView.forceSetSelection(0)
+        }
+
         private fun checkUpdate() {
             val url = URL(context.getString(R.string.version_url))
             scope.launch {
                 val result = fetchJson(url) ?: return@launch
                 val newestVer = result.optString("name")
-                if (newestVer.isNotEmpty() && BuildConfig.VERSION_NAME != newestVer) {
-                    findPreference("version").summary = "${BuildConfig.VERSION_NAME}（最新版$newestVer）"
+                val versionName = BuildConfig.VERSION_NAME
+                if (newestVer.isNotEmpty() && versionName != newestVer) {
+                    searchItems.forEach { it.restore() }
+                    findPreference("version").summary = "${versionName}（最新版$newestVer）"
                     (findPreference("about") as PreferenceCategory).addPreference(
-                        Preference(
-                            activity
-                        ).apply {
+                        Preference(activity).apply {
                             key = "update"
                             title = context.getString(R.string.update_title)
-                            summary = result.optString("body").substringAfterLast("更新日志\r\n").run {
-                                ifEmpty { context.getString(R.string.update_summary) }
-                            }
+                            summary = result.optString("body").substringAfterLast("更新日志\r\n")
+                                .ifEmpty { context.getString(R.string.update_summary) }
                             onPreferenceClickListener = this@PrefsFragment
                             order = 1
                         })
+                    searchItems = retrieve(preferenceScreen)
                 }
             }
         }
@@ -220,14 +324,17 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     if (newValue as Boolean)
                         selectImage(SPLASH_SELECTION)
                 }
+
                 "custom_splash_logo" -> {
                     if (newValue as Boolean)
                         selectImage(LOGO_SELECTION)
                 }
+
                 "custom_subtitle" -> {
                     if (newValue as Boolean)
                         showCustomSubtitle()
                 }
+
                 "add_custom_button" -> {
                     if (newValue as Boolean)
                         onAddCustomButtonClick()
@@ -257,8 +364,10 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     val destFile = when (requestCode) {
                         SPLASH_SELECTION ->
                             File(currentContext.filesDir, SplashHook.SPLASH_IMAGE)
+
                         LOGO_SELECTION ->
                             File(currentContext.filesDir, SplashHook.LOGO_IMAGE)
+
                         else -> null
                     } ?: return
                     val uri = data?.data
@@ -273,6 +382,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     val dest = FileOutputStream(destFile)
                     stream.writeTo(dest)
                 }
+
                 PREF_EXPORT, PREF_IMPORT -> {
                     val file = File(currentContext.filesDir, "../shared_prefs/biliroaming.xml")
                     val uri = data?.data
@@ -280,19 +390,21 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     when (requestCode) {
                         PREF_IMPORT -> {
                             try {
-                                file.outputStream().use { out ->
-                                    activity.contentResolver.openInputStream(uri)?.copyTo(out)
+                                file.outputStream().use { output ->
+                                    activity.contentResolver.openInputStream(uri)
+                                        ?.use { it.copyTo(output) }
                                 }
                             } catch (e: Exception) {
                                 Log.toast(e.message ?: "未知错误", true, alsoLog = true)
                             }
                             Log.toast("请至少重新打开哔哩漫游设置", true)
                         }
+
                         PREF_EXPORT -> {
                             try {
-                                file.inputStream().use { `in` ->
+                                file.inputStream().use { input ->
                                     activity.contentResolver.openOutputStream(uri)
-                                        ?.let { `in`.copyTo(it) }
+                                        ?.use { input.copyTo(it) }
                                 }
                             } catch (e: Exception) {
                                 Log.toast(e.message ?: "未知错误", true, alsoLog = true)
@@ -300,6 +412,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                         }
                     }
                 }
+
                 VIDEO_EXPORT -> {
                     val videosToExport = VideoExportDialog.videosToExport
                     VideoExportDialog.videosToExport = emptySet()
@@ -324,8 +437,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
 
         private fun onVersionClick(): Boolean {
             if (prefs.getBoolean("hidden", false) || counter == 7) return true
-            counter++
-            if (counter == 7) {
+            if (++counter == 7) {
                 prefs.edit()?.putBoolean("hidden", true)?.apply()
                 Log.toast("已开启隐藏功能，重启应用生效", true)
             } else if (counter >= 4) {
@@ -344,9 +456,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
 
         private fun onCustomServerClick(): Boolean {
             AlertDialog.Builder(activity).run {
-                val layout = moduleRes.getLayout(R.layout.customize_backup_dialog)
-                val inflater = LayoutInflater.from(context)
-                val view = inflater.inflate(layout, null)
+                val view = context.inflateLayout(R.layout.customize_backup_dialog)
                 val editTexts = arrayOf(
                     view.findViewById<EditText>(R.id.cn_server),
                     view.findViewById(R.id.hk_server),
@@ -380,8 +490,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
 
         private fun onDanmakuFilterClick(): Boolean {
             AlertDialog.Builder(activity).run {
-                val view = LayoutInflater.from(context)
-                    .inflate(R.layout.danmaku_filter_dialog, null)
+                val view = context.inflateLayout(R.layout.danmaku_filter_dialog)
                 val seekBar = view.findViewById<SeekBar>(R.id.seekBar)
                 val tvHint = view.findViewById<TextView>(R.id.tvHint)
                 seekBar.setOnSeekBarChangeListener(object : OnSeekBarChangeListener {
@@ -481,9 +590,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
 
         private fun onCustomizeAccessKeyClick(): Boolean {
             AlertDialog.Builder(activity).run {
-                val layout = moduleRes.getLayout(R.layout.customize_backup_dialog)
-                val inflater = LayoutInflater.from(context)
-                val view = inflater.inflate(layout, null)
+                val view = context.inflateLayout(R.layout.customize_backup_dialog)
                 val editTexts = arrayOf(
                     view.findViewById<EditText>(R.id.cn_server),
                     view.findViewById(R.id.hk_server),
@@ -530,11 +637,8 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             }
             AlertDialog.Builder(activity)
                 .setTitle(context.getString(R.string.share_log_title))
-                .setItems(arrayOf("log.txt", "old_log.txt (崩溃相关发这个)")) { _, witch ->
-                    val toShareLog = when (witch) {
-                        0 -> logFile
-                        else -> oldLogFile
-                    }
+                .setItems(arrayOf("log.txt", "old_log.txt (崩溃相关发这个)")) { _, which ->
+                    val toShareLog = if (which == 0) logFile else oldLogFile
                     if (toShareLog.exists()) {
                         toShareLog.copyTo(
                             File(activity.cacheDir, "boxing/log.txt"),
@@ -621,9 +725,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
 
         private fun onAddCustomButtonClick(): Boolean {
             AlertDialog.Builder(activity).run {
-                val layout = moduleRes.getLayout(R.layout.custom_button)
-                val inflater = LayoutInflater.from(context)
-                val view = inflater.inflate(layout, null)
+                val view = context.inflateLayout(R.layout.custom_button)
                 val editTexts = arrayOf(
                     view.findViewById<EditText>(R.id.custom_button_id),
                     view.findViewById(R.id.custom_button_title),
@@ -682,36 +784,168 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         }
     }
 
+    class Hint(val hint: String, val startIdx: Int, val fullText: CharSequence)
+    class SearchItem(
+        val preference: Preference,
+        val key: String,
+        private val title: CharSequence,
+        private val summary: CharSequence,
+        private val entries: Array<out CharSequence>,
+        private val isGroup: Boolean,
+        val extra: MutableList<String> = mutableListOf(),
+    ) {
+        var cacheScore = 0
+            private set
+
+        fun calcScoreAndApplyHintBy(text: String): Int {
+            if (text.isEmpty() || isGroup) {
+                cacheScore = 0
+                return 0
+            }
+            var score = 0
+            var titleHint: Hint? = null
+            var summaryHint: Hint? = null
+            var otherHint: Hint? = null
+            if (title.isNotEmpty() && title.indexOf(text, ignoreCase = true).takeIf { it != -1 }
+                    ?.also { titleHint = Hint(text, it, title) } != null
+            ) score += 12
+            if (summary.isNotEmpty() && summary.indexOf(text, ignoreCase = true).takeIf { it != -1 }
+                    ?.also { summaryHint = Hint(text, it, summary) } != null
+            ) score += 6
+            if (entries.isNotEmpty() && entries.firstNotNullOfOrNull { e ->
+                    e.indexOf(text, ignoreCase = true).takeIf { it != -1 }
+                        ?.also { otherHint = Hint(text, it, e) }
+                } != null) {
+                score += 3
+            }
+            if (extra.isNotEmpty() && extra.firstNotNullOfOrNull { e ->
+                    e.indexOf(text, ignoreCase = true).takeIf { it != -1 }
+                        ?.also { if (otherHint == null) otherHint = Hint(text, it, e) }
+                } != null) {
+                score += 2
+            }
+            cacheScore = score
+            applyHint(titleHint, summaryHint, otherHint)
+            return score
+        }
+
+        fun restore() {
+            preference.title = title
+            preference.summary = summary
+        }
+
+        private fun applyHint(titleHint: Hint?, summaryHint: Hint?, otherHint: Hint?) {
+            preference.title = title.withHint(titleHint)
+            if (titleHint == null && summaryHint != null) {
+                preference.summary = summary.withHint(summaryHint)
+            } else if (titleHint == null && otherHint != null) {
+                preference.summary = SpannableStringBuilder(summary).apply {
+                    if (isNotEmpty()) appendLine()
+                    append(otherHint.fullText.withHint(otherHint, true))
+                }
+            } else {
+                preference.summary = summary
+            }
+        }
+
+        private fun CharSequence.withHint(hint: Hint?, other: Boolean = false): CharSequence {
+            if (hint == null || hint.hint.isEmpty())
+                return this
+            val startIdx = hint.startIdx
+            if (startIdx == -1) return this
+            val endIdx = startIdx + hint.hint.length
+            if (endIdx > length) return this
+            val flags = Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            val hintColor = preference.context.getColor(R.color.text_search_hint)
+            val colorSpan = ForegroundColorSpan(hintColor)
+            val boldSpan = StyleSpan(Typeface.BOLD)
+            return SpannableStringBuilder(this).apply {
+                setSpan(colorSpan, startIdx, endIdx, flags)
+                setSpan(boldSpan, startIdx, endIdx, flags)
+                if (other) {
+                    // to make other text smaller and append to summary
+                    val sizeSpan = AbsoluteSizeSpan(12.sp, false)
+                    setSpan(sizeSpan, 0, length, flags)
+                }
+            }
+        }
+    }
+
+    private fun getContentView(fragment: PrefsFragment): View {
+        val contentView = LinearLayout(fragment.context).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            )
+        }
+        val searchBar = context.inflateLayout(R.layout.search_bar)
+        val editView = searchBar.findViewById<EditText>(R.id.search)
+        val clearView = searchBar.findViewById<View>(R.id.clear)
+        searchBar.setOnClickListener {
+            editView.requestFocus()
+            context.getSystemService(InputMethodManager::class.java)
+                ?.showSoftInput(editView, 0)
+        }
+        editView.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) {}
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(
+                s: CharSequence?, start: Int, before: Int, count: Int
+            ) = fragment.search(s?.toString()?.trim().orEmpty())
+        })
+        editView.setOnEditorActionListener { v, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                fragment.search(v.text.toString().trim())
+                true
+            } else false
+        }
+        clearView.setOnClickListener {
+            editView.setText("")
+        }
+        contentView.addView(searchBar)
+        contentView.addView(fragment.view)
+        return contentView
+    }
+
     init {
         val activity = context as Activity
-        addModulePath(context)
+        activity.addModuleAssets()
+
+        // dirty way to make list preference summary span style take effect,
+        // we have no choice, see ListPreference#getSummary
+        val summaryHook = ListPreference::class.java.hookBeforeMethod("getSummary") { param ->
+            param.thisObject.setObjectField("mSummary", null)
+        }
+
         val prefsFragment = PrefsFragment()
         activity.fragmentManager.beginTransaction().add(prefsFragment, "Setting").commit()
         activity.fragmentManager.executePendingTransactions()
 
         prefsFragment.onActivityCreated(null)
 
-        val unhook =
-            Preference::class.java.hookAfterMethod("onCreateView", ViewGroup::class.java) { param ->
-                if (PreferenceCategory::class.java.isInstance(param.thisObject) && TextView::class.java.isInstance(
-                        param.result
-                    )
-                ) {
-                    val textView = param.result as TextView
-                    if (textView.textColors.defaultColor == -13816531)
-                        textView.setTextColor(Color.GRAY)
-                }
+        val unhook = Preference::class.java.hookAfterMethod(
+            "onCreateView", ViewGroup::class.java
+        ) { param ->
+            if (PreferenceCategory::class.java.isInstance(param.thisObject)
+                && TextView::class.java.isInstance(param.result)
+            ) {
+                val textView = param.result as TextView
+                if (textView.textColors.defaultColor == -13816531)
+                    textView.setTextColor(Color.GRAY)
             }
-
-        setView(prefsFragment.view)
-        setTitle("哔哩漫游设置")
-        setNegativeButton("返回") { _, _ ->
-            unhook?.unhook()
         }
+
+        setView(getContentView(prefsFragment))
+        setTitle("哔哩漫游设置")
+        setNegativeButton("返回", null)
         setPositiveButton("确定并重启客户端") { _, _ ->
-            unhook?.unhook()
             prefsFragment.preferenceManager.forceSavePreference()
             restartApplication(activity)
+        }
+        setOnDismissListener {
+            unhook?.unhook()
+            summaryHook?.unhook()
         }
     }
 
@@ -739,13 +973,8 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             }
         }
 
-        @JvmStatic
-        fun addModulePath(context: Context) {
-            val assets = context.resources.assets
-            assets.callMethod(
-                "addAssetPath",
-                modulePath
-            )
+        fun show(context: Context) {
+            SettingDialog(context).show()
         }
 
         const val SPLASH_SELECTION = 0
@@ -754,5 +983,4 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         const val PREF_EXPORT = 3
         const val VIDEO_EXPORT = 4
     }
-
 }

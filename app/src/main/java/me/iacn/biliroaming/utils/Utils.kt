@@ -10,6 +10,8 @@ import android.graphics.BitmapFactory
 import android.os.Build
 import android.util.TypedValue
 import android.view.*
+import android.widget.ListView
+import androidx.annotation.LayoutRes
 import androidx.annotation.RequiresApi
 import androidx.documentfile.provider.DocumentFile
 import com.google.protobuf.GeneratedMessageLite
@@ -287,7 +289,7 @@ val ViewGroup.children: Sequence<View>
         override fun iterator() = this@children.iterator()
     }
 
-fun View.addBackgroundRipple() = with(TypedValue()) {
+fun View.setRippleBackground() = with(TypedValue()) {
     context.theme.resolveAttribute(android.R.attr.selectableItemBackground, this, true)
     setBackgroundResource(resourceId)
 }
@@ -345,7 +347,6 @@ fun Window.blurBackground() {
         override fun onViewDetachedFromWindow(v: View) {
             windowManager.removeCrossWindowBlurEnabledListener(blurEnableListener)
         }
-
     })
     addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
 }
@@ -391,4 +392,20 @@ fun SharedPreferences.appendStringForSet(key: String, value: String, commit: Boo
     getStringSet(key, null).orEmpty().let {
         edit().putStringSet(key, it + value).apply { if (commit) commit() else apply() }
     }
+}
+
+fun ListView.forceSetSelection(pos: Int, top: Int = 0) {
+    // stop scrolling
+    smoothScrollBy(0, 0)
+    setSelectionFromTop(pos, top)
+}
+
+fun Context.inflateLayout(
+    @LayoutRes resource: Int,
+    root: ViewGroup? = null,
+    attachToRoot: Boolean = root != null
+): View = LayoutInflater.from(this).inflate(resource, root, attachToRoot)
+
+fun Context.addModuleAssets() {
+    resources.assets.callMethod("addAssetPath", XposedInit.modulePath)
 }

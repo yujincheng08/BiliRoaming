@@ -26,7 +26,7 @@ class SettingHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         instance.mainActivityClass?.hookAfterMethod("onResume") { param ->
             if (startSetting) {
                 startSetting = false
-                SettingDialog(param.thisObject as Activity).show()
+                SettingDialog.show(param.thisObject as Activity)
             }
         }
 
@@ -50,7 +50,7 @@ class SettingHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             (param.thisObject.getObjectField(nav)
                 ?: param.result).callMethodAs<View>("findViewById", navSettingId)
                 .setOnLongClickListener {
-                    SettingDialog(param.thisObject.callMethodAs<Activity>("getActivity")).show()
+                    SettingDialog.show(param.thisObject.callMethodAs<Activity>("getActivity"))
                     true
                 }
         }
@@ -108,7 +108,7 @@ class SettingHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                 method2.parameterTypes[0].name == "android.app.Activity"
                             ) {
                                 val currentActivity = args[0] as Activity
-                                SettingDialog(currentActivity).show()
+                                SettingDialog.show(currentActivity)
                             }
                             null
                         }

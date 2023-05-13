@@ -3,7 +3,6 @@ package me.iacn.biliroaming.hook
 import android.net.Uri
 import com.google.protobuf.any
 import me.iacn.biliroaming.*
-import me.iacn.biliroaming.API.*
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.hook.BangumiSeasonHook.Companion.lastSeasonInfo
 import me.iacn.biliroaming.network.BiliRoamingApi.CustomServerException
@@ -403,10 +402,8 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         if (viewInfo?.callMethod("getDialog")
                 ?.callMethodAs<String>("getType")?.let { it != "" } == true
         ) return true
-        if (viewInfo?.callMethod("getEndPage")?.callMethod("getDialog")
-                ?.callMethodAs<String>("getType")?.let { it != "" } == true
-        ) return true
-        return false
+        return viewInfo?.callMethod("getEndPage")?.callMethod("getDialog")
+            ?.callMethodAs<String>("getType")?.let { it != "" } == true
     }
 
     private fun needProxyUnite(response: Any, supplement: PlayViewReply): Boolean {
@@ -419,8 +416,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         sPrefs.getString("cn_server_accessKey", null) ?: return false
         if (supplement.business.isPreview) return true
         if (viewInfo.dialog.type.isNotEmpty()) return true
-        if (viewInfo.endPage.dialog.type.isNotEmpty()) return true
-        return false
+        return viewInfo.endPage.dialog.type.isNotEmpty()
     }
 
     private fun PlayViewReply.toErrorReply(message: String) = copy {
