@@ -242,7 +242,7 @@
     <string name="remove_vip_section_title">移除我的大會員橫幅</string>
     <string name="remove_vip_section_summary">我的頁面將大會員橫幅移除</string>
     <string name="save_comment_image_title">筆記圖片長按儲存</string>
-    <string name="save_comment_image_summary">影片筆記圖片長按儲存到本地</string>
+    <string name="save_comment_image_summary">影片筆記圖片長按儲存到本地，7.29.0及以上版本需要點開後長按預覽圖片儲存</string>
     <string name="block_pcdn_title">阻止影片使用 PCDN 載入</string>
     <string name="block_pcdn_summary">啟用此選項可能會稍微改善影片載入速度。在純 IPv6 網路環境或透過代理伺服器連線的情況下，建議啟用。不影響 MCDN。可能在舊版無效。</string>
     <string name="block_pcdn_live_title">阻止直播透過 P2P 技術載入或上傳</string>

@@ -168,6 +168,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val dislikeReasonClass by Weak { "com.bilibili.app.comm.list.common.data.DislikeReason" from mClassLoader }
     val cardClickProcessorClass by Weak { mHookInfo.cardClickProcessor.class_ from mClassLoader }
     val publishToFollowingConfigClass by Weak { mHookInfo.publishToFollowingConfig from mClassLoader }
+    val imageFragmentClass by Weak { "com.bilibili.lib.imageviewer.fragment.ImageFragment" from mClassLoader }
 
     val ids: Map<String, Int> by lazy {
         mHookInfo.mapIds.idsMap
