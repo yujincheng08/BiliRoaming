@@ -229,18 +229,6 @@ message UpdateInfoSupplier {
   optional Method check = 2;
 }
 
-message CommentImageLoader {
-  optional Class class = 1;
-  optional Method load = 2;
-  optional Method rich_load = 3;
-}
-
-message CardGridViewBinder {
-  optional Class class = 1;
-  optional Method bind = 2;
-  optional Field data_interfaces = 3;
-}
-
 message PlayerPreloadHolder {
   optional Class class = 1;
   optional Method get = 2;
