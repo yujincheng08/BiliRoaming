@@ -8,8 +8,6 @@ import android.os.Parcelable
 import android.provider.MediaStore
 import android.view.HapticFeedbackConstants
 import android.view.View
-import android.widget.ImageView
-import de.robv.android.xposed.XC_MethodHook
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
@@ -70,7 +68,7 @@ class CommentImageHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private val imageViewId = getId("image_view")
     private var cacheUrlFieldName = ""
 
-    @Suppress("UNCHECKED_CAST")
+    @Suppress("DEPRECATION")
     override fun startHook() {
         if (!sPrefs.getBoolean("save_comment_image", false)) return
         instance.imageFragmentClass?.hookAfterMethod(
@@ -89,51 +87,6 @@ class CommentImageHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }?.substringBefore('@') ?: return@hookAfterMethod
             view?.findViewById<View>(imageViewId)?.setOnLongClickListener {
                 it.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
-                MainScope().launch(Dispatchers.IO) {
-                    saveImage(imageUrl)
-                }
-                true
-            }
-        }
-        val hooker = fun(param: XC_MethodHook.MethodHookParam) {
-            val images = param.args[1] as? List<ImageView> ?: return
-            val imageUrls = if (param.args.size > 3) {
-                (param.args[3] as? List<Any>)?.map { it.getFirstFieldByExactTypeOrNull() }
-            } else param.args[2].getObjectFieldOrNullAs<List<String?>?>("images")
-            imageUrls ?: return
-            for ((image, imageUrl) in images.zip(imageUrls)) {
-                imageUrl ?: continue
-                image.setOnLongClickListener {
-                    MainScope().launch(Dispatchers.IO) {
-                        saveImage(imageUrl)
-                    }
-                    true
-                }
-            }
-        }
-        instance.commentImageLoaderClass?.declaredMethods?.filter {
-            it.name == instance.load() && it.parameterTypes.size == 6
-                    || it.name == instance.richLoad() && it.parameterTypes.size == 3
-        }?.forEach { it.hookAfterMethod(hooker) }
-        instance.cardGridViewBinderClass?.declaredMethods?.find { it.name == instance.bind() }
-            ?.hookAfterMethod { param ->
-                val pos = param.args[1] as Int
-                val imageUrl = param.thisObject
-                    .getObjectFieldOrNullAs<List<Any>?>(instance.dataInterfacesField())
-                    ?.getOrNull(pos)?.getFirstFieldByExactTypeOrNull<String>()
-                    ?: return@hookAfterMethod
-                param.args[0]?.getFirstFieldByExactTypeOrNull<View>()?.setOnLongClickListener {
-                    MainScope().launch(Dispatchers.IO) {
-                        saveImage(imageUrl)
-                    }
-                    true
-                }
-            }
-        instance.roundImageViewClass?.declaredMethods?.find { m ->
-            m.parameterTypes.let { ts -> ts.size == 2 && ts.all { it == String::class.java } }
-        }?.hookAfterMethod { param ->
-            val imageUrl = (param.args[0] as String).ifBlank { return@hookAfterMethod }
-            (param.thisObject as View).setOnLongClickListener {
                 MainScope().launch(Dispatchers.IO) {
                     saveImage(imageUrl)
                 }

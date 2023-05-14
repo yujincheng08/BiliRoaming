@@ -141,12 +141,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val biliConfigClass by Weak { mHookInfo.biliConfig.class_ from mClassLoader }
     val updateInfoSupplierClass by Weak { mHookInfo.updateInfoSupplier.class_ from mClassLoader }
     val latestVersionExceptionClass by Weak { "tv.danmaku.bili.update.internal.exception.LatestVersionException" from mClassLoader }
-    val commentImageLoaderClass by Weak { mHookInfo.commentImageLoader.class_ from mClassLoader }
-    val cardGridViewBinderClass by Weak { mHookInfo.cardGridViewBinder.class_ from mClassLoader }
-    val roundImageViewClass by Weak {
-        "com.bilibili.app.comm.comment2.comments.view.RoundImageView".from(mClassLoader)
-            ?: "com.bilibili.app.comment.ext.widgets.RoundImageView".from(mClassLoader)
-    }
     val playerPreloadHolderClass by Weak { mHookInfo.playerPreloadHolder.class_ from mClassLoader }
     val playerSettingHelperClass by Weak { mHookInfo.playerSettingHelper.class_ from mClassLoader }
     val liveRtcEnableClass by Weak { mHookInfo.liveRtcHelper.liveRtcEnableClass from mClassLoader }
@@ -307,14 +301,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     fun dynamicDescHolderListeners() =
         mHookInfo.dynDescHolderListenerList.map { it.from(mClassLoader) }
-
-    fun load() = mHookInfo.commentImageLoader.load.orNull
-
-    fun richLoad() = mHookInfo.commentImageLoader.richLoad.orNull
-
-    fun bind() = mHookInfo.cardGridViewBinder.bind.orNull
-
-    fun dataInterfacesField() = mHookInfo.cardGridViewBinder.dataInterfaces.orNull
 
     fun playerFullStoryWidgets() =
         mHookInfo.playerFullStoryWidgetList.map { it.class_.from(mClassLoader) to it.method.orNull }
@@ -1905,43 +1891,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 } ?: return@updateInfoSupplier
                 class_ = class_ { name = checkMethod.declaringClass.name }
                 check = method { name = checkMethod.name }
-            }
-            commentImageLoader = commentImageLoader {
-                val loadMethod = dexHelper.findMethodUsingString(
-                    "  +",
-                    false,
-                    -1,
-                    -1,
-                    null,
-                    -1,
-                    null,
-                    null,
-                    null,
-                    true
-                ).firstOrNull()?.let {
-                    dexHelper.decodeMethodIndex(it)
-                } ?: return@commentImageLoader
-                val clazz = loadMethod.declaringClass
-                class_ = class_ { name = clazz.name }
-                load = method { name = loadMethod.name }
-                "com.bilibili.app.comm.comment2.model.RichTextNote".from(classloader)?.run {
-                    clazz.declaredMethods.find { m ->
-                        m.parameterTypes.let { it.size == 3 && it[1] == List::class.java && it[2] == this }
-                    }?.let { richLoad = method { name = it.name } }
-                }
-            }
-            cardGridViewBinder = cardGridViewBinder {
-                val clazz = "com.bilibili.bplus.followinglist.widget.draw.PaintingCardGridView"
-                    .from(classloader)?.declaredFields?.find { it.isFinal && it.type.isFinal }?.type
-                    ?: return@cardGridViewBinder
-                val bindMethod = clazz.superclass.declaredMethods.find {
-                    it.isAbstract && it.returnType == Void.TYPE
-                } ?: return@cardGridViewBinder
-                val dataInterfacesField = clazz.findFirstFieldByExactTypeOrNull(List::class.java)
-                    ?: return@cardGridViewBinder
-                class_ = class_ { name = clazz.name }
-                bind = method { name = bindMethod.name }
-                dataInterfaces = field { name = dataInterfacesField.name }
             }
             playerPreloadHolder = playerPreloadHolder {
                 val stringClassIndex = dexHelper.encodeClassIndex(String::class.java)

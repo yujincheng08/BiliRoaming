@@ -322,8 +322,6 @@ message HookInfo {
   optional Class live_pager_recycler_view = 76;
   optional BiliConfig bili_config = 77;
   optional UpdateInfoSupplier update_info_supplier = 78;
-  optional CommentImageLoader comment_image_loader = 79;
-  optional CardGridViewBinder card_grid_view_binder = 80;
   optional Method bangumi_season_activity_entrance = 82;
   optional PlayerPreloadHolder player_preload_holder = 83;
   optional PlayerSettingHelper player_setting_helper = 84;
