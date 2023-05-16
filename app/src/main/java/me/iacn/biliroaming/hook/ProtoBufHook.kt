@@ -82,7 +82,14 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             ) { null }
             instance.dmMossClass?.hookAfterMethod(
                 "dmView", "com.bapis.bilibili.community.service.dm.v1.DmViewReq",
-            ) { it.result?.callMethod("clearActivityMeta") }
+            ) {
+                it.result?.run {
+                    callMethod("clearActivityMeta")
+                    runCatchingOrNull {
+                        callMethod("clearCommand")
+                    }
+                }
+            }
         }
         if (hidden && purifySearch) {
             "com.bapis.bilibili.app.interfaces.v1.SearchMoss".hookAfterMethod(
