@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string-array name="upos_entries">
+    <string-array name="video_vod_server_entries">
         <item>不取代</item>
         <item>ali（阿里）</item>
         <item>alib（阿里）</item>

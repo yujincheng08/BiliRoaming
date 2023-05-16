@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string-array name="upos_entries">
+    <string-array name="video_vod_server_entries">
         <item>不替换</item>
         <item>ali（阿里）</item>
         <item>alib（阿里）</item>
@@ -23,7 +23,7 @@
         <item>hwov（华为海外）</item>
         <item>hk_bcache（Bilibili海外）</item>
     </string-array>
-    <string-array name="upos_values">
+    <string-array name="video_vod_server_values">
         <item>$1</item>
         <item>@string/ali_host</item>
         <item>@string/alib_host</item>

@@ -425,7 +425,7 @@ object BiliRoamingApi {
 
     private val mcdn by lazy {
         listOf(
-            (sPrefs.getString("upos_host", null)
+            (sPrefs.getString("video_vod_server", null)
                 ?: XposedInit.moduleRes.getString(R.string.cos_host)) to ""
         ) + if (runCatchingOrNull { XposedInit.country.get(5L, TimeUnit.SECONDS) } == "cn") {
             val uri = Uri.Builder()

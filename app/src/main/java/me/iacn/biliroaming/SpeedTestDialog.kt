@@ -32,8 +32,8 @@ class SpeedTestAdapter(context: Context) : ArrayAdapter<SpeedTestResult>(context
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
         return (convertView ?: context.inflateLayout(R.layout.cdn_speedtest_item)).apply {
             getItem(position).let {
-                findViewById<TextView>(R.id.upos_name).text = it?.name
-                findViewById<TextView>(R.id.upos_speed).text =
+                findViewById<TextView>(R.id.vod_server_name).text = it?.name
+                findViewById<TextView>(R.id.vod_server_speed).text =
                     context.getString(R.string.speed_formatter, it?.speed)
             }
         }
@@ -65,8 +65,8 @@ class SpeedTestDialog(activity: Activity, prefs: SharedPreferences) :
         view.adapter = adapter
 
         view.addHeaderView(context.inflateLayout(R.layout.cdn_speedtest_item).apply {
-            findViewById<TextView>(R.id.upos_name).text = context.getString(R.string.upos)
-            findViewById<TextView>(R.id.upos_speed).text = context.getString(R.string.speed)
+            findViewById<TextView>(R.id.vod_server_name).text = context.getString(R.string.upos)
+            findViewById<TextView>(R.id.vod_server_speed).text = context.getString(R.string.speed)
         }, null, false)
 
         view.setPadding(16.dp, 10.dp, 16.dp, 10.dp)
@@ -82,12 +82,12 @@ class SpeedTestDialog(activity: Activity, prefs: SharedPreferences) :
         view.setOnItemClickListener { _, _, pos, _ ->
             val (name, value, _) = adapter.getItem(pos - 1/*headerView*/)
                 ?: return@setOnItemClickListener
-            Log.d("Use UPOS $name: $value")
-            prefs.edit().putString("upos_host", value).apply()
-            Log.toast("已启用UPOS服务器：${name}", force = true)
+            Log.d("Use VOD Server $name: $value")
+            prefs.edit().putString("video_vod_server", value).apply()
+            Log.toast("已启用 VOD 服务器：${name}", force = true)
         }
 
-        setTitle("CDN测速")
+        setTitle("CDN 测速")
     }
 
     override fun show(): AlertDialog {
@@ -98,8 +98,8 @@ class SpeedTestDialog(activity: Activity, prefs: SharedPreferences) :
                 dialog.setTitle("测速失败")
                 return@launch
             }
-            context.resources.getStringArray(R.array.upos_entries)
-                .zip(context.resources.getStringArray(R.array.upos_values)).asFlow().map {
+            context.resources.getStringArray(R.array.video_vod_server_entries)
+                .zip(context.resources.getStringArray(R.array.video_vod_server_values)).asFlow().map {
                     scope.launch {
                         val item = SpeedTestResult(it.first, it.second, "...")
                         adapter.add(item)
@@ -115,11 +115,11 @@ class SpeedTestDialog(activity: Activity, prefs: SharedPreferences) :
     }
 
     @Suppress("BlockingMethodInNonBlockingContext") // Fuck JetBrain
-    private suspend fun speedTest(upos: String, rawUrl: String) = try {
+    private suspend fun speedTest(vodServer: String, rawUrl: String) = try {
         withContext(speedTestDispatcher) {
             withTimeout(5000) {
-                val url = if (upos == "\$1") URL(rawUrl) else {
-                    URL(Uri.parse(rawUrl).buildUpon().authority(upos).build().toString())
+                val url = if (vodServer == "\$1") URL(rawUrl) else {
+                    URL(Uri.parse(rawUrl).buildUpon().authority(vodServer).build().toString())
                 }
                 val connection = url.openConnection()
                 connection.connectTimeout = 5000

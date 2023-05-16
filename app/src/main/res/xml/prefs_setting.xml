@@ -35,13 +35,13 @@
     <PreferenceCategory android:title="@string/cdn_category">
         <Preference
             android:key="custom_vod_server"
-            android:summary="@string/upos_summary"
-            android:title="@string/upos_title" />
+            android:summary="@string/custom_video_vod_server_summary"
+            android:title="@string/custom_video_vod_server_title" />
 
         <Preference
-            android:key="test_upos"
-            android:summary="@string/test_upos_summary"
-            android:title="@string/test_upos_title" />
+            android:key="test_video_vod_server"
+            android:summary="@string/test_video_vod_server_summary"
+            android:title="@string/test_video_vod_server_title" />
 
         <SwitchPreference
             android:key="block_pcdn"
