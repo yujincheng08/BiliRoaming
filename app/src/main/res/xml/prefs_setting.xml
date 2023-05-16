@@ -33,11 +33,8 @@
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/cdn_category">
-        <ListPreference
-            android:defaultValue="@string/ks3_host"
-            android:entries="@array/upos_entries"
-            android:entryValues="@array/upos_values"
-            android:key="upos_host"
+        <Preference
+            android:key="custom_vod_server"
             android:summary="@string/upos_summary"
             android:title="@string/upos_title" />
 

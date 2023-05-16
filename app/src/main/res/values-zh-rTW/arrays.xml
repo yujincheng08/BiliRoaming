@@ -2,23 +2,26 @@
 <resources>
     <string-array name="upos_entries">
         <item>不取代</item>
+        <item>ali（阿里）</item>
+        <item>alib（阿里）</item>
+        <item>alio1（阿里）</item>
+        <item>bos（百度）</item>
         <item>cos（騰訊）</item>
         <item>cosb（騰訊）</item>
         <item>coso1（騰訊）</item>
-        <item>coso2（騰訊）</item>
-        <item>bos（騰訊）</item>
-        <item>ks3（金山）</item>
-        <item>ks3b（金山）</item>
-        <item>ks3c（金山）</item>
-        <item>ks32（金山）</item>
-        <item>kodo（七牛）</item>
-        <item>kodob（七牛）</item>
         <item>hw（華為）</item>
         <item>hwb（華為）</item>
-        <item>uphw（華為）</item>
-        <item>js（華為）</item>
-        <item>hk（香港）</item>
-        <item>akamai（海外，不能免流）</item>
+        <item>hwo1（華為）</item>
+        <item>08c（華為）</item>
+        <item>08h（華為）</item>
+        <item>08ct（華為）</item>
+        <item>tf_hw（華為）</item>
+        <item>tf_tx（騰訊）</item>
+        <item>akamai（Akamai海外）</item>
+        <item>aliov（阿里海外）</item>
+        <item>cosov（騰訊海外）</item>
+        <item>hwov（華為海外）</item>
+        <item>hk_bcache（Bilibili海外）</item>
     </string-array>
 
     <string-array name="tab_entries">

@@ -85,6 +85,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("save_log")?.summary =
                 context.getString(R.string.save_log_summary).format(logFile.absolutePath)
             findPreference("custom_server")?.onPreferenceClickListener = this
+            findPreference("custom_vod_server")?.onPreferenceClickListener = this
             findPreference("test_upos")?.onPreferenceClickListener = this
             findPreference("customize_bottom_bar")?.onPreferenceClickListener = this
             findPreference("pref_export")?.onPreferenceClickListener = this
@@ -518,8 +519,13 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             return true
         }
 
+        private fun onCustomVodServerClick(): Boolean {
+            CustomVodServerDialog(activity, prefs).show()
+            return true
+        }
+
         private fun onTestUposClick(): Boolean {
-            SpeedTestDialog(findPreference("upos_host") as ListPreference, activity).show()
+            SpeedTestDialog(activity, prefs).show()
             return true
         }
 
@@ -768,6 +774,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             "version" -> onVersionClick()
             "update" -> onUpdateClick()
             "custom_server" -> onCustomServerClick()
+            "custom_vod_server" -> onCustomVodServerClick()
             "test_upos" -> onTestUposClick()
             "customize_bottom_bar" -> onCustomizeBottomBarClick()
             "pref_export" -> onPrefExportClick()

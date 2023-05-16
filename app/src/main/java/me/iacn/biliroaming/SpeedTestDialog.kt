@@ -5,8 +5,8 @@ package me.iacn.biliroaming
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.Context
+import android.content.SharedPreferences
 import android.net.Uri
-import android.preference.ListPreference
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
@@ -53,7 +53,7 @@ class SpeedTestAdapter(context: Context) : ArrayAdapter<SpeedTestResult>(context
     }
 }
 
-class SpeedTestDialog(private val pref: ListPreference, activity: Activity) :
+class SpeedTestDialog(activity: Activity, prefs: SharedPreferences) :
     AlertDialog.Builder(activity) {
     private val scope = MainScope()
     private val speedTestDispatcher = Executors.newFixedThreadPool(1).asCoroutineDispatcher()
@@ -83,8 +83,7 @@ class SpeedTestDialog(private val pref: ListPreference, activity: Activity) :
             val (name, value, _) = adapter.getItem(pos - 1/*headerView*/)
                 ?: return@setOnItemClickListener
             Log.d("Use UPOS $name: $value")
-            pref.value = value
-            sPrefs.edit().putString(pref.key, value).apply()
+            prefs.edit().putString("upos_host", value).apply()
             Log.toast("已启用UPOS服务器：${name}", force = true)
         }
 
