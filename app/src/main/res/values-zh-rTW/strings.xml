@@ -245,9 +245,9 @@
     <string name="save_comment_image_title">筆記圖片長按預覽儲存</string>
     <string name="save_comment_image_summary">影片筆記圖片點開後長按預覽圖片儲存到本地</string>
     <string name="block_pcdn_title">阻止影片使用 PCDN 載入</string>
-    <string name="block_pcdn_summary">【非必要不開啟】啟用此選項可能會稍微改善影片載入速度。</string>
-    <string name="block_pcdn_live_title">阻止直播透過 P2P 技術載入或上傳</string>
-    <string name="block_pcdn_live_summary">【非必要不開啟】可能在某種程度上最佳化直播載入速度，同時避免佔用大量上傳頻寬。</string>
+    <string name="block_pcdn_summary">【非必要不開啟】可以在一定程度上優化影片載入速度，以實際情況為準</string>
+    <string name="block_pcdn_live_title">阻止直播使用 PCDN 載入</string>
+    <string name="block_pcdn_live_summary">【非必要不開啟】避免佔用大量上傳頻寬，同時可以在一定程度上優化直播載入速度，但以實際情況為準</string>
     <string name="danmaku_filter_title">彈幕封鎖等級</string>
     <string name="danmaku_filter_summary">恢復舊版按等級封鎖彈幕功能，0級表示關閉本功能</string>
     <string name="danmaku_filter_weight_hint">%1$d級</string>

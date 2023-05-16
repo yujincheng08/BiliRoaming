@@ -245,9 +245,9 @@
     <string name="save_comment_image_title">笔记图片长按预览保存</string>
     <string name="save_comment_image_summary">视频笔记图片点开后长按预览图片保存到本地</string>
     <string name="block_pcdn_title">阻止视频通过 PCDN 加载</string>
-    <string name="block_pcdn_summary">【非必要不开启】可能一定程度上优化视频加载速度。</string>
-    <string name="block_pcdn_live_title">阻止直播通过 P2P 技术加载或上传</string>
-    <string name="block_pcdn_live_summary">【非必要不开启】可能一定程度上优化直播加载速度，同时避免占用大量上传带宽。</string>
+    <string name="block_pcdn_summary">【非必要不开启】可一定程度上优化视频加载速度，以实际情况为准</string>
+    <string name="block_pcdn_live_title">阻止直播通过 PCDN 加载</string>
+    <string name="block_pcdn_live_summary">【非必要不开启】避免占用大量上传带宽，同时可一定程度上优化直播加载速度，以实际情况为准</string>
     <string name="danmaku_filter_title">弹幕屏蔽等级</string>
     <string name="danmaku_filter_summary">恢复旧版按等级屏蔽弹幕功能，0级表示关闭本功能</string>
     <string name="danmaku_filter_weight_hint">%1$d级</string>

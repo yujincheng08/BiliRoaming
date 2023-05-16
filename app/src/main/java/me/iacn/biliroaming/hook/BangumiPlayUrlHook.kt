@@ -9,6 +9,7 @@ import me.iacn.biliroaming.network.BiliRoamingApi.CustomServerException
 import me.iacn.biliroaming.network.BiliRoamingApi.getPlayUrl
 import me.iacn.biliroaming.network.BiliRoamingApi.getSeason
 import me.iacn.biliroaming.utils.*
+import me.iacn.biliroaming.utils.VodServerReplaceHelper.reconstructVideoInfoVodServer
 import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
@@ -807,7 +808,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
             }
         }
-
+        reconstructVideoInfoVodServer()
         if (isDownload) {
             fixDownloadProto(true)
         }
