@@ -308,6 +308,11 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 // Only handle pgc video
                 if (param.result != null && typeUrl != PGC_ANY_MODEL_TYPE_URL)
                     return@hookAfterMethod
+                val extraContent = request.callMethodAs<Map<String, String>>("getExtraContentMap")
+                val seasonId = extraContent.getOrDefault("season_id", "0")
+                val reqEpId = extraContent.getOrDefault("ep_id", "0").toLong()
+                if (seasonId == "0" && reqEpId == 0L)
+                    return@hookAfterMethod
                 val supplement = supplementAny?.callMethod("getValue")
                     ?.callMethodAs<ByteArray>("toByteArray")
                     ?.let { PlayViewReply.parseFrom(it) } ?: playViewReply {}
@@ -315,9 +320,6 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     try {
                         val serializedRequest = request.callMethodAs<ByteArray>("toByteArray")
                         val req = PlayViewUniteReq.parseFrom(serializedRequest)
-                        val seasonId = req.extraContentMap["season_id"].takeIf { it != "0" }
-                            ?: lastSeasonInfo["season_id"] ?: "0"
-                        val reqEpId = req.extraContentMap["ep_id"]?.toLongOrNull() ?: 0L
                         val (thaiSeason, thaiEp) = getThaiSeason(seasonId, reqEpId)
                         val content = getPlayUrl(reconstructQueryUnite(req, supplement, thaiEp))
                         countDownLatch?.countDown()
