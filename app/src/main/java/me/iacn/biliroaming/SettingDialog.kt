@@ -206,12 +206,14 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             val currentServer = prefs.getString("upos_host", null).orEmpty()
             val serverList = context.resources.getStringArray(R.array.upos_values)
             if (currentServer !in serverList) {
-                val isLocatedCn =
-                    (runCatchingOrNull { XposedInit.country.get(5L, TimeUnit.SECONDS) }
-                        ?: "cn") == "cn"
-                val defaultServer =
-                    if (isLocatedCn) serverList[1] else """$1"""
-                prefs.edit().putString("upos_host", defaultServer).apply()
+                scope.launch(Dispatchers.IO) {
+                    val isLocatedCn =
+                        (runCatchingOrNull { XposedInit.country.get(5L, TimeUnit.SECONDS) }
+                            ?: "cn") == "cn"
+                    val defaultServer =
+                        if (isLocatedCn) serverList[1] else """$1"""
+                    prefs.edit().putString("upos_host", defaultServer).apply()
+                }
             }
         }
 
