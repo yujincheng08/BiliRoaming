@@ -407,9 +407,9 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     when (requestCode) {
                         PREF_IMPORT -> {
                             try {
-                                file.outputStream().use { output ->
+                                file.outputStream().bufferedWriter().use { output ->
                                     activity.contentResolver.openInputStream(uri)
-                                        ?.use { it.copyTo(output) }
+                                        ?.use { it.bufferedReader().copyTo(output) }
                                 }
                             } catch (e: Exception) {
                                 Log.toast(e.message ?: "未知错误", true, alsoLog = true)
@@ -419,9 +419,12 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
 
                         PREF_EXPORT -> {
                             try {
-                                file.inputStream().use { input ->
-                                    activity.contentResolver.openOutputStream(uri)
-                                        ?.use { input.copyTo(it) }
+                                file.inputStream().bufferedReader().use { input ->
+                                    activity.contentResolver.openOutputStream(uri)?.use {
+                                        val buffer = it.bufferedWriter()
+                                        input.copyTo(buffer)
+                                        buffer.flush()
+                                    }
                                 }
                             } catch (e: Exception) {
                                 Log.toast(e.message ?: "未知错误", true, alsoLog = true)
