@@ -33,11 +33,18 @@
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/cdn_category">
-        <Preference
-            android:key="custom_vod_server"
-            android:summary="@string/custom_video_vod_server_summary"
-            android:title="@string/custom_video_vod_server_title" />
-
+        <ListPreference
+            android:defaultValue="@string/ali_host"
+            android:entries="@array/video_vod_server_entries"
+            android:entryValues="@array/video_vod_server_values"
+            android:key="video_vod_server"
+            android:summary="@string/custom_video_vod_summary"
+            android:title="@string/custom_video_vod_title" />
+        <SwitchPreference
+            android:dependency="hidden"
+            android:key="force_video_vod"
+            android:summary="@string/force_video_vod_summary"
+            android:title="@string/force_video_vod_title" />
         <Preference
             android:key="test_video_vod_server"
             android:summary="@string/test_video_vod_server_summary"

@@ -19,7 +19,7 @@
     <string name="teenagers_mode_dialog_summary">仍可从侧滑菜单进入青少年模式</string>
     <string name="allow_download_title">允许下载版权番剧</string>
     <string name="allow_download_summary">使版权番剧可以缓存</string>
-    <string name="cdn_category">加速CDN设置</string>
+    <string name="cdn_category">加速 CDN 设置</string>
     <string name="hidden_title">启用隐藏功能</string>
     <string name="hidden_summary">打开后可以使用隐藏功能</string>
     <string name="purify_game_title">净化游戏中心</string>
@@ -38,8 +38,10 @@
     <string name="group_summary">点击加入QQ频道</string>
     <string name="tg_title">TG频道</string>
     <string name="tg_summary">点击加入TG频道</string>
-    <string name="custom_video_vod_server_title">视频 VOD 服务器设置</string>
-    <string name="custom_video_vod_server_summary">自定义视频（含番剧）的 VOD 服务器，可加快加载速度（漫游解锁的番剧，或启用阻止视频通过 PCDN 加载后的任何试图通过 PCDN 加载的视频，实际加载时均使用本项）</string>
+    <string name="custom_video_vod_title">视频 VOD 服务器设置</string>
+    <string name="custom_video_vod_summary">自定义视频（番剧）加载服务器，可解决黑屏与无限加载</string>
+    <string name="force_video_vod_title">应用 VOD 服务器到所有视频</string>
+    <string name="force_video_vod_summary">含普通视频、番剧、电影等。特殊网络环境视频加载缓慢，可尝试开启本项</string>
     <string name="purify_splash_title">净化开屏页面</string>
     <string name="purify_splash_summary">去除启动客户端时的推广</string>
     <string name="custom_splash_title">替换启动图</string>

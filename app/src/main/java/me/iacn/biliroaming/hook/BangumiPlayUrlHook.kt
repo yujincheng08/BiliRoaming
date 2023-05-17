@@ -808,7 +808,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
             }
         }
-        reconstructVideoInfoVodServer()
+        reconstructVideoInfoVodServer(isDownload)
         if (isDownload) {
             fixDownloadProto(true)
         }

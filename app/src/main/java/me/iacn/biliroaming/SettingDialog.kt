@@ -42,6 +42,7 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.net.URL
+import java.util.concurrent.TimeUnit
 import kotlin.system.exitProcess
 
 
@@ -68,8 +69,9 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         override fun onCreate(savedInstanceState: Bundle?) {
             super.onCreate(savedInstanceState)
             preferenceManager.sharedPreferencesName = "biliroaming"
-            addPreferencesFromResource(R.xml.prefs_setting)
             prefs = preferenceManager.sharedPreferences
+            checkVodServer()
+            addPreferencesFromResource(R.xml.prefs_setting)
             biliprefs = currentContext.getSharedPreferences(
                 packageName + "_preferences",
                 Context.MODE_MULTI_PROCESS
@@ -85,7 +87,6 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("save_log")?.summary =
                 context.getString(R.string.save_log_summary).format(logFile.absolutePath)
             findPreference("custom_server")?.onPreferenceClickListener = this
-            findPreference("custom_vod_server")?.onPreferenceClickListener = this
             findPreference("test_video_vod_server")?.onPreferenceClickListener = this
             findPreference("customize_bottom_bar")?.onPreferenceClickListener = this
             findPreference("pref_export")?.onPreferenceClickListener = this
@@ -199,6 +200,19 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             adapter.preferenceList = preferences
             adapter.notifyDataSetChanged()
             listView.forceSetSelection(0)
+        }
+
+        private fun checkVodServer() {
+            val currentServer = prefs.getString("video_vod_server", null).orEmpty()
+            val serverList = context.resources.getStringArray(R.array.video_vod_server_values)
+            if (currentServer !in serverList) {
+                val isLocatedCn =
+                    (runCatchingOrNull { XposedInit.country.get(5L, TimeUnit.SECONDS) }
+                        ?: "cn") == "cn"
+                val defaultServer =
+                    if (isLocatedCn) serverList[1] else """$1"""
+                prefs.edit().putString("video_vod_server", defaultServer).apply()
+            }
         }
 
         private fun checkUpdate() {
@@ -519,11 +533,6 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             return true
         }
 
-        private fun onCustomVodServerClick(): Boolean {
-            CustomVodServerDialog(activity, prefs).show()
-            return true
-        }
-
         private fun onTestVideoVodServerClick(): Boolean {
             SpeedTestDialog(activity, prefs).show()
             return true
@@ -774,7 +783,6 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             "version" -> onVersionClick()
             "update" -> onUpdateClick()
             "custom_server" -> onCustomServerClick()
-            "custom_vod_server" -> onCustomVodServerClick()
             "test_video_vod_server" -> onTestVideoVodServerClick()
             "customize_bottom_bar" -> onCustomizeBottomBarClick()
             "pref_export" -> onPrefExportClick()

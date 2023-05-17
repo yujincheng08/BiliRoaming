@@ -19,7 +19,7 @@
     <string name="teenagers_mode_dialog_summary">仍可從側滑選單進入青少年模式</string>
     <string name="allow_download_title">允許下載版權番劇</string>
     <string name="allow_download_summary">使版權番劇可以快取</string>
-    <string name="cdn_category">加速CDN設定</string>
+    <string name="cdn_category">加速 CDN 設定</string>
     <string name="hidden_title">啟用隱藏功能</string>
     <string name="hidden_summary">打開後可以使用隱藏功能</string>
     <string name="purify_game_title">淨化遊戲中心</string>
@@ -38,8 +38,10 @@
     <string name="group_summary">點擊加入QQ頻道</string>
     <string name="tg_title">TG頻道</string>
     <string name="tg_summary">點擊加入TG頻道</string>
-    <string name="custom_video_vod_server_title">影片 VOD 伺服器設定</string>
-    <string name="custom_video_vod_server_summary">自訂影片（含番劇）的 VOD 伺服器，可加快載入速度（漫遊解鎖的番劇，或啟用阻止影片透過 PCDN 載入後的任何試圖透過 PCDN 載入的影片，實際載入時均使用本項）。</string>
+    <string name="custom_video_vod_title">影片 VOD 伺服器設定</string>
+    <string name="custom_video_vod_summary">自訂影片（含番劇）的 VOD 伺服器，可以解決黑屏與無限載入</string>
+    <string name="force_video_vod_title">應用 VOD 伺服器至所有影片</string>
+    <string name="force_video_vod_summary">含一般影片、番劇、電影等。在特殊網路環境下影片載入慢，可嘗試開啟此項</string>
     <string name="purify_splash_title">淨化啟動頁面</string>
     <string name="purify_splash_summary">去除啟動程式時的推廣</string>
     <string name="custom_splash_title">取代啟動圖</string>
