@@ -38,10 +38,10 @@
     <string name="group_summary">點擊加入QQ頻道</string>
     <string name="tg_title">TG頻道</string>
     <string name="tg_summary">點擊加入TG頻道</string>
-    <string name="custom_video_vod_title">影片 VOD 伺服器設定</string>
-    <string name="custom_video_vod_summary">自訂影片（含番劇）的 VOD 伺服器，可以解決黑屏與無限載入</string>
-    <string name="force_video_vod_title">應用 VOD 伺服器至所有影片</string>
-    <string name="force_video_vod_summary">含一般影片、番劇、電影等。在特殊網路環境下影片載入慢，可嘗試開啟此項</string>
+    <string name="custom_upos_title">UPOS 伺服器設定</string>
+    <string name="custom_upos_summary">自訂影片（含番劇）的 UPOS 伺服器，可以解決黑屏與無限載入</string>
+    <string name="force_upos_title">應用 UPOS 伺服器至所有影片</string>
+    <string name="force_upos_summary">含一般影片、番劇、電影等。在特殊網路環境下影片載入慢，可嘗試開啟此項</string>
     <string name="purify_splash_title">淨化啟動頁面</string>
     <string name="purify_splash_summary">去除啟動程式時的推廣</string>
     <string name="custom_splash_title">取代啟動圖</string>
@@ -87,8 +87,8 @@
     <string name="purify_campus_title">移除校園標籤</string>
     <string name="setting">設定</string>
     <string name="speed">速度</string>
-    <string name="test_video_vod_server_title">影片 VOD 伺服器測速</string>
-    <string name="test_video_vod_server_summary">選擇最快的影片 VOD 伺服器以獲得最好體驗</string>
+    <string name="test_upos_title">UPOS 伺服器測速</string>
+    <string name="test_upos_summary">選擇最快的 UPOS 伺服器以獲得最好體驗</string>
     <string name="search_area_title">開啟其它地區番劇搜尋</string>
     <string name="search_area_summary">在搜尋頁面新增其它地區番劇搜尋結果，需要解析伺服器支援</string>
     <string name="customize_bottom_bar_title">自訂底欄</string>

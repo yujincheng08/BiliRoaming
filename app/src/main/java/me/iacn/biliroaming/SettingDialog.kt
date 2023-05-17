@@ -70,7 +70,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             super.onCreate(savedInstanceState)
             preferenceManager.sharedPreferencesName = "biliroaming"
             prefs = preferenceManager.sharedPreferences
-            checkVodServer()
+            checkUposServer()
             addPreferencesFromResource(R.xml.prefs_setting)
             biliprefs = currentContext.getSharedPreferences(
                 packageName + "_preferences",
@@ -87,7 +87,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("save_log")?.summary =
                 context.getString(R.string.save_log_summary).format(logFile.absolutePath)
             findPreference("custom_server")?.onPreferenceClickListener = this
-            findPreference("test_video_vod_server")?.onPreferenceClickListener = this
+            findPreference("test_upos")?.onPreferenceClickListener = this
             findPreference("customize_bottom_bar")?.onPreferenceClickListener = this
             findPreference("pref_export")?.onPreferenceClickListener = this
             findPreference("pref_import")?.onPreferenceClickListener = this
@@ -202,16 +202,16 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             listView.forceSetSelection(0)
         }
 
-        private fun checkVodServer() {
-            val currentServer = prefs.getString("video_vod_server", null).orEmpty()
-            val serverList = context.resources.getStringArray(R.array.video_vod_server_values)
+        private fun checkUposServer() {
+            val currentServer = prefs.getString("upos_host", null).orEmpty()
+            val serverList = context.resources.getStringArray(R.array.upos_values)
             if (currentServer !in serverList) {
                 val isLocatedCn =
                     (runCatchingOrNull { XposedInit.country.get(5L, TimeUnit.SECONDS) }
                         ?: "cn") == "cn"
                 val defaultServer =
                     if (isLocatedCn) serverList[1] else """$1"""
-                prefs.edit().putString("video_vod_server", defaultServer).apply()
+                prefs.edit().putString("upos_host", defaultServer).apply()
             }
         }
 
@@ -533,7 +533,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             return true
         }
 
-        private fun onTestVideoVodServerClick(): Boolean {
+        private fun onTestUposClick(): Boolean {
             SpeedTestDialog(activity, prefs).show()
             return true
         }
@@ -783,7 +783,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             "version" -> onVersionClick()
             "update" -> onUpdateClick()
             "custom_server" -> onCustomServerClick()
-            "test_video_vod_server" -> onTestVideoVodServerClick()
+            "test_upos" -> onTestUposClick()
             "customize_bottom_bar" -> onCustomizeBottomBarClick()
             "pref_export" -> onPrefExportClick()
             "pref_import" -> onPrefImportClick()

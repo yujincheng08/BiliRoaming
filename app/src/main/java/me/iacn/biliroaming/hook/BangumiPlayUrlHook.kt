@@ -9,7 +9,7 @@ import me.iacn.biliroaming.network.BiliRoamingApi.CustomServerException
 import me.iacn.biliroaming.network.BiliRoamingApi.getPlayUrl
 import me.iacn.biliroaming.network.BiliRoamingApi.getSeason
 import me.iacn.biliroaming.utils.*
-import me.iacn.biliroaming.utils.VodServerReplaceHelper.reconstructVideoInfoVodServer
+import me.iacn.biliroaming.utils.UposReplaceHelper.reconstructVideoInfoUpos
 import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
@@ -117,7 +117,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 Log.toast("获取播放地址失败")
                 return@hookBeforeAllConstructors
             }
-            Log.toast("已从代理服务器获取播放地址\n如加载缓慢或黑屏，可去漫游设置中测速并设置 VOD 服务器")
+            Log.toast("已从代理服务器获取播放地址\n如加载缓慢或黑屏，可去漫游设置中测速并设置 UPOS")
             body.setObjectField(
                 dataField, instance.fastJsonClass?.callStaticMethod(
                     instance.fastJsonParse(),
@@ -171,7 +171,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         val content = getPlayUrl(reconstructQuery(req, response, thaiEp))
                         countDownLatch?.countDown()
                         content?.let {
-                            Log.toast("已从代理服务器获取播放地址\n如加载缓慢或黑屏，可去漫游设置中测速并设置 VOD 服务器")
+                            Log.toast("已从代理服务器获取播放地址\n如加载缓慢或黑屏，可去漫游设置中测速并设置 UPOS")
                             param.result = reconstructResponse(
                                 req, response, it, isDownload, thaiSeason, thaiEp
                             )
@@ -248,7 +248,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         val content = getPlayUrl(reconstructQuery(req, response, thaiEp))
                         countDownLatch?.countDown()
                         content?.let {
-                            Log.toast("已从代理服务器获取播放地址\n如加载缓慢或黑屏，可去漫游设置中测速并设置 VOD 服务器")
+                            Log.toast("已从代理服务器获取播放地址\n如加载缓慢或黑屏，可去漫游设置中测速并设置 UPOS")
                             param.result = reconstructResponse(
                                 req, response, it, isDownload, thaiSeason, thaiEp
                             )
@@ -325,7 +325,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         val content = getPlayUrl(reconstructQueryUnite(req, supplement, thaiEp))
                         countDownLatch?.countDown()
                         content?.let {
-                            Log.toast("已从代理服务器获取播放地址\n如加载缓慢或黑屏，可去漫游设置中测速并设置 VOD 服务器")
+                            Log.toast("已从代理服务器获取播放地址\n如加载缓慢或黑屏，可去漫游设置中测速并设置 UPOS")
                             param.result = reconstructResponseUnite(
                                 req, response, supplement, it, isDownload, thaiSeason, thaiEp
                             )
@@ -808,7 +808,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
             }
         }
-        reconstructVideoInfoVodServer(isDownload)
+        reconstructVideoInfoUpos(isDownload)
         if (isDownload) {
             fixDownloadProto(true)
         }

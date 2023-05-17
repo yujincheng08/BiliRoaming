@@ -15,7 +15,7 @@ import me.iacn.biliroaming.copy
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 
-object VodServerReplaceHelper {
+object UposReplaceHelper {
     private val aliHost = string(R.string.ali_host)
     private val cosHost = string(R.string.cos_host)
     private val hwHost = string(R.string.hw_host)
@@ -27,50 +27,50 @@ object VodServerReplaceHelper {
         (runCatchingOrNull { XposedInit.country.get(5L, TimeUnit.SECONDS) } ?: "cn") == "cn"
     }
 
-    private val forceVideoVod = sPrefs.getBoolean("force_video_vod", false)
+    private val forceUpos = sPrefs.getBoolean("force_upos", false)
     private val enablePcdnBlock = sPrefs.getBoolean("block_pcdn", false)
 
-    private lateinit var videoVodServer: CompletableFuture<List<String>>
-    private val mainVideoVodServer = sPrefs.getString("video_vod_server", null)?.let {
+    private lateinit var videoUposList: CompletableFuture<List<String>>
+    private val mainVideoUpos = sPrefs.getString("upos_host", null)?.let {
         if (it == "\$1") null else it
     } ?: if (isLocatedCn) hwHost else aliovHost
-    private val extraVideoVodServer = if (isLocatedCn) {
-        when (mainVideoVodServer) {
+    private val extraVideoUposList = if (isLocatedCn) {
+        when (mainVideoUpos) {
             hwHost -> listOf(aliHost, cosHost)
             aliHost -> listOf(hwHost, cosHost)
             else -> listOf(aliHost, hwHost)
         }
     } else {
-        when (mainVideoVodServer) {
+        when (mainVideoUpos) {
             aliovHost -> listOf(hkBcacheHost, hwovHost)
             hkBcacheHost -> listOf(aliovHost, hwovHost)
             else -> listOf(hkBcacheHost, aliovHost)
         }
     }
-    private val videoVodServerBase by lazy {
-        runCatchingOrNull { videoVodServer.get(500L, TimeUnit.MILLISECONDS) }?.get(0)
-            ?: mainVideoVodServer
+    private val videoUposBase by lazy {
+        runCatchingOrNull { videoUposList.get(500L, TimeUnit.MILLISECONDS) }?.get(0)
+            ?: mainVideoUpos
     }
-    private val videoVodServerBackups by lazy {
-        runCatchingOrNull { videoVodServer.get(500L, TimeUnit.MILLISECONDS) }?.subList(1, 3)
-            ?: extraVideoVodServer
+    private val videoUposBackups by lazy {
+        runCatchingOrNull { videoUposList.get(500L, TimeUnit.MILLISECONDS) }?.subList(1, 3)
+            ?: extraVideoUposList
     }
-    private const val liveVodServer = "c1--cn-gotcha01.bilivideo.com"
+    private const val liveUpos = "c1--cn-gotcha01.bilivideo.com"
 
-    private val badVideoVodServerRegex by lazy {
+    private val badVideoUposRegex by lazy {
         Regex("""(szbdyd\.com)|(^(https?://)\w*\.mcdn\.bilivideo)""")
     }
-    private val overseaVideoVodServerRegex by lazy {
+    private val overseaVideoUposRegex by lazy {
         Regex("""(akamai|(ali|hw|cos)\w*ov|hk-eq-bcache|bstar1)""")
     }
     private val urlBwRegex by lazy { Regex("""(bw=[^&]*)""") }
     val ipPCdnRegex by lazy { Regex("""^https?://\d{1,3}\.\d{1,3}""") }
 
-    fun initVideoVodServer() {
-        videoVodServer = MainScope().future(Dispatchers.IO) {
+    fun initVideoUposList() {
+        videoUposList = MainScope().future(Dispatchers.IO) {
             val bCacheRegex = Regex("""cn-.*\.bilivideo""")
             val badCdnRegex = Regex("""(szbdyd\.com)|(\w*\.mcdn\.bilivideo)""")
-            mutableListOf(mainVideoVodServer).apply {
+            mutableListOf(mainVideoUpos).apply {
                 // 8K video sample, without area limitation, reply probably contains Mirror CDN
                 val playViewReply = instance.playViewReqClass?.new()?.apply {
                     callMethod("setAid", 355749246L)
@@ -98,60 +98,60 @@ object VodServerReplaceHelper {
                     }
                 }?.mapNotNull { Uri.parse(it).encodedAuthority }?.distinct()
                     ?.filter { !it.contains(badCdnRegex) }.orEmpty()
-                this.addAll(officialList.filter { !(it.contains(bCacheRegex) || it == mainVideoVodServer) }
+                this.addAll(officialList.filter { !(it.contains(bCacheRegex) || it == mainVideoUpos) }
                     .ifEmpty { officialList })
-                this.addAll(extraVideoVodServer)
+                this.addAll(extraVideoUposList)
             }
         }
     }
 
-    fun String.isNeedReplaceVideoVodServer() =
-        forceVideoVod || (enablePcdnBlock && this.contains(badVideoVodServerRegex))
+    fun String.isNeedReplaceVideoUpos() =
+        forceUpos || (enablePcdnBlock && this.contains(badVideoUposRegex))
 
-    fun String.replaceVideoVodServer(
-        vodServer: String = videoVodServerBase, needReplace: Boolean = true
+    fun String.replaceVideoUpos(
+        upos: String = videoUposBase, needReplace: Boolean = true
     ): String {
-        fun String.replaceVideoVodBw(): String = this.replace(
+        fun String.replaceUposBw(): String = this.replace(
             urlBwRegex, "bw=1280000"
         )
 
         return if (needReplace) {
             val uri = Uri.parse(this)
-            val newVodServer = uri.getQueryParameter("xy_usource") ?: vodServer
-            uri.buildUpon().authority(newVodServer).build().toString().replaceVideoVodBw()
-        } else this.replaceVideoVodBw()
+            val newUpos = uri.getQueryParameter("xy_usource") ?: upos
+            uri.buildUpon().authority(newUpos).build().toString().replaceUposBw()
+        } else this.replaceUposBw()
     }
 
-    fun reconstructBackupVideoVodServer(
+    fun reconstructBackupUposList(
         baseUrl: String, backupUrls: List<String>, mediaAssertSegment: Any?
     ) = mutableListOf(
-        backupUrls.getOrNull(0)?.reconstructVideoVodServer(videoVodServerBackups[0])
-            ?: baseUrl.replaceVideoVodServer(
-                videoVodServerBackups[0], true
+        backupUrls.getOrNull(0)?.reconstructVideoUpos(videoUposBackups[0])
+            ?: baseUrl.replaceVideoUpos(
+                videoUposBackups[0], true
             ),
-        backupUrls.getOrNull(1)?.reconstructVideoVodServer(videoVodServerBackups[1])
-            ?: baseUrl.replaceVideoVodServer(
-                videoVodServerBackups[1], true
+        backupUrls.getOrNull(1)?.reconstructVideoUpos(videoUposBackups[1])
+            ?: baseUrl.replaceVideoUpos(
+                videoUposBackups[1], true
             ),
     ).apply {
         if (baseUrl.contains(ipPCdnRegex)) {
             mediaAssertSegment?.setObjectField(
-                "url", backupUrls.first().replaceVideoVodServer()
+                "url", backupUrls.first().replaceVideoUpos()
             )
             this[0] = baseUrl
         }
     }
 
-    fun String.replaceLiveVodServer(vodServer: String = liveVodServer) =
-        Uri.parse(this).buildUpon().authority(vodServer).build().toString()
+    fun String.replaceLiveUpos(upos: String = liveUpos) =
+        Uri.parse(this).buildUpon().authority(upos).build().toString()
 
-    fun VideoInfoKt.Dsl.reconstructVideoInfoVodServer(isDownload: Boolean = false) {
-        if (forceVideoVod && !isDownload) return
+    fun VideoInfoKt.Dsl.reconstructVideoInfoUpos(isDownload: Boolean = false) {
+        if (forceUpos && !isDownload) return
         val newStreamList = streamList.map { stream ->
-            stream.copy { reconstructStreamVodServer() }
+            stream.copy { reconstructStreamUpos() }
         }
         val newDashAudio = dashAudio.map { dashItem ->
-            dashItem.copy { reconstructDashItemVodServer() }
+            dashItem.copy { reconstructDashItemUpos() }
         }
         streamList.clear()
         dashAudio.clear()
@@ -159,11 +159,11 @@ object VodServerReplaceHelper {
         dashAudio.addAll(newDashAudio)
     }
 
-    private fun StreamKt.Dsl.reconstructStreamVodServer() {
+    private fun StreamKt.Dsl.reconstructStreamUpos() {
         if (hasDashVideo()) {
             dashVideo = dashVideo.copy {
                 if (!hasBaseUrl()) return@copy
-                val (newBaseUrl, newBackupUrl) = reconstructVideoInfoVodServer(baseUrl, backupUrl)
+                val (newBaseUrl, newBackupUrl) = reconstructVideoInfoUpos(baseUrl, backupUrl)
                 baseUrl = newBaseUrl
                 backupUrl.clear()
                 backupUrl.addAll(newBackupUrl)
@@ -172,7 +172,7 @@ object VodServerReplaceHelper {
             segmentVideo = segmentVideo.copy {
                 val newSegment = segment.map { responseUrl ->
                     responseUrl.copy {
-                        val (newUrl, newBackupUrl) = reconstructVideoInfoVodServer(url, backupUrl)
+                        val (newUrl, newBackupUrl) = reconstructVideoInfoUpos(url, backupUrl)
                         url = newUrl
                         backupUrl.clear()
                         backupUrl.addAll(newBackupUrl)
@@ -184,44 +184,43 @@ object VodServerReplaceHelper {
         }
     }
 
-    private fun DashItemKt.Dsl.reconstructDashItemVodServer() {
+    private fun DashItemKt.Dsl.reconstructDashItemUpos() {
         if (!hasBaseUrl()) return
-        val (newBaseUrl, newBackupUrl) = reconstructVideoInfoVodServer(baseUrl, backupUrl)
+        val (newBaseUrl, newBackupUrl) = reconstructVideoInfoUpos(baseUrl, backupUrl)
         baseUrl = newBaseUrl
         backupUrl.clear()
         backupUrl.addAll(newBackupUrl)
     }
 
-    private fun reconstructVideoInfoVodServer(
+    private fun reconstructVideoInfoUpos(
         baseUrl: String, backupUrls: List<String>
     ): Pair<String, List<String>> {
         val filteredBackupUrls = backupUrls.filter { !it.contains(ipPCdnRegex) }
         val newBackupUrls = mutableListOf(
-            filteredBackupUrls.getOrNull(0)?.reconstructVideoVodServer(videoVodServerBackups[0])
-                ?: baseUrl.replaceVideoVodServer(
-                    videoVodServerBackups[0]
+            filteredBackupUrls.getOrNull(0)?.reconstructVideoUpos(videoUposBackups[0])
+                ?: baseUrl.replaceVideoUpos(
+                    videoUposBackups[0]
                 ),
-            filteredBackupUrls.getOrNull(1)?.reconstructVideoVodServer(videoVodServerBackups[1])
-                ?: baseUrl.replaceVideoVodServer(
-                    videoVodServerBackups[1]
+            filteredBackupUrls.getOrNull(1)?.reconstructVideoUpos(videoUposBackups[1])
+                ?: baseUrl.replaceVideoUpos(
+                    videoUposBackups[1]
                 ),
         )
         return if (baseUrl.contains(ipPCdnRegex)) {
             val newBaseUrl = newBackupUrls.firstOrNull { !it.contains(ipPCdnRegex) }
                 ?: return baseUrl to backupUrls
             newBackupUrls[0] = baseUrl
-            newBaseUrl.reconstructVideoVodServer() to newBackupUrls
+            newBaseUrl.reconstructVideoUpos() to newBackupUrls
         } else {
-            baseUrl.reconstructVideoVodServer() to newBackupUrls
+            baseUrl.reconstructVideoUpos() to newBackupUrls
         }
     }
 
-    private fun String.reconstructVideoVodServer(vodServer: String = videoVodServerBase) =
-        this.replaceVideoVodServer(
-            vodServer, this.contains(badVideoVodServerRegex) || this.contains(
-                overseaVideoVodServerRegex
-            )
+    private fun String.reconstructVideoUpos(upos: String = videoUposBase) = this.replaceVideoUpos(
+        upos, this.contains(badVideoUposRegex) || this.contains(
+            overseaVideoUposRegex
         )
+    )
 
     private fun string(resId: Int) = XposedInit.moduleRes.getString(resId)
 }

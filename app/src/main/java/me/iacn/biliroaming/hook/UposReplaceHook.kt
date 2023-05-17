@@ -1,47 +1,47 @@
 package me.iacn.biliroaming.hook
 
 import me.iacn.biliroaming.utils.Log
-import me.iacn.biliroaming.utils.VodServerReplaceHelper.initVideoVodServer
-import me.iacn.biliroaming.utils.VodServerReplaceHelper.ipPCdnRegex
-import me.iacn.biliroaming.utils.VodServerReplaceHelper.isNeedReplaceVideoVodServer
-import me.iacn.biliroaming.utils.VodServerReplaceHelper.reconstructBackupVideoVodServer
-import me.iacn.biliroaming.utils.VodServerReplaceHelper.replaceLiveVodServer
-import me.iacn.biliroaming.utils.VodServerReplaceHelper.replaceVideoVodServer
 import me.iacn.biliroaming.utils.from
 import me.iacn.biliroaming.utils.getObjectFieldOrNull
 import me.iacn.biliroaming.utils.getObjectFieldOrNullAs
 import me.iacn.biliroaming.utils.hookBeforeConstructor
 import me.iacn.biliroaming.utils.hookBeforeMethod
 import me.iacn.biliroaming.utils.sPrefs
+import me.iacn.biliroaming.utils.UposReplaceHelper.initVideoUposList
+import me.iacn.biliroaming.utils.UposReplaceHelper.ipPCdnRegex
+import me.iacn.biliroaming.utils.UposReplaceHelper.isNeedReplaceVideoUpos
+import me.iacn.biliroaming.utils.UposReplaceHelper.reconstructBackupUposList
+import me.iacn.biliroaming.utils.UposReplaceHelper.replaceLiveUpos
+import me.iacn.biliroaming.utils.UposReplaceHelper.replaceVideoUpos
 
 
-class VodServerReplaceHook(classLoader: ClassLoader) : BaseHook(classLoader) {
+class UposReplaceHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     companion object {
-        private val forceVideoVod = sPrefs.getBoolean("force_video_vod", false)
+        private val forceUpos = sPrefs.getBoolean("force_upos", false)
         private val replaceVideo = sPrefs.getBoolean("block_pcdn", false)
         private val replaceLive = sPrefs.getBoolean("block_pcdn_live", false)
         private val gotchaRegex by lazy { Regex("""https?://\w*--\w*-gotcha\d*\.bilivideo""") }
     }
 
     override fun startHook() {
-        if (!(forceVideoVod || replaceVideo || replaceLive)) return
-        Log.d("startHook: VodServerReplaceHook")
+        if (!(forceUpos || replaceVideo || replaceLive)) return
+        Log.d("startHook: UposReplaceHook")
         "tv.danmaku.ijk.media.player.IjkMediaAsset\$MediaAssertSegment\$Builder".from(mClassLoader)
             ?.run {
                 hookBeforeConstructor(String::class.java, Int::class.javaPrimitiveType) { param ->
                     val baseUrl = param.args[0] as String
                     if (baseUrl.contains("live-bvc")) {
                         if (!replaceLive || baseUrl.contains(gotchaRegex)) return@hookBeforeConstructor
-                        param.args[0] = baseUrl.replaceLiveVodServer()
+                        param.args[0] = baseUrl.replaceLiveUpos()
                     } else if (baseUrl.contains(ipPCdnRegex)) {
                         // IP:Port type PCDN currently only exists in Live and Thai Video.
                         return@hookBeforeConstructor
-                    } else if (baseUrl.isNeedReplaceVideoVodServer()) {
-                        param.args[0] = baseUrl.replaceVideoVodServer()
+                    } else if (baseUrl.isNeedReplaceVideoUpos()) {
+                        param.args[0] = baseUrl.replaceVideoUpos()
                     }
                 }
 
-                if (!(replaceVideo || forceVideoVod)) return@run
+                if (!(replaceVideo || forceUpos)) return@run
                 hookBeforeMethod("setBackupUrls", MutableCollection::class.java) { param ->
                     val mediaAssertSegment = param.thisObject.getObjectFieldOrNull("target")
                     val baseUrl =
@@ -60,12 +60,12 @@ class VodServerReplaceHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             } ?: return@hookBeforeMethod
                     }
                     param.args[0] =
-                        reconstructBackupVideoVodServer(baseUrl, backupUrls, mediaAssertSegment)
+                        reconstructBackupUposList(baseUrl, backupUrls, mediaAssertSegment)
                 }
             }
     }
 
     override fun lateInitHook() {
-        initVideoVodServer()
+        initVideoUposList()
     }
 }

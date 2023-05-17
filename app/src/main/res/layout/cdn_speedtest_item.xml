@@ -5,7 +5,7 @@
     android:orientation="horizontal">
 
     <TextView
-        android:id="@+id/vod_server_name"
+        android:id="@+id/upos_name"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="3"
@@ -14,7 +14,7 @@
         android:textSize="14sp" />
 
     <TextView
-        android:id="@+id/vod_server_speed"
+        android:id="@+id/upos_speed"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="2"
