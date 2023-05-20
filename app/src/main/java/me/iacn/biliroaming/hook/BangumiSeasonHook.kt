@@ -458,26 +458,19 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 "com.bilibili.search.result.pages.BiliMainSearchResultPage\$PageTypes",
                 true, mClassLoader
             )
-            val pageArrays = pageTypesClass.getStaticObjectFieldAs<Array<Any>>("\$VALUES")
-            var counter = 0
-            for (area in AREA_TYPES) {
-                if (!sPrefs.getString(area.value.area + "_server", null).isNullOrBlank()) {
-                    counter++
-                }
+            val pageArray = pageTypesClass.getStaticObjectFieldAs<Array<Any>>("\$VALUES")
+            val extra = AREA_TYPES.mapNotNull { area ->
+                sPrefs.getString(area.value.area + "_server", null)
+                    .takeUnless { it.isNullOrBlank() }?.run {
+                        pageTypesClass.new(
+                            "PAGE_" + area.value.type_str.uppercase(Locale.getDefault()), 4,
+                            "bilibili://search-result/new-" + area.value.type_str + "?from=" + area.value.area,
+                            area.key, area.value.type_str
+                        )
+                    }
             }
-            val newPageArray = pageArrays.copyOf(pageArrays.size + counter)
-            counter = 0
-            for (area in AREA_TYPES) {
-                if (!sPrefs.getString(area.value.area + "_server", null).isNullOrBlank()) {
-                    newPageArray[pageArrays.size + counter++] = pageTypesClass.new(
-                        "PAGE_" + area.value.type_str.uppercase(Locale.getDefault()),
-                        4,
-                        "bilibili://search-result/new-" + area.value.type_str + "?from=" + area.value.area,
-                        area.key,
-                        area.value.type_str
-                    )
-                }
-            }
+            val newPageArray = pageArray.copyOf(pageArray.size + extra.size)
+            extra.forEachIndexed { index, any -> newPageArray[pageArray.size + index] = any }
             pageTypesClass.setStaticObjectField("\$VALUES", newPageArray)
         }
     }
