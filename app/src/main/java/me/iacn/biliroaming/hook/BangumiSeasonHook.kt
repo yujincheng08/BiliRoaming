@@ -333,30 +333,20 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             if (redirectUrl.isNullOrEmpty()) return
             param.result = param.thisObject.callMethod("getUrl", redirectUrl)
         }
-        "com.bilibili.bplus.followingcard.api.entity.cardBean.VideoCard".findClassOrNull(
-            mClassLoader
-        )
-            ?.run {
-                hookAfterMethod("getJumpUrl", hooker = urlHook)
-                hookAfterMethod("getCommentJumpUrl", hooker = urlHook)
-            }
+        "com.bilibili.bplus.followingcard.api.entity.cardBean.VideoCard".from(mClassLoader)?.run {
+            hookAfterMethod("getJumpUrl", hooker = urlHook)
+            hookAfterMethod("getCommentJumpUrl", hooker = urlHook)
+        }
 
         if (sPrefs.getBoolean("hidden", false) &&
-            (sPrefs.getBoolean(
-                "search_area_bangumi",
-                false
-            ) || sPrefs.getBoolean("search_area_movie", false))
+            (sPrefs.getBoolean("search_area_bangumi", false)
+                    || sPrefs.getBoolean("search_area_movie", false))
         ) {
             val searchResultFragment =
-                "com.bilibili.bangumi.ui.page.search.BangumiSearchResultFragment".findClassOrNull(
-                    mClassLoader
-                )
-                    ?: "com.bilibili.search.result.bangumi.ogv.BangumiSearchResultFragment".findClassOrNull(
-                        mClassLoader
-                    )
-                    ?: "com.bilibili.search.ogv.OgvSearchResultFragment".findClassOrNull(
-                        mClassLoader
-                    )
+                "com.bilibili.bangumi.ui.page.search.BangumiSearchResultFragment".from(mClassLoader)
+                    ?: "com.bilibili.search.result.bangumi.ogv.BangumiSearchResultFragment"
+                        .from(mClassLoader) ?: "com.bilibili.search.ogv.OgvSearchResultFragment"
+                        .from(mClassLoader)
             searchResultFragment?.run {
                 hookBeforeMethod(
                     "setUserVisibleCompat",
@@ -380,32 +370,6 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     }
                 }
             }
-            val pageTypesClass = Class.forName(
-                "com.bilibili.search.result.pages.BiliMainSearchResultPage\$PageTypes",
-                true,
-                mClassLoader
-            )
-            val pageArrays = pageTypesClass.getStaticObjectFieldAs<Array<Any>>("\$VALUES")
-            var counter = 0
-            for (area in AREA_TYPES) {
-                if (!sPrefs.getString(area.value.area + "_server", null).isNullOrBlank()) {
-                    counter++
-                }
-            }
-            val newPageArray = pageArrays.copyOf(pageArrays.size + counter)
-            counter = 0
-            for (area in AREA_TYPES) {
-                if (!sPrefs.getString(area.value.area + "_server", null).isNullOrBlank()) {
-                    newPageArray[pageArrays.size + counter++] = pageTypesClass.new(
-                        "PAGE_" + area.value.type_str.uppercase(Locale.getDefault()),
-                        4,
-                        "bilibili://search-result/new-" + area.value.type_str + "?from=" + area.value.area,
-                        area.key,
-                        area.value.type_str
-                    )
-                }
-            }
-            pageTypesClass.setStaticObjectField("\$VALUES", newPageArray)
         }
         if (sPrefs.getBoolean("hidden", false) &&
             (sPrefs.getBoolean("search_area_bangumi", false)
@@ -483,6 +447,39 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             navClass.callStaticMethod("parseFrom", it.toByteArray())
         }
         v.callMethod("addAllNav", newNavList)
+    }
+
+    override fun lateInitHook() {
+        if (sPrefs.getBoolean("hidden", false) &&
+            (sPrefs.getBoolean("search_area_bangumi", false)
+                    || sPrefs.getBoolean("search_area_movie", false))
+        ) {
+            val pageTypesClass = Class.forName(
+                "com.bilibili.search.result.pages.BiliMainSearchResultPage\$PageTypes",
+                true, mClassLoader
+            )
+            val pageArrays = pageTypesClass.getStaticObjectFieldAs<Array<Any>>("\$VALUES")
+            var counter = 0
+            for (area in AREA_TYPES) {
+                if (!sPrefs.getString(area.value.area + "_server", null).isNullOrBlank()) {
+                    counter++
+                }
+            }
+            val newPageArray = pageArrays.copyOf(pageArrays.size + counter)
+            counter = 0
+            for (area in AREA_TYPES) {
+                if (!sPrefs.getString(area.value.area + "_server", null).isNullOrBlank()) {
+                    newPageArray[pageArrays.size + counter++] = pageTypesClass.new(
+                        "PAGE_" + area.value.type_str.uppercase(Locale.getDefault()),
+                        4,
+                        "bilibili://search-result/new-" + area.value.type_str + "?from=" + area.value.area,
+                        area.key,
+                        area.value.type_str
+                    )
+                }
+            }
+            pageTypesClass.setStaticObjectField("\$VALUES", newPageArray)
+        }
     }
 
     private fun retrieveAreaSearchV3(
