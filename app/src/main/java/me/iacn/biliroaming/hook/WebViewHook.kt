@@ -12,11 +12,7 @@ import me.iacn.biliroaming.utils.*
 
 
 class WebViewHook(classLoader: ClassLoader) : BaseHook(classLoader) {
-    private val biliWebviewClass by Weak {
-        "com.bilibili.app.comm.bh.BiliWebView".findClassOrNull(
-            mClassLoader
-        )
-    }
+    private val biliWebviewClass by Weak { "com.bilibili.app.comm.bh.BiliWebView" from mClassLoader }
     private val hookedClient = HashSet<Class<*>>()
     private val hooker: Hooker = { param ->
         try {
@@ -90,7 +86,14 @@ class WebViewHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun lateInitHook() {
         if (BuildConfig.DEBUG) {
             WebView.setWebContentsDebuggingEnabled(true)
-            biliWebviewClass?.callStaticMethod("setWebContentsDebuggingEnabled", true)
+            biliWebviewClass?.run {
+                runCatchingOrNull {
+                    callStaticMethod("setWebContentsDebuggingEnabled", true)
+                }
+                runCatchingOrNull {
+                    callStaticMethod("enableDebugMode", true)
+                }
+            }
         }
     }
 }
