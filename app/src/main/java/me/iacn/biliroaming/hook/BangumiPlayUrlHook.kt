@@ -9,7 +9,11 @@ import me.iacn.biliroaming.network.BiliRoamingApi.CustomServerException
 import me.iacn.biliroaming.network.BiliRoamingApi.getPlayUrl
 import me.iacn.biliroaming.network.BiliRoamingApi.getSeason
 import me.iacn.biliroaming.utils.*
-import me.iacn.biliroaming.utils.UposReplaceHelper.reconstructVideoInfoUpos
+import me.iacn.biliroaming.utils.UposReplaceHelper.forceUpos
+import me.iacn.biliroaming.utils.UposReplaceHelper.ipPCdnRegex
+import me.iacn.biliroaming.utils.UposReplaceHelper.reconstructVideoUpos
+import me.iacn.biliroaming.utils.UposReplaceHelper.replaceUpos
+import me.iacn.biliroaming.utils.UposReplaceHelper.videoUposBackups
 import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
@@ -880,4 +884,71 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             response
         }
     }.onFailure { Log.e(it) }.getOrDefault(response)
+
+    private fun VideoInfoKt.Dsl.reconstructVideoInfoUpos(isDownload: Boolean = false) {
+        if (forceUpos && !isDownload) return
+        val newStreamList = streamList.map { stream ->
+            stream.copy { reconstructStreamUpos() }
+        }
+        val newDashAudio = dashAudio.map { dashItem ->
+            dashItem.copy { reconstructDashItemUpos() }
+        }
+        streamList.clear()
+        dashAudio.clear()
+        streamList.addAll(newStreamList)
+        dashAudio.addAll(newDashAudio)
+    }
+
+    private fun StreamKt.Dsl.reconstructStreamUpos() {
+        if (hasDashVideo()) {
+            dashVideo = dashVideo.copy {
+                if (!hasBaseUrl()) return@copy
+                val (newBaseUrl, newBackupUrl) = reconstructVideoInfoUpos(baseUrl, backupUrl)
+                baseUrl = newBaseUrl
+                backupUrl.clear()
+                backupUrl.addAll(newBackupUrl)
+            }
+        } else if (hasSegmentVideo()) {
+            segmentVideo = segmentVideo.copy {
+                val newSegment = segment.map { responseUrl ->
+                    responseUrl.copy {
+                        val (newUrl, newBackupUrl) = reconstructVideoInfoUpos(url, backupUrl)
+                        url = newUrl
+                        backupUrl.clear()
+                        backupUrl.addAll(newBackupUrl)
+                    }
+                }
+                segment.clear()
+                segment.addAll(newSegment)
+            }
+        }
+    }
+
+    private fun DashItemKt.Dsl.reconstructDashItemUpos() {
+        if (!hasBaseUrl()) return
+        val (newBaseUrl, newBackupUrl) = reconstructVideoInfoUpos(baseUrl, backupUrl)
+        baseUrl = newBaseUrl
+        backupUrl.clear()
+        backupUrl.addAll(newBackupUrl)
+    }
+
+    private fun reconstructVideoInfoUpos(
+        baseUrl: String, backupUrls: List<String>
+    ): Pair<String, List<String>> {
+        val filteredBackupUrls = backupUrls.filter { !it.contains(ipPCdnRegex) }
+        val newBackupUrls = mutableListOf(
+            filteredBackupUrls.getOrNull(0)?.reconstructVideoUpos(videoUposBackups[0])
+                ?: baseUrl.replaceUpos(videoUposBackups[0]),
+            filteredBackupUrls.getOrNull(1)?.reconstructVideoUpos(videoUposBackups[1])
+                ?: baseUrl.replaceUpos(videoUposBackups[1]),
+        )
+        return if (baseUrl.contains(ipPCdnRegex)) {
+            val newBaseUrl = newBackupUrls.firstOrNull { !it.contains(ipPCdnRegex) }
+                ?: return baseUrl to backupUrls
+            newBackupUrls[0] = baseUrl
+            newBaseUrl.reconstructVideoUpos() to newBackupUrls
+        } else {
+            baseUrl.reconstructVideoUpos() to newBackupUrls
+        }
+    }
 }

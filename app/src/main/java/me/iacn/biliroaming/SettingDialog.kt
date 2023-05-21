@@ -407,7 +407,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     when (requestCode) {
                         PREF_IMPORT -> {
                             try {
-                                file.outputStream().bufferedWriter().use { output ->
+                                file.bufferedWriter().use { output ->
                                     activity.contentResolver.openInputStream(uri)
                                         ?.use { it.bufferedReader().copyTo(output) }
                                 }
@@ -419,11 +419,11 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
 
                         PREF_EXPORT -> {
                             try {
-                                file.inputStream().bufferedReader().use { input ->
+                                file.bufferedReader().use { input ->
                                     activity.contentResolver.openOutputStream(uri)?.use {
-                                        val buffer = it.bufferedWriter()
-                                        input.copyTo(buffer)
-                                        buffer.flush()
+                                        it.bufferedWriter().use { output ->
+                                            input.copyTo(output)
+                                        }
                                     }
                                 }
                             } catch (e: Exception) {

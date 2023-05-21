@@ -39,7 +39,7 @@
     <string name="tg_title">TG频道</string>
     <string name="tg_summary">点击加入TG频道</string>
     <string name="custom_upos_title">UPOS 服务器设置</string>
-    <string name="custom_upos_summary">自定义视频（番剧）加载服务器，可解决黑屏与无限加载</string>
+    <string name="custom_upos_summary">自定义番剧的 UPOS 服务器，可解决黑屏与无限加载</string>
     <string name="force_upos_title">应用 UPOS 服务器到所有视频</string>
     <string name="force_upos_summary">含普通视频、番剧、电影等。特殊网络环境视频加载缓慢，可尝试开启本项</string>
     <string name="purify_splash_title">净化开屏页面</string>

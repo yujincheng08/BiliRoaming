@@ -1,47 +1,45 @@
 package me.iacn.biliroaming.hook
 
 import me.iacn.biliroaming.utils.Log
+import me.iacn.biliroaming.utils.UposReplaceHelper.enableLivePcdnBlock
+import me.iacn.biliroaming.utils.UposReplaceHelper.enablePcdnBlock
+import me.iacn.biliroaming.utils.UposReplaceHelper.forceUpos
+import me.iacn.biliroaming.utils.UposReplaceHelper.gotchaRegex
+import me.iacn.biliroaming.utils.UposReplaceHelper.initVideoUposList
+import me.iacn.biliroaming.utils.UposReplaceHelper.ipPCdnRegex
+import me.iacn.biliroaming.utils.UposReplaceHelper.isNeedReplaceVideoUpos
+import me.iacn.biliroaming.utils.UposReplaceHelper.liveUpos
+import me.iacn.biliroaming.utils.UposReplaceHelper.reconstructVideoUpos
+import me.iacn.biliroaming.utils.UposReplaceHelper.replaceUpos
+import me.iacn.biliroaming.utils.UposReplaceHelper.videoUposBackups
 import me.iacn.biliroaming.utils.from
 import me.iacn.biliroaming.utils.getObjectFieldOrNull
 import me.iacn.biliroaming.utils.getObjectFieldOrNullAs
 import me.iacn.biliroaming.utils.hookBeforeConstructor
 import me.iacn.biliroaming.utils.hookBeforeMethod
-import me.iacn.biliroaming.utils.sPrefs
-import me.iacn.biliroaming.utils.UposReplaceHelper.initVideoUposList
-import me.iacn.biliroaming.utils.UposReplaceHelper.ipPCdnRegex
-import me.iacn.biliroaming.utils.UposReplaceHelper.isNeedReplaceVideoUpos
-import me.iacn.biliroaming.utils.UposReplaceHelper.reconstructBackupUposList
-import me.iacn.biliroaming.utils.UposReplaceHelper.replaceLiveUpos
-import me.iacn.biliroaming.utils.UposReplaceHelper.replaceVideoUpos
+import me.iacn.biliroaming.utils.setObjectField
 
 
 class UposReplaceHook(classLoader: ClassLoader) : BaseHook(classLoader) {
-    companion object {
-        private val forceUpos = sPrefs.getBoolean("force_upos", false)
-        private val replaceVideo = sPrefs.getBoolean("block_pcdn", false)
-        private val replaceLive = sPrefs.getBoolean("block_pcdn_live", false)
-        private val gotchaRegex by lazy { Regex("""https?://\w*--\w*-gotcha\d*\.bilivideo""") }
-    }
-
     override fun startHook() {
-        if (!(forceUpos || replaceVideo || replaceLive)) return
+        if (!(forceUpos || enablePcdnBlock || enableLivePcdnBlock)) return
         Log.d("startHook: UposReplaceHook")
         "tv.danmaku.ijk.media.player.IjkMediaAsset\$MediaAssertSegment\$Builder".from(mClassLoader)
             ?.run {
                 hookBeforeConstructor(String::class.java, Int::class.javaPrimitiveType) { param ->
                     val baseUrl = param.args[0] as String
                     if (baseUrl.contains("live-bvc")) {
-                        if (!replaceLive || baseUrl.contains(gotchaRegex)) return@hookBeforeConstructor
-                        param.args[0] = baseUrl.replaceLiveUpos()
+                        if (enableLivePcdnBlock && baseUrl.contains(gotchaRegex)) {
+                            param.args[0] = baseUrl.replaceUpos(liveUpos)
+                        }
                     } else if (baseUrl.contains(ipPCdnRegex)) {
                         // IP:Port type PCDN currently only exists in Live and Thai Video.
-                        return@hookBeforeConstructor
                     } else if (baseUrl.isNeedReplaceVideoUpos()) {
-                        param.args[0] = baseUrl.replaceVideoUpos()
+                        param.args[0] = baseUrl.replaceUpos()
                     }
                 }
 
-                if (!(replaceVideo || forceUpos)) return@run
+                if (!(enablePcdnBlock || forceUpos)) return@run
                 hookBeforeMethod("setBackupUrls", MutableCollection::class.java) { param ->
                     val mediaAssertSegment = param.thisObject.getObjectFieldOrNull("target")
                     val baseUrl =
@@ -67,5 +65,23 @@ class UposReplaceHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     override fun lateInitHook() {
         initVideoUposList()
+    }
+
+    private fun reconstructBackupUposList(
+        baseUrl: String, backupUrls: List<String>, mediaAssertSegment: Any?
+    ) = mutableListOf(
+        backupUrls.getOrNull(0)?.reconstructVideoUpos(videoUposBackups[0]) ?: baseUrl.replaceUpos(
+            videoUposBackups[0], true
+        ),
+        backupUrls.getOrNull(1)?.reconstructVideoUpos(videoUposBackups[1]) ?: baseUrl.replaceUpos(
+            videoUposBackups[1], true
+        ),
+    ).apply {
+        if (baseUrl.contains(ipPCdnRegex)) {
+            mediaAssertSegment?.setObjectField(
+                "url", backupUrls.first().replaceUpos()
+            )
+            this[0] = baseUrl
+        }
     }
 }
