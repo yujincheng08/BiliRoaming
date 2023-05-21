@@ -88,6 +88,9 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     runCatchingOrNull {
                         callMethod("clearCommand")
                     }
+                    it.result?.setObjectField(
+                        "unknownFields", instance.unknownFieldSetLiteInstance
+                    )
                 }
             }
         }
