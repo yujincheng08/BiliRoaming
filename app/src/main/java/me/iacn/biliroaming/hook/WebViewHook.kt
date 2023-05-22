@@ -3,6 +3,7 @@ package me.iacn.biliroaming.hook
 import android.graphics.Bitmap
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
+import android.webkit.WebViewClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
@@ -12,17 +13,7 @@ import me.iacn.biliroaming.utils.*
 
 
 class WebViewHook(classLoader: ClassLoader) : BaseHook(classLoader) {
-    private val biliWebviewClass by Weak { "com.bilibili.app.comm.bh.BiliWebView" from mClassLoader }
     private val hookedClient = HashSet<Class<*>>()
-    private val hooker: Hooker = { param ->
-        try {
-            param.args[0].callMethod(
-                "evaluateJavascript", """(function(){$js})()""".trimMargin(), null
-            )
-        } catch (e: Throwable) {
-            Log.e(e)
-        }
-    }
 
     private val jsHooker = object : Any() {
         @Suppress("UNUSED")
@@ -49,28 +40,34 @@ class WebViewHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     override fun startHook() {
         Log.d("startHook: WebView")
-        biliWebviewClass?.hookBeforeMethod(
-            "setWebViewClient", "com.bilibili.app.comm.bh.BiliWebViewClient"
+        WebView::class.java.hookBeforeMethod(
+            "setWebViewClient", WebViewClient::class.java
         ) { param ->
             val clazz = param.args[0].javaClass
             param.thisObject.callMethod("addJavascriptInterface", jsHooker, "hooker")
             if (hookedClient.contains(clazz)) return@hookBeforeMethod
             try {
                 clazz.getDeclaredMethod(
-                    "onPageStarted", biliWebviewClass, String::class.java, Bitmap::class.java
-                ).hookBeforeMethod(hooker)
+                    "onPageStarted",
+                    WebView::class.java, String::class.java, Bitmap::class.java
+                ).hookBeforeMethod { p ->
+                    val webView = p.args[0] as WebView
+                    webView.evaluateJavascript("""(function(){$js})()""".trimMargin(), null)
+                }
                 if (sPrefs.getBoolean("save_comment_image", false)) {
-                    clazz.getDeclaredMethod("onPageFinished", biliWebviewClass, String::class.java)
-                        .hookBeforeMethod { hookParam ->
-                            val url = hookParam.args[1] as String
-                            if (url.startsWith("https://www.bilibili.com/h5/note-app/view")) {
-                                hookParam.args[0].callMethod(
-                                    "evaluateJavascript",
-                                    """(function(){for(var i=0;i<document.images.length;++i){if(document.images[i].className==='img-preview'){document.images[i].addEventListener("contextmenu",(e)=>{hooker.saveImage(e.target.currentSrc);})}}})()""",
-                                    null
-                                )
-                            }
+                    clazz.getDeclaredMethod(
+                        "onPageFinished",
+                        WebView::class.java, String::class.java
+                    ).hookBeforeMethod { p ->
+                        val webView = p.args[0] as WebView
+                        val url = p.args[1] as String
+                        if (url.startsWith("https://www.bilibili.com/h5/note-app/view")) {
+                            webView.evaluateJavascript(
+                                """(function(){for(var i=0;i<document.images.length;++i){if(document.images[i].className==='img-preview'){document.images[i].addEventListener("contextmenu",(e)=>{hooker.saveImage(e.target.currentSrc);})}}})()""",
+                                null
+                            )
                         }
+                    }
                 }
                 hookedClient.add(clazz)
                 Log.d("hook webview $clazz")
@@ -79,6 +76,7 @@ class WebViewHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
     }
 
+    @Suppress("UNUSED_PARAMETER")
     fun hook(url: String, text: String): String {
         return text
     }
@@ -86,14 +84,6 @@ class WebViewHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun lateInitHook() {
         if (BuildConfig.DEBUG) {
             WebView.setWebContentsDebuggingEnabled(true)
-            biliWebviewClass?.run {
-                runCatchingOrNull {
-                    callStaticMethod("setWebContentsDebuggingEnabled", true)
-                }
-                runCatchingOrNull {
-                    callStaticMethod("enableDebugMode", true)
-                }
-            }
         }
     }
 }
