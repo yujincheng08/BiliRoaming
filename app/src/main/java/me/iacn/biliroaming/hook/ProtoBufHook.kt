@@ -165,8 +165,7 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             ) { param ->
                 val type = param.args[0].callMethodAs<Long>("getType")
                 if (hidden && blockVideoComment && type == 1L) {
-                    val handler = param.args[1]
-                    val replay = mainListReplyClass?.new()?.apply {
+                    val reply = mainListReplyClass?.new()?.apply {
                         val subjectControl = callMethod("getSubjectControl")
                         val emptyPage = emptyPageClass?.new()?.also {
                             subjectControl?.callMethod("setEmptyPage", it)
@@ -188,7 +187,7 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             emptyPage?.callMethod("addTexts", it)
                         }
                     }
-                    handler.callMethod("onNext", replay)
+                    param.args[1].callMethod("onNext", reply)
                     param.result = null
                     return@hookBeforeMethod
                 }
