@@ -262,4 +262,5 @@
     <string name="disable_auto_select_summary">禁止評論帶圖時自動勾選轉到動態</string>
     <string name="apply_to_relate_title">同時套用於影片下方推薦</string>
     <string name="search_hint" tools:ignore="TypographyEllipsis">搜尋...</string>
+    <string name="block_video_comment_title">屏蔽影片評論區</string>
 </resources>

@@ -4,6 +4,12 @@ import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.utils.*
 
 class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
+
+    private val mainListReplyClass by Weak { "com.bapis.bilibili.main.community.reply.v1.MainListReply" from mClassLoader }
+    private val emptyPageClass by Weak { "com.bapis.bilibili.main.community.reply.v1.EmptyPage" from mClassLoader }
+    private val textClass by Weak { "com.bapis.bilibili.main.community.reply.v1.EmptyPage\$Text" from mClassLoader }
+    private val textStyleClass by Weak { "com.bapis.bilibili.main.community.reply.v1.TextStyle" from mClassLoader }
+
     override fun startHook() {
         val hidden = sPrefs.getBoolean("hidden", false)
         val purifyCity = sPrefs.getBoolean("purify_city", false)
@@ -18,6 +24,7 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val disableMainPageStory = sPrefs.getBoolean("disable_main_page_story", false)
         val unlockPlayLimit = sPrefs.getBoolean("play_arc_conf", false)
         val blockCommentGuide = sPrefs.getBoolean("block_comment_guide", false)
+        val blockVideoComment = sPrefs.getBoolean("block_video_comment", false)
 
         if (hidden && (purifyCity || purifyCampus)) {
             listOf(
@@ -149,13 +156,43 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     }
                 }
         }
-        if (blockCommentGuide) {
+        if (blockCommentGuide || (hidden && blockVideoComment)) {
             "com.bapis.bilibili.main.community.reply.v1.ReplyMoss".hookBeforeMethod(
                 mClassLoader,
                 "mainList",
                 "com.bapis.bilibili.main.community.reply.v1.MainListReq",
                 instance.mossResponseHandlerClass
             ) { param ->
+                val type = param.args[0].callMethodAs<Long>("getType")
+                if (hidden && blockVideoComment && type == 1L) {
+                    val reply = mainListReplyClass?.new()?.apply {
+                        val subjectControl = callMethod("getSubjectControl")
+                        val emptyPage = emptyPageClass?.new()?.also {
+                            subjectControl?.callMethod("setEmptyPage", it)
+                        }
+                        emptyPage?.callMethod(
+                            "setImageUrl",
+                            "https://i0.hdslb.com/bfs/app-res/android/img_holder_forbid_style1.webp"
+                        )
+                        textClass?.new()?.apply {
+                            callMethod("setRaw", "评论区已由漫游屏蔽")
+                            textStyleClass?.new()?.apply {
+                                callMethod("setFontSize", 14)
+                                callMethod("setTextDayColor", "#FF61666D")
+                                callMethod("setTextNightColor", "#FFA2A7AE")
+                            }?.let {
+                                callMethod("setStyle", it)
+                            }
+                        }?.let {
+                            emptyPage?.callMethod("addTexts", it)
+                        }
+                    }
+                    param.args[1].callMethod("onNext", reply)
+                    param.result = null
+                    return@hookBeforeMethod
+                }
+                if (!blockCommentGuide)
+                    return@hookBeforeMethod
                 param.args[1] = param.args[1].mossResponseHandlerProxy { reply ->
                     reply?.runCatchingOrNull {
                         callMethod("getSubjectControl")?.run {

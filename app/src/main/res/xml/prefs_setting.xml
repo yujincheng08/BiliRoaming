@@ -465,6 +465,10 @@
             android:key="block_pcdn_live"
             android:summary="@string/block_pcdn_live_summary"
             android:title="@string/block_pcdn_live_title" />
+        <SwitchPreference
+            android:dependency="hidden"
+            android:key="block_video_comment"
+            android:title="@string/block_video_comment_title" />
     </PreferenceCategory>
 
     <PreferenceCategory
