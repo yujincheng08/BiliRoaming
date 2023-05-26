@@ -9,6 +9,7 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private val emptyPageClass by Weak { "com.bapis.bilibili.main.community.reply.v1.EmptyPage" from mClassLoader }
     private val textClass by Weak { "com.bapis.bilibili.main.community.reply.v1.EmptyPage\$Text" from mClassLoader }
     private val textStyleClass by Weak { "com.bapis.bilibili.main.community.reply.v1.TextStyle" from mClassLoader }
+    private val videoGuideClass by Weak { "com.bapis.bilibili.app.view.v1.VideoGuide" from mClassLoader }
 
     override fun startHook() {
         val hidden = sPrefs.getBoolean("hidden", false)
@@ -74,7 +75,9 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             instance.viewMossClass?.hookAfterMethod(
                 "viewProgress",
                 "com.bapis.bilibili.app.view.v1.ViewProgressReq"
-            ) { it.result?.callMethod("clearVideoGuide") }
+            ) { param ->
+                param.result?.callMethod("setVideoGuide", videoGuideClass?.new())
+            }
             "com.bapis.bilibili.app.viewunite.v1.ViewMoss".from(mClassLoader)?.hookAfterMethod(
                 "viewProgress",
                 "com.bapis.bilibili.app.viewunite.v1.ViewProgressReq"
