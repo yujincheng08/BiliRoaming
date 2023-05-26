@@ -7,6 +7,12 @@
             android:summary="@string/main_func_summary"
             android:title="@string/main_func_title" />
 
+        <Preference
+            android:dependency="main_func"
+            android:key="custom_server"
+            android:summary="@string/custom_server_summary"
+            android:title="@string/custom_server_title" />
+
         <SwitchPreference
             android:dependency="main_func"
             android:key="allow_download"
@@ -19,15 +25,10 @@
             android:summary="@string/fix_download_summary"
             android:title="@string/fix_download_title" />
 
-        <Preference
-            android:dependency="main_func"
-            android:key="custom_server"
-            android:summary="@string/custom_server_summary"
-            android:title="@string/custom_server_title" />
-
         <SwitchPreference
             android:dependency="main_func"
             android:key="allow_mini_play"
+            android:summary="@string/allow_mini_play_summary"
             android:title="@string/allow_mini_play_title" />
     </PreferenceCategory>
 
@@ -44,6 +45,16 @@
             android:key="test_upos"
             android:summary="@string/test_upos_summary"
             android:title="@string/test_upos_title" />
+
+        <SwitchPreference
+            android:key="block_pcdn"
+            android:summary="@string/block_pcdn_summary"
+            android:title="@string/block_pcdn_title" />
+
+        <SwitchPreference
+            android:key="block_pcdn_live"
+            android:summary="@string/block_pcdn_live_summary"
+            android:title="@string/block_pcdn_live_title" />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/beautify_category">
@@ -240,23 +251,6 @@
             android:key="pref_import"
             android:title="@string/pref_import_title" />
     </PreferenceCategory>
-    <PreferenceCategory android:title="@string/setting_category">
-        <SwitchPreference
-            android:defaultValue="true"
-            android:key="show_info"
-            android:summary="@string/show_info_summary"
-            android:title="@string/show_info_title" />
-
-        <SwitchPreference
-            android:key="save_log"
-            android:title="@string/save_log_title" />
-
-        <Preference
-            android:key="share_log"
-            android:summary="@string/share_log_summary"
-            android:title="@string/share_log_title" />
-    </PreferenceCategory>
-
     <PreferenceCategory
         android:key="hidden_group"
         android:title="@string/hidden_group">
@@ -457,18 +451,25 @@
             android:title="@string/remove_vip_section_title" />
         <SwitchPreference
             android:dependency="hidden"
-            android:key="block_pcdn"
-            android:summary="@string/block_pcdn_summary"
-            android:title="@string/block_pcdn_title" />
-        <SwitchPreference
-            android:dependency="hidden"
-            android:key="block_pcdn_live"
-            android:summary="@string/block_pcdn_live_summary"
-            android:title="@string/block_pcdn_live_title" />
-        <SwitchPreference
-            android:dependency="hidden"
             android:key="block_video_comment"
             android:title="@string/block_video_comment_title" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/setting_category">
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="show_info"
+            android:summary="@string/show_info_summary"
+            android:title="@string/show_info_title" />
+
+        <SwitchPreference
+            android:key="save_log"
+            android:title="@string/save_log_title" />
+
+        <Preference
+            android:key="share_log"
+            android:summary="@string/share_log_summary"
+            android:title="@string/share_log_title" />
     </PreferenceCategory>
 
     <PreferenceCategory
@@ -486,6 +487,15 @@
             <intent
                 android:action="android.intent.action.VIEW"
                 android:data="@string/github_url" />
+        </Preference>
+
+        <Preference
+            android:key="support"
+            android:summary="@string/support_summary"
+            android:title="@string/support">
+            <intent
+                android:action="android.intent.action.VIEW"
+                android:data="@string/afdian_url" />
         </Preference>
 
         <Preference

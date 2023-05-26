@@ -1,10 +1,11 @@
 <!-- Here place some not translatable string resources -->
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
-    <string name="author_list">iAcn/djytw/yujincheng08</string>
+    <string name="author_list">yujincheng08/iAcn/djytw/</string>
     <string name="version_url">https://api.github.com/repos/yujincheng08/BiliRoaming/releases/latest</string>
     <string name="update_url">https://github.com/yujincheng08/BiliRoaming/releases/latest</string>
     <string name="server_url">https://github.com/yujincheng08/BiliRoaming/wiki/%E5%85%AC%E5%85%B1%E8%A7%A3%E6%9E%90%E6%9C%8D%E5%8A%A1%E5%99%A8</string>
     <string name="github_url">https://github.com/yujincheng08/BiliRoaming</string>
+    <string name="afdian_url">https://afdian.net/a/yujincheng08</string>
     <string name="tg_url">https://t.me/biliroaming</string>
     <string name="help_url">https://github.com/yujincheng08/BiliRoaming/wiki</string>
     <string name="group_url">mqqguild://guild/share?inviteCode=NVoD5&amp;from=246610</string>

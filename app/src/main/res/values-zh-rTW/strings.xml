@@ -18,7 +18,7 @@
     <string name="teenagers_mode_dialog_title">關閉青少年模式跳出視窗</string>
     <string name="teenagers_mode_dialog_summary">仍可從側滑選單進入青少年模式</string>
     <string name="allow_download_title">允許下載版權番劇</string>
-    <string name="allow_download_summary">使版權番劇可以快取（同時修復概念版不能投影的問題）</string>
+    <string name="allow_download_summary">使版權番劇可以快取</string>
     <string name="cdn_category">加速CDN設定</string>
     <string name="hidden_title">啟用隱藏功能</string>
     <string name="hidden_summary">打開後可以使用隱藏功能</string>
@@ -188,7 +188,8 @@
     <string name="block_word_search_summary">封鎖影片評論藍色關鍵字點擊觸發跳轉搜尋功能</string>
     <string name="disable_try_watch_vip_quality_title">禁用免費試看大會員解析度</string>
     <string name="disable_try_watch_vip_quality_desc">鼠鼠我呀，真的不想每30天點一次不再試看呢</string>
-    <string name="allow_mini_play_title">允許解鎖的番劇小窗播放</string>
+    <string name="allow_mini_play_title">允許版權限制番劇小窗播放</string>
+    <string name="allow_mini_play_summary">港澳台番劇的字幕並不能在小窗顯示</string>
     <string name="force_browser_title">在外部瀏覽器打開連結</string>
     <string name="force_browser_summary">而不是使用內建瀏覽器</string>
     <string name="disable_story_full_title">關閉看一看按鈕</string>
@@ -263,4 +264,6 @@
     <string name="apply_to_relate_title">同時套用於影片下方推薦</string>
     <string name="search_hint" tools:ignore="TypographyEllipsis">搜尋...</string>
     <string name="block_video_comment_title">屏蔽影片評論區</string>
+    <string name="support">捐贈</string>
+    <string name="support_summary">捐贈以支持模組開發</string>
 </resources>
