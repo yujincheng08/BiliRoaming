@@ -9,7 +9,7 @@ import me.iacn.biliroaming.network.BiliRoamingApi.CustomServerException
 import me.iacn.biliroaming.network.BiliRoamingApi.getPlayUrl
 import me.iacn.biliroaming.network.BiliRoamingApi.getSeason
 import me.iacn.biliroaming.utils.*
-import me.iacn.biliroaming.utils.UposReplaceHelper.forceUpos
+import me.iacn.biliroaming.utils.UposReplaceHelper.enableUposReplace
 import me.iacn.biliroaming.utils.UposReplaceHelper.ipPCdnRegex
 import me.iacn.biliroaming.utils.UposReplaceHelper.reconstructVideoUpos
 import me.iacn.biliroaming.utils.UposReplaceHelper.replaceUpos
@@ -886,7 +886,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }.onFailure { Log.e(it) }.getOrDefault(response)
 
     private fun VideoInfoKt.Dsl.reconstructVideoInfoUpos(isDownload: Boolean = false) {
-        if (forceUpos && !isDownload) return
+        if (!isDownload || !enableUposReplace) return
         val newStreamList = streamList.map { stream ->
             stream.copy { reconstructStreamUpos() }
         }

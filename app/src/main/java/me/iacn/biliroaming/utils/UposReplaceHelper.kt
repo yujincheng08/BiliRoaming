@@ -19,7 +19,7 @@ object UposReplaceHelper {
     private val hwovHost = string(R.string.hwov_host)
     private val hkBcacheHost = string(R.string.hk_bcache_host)
 
-    private val isLocatedCn by lazy {
+    val isLocatedCn by lazy {
         (runCatchingOrNull { XposedInit.country.get(5L, TimeUnit.SECONDS) } ?: "cn") == "cn"
     }
 
@@ -28,9 +28,8 @@ object UposReplaceHelper {
     val enableLivePcdnBlock = sPrefs.getBoolean("block_pcdn_live", false)
 
     private lateinit var videoUposList: CompletableFuture<List<String>>
-    private val mainVideoUpos = sPrefs.getString("upos_host", null)?.let {
-        if (it == "\$1") null else it
-    } ?: if (isLocatedCn) hwHost else aliovHost
+    private val mainVideoUpos =
+        sPrefs.getString("upos_host", null) ?: if (isLocatedCn) hwHost else aliovHost
     private val extraVideoUposList = if (isLocatedCn) {
         when (mainVideoUpos) {
             hwHost -> listOf(aliHost, cosHost)
@@ -53,6 +52,8 @@ object UposReplaceHelper {
             ?: extraVideoUposList
     }
     const val liveUpos = "c1--cn-gotcha01.bilivideo.com"
+
+    val enableUposReplace = (mainVideoUpos != "\$1")
 
     private val overseaVideoUposRegex by lazy {
         Regex("""(akamai|(ali|hw|cos)\w*ov|hk-eq-bcache|bstar1)""")

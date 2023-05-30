@@ -3,6 +3,7 @@ package me.iacn.biliroaming.hook
 import me.iacn.biliroaming.utils.Log
 import me.iacn.biliroaming.utils.UposReplaceHelper.enableLivePcdnBlock
 import me.iacn.biliroaming.utils.UposReplaceHelper.enablePcdnBlock
+import me.iacn.biliroaming.utils.UposReplaceHelper.enableUposReplace
 import me.iacn.biliroaming.utils.UposReplaceHelper.forceUpos
 import me.iacn.biliroaming.utils.UposReplaceHelper.gotchaRegex
 import me.iacn.biliroaming.utils.UposReplaceHelper.initVideoUposList
@@ -22,14 +23,14 @@ import me.iacn.biliroaming.utils.setObjectField
 
 class UposReplaceHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
-        if (!(forceUpos || enablePcdnBlock || enableLivePcdnBlock)) return
+        if (!enableUposReplace || !(forceUpos || enablePcdnBlock || enableLivePcdnBlock)) return
         Log.d("startHook: UposReplaceHook")
         "tv.danmaku.ijk.media.player.IjkMediaAsset\$MediaAssertSegment\$Builder".from(mClassLoader)
             ?.run {
                 hookBeforeConstructor(String::class.java, Int::class.javaPrimitiveType) { param ->
                     val baseUrl = param.args[0] as String
                     if (baseUrl.contains("live-bvc")) {
-                        if (enableLivePcdnBlock && baseUrl.contains(gotchaRegex)) {
+                        if (enableLivePcdnBlock && !baseUrl.contains(gotchaRegex)) {
                             param.args[0] = baseUrl.replaceUpos(liveUpos)
                         }
                     } else if (baseUrl.contains(ipPCdnRegex)) {

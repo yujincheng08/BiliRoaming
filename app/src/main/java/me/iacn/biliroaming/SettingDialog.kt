@@ -38,11 +38,11 @@ import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.hook.JsonHook
 import me.iacn.biliroaming.hook.SplashHook
 import me.iacn.biliroaming.utils.*
+import me.iacn.biliroaming.utils.UposReplaceHelper.isLocatedCn
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.net.URL
-import java.util.concurrent.TimeUnit
 import kotlin.system.exitProcess
 
 
@@ -207,9 +207,6 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             val serverList = context.resources.getStringArray(R.array.upos_values)
             if (currentServer !in serverList) {
                 scope.launch(Dispatchers.IO) {
-                    val isLocatedCn =
-                        (runCatchingOrNull { XposedInit.country.get(5L, TimeUnit.SECONDS) }
-                            ?: "cn") == "cn"
                     val defaultServer =
                         if (isLocatedCn) serverList[1] else """$1"""
                     prefs.edit().putString("upos_host", defaultServer).apply()
