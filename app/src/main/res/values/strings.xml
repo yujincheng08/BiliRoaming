@@ -40,8 +40,6 @@
     <string name="tg_summary">点击加入TG频道</string>
     <string name="custom_upos_title">UPOS 服务器设置</string>
     <string name="custom_upos_summary">自定义番剧的 UPOS 服务器，可解决黑屏与无限加载</string>
-    <string name="force_upos_title">应用 UPOS 服务器到所有视频</string>
-    <string name="force_upos_summary">含普通视频、番剧、电影等。特殊网络环境视频加载缓慢，可尝试开启本项</string>
     <string name="purify_splash_title">净化开屏页面</string>
     <string name="purify_splash_summary">去除启动客户端时的推广</string>
     <string name="custom_splash_title">替换启动图</string>
@@ -246,6 +244,8 @@
     <string name="remove_vip_section_summary">我的页面将大会员横幅移除</string>
     <string name="save_comment_image_title">笔记图片长按预览保存</string>
     <string name="save_comment_image_summary">视频笔记图片点开后长按预览图片保存到本地</string>
+    <string name="force_upos_title">应用 UPOS 服务器到所有视频</string>
+    <string name="force_upos_summary">【非必要不开启】含普通视频、番剧、电影等。特殊网络环境视频加载缓慢，可尝试开启</string>
     <string name="block_pcdn_title">阻止视频通过 PCDN 加载</string>
     <string name="block_pcdn_summary">【非必要不开启】可一定程度上优化视频加载速度，以实际情况为准</string>
     <string name="block_pcdn_live_title">阻止直播通过 PCDN 加载</string>

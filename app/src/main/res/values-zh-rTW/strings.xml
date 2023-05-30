@@ -40,8 +40,6 @@
     <string name="tg_summary">點擊加入TG頻道</string>
     <string name="custom_upos_title">UPOS 伺服器設定</string>
     <string name="custom_upos_summary">自訂番劇的 UPOS 伺服器，可以解決黑畫面與無限載入</string>
-    <string name="force_upos_title">套用 UPOS 伺服器至所有影片</string>
-    <string name="force_upos_summary">含一般影片、番劇、電影等。在特殊網路環境下影片載入慢，可嘗試開啟此項</string>
     <string name="purify_splash_title">淨化啟動頁面</string>
     <string name="purify_splash_summary">去除啟動程式時的推廣</string>
     <string name="custom_splash_title">取代啟動圖</string>
@@ -246,6 +244,8 @@
     <string name="remove_vip_section_summary">我的頁面將大會員橫幅移除</string>
     <string name="save_comment_image_title">筆記圖片長按預覽儲存</string>
     <string name="save_comment_image_summary">影片筆記圖片點開後長按預覽圖片儲存到本地</string>
+    <string name="force_upos_title">套用 UPOS 伺服器至所有影片</string>
+    <string name="force_upos_summary">【非必要不開啟】含一般影片、番劇、電影等。在特殊網路環境下影片載入慢，可嘗試開啟</string>
     <string name="block_pcdn_title">阻止影片使用 PCDN 載入</string>
     <string name="block_pcdn_summary">【非必要不開啟】可以在一定程度上最佳化影片載入速度，以實際情況為準</string>
     <string name="block_pcdn_live_title">阻止直播使用 PCDN 載入</string>

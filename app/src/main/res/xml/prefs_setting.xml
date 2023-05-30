@@ -40,15 +40,16 @@
             android:key="upos_host"
             android:summary="@string/custom_upos_summary"
             android:title="@string/custom_upos_title" />
-        <SwitchPreference
-            android:defaultValue="false"
-            android:key="force_upos"
-            android:summary="@string/force_upos_summary"
-            android:title="@string/force_upos_title" />
+
         <Preference
             android:key="test_upos"
             android:summary="@string/test_upos_summary"
             android:title="@string/test_upos_title" />
+
+        <SwitchPreference
+            android:key="force_upos"
+            android:summary="@string/force_upos_summary"
+            android:title="@string/force_upos_title" />
 
         <SwitchPreference
             android:key="block_pcdn"
