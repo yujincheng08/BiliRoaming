@@ -38,6 +38,7 @@ import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.hook.JsonHook
 import me.iacn.biliroaming.hook.SplashHook
 import me.iacn.biliroaming.utils.*
+import me.iacn.biliroaming.utils.UposReplaceHelper.isLocatedCn
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -68,8 +69,9 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         override fun onCreate(savedInstanceState: Bundle?) {
             super.onCreate(savedInstanceState)
             preferenceManager.sharedPreferencesName = "biliroaming"
-            addPreferencesFromResource(R.xml.prefs_setting)
             prefs = preferenceManager.sharedPreferences
+            checkUposServer()
+            addPreferencesFromResource(R.xml.prefs_setting)
             biliprefs = currentContext.getSharedPreferences(
                 packageName + "_preferences",
                 Context.MODE_MULTI_PROCESS
@@ -198,6 +200,18 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             adapter.preferenceList = preferences
             adapter.notifyDataSetChanged()
             listView.forceSetSelection(0)
+        }
+
+        private fun checkUposServer() {
+            val currentServer = prefs.getString("upos_host", null).orEmpty()
+            val serverList = context.resources.getStringArray(R.array.upos_values)
+            if (currentServer !in serverList) {
+                scope.launch(Dispatchers.IO) {
+                    val defaultServer =
+                        if (isLocatedCn) serverList[1] else """$1"""
+                    prefs.edit().putString("upos_host", defaultServer).apply()
+                }
+            }
         }
 
         private fun checkUpdate() {
@@ -390,9 +404,9 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     when (requestCode) {
                         PREF_IMPORT -> {
                             try {
-                                file.outputStream().use { output ->
+                                file.bufferedWriter().use { output ->
                                     activity.contentResolver.openInputStream(uri)
-                                        ?.use { it.copyTo(output) }
+                                        ?.use { it.bufferedReader().copyTo(output) }
                                 }
                             } catch (e: Exception) {
                                 Log.toast(e.message ?: "未知错误", true, alsoLog = true)
@@ -402,9 +416,12 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
 
                         PREF_EXPORT -> {
                             try {
-                                file.inputStream().use { input ->
-                                    activity.contentResolver.openOutputStream(uri)
-                                        ?.use { input.copyTo(it) }
+                                file.bufferedReader().use { input ->
+                                    activity.contentResolver.openOutputStream(uri)?.use {
+                                        it.bufferedWriter().use { output ->
+                                            input.copyTo(output)
+                                        }
+                                    }
                                 }
                             } catch (e: Exception) {
                                 Log.toast(e.message ?: "未知错误", true, alsoLog = true)
@@ -519,7 +536,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         }
 
         private fun onTestUposClick(): Boolean {
-            SpeedTestDialog(findPreference("upos_host") as ListPreference, activity).show()
+            SpeedTestDialog(activity, prefs).show()
             return true
         }
 

@@ -34,17 +34,22 @@
 
     <PreferenceCategory android:title="@string/cdn_category">
         <ListPreference
-            android:defaultValue="@string/ks3_host"
+            android:defaultValue="@string/ali_host"
             android:entries="@array/upos_entries"
             android:entryValues="@array/upos_values"
             android:key="upos_host"
-            android:summary="@string/upos_summary"
-            android:title="@string/upos_title" />
+            android:summary="@string/custom_upos_summary"
+            android:title="@string/custom_upos_title" />
 
         <Preference
             android:key="test_upos"
             android:summary="@string/test_upos_summary"
             android:title="@string/test_upos_title" />
+
+        <SwitchPreference
+            android:key="force_upos"
+            android:summary="@string/force_upos_summary"
+            android:title="@string/force_upos_title" />
 
         <SwitchPreference
             android:key="block_pcdn"

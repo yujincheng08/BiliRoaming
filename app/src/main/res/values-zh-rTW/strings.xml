@@ -19,7 +19,7 @@
     <string name="teenagers_mode_dialog_summary">仍可從側滑選單進入青少年模式</string>
     <string name="allow_download_title">允許下載版權番劇</string>
     <string name="allow_download_summary">使版權番劇可以快取</string>
-    <string name="cdn_category">加速CDN設定</string>
+    <string name="cdn_category">加速 CDN 設定</string>
     <string name="hidden_title">啟用隱藏功能</string>
     <string name="hidden_summary">打開後可以使用隱藏功能</string>
     <string name="purify_game_title">淨化遊戲中心</string>
@@ -38,8 +38,8 @@
     <string name="group_summary">點擊加入QQ頻道</string>
     <string name="tg_title">TG頻道</string>
     <string name="tg_summary">點擊加入TG頻道</string>
-    <string name="upos_title">UPOS伺服器設定</string>
-    <string name="upos_summary">設定解鎖番劇的伺服器，可加快影片載入速度；當所選 UPOS 不能用時，會回退到 MCDN。</string>
+    <string name="custom_upos_title">UPOS 伺服器設定</string>
+    <string name="custom_upos_summary">自訂番劇的 UPOS 伺服器，可以解決黑畫面與無限載入</string>
     <string name="purify_splash_title">淨化啟動頁面</string>
     <string name="purify_splash_summary">去除啟動程式時的推廣</string>
     <string name="custom_splash_title">取代啟動圖</string>
@@ -85,8 +85,8 @@
     <string name="purify_campus_title">移除校園標籤</string>
     <string name="setting">設定</string>
     <string name="speed">速度</string>
-    <string name="test_upos_title">UPOS伺服器測速</string>
-    <string name="test_upos_summary">選擇最快的UPOS以獲得最好體驗</string>
+    <string name="test_upos_title">UPOS 伺服器測速</string>
+    <string name="test_upos_summary">選擇最快的 UPOS 伺服器以獲得最好體驗</string>
     <string name="search_area_title">開啟其它地區番劇搜尋</string>
     <string name="search_area_summary">在搜尋頁面新增其它地區番劇搜尋結果，需要解析伺服器支援</string>
     <string name="customize_bottom_bar_title">自訂底欄</string>
@@ -244,10 +244,12 @@
     <string name="remove_vip_section_summary">我的頁面將大會員橫幅移除</string>
     <string name="save_comment_image_title">筆記圖片長按預覽儲存</string>
     <string name="save_comment_image_summary">影片筆記圖片點開後長按預覽圖片儲存到本地</string>
+    <string name="force_upos_title">套用 UPOS 伺服器至所有影片</string>
+    <string name="force_upos_summary">【非必要不開啟】含一般影片、番劇、電影等。在特殊網路環境下影片載入慢，可嘗試開啟</string>
     <string name="block_pcdn_title">阻止影片使用 PCDN 載入</string>
-    <string name="block_pcdn_summary">【非必要不開啟】啟用此選項可能會稍微改善影片載入速度。</string>
-    <string name="block_pcdn_live_title">阻止直播透過 P2P 技術載入或上傳</string>
-    <string name="block_pcdn_live_summary">【非必要不開啟】可能在某種程度上最佳化直播載入速度，同時避免佔用大量上傳頻寬。</string>
+    <string name="block_pcdn_summary">【非必要不開啟】可以在一定程度上最佳化影片載入速度，以實際情況為準</string>
+    <string name="block_pcdn_live_title">阻止直播使用 PCDN 載入</string>
+    <string name="block_pcdn_live_summary">【非必要不開啟】避免佔用大量上傳頻寬，同時可以在一定程度上最佳化直播載入速度，但以實際情況為準</string>
     <string name="danmaku_filter_title">彈幕封鎖等級</string>
     <string name="danmaku_filter_summary">恢復舊版按等級封鎖彈幕功能，0級表示關閉本功能</string>
     <string name="danmaku_filter_weight_hint">%1$d級</string>
