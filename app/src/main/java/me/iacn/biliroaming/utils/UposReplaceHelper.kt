@@ -86,7 +86,7 @@ object UposReplaceHelper {
                         }
                     }
                 }?.mapNotNull { Uri.parse(it).encodedAuthority }?.distinct()
-                    ?.filter { !it.isBadUpos() }.orEmpty()
+                    ?.filter { !it.isPCdnUpos() }.orEmpty()
                 addAll(officialList.filter { !(it.contains(bCacheRegex) || it == mainVideoUpos) }
                     .ifEmpty { officialList })
                 addAll(extraVideoUposList)
@@ -94,7 +94,18 @@ object UposReplaceHelper {
         }
     }
 
-    fun String.isNeedReplaceVideoUpos() = forceUpos || (enablePcdnBlock && isBadUpos())
+    fun String.isPCdnUpos() =
+        contains("szbdyd.com") || contains(".mcdn.bilivideo") || contains(ipPCdnRegex)
+
+    fun String.isNeedReplaceVideoUpos() =
+        if (contains(".mcdn.bilivideo") || contains(ipPCdnRegex)) {
+            // IP:Port type PCDN currently only exists in Live and Thai Video.
+            // Cannot simply replace IP:Port or 'mcdn.bilivideo' like PCDN's host
+            false
+        } else {
+            // only 'szbdyd.com' like PCDN can be replace
+            if (forceUpos) true else enablePcdnBlock && contains("szbdyd.com")
+        }
 
     fun String.replaceUpos(
         upos: String = videoUposBase, needReplace: Boolean = true
@@ -109,12 +120,6 @@ object UposReplaceHelper {
     }
 
     fun Uri.replaceUpos(upos: String): Uri = buildUpon().authority(upos).build()
-
-    private fun String.isBadUpos() = contains("szbdyd.com") || contains(".mcdn.bilivideo")
-
-    fun String.reconstructVideoUpos(upos: String = videoUposBase) = replaceUpos(
-        upos, isBadUpos() || this.contains(overseaVideoUposRegex)
-    )
 
     private fun string(resId: Int) = XposedInit.moduleRes.getString(resId)
 }
