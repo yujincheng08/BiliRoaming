@@ -53,10 +53,10 @@ object UposReplaceHelper {
         Regex("""(akamai|(ali|hw|cos)\w*ov|hk-eq-bcache|bstar1)""")
     }
     private val urlBwRegex by lazy { Regex("""(bw=[^&]*)""") }
-    val ipPCdnRegex by lazy { Regex("""^https?://\d{1,3}\.\d{1,3}""") }
+    private val ipPCdnRegex by lazy { Regex("""^https?://\d{1,3}\.\d{1,3}""") }
     val gotchaRegex by lazy { Regex("""https?://\w*--\w*-gotcha\d*\.bilivideo""") }
 
-    fun initVideoUposList() {
+    fun initVideoUposList(mClassLoader: ClassLoader) {
         videoUposList = MainScope().future(Dispatchers.IO) {
             val bCacheRegex = Regex("""cn-.*\.bilivideo""")
             mutableListOf(mainVideoUpos).apply {
@@ -90,12 +90,14 @@ object UposReplaceHelper {
                 addAll(officialList.filter { !(it.contains(bCacheRegex) || it == mainVideoUpos) }
                     .ifEmpty { officialList })
                 addAll(extraVideoUposList)
-            }
+            }.also { hookTf(mClassLoader) }
         }
     }
 
     fun String.isPCdnUpos() =
         contains("szbdyd.com") || contains(".mcdn.bilivideo") || contains(ipPCdnRegex)
+
+    fun String.isOverseaUpos() = isLocatedCn == contains(overseaVideoUposRegex)
 
     fun String.isNeedReplaceVideoUpos() =
         if (contains(".mcdn.bilivideo") || contains(ipPCdnRegex)) {
@@ -104,7 +106,7 @@ object UposReplaceHelper {
             false
         } else {
             // only 'szbdyd.com' like PCDN can be replace
-            if (forceUpos) true else enablePcdnBlock && contains("szbdyd.com")
+            forceUpos || (enablePcdnBlock && contains("szbdyd.com")) || isOverseaUpos()
         }
 
     fun String.replaceUpos(
@@ -120,6 +122,19 @@ object UposReplaceHelper {
     }
 
     fun Uri.replaceUpos(upos: String): Uri = buildUpon().authority(upos).build()
+
+    private fun hookTf(mClassLoader: ClassLoader) {
+        if (!(enablePcdnBlock || forceUpos)) return
+        // fake grpc TF header then only reply with mirror type playurl
+        "com.bilibili.lib.moss.utils.RuntimeHelper".from(mClassLoader)
+            ?.hookAfterMethod("tf") { param ->
+                val result = param.result
+                if (result.callMethodOrNullAs<Int>("getNumber") != 0) return@hookAfterMethod
+                result.javaClass.callStaticMethodOrNull("forNumber", 1)?.let {
+                    param.result = it
+                }
+            }
+    }
 
     private fun string(resId: Int) = XposedInit.moduleRes.getString(resId)
 }

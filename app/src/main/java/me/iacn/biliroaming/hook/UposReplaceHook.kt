@@ -8,6 +8,7 @@ import me.iacn.biliroaming.utils.UposReplaceHelper.forceUpos
 import me.iacn.biliroaming.utils.UposReplaceHelper.gotchaRegex
 import me.iacn.biliroaming.utils.UposReplaceHelper.initVideoUposList
 import me.iacn.biliroaming.utils.UposReplaceHelper.isNeedReplaceVideoUpos
+import me.iacn.biliroaming.utils.UposReplaceHelper.isOverseaUpos
 import me.iacn.biliroaming.utils.UposReplaceHelper.isPCdnUpos
 import me.iacn.biliroaming.utils.UposReplaceHelper.liveUpos
 import me.iacn.biliroaming.utils.UposReplaceHelper.replaceUpos
@@ -64,7 +65,7 @@ class UposReplaceHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     override fun lateInitHook() {
-        initVideoUposList()
+        initVideoUposList(mClassLoader)
     }
 
     private fun reconstructBackupUposList(
@@ -74,10 +75,14 @@ class UposReplaceHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         return if (baseUrl.isPCdnUpos()) {
             if (backupUrls.isNotEmpty()) {
                 mediaAssertSegment?.setObjectField("url", rawUrl.replaceUpos())
-                listOf(rawUrl.replaceUpos(videoUposBackups[0]), baseUrl)
+                listOf(rawUrl.replaceUpos(videoUposBackups[0], rawUrl.isOverseaUpos()), baseUrl)
             } else emptyList()
         } else {
-            listOf(rawUrl.replaceUpos(videoUposBackups[0]), rawUrl.replaceUpos(videoUposBackups[1]))
+            if (enablePcdnBlock || forceUpos || backupUrls.isEmpty() || rawUrl.isOverseaUpos()) {
+                listOf(
+                    rawUrl.replaceUpos(videoUposBackups[0]), rawUrl.replaceUpos(videoUposBackups[1])
+                )
+            } else emptyList()
         }
     }
 }
