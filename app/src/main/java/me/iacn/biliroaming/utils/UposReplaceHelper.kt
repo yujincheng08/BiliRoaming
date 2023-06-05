@@ -30,18 +30,12 @@ object UposReplaceHelper {
     private lateinit var videoUposList: CompletableFuture<List<String>>
     private val mainVideoUpos =
         sPrefs.getString("upos_host", null) ?: if (isLocatedCn) hwHost else aliovHost
-    private val extraVideoUposList = if (isLocatedCn) {
-        when (mainVideoUpos) {
-            hwHost -> listOf(aliHost, cosHost)
-            aliHost -> listOf(hwHost, cosHost)
-            else -> listOf(aliHost, hwHost)
-        }
-    } else {
-        when (mainVideoUpos) {
-            aliovHost -> listOf(hkBcacheHost, hwovHost)
-            hkBcacheHost -> listOf(aliovHost, hwovHost)
-            else -> listOf(hkBcacheHost, aliovHost)
-        }
+    private val serverList = XposedInit.moduleRes.getStringArray(R.array.upos_values)
+    private val extraVideoUposList = when (serverList.indexOf(mainVideoUpos)) {
+        in 1..3 -> listOf(hwHost, cosHost)
+        in 5..7 -> listOf(hwHost, aliHost)
+        in 8..15 -> listOf(aliHost, cosHost)
+        else -> listOf(aliHost, hkBcacheHost)
     }
     private val videoUposBase by lazy {
         runCatchingOrNull { videoUposList.get(500L, TimeUnit.MILLISECONDS) }?.get(0)
