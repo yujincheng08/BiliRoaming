@@ -96,6 +96,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         "com.bilibili.teenagersmode.ui.TeenagersModeDialogActivity" from mClassLoader
     }
     val pegasusFeedClass by Weak { mHookInfo.pegasusFeed.class_ from mClassLoader }
+    val popularClass by Weak { mHookInfo.popular.class_ from mClassLoader }
     val subtitleSpanClass by Weak { mHookInfo.subtitleSpan from mClassLoader }
     val chronosSwitchClass by Weak { mHookInfo.chronosSwitch from mClassLoader }
     val biliSpaceClass by Weak { "com.bilibili.app.authorspace.api.BiliSpace" from mClassLoader }
@@ -1426,6 +1427,12 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                         it.parameterTypes.size == 1 && it.parameterTypes[0].name == this@hookInfo.okHttp.responseBody.class_.name
                                 && it.returnType != Object::class.java
                     }?.name ?: return@method
+                }
+            }
+            popular = popular {
+                class_ = class_ { name = "com.bapis.bilibili.app.show.popular.v1.PopularMoss" }
+                method = method {
+                    name = "index"
                 }
             }
             chronosSwitch = class_ {

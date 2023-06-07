@@ -102,6 +102,16 @@
     <string name="pref_import_title">匯入配置</string>
     <string name="hide_low_play_count_recommend_title">隱藏首頁低播放量影片</string>
     <string name="hide_low_play_count_recommend_summary">隱藏首頁推送低於指定播放量的影片</string>
+    
+    <string name="hide_low_play_count_popular_title">隱藏首頁低播放量視頻</string>
+    <string name="hide_low_play_count_popular_summary">隱藏熱門低於指定播放量的視頻</string>
+    <string name="hide_duration_popular_summary">隱藏熱門推送指定時長的影片（秒）</string>
+    <string name="hide_short_duration_popular_title">隐藏热门视频时长小于</string>
+    <string name="hide_long_duration_popular_title">隐藏热门视频时长大于</string>
+    <string name="keywords_filter_popular_summary">過濾熱門推送中包含指定關鍵字的內容</string>
+    <string name="hide_top_entrance_popular_summary">去除頂欄（排行榜等）</string>
+    <string name="hide_suggest_follow_popular_summary">去除推薦關注（和他的視頻）</string>
+
     <string name="add_bangumi_title">新增其他地區番劇</string>
     <string name="add_bangumi_summary">在首頁標籤新增大陸/港澳台番劇分頁</string>
     <string name="add_movie_title">新增其他地區影視</string>
@@ -123,6 +133,8 @@
     <string name="hide_duration_recommend_summary">隱藏首頁推送指定時長的影片（秒）</string>
     <string name="home_filter_title">首頁推送過濾器</string>
     <string name="home_filter_summary">過濾首頁推送的內容（重啟兩次生效）</string>
+    <string name="popular_filter_title">熱門推送過濾器</string>
+    <string name="popular_filter_summary">過濾熱門推送的內容（重啟兩次生效）</string>
     <string name="keywords_filter_recommend_summary">過濾首頁推送中包含指定關鍵字的內容</string>
     <string name="search_area_movie_title">開啟其它地區影劇搜尋</string>
     <string name="search_area_movie_summary">在搜尋頁面新增其它地區影劇搜尋結果，需要解析伺服器支援</string>
@@ -166,6 +178,7 @@
     <string name="keyword_group_name_up">UP主</string>
     <string name="keyword_group_name_title">標題</string>
     <string name="keyword_group_name_rcmd_reason">推薦原因</string>
+    <string name="keyword_group_name_desc">描述</string>
     <string name="keyword_group_name_category">分區</string>
     <string name="keyword_group_name_channel">頻道</string>
     <string name="keyword_group_add">新增</string>
