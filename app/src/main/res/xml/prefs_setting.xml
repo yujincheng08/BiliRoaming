@@ -272,6 +272,11 @@
             android:title="@string/home_filter_title" />
         <Preference
             android:dependency="hidden"
+            android:key="popular_filter"
+            android:summary="@string/popular_filter_summary"
+            android:title="@string/popular_filter_title" />
+        <Preference
+            android:dependency="hidden"
             android:key="customize_bottom_bar"
             android:summary="@string/customize_bottom_bar_summary"
             android:title="@string/customize_bottom_bar_title" />
