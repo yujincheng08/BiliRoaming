@@ -1,28 +1,53 @@
 package me.iacn.biliroaming.hook
 
+import de.robv.android.xposed.XC_MethodHook
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.utils.*
 
 class PopularHook(classLoader: ClassLoader) : BaseHook(classLoader) {
-    private val hidden = sPrefs.getBoolean("hidden", false)
-
-    private val hideLowPlayCountLimit = sPrefs.getLong("hide_low_play_count_popular_limit", 0)
-    private val hideShortDurationLimit = sPrefs.getInt("hide_short_duration_popular_limit", 0)
-    private val hideLongDurationLimit = sPrefs.getInt("hide_long_duration_popular_limit", 0)
-
     private val hideTopEntrance = sPrefs.getBoolean("hide_top_entrance_popular", false)
     private val hideSuggestFollow = sPrefs.getBoolean("hide_suggest_follow_popular", false)
 
-    private val kwdFilterTitleRegexMode = sPrefs.getBoolean("popular_filter_title_regex_mode", false)
-    private val kwdFilterTitleRegexes by lazy { kwdFilterTitleList.map { it.toRegex() } }
+    private val hidden = sPrefs.getBoolean("hidden", false)
+
+    private val hideLowPlayCountLimit = sPrefs.getLong("hide_low_play_count_recommend_limit", 0)
+    private val hideShortDurationLimit = sPrefs.getInt("hide_short_duration_recommend_limit", 0)
+    private val hideLongDurationLimit = sPrefs.getInt("hide_long_duration_recommend_limit", 0)
     private val kwdFilterTitleList by lazy {
-        sPrefs.getStringSet("popular_filter_keywords_title", null).orEmpty()
+        migrateHomeFilterPrefsIfNeeded()
+        sPrefs.getStringSet("home_filter_keywords_title", null).orEmpty()
+    }
+    private val kwdFilterTitleRegexes by lazy { kwdFilterTitleList.map { it.toRegex() } }
+    private val kwdFilterTitleRegexMode = sPrefs.getBoolean("home_filter_title_regex_mode", false)
+    private val kwdFilterReasonList by lazy {
+        migrateHomeFilterPrefsIfNeeded()
+        sPrefs.getStringSet("home_filter_keywords_reason", null).orEmpty()
+    }
+    private val kwdFilterReasonRegexes by lazy { kwdFilterReasonList.map { it.toRegex() } }
+    private val kwdFilterReasonRegexMode = sPrefs.getBoolean("home_filter_reason_regex_mode", false)
+    private val kwdFilterUidList by lazy {
+        migrateHomeFilterPrefsIfNeeded()
+        sPrefs.getStringSet("home_filter_keywords_uid", null)
+            ?.mapNotNull { it.toLongOrNull() }.orEmpty()
+    }
+    private val kwdFilterUpnameList by lazy {
+        migrateHomeFilterPrefsIfNeeded()
+        sPrefs.getStringSet("home_filter_keywords_up", null).orEmpty()
+    }
+    private val kwdFilterUpnameRegexes by lazy { kwdFilterUpnameList.map { it.toRegex() } }
+    private val kwdFilterUpnameRegexMode = sPrefs.getBoolean("home_filter_up_regex_mode", false)
+    private val kwdFilterRnameList by lazy {
+        migrateHomeFilterPrefsIfNeeded()
+        sPrefs.getStringSet("home_filter_keywords_category", null).orEmpty()
+    }
+    private val kwdFilterTnameList by lazy {
+        migrateHomeFilterPrefsIfNeeded()
+        sPrefs.getStringSet("home_filter_keywords_channel", null).orEmpty()
     }
 
-    private val kwdFilterUpnameRegexMode = sPrefs.getBoolean("popular_filter_up_regex_mode", false)
-    private val kwdFilterUpnameRegexes by lazy { kwdFilterUpnameList.map { it.toRegex() } }
-    private val kwdFilterUpnameList by lazy {
-        sPrefs.getStringSet("popular_filter_keywords_up", null).orEmpty()
+    companion object {
+        private var dataVersion = ""
+        private var dataCount = 0
     }
 
     private fun String.isNum() = isNotEmpty() && all { it.isDigit() }
@@ -36,20 +61,17 @@ class PopularHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
     } ?: -1L
 
-    // 屏蔽过低的播放数
     private fun isLowCountVideo(obj: Any): Boolean {
         if (hideLowPlayCountLimit == 0L) return false
-        val rightDesc2 = obj.callMethodAs<String>("getRightDesc2") // xx万观看 · 时间
+        val rightDesc2 = obj.callMethodAs<String>("getRightDesc2")
 
         val text = rightDesc2.split(' ').first().removeSuffix("观看")
-
         return text.toPlayCount().let {
             if (it == -1L) false
             else it < hideLowPlayCountLimit
         }
     }
 
-    // 屏蔽指定播放时长
     private fun durationVideo(obj: Any): Boolean {
         fun getTimeInSeconds(time: String): Long {
             val parts = time.split(":").map { it.toInt() }
@@ -73,11 +95,12 @@ class PopularHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         return hideShortDurationLimit != 0 && duration < hideShortDurationLimit
     }
 
-    // 屏蔽关键词
     private fun isContainsBlockKwd(obj: Any, base: Any?): Boolean {
         base?: return false
 
-        // 屏蔽标题
+        val threePointV4 = base.callMethod("getThreePointV4")
+        val sharePlane = threePointV4?.callMethod("getSharePlane")
+
         if (kwdFilterTitleList.isNotEmpty()) {
             val title = base.callMethodAs<String>("getTitle")
             if (kwdFilterTitleRegexMode && title.isNotEmpty()) {
@@ -90,7 +113,12 @@ class PopularHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
         }
 
-        // 屏蔽UP主
+        if (kwdFilterUidList.isNotEmpty()) {
+            val uid = sharePlane?.callMethodAs<Long>("getAuthorId") ?: 0
+            if (uid != 0L && kwdFilterUidList.any { it == uid })
+                return true
+        }
+
         if (kwdFilterUpnameList.isNotEmpty()) {
             val upname = obj.callMethodAs<String>("getRightDesc1")
             if (kwdFilterUpnameRegexMode && upname.isNotEmpty()) {
@@ -102,19 +130,37 @@ class PopularHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
         }
 
+        if (kwdFilterReasonList.isNotEmpty()) {
+            val reasonStyle = obj.callMethod("getRcmdReasonStyle")
+            val reasonText = reasonStyle?.callMethodAs<String>("getText")
+
+            val hasContent = reasonText?.isNotEmpty() == true
+            do {
+                if (!hasContent) {
+                    break
+                }
+                if (kwdFilterReasonRegexMode && kwdFilterReasonRegexes.any { reasonText!!.contains(it) }) {
+                    return true
+                } else if (kwdFilterReasonList.any { reasonText!!.contains(it) }) {
+                    return true
+                }
+            } while (false)
+        }
+
         return false
     }
 
     override fun startHook() {
         Log.d("startHook: Popular")
+        if (!hidden) return
 
         fun cardV5Handle(obj: Any?): Boolean {
-            if (obj == null) return false
+            obj ?: return false
 
-            // printFields(obj)
             val base = obj.callMethod("getBase")
-            // val threePointV4 = base?.callMethod("getThreePointV4")
-            // val sharePlane = threePointV4?.callMethod("getSharePlane")
+            if (dataCount % 10 == 0) {
+                dataVersion = base?.callMethodAs<String>("getParam") ?: dataVersion
+            }
 
             return isLowCountVideo(obj) || durationVideo(obj) || isContainsBlockKwd(obj, base)
         }
@@ -123,29 +169,50 @@ class PopularHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             when (val itemCase = it.callMethod("getItemCase")?.toString()) {
                 "SMALL_COVER_V5" -> {
                     val v5 = it.callMethod("getSmallCoverV5")
+                    dataCount++
                     return@removeIf cardV5Handle(v5)
                 }
                 "POPULAR_TOP_ENTRANCE" -> {
                     return@removeIf hideTopEntrance
                 }
                 "RCMD_ONE_ITEM" -> {
+                    dataCount++
                     return@removeIf hideSuggestFollow
                 }
                 else -> {
-                    Log.w("itemCase is $itemCase")
+                    dataCount++
                     return@removeIf false
                 }
             }
         }
 
-        instance.popularClass?.hookAfterMethod(
-            "index", "com.bapis.bilibili.app.show.popular.v1.PopularResultReq") { param ->
-            param.result ?: return@hookAfterMethod
-            param.result.callMethod("ensureItemsIsMutable")
-            val card = param.result.callMethodAs<MutableList<Any>>("getItemsList")
-            Log.d("before filter size: ${card.size}")
-            card.filter()
-            Log.d("after filter size: ${card.size}")
-        }
+        instance.popularClass?.hookMethod(
+            "index", "com.bapis.bilibili.app.show.popular.v1.PopularResultReq", object: XC_MethodHook(){
+                override fun beforeHookedMethod(param: MethodHookParam?) {
+                    param?.args ?: return
+
+                    val versionField = param.args[0].javaClass.getDeclaredField("lastParam_")
+                    val idxField = param.args[0].javaClass.getDeclaredField("idx_")
+                    versionField.isAccessible = true
+                    idxField.isAccessible = true
+
+                    val idx = idxField.getLong(param.args[0])
+                    if (idx == 0L) {
+                        dataCount = 0
+                        dataVersion = ""
+                        return
+                    }
+
+                    versionField.set(param.args[0], dataVersion)
+                    idxField.set(param.args[0], dataCount)
+                }
+
+                override fun afterHookedMethod(param: MethodHookParam?) {
+                    param?.result ?: return
+
+                    param.result.callMethod("ensureItemsIsMutable")
+                    param.result.callMethodAs<MutableList<Any>>("getItemsList").filter()
+                }
+            })
     }
 }
