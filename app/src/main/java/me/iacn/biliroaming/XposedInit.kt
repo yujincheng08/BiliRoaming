@@ -91,7 +91,6 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                     startHook(BangumiSeasonHook(lpparam.classLoader))
                     startHook(BangumiPlayUrlHook(lpparam.classLoader))
                     startHook(PegasusHook(lpparam.classLoader))
-                    startHook(PopularHook(lpparam.classLoader))
                     startHook(CustomThemeHook(lpparam.classLoader))
                     startHook(TeenagersModeHook(lpparam.classLoader))
                     startHook(JsonHook(lpparam.classLoader))
