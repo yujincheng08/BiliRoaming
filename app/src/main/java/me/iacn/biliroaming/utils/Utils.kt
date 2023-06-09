@@ -409,15 +409,3 @@ fun Context.inflateLayout(
 fun Context.addModuleAssets() {
     resources.assets.callMethod("addAssetPath", XposedInit.modulePath)
 }
-
-fun printFields(obj: Any?) {
-    obj ?: return Log.i("printFields param is null")
-
-    val fields = obj.javaClass.declaredFields
-    Log.d("-------- print Obj start --------")
-    for (field in fields) {
-        field.isAccessible = true
-        Log.d("${obj.javaClass.name}-> ${field.name}: ${field.get(obj)}")
-    }
-    Log.d("-------- print Obj end --------")
-}

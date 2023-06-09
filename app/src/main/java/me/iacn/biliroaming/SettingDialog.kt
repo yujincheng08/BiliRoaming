@@ -93,7 +93,6 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("pref_import")?.onPreferenceClickListener = this
             findPreference("export_video")?.onPreferenceClickListener = this
             findPreference("home_filter")?.onPreferenceClickListener = this
-            findPreference("popular_filter")?.onPreferenceClickListener = this
             findPreference("custom_subtitle")?.onPreferenceChangeListener = this
             findPreference("danmaku_filter")?.onPreferenceClickListener = this
             findPreference("customize_accessKey")?.onPreferenceClickListener = this
@@ -648,11 +647,6 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             return true
         }
 
-        private fun onPopularFilterClick(): Boolean {
-            PopularFilterDialog(activity, prefs).show()
-            return true
-        }
-
         private fun onShareLogClick(): Boolean {
             if ((logFile.exists().not() && oldLogFile.exists().not()) || shouldSaveLog.not()) {
                 Log.toast("没有保存过日志", force = true)
@@ -798,7 +792,6 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             "export_video" -> onExportVideoClick()
             "customize_accessKey" -> onCustomizeAccessKeyClick()
             "home_filter" -> onHomeFilterClick()
-            "popular_filter" -> onPopularFilterClick()
             "share_log" -> onShareLogClick()
             "customize_drawer" -> onCustomizeDrawerClick()
             "custom_link" -> onCustomLinkClick()
