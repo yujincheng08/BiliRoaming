@@ -103,7 +103,7 @@
     <string name="hide_low_play_count_recommend_title">隱藏低播放量影片</string>
     <string name="hide_low_play_count_recommend_summary">隱藏低於指定播放量的影片</string>
     <string name="hide_top_entrance_popular_summary">隱藏熱門的頂欄（排行榜等）</string>
-    <string name="hide_suggest_follow_popular_summary">隱藏熱門的推薦關注（及其視頻）</string>
+    <string name="hide_suggest_follow_popular_summary">隱藏熱門的推薦關注（及其影片）</string>
     <string name="add_bangumi_title">新增其他地區番劇</string>
     <string name="add_bangumi_summary">在首頁標籤新增大陸/港澳台番劇分頁</string>
     <string name="add_movie_title">新增其他地區影視</string>
