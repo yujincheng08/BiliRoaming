@@ -88,8 +88,8 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             REASON_ID_CHANNEL_NAME,
         )
 
-        private var POPULAR_DATA_VERSION = ""
-        private var POPULAR_DATA_COUNT = 0
+        private var popularDataVersion = ""
+        private var popularDataCount = 0
     }
 
     private fun String.isNum() = isNotEmpty() && all { it.isDigit() }
@@ -439,8 +439,8 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         obj ?: return false
 
         val base = obj.callMethod("getBase")
-        if (POPULAR_DATA_COUNT % 10 == 0) {
-            POPULAR_DATA_VERSION = base?.callMethodAs<String>("getParam") ?: POPULAR_DATA_VERSION
+        if (popularDataCount % 10 == 0) {
+            popularDataVersion = base?.callMethodAs<String>("getParam") ?: popularDataVersion
         }
 
         return isLowCountVideoPopular(obj) || durationVideoPopular(obj) || isContainsBlockKwdPopular(obj, base)
@@ -538,18 +538,18 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             when (it.callMethod("getItemCase")?.toString()) {
                 "SMALL_COVER_V5" -> {
                     val v5 = it.callMethod("getSmallCoverV5")
-                    POPULAR_DATA_COUNT++
+                    popularDataCount++
                     return@removeIf cardV5Handle(v5)
                 }
                 "POPULAR_TOP_ENTRANCE" -> {
                     return@removeIf hideTopEntrance
                 }
                 "RCMD_ONE_ITEM" -> {
-                    POPULAR_DATA_COUNT++
+                    popularDataCount++
                     return@removeIf hideSuggestFollow
                 }
                 else -> {
-                    POPULAR_DATA_COUNT++
+                    popularDataCount++
                     return@removeIf false
                 }
             }
@@ -567,13 +567,13 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
                     val idx = idxField.getLong(param.args[0])
                     if (idx == 0L) {
-                        POPULAR_DATA_COUNT = 0
-                        POPULAR_DATA_VERSION = ""
+                        popularDataCount = 0
+                        popularDataVersion = ""
                         return
                     }
 
-                    versionField.set(param.args[0], POPULAR_DATA_VERSION)
-                    idxField.set(param.args[0], POPULAR_DATA_COUNT)
+                    versionField.set(param.args[0], popularDataVersion)
+                    idxField.set(param.args[0], popularDataCount)
                 }
 
                 override fun afterHookedMethod(param: MethodHookParam?) {
