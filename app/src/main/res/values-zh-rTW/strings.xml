@@ -123,7 +123,7 @@
     <string name="hide_long_duration_recommend_title">隱藏影片時長大於</string>
     <string name="hide_short_duration_recommend_title">隱藏影片時長小於</string>
     <string name="hide_duration_recommend_summary">隱藏指定時長的影片（秒）</string>
-    <string name="home_filter_title">首頁篩檢程式（推薦和熱門）</string>
+    <string name="home_filter_title">首頁過濾器（推薦和熱門）</string>
     <string name="home_filter_summary">過濾首頁推薦和熱門推送的內容（重啓兩次生效）</string>
     <string name="keywords_filter_recommend_summary">過濾包含指定關鍵字的內容</string>
     <string name="search_area_movie_title">開啟其它地區影劇搜尋</string>
