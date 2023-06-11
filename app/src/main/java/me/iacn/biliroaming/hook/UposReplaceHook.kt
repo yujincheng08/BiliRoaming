@@ -7,10 +7,10 @@ import me.iacn.biliroaming.utils.UposReplaceHelper.enableUposReplace
 import me.iacn.biliroaming.utils.UposReplaceHelper.forceUpos
 import me.iacn.biliroaming.utils.UposReplaceHelper.gotchaRegex
 import me.iacn.biliroaming.utils.UposReplaceHelper.initVideoUposList
-import me.iacn.biliroaming.utils.UposReplaceHelper.ipPCdnRegex
 import me.iacn.biliroaming.utils.UposReplaceHelper.isNeedReplaceVideoUpos
+import me.iacn.biliroaming.utils.UposReplaceHelper.isOverseaUpos
+import me.iacn.biliroaming.utils.UposReplaceHelper.isPCdnUpos
 import me.iacn.biliroaming.utils.UposReplaceHelper.liveUpos
-import me.iacn.biliroaming.utils.UposReplaceHelper.reconstructVideoUpos
 import me.iacn.biliroaming.utils.UposReplaceHelper.replaceUpos
 import me.iacn.biliroaming.utils.UposReplaceHelper.videoUposBackups
 import me.iacn.biliroaming.utils.from
@@ -33,8 +33,6 @@ class UposReplaceHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         if (enableLivePcdnBlock && !baseUrl.contains(gotchaRegex)) {
                             param.args[0] = baseUrl.replaceUpos(liveUpos)
                         }
-                    } else if (baseUrl.contains(ipPCdnRegex)) {
-                        // IP:Port type PCDN currently only exists in Live and Thai Video.
                     } else if (baseUrl.isNeedReplaceVideoUpos()) {
                         param.args[0] = baseUrl.replaceUpos()
                     }
@@ -52,37 +50,39 @@ class UposReplaceHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         }
                     } else {
                         @Suppress("UNCHECKED_CAST")
-                        // Cannot simply replace IP:Port type PCDN's host
-                        (param.args[0] as List<String>).filter { !it.contains(ipPCdnRegex) }
+                        (param.args[0] as List<String>).filter { !it.isPCdnUpos() }
                             .takeIf { backupUrls ->
                                 backupUrls.isEmpty() || !backupUrls.any { it.contains("live-bvc") }
                             } ?: return@hookBeforeMethod
                     }
-                    param.args[0] =
-                        reconstructBackupUposList(baseUrl, backupUrls, mediaAssertSegment)
+                    reconstructBackupUposList(
+                        baseUrl, backupUrls, mediaAssertSegment
+                    ).takeIf { it.isNotEmpty() }?.let {
+                        param.args[0] = it
+                    }
                 }
             }
     }
 
     override fun lateInitHook() {
-        initVideoUposList()
+        initVideoUposList(mClassLoader)
     }
 
     private fun reconstructBackupUposList(
         baseUrl: String, backupUrls: List<String>, mediaAssertSegment: Any?
-    ) = mutableListOf(
-        backupUrls.getOrNull(0)?.reconstructVideoUpos(videoUposBackups[0]) ?: baseUrl.replaceUpos(
-            videoUposBackups[0], true
-        ),
-        backupUrls.getOrNull(1)?.reconstructVideoUpos(videoUposBackups[1]) ?: baseUrl.replaceUpos(
-            videoUposBackups[1], true
-        ),
-    ).apply {
-        if (baseUrl.contains(ipPCdnRegex)) {
-            mediaAssertSegment?.setObjectField(
-                "url", backupUrls.first().replaceUpos()
-            )
-            this[0] = baseUrl
+    ): List<String> {
+        val rawUrl = backupUrls.firstOrNull() ?: baseUrl
+        return if (baseUrl.isPCdnUpos()) {
+            if (backupUrls.isNotEmpty()) {
+                mediaAssertSegment?.setObjectField("url", rawUrl.replaceUpos())
+                listOf(rawUrl.replaceUpos(videoUposBackups[0], rawUrl.isOverseaUpos()), baseUrl)
+            } else emptyList()
+        } else {
+            if (enablePcdnBlock || forceUpos || backupUrls.isEmpty() || rawUrl.isOverseaUpos()) {
+                listOf(
+                    rawUrl.replaceUpos(videoUposBackups[0]), rawUrl.replaceUpos(videoUposBackups[1])
+                )
+            } else emptyList()
         }
     }
 }

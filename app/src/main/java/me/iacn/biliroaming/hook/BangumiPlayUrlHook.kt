@@ -10,8 +10,7 @@ import me.iacn.biliroaming.network.BiliRoamingApi.getPlayUrl
 import me.iacn.biliroaming.network.BiliRoamingApi.getSeason
 import me.iacn.biliroaming.utils.*
 import me.iacn.biliroaming.utils.UposReplaceHelper.enableUposReplace
-import me.iacn.biliroaming.utils.UposReplaceHelper.ipPCdnRegex
-import me.iacn.biliroaming.utils.UposReplaceHelper.reconstructVideoUpos
+import me.iacn.biliroaming.utils.UposReplaceHelper.isPCdnUpos
 import me.iacn.biliroaming.utils.UposReplaceHelper.replaceUpos
 import me.iacn.biliroaming.utils.UposReplaceHelper.videoUposBackups
 import org.json.JSONObject
@@ -935,20 +934,17 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private fun reconstructVideoInfoUpos(
         baseUrl: String, backupUrls: List<String>
     ): Pair<String, List<String>> {
-        val filteredBackupUrls = backupUrls.filter { !it.contains(ipPCdnRegex) }
-        val newBackupUrls = mutableListOf(
-            filteredBackupUrls.getOrNull(0)?.reconstructVideoUpos(videoUposBackups[0])
-                ?: baseUrl.replaceUpos(videoUposBackups[0]),
-            filteredBackupUrls.getOrNull(1)?.reconstructVideoUpos(videoUposBackups[1])
-                ?: baseUrl.replaceUpos(videoUposBackups[1]),
-        )
-        return if (baseUrl.contains(ipPCdnRegex)) {
-            val newBaseUrl = newBackupUrls.firstOrNull { !it.contains(ipPCdnRegex) }
-                ?: return baseUrl to backupUrls
-            newBackupUrls[0] = baseUrl
-            newBaseUrl.reconstructVideoUpos() to newBackupUrls
+        val filteredBackupUrls = backupUrls.filter { !it.isPCdnUpos() }
+        val rawUrl = filteredBackupUrls.firstOrNull() ?: baseUrl
+        return if (baseUrl.isPCdnUpos()) {
+            if (filteredBackupUrls.isNotEmpty()) {
+                rawUrl.replaceUpos() to listOf(rawUrl.replaceUpos(videoUposBackups[0]), baseUrl)
+            } else baseUrl to backupUrls
         } else {
-            baseUrl.reconstructVideoUpos() to newBackupUrls
+            baseUrl.replaceUpos() to listOf(
+                rawUrl.replaceUpos(videoUposBackups[0]),
+                rawUrl.replaceUpos(videoUposBackups[1])
+            )
         }
     }
 }
