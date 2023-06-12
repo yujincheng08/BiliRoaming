@@ -1,5 +1,6 @@
 package me.iacn.biliroaming.hook
 
+import de.robv.android.xposed.XC_MethodHook
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.utils.*
 
@@ -48,6 +49,9 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private val removeRelateNothing = sPrefs.getBoolean("remove_video_relate_nothing", false)
     private val applyToRelate = sPrefs.getBoolean("home_filter_apply_to_relate", false)
 
+    private val hideTopEntrance = sPrefs.getBoolean("hide_top_entrance_popular", false)
+    private val hideSuggestFollow = sPrefs.getBoolean("hide_suggest_follow_popular", false)
+
     private val filterMap = mapOf(
         "advertisement" to listOf("ad"),
         "article" to listOf("article"),
@@ -83,6 +87,9 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             REASON_ID_CATEGORY_NAME,
             REASON_ID_CHANNEL_NAME,
         )
+
+        private var popularDataVersion = ""
+        private var popularDataCount = 0L
     }
 
     private fun String.isNum() = isNotEmpty() && all { it.isDigit() }
@@ -340,6 +347,104 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         return false
     }
 
+    private fun isLowCountVideoPopular(obj: Any): Boolean {
+        if (hideLowPlayCountLimit == 0L) return false
+        val rightDesc2 = obj.callMethodAs<String>("getRightDesc2")
+
+        val text = rightDesc2.split(' ').first().removeSuffix("观看")
+        return text.toPlayCount().let {
+            if (it == -1L) false
+            else it < hideLowPlayCountLimit
+        }
+    }
+
+    private fun durationVideoPopular(obj: Any): Boolean {
+        fun getTimeInSeconds(time: String): Long {
+            val parts = time.split(":").map { it.toInt() }
+
+            val seconds: Long = when (parts.size) {
+                2 -> parts[0] * 60L + parts[1]
+                3 -> parts[0] * 3600L + parts[1] * 60L + parts[2]
+                else -> Long.MAX_VALUE
+            }
+
+            return seconds
+        }
+
+        if (hideLongDurationLimit == 0 && hideShortDurationLimit == 0)
+            return false
+        val text = obj.callMethodAs<String>("getCoverRightText1")
+        val duration = getTimeInSeconds(text)
+
+        if (hideLongDurationLimit != 0 && duration > hideLongDurationLimit)
+            return true
+        return hideShortDurationLimit != 0 && duration < hideShortDurationLimit
+    }
+
+    private fun isContainsBlockKwdPopular(obj: Any, base: Any?): Boolean {
+        base?: return false
+
+        val threePointV4 = base.callMethod("getThreePointV4")
+        val sharePlane = threePointV4?.callMethod("getSharePlane")
+
+        if (kwdFilterTitleList.isNotEmpty()) {
+            val title = base.callMethodAs<String>("getTitle")
+            if (kwdFilterTitleRegexMode && title.isNotEmpty()) {
+                if (kwdFilterTitleRegexes.any { title.contains(it) })
+                    return true
+            } else if (title.isNotEmpty()) {
+                if (kwdFilterTitleList.any { title.contains(it) }) {
+                    return true
+                }
+            }
+        }
+
+        if (kwdFilterUidList.isNotEmpty()) {
+            val uid = sharePlane?.callMethodAs<Long>("getAuthorId") ?: 0
+            if (uid != 0L && kwdFilterUidList.any { it == uid })
+                return true
+        }
+
+        if (kwdFilterUpnameList.isNotEmpty()) {
+            val upname = obj.callMethodAs<String>("getRightDesc1")
+            if (kwdFilterUpnameRegexMode && upname.isNotEmpty()) {
+                if (kwdFilterUpnameRegexes.any { upname.contains(it) })
+                    return true
+            } else if (upname.isNotEmpty()) {
+                if (kwdFilterUpnameList.any { upname.contains(it) })
+                    return true
+            }
+        }
+
+        if (kwdFilterReasonList.isNotEmpty()) {
+            val reasonStyle = obj.callMethod("getRcmdReasonStyle")
+            val reasonText = reasonStyle?.callMethodAs<String>("getText")
+
+            do {
+                if (reasonText.isNullOrEmpty()) {
+                    break
+                }
+                if (kwdFilterReasonRegexMode && kwdFilterReasonRegexes.any { reasonText.contains(it) }) {
+                    return true
+                } else if (kwdFilterReasonList.any { reasonText.contains(it) }) {
+                    return true
+                }
+            } while (false)
+        }
+
+        return false
+    }
+    private fun cardV5Handle(obj: Any?): Boolean {
+        obj ?: return false
+
+        val base = obj.callMethod("getBase")
+        if (popularDataCount % 10 == 0L) {
+            popularDataVersion = base?.callMethodAs<String>("getParam") ?: popularDataVersion
+        }
+
+        return isLowCountVideoPopular(obj) || durationVideoPopular(obj) || isContainsBlockKwdPopular(obj, base)
+    }
+
     override fun startHook() {
         Log.d("startHook: Pegasus")
         instance.pegasusFeedClass?.hookAfterMethod(
@@ -427,5 +532,53 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 Log.toast("添加成功", force = true)
                 param.result = null
             }
+
+        fun MutableList<Any>.filterPopular() = removeIf {
+            when (it.callMethod("getItemCase")?.toString()) {
+                "SMALL_COVER_V5" -> {
+                    val v5 = it.callMethod("getSmallCoverV5")
+                    popularDataCount++
+                    return@removeIf cardV5Handle(v5)
+                }
+                "POPULAR_TOP_ENTRANCE" -> {
+                    return@removeIf hideTopEntrance
+                }
+                "RCMD_ONE_ITEM" -> {
+                    popularDataCount++
+                    return@removeIf hideSuggestFollow
+                }
+                else -> {
+                    popularDataCount++
+                    return@removeIf false
+                }
+            }
+        }
+
+        instance.popularClass?.hookBeforeMethod(
+            "index",
+            "com.bapis.bilibili.app.show.popular.v1.PopularResultReq"
+        ) { param ->
+            param.args ?: return@hookBeforeMethod
+
+            val idx = param.args[0].getLongFieldOrNull("idx_")
+            if (idx == null || idx == 0L) {
+                popularDataCount = 0
+                popularDataVersion = ""
+                return@hookBeforeMethod
+            }
+
+            param.args[0].setObjectField("lastParam_", popularDataVersion)
+            param.args[0].setLongField("idx_", popularDataCount)
+        }
+
+        instance.popularClass?.hookAfterMethod(
+            "index",
+            "com.bapis.bilibili.app.show.popular.v1.PopularResultReq"
+        ) { param ->
+            param.result ?: return@hookAfterMethod
+
+            param.result.callMethod("ensureItemsIsMutable")
+            param.result.callMethodAs<MutableList<Any>>("getItemsList").filterPopular()
+        }
     }
 }

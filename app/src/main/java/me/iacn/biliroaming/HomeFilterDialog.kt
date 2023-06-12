@@ -23,6 +23,12 @@ class HomeFilterDialog(activity: Activity, prefs: SharedPreferences) :
             )
         }
         scrollView.addView(root)
+        val hideTopSwitch = switchPrefsItem((string(R.string.hide_top_entrance_popular_summary)))
+            .let { root.addView(it.first); it.second }
+        hideTopSwitch.isChecked = prefs.getBoolean("hide_top_entrance_popular", false)
+        val hideFollowSwitch = switchPrefsItem((string(R.string.hide_suggest_follow_popular_summary)))
+            .let { root.addView(it.first); it.second }
+        hideFollowSwitch.isChecked = prefs.getBoolean("hide_suggest_follow_popular", false)
 
         val applyToRelateSwitch = switchPrefsItem(string(R.string.apply_to_relate_title))
             .let { root.addView(it.first); it.second }
@@ -85,6 +91,9 @@ class HomeFilterDialog(activity: Activity, prefs: SharedPreferences) :
         setTitle(string(R.string.home_filter_title))
 
         setPositiveButton(android.R.string.ok) { _, _ ->
+            val hideTop = hideTopSwitch.isChecked
+            val hideSuggestFollow = hideFollowSwitch.isChecked
+
             val lowPlayCount = lowPlayCountInput.text.toString().toLongOrNull() ?: 0
             val shortDuration = shortDurationInput.text.toString().toIntOrNull() ?: 0
             val longDuration = longDurationInput.text.toString().toIntOrNull() ?: 0
@@ -109,6 +118,8 @@ class HomeFilterDialog(activity: Activity, prefs: SharedPreferences) :
             }
 
             prefs.edit().apply {
+                putBoolean("hide_top_entrance_popular", hideTop)
+                putBoolean("hide_suggest_follow_popular", hideSuggestFollow)
                 putLong("hide_low_play_count_recommend_limit", lowPlayCount)
                 putInt("hide_short_duration_recommend_limit", shortDuration)
                 putInt("hide_long_duration_recommend_limit", longDuration)

@@ -97,6 +97,11 @@ message PegasusFeed {
   optional Method method = 2;
 }
 
+message Popular {
+  optional Class class = 1;
+  optional Method method = 2;
+}
+
 message OkIO {
   optional Class class = 1;
   optional Field field = 2;
@@ -289,6 +294,7 @@ message HookInfo {
   optional GsonHelper gson_helper = 46;
   optional PlayerCoreService player_core_service = 47;
   optional PegasusFeed pegasus_feed = 49;
+  optional Popular popular = 50;
   optional Class chronos_switch = 51;
   optional Class subtitle_span = 52;
   optional Class comment_long_click = 53;
