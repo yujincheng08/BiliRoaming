@@ -89,7 +89,7 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         )
 
         private var popularDataVersion = ""
-        private var popularDataCount = 0
+        private var popularDataCount = 0L
     }
 
     private fun String.isNum() = isNotEmpty() && all { it.isDigit() }
@@ -365,7 +365,7 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             val seconds: Long = when (parts.size) {
                 2 -> parts[0] * 60L + parts[1]
                 3 -> parts[0] * 3600L + parts[1] * 60L + parts[2]
-                else -> throw IllegalArgumentException("Invalid time format: $time")
+                else -> Long.MAX_VALUE
             }
 
             return seconds
@@ -420,14 +420,13 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             val reasonStyle = obj.callMethod("getRcmdReasonStyle")
             val reasonText = reasonStyle?.callMethodAs<String>("getText")
 
-            val hasContent = reasonText?.isNotEmpty() == true
             do {
-                if (!hasContent) {
+                if (reasonText.isNullOrEmpty()) {
                     break
                 }
-                if (kwdFilterReasonRegexMode && kwdFilterReasonRegexes.any { reasonText!!.contains(it) }) {
+                if (kwdFilterReasonRegexMode && kwdFilterReasonRegexes.any { reasonText.contains(it) }) {
                     return true
-                } else if (kwdFilterReasonList.any { reasonText!!.contains(it) }) {
+                } else if (kwdFilterReasonList.any { reasonText.contains(it) }) {
                     return true
                 }
             } while (false)
@@ -439,7 +438,7 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         obj ?: return false
 
         val base = obj.callMethod("getBase")
-        if (popularDataCount % 10 == 0) {
+        if (popularDataCount % 10 == 0L) {
             popularDataVersion = base?.callMethodAs<String>("getParam") ?: popularDataVersion
         }
 
@@ -555,33 +554,31 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
         }
 
-        instance.popularClass?.hookMethod(
-            "index", "com.bapis.bilibili.app.show.popular.v1.PopularResultReq", object: XC_MethodHook(){
-                override fun beforeHookedMethod(param: MethodHookParam?) {
-                    param?.args ?: return
+        instance.popularClass?.hookBeforeMethod(
+            "index",
+            "com.bapis.bilibili.app.show.popular.v1.PopularResultReq"
+        ) { param ->
+            param.args ?: return@hookBeforeMethod
 
-                    val versionField = param.args[0].javaClass.getDeclaredField("lastParam_")
-                    val idxField = param.args[0].javaClass.getDeclaredField("idx_")
-                    versionField.isAccessible = true
-                    idxField.isAccessible = true
+            val idx = param.args[0].getLongFieldOrNull("idx_")
+            if (idx == null || idx == 0L) {
+                popularDataCount = 0
+                popularDataVersion = ""
+                return@hookBeforeMethod
+            }
 
-                    val idx = idxField.getLong(param.args[0])
-                    if (idx == 0L) {
-                        popularDataCount = 0
-                        popularDataVersion = ""
-                        return
-                    }
+            param.args[0].setObjectField("lastParam_", popularDataVersion)
+            param.args[0].setLongField("idx_", popularDataCount)
+        }
 
-                    versionField.set(param.args[0], popularDataVersion)
-                    idxField.set(param.args[0], popularDataCount)
-                }
+        instance.popularClass?.hookAfterMethod(
+            "index",
+            "com.bapis.bilibili.app.show.popular.v1.PopularResultReq"
+        ) { param ->
+            param.result ?: return@hookAfterMethod
 
-                override fun afterHookedMethod(param: MethodHookParam?) {
-                    param?.result ?: return
-
-                    param.result.callMethod("ensureItemsIsMutable")
-                    param.result.callMethodAs<MutableList<Any>>("getItemsList").filterPopular()
-                }
-            })
+            param.result.callMethod("ensureItemsIsMutable")
+            param.result.callMethodAs<MutableList<Any>>("getItemsList").filterPopular()
+        }
     }
 }
