@@ -266,6 +266,8 @@
     <string name="disable_auto_select_title">禁止自動轉到動態</string>
     <string name="disable_auto_select_summary">禁止評論帶圖時自動勾選轉到動態</string>
     <string name="apply_to_relate_title">同時套用於影片下方推薦</string>
+    <string name="disable_vip_dm_colorful_title">篩選漸層顏色弹幕</string>
+    <string name="disable_vip_dm_colorful_summary">漸層顏色（非一般彩色）彈幕顯示為白色</string>
     <string name="search_hint" tools:ignore="TypographyEllipsis">搜尋...</string>
     <string name="block_video_comment_title">屏蔽影片評論區</string>
     <string name="support">捐贈</string>

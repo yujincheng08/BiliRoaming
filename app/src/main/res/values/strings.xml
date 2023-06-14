@@ -266,6 +266,8 @@
     <string name="disable_auto_select_title">禁止自动转到动态</string>
     <string name="disable_auto_select_summary">禁止评论带图时自动勾选转到动态</string>
     <string name="apply_to_relate_title">同时应用于视频下方推荐</string>
+    <string name="disable_vip_dm_colorful_title">过滤渐变色弹幕</string>
+    <string name="disable_vip_dm_colorful_summary">渐变色（非普通彩色）弹幕显示为白色</string>
     <string name="search_hint" tools:ignore="TypographyEllipsis">搜索...</string>
     <string name="block_video_comment_title">屏蔽视频评论区</string>
     <string name="support">捐赠</string>
