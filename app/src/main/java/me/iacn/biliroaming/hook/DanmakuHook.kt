@@ -4,10 +4,10 @@ import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.utils.*
 
 class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
-    private val blockWeight = sPrefs.getInt("danmaku_filter_weight", 0)
-    private val disableVipDmColorful = sPrefs.getBoolean("disable_vip_dm_colorful", false)
 
     override fun startHook() {
+        val blockWeight = sPrefs.getInt("danmaku_filter_weight", 0)
+        val disableVipDmColorful = sPrefs.getBoolean("disable_vip_dm_colorful", false)
         if (blockWeight <= 0 && !disableVipDmColorful) return
         instance.dmMossClass?.hookBeforeMethod(
             "dmSegMobile",
@@ -15,14 +15,13 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             instance.mossResponseHandlerClass
         ) { param ->
             param.args[1] = param.args[1].mossResponseHandlerProxy {
-                filterDanmaku(it)
-                clearVipColorfulSrc(it)
+                if (blockWeight > 0) filterDanmaku(it, blockWeight)
+                if (disableVipDmColorful) clearVipColorfulSrc(it)
             }
         }
     }
 
-    private fun filterDanmaku(reply: Any?) {
-        if (blockWeight <= 0) return
+    private fun filterDanmaku(reply: Any?, blockWeight: Int) {
         reply?.callMethodAs<List<Any>>("getElemsList")?.filter {
             it.callMethodAs<Int>("getWeight") >= blockWeight
         }?.let {
@@ -32,7 +31,6 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     private fun clearVipColorfulSrc(reply: Any?) {
-        if (!disableVipDmColorful) return
         reply?.callMethodOrNullAs<List<Any>>("getColorfulSrcList")?.filter {
             // DmColorfulType 60001 VipGradualColor
             it.callMethodAs<Int>("getTypeValue") != 60001
