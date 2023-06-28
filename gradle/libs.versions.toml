@@ -11,7 +11,7 @@ lsplugin-jgit = { id = "org.lsposed.lsplugin.jgit", version = "1.0" }
 lsplugin-resopt = { id = "org.lsposed.lsplugin.resopt", version = "1.5" }
 lsplugin-apksign = { id = "org.lsposed.lsplugin.apksign", version = "1.1" }
 lsplugin-apktransform = { id = "org.lsposed.lsplugin.apktransform", version = "1.2" }
-lsplugin-cmaker = { id = "org.lsposed.lsplugin.cmaker", version = "1.1" }
+lsplugin-cmaker = { id = "org.lsposed.lsplugin.cmaker", version = "1.2" }
 
 
 
