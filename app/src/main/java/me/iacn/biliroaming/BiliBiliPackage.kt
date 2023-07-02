@@ -240,6 +240,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     fun defaultSpeed() = mHookInfo.playerCoreService.getDefaultSpeed.orNull
 
+    fun setDefaultSpeed() = mHookInfo.playerCoreService.setDefaultSpeed.orNull
+
     fun urlField() = mHookInfo.okHttp.request.url.orNull
 
     fun gsonToJson() = mHookInfo.gsonHelper.toJson.orNull
@@ -1389,6 +1391,22 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                         -1,
                         1,
                         "FZ",
+                        dexHelper.encodeClassIndex(playerCoreServiceClass),
+                        null,
+                        null,
+                        null,
+                        true
+                    ).asSequence().firstNotNullOfOrNull {
+                        dexHelper.decodeMethodIndex(it)
+                    }?.name ?: return@method
+                }
+                setDefaultSpeed = method {
+                    name = dexHelper.findMethodUsingString(
+                        "player_key_video_speed",
+                        true,
+                        -1,
+                        1,
+                        "VF",
                         dexHelper.encodeClassIndex(playerCoreServiceClass),
                         null,
                         null,

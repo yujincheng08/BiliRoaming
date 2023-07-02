@@ -95,6 +95,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("home_filter")?.onPreferenceClickListener = this
             findPreference("custom_subtitle")?.onPreferenceChangeListener = this
             findPreference("danmaku_filter")?.onPreferenceClickListener = this
+            findPreference("default_speed").onPreferenceClickListener = this
             findPreference("customize_accessKey")?.onPreferenceClickListener = this
             findPreference("share_log")?.onPreferenceClickListener = this
             findPreference("customize_drawer")?.onPreferenceClickListener = this
@@ -507,8 +508,9 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
 
         private fun onDanmakuFilterClick(): Boolean {
             AlertDialog.Builder(activity).run {
-                val view = context.inflateLayout(R.layout.danmaku_filter_dialog)
+                val view = context.inflateLayout(R.layout.seekbar_dialog)
                 val seekBar = view.findViewById<SeekBar>(R.id.seekBar)
+                seekBar.max = 12
                 val tvHint = view.findViewById<TextView>(R.id.tvHint)
                 seekBar.setOnSeekBarChangeListener(object : OnSeekBarChangeListener {
                     override fun onProgressChanged(
@@ -531,6 +533,39 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 }
                 setView(view)
                 show()
+            }
+            return true
+        }
+
+        private fun onDefaultSpeedClick(): Boolean {
+            AlertDialog.Builder(activity).run {
+                val view = context.inflateLayout(R.layout.seekbar_dialog)
+                val seekBar = view.findViewById<SeekBar>(R.id.seekBar)
+                seekBar.max = 100
+                val tvHint = view.findViewById<TextView>(R.id.tvHint)
+                seekBar.setOnSeekBarChangeListener(object : OnSeekBarChangeListener {
+                    @SuppressLint("SetTextI18n")
+                    override fun onProgressChanged(
+                        seekBar: SeekBar?, progress: Int, fromUser: Boolean
+                    ) {
+                        tvHint.text = "${progress * 10}%"
+                    }
+
+                    override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+                    override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+                })
+                val current = prefs.getInt("default_speed", 100)
+                @SuppressLint("SetTextI18n")
+                tvHint.text = "${current * 10}%"
+                seekBar.progress = current / 10
+                setTitle(R.string.default_speed_title)
+                setNegativeButton(android.R.string.cancel, null)
+                setPositiveButton(android.R.string.ok) { _, _ ->
+                    prefs.edit().putInt("default_speed", seekBar.progress * 10).apply()
+                }
+                setView(view)
+                show()
+
             }
             return true
         }
@@ -797,6 +832,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             "custom_link" -> onCustomLinkClick()
             "customize_dynamic" -> onCustomDynamicClick()
             "danmaku_filter" -> onDanmakuFilterClick()
+            "default_speed" -> onDefaultSpeedClick()
             else -> false
         }
     }

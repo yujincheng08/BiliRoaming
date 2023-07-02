@@ -272,4 +272,6 @@
     <string name="block_video_comment_title">屏蔽视频评论区</string>
     <string name="support">捐赠</string>
     <string name="support_summary">捐赠以支持模块开发</string>
+    <string name="default_speed_summary">设置视频播放默认速度，视频播放后可手动覆盖该速度</string>
+    <string name="default_speed_title">视频默认播放速度</string>
 </resources>

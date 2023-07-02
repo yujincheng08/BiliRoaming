@@ -252,6 +252,12 @@
             android:key="disable_vip_dm_colorful"
             android:summary="@string/disable_vip_dm_colorful_summary"
             android:title="@string/disable_vip_dm_colorful_title" />
+
+        <Preference
+            android:key="default_speed"
+            android:summary="@string/default_speed_summary"
+            android:title="@string/default_speed_title" />
+
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/pref_backup">
         <Preference
