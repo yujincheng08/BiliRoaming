@@ -45,8 +45,8 @@ cmaker {
 
 android {
     namespace = "me.iacn.biliroaming"
-    compileSdk = 33
-    buildToolsVersion = "33.0.2"
+    compileSdk = 34
+    buildToolsVersion = "34.0.0"
     ndkVersion = "25.2.9519653"
 
     buildFeatures {
@@ -57,7 +57,7 @@ android {
     defaultConfig {
         applicationId = "me.iacn.biliroaming"
         minSdk = 24
-        targetSdk = 33  // Target Android T
+        targetSdk = 34  // Target Android U
         versionCode = appVerCode
         versionName = appVerName
     }

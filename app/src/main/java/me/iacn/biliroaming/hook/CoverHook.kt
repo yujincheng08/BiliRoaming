@@ -159,13 +159,13 @@ class CoverHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                 contentValues
                             )
                             try {
-                                resolver.openOutputStream(uri!!).use { stream ->
+                                resolver.openOutputStream(uri!!)?.use { stream ->
                                     it.compress(Bitmap.CompressFormat.PNG, 100, stream)
+                                    Log.toast(
+                                        "保存封面成功到\n$relativePath${File.separator}$filename.png",
+                                        true
+                                    )
                                 }
-                                Log.toast(
-                                    "保存封面成功到\n$relativePath${File.separator}$filename.png",
-                                    true
-                                )
                             } catch (e: Throwable) {
                                 Log.e(e)
                                 Log.toast("保存封面失败，可能已经保存或未授予权限", true)
