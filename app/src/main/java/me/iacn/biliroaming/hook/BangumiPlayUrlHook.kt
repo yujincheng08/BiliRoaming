@@ -30,7 +30,6 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         // DASH, HDR, 4K, DOBLY AUDO, DOBLY VISION, 8K, AV1
         const val MAX_FNVAL = 16 or 64 or 128 or 256 or 512 or 1024 or 2048
         const val FAIL_CODE = -404
-        var countDownLatch: CountDownLatch? = null
         val qnApplied = AtomicBoolean(false)
         private const val PGC_ANY_MODEL_TYPE_URL =
             "type.googleapis.com/bilibili.app.playerunite.pgcanymodel.PGCAnyModel"
@@ -172,7 +171,6 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             ?: lastSeasonInfo["season_id"] ?: "0"
                         val (thaiSeason, thaiEp) = getThaiSeason(seasonId, req.epId)
                         val content = getPlayUrl(reconstructQuery(req, response, thaiEp))
-                        countDownLatch?.countDown()
                         content?.let {
                             Log.toast("已从代理服务器获取播放地址\n如加载缓慢或黑屏，可去漫游设置中测速并设置 UPOS")
                             param.result = reconstructResponse(
@@ -249,7 +247,6 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             ?: lastSeasonInfo["season_id"] ?: "0"
                         val (thaiSeason, thaiEp) = getThaiSeason(seasonId, req.epId)
                         val content = getPlayUrl(reconstructQuery(req, response, thaiEp))
-                        countDownLatch?.countDown()
                         content?.let {
                             Log.toast("已从代理服务器获取播放地址\n如加载缓慢或黑屏，可去漫游设置中测速并设置 UPOS")
                             param.result = reconstructResponse(
@@ -326,7 +323,6 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         val req = PlayViewUniteReq.parseFrom(serializedRequest)
                         val (thaiSeason, thaiEp) = getThaiSeason(seasonId, reqEpId)
                         val content = getPlayUrl(reconstructQueryUnite(req, supplement, thaiEp))
-                        countDownLatch?.countDown()
                         content?.let {
                             Log.toast("已从代理服务器获取播放地址\n如加载缓慢或黑屏，可去漫游设置中测速并设置 UPOS")
                             param.result = reconstructResponseUnite(

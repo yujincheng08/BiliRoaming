@@ -15,7 +15,6 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import me.iacn.biliroaming.*
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
-import me.iacn.biliroaming.hook.BangumiPlayUrlHook.Companion.countDownLatch
 import me.iacn.biliroaming.hook.BangumiSeasonHook.Companion.lastSeasonInfo
 import me.iacn.biliroaming.network.BiliRoamingApi
 import me.iacn.biliroaming.utils.*
@@ -23,8 +22,6 @@ import org.json.JSONArray
 import java.io.File
 import java.lang.reflect.Method
 import java.lang.reflect.Proxy
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
 import kotlin.math.ceil
 import kotlin.math.roundToInt
 
@@ -300,19 +297,13 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             val extraSubtitles = mutableListOf<SubtitleItem>()
             if (mainFunc) {
                 val oid = param.args[0].callMethod("getOid").toString()
-                var tryThailand = lastSeasonInfo.containsKey("watch_platform")
+                val tryThailand = (lastSeasonInfo.containsKey("watch_platform")
                         && lastSeasonInfo["watch_platform"] == "1"
                         && lastSeasonInfo.containsKey(oid)
                         && (param.result == null || param.result.callMethod("getSubtitle")
-                    ?.callMethod("getSubtitlesCount") == 0)
-                if (!tryThailand && !lastSeasonInfo.containsKey("area")) {
-                    countDownLatch = CountDownLatch(1)
-                    runCatchingOrNull {
-                        countDownLatch?.await(5, TimeUnit.SECONDS)
-                    }
-                    tryThailand = lastSeasonInfo.containsKey("area")
-                            && lastSeasonInfo["area"] == "th"
-                }
+                    ?.callMethod("getSubtitlesCount") == 0)) || (
+                        lastSeasonInfo.containsKey("area")
+                                && lastSeasonInfo["area"] == "th")
                 if (tryThailand) {
                     val subtitles = if (lastSeasonInfo.containsKey("sb$oid")) {
                         JSONArray(lastSeasonInfo["sb$oid"])
