@@ -297,13 +297,13 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             val extraSubtitles = mutableListOf<SubtitleItem>()
             if (mainFunc) {
                 val oid = param.args[0].callMethod("getOid").toString()
-                val tryThailand = (lastSeasonInfo.containsKey("watch_platform")
-                        && lastSeasonInfo["watch_platform"] == "1"
-                        && lastSeasonInfo.containsKey(oid)
-                        && (param.result == null || param.result.callMethod("getSubtitle")
-                    ?.callMethod("getSubtitlesCount") == 0)) || (
+                val tryThailand = lastSeasonInfo.containsKey(oid) && ((
                         lastSeasonInfo.containsKey("area")
-                                && lastSeasonInfo["area"] == "th")
+                                && lastSeasonInfo["area"] == "th") ||
+                        (lastSeasonInfo.containsKey("watch_platform")
+                                && lastSeasonInfo["watch_platform"] == "1"
+                                && (param.result == null || param.result.callMethod("getSubtitle")
+                            ?.callMethod("getSubtitlesCount") == 0)))
                 if (tryThailand) {
                     val subtitles = if (lastSeasonInfo.containsKey("sb$oid")) {
                         JSONArray(lastSeasonInfo["sb$oid"])
