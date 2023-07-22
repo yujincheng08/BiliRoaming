@@ -204,6 +204,8 @@
     <string name="block_up_rcmd_ads_summary">封鎖影片播放過程中，浮窗出現的UP主推薦廣告</string>
     <string name="block_bangumi_page_ads_title">封鎖番劇頁面廣告</string>
     <string name="block_bangumi_page_ads_summary">封鎖番劇頁面彈窗廣告及會員購</string>
+    <string name="block_live_order_title">封鎖直播預約</string>
+    <string name="block_live_order_summary">封鎖影片詳情頁的直播預約信息</string>
     <string name="generate_subtitle_title">生成簡中字幕</string>
     <string name="generate_subtitle_summary">根據繁體字幕自動生成簡體中文字幕</string>
     <string name="forbid_switch_live_room_title">禁止滑動切換直播間</string>

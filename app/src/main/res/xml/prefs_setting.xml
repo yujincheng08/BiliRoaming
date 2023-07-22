@@ -449,6 +449,12 @@
             android:summary="@string/block_bangumi_page_ads_summary"
             android:title="@string/block_bangumi_page_ads_title" />
 
+        <SwitchPreference
+            android:dependency="hidden"
+            android:key="block_live_order"
+            android:summary="@string/block_live_order_summary"
+            android:title="@string/block_live_order_title" />
+
         <MultiSelectListPreference
             android:dependency="hidden"
             android:entries="@array/live_popup_entries"

@@ -13,6 +13,7 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     override fun startHook() {
         val hidden = sPrefs.getBoolean("hidden", false)
+        val blockLiveOrder = sPrefs.getBoolean("block_live_order", false)
         val purifyCity = sPrefs.getBoolean("purify_city", false)
         val removeHonor = sPrefs.getBoolean("remove_video_honor", false)
         val removeUgcSeason = sPrefs.getBoolean("remove_video_UgcSeason", false)
@@ -68,6 +69,9 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
             if (hidden && removeUgcSeason) {
                 param.result.callMethod("clearUgcSeason")
+            }
+            if (hidden && blockLiveOrder) {
+                param.result.callMethod("clearLiveOrderInfo")
             }
         }
 
