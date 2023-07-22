@@ -1922,8 +1922,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 check = method { name = checkMethod.name }
             }
             playerPreloadHolder = playerPreloadHolder {
-                val stringClassIndex = dexHelper.encodeClassIndex(String::class.java)
-                val getMethod = dexHelper.findMethodUsingString(
+                dexHelper.findMethodUsingString(
                     "preloadKey is null",
                     false,
                     -1,
@@ -1935,6 +1934,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     null,
                     true
                 ).firstOrNull()?.run {
+                    val stringClassIndex = dexHelper.encodeClassIndex(String::class.java)
                     dexHelper.findMethodInvoking(
                         this,
                         stringClassIndex,
@@ -1948,9 +1948,32 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     ).firstOrNull()?.let {
                         dexHelper.decodeMethodIndex(it)
                     }
+                }?.let {
+                    class_ = class_ { name = it.declaringClass.name }
+                    get = method { name = it.name }
+                    return@playerPreloadHolder
+                }
+                // 粉版 7.39.0+
+                val geminiPreloadClass = dexHelper.findMethodUsingString(
+                    "PreloadData(type=",
+                    false,
+                    -1,
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).firstOrNull()?.let {
+                    dexHelper.decodeMethodIndex(it)?.declaringClass?.declaringClass
                 } ?: return@playerPreloadHolder
-                class_ = class_ { name = getMethod.declaringClass.name }
-                get = method { name = getMethod.name }
+                geminiPreloadClass.declaredMethods.firstOrNull {
+                    it.isPublic && it.parameterTypes.count() == 1
+                }?.let {
+                    class_ = class_ { name = it.declaringClass.name }
+                    get = method { name = it.name }
+                }
             }
             playerSettingHelper = playerSettingHelper {
                 val getDefaultQnMethod = dexHelper.findMethodUsingString(

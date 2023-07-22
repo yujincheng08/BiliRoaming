@@ -10,11 +10,7 @@ class VideoQualityHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val halfScreenQuality = sPrefs.getString("half_screen_quality", "0")?.toInt() ?: 0
         val fullScreenQuality = sPrefs.getString("full_screen_quality", "0")?.toInt() ?: 0
         if (halfScreenQuality != 0) {
-            instance.playerPreloadHolderClass?.replaceMethod(
-                instance.getPreload(),
-                "tv.danmaku.bili.videopage.common.preload.PreloadType",
-                String::class.java
-            ) { null }
+            instance.playerPreloadHolderClass?.replaceAllMethods(instance.getPreload()) { null }
         }
         if (fullScreenQuality != 0) {
             instance.playerSettingHelperClass?.replaceMethod(instance.getDefaultQn()) { fullScreenQuality }
