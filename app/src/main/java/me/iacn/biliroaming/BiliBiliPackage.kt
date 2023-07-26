@@ -1362,6 +1362,20 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                         true
                     ).asSequence().firstNotNullOfOrNull {
                         dexHelper.decodeMethodIndex(it)
+                    } ?: run {
+                        dexHelper.findMethodInvoked(
+                            doSeekToIndex,
+                            -1,
+                            2,
+                            "VIZ",
+                            playerCoreServiceIndex,
+                            null,
+                            null,
+                            null,
+                            true
+                        ).asSequence().firstNotNullOfOrNull {
+                            dexHelper.decodeMethodIndex(it)
+                        }
                     }
                 } ?: return@playerCoreService
                 val playerCoreServiceClass = seekToMethod.declaringClass
