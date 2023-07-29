@@ -455,6 +455,12 @@
             android:summary="@string/block_live_order_summary"
             android:title="@string/block_live_order_title" />
 
+        <SwitchPreference
+            android:dependency="hidden"
+            android:key="remove_up_vip_label"
+            android:summary="@string/remove_up_vip_label_summary"
+            android:title="@string/remove_up_vip_label_title" />
+
         <MultiSelectListPreference
             android:dependency="hidden"
             android:entries="@array/live_popup_entries"
