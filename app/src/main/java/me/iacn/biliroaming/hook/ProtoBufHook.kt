@@ -18,6 +18,7 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val removeHonor = sPrefs.getBoolean("remove_video_honor", false)
         val removeUgcSeason = sPrefs.getBoolean("remove_video_UgcSeason", false)
         val removeCmdDms = sPrefs.getBoolean("remove_video_cmd_dms", false)
+        val removeUpVipLabel = sPrefs.getBoolean("remove_up_vip_label", false)
         val purifySearch = sPrefs.getBoolean("purify_search", false)
         val purifyCampus = sPrefs.getBoolean("purify_campus", false)
         val blockWordSearch = sPrefs.getBoolean("block_word_search", false)
@@ -72,6 +73,10 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
             if (hidden && blockLiveOrder) {
                 param.result.callMethod("clearLiveOrderInfo")
+            }
+            if (hidden && removeUpVipLabel) {
+                param.result.callMethod("getOwnerExt")?.callMethod("getVip")
+                    ?.callMethod("clearLabel")
             }
         }
 
