@@ -1032,7 +1032,14 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     private fun fixViewProto(resp: Any, supplement: ViewPgcAny): Any? {
-        Log.toast("发现区域限制视频，尝试解锁……")
+        val isAreaLimit = supplement.ogvData.rights.areaLimit != 0
+        val unlockDownload = sPrefs.getBoolean("allow_download", false)
+
+        if (!(isAreaLimit || unlockDownload))
+            return null
+
+        if (isAreaLimit)
+            Log.toast("发现区域限制视频，尝试解锁……")
 
         resp.callMethod("getArc")?.callMethod("getRight")?.run {
             callMethod("setDownload", true)
@@ -1043,12 +1050,14 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val newSupplement = supplement.copy {
             ogvData = ogvData.copy {
                 rights = rights.copy {
-                    allowDownload = 1
+                    if (unlockDownload) {
+                        allowDownload = 1
+                        onlyVipDownload = 0
+                        newAllowDownload = 1
+                    }
                     allowReview = 1
                     areaLimit = 0
                     banAreaShow = 1
-                    onlyVipDownload = 0
-                    newAllowDownload = 1
                 }
             }
         }
@@ -1080,7 +1089,9 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                                 }
                                             }
                                             rights = rights.copy {
-                                                allowDownload = 1
+                                                if (unlockDownload) {
+                                                    allowDownload = 1
+                                                }
                                                 allowReview = 1
                                                 canWatch = 1
                                                 allowDm = 1
