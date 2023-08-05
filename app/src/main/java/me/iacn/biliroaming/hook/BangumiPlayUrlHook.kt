@@ -16,7 +16,6 @@ import me.iacn.biliroaming.utils.UposReplaceHelper.videoUposBackups
 import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
-import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.abs
 
@@ -343,6 +342,83 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     param.result = purifyViewInfo(response, supplement)
                 }
             }
+            // 7.41.0+ use async
+            hookBeforeMethod(
+                "playViewUnite",
+                instance.playViewUniteReqClass,
+                instance.mossResponseHandlerClass
+            ) { param ->
+                val request = param.args[0]
+                val vod = request.callMethod("getVod") ?: return@hookBeforeMethod
+                isDownload = sPrefs.getBoolean("allow_download", false)
+                        && vod.callMethodAs<Int>("getDownload") >= 1
+                if (isDownload) {
+                    if (!sPrefs.getBoolean("fix_download", false)
+                        || vod.callMethodAs<Int>("getFnval") <= 1
+                    ) {
+                        vod.callMethod("setFnval", MAX_FNVAL)
+                        vod.callMethod("setFourk", true)
+                    }
+                    vod.callMethod("setDownload", 0)
+                } else if (halfScreenQuality != 0 || fullScreenQuality != 0) {
+                    // unlock available quality limit, allow quality up to 8K
+                    vod.callMethod("setFnval", MAX_FNVAL)
+                    vod.callMethod("setFourk", true)
+                    if (halfScreenQuality != 0 && qnApplied.compareAndSet(false, true)) {
+                        if (halfScreenQuality != 1) {
+                            vod.callMethod("setQn", halfScreenQuality)
+                        } else {
+                            // follow full screen quality
+                            defaultQn?.let { vod.callMethod("setQn", it) }
+                        }
+                    }
+                }
+                param.args[1] = param.args[1].mossResponseHandlerReplaceProxy { originalResp ->
+                    val request = param.args[0]
+                    val response =
+                        originalResp ?: "com.bapis.bilibili.app.playerunite.v1.PlayViewUniteReply"
+                            .on(mClassLoader).new()
+                    val supplementAny = response.callMethod("getSupplement")
+                    val typeUrl = supplementAny?.callMethodAs<String>("getTypeUrl")
+                    // Only handle pgc video
+                    if (originalResp != null && typeUrl != PGC_ANY_MODEL_TYPE_URL)
+                        return@mossResponseHandlerReplaceProxy null
+                    val extraContent =
+                        request.callMethodAs<Map<String, String>>("getExtraContentMap")
+                    val seasonId = extraContent.getOrDefault("season_id", "0")
+                    val reqEpId = extraContent.getOrDefault("ep_id", "0").toLong()
+                    if (seasonId == "0" && reqEpId == 0L)
+                        return@mossResponseHandlerReplaceProxy null
+                    val supplement = supplementAny?.callMethod("getValue")
+                        ?.callMethodAs<ByteArray>("toByteArray")
+                        ?.let { PlayViewReply.parseFrom(it) } ?: playViewReply {}
+                    val newResponse = if (needProxyUnite(response, supplement)) {
+                        try {
+                            val serializedRequest = request.callMethodAs<ByteArray>("toByteArray")
+                            val req = PlayViewUniteReq.parseFrom(serializedRequest)
+                            val (thaiSeason, thaiEp) = getThaiSeason(seasonId, reqEpId)
+                            val content = getPlayUrl(reconstructQueryUnite(req, supplement, thaiEp))
+                            content?.let {
+                                Log.toast("已从代理服务器获取播放地址\n如加载缓慢或黑屏，可去漫游设置中测速并设置 UPOS")
+                                reconstructResponseUnite(
+                                    req, response, supplement, it, isDownload, thaiSeason, thaiEp
+                                )
+                            }
+                                ?: throw CustomServerException(mapOf("未知错误" to "请检查哔哩漫游设置中解析服务器设置。"))
+                        } catch (e: CustomServerException) {
+                            Log.toast("请求解析服务器发生错误: ${e.message}", alsoLog = true)
+                            return@mossResponseHandlerReplaceProxy showPlayerErrorUnite(
+                                response, supplement, "请求解析服务器发生错误", e.message
+                            )
+                        }
+                    } else if (isDownload) {
+                        fixDownloadProtoUnite(response)
+                    } else if (blockBangumiPageAds) {
+                        purifyViewInfo(response, supplement)
+                    } else return@mossResponseHandlerReplaceProxy null
+                    newResponse
+                }
+            }
         }
         instance.playURLMossClass?.hookBeforeMethod(
             "playView", instance.playViewReqClass
@@ -445,6 +521,27 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         clearVideoInfo()
     }
 
+    private fun PlaysharedViewInfo.toErrorReply(message: String, subMessage: String) = copy {
+        val startPlayingDialog = dialogMap["start_playing"] ?: playsharedDialog {}
+        dialogMap.put("start_playing", startPlayingDialog.copy {
+            backgroundInfo = backgroundInfo.copy {
+                drawableBitmapUrl = "http://i0.hdslb.com/bfs/bangumi/e42bfa7427456c03562a64ac747be55203e24993.png"
+                effects = 2 // Effects::HALF_ALPHA
+            }
+            title = title.copy {
+                text = message
+                if (!hasTextColor()) textColor = "#ffffff"
+            }
+            subtitle = subtitle.copy {
+                text = subMessage
+                if (!hasTextColor()) textColor = "#ffffff"
+            }
+            // use GuideStyle::VERTICAL_TEXT, for HORIZONTAL_IMAGE cannot show error details
+            styleType = 2
+            limitActionType = 1 // SHOW_LIMIT_DIALOG
+        })
+    }
+
     private fun showPlayerError(response: Any, message: String) = runCatchingOrNull {
         val serializedResponse = response.callMethodAs<ByteArray>("toByteArray")
         val newRes = PlayViewReply.parseFrom(serializedResponse).toErrorReply(message)
@@ -459,6 +556,25 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     typeUrl = PGC_ANY_MODEL_TYPE_URL
                     value = supplement.toErrorReply(message).toByteString()
                 }
+                clearVodInfo()
+            }.toByteArray()
+            response.javaClass.callStaticMethod("parseFrom", newRes)
+        } ?: response
+
+    private fun showPlayerErrorUnite(
+        response: Any,
+        supplement: PlayViewReply,
+        message: String,
+        subMessage: String
+    ) =
+        runCatchingOrNull {
+            val serializedResponse = response.callMethodAs<ByteArray>("toByteArray")
+            val newRes = PlayViewUniteReply.parseFrom(serializedResponse).copy {
+                this.supplement = any {
+                    typeUrl = PGC_ANY_MODEL_TYPE_URL
+                    value = supplement.toErrorReply(message).toByteString()
+                }
+                viewInfo = viewInfo.toErrorReply(message, subMessage)
                 clearVodInfo()
             }.toByteArray()
             response.javaClass.callStaticMethod("parseFrom", newRes)

@@ -387,6 +387,24 @@ inline fun Any.mossResponseHandlerProxy(crossinline onNext: (reply: Any?) -> Uni
     }
 }
 
+inline fun Any.mossResponseHandlerReplaceProxy(crossinline onNext: (reply: Any?) -> Any?): Any {
+    return Proxy.newProxyInstance(
+        javaClass.classLoader,
+        arrayOf(instance.mossResponseHandlerClass)
+    ) { _, m, args ->
+        if (m.name == "onNext") {
+            onNext(args[0])?.let {
+                args[0] = it
+            }
+            m(this, *args)
+        } else if (args == null) {
+            m(this)
+        } else {
+            m(this, *args)
+        }
+    }
+}
+
 @SuppressLint("ApplySharedPref")
 fun SharedPreferences.appendStringForSet(key: String, value: String, commit: Boolean = false) {
     getStringSet(key, null).orEmpty().let {
