@@ -151,6 +151,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val playViewUniteReqClass by Weak { "com.bapis.bilibili.app.playerunite.v1.PlayViewUniteReq" from mClassLoader }
     val viewMossClass by Weak { "com.bapis.bilibili.app.view.v1.ViewMoss" from mClassLoader }
     val viewReqClass by Weak { "com.bapis.bilibili.app.view.v1.ViewReq" from mClassLoader }
+    val viewUniteMossClass by Weak { "com.bapis.bilibili.app.viewunite.v1.ViewMoss" from mClassLoader }
+    val viewUniteReqClass by Weak { "com.bapis.bilibili.app.viewunite.v1.ViewReq" from mClassLoader }
     val bkArcPartClass by Weak { "com.bapis.bilibili.app.listener.v1.BKArcPart" from mClassLoader }
     val builtInThemesClass by Weak { mHookInfo.builtInThemes.class_ from mClassLoader }
     val themeColorsConstructor by Weak {

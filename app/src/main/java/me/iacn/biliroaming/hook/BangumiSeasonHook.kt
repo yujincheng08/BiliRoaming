@@ -11,6 +11,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
+import com.google.protobuf.any
 import kotlinx.coroutines.*
 import me.iacn.biliroaming.*
 import me.iacn.biliroaming.API.*
@@ -58,6 +59,9 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             1919 to Area("hk", "港", "7", "bangumi"),
             810 to Area("tw", "台", "7", "bangumi")
         )
+
+        private const val PGC_ANY_MODEL_TYPE_URL =
+            "type.googleapis.com/bilibili.app.viewunite.pgcanymodel.ViewPgcAny"
     }
 
     private val isSerializable by lazy {
@@ -319,8 +323,28 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             val req = ViewReq.parseFrom(serializedRequest)
             val reply = fixViewProto(req)
             val serializedReply = reply?.toByteArray() ?: return@hookAfterMethod
-            param.result = (param.method as Method).returnType
-                .callStaticMethod("parseFrom", serializedReply)
+            param.result =
+                (param.method as Method).returnType.callStaticMethod("parseFrom", serializedReply)
+        }
+
+        instance.viewUniteMossClass?.hookAfterMethod(
+            "view", "com.bapis.bilibili.app.viewunite.v1.ViewReq"
+        ) { param ->
+            if (instance.networkExceptionClass?.isInstance(param.throwable) == true) return@hookAfterMethod
+            val response = param.result ?: return@hookAfterMethod
+            val supplementAny = response.callMethod("getSupplement")
+            val typeUrl = supplementAny?.callMethodAs<String>("getTypeUrl")
+            // Only handle pgc video
+            if (param.result != null && typeUrl != PGC_ANY_MODEL_TYPE_URL) {
+                return@hookAfterMethod
+            }
+            val supplement =
+                supplementAny?.callMethod("getValue")?.callMethodAs<ByteArray>("toByteArray")
+                    ?.let { ViewPgcAny.parseFrom(it) } ?: viewPgcAny {}
+
+            fixViewProto(response, supplement)?.let {
+                param.result = it
+            }
         }
 
         val urlHook: Hooker = fun(param) {
@@ -1005,6 +1029,85 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
             }
         }
+    }
+
+    private fun fixViewProto(resp: Any, supplement: ViewPgcAny): Any? {
+        Log.toast("发现区域限制视频，尝试解锁……")
+
+        resp.callMethod("getArc")?.callMethod("getRight")?.run {
+            callMethod("setDownload", true)
+            callMethod("setOnlyVipDownload", false)
+            callMethod("setNoReprint", false)
+        }
+
+        val newSupplement = supplement.copy {
+            ogvData = ogvData.copy {
+                rights = rights.copy {
+                    allowDownload = 1
+                    allowReview = 1
+                    areaLimit = 0
+                    banAreaShow = 1
+                    onlyVipDownload = 0
+                    newAllowDownload = 1
+                }
+            }
+        }
+        val supplementAny = "com.google.protobuf.Any".from(mClassLoader)?.callStaticMethod(
+            "parseFrom", any {
+                typeUrl = PGC_ANY_MODEL_TYPE_URL
+                value = newSupplement.toByteString()
+            }.toByteArray()
+        )
+        resp.callMethod("setSupplement", supplementAny)
+
+        val tab = resp.callMethod("getTab") ?: return null
+        val newTab = tab.callMethodAs<ByteArray>("toByteArray").let {
+            Tab.parseFrom(it)
+        }.copy {
+            val newTabModule = tabModule.map { tabModule ->
+                tabModule.copy {
+                    if (!hasIntroduction()) return@copy
+                    introduction = introduction.copy {
+                        val newModules = modules.map { module ->
+                            module.copy {
+                                if (!hasSectionData()) return@copy
+                                sectionData = sectionData.copy {
+                                    val newEpisodes = episodes.map {
+                                        it.copy {
+                                            badgeInfo = badgeInfo.copy {
+                                                if (text == "受限") {
+                                                    text = ""
+                                                }
+                                            }
+                                            rights = rights.copy {
+                                                allowDownload = 1
+                                                allowReview = 1
+                                                canWatch = 1
+                                                allowDm = 1
+                                                allowDemand = 1
+                                                areaLimit = 1
+                                            }
+                                        }
+                                    }
+                                    episodes.clear()
+                                    episodes.addAll(newEpisodes)
+                                }
+                            }
+                        }
+                        modules.clear()
+                        modules.addAll(newModules)
+                    }
+                }
+            }
+            tabModule.clear()
+            tabModule.addAll(newTabModule)
+        }
+
+        tab.javaClass.callStaticMethod("parseFrom", newTab.toByteArray())?.let {
+            resp.callMethod("setTab", it)
+        }
+
+        return resp
     }
 
     private fun fixView(data: Any?, urlString: String): Any? {
