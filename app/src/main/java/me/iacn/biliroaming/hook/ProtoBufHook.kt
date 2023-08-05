@@ -28,6 +28,7 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val unlockPlayLimit = sPrefs.getBoolean("play_arc_conf", false)
         val blockCommentGuide = sPrefs.getBoolean("block_comment_guide", false)
         val blockVideoComment = sPrefs.getBoolean("block_video_comment", false)
+        val blockViewPageAds = sPrefs.getBoolean("block_view_page_ads", false)
 
         if (hidden && (purifyCity || purifyCampus)) {
             listOf(
@@ -221,6 +222,29 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                             callMethod("setRaw", "还没有评论哦")
                                         })
                                     }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        instance.viewUniteMossClass?.hookAfterMethod(
+            "view",
+            instance.viewUniteReqClass
+        ) { param ->
+            if (!blockViewPageAds) return@hookAfterMethod
+            if (instance.networkExceptionClass?.isInstance(param.throwable) == true) return@hookAfterMethod
+
+            param.result.callMethod("clearCm")
+            param.result.callMethod("getTab")?.run {
+                callMethod("ensureTabModuleIsMutable")
+                callMethodAs<MutableList<Any>>("getTabModuleList").map { originalTabModules ->
+                    if (originalTabModules.callMethodAs("hasIntroduction")) {
+                        originalTabModules.callMethodAs<Any>("getIntroduction").run {
+                            callMethod("ensureModulesIsMutable")
+                            callMethodAs<MutableList<Any>>("getModulesList").removeAll {
+                                it.callMethodAs("hasActivityEntranceModule")
                             }
                         }
                     }

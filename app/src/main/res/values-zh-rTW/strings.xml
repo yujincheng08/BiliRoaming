@@ -202,8 +202,8 @@
     <string name="dialog_blur_background_title">全域 Dialog 背景模糊</string>
     <string name="block_up_rcmd_ads_title">封鎖UP主推薦廣告</string>
     <string name="block_up_rcmd_ads_summary">封鎖影片播放過程中，浮窗出現的UP主推薦廣告</string>
-    <string name="block_bangumi_page_ads_title">封鎖番劇頁面廣告</string>
-    <string name="block_bangumi_page_ads_summary">封鎖番劇頁面彈窗廣告及會員購</string>
+    <string name="block_view_page_ads_title">封鎖影片詳情頁面廣告</string>
+    <string name="block_view_page_ads_summary">封鎖影片（包含番劇、普通影片等）詳情頁面的廣告，包括但不限於彈窗廣告、會員購等活動廣告（舊版本僅對番劇頁面生效）。</string>
     <string name="block_live_order_title">封鎖直播預約</string>
     <string name="block_live_order_summary">封鎖影片詳情頁的直播預約信息</string>
     <string name="remove_up_vip_label_title">移除 UP 大會員標識</string>

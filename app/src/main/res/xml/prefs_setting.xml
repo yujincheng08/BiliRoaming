@@ -445,9 +445,9 @@
 
         <SwitchPreference
             android:dependency="hidden"
-            android:key="block_bangumi_page_ads"
-            android:summary="@string/block_bangumi_page_ads_summary"
-            android:title="@string/block_bangumi_page_ads_title" />
+            android:key="block_view_page_ads"
+            android:summary="@string/block_view_page_ads_summary"
+            android:title="@string/block_view_page_ads_title" />
 
         <SwitchPreference
             android:dependency="hidden"

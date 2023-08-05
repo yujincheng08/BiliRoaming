@@ -5,7 +5,7 @@ import me.iacn.biliroaming.utils.*
 
 class BangumiPageAdHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
-        if (!sPrefs.getBoolean("block_bangumi_page_ads", false)) return
+        if (!sPrefs.getBoolean("block_view_page_ads", false)) return
         Log.d("startHook: BangumiPageAd")
         // activity toast ad
         "com.bilibili.bangumi.data.page.detail.entity.OGVActivityVo".from(mClassLoader)
