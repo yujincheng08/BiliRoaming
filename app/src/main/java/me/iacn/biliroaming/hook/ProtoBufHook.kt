@@ -6,9 +6,13 @@ import me.iacn.biliroaming.utils.*
 class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     private val mainListReplyClass by Weak { "com.bapis.bilibili.main.community.reply.v1.MainListReply" from mClassLoader }
-    private val emptyPageClass by Weak { "com.bapis.bilibili.main.community.reply.v1.EmptyPage" from mClassLoader }
-    private val textClass by Weak { "com.bapis.bilibili.main.community.reply.v1.EmptyPage\$Text" from mClassLoader }
-    private val textStyleClass by Weak { "com.bapis.bilibili.main.community.reply.v1.TextStyle" from mClassLoader }
+    private val subjectDescriptionReplyClass by Weak { "com.bapis.bilibili.main.community.reply.v2.SubjectDescriptionReply" from mClassLoader }
+    private val emptyPageV1Class by Weak { "com.bapis.bilibili.main.community.reply.v1.EmptyPage" from mClassLoader }
+    private val textV1Class by Weak { "com.bapis.bilibili.main.community.reply.v1.EmptyPage\$Text" from mClassLoader }
+    private val textStyleV1Class by Weak { "com.bapis.bilibili.main.community.reply.v1.TextStyle" from mClassLoader }
+    private val emptyPageV2Class by Weak { "com.bapis.bilibili.main.community.reply.v2.EmptyPage" from mClassLoader }
+    private val textV2Class by Weak { "com.bapis.bilibili.main.community.reply.v2.EmptyPage\$Text" from mClassLoader }
+    private val textStyleV2Class by Weak { "com.bapis.bilibili.main.community.reply.v2.TextStyle" from mClassLoader }
     private val videoGuideClass by Weak { "com.bapis.bilibili.app.view.v1.VideoGuide" from mClassLoader }
 
     override fun startHook() {
@@ -180,16 +184,16 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 if (hidden && blockVideoComment && type == 1L) {
                     val reply = mainListReplyClass?.new()?.apply {
                         val subjectControl = callMethod("getSubjectControl")
-                        val emptyPage = emptyPageClass?.new()?.also {
+                        val emptyPage = emptyPageV1Class?.new()?.also {
                             subjectControl?.callMethod("setEmptyPage", it)
                         }
                         emptyPage?.callMethod(
                             "setImageUrl",
                             "https://i0.hdslb.com/bfs/app-res/android/img_holder_forbid_style1.webp"
                         )
-                        textClass?.new()?.apply {
+                        textV1Class?.new()?.apply {
                             callMethod("setRaw", "评论区已由漫游屏蔽")
-                            textStyleClass?.new()?.apply {
+                            textStyleV1Class?.new()?.apply {
                                 callMethod("setFontSize", 14)
                                 callMethod("setTextDayColor", "#FF61666D")
                                 callMethod("setTextNightColor", "#FFA2A7AE")
@@ -227,6 +231,50 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     }
                 }
             }
+            "com.bapis.bilibili.main.community.reply.v2.ReplyMoss".from(mClassLoader)
+                ?.hookBeforeMethod(
+                    "subjectDescription",
+                    "com.bapis.bilibili.main.community.reply.v2.SubjectDescriptionReq",
+                    instance.mossResponseHandlerClass
+                ) { param ->
+                    val tipStr = if (hidden && blockVideoComment) {
+                        "评论区已由漫游屏蔽"
+                    } else {
+                        "还没有评论哦"
+                    }
+                    val defaultText = textV2Class?.new()?.apply {
+                        callMethod("setRaw", tipStr)
+                        textStyleV2Class?.new()?.apply {
+                            callMethod("setFontSize", 14)
+                            callMethod("setTextDayColor", "#FF61666D")
+                            callMethod("setTextNightColor", "#FFA2A7AE")
+                        }?.let {
+                            callMethod("setStyle", it)
+                        }
+                    } ?: return@hookBeforeMethod
+                    param.args[1] = param.args[1].mossResponseHandlerProxy { reply ->
+                        reply?.runCatchingOrNull {
+                            callMethod("setCount", 0L)
+                            callMethod("getEmptyPage")?.let { page ->
+                                page.run {
+                                    callMethod("clearLeftButton")
+                                    callMethod("clearRightButton")
+                                    callMethod("ensureTextsIsMutable")
+                                    callMethodAs<MutableList<Any>>("getTextsList").run {
+                                        clear()
+                                        add(defaultText)
+                                    }
+                                    if (hidden && blockVideoComment) {
+                                        callMethod(
+                                            "setImageUrl",
+                                            "https://i0.hdslb.com/bfs/app-res/android/img_holder_forbid_style1.webp"
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
         }
 
         if (!(hidden && (blockViewPageAds || removeHonor))) return
