@@ -83,6 +83,17 @@ class CopyHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         instance.commentCopyNewClass?.replaceMethod("onLongClick", View::class.java) {
             commentCopyHook(it, "comment_message")
         }
+        instance.comment3CopyClass?.let { c ->
+            instance.comment3Copy()?.let { m ->
+                c.replaceAllMethods(m) { param ->
+                    val view = param.args[2] as View
+                    view.getFirstFieldByExactTypeOrNull<CharSequence>()?.also { text ->
+                        showCopyDialog(view.context, text, param)
+                    }
+                    return@replaceAllMethods true
+                }
+            }
+        }
 
         if (!sPrefs.getBoolean("comment_copy_enhance", false)) return
         "com.bilibili.bplus.im.conversation.ConversationActivity".from(mClassLoader)
