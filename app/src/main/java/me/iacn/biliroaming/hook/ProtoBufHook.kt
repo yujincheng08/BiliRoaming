@@ -87,7 +87,7 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             ) { param ->
                 param.result?.callMethod("setVideoGuide", videoGuideClass?.new())
             }
-            "com.bapis.bilibili.app.viewunite.v1.ViewMoss".from(mClassLoader)?.hookAfterMethod(
+            instance.viewUniteMossClass?.hookAfterMethod(
                 "viewProgress",
                 "com.bapis.bilibili.app.viewunite.v1.ViewProgressReq"
             ) { param ->
