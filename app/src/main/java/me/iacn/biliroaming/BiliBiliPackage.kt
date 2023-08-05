@@ -89,6 +89,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     }
     val commentCopyClass by Weak { mHookInfo.commentLongClick from mClassLoader }
     val commentCopyNewClass by Weak { mHookInfo.commentLongClickNew from mClassLoader }
+    val comment3CopyClass by Weak { mHookInfo.comment3Copy.class_ from mClassLoader }
     val kotlinJsonClass by Weak { "kotlinx.serialization.json.Json" from mClassLoader }
     val gsonConverterClass by Weak { mHookInfo.gsonHelper.gsonConverter from mClassLoader }
     val playerCoreServiceV2Class by Weak { mHookInfo.playerCoreService.class_ from mClassLoader }
@@ -255,6 +256,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     fun descCopy() = mHookInfo.descCopy.methodsList.map { it.orNull }
 
     fun descCopyView() = mHookInfo.descCopy.classesList.map { it from mClassLoader }
+
+    fun comment3Copy() = mHookInfo.comment3Copy.method.orNull
 
     fun responseDataField() = runCatchingOrNull {
         rxGeneralResponseClass?.getDeclaredField("data")?.name
@@ -1681,6 +1684,60 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 }.forEach {
                     classes += class_ { name = it.declaringClass.name }
                     methods += method { name = it.name }
+                }
+                classesList.filter {
+                    it.startsWith("com.bilibili.ship.theseus.ugc.intro.ugcheadline.UgcIntroductionComponent")
+                }.map {
+                    it.on(classloader)
+                }.flatMap { c ->
+                    c.declaredMethods.filter {
+                        it.isPublic
+                                && it.parameterCount == 2
+                                && it.parameterTypes[0] == View::class.java
+                                && it.parameterTypes[1] == ClickableSpan::class.java
+                    }
+                }.forEach {
+                    classes += class_ { name = it.declaringClass.name }
+                    methods += method { name = it.name }
+                }
+            }
+            comment3Copy = comment3Copy {
+                val clipBoardCopyMethod =
+                    "com.bilibili.droid.ClipboardHelper".from(classloader)
+                        ?.getDeclaredMethod("copy", Context::class.java, String::class.java)?.let {
+                            dexHelper.encodeMethodIndex(it)
+                        } ?: return@comment3Copy
+                val commentExtensionsKtClass =
+                    "com.bilibili.app.comment3.utils.CommentExtensionsKt".from(classloader)?.let {
+                        dexHelper.encodeClassIndex(it)
+                    } ?: return@comment3Copy
+                dexHelper.findMethodInvoked(
+                    clipBoardCopyMethod,
+                    -1,
+                    2,
+                    "ZLL",
+                    commentExtensionsKtClass,
+                    null,
+                    null,
+                    null,
+                    true
+                ).firstOrNull()?.let {
+                    dexHelper.findMethodInvoked(
+                        it,
+                        -1,
+                        3,
+                        "ZLLL",
+                        -1,
+                        null,
+                        null,
+                        null,
+                        true
+                    ).firstOrNull()?.let {
+                        dexHelper.decodeMethodIndex(it)
+                    }
+                }?.let {
+                    class_ = class_ { name = it.declaringClass.name }
+                    method = method { name = it.name }
                 }
             }
             dexHelper.findMethodUsingString(

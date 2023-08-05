@@ -265,6 +265,11 @@ message CardClickProcessor {
   optional Method on_feed_clicked = 2;
 }
 
+message Comment3Copy {
+  optional Class class = 1;
+  optional Method method = 2;
+}
+
 message HookInfo {
   int64 last_update_time = 1;
   optional MapIds map_ids = 2;
@@ -326,4 +331,5 @@ message HookInfo {
   optional BiliGlobalPreference bili_global_preference = 88;
   optional CardClickProcessor card_click_processor = 89;
   optional Class publish_to_following_config = 90;
+  optional Comment3Copy comment3_copy = 91;
 }
