@@ -331,6 +331,30 @@ message PlayDeviceConf {}
 message PlayArc {}
 message QnTrialInfo {}
 
+// renamed due to name collision
+message PlaysharedViewInfo {
+  map<string, PlaysharedDialog> dialog_map = 0x1;
+}
+message PlaysharedDialog {
+    int32 style_type = 0x1;
+    BackgroundInfo background_info = 0x2;
+    TextInfo title = 0x3;
+    TextInfo subtitle = 0x4;
+    ImageInfo image = 0x5;
+    repeated ButtonInfo button = 0x6;
+    ButtonInfo bottom_desc = 0x7;
+    int32 count_down_sec = 0x9;
+    TextInfo right_bottom_desc= 0xa;
+    repeated BottomDisplay bottom_display= 0xb;
+    ExtData ext_data= 0xc;
+    int32 limit_action_type= 0xd;
+}
+message BackgroundInfo {
+  optional string drawable_color = 0x1;
+  optional string drawable_bitmap_url = 0x2;
+  optional int32 effects = 0x3;
+}
+message ExtData {}
 message PlayViewUniteReply {
   optional VideoInfo vod_info = 0x1;
   optional PlayArcConf play_arc_conf = 0x2;
@@ -340,6 +364,7 @@ message PlayViewUniteReply {
   optional PlayArc play_arc = 0x6;
   optional QnTrialInfo qn_trial_info = 0x7;
   optional History history = 0x8;
+  optional PlaysharedViewInfo view_info = 0x9;
 }
 
 message VideoVod {
@@ -377,6 +402,22 @@ message ViewReq {
   optional string from_spmid = 0xc;
   optional int32 autoplay = 0xd;
   optional PlayerArgs player_args = 0xe;
+}
+
+message ViewUniteReq {
+  optional uint64 aid = 0x1;
+  optional string bvid = 0x2;
+  optional string from = 0x3;
+  optional string spmid = 0x4;
+  optional string from_spmid = 0x5;
+  optional string session_id = 0x6;
+  optional PlayerArgs player_args = 0x7;
+  optional string track_id = 0x8;
+  map<string, string> extra_content = 0x9;
+  optional string play_mode = 0xa;
+  optional Relate relate = 0xb;
+  optional string biz_extra = 0xc;
+  optional string ad_extra = 0xd;
 }
 
 message UserSeason {optional string attention = 0x1;}
@@ -648,6 +689,432 @@ message ViewReply {
   optional UgcSeason ugc_season = 0x18;
   optional string vip_active = 0xd;
 }
+
+message ViewUniteReply {
+  optional ViewBase view_base = 0x1;
+  optional ViewUniteArc arc = 0x2;
+  // optional Owner owner = 0x4;
+  optional Tab tab = 0x5;
+  optional google.protobuf.Any supplement = 0x6;
+}
+message ViewBase {
+  enum PageType {
+    H5 = 0x0;
+    NA = 0x1;
+  }
+  optional int32 biz_type = 0x1;
+  optional PageType page_type = 0x2;
+}
+// Renamed due to name collision
+message ViewUniteArc {
+  optional int64 aid = 0x1;
+  optional int64 cid = 0x2;
+  optional int64 duration = 0x3;
+  optional string bvid = 0x5;
+  optional int32 copyright = 0x6;
+  optional ViewUniteArcRights right = 0x7;
+  optional string cover = 0x8;
+  optional int64 type_id = 0x9;
+  optional string title= 0xa;
+}
+// Renamed due to name collision
+message ViewUniteArcRights {
+  optional bool only_vip_download = 0x1;
+  optional bool no_reprint = 0x2;
+  optional bool download = 0x3;
+}
+message ViewPgcAny {
+  optional OgvData ogv_data = 0x1;
+}
+message OgvData {
+  optional int32 media_id = 0x1;
+  optional int64 season_id = 0x2;
+  optional int32 season_type = 0x3;
+  optional int32 show_season_type = 0x4;
+  optional OgvDataRights rights = 0x5;
+  optional OgvDataUserStatus user_status = 0x6;
+  optional int64 aid = 0x7;
+  optional OgvDataStat stat = 0x8;
+  optional int32 mode = 0x9;
+  optional Publish publish = 0xa;
+  optional PlayStrategy play_strategy = 0xb;
+  optional MultiViewInfo multi_view_info = 0xc;
+  optional OgvSwitch ogv_switch = 0xd;
+  optional int32 total_ep = 0xe;
+  optional NewEp new_ep = 0xf;
+  optional Reserve reserve = 0x10;
+  optional int32 status = 0x11;
+  repeated PlayFloatLayerActivity activity_float_layer = 0x12;
+  optional EarphoneConf earphone_conf = 0x13;
+  optional string cover = 0x14;
+  optional string square_cover = 0x15;
+  optional string share_url = 0x16;
+  optional string short_link = 0x17;
+  optional string title = 0x18;
+  optional string horizontal_cover169 = 0x19;
+  optional string horizontal_cover1610 = 0x1a;
+  optional int32 has_can_play_ep = 0x1b;
+}
+message OgvDataRights {
+  optional int32 allow_download = 0x1;
+  optional int32 allow_review = 0x2;
+  optional int32 can_watch = 0x3;
+  optional int32 is_cover_show = 0x4;
+  optional string copyright = 0x5;
+  optional string copyright_name = 0x6;
+  optional int32 allow_bp = 0x7;
+  optional int32 area_limit = 0x8;
+  optional int32 is_preview = 0x9;
+  optional int32 ban_area_show = 0xa;
+  optional int32 watch_platform = 0xb;
+  optional int32 allow_bp_rank = 0xc;
+  optional string resource = 0xd;
+  optional int32 forbid_pre = 0xe;
+  optional int32 only_vip_download = 0xf;
+  optional int32 new_allow_download = 0x10;
+}
+message OgvDataUserStatus {
+  optional int32 show = 0x1;
+  optional int32 follow = 0x2;
+  optional int32 follow_status = 0x3;
+  optional int32 pay = 0x4;
+  optional int32 sponsor = 0x5;
+  optional int32 vip = 0x6;
+  optional int32 vip_frozen = 0x7;
+}
+message OgvDataStat {
+  optional string followers = 0x1;
+  optional StatInfo play_data = 0x2;
+}
+message StatInfo {
+  optional int64 value = 0x1;
+  optional string text = 0x2;
+  optional string pure_text = 0x3;
+  optional string icon = 0x4;
+}
+message Publish {
+  optional string pub_time = 0x1;
+  optional string pub_time_show = 0x2;
+  optional int32 is_started = 0x3;
+  optional int32 is_finish = 0x4;
+  optional int32 weekday = 0x5;
+  optional string release_date_show = 0x6;
+  optional string time_length_show = 0x7;
+  optional int32 unknow_pub_date = 0x8;
+  optional string update_info_desc = 0x9;
+}
+message NewEp {
+  optional int32 id = 0x1;
+  optional string title = 0x2;
+  optional string desc = 0x3;
+  optional int32 is_new = 0x4;
+  optional string more = 0x5;
+  optional string cover = 0x6;
+  optional string index_show = 0x7;
+}
+message PlayStrategy {
+  repeated string strategies = 0x1;
+  optional int32 recommend_show_strategy = 0x2;
+  optional string auto_play_toast = 0x3;
+}
+message MultiViewInfo {}
+message OgvSwitch {
+  optional int32 reduce_short_title_spacing = 0x1;
+  optional int32 merge_position_section_for_cinema = 0x2;
+  optional int32 merge_preview_section = 0x3;
+  optional int32 enable_show_vt_info = 0x4;
+}
+message Reserve {}
+message PlayFloatLayerActivity {}
+message EarphoneConf {}
+
+message Tab {
+  repeated TabModule tab_module = 0x1;
+}
+message TabModule {
+  optional TabType tab_type = 0x1;
+  oneof tab {
+    IntroductionTab introduction = 0x2;
+    ReplyTab reply = 0x3;
+    ActivityTab activity_tab = 0x4;
+  }
+}
+enum TabType {
+  TAB_NONE = 0x0;
+  TAB_INTRODUCTION = 0x1;
+  TAB_REPLY = 0x2;
+  TAB_OGV_ACTIVITY = 0x3;
+}
+message IntroductionTab {
+  string title = 0x1;
+  repeated Module modules = 0x2;
+}
+message Module {
+  ModuleType type = 0x1;
+  oneof data {
+      OgvIntroduction ogv_introduction = 0x2;
+      UgcIntroduction ugc_introduction = 0x3;
+      KingPosition king_position = 0x4;
+      Headline head_line = 0x5;
+      OgvTitle ogv_title = 0x6;
+      Honor honor = 0x7;
+      UserList list = 0x8;
+      Staffs staffs = 0x9;
+      ActivityReserve activity_reserve= 0xa;
+      LiveOrder live_order= 0xb;
+      SectionData section_data= 0xc;
+      DeliveryData delivery_data= 0xd;
+      FollowLayer follow_layer= 0xe;
+      OgvSeasons ogv_seasons= 0xf;
+      UgcSeasons ugc_season = 0x10;
+      OgvLiveReserve ogv_live_reserve = 0x11;
+      CombinationEp combination_ep = 0x12;
+      Sponsor sponsor = 0x13;
+      ActivityEntranceModule activity_entrance_module = 0x14;
+      SerialSeason serial_season = 0x15;
+      Relates relates = 0x16;
+      Banner banner = 0x17;
+      Audio audio = 0x18;
+      LikeComment like_comment = 0x19;
+      AttentionRecommend attention_recommend = 0x1a;
+      Covenanter covenanter = 0x1b;
+  }
+}
+enum ModuleType {
+  UNKNOWN = 0x0;
+  OGV_INTRODUCTION = 0x1;
+  OGV_TITLE = 0x2;
+  UGC_HEADLINE = 0x3;
+  UGC_INTRODUCTION = 0x4;
+  KING_POSITION = 0x5;
+  MASTER_USER_LIST = 0x6;
+  STAFFS = 0x7;
+  HONOR = 0x8;
+  OWNER = 0x9;
+  PAGE= 0xa;
+  ACTIVITY_RESERVE= 0xb;
+  LIVE_ORDER= 0xc;
+  POSITIVE= 0xd;
+  SECTION= 0xe;
+  RELATE= 0xf;
+  PUGV = 0x10;
+  COLLECTION_CARD = 0x11;
+  ACTIVITY = 0x12;
+  CHARACTER = 0x13;
+  FOLLOW_LAYER = 0x14;
+  OGV_SEASONS = 0x15;
+  UGC_SEASON = 0x16;
+  OGV_LIVE_RESERVE = 0x17;
+  COMBINATION_EPISODE = 0x18;
+  SPONSOR = 0x19;
+  ACTIVITY_ENTRANCE = 0x1a;
+  THEATRE_HOT_TOPIC = 0x1b;
+  RELATED_RECOMMEND = 0x1c;
+  PAY_BAR = 0x1d;
+  BANNER = 0x1e;
+  AUDIO = 0x1f;
+  AGG_CARD = 0x20;
+  SINGLE_EP = 0x21;
+  LIKE_COMMENT = 0x22;
+  ATTENTION_RECOMMEND = 0x23;
+  COVENANTER = 0x24;
+}
+message OgvIntroduction {
+  optional string followers = 0x1;
+  optional string score = 0x2;
+  optional StatInfo play_data = 0x3;
+}
+message UgcIntroduction {}
+message KingPosition {
+  repeated KingPos king_pos = 0x1;
+  repeated KingPos extenf = 0x2;
+}
+message KingPos {
+  enum KingPositionType {
+    KING_POS_UNSPECIFIED = 0x0;
+    LIKE = 0x1;
+    DISLIKE = 0x2;
+    COIN = 0x3;
+    FAV = 0x4;
+    SHARE = 0x5;
+    CACHE = 0x6;
+    DANMAKU = 0x7;
+  }
+  message LikeExtend {}
+  message CoinExtend {}
+  optional bool disable = 0x1;
+  optional string icon = 0x2;
+  optional KingPositionType type = 0x3;
+  optional string disable_toast = 0x4;
+  optional string checked_post = 0x5;
+  oneof extend {
+    LikeExtend like = 0x6;
+    CoinExtend coin = 0x7;
+  }
+}
+message Headline {}
+message OgvTitle {
+  optional string title = 0x1;
+  optional BadgeInfo badge_info = 0x2;
+  optional int32 is_show_btn_animation = 0x3;
+  optional int32 follow_video_is_reserve_live = 0x4;
+  optional int64 reserve_id = 0x5;
+}
+message BadgeInfo {
+  optional string text = 0x1;
+  optional string text_color = 0x2;
+  optional string text_color_night = 0x3;
+  optional string bg_color = 0x4;
+  optional string bg_color_night = 0x5;
+  optional string border_color = 0x6;
+  optional string border_color_night = 0x7;
+  optional int32 bg_style = 0x8;
+  optional string img = 0x9;
+  optional int32 type= 0xa;
+}
+message UserList {}
+message Staffs {}
+message ActivityReserve {}
+message LiveOrder {}
+message SectionData {
+  optional int32 id = 0x1;
+  optional int32 section_id = 0x2;
+  optional string title = 0x3;
+  optional int32 can_ord_desc = 0x4;
+  optional string more = 0x5;
+  repeated int32 episode_ids = 0x6;
+  repeated ViewEpisode episodes = 0x7;
+  optional string split_text = 0x8;
+  optional Style module_style = 0x9;
+  optional string more_bottom_desc= 0xa;
+  repeated SerialSeason seasons= 0xb;
+  optional SectionDataButton more_left= 0xc;
+  optional int32 type= 0xd;
+}
+message ViewEpisode {
+  optional int64 ep_id = 0x1;
+  optional string badge = 0x2;
+  optional int32 badge_type = 0x3;
+  optional BadgeInfo badge_info = 0x4;
+  optional int32 duration = 0x5;
+  optional int32 status = 0x6;
+  optional string cover = 0x7;
+  optional int64 aid = 0x8;
+  optional string title = 0x9;
+  optional string movie_title= 0xa;
+  optional string subtitle= 0xb;
+  optional string long_title= 0xc;
+  optional string toast_title= 0xd;
+  optional int64 cid= 0xe;
+  optional string from= 0xf;
+  optional string share_url = 0x10;
+  optional string share_copy = 0x11;
+  optional string short_link = 0x12;
+  optional string vid = 0x13;
+  optional string release_date = 0x14;
+  optional Dimension dimension = 0x15;
+  optional ViewEpisodeRights rights = 0x16;
+  optional Interaction interaction = 0x17;
+  optional string bvid = 0x18;
+  optional int32 archive_attr = 0x19;
+  optional string link = 0x1a;
+  optional string link_type = 0x1b;
+  optional string bmid = 0x1c;
+  optional int64 pub_time = 0x1d;
+  optional int32 pv = 0x1e;
+  optional int32 ep_index = 0x1f;
+  optional int32 section_index = 0x20;
+  repeated Staff up_infos = 0x21;
+  optional Staff up_info = 0x22;
+  optional string dialog_type = 0x23;
+  optional string toast_type = 0x24;
+  optional bool is_sub_view = 38;
+  optional bool is_view_hide = 39;
+  optional string jump_link = 40;
+  optional ViewEpisodeStat stat_for_unity = 41;
+}
+message ViewEpisodeRights {
+  optional int32 allow_download = 0x1;
+  optional int32 allow_review = 0x2;
+  optional int32 can_watch = 0x3;
+  optional string resource = 0x4;
+  optional int32 allow_dm = 0x5;
+  optional int32 allow_demand = 0x6;
+  optional int32 area_limit = 0x7;
+}
+message ViewEpisodeStat {
+  StatInfo vt = 0x1;
+  StatInfo danmaku = 0x2;
+  int64 reply = 0x3;
+  int64 fav = 0x4;
+  int64 coin = 0x5;
+  int64 share = 0x6;
+  int64 like = 0x7;
+  int64 follow = 0x8;
+}
+message Style {
+  optional int32 line = 0x1;
+  optional int32 hidden = 0x2;
+  repeated string show_pages = 0x3;
+}
+message SerialSeason {
+  optional int32 season_id = 0x1;
+  optional string title = 0x2;
+  optional string season_title = 0x3;
+  optional int32 is_new = 0x4;
+  optional string cover = 0x5;
+  optional string badge = 0x6;
+  optional int32 badge_type = 0x7;
+  optional BadgeInfo badge_info = 0x8;
+  optional string link = 0x9;
+  optional string resource= 0xa;
+  optional NewEp new_ep= 0xb;
+}
+message SectionDataButton {
+  optional string title = 0x1;
+  optional string left_strikethrough_text = 0x2;
+  optional string type = 0x3;
+  optional string link = 0x4;
+  optional BadgeInfo badge_info = 0x5;
+  optional string sub_title = 0x6;
+}
+message DeliveryData {}
+message FollowLayer {}
+message OgvSeasons {
+  enum SerialSeasonCoverStyle {
+    TITLE = 0x0;
+    PICTURE = 0x1;
+  }
+  optional string title = 0x1;
+  repeated SerialSeason serial_season = 0x2;
+  optional SerialSeasonCoverStyle style = 0x3; 
+}
+message UgcSeasons {}
+message OgvLiveReserve {}
+message CombinationEp {}
+message Sponsor {}
+message ActivityEntranceModule {}
+message Relates {}
+message Banner {}
+message LikeComment {}
+message AttentionRecommend {}
+message Covenanter {}
+message ReplyTab {
+  optional ReplyStyle reply_style = 0x1;
+  optional string title = 0x2;
+  optional TabControl control = 0x3;
+}
+message ReplyStyle {
+  optional string badge_url = 0x1;
+  optional string badge_text = 0x2;
+  optional int64 badge_type = 0x3;
+}
+message TabControl {
+  optional bool limit = 0x1;
+  optional bool disable = 0x2;
+  optional string disable_click_tip = 0x3;
+}
+message ActivityTab {}
 
 message Device {
   optional int32 app_id = 0x1;
