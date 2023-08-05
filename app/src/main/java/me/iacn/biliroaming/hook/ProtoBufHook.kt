@@ -229,23 +229,35 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
         }
 
+        if (!(hidden && (blockViewPageAds || removeHonor))) return
+        // 视频详情页荣誉卡片
+        fun Any.isHonor() = callMethodAs("hasHonor") && removeHonor
+        // 视频详情页活动卡片(含会员购等), 区分于视频下方推荐处的广告卡片
+        fun Any.isActivityEntranceModule() =
+            callMethodAs("hasActivityEntranceModule") && blockViewPageAds
+
+        fun MutableList<Any>.filter() = removeAll {
+            it.isActivityEntranceModule() || it.isHonor()
+        }
+
         instance.viewUniteMossClass?.hookAfterMethod(
             "view",
             instance.viewUniteReqClass
         ) { param ->
-            if (!blockViewPageAds) return@hookAfterMethod
             if (instance.networkExceptionClass?.isInstance(param.throwable) == true) return@hookAfterMethod
+            param.result ?: return@hookAfterMethod
 
-            param.result.callMethod("clearCm")
+            if (blockViewPageAds) {
+                param.result.callMethod("clearCm")
+            }
+
             param.result.callMethod("getTab")?.run {
                 callMethod("ensureTabModuleIsMutable")
-                callMethodAs<MutableList<Any>>("getTabModuleList").map { originalTabModules ->
-                    if (originalTabModules.callMethodAs("hasIntroduction")) {
-                        originalTabModules.callMethodAs<Any>("getIntroduction").run {
+                callMethodAs<MutableList<Any>>("getTabModuleList").map {
+                    if (it.callMethodAs("hasIntroduction")) {
+                        it.callMethodAs<Any>("getIntroduction").run {
                             callMethod("ensureModulesIsMutable")
-                            callMethodAs<MutableList<Any>>("getModulesList").removeAll {
-                                it.callMethodAs("hasActivityEntranceModule")
-                            }
+                            callMethodAs<MutableList<Any>>("getModulesList").filter()
                         }
                     }
                 }
