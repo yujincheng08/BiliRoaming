@@ -1,6 +1,5 @@
 package me.iacn.biliroaming.hook
 
-import de.robv.android.xposed.XC_MethodHook
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.utils.*
 
@@ -472,6 +471,18 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             isPromoteRelate(it) || isNotAvRelate(it) || (applyToRelate && (isLowCountRelate(it)
                     || isDurationInvalidRelate(it) || isContainsBlockKwdRelate(it)))
         }
+        fun MutableList<Any>.filterUnite() = removeAll {
+            val allowTypeList = mutableListOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+            allowTypeList.removeAll { digit ->
+                (removeRelateOnlyAv && digit != 1) || (removeRelatePromote && digit in listOf(
+                    3, // Resource, like mall
+                    4, // GAME
+                    5, // CM
+                    10 // SPECIAL
+                ))
+            }
+            removeRelateNothing || it.callMethodAs("getRelateCardTypeValue") !in allowTypeList
+        }
         instance.viewMossClass?.hookAfterMethod("view", instance.viewReqClass) { param ->
             param.result ?: return@hookAfterMethod
             if (removeRelatePromote && removeRelateOnlyAv && removeRelateNothing) {
@@ -490,6 +501,40 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             param.result.callMethod("ensureListIsMutable")
             param.result.callMethodAs<MutableList<Any>>("getListList").filter()
         }
+        instance.viewUniteMossClass?.run {
+            hookAfterMethod("view", instance.viewUniteReqClass) { param ->
+                param.result ?: return@hookAfterMethod
+                param.result.callMethod("getTab")?.run {
+                    callMethod("ensureTabModuleIsMutable")
+                    callMethodAs<MutableList<Any>>("getTabModuleList").map { originalTabModules ->
+                        if (!originalTabModules.callMethodAs<Boolean>("hasIntroduction")) return@map
+                        originalTabModules.callMethodAs<Any>("getIntroduction").run {
+                            callMethod("ensureModulesIsMutable")
+                            callMethodAs<MutableList<Any>>("getModulesList").map { module ->
+                                if (!module.callMethodAs<Boolean>("hasRelates")) return@map
+                                module.callMethodAs<Any>("getRelates").run {
+                                    callMethod("ensureCardsIsMutable")
+                                    callMethodAs<MutableList<Any>>("getCardsList").filterUnite()
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            hookAfterMethod(
+                "relatesFeed",
+                "com.bapis.bilibili.app.viewunite.v1.RelatesFeedReq"
+            ) { param ->
+                param.result?.run {
+                    callMethod("ensureRelatesIsMutable")
+                    callMethod("getRelatesList").run {
+                        callMethod("ensureCardsIsMutable")
+                        callMethodAs<MutableList<Any>>("getCardsList").filterUnite()
+                    }
+                }
+            }
+        }
+
         instance.cardClickProcessorClass?.declaredMethods
             ?.find { it.name == instance.onFeedClicked() }?.hookBeforeMethod { param ->
                 val reason = param.args[2]
