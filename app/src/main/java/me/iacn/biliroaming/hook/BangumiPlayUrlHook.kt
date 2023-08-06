@@ -181,7 +181,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     } catch (e: CustomServerException) {
                         param.result = showPlayerError(
                             response,
-                            "请求解析中服务器发生错误(点此查看更多)\n${e.message}"
+                            "请求解析服务器发生错误(点此查看更多)\n${e.message}"
                         )
                         Log.toast("请求解析服务器发生错误: ${e.message}", alsoLog = true)
                     }
@@ -256,7 +256,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     } catch (e: CustomServerException) {
                         param.result = showPlayerError(
                             response,
-                            "请求解析中服务器发生错误(点此查看更多)\n${e.message}"
+                            "请求解析服务器发生错误(点此查看更多)\n${e.message}"
                         )
                         Log.toast("请求解析服务器发生错误: ${e.message}", alsoLog = true)
                     }
@@ -332,7 +332,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     } catch (e: CustomServerException) {
                         param.result = showPlayerErrorUnite(
                             response, supplement,
-                            "请求解析中服务器发生错误", e.message, true
+                            "请求解析服务器发生错误", e.message, true
                         )
                         Log.toast("请求解析服务器发生错误: ${e.message}", alsoLog = true)
                     }
