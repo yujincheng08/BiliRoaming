@@ -208,8 +208,7 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     param.result = null
                     return@hookBeforeMethod
                 }
-                if (!blockCommentGuide)
-                    return@hookBeforeMethod
+                if (!blockCommentGuide) return@hookBeforeMethod
                 param.args[1] = param.args[1].mossResponseHandlerProxy { reply ->
                     reply?.runCatchingOrNull {
                         callMethod("getSubjectControl")?.run {
@@ -219,8 +218,8 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             callMethod("getEmptyPage")?.let { page ->
                                 page.callMethod("clearLeftButton")
                                 page.callMethod("clearRightButton")
-                                page.callMethodAs<List<Any>>("getTextsList")
-                                    .takeIf { it.size > 1 }?.let {
+                                page.callMethodAs<List<Any>>("getTextsList").takeIf { it.size > 1 }
+                                    ?.let {
                                         page.callMethod("clearTexts")
                                         page.callMethod("addTexts", it.first().apply {
                                             callMethod("setRaw", "还没有评论哦")
@@ -237,12 +236,12 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     "com.bapis.bilibili.main.community.reply.v2.SubjectDescriptionReq",
                     instance.mossResponseHandlerClass
                 ) { param ->
-                    val tipStr = if (hidden && blockVideoComment) {
-                        "评论区已由漫游屏蔽"
-                    } else {
-                        "还没有评论哦"
-                    }
                     val defaultText = textV2Class?.new()?.apply {
+                        val tipStr = if (hidden && blockVideoComment) {
+                            "评论区已由漫游屏蔽"
+                        } else {
+                            "还没有评论哦"
+                        }
                         callMethod("setRaw", tipStr)
                         textStyleV2Class?.new()?.apply {
                             callMethod("setFontSize", 14)
@@ -254,23 +253,19 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     } ?: return@hookBeforeMethod
                     param.args[1] = param.args[1].mossResponseHandlerProxy { reply ->
                         reply?.runCatchingOrNull {
-                            callMethod("setCount", 0L)
-                            callMethod("getEmptyPage")?.let { page ->
-                                page.run {
-                                    callMethod("clearLeftButton")
-                                    callMethod("clearRightButton")
-                                    callMethod("ensureTextsIsMutable")
-                                    callMethodAs<MutableList<Any>>("getTextsList").run {
-                                        clear()
-                                        add(defaultText)
-                                    }
-                                    if (hidden && blockVideoComment) {
-                                        callMethod(
-                                            "setImageUrl",
-                                            "https://i0.hdslb.com/bfs/app-res/android/img_holder_forbid_style1.webp"
-                                        )
-                                    }
+                            callMethod("getEmptyPage")?.run {
+                                callMethod("clearLeftButton")
+                                callMethod("clearRightButton")
+                                callMethod("ensureTextsIsMutable")
+                                callMethodAs<MutableList<Any>>("getTextsList").run {
+                                    clear()
+                                    add(defaultText)
                                 }
+                                if (!(hidden && blockVideoComment)) return@run
+                                callMethod(
+                                    "setImageUrl",
+                                    "https://i0.hdslb.com/bfs/app-res/android/img_holder_forbid_style1.webp"
+                                )
                             }
                         }
                     }
@@ -280,6 +275,7 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         if (!(hidden && (blockViewPageAds || removeHonor))) return
         // 视频详情页荣誉卡片
         fun Any.isHonor() = callMethodAs("hasHonor") && removeHonor
+
         // 视频详情页活动卡片(含会员购等), 区分于视频下方推荐处的广告卡片
         fun Any.isActivityEntranceModule() =
             callMethodAs("hasActivityEntranceModule") && blockViewPageAds
@@ -289,8 +285,7 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
 
         instance.viewUniteMossClass?.hookAfterMethod(
-            "view",
-            instance.viewUniteReqClass
+            "view", instance.viewUniteReqClass
         ) { param ->
             if (instance.networkExceptionClass?.isInstance(param.throwable) == true) return@hookAfterMethod
             param.result ?: return@hookAfterMethod
@@ -302,11 +297,10 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             param.result.callMethod("getTab")?.run {
                 callMethod("ensureTabModuleIsMutable")
                 callMethodAs<MutableList<Any>>("getTabModuleList").map {
-                    if (it.callMethodAs("hasIntroduction")) {
-                        it.callMethodAs<Any>("getIntroduction").run {
-                            callMethod("ensureModulesIsMutable")
-                            callMethodAs<MutableList<Any>>("getModulesList").filter()
-                        }
+                    if (!it.callMethodAs<Boolean>("hasIntroduction")) return@map
+                    it.callMethodAs<Any>("getIntroduction").run {
+                        callMethod("ensureModulesIsMutable")
+                        callMethodAs<MutableList<Any>>("getModulesList").filter()
                     }
                 }
             }

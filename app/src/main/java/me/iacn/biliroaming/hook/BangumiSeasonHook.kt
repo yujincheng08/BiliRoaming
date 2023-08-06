@@ -62,6 +62,8 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
         private const val PGC_ANY_MODEL_TYPE_URL =
             "type.googleapis.com/bilibili.app.viewunite.pgcanymodel.ViewPgcAny"
+
+        private val needUnlockDownload = sPrefs.getBoolean("allow_download", false)
     }
 
     private val isSerializable by lazy {
@@ -342,9 +344,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 supplementAny?.callMethod("getValue")?.callMethodAs<ByteArray>("toByteArray")
                     ?.let { ViewPgcAny.parseFrom(it) } ?: viewPgcAny {}
 
-            fixViewProto(response, supplement)?.let {
-                param.result = it
-            }
+            fixViewProto(response, supplement)
         }
 
         val urlHook: Hooker = fun(param) {
@@ -924,8 +924,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     result.optJSONObject("rights")?.run {
                         bp = optInt("bp")
                         elec = optInt("elec")
-                        download = if (sPrefs.getBoolean("allow_download", false))
-                            1 else optInt("download")
+                        download = if (needUnlockDownload) 1 else optInt("download")
                         movie = optInt("movie")
                         pay = optInt("pay")
                         hd5 = optInt("hd5")
@@ -1033,9 +1032,8 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     private fun fixViewProto(resp: Any, supplement: ViewPgcAny): Any? {
         val isAreaLimit = supplement.ogvData.rights.areaLimit != 0
-        val unlockDownload = sPrefs.getBoolean("allow_download", false)
 
-        if (!(isAreaLimit || unlockDownload))
+        if (!(isAreaLimit || needUnlockDownload))
             return null
 
         if (isAreaLimit)
@@ -1050,7 +1048,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val newSupplement = supplement.copy {
             ogvData = ogvData.copy {
                 rights = rights.copy {
-                    if (unlockDownload) {
+                    if (needUnlockDownload) {
                         allowDownload = 1
                         onlyVipDownload = 0
                         newAllowDownload = 1
@@ -1061,13 +1059,14 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
             }
         }
-        val supplementAny = "com.google.protobuf.Any".from(mClassLoader)?.callStaticMethod(
+        "com.google.protobuf.Any".from(mClassLoader)?.callStaticMethod(
             "parseFrom", any {
                 typeUrl = PGC_ANY_MODEL_TYPE_URL
                 value = newSupplement.toByteString()
             }.toByteArray()
-        )
-        resp.callMethod("setSupplement", supplementAny)
+        )?.let {
+            resp.callMethod("setSupplement", it)
+        }
 
         val tab = resp.callMethod("getTab") ?: return null
         val newTab = tab.callMethodAs<ByteArray>("toByteArray").let {
@@ -1089,14 +1088,14 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                                 }
                                             }
                                             rights = rights.copy {
-                                                if (unlockDownload) {
+                                                if (needUnlockDownload) {
                                                     allowDownload = 1
                                                 }
                                                 allowReview = 1
                                                 canWatch = 1
                                                 allowDm = 1
                                                 allowDemand = 1
-                                                areaLimit = 1
+                                                areaLimit = 0
                                             }
                                         }
                                     }
@@ -1113,7 +1112,6 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             tabModule.clear()
             tabModule.addAll(newTabModule)
         }
-
         tab.javaClass.callStaticMethod("parseFrom", newTab.toByteArray())?.let {
             resp.callMethod("setTab", it)
         }
@@ -1145,7 +1143,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
 
     private fun allowDownload(result: JSONObject?, toast: Boolean = true) {
-        if (sPrefs.getBoolean("allow_download", false)) {
+        if (needUnlockDownload) {
             val rights = result?.optJSONObject("rights")
             rights?.put("allow_download", 1)
             rights?.put("only_vip_download", 0)
