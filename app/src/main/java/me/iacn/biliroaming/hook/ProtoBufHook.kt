@@ -272,7 +272,7 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
         }
 
-        if (!(hidden && (blockViewPageAds || removeHonor))) return
+        if (!(hidden && (blockViewPageAds || removeHonor || blockVideoComment))) return
         // 视频详情页荣誉卡片
         fun Any.isHonor() = callMethodAs("hasHonor") && removeHonor
 
@@ -296,7 +296,12 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
             param.result.callMethod("getTab")?.run {
                 callMethod("ensureTabModuleIsMutable")
-                callMethodAs<MutableList<Any>>("getTabModuleList").map {
+                val tabModuleList = callMethodAs<MutableList<Any>>("getTabModuleList")
+                tabModuleList.removeAll {
+                    blockVideoComment && it.callMethodAs("hasReply")
+                }
+                if (!(blockViewPageAds || removeHonor)) return@run
+                tabModuleList.map {
                     if (!it.callMethodAs<Boolean>("hasIntroduction")) return@map
                     it.callMethodAs<Any>("getIntroduction").run {
                         callMethod("ensureModulesIsMutable")
