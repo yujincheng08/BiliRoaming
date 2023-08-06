@@ -280,8 +280,11 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         fun Any.isActivityEntranceModule() =
             callMethodAs("hasActivityEntranceModule") && blockViewPageAds
 
+        // 视频详情页直播预约卡片
+        fun Any.isLiveOrder() = callMethodAs("hasLiveOrder") && blockLiveOrder
+
         fun MutableList<Any>.filter() = removeAll {
-            it.isActivityEntranceModule() || it.isHonor()
+            it.isActivityEntranceModule() || it.isHonor() || it.isLiveOrder()
         }
 
         instance.viewUniteMossClass?.hookAfterMethod(
