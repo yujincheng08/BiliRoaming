@@ -69,7 +69,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
         if (!sPrefs.getBoolean("main_func", false)) return
         Log.d("startHook: BangumiPlayUrl")
-        val blockBangumiPageAds = sPrefs.getBoolean("block_bangumi_page_ads", false)
+        val blockBangumiPageAds = sPrefs.getBoolean("block_view_page_ads", false)
         val halfScreenQuality = sPrefs.getString("half_screen_quality", "0")?.toInt() ?: 0
         val fullScreenQuality = sPrefs.getString("full_screen_quality", "0")?.toInt() ?: 0
 
@@ -332,7 +332,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     } catch (e: CustomServerException) {
                         param.result = showPlayerErrorUnite(
                             response, supplement,
-                            "请求解析中服务器发生错误(点此查看更多)\n${e.message}"
+                            "请求解析中服务器发生错误", e.message, true
                         )
                         Log.toast("请求解析服务器发生错误: ${e.message}", alsoLog = true)
                     }
@@ -407,7 +407,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                 ?: throw CustomServerException(mapOf("未知错误" to "请检查哔哩漫游设置中解析服务器设置。"))
                         } catch (e: CustomServerException) {
                             Log.toast("请求解析服务器发生错误: ${e.message}", alsoLog = true)
-                            return@mossResponseHandlerReplaceProxy showPlayerErrorUnite(
+                            showPlayerErrorUnite(
                                 response, supplement, "请求解析服务器发生错误", e.message
                             )
                         }
@@ -415,7 +415,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         fixDownloadProtoUnite(response)
                     } else if (blockBangumiPageAds) {
                         purifyViewInfo(response, supplement)
-                    } else return@mossResponseHandlerReplaceProxy null
+                    } else null
                     newResponse
                 }
             }
@@ -525,7 +525,8 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val startPlayingDialog = dialogMap["start_playing"] ?: playsharedDialog {}
         dialogMap.put("start_playing", startPlayingDialog.copy {
             backgroundInfo = backgroundInfo.copy {
-                drawableBitmapUrl = "http://i0.hdslb.com/bfs/bangumi/e42bfa7427456c03562a64ac747be55203e24993.png"
+                drawableBitmapUrl =
+                    "http://i0.hdslb.com/bfs/bangumi/e42bfa7427456c03562a64ac747be55203e24993.png"
                 effects = 2 // Effects::HALF_ALPHA
             }
             title = title.copy {
@@ -548,31 +549,24 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         response.javaClass.callStaticMethod("parseFrom", newRes.toByteArray())
     } ?: response
 
-    private fun showPlayerErrorUnite(response: Any, supplement: PlayViewReply, message: String) =
-        runCatchingOrNull {
-            val serializedResponse = response.callMethodAs<ByteArray>("toByteArray")
-            val newRes = PlayViewUniteReply.parseFrom(serializedResponse).copy {
-                this.supplement = any {
-                    typeUrl = PGC_ANY_MODEL_TYPE_URL
-                    value = supplement.toErrorReply(message).toByteString()
-                }
-                clearVodInfo()
-            }.toByteArray()
-            response.javaClass.callStaticMethod("parseFrom", newRes)
-        } ?: response
-
     private fun showPlayerErrorUnite(
         response: Any,
         supplement: PlayViewReply,
         message: String,
-        subMessage: String
+        subMessage: String,
+        isBlockingReq: Boolean = false
     ) =
         runCatchingOrNull {
             val serializedResponse = response.callMethodAs<ByteArray>("toByteArray")
             val newRes = PlayViewUniteReply.parseFrom(serializedResponse).copy {
                 this.supplement = any {
+                    val supplementMessage = if (isBlockingReq) {
+                        message
+                    } else {
+                        message + "\n" + subMessage
+                    }
                     typeUrl = PGC_ANY_MODEL_TYPE_URL
-                    value = supplement.toErrorReply(message).toByteString()
+                    value = supplement.toErrorReply(supplementMessage).toByteString()
                 }
                 viewInfo = viewInfo.toErrorReply(message, subMessage)
                 clearVodInfo()

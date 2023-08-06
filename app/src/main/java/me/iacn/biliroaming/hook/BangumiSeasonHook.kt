@@ -1055,7 +1055,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     }
                     allowReview = 1
                     areaLimit = 0
-                    banAreaShow = 1
+                    banAreaShow = 0
                 }
             }
         }
