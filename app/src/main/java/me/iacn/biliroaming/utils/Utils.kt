@@ -388,6 +388,7 @@ inline fun Any.mossResponseHandlerProxy(crossinline onNext: (reply: Any?) -> Uni
 }
 
 inline fun Any.mossResponseHandlerReplaceProxy(crossinline onNext: (reply: Any?) -> Any?): Any {
+    val originalHandler = this
     return Proxy.newProxyInstance(
         javaClass.classLoader,
         arrayOf(instance.mossResponseHandlerClass)
@@ -397,6 +398,13 @@ inline fun Any.mossResponseHandlerReplaceProxy(crossinline onNext: (reply: Any?)
                 args[0] = it
             }
             m(this, *args)
+        } else if (m.name == "onError") {
+            val newResponse = onNext(null)
+            if (newResponse == null) {
+                m(this, *args)
+            } else {
+                originalHandler.callMethod("onNext", newResponse)
+            }
         } else if (args == null) {
             m(this)
         } else {

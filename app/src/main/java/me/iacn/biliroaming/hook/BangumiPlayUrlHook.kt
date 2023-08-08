@@ -348,28 +348,28 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 instance.playViewUniteReqClass,
                 instance.mossResponseHandlerClass
             ) { param ->
-                val request = param.args[0]
-                val vod = request.callMethod("getVod") ?: return@hookBeforeMethod
-                isDownload = sPrefs.getBoolean("allow_download", false)
-                        && vod.callMethodAs<Int>("getDownload") >= 1
-                if (isDownload) {
-                    if (!sPrefs.getBoolean("fix_download", false)
-                        || vod.callMethodAs<Int>("getFnval") <= 1
-                    ) {
-                        vod.callMethod("setFnval", MAX_FNVAL)
-                        vod.callMethod("setFourk", true)
-                    }
-                    vod.callMethod("setDownload", 0)
-                } else if (halfScreenQuality != 0 || fullScreenQuality != 0) {
-                    // unlock available quality limit, allow quality up to 8K
-                    vod.callMethod("setFnval", MAX_FNVAL)
-                    vod.callMethod("setFourk", true)
-                    if (halfScreenQuality != 0 && qnApplied.compareAndSet(false, true)) {
-                        if (halfScreenQuality != 1) {
-                            vod.callMethod("setQn", halfScreenQuality)
-                        } else {
-                            // follow full screen quality
-                            defaultQn?.let { vod.callMethod("setQn", it) }
+                param.args[0].callMethod("getVod")?.apply {
+                    isDownload = sPrefs.getBoolean("allow_download", false)
+                            && callMethodAs<Int>("getDownload") >= 1
+                    if (isDownload) {
+                        if (!sPrefs.getBoolean("fix_download", false)
+                            || callMethodAs<Int>("getFnval") <= 1
+                        ) {
+                            callMethod("setFnval", MAX_FNVAL)
+                            callMethod("setFourk", true)
+                        }
+                        callMethod("setDownload", 0)
+                    } else if (halfScreenQuality != 0 || fullScreenQuality != 0) {
+                        // unlock available quality limit, allow quality up to 8K
+                        callMethod("setFnval", MAX_FNVAL)
+                        callMethod("setFourk", true)
+                        if (halfScreenQuality != 0 && qnApplied.compareAndSet(false, true)) {
+                            if (halfScreenQuality != 1) {
+                                callMethod("setQn", halfScreenQuality)
+                            } else {
+                                // follow full screen quality
+                                defaultQn?.let { callMethod("setQn", it) }
+                            }
                         }
                     }
                 }

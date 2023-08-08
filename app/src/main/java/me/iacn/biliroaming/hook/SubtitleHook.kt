@@ -319,6 +319,11 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     if (subtitles.length() != 0) {
                         extraSubtitles += subtitles.toSubtitles()
                     }
+                    // Disable danmaku for Area Th
+                    param.result.apply {
+                        callMethod("setClosed", true)
+                        callMethod("setInputPlaceholder", "漫游泰区不支持弹幕")
+                    }
                 }
             }
 
