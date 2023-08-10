@@ -31,6 +31,18 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val removeCmdDms = sPrefs.getBoolean("remove_video_cmd_dms", false)
         val removeUpVipLabel = sPrefs.getBoolean("remove_up_vip_label", false)
         val purifySearch = sPrefs.getBoolean("purify_search", false)
+        val searchFilterUid = run {
+            sPrefs.getStringSet("search_filter_keyword_uid", null)
+                ?.mapNotNull { it.toLongOrNull() }.orEmpty()
+        }
+        val searchFilterContents = run {
+            sPrefs.getStringSet("search_filter_keyword_content", null).orEmpty()
+        }
+        val searchFilterContentRegexes by lazy { searchFilterContents.map { it.toRegex() } }
+        val searchFilterContentRegexMode = sPrefs.getBoolean("search_filter_content_regex_mode", false)
+        val searchFilterUpNames = run {
+            sPrefs.getStringSet("search_filter_keyword_upname", null).orEmpty()
+        }
         val purifyCampus = sPrefs.getBoolean("purify_campus", false)
         val blockWordSearch = sPrefs.getBoolean("block_word_search", false)
         val blockModules = sPrefs.getBoolean("block_modules", false)
@@ -269,6 +281,25 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         }
                     }
                 }
+        }
+        val needSearchFilter = hidden and (searchFilterContents.isNotEmpty() or searchFilterUid.isNotEmpty() or searchFilterUpNames.isNotEmpty())
+        if (needSearchFilter) {
+            instance.searchAllResponseClass?.hookAfterMethod("getItemList") { p ->
+                val items = p.result as? List<Any?> ?: return@hookAfterMethod
+                p.result = items.filter { item ->
+                    val videoCard = item?.getObjectField("cardItem_") ?: return@filter true
+                    if (instance.searchVideoCardClass?.isInstance(videoCard) == false) return@filter true
+                    if (videoCard.getLongField("mid_") in searchFilterUid) return@filter false
+                    if (videoCard.getObjectFieldAs<String>("author_") in searchFilterUpNames) return@filter false
+                    if (searchFilterContentRegexMode) {
+                        if (searchFilterContentRegexes.any { it.matches(videoCard.getObjectFieldAs<String>("title_")) })
+                            return@filter false
+                    } else {
+                        if (searchFilterContents.any { videoCard.getObjectFieldAs<String>("title_").contains(it) }) return@filter false
+                    }
+                    true
+                }
+            }
         }
 
         if (!(hidden && (blockViewPageAds || removeHonor || blockVideoComment))) return

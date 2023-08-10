@@ -172,6 +172,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         "com.google.protobuf.UnknownFieldSetLite".from(mClassLoader)
             ?.callStaticMethod("getDefaultInstance")
     }
+    val searchAllResponseClass by Weak { "com.bapis.bilibili.polymer.app.search.v1.SearchAllResponse" from mClassLoader }
+    val searchVideoCardClass by Weak { "com.bapis.bilibili.polymer.app.search.v1.SearchVideoCard" from mClassLoader }
 
     val ids: Map<String, Int> by lazy {
         mHookInfo.mapIds.idsMap
