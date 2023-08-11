@@ -16,6 +16,7 @@ import kotlinx.coroutines.launch
 import me.iacn.biliroaming.*
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.hook.BangumiSeasonHook.Companion.lastSeasonInfo
+import me.iacn.biliroaming.hook.ProtoBufHook.Companion.removeCmdDms
 import me.iacn.biliroaming.network.BiliRoamingApi
 import me.iacn.biliroaming.utils.*
 import org.json.JSONArray
@@ -108,6 +109,9 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
     }
 
+    private val hidden = sPrefs.getBoolean("hidden", false)
+    private val removeCmdDms = sPrefs.getBoolean("remove_video_cmd_dms", false)
+
     private val mainFunc by lazy { sPrefs.getBoolean("main_func", false) }
     private val generateSubtitle by lazy { sPrefs.getBoolean("auto_generate_subtitle", false) }
     private val addCloseSubtitle by lazy { mainFunc && getVersionCode(packageName) >= 6750300 }
@@ -143,6 +147,27 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
         if (mainFunc || generateSubtitle)
             hookSubtitleList()
+
+        hookDmViewAsync()
+    }
+
+    private fun hookDmViewAsync() {
+        if (!(mainFunc || generateSubtitle || (hidden && removeCmdDms))) return
+        instance.dmMossClass?.hookBeforeMethod(
+            "dmView",
+            instance.dmViewReqClass,
+            instance.mossResponseHandlerClass
+        ) { param ->
+            val dmViewReq = param.args[0]
+            param.args[1] = param.args[1].mossResponseHandlerReplaceProxy { dmViewReply ->
+                if (hidden && removeCmdDms) {
+                    dmViewReply?.removeCmdDms()
+                }
+                if (mainFunc || generateSubtitle ) {
+                    dmViewReply.hookSubtitleList(dmViewReq)
+                } else null
+            }
+        }
     }
 
     private fun hookSubtitleStyle() {
@@ -288,90 +313,9 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     private fun hookSubtitleList() {
         instance.dmMossClass?.hookAfterMethod(
-            "dmView", "com.bapis.bilibili.community.service.dm.v1.DmViewReq",
+            "dmView", instance.dmViewReqClass,
         ) { param ->
-            val parseDmViewReply = { r: Any? ->
-                r?.let { DmViewReply.parseFrom(it.callMethodAs<ByteArray>("toByteArray")) }
-            }
-
-            val extraSubtitles = mutableListOf<SubtitleItem>()
-            if (mainFunc) {
-                val oid = param.args[0].callMethod("getOid").toString()
-                val tryThailand = lastSeasonInfo.containsKey(oid) && ((
-                        lastSeasonInfo.containsKey("area")
-                                && lastSeasonInfo["area"] == "th") ||
-                        (lastSeasonInfo.containsKey("watch_platform")
-                                && lastSeasonInfo["watch_platform"] == "1"
-                                && (param.result == null || param.result.callMethod("getSubtitle")
-                            ?.callMethod("getSubtitlesCount") == 0)))
-                if (tryThailand) {
-                    val subtitles = if (lastSeasonInfo.containsKey("sb$oid")) {
-                        JSONArray(lastSeasonInfo["sb$oid"])
-                    } else {
-                        val result = BiliRoamingApi.getThailandSubtitles(
-                            lastSeasonInfo[oid] ?: lastSeasonInfo["epid"]
-                        )?.toJSONObject()
-                        if (result != null && result.optInt("code") == 0) {
-                            result.optJSONObject("data")
-                                ?.optJSONArray("subtitles").orEmpty()
-                        } else JSONArray()
-                    }
-                    if (subtitles.length() != 0) {
-                        extraSubtitles += subtitles.toSubtitles()
-                    }
-                    // Disable danmaku for Area Th
-                    param.result.apply {
-                        callMethod("setClosed", true)
-                        callMethod("setInputPlaceholder", "漫游泰区不支持弹幕")
-                    }
-                }
-            }
-
-            val fromPGC = param.args[0].callMethodAs<String>("getSpmid").contains("pgc")
-            val dmViewReply = if (generateSubtitle || (addCloseSubtitle && fromPGC)) {
-                parseDmViewReply(param.result)
-            } else null
-            if (generateSubtitle) {
-                val subtitles = mutableListOf<SubtitleItem>()
-                dmViewReply?.subtitle?.subtitlesList?.let { subtitles += it }
-                subtitles += extraSubtitles
-                if (subtitles.map { it.lan }.let { "zh-Hant" in it && "zh-CN" !in it }) {
-                    val origSub = subtitles.first { it.lan == "zh-Hant" }
-                    val targetSubUrl = Uri.parse(origSub.subtitleUrl).buildUpon()
-                        .appendQueryParameter("zh_converter", "t2cn")
-                        .build().toString()
-
-                    subtitleItem {
-                        lan = "zh-CN"
-                        lanDoc = "简中（生成）"
-                        lanDocBrief = "简中"
-                        subtitleUrl = targetSubUrl
-                        id = origSub.id + 1
-                        idStr = id.toString()
-                    }.let { extraSubtitles += it }
-                }
-            }
-
-            if (addCloseSubtitle && fromPGC
-                && (!dmViewReply?.subtitle?.subtitlesList.isNullOrEmpty() || extraSubtitles.isNotEmpty())
-            ) {
-                subtitleItem {
-                    lan = "nodisplay"
-                    lanDoc = closeText
-                }.let { extraSubtitles += it }
-            }
-
-            if (extraSubtitles.isNotEmpty()) {
-                val newRes = (dmViewReply ?: parseDmViewReply(param.result)
-                ?: dmViewReply {}).copy {
-                    subtitle = subtitle.copy {
-                        subtitles += extraSubtitles
-                    }
-                }
-
-                param.result = (param.method as Method).returnType
-                    .callStaticMethod("parseFrom", newRes.toByteArray())
-            }
+            param.result.hookSubtitleList(param.args[0])?.let { param.result = it }
         }
 
         if (!generateSubtitle) return
@@ -414,6 +358,94 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 m(parser, responseBody)
             }
         }
+    }
+
+    private fun Any?.hookSubtitleList(originalReq: Any): Any? {
+        val originalReply = this
+        val parseDmViewReply = { r: Any? ->
+            r?.let { DmViewReply.parseFrom(it.callMethodAs<ByteArray>("toByteArray")) }
+        }
+
+        val extraSubtitles = mutableListOf<SubtitleItem>()
+        if (mainFunc) {
+            val oid = originalReq.callMethod("getOid").toString()
+            val tryThailand = lastSeasonInfo.containsKey(oid) && ((
+                    lastSeasonInfo.containsKey("area")
+                            && lastSeasonInfo["area"] == "th") ||
+                    (lastSeasonInfo.containsKey("watch_platform")
+                            && lastSeasonInfo["watch_platform"] == "1"
+                            && (originalReply == null || originalReply.callMethod("getSubtitle")
+                        ?.callMethod("getSubtitlesCount") == 0)))
+            if (tryThailand) {
+                val subtitles = if (lastSeasonInfo.containsKey("sb$oid")) {
+                    JSONArray(lastSeasonInfo["sb$oid"])
+                } else {
+                    val result = BiliRoamingApi.getThailandSubtitles(
+                        lastSeasonInfo[oid] ?: lastSeasonInfo["epid"]
+                    )?.toJSONObject()
+                    if (result != null && result.optInt("code") == 0) {
+                        result.optJSONObject("data")
+                            ?.optJSONArray("subtitles").orEmpty()
+                    } else JSONArray()
+                }
+                if (subtitles.length() != 0) {
+                    extraSubtitles += subtitles.toSubtitles()
+                }
+                // Disable danmaku for Area Th
+                originalReply?.run {
+                    callMethod("setClosed", true)
+                    callMethod("setInputPlaceholder", "泰区不支持")
+                }
+            }
+        }
+
+        val fromPGC = originalReq.callMethodAs<String>("getSpmid").contains("pgc")
+        val dmViewReply = if (generateSubtitle || (addCloseSubtitle && fromPGC)) {
+            parseDmViewReply(originalReply)
+        } else null
+        if (generateSubtitle) {
+            val subtitles = mutableListOf<SubtitleItem>()
+            dmViewReply?.subtitle?.subtitlesList?.let { subtitles += it }
+            subtitles += extraSubtitles
+            if (subtitles.map { it.lan }.let { "zh-Hant" in it && "zh-CN" !in it }) {
+                val origSub = subtitles.first { it.lan == "zh-Hant" }
+                val targetSubUrl = Uri.parse(origSub.subtitleUrl).buildUpon()
+                    .appendQueryParameter("zh_converter", "t2cn")
+                    .build().toString()
+
+                subtitleItem {
+                    lan = "zh-CN"
+                    lanDoc = "简中（生成）"
+                    lanDocBrief = "简中"
+                    subtitleUrl = targetSubUrl
+                    id = origSub.id + 1
+                    idStr = id.toString()
+                }.let { extraSubtitles += it }
+            }
+        }
+
+        if (addCloseSubtitle && fromPGC
+            && (!dmViewReply?.subtitle?.subtitlesList.isNullOrEmpty() || extraSubtitles.isNotEmpty())
+        ) {
+            subtitleItem {
+                lan = "nodisplay"
+                lanDoc = closeText
+            }.let { extraSubtitles += it }
+        }
+
+        if (extraSubtitles.isNotEmpty()) {
+            val newRes = (dmViewReply ?: parseDmViewReply(originalReply)
+            ?: dmViewReply {}).copy {
+                subtitle = subtitle.copy {
+                    subtitles += extraSubtitles
+                }
+                d = true
+                inputPlaceHolder = "泰区不支持"
+            }
+            return originalReply?.javaClass?.callStaticMethod("parseFrom", newRes.toByteArray())
+        }
+
+        return null
     }
 
     private fun JSONArray.toSubtitles(): List<SubtitleItem> {
