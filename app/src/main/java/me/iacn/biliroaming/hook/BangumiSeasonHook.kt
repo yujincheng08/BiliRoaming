@@ -479,29 +479,37 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         v.callMethod("addAllNav", newNavList)
     }
 
+    private fun Class<*>.reconstructPageType() {
+        val pageArray = getStaticObjectFieldAs<Array<Any>>("\$VALUES")
+        val extra = AREA_TYPES.mapNotNull { area ->
+            sPrefs.getString(area.value.area + "_server", null)
+                .takeUnless { it.isNullOrBlank() }?.run {
+                    new(
+                        "PAGE_" + area.value.typeStr.uppercase(Locale.getDefault()), 4,
+                        "bilibili://search-result/new-" + area.value.typeStr + "?from=" + area.value.area,
+                        area.key, area.value.typeStr
+                    )
+                }
+        }
+        val newPageArray = pageArray.copyOf(pageArray.size + extra.size)
+        extra.forEachIndexed { index, any -> newPageArray[pageArray.size + index] = any }
+        setStaticObjectField("\$VALUES", newPageArray)
+    }
+
     override fun lateInitHook() {
         if (sPrefs.getBoolean("hidden", false) &&
             (sPrefs.getBoolean("search_area_bangumi", false)
                     || sPrefs.getBoolean("search_area_movie", false))
         ) {
-            val pageTypesClass = Class.forName(
+            Class.forName(
                 "com.bilibili.search.result.pages.BiliMainSearchResultPage\$PageTypes",
                 true, mClassLoader
-            )
-            val pageArray = pageTypesClass.getStaticObjectFieldAs<Array<Any>>("\$VALUES")
-            val extra = AREA_TYPES.mapNotNull { area ->
-                sPrefs.getString(area.value.area + "_server", null)
-                    .takeUnless { it.isNullOrBlank() }?.run {
-                        pageTypesClass.new(
-                            "PAGE_" + area.value.typeStr.uppercase(Locale.getDefault()), 4,
-                            "bilibili://search-result/new-" + area.value.typeStr + "?from=" + area.value.area,
-                            area.key, area.value.typeStr
-                        )
-                    }
-            }
-            val newPageArray = pageArray.copyOf(pageArray.size + extra.size)
-            extra.forEachIndexed { index, any -> newPageArray[pageArray.size + index] = any }
-            pageTypesClass.setStaticObjectField("\$VALUES", newPageArray)
+            ).reconstructPageType()
+            if (getVersionCode(packageName) < 7390000) return
+            Class.forName(
+                "com.bilibili.search2.result.pages.BiliMainSearchResultPage\$PageTypes",
+                true, mClassLoader
+            ).reconstructPageType()
         }
     }
 
