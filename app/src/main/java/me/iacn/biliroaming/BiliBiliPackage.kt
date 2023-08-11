@@ -162,6 +162,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     }
     val biliGlobalPreferenceClass by Weak { mHookInfo.biliGlobalPreference.class_ from mClassLoader }
     val dmMossClass by Weak { "com.bapis.bilibili.community.service.dm.v1.DMMoss" from mClassLoader }
+    val dmViewReqClass by Weak { "com.bapis.bilibili.community.service.dm.v1.DmViewReq" from mClassLoader }
     val treePointItemClass by Weak { "com.bilibili.app.comm.list.common.data.ThreePointItem" from mClassLoader }
     val dislikeReasonClass by Weak { "com.bilibili.app.comm.list.common.data.DislikeReason" from mClassLoader }
     val cardClickProcessorClass by Weak { mHookInfo.cardClickProcessor.class_ from mClassLoader }
