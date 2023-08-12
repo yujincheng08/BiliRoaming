@@ -15,11 +15,9 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     private val mainListReplyClass by Weak { "com.bapis.bilibili.main.community.reply.v1.MainListReply" from mClassLoader }
-    private val subjectDescriptionReplyClass by Weak { "com.bapis.bilibili.main.community.reply.v2.SubjectDescriptionReply" from mClassLoader }
     private val emptyPageV1Class by Weak { "com.bapis.bilibili.main.community.reply.v1.EmptyPage" from mClassLoader }
     private val textV1Class by Weak { "com.bapis.bilibili.main.community.reply.v1.EmptyPage\$Text" from mClassLoader }
     private val textStyleV1Class by Weak { "com.bapis.bilibili.main.community.reply.v1.TextStyle" from mClassLoader }
-    private val emptyPageV2Class by Weak { "com.bapis.bilibili.main.community.reply.v2.EmptyPage" from mClassLoader }
     private val textV2Class by Weak { "com.bapis.bilibili.main.community.reply.v2.EmptyPage\$Text" from mClassLoader }
     private val textStyleV2Class by Weak { "com.bapis.bilibili.main.community.reply.v2.TextStyle" from mClassLoader }
     private val videoGuideClass by Weak { "com.bapis.bilibili.app.view.v1.VideoGuide" from mClassLoader }
