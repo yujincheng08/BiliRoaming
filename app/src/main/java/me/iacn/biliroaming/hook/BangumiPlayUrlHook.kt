@@ -763,6 +763,21 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 val supportedConf = arcConf { isSupport = true }
                 supportedPlayArcIndices.forEach { arcConf[it] = supportedConf }
             }
+            if (!hasPlayArc()) {
+                playArc = playArc {
+                    val episode = thaiEp.value
+                    aid = episode.optLong("aid")
+                    cid = episode.optLong("cid")
+                    videoType = BizType.BIZ_TYPE_PGC
+                    episode.optJSONObject("dimension")?.run {
+                        dimension = dimension {
+                            width = optLong("width")
+                            height = optLong("height")
+                            rotate = optLong("rotate")
+                        }
+                    }
+                }
+            }
         }.toByteArray()
         response.javaClass.callStaticMethod("parseFrom", newRes)
     }.onFailure { Log.e(it) }.getOrDefault(response)
