@@ -330,6 +330,11 @@
             android:key="filter_search"
             android:summary="@string/filter_search_summary"
             android:title="@string/filter_search_title" />
+        <Preference
+            android:dependency="hidden"
+            android:key="filter_comment"
+            android:summary="@string/filter_comment_summary"
+            android:title="@string/filter_comment_title" />
         <MultiSelectListPreference
             android:dependency="hidden"
             android:entries="@array/tab_entries"
