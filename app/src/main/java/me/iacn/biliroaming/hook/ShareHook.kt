@@ -10,7 +10,7 @@ import me.iacn.biliroaming.utils.sPrefs
 import java.net.HttpURLConnection
 import java.net.URL
 
-class MiniProgramHook(classLoader: ClassLoader) : BaseHook(classLoader) {
+class ShareHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private val contentUrlPattern = Regex("""[\s\S]*(https://b23\.tv/\S*)$""")
 
     private fun resolveB23URL(url: String): String {
