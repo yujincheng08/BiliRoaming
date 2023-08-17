@@ -94,7 +94,7 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                     startHook(CustomThemeHook(lpparam.classLoader))
                     startHook(TeenagersModeHook(lpparam.classLoader))
                     startHook(JsonHook(lpparam.classLoader))
-                    startHook(MiniProgramHook(lpparam.classLoader))
+                    startHook(ShareHook(lpparam.classLoader))
                     startHook(AutoLikeHook(lpparam.classLoader))
                     startHook(SettingHook(lpparam.classLoader))
                     startHook(SplashHook(lpparam.classLoader))
@@ -107,7 +107,6 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                     startHook(CopyHook(lpparam.classLoader))
                     startHook(LiveRoomHook(lpparam.classLoader))
                     startHook(QualityHook(lpparam.classLoader))
-                    startHook(PurifyShareHook(lpparam.classLoader))
                     startHook(DynamicHook(lpparam.classLoader))
                     startHook(ProtoBufHook(lpparam.classLoader))
                     startHook(PlayArcConfHook(lpparam.classLoader))
@@ -134,7 +133,7 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                     BiliBiliPackage(lpparam.classLoader, param.args[0] as Context)
                     CustomThemeHook(lpparam.classLoader).insertColorForWebProcess()
                     startHook(WebViewHook(lpparam.classLoader))
-                    startHook(PurifyShareHook(lpparam.classLoader))
+                    startHook(ShareHook(lpparam.classLoader))
                     startHook(DialogBlurBackgroundHook(lpparam.classLoader))
                 }
 
