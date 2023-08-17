@@ -24,6 +24,8 @@ class CopyHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         )
     }
 
+    private val enhanceLongClickCopy = sPrefs.getBoolean("comment_copy_enhance", false)
+
     override fun startHook() {
         if (!sPrefs.getBoolean("comment_copy", false)) return
         instance.descCopyView().zip(instance.descCopy()).forEach { p ->
@@ -34,7 +36,7 @@ class CopyHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 View::class.java,
                 ClickableSpan::class.java
             ) { param ->
-                if (!sPrefs.getBoolean("comment_copy_enhance", false)) return@replaceMethod Unit
+                if (!enhanceLongClickCopy) return@replaceMethod Unit
 
                 param.thisObject.getFirstFieldByExactTypeOrNull<SpannableStringBuilder>()?.let {
                     val view = param.args[0] as View
@@ -47,7 +49,7 @@ class CopyHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
         instance.dynamicDescHolderListeners().forEach { c ->
             c?.replaceMethod("onLongClick", View::class.java) { param ->
-                if (!sPrefs.getBoolean("comment_copy_enhance", false))
+                if (!enhanceLongClickCopy)
                     return@replaceMethod true
                 val itemView = param.args[0] as? View
                 DYNAMIC_COPYABLE_IDS.asSequence().firstNotNullOfOrNull { n ->
@@ -64,7 +66,7 @@ class CopyHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
 
         val commentCopyHook = fun(param: MethodHookParam, idName: String): Any? {
-            if (!sPrefs.getBoolean("comment_copy_enhance", false)) return true
+            if (!enhanceLongClickCopy) return true
             if (param.args[0] is FrameLayout) return param.invokeOriginalMethod()
             (param.args[0] as? View)?.findViewById<View>(getId(idName))?.let {
                 if (instance.commentSpanTextViewClass?.isInstance(it) == true ||
@@ -83,9 +85,12 @@ class CopyHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         instance.commentCopyNewClass?.replaceMethod("onLongClick", View::class.java) {
             commentCopyHook(it, "comment_message")
         }
+
         instance.comment3CopyClass?.let { c ->
             instance.comment3Copy()?.let { m ->
                 c.replaceAllMethods(m) { param ->
+                    if (!enhanceLongClickCopy) return@replaceAllMethods true
+
                     val view = param.args[2] as View
                     view.getFirstFieldByExactTypeOrNull<CharSequence>()?.also { text ->
                         showCopyDialog(view.context, text, param)
@@ -95,7 +100,7 @@ class CopyHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
         }
 
-        if (!sPrefs.getBoolean("comment_copy_enhance", false)) return
+        if (!enhanceLongClickCopy) return
         "com.bilibili.bplus.im.conversation.ConversationActivity".from(mClassLoader)
             ?.declaredMethods?.find {
                 it.name == instance.onOperateClick() && it.parameterTypes.size == 8
