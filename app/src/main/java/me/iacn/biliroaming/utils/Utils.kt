@@ -404,6 +404,7 @@ inline fun Any.mossResponseHandlerReplaceProxy(crossinline onNext: (reply: Any?)
                 m(this, *args)
             } else {
                 originalHandler.callMethod("onNext", newResponse)
+                originalHandler.callMethod("onCompleted")
             }
         } else if (args == null) {
             m(this)
