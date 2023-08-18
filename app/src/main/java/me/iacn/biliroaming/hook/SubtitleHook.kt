@@ -163,7 +163,7 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 if (hidden && removeCmdDms) {
                     dmViewReply?.removeCmdDms()
                 }
-                if (mainFunc || generateSubtitle ) {
+                if (mainFunc || generateSubtitle) {
                     dmViewReply.hookSubtitleList(dmViewReq)
                 } else null
             }
@@ -367,35 +367,33 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
 
         val extraSubtitles = mutableListOf<SubtitleItem>()
-        if (mainFunc) {
-            val oid = originalReq.callMethod("getOid").toString()
-            val tryThailand = lastSeasonInfo.containsKey(oid) && ((
-                    lastSeasonInfo.containsKey("area")
-                            && lastSeasonInfo["area"] == "th") ||
-                    (lastSeasonInfo.containsKey("watch_platform")
-                            && lastSeasonInfo["watch_platform"] == "1"
-                            && (originalReply == null || originalReply.callMethod("getSubtitle")
-                        ?.callMethod("getSubtitlesCount") == 0)))
-            if (tryThailand) {
-                val subtitles = if (lastSeasonInfo.containsKey("sb$oid")) {
-                    JSONArray(lastSeasonInfo["sb$oid"])
-                } else {
-                    val result = BiliRoamingApi.getThailandSubtitles(
-                        lastSeasonInfo[oid] ?: lastSeasonInfo["epid"]
-                    )?.toJSONObject()
-                    if (result != null && result.optInt("code") == 0) {
-                        result.optJSONObject("data")
-                            ?.optJSONArray("subtitles").orEmpty()
-                    } else JSONArray()
-                }
-                if (subtitles.length() != 0) {
-                    extraSubtitles += subtitles.toSubtitles()
-                }
-                // Disable danmaku for Area Th
-                originalReply?.run {
-                    callMethod("setClosed", true)
-                    callMethod("setInputPlaceholder", "泰区不支持")
-                }
+        val oid = originalReq.callMethod("getOid").toString()
+        val tryThailand = lastSeasonInfo.containsKey(oid) && ((
+                lastSeasonInfo.containsKey("area")
+                        && lastSeasonInfo["area"] == "th") ||
+                (lastSeasonInfo.containsKey("watch_platform")
+                        && lastSeasonInfo["watch_platform"] == "1"
+                        && (originalReply == null || originalReply.callMethod("getSubtitle")
+                    ?.callMethod("getSubtitlesCount") == 0)))
+        if (mainFunc && tryThailand) {
+            val subtitles = if (lastSeasonInfo.containsKey("sb$oid")) {
+                JSONArray(lastSeasonInfo["sb$oid"])
+            } else {
+                val result = BiliRoamingApi.getThailandSubtitles(
+                    lastSeasonInfo[oid] ?: lastSeasonInfo["epid"]
+                )?.toJSONObject()
+                if (result != null && result.optInt("code") == 0) {
+                    result.optJSONObject("data")
+                        ?.optJSONArray("subtitles").orEmpty()
+                } else JSONArray()
+            }
+            if (subtitles.length() != 0) {
+                extraSubtitles += subtitles.toSubtitles()
+            }
+            // Disable danmaku for Area Th
+            originalReply?.run {
+                callMethod("setClosed", true)
+                callMethod("setInputPlaceholder", "泰区不支持")
             }
         }
 
@@ -439,7 +437,7 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 subtitle = subtitle.copy {
                     subtitles += extraSubtitles
                 }
-                d = true
+                d = tryThailand
                 inputPlaceHolder = "泰区不支持"
             }
             return originalReply?.javaClass?.callStaticMethod("parseFrom", newRes.toByteArray())
