@@ -471,6 +471,7 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             isPromoteRelate(it) || isNotAvRelate(it) || (applyToRelate && (isLowCountRelate(it)
                     || isDurationInvalidRelate(it) || isContainsBlockKwdRelate(it)))
         }
+
         fun MutableList<Any>.filterUnite() = removeAll {
             val allowTypeList = mutableListOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
             allowTypeList.removeAll { digit ->
@@ -527,10 +528,7 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             ) { param ->
                 param.result?.run {
                     callMethod("ensureRelatesIsMutable")
-                    callMethod("getRelatesList").run {
-                        callMethod("ensureCardsIsMutable")
-                        callMethodAs<MutableList<Any>>("getCardsList").filterUnite()
-                    }
+                    callMethodAs<MutableList<Any>>("getRelatesList").filterUnite()
                 }
             }
         }
