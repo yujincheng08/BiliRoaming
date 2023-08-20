@@ -17,7 +17,7 @@ class StartActivityHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         "tv.danmaku.bili.ui.intent.IntentHandlerActivity".hookBeforeMethod(mClassLoader, "onCreate", Bundle::class.java) { param ->
             val a = param.thisObject as Activity
             val data = a.intent.data ?: return@hookBeforeMethod
-            a.intent.data = data.buildUpon().encodedQuery(data.encodedQuery?.replace("&-Arouter=story", "")).build()
+            a.intent.data = data.buildUpon().encodedQuery(data.encodedQuery?.replace("&-Arouter=story", "")?.replace("&-Atype=story", "")).build()
         }
         Instrumentation::class.java.hookBeforeAllMethods("execStartActivity") { param ->
             val intent = param.args[4] as? Intent ?: return@hookBeforeAllMethods
