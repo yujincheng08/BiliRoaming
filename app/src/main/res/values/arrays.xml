@@ -65,7 +65,7 @@
         <item>other_tabs</item>
     </string-array>
     <string-array name="home_recommend_entries">
-        <item>广告</item>
+        <item>广告（含推广）</item>
         <item>游戏</item>
         <item>横幅（轮播图）</item>
         <item>通知（追番更新、活动提示）</item>

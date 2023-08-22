@@ -52,7 +52,7 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private val hideSuggestFollow = sPrefs.getBoolean("hide_suggest_follow_popular", false)
 
     private val filterMap = mapOf(
-        "advertisement" to listOf("ad"),
+        "advertisement" to listOf("ad", "cm", "cm_v2"),
         "article" to listOf("article"),
         "bangumi" to listOf("bangumi", "special", "pgc"),
         "game" to listOf("game"),

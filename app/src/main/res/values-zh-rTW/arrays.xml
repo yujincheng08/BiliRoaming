@@ -35,7 +35,7 @@
     </string-array>
 
     <string-array name="home_recommend_entries">
-        <item>廣告</item>
+        <item>廣告（含推廣）</item>
         <item>遊戲</item>
         <item>橫幅（輪播圖）</item>
         <item>通知（追番更新、活動提示）</item>
