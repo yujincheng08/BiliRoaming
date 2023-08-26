@@ -324,6 +324,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     fun getPreload() = mHookInfo.playerPreloadHolder.get.orNull
 
+    fun playerQualityServices() =
+        mHookInfo.playerQualityServiceList.map { it.class_.from(mClassLoader) to it.getDefaultQnThumb.orNull }
+
     fun getDefaultQn() = mHookInfo.playerSettingHelper.getDefaultQn.orNull
 
     fun liveRtcEnable() = mHookInfo.liveRtcHelper.liveRtcEnableMethod.orNull
@@ -2045,6 +2048,25 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     get = method { name = it.name }
                 }
             }
+            dexHelper.findMethodUsingString(
+                "player.unite_login_qn",
+                false,
+                -1,
+                -1,
+                null,
+                -1,
+                null,
+                null,
+                null,
+                false
+            ).asSequence().mapNotNull {
+                dexHelper.decodeMethodIndex(it)?.let { m ->
+                    playerQualityService {
+                        class_ = class_ { name = m.declaringClass.name }
+                        getDefaultQnThumb = method { name = m.name }
+                    }
+                }
+            }.let { playerQualityService.addAll(it.toList()) }
             playerSettingHelper = playerSettingHelper {
                 val getDefaultQnMethod = dexHelper.findMethodUsingString(
                     "get free data failed",

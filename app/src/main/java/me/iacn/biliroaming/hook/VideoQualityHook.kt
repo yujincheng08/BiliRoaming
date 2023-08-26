@@ -11,6 +11,9 @@ class VideoQualityHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val fullScreenQuality = sPrefs.getString("full_screen_quality", "0")?.toInt() ?: 0
         if (halfScreenQuality != 0) {
             instance.playerPreloadHolderClass?.replaceAllMethods(instance.getPreload()) { null }
+            instance.playerQualityServices().forEach { (clazz, getDefaultQnThumb) ->
+                clazz?.replaceMethod(getDefaultQnThumb) { halfScreenQuality }
+            }
         }
         if (fullScreenQuality != 0) {
             instance.playerSettingHelperClass?.replaceMethod(instance.getDefaultQn()) { fullScreenQuality }
