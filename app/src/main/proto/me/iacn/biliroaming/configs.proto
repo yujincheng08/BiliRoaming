@@ -240,6 +240,11 @@ message PlayerPreloadHolder {
   optional Method get = 2;
 }
 
+message PlayerQualityService {
+  optional Class class = 1;
+  optional Method get_default_qn_thumb = 2;
+}
+
 message PlayerSettingHelper {
   optional Class class = 1;
   optional Method get_default_qn = 2;
@@ -332,4 +337,5 @@ message HookInfo {
   optional CardClickProcessor card_click_processor = 89;
   optional Class publish_to_following_config = 90;
   optional Comment3Copy comment3_copy = 91;
+  repeated PlayerQualityService player_quality_service = 92;
 }
