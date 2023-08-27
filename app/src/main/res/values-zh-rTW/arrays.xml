@@ -148,4 +148,9 @@
         <item>4K</item>
         <item>8K</item>
     </string-array>
+    <string-array name="pegasus_cover_ratio_entries">
+        <item>預設（使用雲控值）</item>
+        <item>16:9</item>
+        <item>4:3</item>
+    </string-array>
 </resources>

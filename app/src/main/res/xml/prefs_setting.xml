@@ -258,6 +258,14 @@
             android:summary="@string/default_speed_summary"
             android:title="@string/default_speed_title" />
 
+        <ListPreference
+            android:defaultValue="0"
+            android:entries="@array/pegasus_cover_ratio_entries"
+            android:entryValues="@array/pegasus_cover_ratio_values"
+            android:key="pegasus_cover_ratio"
+            android:summary="@string/pegasus_cover_ratio_summary"
+            android:title="@string/pegasus_cover_ratio_title" />
+
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/pref_backup">
         <Preference

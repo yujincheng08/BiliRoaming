@@ -397,6 +397,10 @@ fun <T> T.setBooleanField(field: String?, value: Boolean) = apply {
     setBooleanField(this, field, value)
 }
 
+fun <T> T.setFloatField(field: String?, value: Float) = apply {
+    setFloatField(this, field, value)
+}
+
 inline fun XResources.hookLayout(
     id: Int,
     crossinline hooker: (XC_LayoutInflated.LayoutInflatedParam) -> Unit
