@@ -252,7 +252,7 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     result.getObjectFieldOrNullAs<MutableList<*>>("splashList")?.clear()
                     result.getObjectFieldOrNullAs<MutableList<*>>("strategyList")?.clear()
                 }
-                defaultWordClass, defaultKeywordClass, searchRanksClass, searchReferralClass, searchReferralV2Class, followingcardSearchRanksClass -> if (sPrefs.getBoolean(
+                defaultWordClass, defaultKeywordClass, searchRanksClass, searchReferralClass, followingcardSearchRanksClass -> if (sPrefs.getBoolean(
                         "purify_search",
                         false
                     ) &&
@@ -261,6 +261,22 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     result.javaClass.fields.forEach {
                         if (!it.type.isPrimitive)
                             result.setObjectField(it.name, null)
+                    }
+                }
+                searchReferralV2Class -> if (sPrefs.getBoolean(
+                        "purify_search",
+                        false
+                    ) &&
+                    sPrefs.getBoolean("hidden", false)
+                ) {
+                    result.javaClass.declaredFields.forEach {
+                        it.isAccessible = true
+                        it.set(result, it.type.let { type ->
+                            when (type) {
+                                Int::class.javaPrimitiveType -> 0
+                                else -> null
+                            }
+                        })
                     }
                 }
                 brandSplashDataClass -> if (sPrefs.getBoolean("custom_splash", false) ||
@@ -346,9 +362,8 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val searchRankClass = "com.bilibili.search.api.SearchRank".findClass(mClassLoader)
         val searchGuessClass =
             "com.bilibili.search.api.SearchReferral\$Guess".findClass(mClassLoader)
-        val searchRankV2Class = "com.bilibili.search2.api.SearchRank".from(mClassLoader) ?: searchRankClass
-        val searchGuessV2Class =
-            "com.bilibili.search2.api.SearchReferral\$Guess".from(mClassLoader) ?: searchGuessClass
+        val searchRankV2Class = "com.bilibili.search2.api.SearchRank".from(mClassLoader)
+        val searchGuessV2Class = "com.bilibili.search2.api.SearchReferral\$Guess".from(mClassLoader)
         val categoryClass = "tv.danmaku.bili.category.CategoryMeta".findClass(mClassLoader)
 
         instance.fastJsonClass?.hookAfterMethod(
