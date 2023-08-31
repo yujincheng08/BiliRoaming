@@ -71,6 +71,8 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         filterMap[it].orEmpty()
     }
 
+    val handleCoverRatio = sPrefs.getString("pegasus_cover_ratio", "0")?.toFloat() ?: 0f
+
     companion object {
         private const val REASON_ID_TITLE = 1145140L
         private const val REASON_ID_RCMD_REASON = 1145141L
@@ -278,6 +280,13 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
     }
 
+    private fun Any.customSmallCoverWhRatio() {
+        if (handleCoverRatio == 0f) return
+        runCatchingOrNull {
+            setFloatField("smallCoverWhRatio", handleCoverRatio)
+        }
+    }
+
     private fun isPromoteRelate(item: Any) = removeRelatePromote
             && (item.callMethod("getFromSourceType") == 2L ||
             item.callMethod("getGoto") == "cm")
@@ -452,7 +461,10 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         ) { param ->
             param.result ?: return@hookAfterMethod
             val data = param.result.getObjectField("data")
-            data?.getObjectField("config")?.disableAutoRefresh()
+            data?.getObjectField("config")?.apply {
+                disableAutoRefresh()
+                customSmallCoverWhRatio()
+            }
             if (!hidden) return@hookAfterMethod
             data?.getObjectFieldAs<ArrayList<Any>>("items")?.run {
                 removeAll {
