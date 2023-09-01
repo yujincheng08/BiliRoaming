@@ -162,6 +162,7 @@
     <string name="customize_dynamic_video_rm_up_title">移除最常访问（视频）</string>
     <string name="customize_dynamic_filter_apply_to_video">过滤设置同时作用于视频分区</string>
     <string name="customize_dynamic_rm_blocked_title">屏蔽无权查看动态(例如充电专属)</string>
+    <string name="customize_dynamic_rm_ad_link_title">屏蔽跳转广告动态(例如“UP主的推荐”)</string>
     <string name="customize_dynamic_by_type">按类型</string>
     <string name="customize_dynamic_by_keyword">按关键词</string>
     <string name="keyword_group_name_content">内容</string>

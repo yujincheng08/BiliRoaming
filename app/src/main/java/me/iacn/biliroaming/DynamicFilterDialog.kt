@@ -60,6 +60,11 @@ class DynamicFilterDialog(activity: Activity, prefs: SharedPreferences) :
         ).let { root.addView(it.first); it.second }
         rmBlockedSwitch.isChecked = prefs.getBoolean("customize_dynamic_rm_blocked", false)
 
+        val rmAdLinkSwitch = switchPrefsItem(
+            string(R.string.customize_dynamic_rm_ad_link_title)
+        ).let { root.addView(it.first); it.second }
+        rmBlockedSwitch.isChecked = prefs.getBoolean("customize_dynamic_rm_ad_link", false)
+
         val byTypeTitle = categoryTitle(string(R.string.customize_dynamic_by_type))
         root.addView(byTypeTitle)
 
@@ -141,6 +146,7 @@ class DynamicFilterDialog(activity: Activity, prefs: SharedPreferences) :
                 putBoolean("customize_dynamic_video_rm_up", rmUpOfVideoSwitch.isChecked)
                 putBoolean("filter_apply_to_video", filterApplyToVideoSwitch.isChecked)
                 putBoolean("customize_dynamic_rm_blocked", rmBlockedSwitch.isChecked)
+                putBoolean("customize_dynamic_rm_ad_link", rmAdLinkSwitch.isChecked)
                 putStringSet("customize_dynamic_type", typeValues)
                 putStringSet("customize_dynamic_keyword_content", contents)
                 putStringSet("customize_dynamic_keyword_upname", upNameGroup.getKeywords())
