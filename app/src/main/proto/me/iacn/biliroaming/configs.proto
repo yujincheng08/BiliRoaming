@@ -86,11 +86,13 @@ message GsonHelper {
 
 message PlayerCoreService {
   optional Class class = 1;
-  optional Method get_default_speed = 2;
+  optional Method get_playback_speed = 2;
   optional Method seek_to = 3;
   optional Method on_seek_complete = 4;
   optional Class seek_complete_listener = 5;
-  optional Method set_default_speed = 6;
+  optional Method set_playback_speed = 6;
+  optional Method player_on_prepare = 7;
+  optional Method theseus_player_set_speed = 8;
 }
 
 message PegasusFeed {
