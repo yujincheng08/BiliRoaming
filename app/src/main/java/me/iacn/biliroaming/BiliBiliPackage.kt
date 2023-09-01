@@ -244,9 +244,13 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     fun gson() = mHookInfo.gsonHelper.gson.orNull
 
-    fun defaultSpeed() = mHookInfo.playerCoreService.getDefaultSpeed.orNull
+    fun getPlaybackSpeed() = mHookInfo.playerCoreService.getPlaybackSpeed.orNull
 
-    fun setDefaultSpeed() = mHookInfo.playerCoreService.setDefaultSpeed.orNull
+    fun setPlaybackSpeed() = mHookInfo.playerCoreService.setPlaybackSpeed.orNull
+
+    fun theseusPlayerSetSpeed() = mHookInfo.playerCoreService.theseusPlayerSetSpeed.orNull
+
+    fun playerOnPrepare() = mHookInfo.playerCoreService.playerOnPrepare.orNull
 
     fun urlField() = mHookInfo.okHttp.request.url.orNull
 
@@ -1409,7 +1413,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 onSeekComplete = method { name = onSeekCompleteMethod.name }
                 seekCompleteListener =
                     class_ { name = onSeekCompleteMethod.declaringClass.name }
-                getDefaultSpeed = method {
+                getPlaybackSpeed = method {
                     name = dexHelper.findMethodUsingString(
                         "player_key_video_speed",
                         true,
@@ -1425,13 +1429,49 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                         dexHelper.decodeMethodIndex(it)
                     }?.name ?: return@method
                 }
-                setDefaultSpeed = method {
+                dexHelper.findMethodUsingString(
+                    "player_key_video_speed",
+                    true,
+                    -1,
+                    1,
+                    "VF",
+                    dexHelper.encodeClassIndex(playerCoreServiceClass),
+                    null,
+                    null,
+                    null,
+                    true
+                ).asSequence().firstOrNull()?.also { mIndex ->
+                    dexHelper.decodeMethodIndex(mIndex)?.let {
+                        setPlaybackSpeed = method {
+                            name = it.name
+                        }
+                    }
+                }?.let {
+                    dexHelper.findMethodInvoked(
+                        it,
+                        -1,
+                        -1,
+                        "VF",
+                        -1,
+                        null,
+                        null,
+                        null,
+                        true
+                    ).asSequence().firstNotNullOfOrNull {
+                        dexHelper.decodeMethodIndex(it)
+                    }?.let {
+                        theseusPlayerSetSpeed = method {
+                            name = it.name
+                        }
+                    }
+                }
+                playerOnPrepare = method {
                     name = dexHelper.findMethodUsingString(
-                        "player_key_video_speed",
+                        "[ijk][callback]player onPrepared",
                         true,
                         -1,
-                        1,
-                        "VF",
+                        -1,
+                        "VLL",
                         dexHelper.encodeClassIndex(playerCoreServiceClass),
                         null,
                         null,

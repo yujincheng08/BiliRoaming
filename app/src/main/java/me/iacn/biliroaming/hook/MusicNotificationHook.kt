@@ -209,9 +209,9 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             getCorePlayer(param.thisObject)?.run {
                 position = callMethodAs<Int>(getCurrentPositionMethod).toLong()
                 speed = try {
-                    callMethodAs(instance.defaultSpeed(), true)
+                    callMethodAs(instance.getPlaybackSpeed(), true)
                 } catch (e: Throwable) {
-                    callMethodAs(instance.defaultSpeed())
+                    callMethodAs(instance.getPlaybackSpeed())
                 }
             }
         }
