@@ -26,6 +26,7 @@ class DynamicHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private val preferVideoTab = sPrefs.getBoolean("prefer_video_tab", false)
     private val filterApplyToVideo = sPrefs.getBoolean("filter_apply_to_video", false)
     private val rmBlocked = sPrefs.getBoolean("customize_dynamic_rm_blocked", false)
+    private val rmAdLink = sPrefs.getBoolean("customize_dynamic_rm_ad_link", false)
 
     private val needFilterDynamic = purifyTypes.isNotEmpty() || purifyContents.isNotEmpty()
             || purifyUpNames.isNotEmpty() || purifyUidList.isNotEmpty() || rmBlocked
@@ -96,12 +97,22 @@ class DynamicHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 continue
             }
 
-            if (purifyContents.isNotEmpty()) {
-                val modulesText = e.callMethodAs<List<Any>>("getModulesList")
-                    .joinToString(separator = "") {
-                        it.callMethod("getModuleDesc")
-                            ?.callMethodAs<String>("getText").orEmpty()
-                    }
+            if (rmAdLink || purifyContents.isNotEmpty()) {
+                val moduleList = e.callMethodAs<List<Any>>("getModulesList")
+                if (rmAdLink && moduleList.any {
+                        it.callMethodOrNull("hasModuleAdditional") == true
+                                && it.callMethod("getModuleAdditional")
+                            ?.callMethod("getTypeValue").let {
+                                it == 2 || it == 6
+                            } // additional_type_goods, additional_type_up_rcmd
+                    }) {
+                    idxList.add(idx)
+                    continue
+                }
+                val modulesText = moduleList.joinToString(separator = "") {
+                    it.callMethod("getModuleDesc")
+                        ?.callMethodAs<String>("getText").orEmpty()
+                }
                 if (modulesText.isNotEmpty() && if (contentRegexMode)
                         purifyContentRegexes.any { modulesText.contains(it) }
                     else purifyContents.any { modulesText.contains(it) }
