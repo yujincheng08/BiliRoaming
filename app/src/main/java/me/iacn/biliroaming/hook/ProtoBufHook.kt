@@ -387,5 +387,12 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
             }
         }
+
+        if (!sPrefs.getBoolean("replace_story_video", false)) return
+        val disableBooleanValue = "com.bapis.bilibili.app.distribution.BoolValue".from(mClassLoader)?.callStaticMethod("getDefaultInstance") ?: return
+        "com.bapis.bilibili.app.distribution.setting.play.PlayConfig".from(mClassLoader)?.run {
+            replaceAllMethods("getLandscapeAutoStory") { disableBooleanValue }
+            replaceAllMethods("getShouldAutoStory") { disableBooleanValue }
+        }
     }
 }
