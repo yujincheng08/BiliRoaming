@@ -39,7 +39,7 @@ cmaker {
     }
 
     buildTypes {
-        arguments += "-DDEBUG_SYMBOLS_PATH=${project.buildDir.absolutePath}/symbols/${it.name}"
+        arguments += "-DDEBUG_SYMBOLS_PATH=${layout.buildDirectory.file("symbols/${it.name}").get().asFile.absolutePath}"
     }
 }
 
@@ -47,7 +47,7 @@ android {
     namespace = "me.iacn.biliroaming"
     compileSdk = 34
     buildToolsVersion = "34.0.0"
-    ndkVersion = "25.2.9519653"
+    ndkVersion = "26.0.10792818"
 
     buildFeatures {
         prefab = true
