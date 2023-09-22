@@ -202,6 +202,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         } ?: appKeyMap[packageName] ?: "1d8b6e7d45233436"
     }
 
+    val clientVersionCode get() = mHookInfo.clientVersionCode
+
     fun fastJsonParse() = mHookInfo.fastJson.parse.orNull
 
     fun colorArray() = mHookInfo.themeHelper.colorArray.orNull
@@ -802,8 +804,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 method = method { name = shareMethod.name }
             }
             themeName = themeName {
+                val themeNameClassRegex = Regex("""^tv\.danmaku\.bili\.ui\.garb\.\w?$""")
                 val themeNameClass = classesList.filter {
-                    it.startsWith("tv.danmaku.bili.ui.garb")
+                    it.startsWith("tv.danmaku.bili.ui.garb") && it.contains(themeNameClassRegex)
                 }.map {
                     it.findClass(classloader)
                 }.firstOrNull { c ->
