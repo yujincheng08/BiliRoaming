@@ -7,7 +7,6 @@ import android.app.Notification
 import android.content.Context
 import android.content.SharedPreferences
 import android.graphics.Bitmap
-import android.os.Bundle
 import android.text.style.ClickableSpan
 import android.text.style.LineBackgroundSpan
 import android.util.SparseArray
@@ -57,7 +56,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val columnHelperClass by Weak { mHookInfo.columnHelper.class_ from mClassLoader }
     val settingRouterClass by Weak { mHookInfo.settings.settingRouter from mClassLoader }
     val themeListClickClass by Weak { mHookInfo.themeListClick from mClassLoader }
-    val shareWrapperClass by Weak { mHookInfo.shareWrapper.class_ from mClassLoader }
     val themeNameClass by Weak { mHookInfo.themeName.class_ from mClassLoader }
     val themeProcessorClass by Weak { mHookInfo.themeProcessor.class_ from mClassLoader }
     val drawerClass by Weak { mHookInfo.drawer.class_ from mClassLoader }
@@ -227,8 +225,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     fun likeMethod() = mHookInfo.section.like.orNull
 
     fun themeName() = mHookInfo.themeName.field.orNull
-
-    fun shareWrapper() = mHookInfo.shareWrapper.method.orNull
 
     fun downloadingThread() = mHookInfo.downloadThread.field.orNull
 
@@ -768,40 +764,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     "tv.danmaku.bili.ui.theme.ThemeStoreActivity".findClassOrNull(classloader)?.declaredClasses?.firstOrNull {
                         it.interfaces.contains(View.OnClickListener::class.java)
                     }?.name ?: return@class_
-            }
-            shareWrapper = shareWrapper {
-                val shareToIndex = dexHelper.findMethodUsingString(
-                    "share.helper.inner",
-                    false,
-                    -1,
-                    -1,
-                    null,
-                    -1,
-                    null,
-                    null,
-                    null,
-                    true
-                ).firstOrNull() ?: return@shareWrapper
-                val shareHelperClass =
-                    dexHelper.decodeMethodIndex(shareToIndex)?.declaringClass ?: return@shareWrapper
-                class_ = class_ { name = shareHelperClass.name }
-                val shareHelperIndex = dexHelper.encodeClassIndex(shareHelperClass)
-                val stringIndex = dexHelper.encodeClassIndex(String::class.java)
-                val bundleIndex = dexHelper.encodeClassIndex(Bundle::class.java)
-                val shareMethod = dexHelper.findMethodInvoking(
-                    shareToIndex,
-                    -1,
-                    2,
-                    "VLL",
-                    shareHelperIndex,
-                    longArrayOf(stringIndex, bundleIndex),
-                    null,
-                    null,
-                    true
-                ).asSequence().firstNotNullOfOrNull {
-                    dexHelper.decodeMethodIndex(it)
-                } ?: return@shareWrapper
-                method = method { name = shareMethod.name }
             }
             themeName = themeName {
                 val themeNameClassRegex = Regex("""^tv\.danmaku\.bili\.ui\.garb\.\w?$""")
