@@ -31,21 +31,24 @@ class ShareHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 ?.firstOrNull { it.startsWith("BV") && it.length == 12 }
         else null
         val av = bv?.let { "av${bv2av(bv)}" }
-        val query = target.encodedQuery?.split("&")?.map {
-            it.split("=")
-        }?.filter {
-            it.size == 2
-        }?.mapNotNull {
-            if (it[0] == "p" || it[0] == "t") "${it[0]}=${it[1]}"
-            else if (it[0] == "start_progress") "start_progress=${it[1]}&t=${it[1].toLong() / 1000}"
-            else null
-        }?.joinToString("&")
         val newUrl = target.buildUpon()
         if (av != null) {
             newUrl.path(target.path!!.replace(bv, av))
         }
-        if (query != null) {
+        val encodedQuery = target.encodedQuery
+        if (encodedQuery != null) {
+            val query = encodedQuery.split("&").map {
+                it.split("=")
+            }.filter {
+                it.size == 2
+            }.mapNotNull {
+                if (it[0] == "p" || it[0] == "t") "${it[0]}=${it[1]}"
+                else if (it[0] == "start_progress") "start_progress=${it[1]}&t=${it[1].toLong() / 1000}"
+                else null
+            }.joinToString("&", postfix = "&unique_k=114514")
             newUrl.encodedQuery(query)
+        } else {
+            newUrl.appendQueryParameter("unique_k", "114514")
         }
         return newUrl.build().toString()
     }
