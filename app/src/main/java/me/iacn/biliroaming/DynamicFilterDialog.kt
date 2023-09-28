@@ -63,7 +63,7 @@ class DynamicFilterDialog(activity: Activity, prefs: SharedPreferences) :
         val rmAdLinkSwitch = switchPrefsItem(
             string(R.string.customize_dynamic_rm_ad_link_title)
         ).let { root.addView(it.first); it.second }
-        rmBlockedSwitch.isChecked = prefs.getBoolean("customize_dynamic_rm_ad_link", false)
+        rmAdLinkSwitch.isChecked = prefs.getBoolean("customize_dynamic_rm_ad_link", false)
 
         val byTypeTitle = categoryTitle(string(R.string.customize_dynamic_by_type))
         root.addView(byTypeTitle)
