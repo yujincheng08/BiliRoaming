@@ -242,7 +242,6 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
 
         private fun checkCompatibleVersion() {
             val versionCode = getVersionCode(packageName)
-            var supportMusicNotificationHook = true
             var supportCustomizeTab = true
             val supportFullSplash = try {
                 instance.splashInfoClass?.getMethod("getMode") != null
@@ -262,8 +261,6 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     supportAddTag = false
                 }
             }
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
-                supportMusicNotificationHook = false
             val supportSplashHook = instance.brandSplashClass != null
             val supportTeenagersMode = instance.teenagersModeDialogActivityClass != null
             val supportStoryVideo = instance.storyVideoActivityClass != null
@@ -277,12 +274,6 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             }
             if (!supportFullSplash) {
                 disablePreference("full_splash")
-            }
-            if (!supportMusicNotificationHook) {
-                disablePreference(
-                    "music_notification",
-                    context.getString(R.string.os_not_support)
-                )
             }
             if (!supportMain) {
                 disablePreference("main_func", "Android O以下系统不支持64位Xpatch版，请使用32位版")

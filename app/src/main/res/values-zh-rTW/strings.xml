@@ -71,8 +71,6 @@
     <string name="fix_download_summary">提高版權番劇的下載速度，但是會導致影音分離</string>
     <string name="customize_home_tab_title">淨化首頁標籤</string>
     <string name="customize_home_tab_summary">請勿全部選擇，會使用之前的的標籤</string>
-    <string name="music_notification_title">原生音樂通知樣式</string>
-    <string name="music_notification_summary">強制音樂通知欄為模組自製的原生樣式</string>
     <string name="custom_server_title">設定解析伺服器</string>
     <string name="custom_server_summary">使用設定的伺服器解析區域限制番劇的播放地址；如不知如何設定，請查看說明文件</string>
     <string name="drawer_title">移動我的頁面到側邊欄</string>

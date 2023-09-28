@@ -80,10 +80,6 @@
             android:summary="@string/full_splash_summary"
             android:title="@string/full_splash_title" />
         <SwitchPreference
-            android:key="music_notification"
-            android:summary="@string/music_notification_summary"
-            android:title="@string/music_notification_title" />
-        <SwitchPreference
             android:key="drawer"
             android:summary="@string/drawer_summary"
             android:title="@string/drawer_title" />

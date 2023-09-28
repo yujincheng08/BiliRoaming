@@ -390,27 +390,6 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     ) {
                         result?.clear()
                     }
-                categoryClass ->
-                    if (sPrefs.getBoolean("music_notification", false)) {
-                        val hasMusic = result?.any {
-                            it.getObjectFieldAs<String?>("mUri")
-                                ?.startsWith("bilibili://music") ?: false
-                        } ?: false
-                        if (!hasMusic) {
-                            result?.add(
-                                categoryClass.new()
-                                    .setObjectField("mTypeName", "音頻")
-                                    .setObjectField(
-                                        "mCoverUrl",
-                                        "http://i0.hdslb.com/bfs/archive/85d6dddbdc9746fed91c65c2c3eb3a0a453eadaf.png"
-                                    )
-                                    .setObjectField("mUri", "bilibili://music/home?from=category")
-                                    .setIntField("mType", 1)
-                                    .setIntField("mParentTid", 0)
-                                    .setIntField("mTid", 65543)
-                            )
-                        }
-                    }
             }
         }
 
