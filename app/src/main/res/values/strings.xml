@@ -71,8 +71,6 @@
     <string name="fix_download_summary">提高版权番剧的下载速度，但是会导致音视频分离</string>
     <string name="customize_home_tab_title">净化首页标签</string>
     <string name="customize_home_tab_summary">请勿全部选择，会使用之前的的标签</string>
-    <string name="music_notification_title">原生音乐通知样式</string>
-    <string name="music_notification_summary">强制音乐通知栏为模块自制的原生样式</string>
     <string name="custom_server_title">设置解析服务器</string>
     <string name="custom_server_summary">使用设置的服务器解析区域限制番剧的播放地址；如不知如何设置，请查看帮助文档</string>
     <string name="drawer_title">移动我的页面到侧边栏</string>

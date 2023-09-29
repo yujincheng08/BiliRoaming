@@ -106,7 +106,7 @@ object UposReplaceHelper {
             false
         } else {
             // only 'szbdyd.com' like PCDN can be replace
-            forceUpos || (enablePcdnBlock && contains("szbdyd.com")) || isOverseaUpos()
+            (forceUpos && startsWith("http")) || (enablePcdnBlock && contains("szbdyd.com")) || isOverseaUpos()
         }
 
     fun String.replaceUpos(

@@ -23,6 +23,8 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             )
         val accountMineClass =
             "tv.danmaku.bili.ui.main2.api.AccountMine".findClassOrNull(mClassLoader)
+        val garbEntranceClass =
+            "tv.danmaku.bili.ui.main2.api.AccountMine\$GarbEntrance".from(mClassLoader)
         val splashClass = "tv.danmaku.bili.ui.splash.SplashData".findClassOrNull(mClassLoader)
             ?: "tv.danmaku.bili.ui.splash.ad.model.SplashData".findClassOrNull(mClassLoader)
         val splashShowClass = "tv.danmaku.bili.ui.splash.ad.model.SplashShowData".findClassOrNull(mClassLoader)
@@ -243,7 +245,13 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     }
                     accountMineClass.findFieldOrNull("vipSectionRight")?.set(result, null)
                     if (sPrefs.getBoolean("custom_theme", false)) {
-                        result.setObjectField("garbEntrance", null)
+                        if (instance.clientVersionCode >= 7480200) {
+                            garbEntranceClass?.new()?.apply {
+                                setObjectField("uri", "activity://navigation/theme/")
+                            }?.let { result.setObjectField("garbEntrance", it) }
+                        } else {
+                            result.setObjectField("garbEntrance", null)
+                        }
                     }
                 }
                 splashClass, splashShowClass -> if (sPrefs.getBoolean("purify_splash", false) &&
@@ -381,27 +389,6 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         )
                     ) {
                         result?.clear()
-                    }
-                categoryClass ->
-                    if (sPrefs.getBoolean("music_notification", false)) {
-                        val hasMusic = result?.any {
-                            it.getObjectFieldAs<String?>("mUri")
-                                ?.startsWith("bilibili://music") ?: false
-                        } ?: false
-                        if (!hasMusic) {
-                            result?.add(
-                                categoryClass.new()
-                                    .setObjectField("mTypeName", "音頻")
-                                    .setObjectField(
-                                        "mCoverUrl",
-                                        "http://i0.hdslb.com/bfs/archive/85d6dddbdc9746fed91c65c2c3eb3a0a453eadaf.png"
-                                    )
-                                    .setObjectField("mUri", "bilibili://music/home?from=category")
-                                    .setIntField("mType", 1)
-                                    .setIntField("mParentTid", 0)
-                                    .setIntField("mTid", 65543)
-                            )
-                        }
                     }
             }
         }

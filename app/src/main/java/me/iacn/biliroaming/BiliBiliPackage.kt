@@ -3,11 +3,8 @@
 package me.iacn.biliroaming
 
 import android.app.AndroidAppHelper
-import android.app.Notification
 import android.content.Context
 import android.content.SharedPreferences
-import android.graphics.Bitmap
-import android.os.Bundle
 import android.text.style.ClickableSpan
 import android.text.style.LineBackgroundSpan
 import android.util.SparseArray
@@ -57,7 +54,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val columnHelperClass by Weak { mHookInfo.columnHelper.class_ from mClassLoader }
     val settingRouterClass by Weak { mHookInfo.settings.settingRouter from mClassLoader }
     val themeListClickClass by Weak { mHookInfo.themeListClick from mClassLoader }
-    val shareWrapperClass by Weak { mHookInfo.shareWrapper.class_ from mClassLoader }
     val themeNameClass by Weak { mHookInfo.themeName.class_ from mClassLoader }
     val themeProcessorClass by Weak { mHookInfo.themeProcessor.class_ from mClassLoader }
     val drawerClass by Weak { mHookInfo.drawer.class_ from mClassLoader }
@@ -76,10 +72,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     }
     val mainActivityClass by Weak { "tv.danmaku.bili.MainActivityV2" from mClassLoader }
     val homeUserCenterClass by Weak { if (mHookInfo.settings.homeUserCenterCount == 1) mHookInfo.settings.homeUserCenterList.first().class_ from mClassLoader else null }
-    val musicNotificationHelperClass by Weak { mHookInfo.musicNotification.helper from mClassLoader }
-    val liveNotificationHelperClass by Weak { mHookInfo.musicNotification.liveHelper from mClassLoader }
-    val notificationBuilderClass by Weak { mHookInfo.musicNotification.builder.class_ from mClassLoader }
-    val absMusicServiceClass by Weak { mHookInfo.musicNotification.absMusicService from mClassLoader }
     val menuGroupItemClass by Weak { mHookInfo.settings.menuGroupItem from mClassLoader }
     val drawerLayoutClass by Weak { mHookInfo.drawer.layout from mClassLoader }
     val drawerLayoutParamsClass by Weak { mHookInfo.drawer.layoutParams from mClassLoader }
@@ -113,11 +105,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val okioWrapperClass by Weak { mHookInfo.okio.class_ from mClassLoader }
     val ellipsizingTextViewClass by Weak { "com.bilibili.bplus.followingcard.widget.EllipsizingTextView" from mClassLoader }
     val shareClickResultClass by Weak { "com.bilibili.lib.sharewrapper.online.api.ShareClickResult" from mClassLoader }
-    val backgroundPlayerClass by Weak { mHookInfo.musicNotification.backgroundPlayer from mClassLoader }
-    val playerServiceClass by Weak { mHookInfo.musicNotification.playerService from mClassLoader }
-    val mediaSessionCallbackClass by Weak { mHookInfo.musicNotification.mediaSessionCallback from mClassLoader }
-    val playerOnSeekCompleteClass by Weak { mHookInfo.playerCoreService.seekCompleteListener from mClassLoader }
-    val musicBackgroundPlayerClass by Weak { mHookInfo.musicNotification.musicBackgroundPlayer from mClassLoader }
     val kanbanCallbackClass by Weak { mHookInfo.kanBan.class_ from mClassLoader }
     val toastHelperClass by Weak { mHookInfo.toastHelper.class_ from mClassLoader }
     val biliAccountsClass by Weak { mHookInfo.biliAccounts.class_ from mClassLoader }
@@ -202,6 +189,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         } ?: appKeyMap[packageName] ?: "1d8b6e7d45233436"
     }
 
+    val clientVersionCode get() = mHookInfo.clientVersionCode
+
     fun fastJsonParse() = mHookInfo.fastJson.parse.orNull
 
     fun colorArray() = mHookInfo.themeHelper.colorArray.orNull
@@ -226,13 +215,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     fun themeName() = mHookInfo.themeName.field.orNull
 
-    fun shareWrapper() = mHookInfo.shareWrapper.method.orNull
-
     fun downloadingThread() = mHookInfo.downloadThread.field.orNull
 
     fun reportDownloadThread() = mHookInfo.downloadThread.reportDownload.method.orNull
-
-    fun setNotification() = mHookInfo.musicNotification.builder.method.orNull
 
     fun openDrawer() = mHookInfo.drawer.open.orNull
 
@@ -282,8 +267,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     fun onSeekComplete() = mHookInfo.playerCoreService.onSeekComplete.orNull
 
-    fun setState() = mHookInfo.musicNotification.setState.orNull
-
     fun kanbanCallback() = mHookInfo.kanBan.method.orNull
 
     fun showToast() = mHookInfo.toastHelper.show.orNull
@@ -295,12 +278,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     fun setInvalidTips() = commentInvalidFragmentClass?.declaredMethods?.find { m ->
         m.parameterTypes.let { it.size == 2 && it[0] == commentInvalidFragmentClass && it[1].name == "kotlin.Pair" }
     }?.name
-
-    fun musicWrapperPlayer() = mHookInfo.musicNotification.musicWrapperPlayer.orNull
-
-    fun musicPlayer() = mHookInfo.musicNotification.musicPlayer.orNull
-
-    fun musicPlayerService() = mHookInfo.musicNotification.musicPlayerService.orNull
 
     fun create() = mHookInfo.okHttp.responseBody.create.orNull
 
@@ -767,43 +744,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                         it.interfaces.contains(View.OnClickListener::class.java)
                     }?.name ?: return@class_
             }
-            shareWrapper = shareWrapper {
-                val shareToIndex = dexHelper.findMethodUsingString(
-                    "share.helper.inner",
-                    false,
-                    -1,
-                    -1,
-                    null,
-                    -1,
-                    null,
-                    null,
-                    null,
-                    true
-                ).firstOrNull() ?: return@shareWrapper
-                val shareHelperClass =
-                    dexHelper.decodeMethodIndex(shareToIndex)?.declaringClass ?: return@shareWrapper
-                class_ = class_ { name = shareHelperClass.name }
-                val shareHelperIndex = dexHelper.encodeClassIndex(shareHelperClass)
-                val stringIndex = dexHelper.encodeClassIndex(String::class.java)
-                val bundleIndex = dexHelper.encodeClassIndex(Bundle::class.java)
-                val shareMethod = dexHelper.findMethodInvoking(
-                    shareToIndex,
-                    -1,
-                    2,
-                    "VLL",
-                    shareHelperIndex,
-                    longArrayOf(stringIndex, bundleIndex),
-                    null,
-                    null,
-                    true
-                ).asSequence().firstNotNullOfOrNull {
-                    dexHelper.decodeMethodIndex(it)
-                } ?: return@shareWrapper
-                method = method { name = shareMethod.name }
-            }
             themeName = themeName {
+                val themeNameClassRegex = Regex("""^tv\.danmaku\.bili\.ui\.garb\.\w?$""")
                 val themeNameClass = classesList.filter {
-                    it.startsWith("tv.danmaku.bili.ui.garb")
+                    it.startsWith("tv.danmaku.bili.ui.garb") && it.contains(themeNameClassRegex)
                 }.map {
                     it.findClass(classloader)
                 }.firstOrNull { c ->
@@ -1067,206 +1011,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 reportDownload = reportDownload {
                     class_ = class_ { name = reportMethod.declaringClass.name }
                     method = method { name = reportMethod.name }
-                }
-            }
-            musicNotification = musicNotification {
-                val bitmapIndex = dexHelper.encodeClassIndex(Bitmap::class.java)
-                val notificationIndex = dexHelper.encodeClassIndex(Notification::class.java)
-                val musicNotificationHelperClass = dexHelper.findMethodUsingString(
-                    "buildNewJBNotification",
-                    true,
-                    notificationIndex,
-                    1,
-                    "LL",
-                    -1,
-                    longArrayOf(bitmapIndex),
-                    null,
-                    null,
-                    true
-                ).asSequence().firstNotNullOfOrNull {
-                    dexHelper.decodeMethodIndex(it)
-                }?.declaringClass ?: return@musicNotification
-                helper = class_ { name = musicNotificationHelperClass.name }
-                liveHelper = class_ {
-                    name = dexHelper.findMethodUsingString(
-                        "buildLiveNotification",
-                        true,
-                        notificationIndex,
-                        1,
-                        "LL",
-                        -1,
-                        longArrayOf(bitmapIndex),
-                        null,
-                        null,
-                        true
-                    ).asSequence().firstNotNullOfOrNull {
-                        dexHelper.decodeMethodIndex(it)
-                    }?.declaringClass?.name ?: return@class_
-                }
-                val musicNotificationHelperIndex =
-                    dexHelper.encodeClassIndex(musicNotificationHelperClass)
-                val musicManagerIndex = dexHelper.findMethodUsingString(
-                    "the build sdk >= 8.0",
-                    true,
-                    -1,
-                    -1,
-                    null,
-                    -1,
-                    null,
-                    null,
-                    null,
-                    true
-                ).firstOrNull() ?: return@musicNotification
-                builder = notificationBuilder {
-                    dexHelper.findMethodInvoking(
-                        musicManagerIndex,
-                        -1,
-                        0,
-                        "L",
-                        musicNotificationHelperIndex,
-                        null,
-                        null,
-                        null,
-                        false
-                    ).asSequence().flatMap {
-                        dexHelper.findMethodInvoking(
-                            it,
-                            -1,
-                            1,
-                            "VL",
-                            musicNotificationHelperIndex,
-                            null,
-                            null,
-                            null,
-                            false
-                        ).asSequence()
-                    }.firstNotNullOfOrNull {
-                        dexHelper.decodeMethodIndex(it)
-                    }?.let {
-                        class_ = class_ {
-                            name = (it as? Method)?.parameterTypes?.get(0)?.name ?: return@class_
-                        }
-                        method = method { name = it.name }
-                    }
-                }
-                val backgroundPlayerClass = dexHelper.findMethodUsingString(
-                    "backgroundPlayer status changed",
-                    true,
-                    -1,
-                    2,
-                    "VIZ",
-                    -1,
-                    null,
-                    null,
-                    null,
-                    true
-                ).asSequence().firstNotNullOfOrNull {
-                    dexHelper.decodeMethodIndex(it)
-                }?.declaringClass ?: return@musicNotification
-                backgroundPlayer = class_ { name = backgroundPlayerClass.name }
-                val setStateMethod = dexHelper.findMethodUsingString(
-                    "MediaSession setPlaybackState",
-                    true,
-                    -1,
-                    1,
-                    "VI",
-                    -1,
-                    null,
-                    null,
-                    null,
-                    true
-                ).asSequence().firstNotNullOfOrNull {
-                    dexHelper.decodeMethodIndex(it)
-                } ?: return@musicNotification
-                setState = method { name = setStateMethod.name }
-                absMusicService = class_ { name = setStateMethod.declaringClass.name }
-                val playerServiceClass = dexHelper.findMethodUsingString(
-                    "mPlayerServiceManager",
-                    true,
-                    -1,
-                    0,
-                    "L",
-                    -1,
-                    null,
-                    null,
-                    null,
-                    true
-                ).asSequence().firstNotNullOfOrNull {
-                    dexHelper.decodeMethodIndex(it)
-                }?.declaringClass?.superclass?.interfaces?.firstOrNull()
-                playerService = class_ { name = playerServiceClass?.name ?: return@class_ }
-                mediaSessionCallback = class_ {
-                    name = classesList.filter {
-                        it.startsWith("android.support.v4.media.session")
-                    }.firstOrNull { c ->
-                        c.findClass(classloader).declaredMethods.any {
-                            it.name == "onSeekTo"
-                        }
-                    } ?: return@class_
-                }
-                val musicBackgroundPlayerClass = dexHelper.findMethodUsingString(
-                    "MusicBackgroundPlayBack call resetPendingState",
-                    true,
-                    -1,
-                    0,
-                    "V",
-                    -1,
-                    null,
-                    null,
-                    null,
-                    true
-                ).asSequence().firstNotNullOfOrNull {
-                    dexHelper.decodeMethodIndex(it)
-                }?.declaringClass ?: dexHelper.findMethodUsingString(
-                    "MusicBackgroundPlayBack status changed",
-                    true,
-                    -1,
-                    -1,
-                    null,
-                    -1,
-                    null,
-                    null,
-                    null,
-                    true
-                ).asSequence().firstNotNullOfOrNull {
-                    dexHelper.decodeMethodIndex(it)
-                }?.declaringClass
-
-                musicBackgroundPlayer = class_ {
-                    name = musicBackgroundPlayerClass?.name ?: return@class_
-                }
-                val musicWrapperPlayerClass = dexHelper.findMethodUsingString(
-                    "call playNextVideo",
-                    true,
-                    -1,
-                    -1,
-                    null,
-                    -1,
-                    null,
-                    null,
-                    null,
-                    true
-                ).asSequence().firstNotNullOfOrNull {
-                    dexHelper.decodeMethodIndex(it)
-                }?.declaringClass
-                musicWrapperPlayer = field {
-                    name = musicBackgroundPlayerClass?.declaredFields?.firstOrNull {
-                        it.type == musicWrapperPlayerClass
-                    }?.name ?: return@field
-                }
-                val ifs = musicWrapperPlayerClass?.interfaces?.flatMap {
-                    it.interfaces.asSequence() ?: arrayOf(it).asSequence()
-                } ?: return@musicNotification
-                val musicPlayerField = musicWrapperPlayerClass.declaredFields.firstOrNull {
-                    ifs.contains(it.type.interfaces.firstOrNull())
-                } ?: return@musicNotification
-                musicPlayer = field {
-                    name = musicPlayerField.name
-                }
-                musicPlayerService = field {
-                    name = musicPlayerField.type?.declaredFields?.firstOrNull {
-                        it.type == playerServiceClass
-                    }?.name ?: return@field
                 }
             }
             bangumiParams = bangumiParams {

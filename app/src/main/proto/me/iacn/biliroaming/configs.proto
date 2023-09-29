@@ -51,23 +51,12 @@ message FastJson {
   optional Method parse = 2;
 }
 
-
-message ShareWrapper {
-  optional Class class = 1;
-  optional Method method = 2;
-}
-
 message ThemeName {
   optional Class class = 1;
   optional Field field = 2;
 }
 
 message ReportDownload {
-  optional Class class = 1;
-  optional Method method = 2;
-}
-
-message NotificationBuilder {
   optional Class class = 1;
   optional Method method = 2;
 }
@@ -194,21 +183,6 @@ message Settings {
   repeated HomeUserCenter home_user_center = 5;
 }
 
-message MusicNotification {
-  optional Class abs_music_service = 1;
-  optional Class background_player = 2;
-  optional Method set_state = 3;
-  optional Class helper = 4;
-  optional NotificationBuilder builder = 5;
-  optional Class player_service = 6;
-  optional Class media_session_callback = 7;
-  optional Class live_helper = 8;
-  optional Class music_background_player = 9;
-  optional Field music_wrapper_player = 10;
-  optional Field music_player = 11;
-  optional Field music_player_service = 12;
-}
-
 message BiliAccounts {
   optional Class class = 1;
   optional Method get = 2;
@@ -294,7 +268,6 @@ message HookInfo {
   optional Method skin_list = 19;
   optional ThemeProcessor theme_processor = 20;
   optional Class theme_list_click = 22;
-  optional ShareWrapper share_wrapper = 23;
   optional ThemeName theme_name = 24;
   optional Section section = 25;
   optional SignQuery sign_query = 27;
@@ -302,7 +275,6 @@ message HookInfo {
   optional Drawer drawer = 30;
   optional Settings settings = 31;
   optional DownloadThread download_thread = 34;
-  optional MusicNotification music_notification = 38;
   optional BangumiParams bangumi_params = 45;
   optional GsonHelper gson_helper = 46;
   optional PlayerCoreService player_core_service = 47;

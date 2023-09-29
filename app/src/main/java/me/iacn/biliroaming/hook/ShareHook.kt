@@ -1,34 +1,34 @@
 package me.iacn.biliroaming.hook
 
 import android.net.Uri
-import android.os.Bundle
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.utils.Log
 import me.iacn.biliroaming.utils.bv2av
-import me.iacn.biliroaming.utils.hookBeforeMethod
+import me.iacn.biliroaming.utils.getObjectField
+import me.iacn.biliroaming.utils.hookAfterMethod
 import me.iacn.biliroaming.utils.sPrefs
+import me.iacn.biliroaming.utils.setObjectField
 import java.net.HttpURLConnection
 import java.net.URL
 
 class ShareHook(classLoader: ClassLoader) : BaseHook(classLoader) {
-    private val contentUrlPattern = Regex("""[\s\S]*(https://b23\.tv/\S*)$""")
+    private val contentUrlPattern = Regex("""[\s\S]*(https?://b23\.tv/\S*)$""")
 
-    private fun resolveB23URL(url: String): String {
-        val conn = URL(url).openConnection() as HttpURLConnection
+    private fun String.resolveB23URL(): String {
+        val conn = URL(this).openConnection() as HttpURLConnection
         conn.requestMethod = "GET"
         conn.instanceFollowRedirects = false
         conn.connect()
         if (conn.responseCode == HttpURLConnection.HTTP_MOVED_TEMP) {
             return conn.getHeaderField("Location")
         }
-        return url
+        return this
     }
 
     private fun transformUrl(url: String, transformAv: Boolean): String {
         val target = Uri.parse(url)
-        val bv = if (transformAv)
-            target.path?.split("/")
-                ?.firstOrNull { it.startsWith("BV") && it.length == 12 }
+        val bv = if (transformAv) target.path?.split("/")
+            ?.firstOrNull { it.startsWith("BV") && it.length == 12 }
         else null
         val av = bv?.let { "av${bv2av(bv)}" }
         val newUrl = target.buildUpon()
@@ -58,43 +58,55 @@ class ShareHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val purifyShareEnabled = sPrefs.getBoolean("purify_share", false)
         if (!miniProgramEnabled && !purifyShareEnabled) return
         Log.d("startHook: ShareHook")
-        instance.shareWrapperClass?.hookBeforeMethod(
-            instance.shareWrapper(),
-            String::class.java,
-            Bundle::class.java
-        ) { param ->
-            val bundle = param.args[1] as Bundle
-            if (miniProgramEnabled && bundle.getString("params_type") == "type_min_program") {
-                bundle.putString("params_type", "type_web")
-                if (bundle.getString("params_title") == "哔哩哔哩") {
-                    bundle.putString("params_title", bundle.getString("params_content"))
-                    bundle.putString("params_content", "由哔哩漫游分享")
+        instance.shareClickResultClass?.apply {
+            if (purifyShareEnabled) {
+                hookAfterMethod("getLink") { param ->
+                    (param.result as? String)?.takeIf {
+                        it.startsWith("https://b23.tv") || it.startsWith("http://b23.tv")
+                    }?.let {
+                        val targetUrl = Uri.parse(it).buildUpon().query("").build().toString()
+                        param.result = targetUrl.resolveB23URL()
+                    }
                 }
-                if (bundle.getString("params_content")?.startsWith("已观看") == true) {
-                    bundle.putString(
-                        "params_content",
-                        "${bundle.getString("params_content")}\n由哔哩漫游分享"
-                    )
+                hookAfterMethod("getContent") { param ->
+                    val content = param.result as? String
+                    content?.let {
+                        contentUrlPattern.matchEntire(it)?.groups?.get(1)?.value
+                    }?.let { contentUrl ->
+                        (param.thisObject.getObjectField("link")?.let { it as String }
+                            ?: contentUrl).resolveB23URL().takeIf { it.contains("/video/") }
+                            ?.let { realUrl ->
+                                param.result = content.replace(
+                                    contentUrl, transformUrl(realUrl, miniProgramEnabled)
+                                )
+                            }
+                    }
                 }
             }
-            val targetUrl = bundle.getString("params_target_url")?.let {
-                Uri.parse(it).buildUpon().query("").build().toString()
+            if (!miniProgramEnabled) return@apply
+            // ShareMode Definition
+            // 1: PARAMS_TYPE_TEXT
+            // 2: PARAMS_TYPE_AUDIO
+            // 4: PARAMS_TYPE_VIDEO
+            // 5: PARAMS_TYPE_IMAGE
+            // 6 / 7: PARAMS_TYPE_MIN_PROGRAM
+            // 21: PARAMS_TYPE_PURE_IMAGE
+            // Others: PARAMS_TYPE_WEB
+            hookAfterMethod("getShareMode") { param ->
+                if (param.result == 6 || param.result == 7) {
+                    param.result = 0
+                    param.thisObject.apply {
+                        getObjectField("title")?.takeIf { it == "哔哩哔哩" }?.let { title ->
+                            setObjectField("title", getObjectField("content"))
+                            setObjectField("content", "由哔哩漫游分享")
+                        }
+                        getObjectField("content")?.let { it as String }
+                            ?.takeIf { it.startsWith("已观看") }?.let { content ->
+                                setObjectField("content", "$content\n由哔哩漫游分享")
+                            }
+                    }
+                }
             }
-            val content = bundle.getString("params_content")
-            val contentUrl = content?.let {
-                contentUrlPattern.matchEntire(it)?.groups?.get(1)?.value
-            }
-            val realUrl = if (targetUrl != null) {
-                if (targetUrl.startsWith("https://b23.tv")) resolveB23URL(targetUrl)
-                else targetUrl
-            } else if (contentUrl != null) {
-                resolveB23URL(contentUrl)
-            } else return@hookBeforeMethod
-            if (!purifyShareEnabled && !realUrl.contains("/video/")) return@hookBeforeMethod
-            if (contentUrl != null) {
-                bundle.putString("params_content", content.replace(contentUrl, transformUrl(realUrl, miniProgramEnabled)))
-            }
-            bundle.putString("params_target_url", realUrl)
         }
     }
 }

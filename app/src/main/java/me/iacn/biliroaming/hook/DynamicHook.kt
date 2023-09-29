@@ -51,6 +51,22 @@ class DynamicHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         filterDynamic(it)
                 }
             }
+            dynamicMossV2?.hookBeforeMethod(
+                "dynAll",
+                "com.bapis.bilibili.app.dynamic.v2.DynAllReq",
+                instance.mossResponseHandlerClass
+            ) {
+                it.args[1] = it.args[1].mossResponseHandlerProxy { result ->
+                    result?.let {
+                        if (removeTopicOfAll)
+                            it.callMethod("clearTopicList")
+                        if (removeUpOfAll)
+                            it.callMethod("clearUpList")
+                        if (needFilterDynamic)
+                            filterDynamic(it)
+                    }
+                }
+            }
         }
         if (hidden && ((filterApplyToVideo && needFilterDynamic) || removeUpOfVideo)) {
             dynamicMossV2?.hookAfterMethod(
@@ -62,6 +78,20 @@ class DynamicHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         it.callMethod("clearVideoUpList")
                     if (filterApplyToVideo && needFilterDynamic)
                         filterDynamic(it)
+                }
+            }
+            dynamicMossV2?.hookBeforeMethod(
+                "dynVideo",
+                "com.bapis.bilibili.app.dynamic.v2.DynVideoReq",
+                instance.mossResponseHandlerClass
+            ) {
+                it.args[1] = it.args[1].mossResponseHandlerProxy { result ->
+                    result?.let {
+                        if (removeUpOfVideo)
+                            it.callMethod("clearVideoUpList")
+                        if (filterApplyToVideo && needFilterDynamic)
+                            filterDynamic(it)
+                    }
                 }
             }
         }

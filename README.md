@@ -32,7 +32,7 @@ An Xposed module that unblocks bangumi area limit of BILIBILI, and miscellaneous
 - 不以小程序形式分享
 - 自动点赞视频
 - 把我的页面移到侧边栏
-- 替换音乐状态栏为原生样式
+- ~替换音乐状态栏为原生样式~
 - 提取视频、直播封面
 - 自定义屏启动图
 
@@ -49,7 +49,7 @@ An Xposed module that unblocks bangumi area limit of BILIBILI, and miscellaneous
 - Share without mini programs
 - Like videos automatically
 - Move 'Mine page' to sidebar drawer
-- Change music notification style to Primitive
+- ~Change music notification style to Primitive~
 - Extra covers from videos and live rooms
 - Customized splash images
 
