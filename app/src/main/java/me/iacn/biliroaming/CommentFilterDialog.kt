@@ -6,6 +6,7 @@ import android.view.inputmethod.EditorInfo
 import android.widget.*
 import me.iacn.biliroaming.utils.Log
 import me.iacn.biliroaming.utils.dp
+import me.iacn.biliroaming.utils.inflateLayout
 
 class CommentFilterDialog(activity: Activity, prefs: SharedPreferences) :
     BaseWidgetDialog(activity) {
@@ -47,6 +48,39 @@ class CommentFilterDialog(activity: Activity, prefs: SharedPreferences) :
         ).let { root.addView(it.first); it.second }
         blockAtCommentSwitch.isChecked = prefs.getBoolean("comment_filter_block_at_comment", false)
 
+        val targetCommentAuthorLevelTitle =
+            categoryTitle(string(R.string.target_comment_author_level_title))
+        root.addView(targetCommentAuthorLevelTitle)
+
+        val seekBarView = context.inflateLayout(R.layout.seekbar_dialog)
+        val currentTargetCommentAuthorLevel =
+            prefs.getLong("target_comment_author_level", 0L).toInt()
+        val tvHint = seekBarView.findViewById<TextView>(R.id.tvHint).apply {
+            text = if (currentTargetCommentAuthorLevel == 0) "关闭" else context.getString(
+                R.string.danmaku_filter_weight_hint,
+                currentTargetCommentAuthorLevel
+            )
+        }
+        val seekBar = seekBarView.findViewById<SeekBar>(R.id.seekBar).apply {
+            max = 6
+            setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                override fun onProgressChanged(
+                    seekBar: SeekBar?, progress: Int, fromUser: Boolean
+                ) {
+                    tvHint.text =
+                        if (progress == 0) "关闭" else context.getString(
+                            R.string.danmaku_filter_weight_hint,
+                            progress
+                        )
+                }
+
+                override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+                override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+            })
+            progress = currentTargetCommentAuthorLevel
+        }
+        root.addView(seekBarView)
+
         setTitle(string(R.string.filter_comment_title))
 
         setPositiveButton(android.R.string.ok) { _, _ ->
@@ -64,6 +98,7 @@ class CommentFilterDialog(activity: Activity, prefs: SharedPreferences) :
                 putStringSet("comment_filter_keyword_at_uid", uidGroup.getKeywords())
                 putBoolean("comment_filter_content_regex_mode", contentRegexMode)
                 putBoolean("comment_filter_block_at_comment", blockAtCommentSwitch.isChecked)
+                putLong("target_comment_author_level", seekBar.progress.toLong())
             }.apply()
             Log.toast(string(R.string.prefs_save_success_and_reboot))
         }
