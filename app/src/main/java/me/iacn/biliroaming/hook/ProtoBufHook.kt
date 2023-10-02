@@ -56,6 +56,7 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             sPrefs.getStringSet("comment_filter_keyword_at_upname", null).orEmpty()
         }
         val commentFilterBlockAtComment = sPrefs.getBoolean("comment_filter_block_at_comment", false)
+        val targetCommentAuthorLevel = sPrefs.getLong("target_comment_author_level", 0L)
         val purifyCampus = sPrefs.getBoolean("purify_campus", false)
         val blockWordSearch = sPrefs.getBoolean("block_word_search", false)
         val blockModules = sPrefs.getBoolean("block_modules", false)
@@ -315,34 +316,48 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
         }
 
-        val needCommentFilter = hidden and (commentFilterBlockAtComment or commentFilterContents.isNotEmpty() or commentFilterAtUid.isNotEmpty() or commentFilterAtUpNames.isNotEmpty())
+        val needCommentFilter =
+            hidden && (commentFilterBlockAtComment || commentFilterContents.isNotEmpty() || commentFilterAtUid.isNotEmpty() || commentFilterAtUpNames.isNotEmpty() || targetCommentAuthorLevel != 0L)
         if (needCommentFilter) {
             val blockAtCommentSplitRegex = Regex("\\s+")
-            fun filterComment(replyInfo: Any?): Boolean {
-                if (replyInfo == null) return true
-                val content = replyInfo.getObjectField("content_")!!
-                val message = content.getObjectFieldAs<String>("message_")
-                if (commentFilterContents.isNotEmpty()) {
-                    if (commentFilterContentRegexMode) {
-                        if (commentFilterContentRegexes.any { it.matches(message) }) return false
-                    } else {
-                        if (commentFilterContents.any { message.contains(it) }) return false
-                    }
-                }
-                if (commentFilterBlockAtComment && message.trim().split(blockAtCommentSplitRegex).all { it.startsWith("@") }) return false
-                val atNameToMid = content.getObjectFieldAs<Map<String, Long>>("atNameToMid_")
-                if (commentFilterAtUpNames.isNotEmpty() && atNameToMid.keys.any { it in commentFilterAtUpNames }) return false
-                return !(commentFilterAtUid.isNotEmpty() && atNameToMid.values.any { it in commentFilterAtUid })
+
+            fun Any.validCommentAuthorLevel(): Boolean {
+                if (targetCommentAuthorLevel == 0L) return true
+                val authorLevel = getObjectField("member_")?.getObjectFieldAs<Long>("level_") ?: 6L
+                return authorLevel >= targetCommentAuthorLevel
             }
+
+            fun Any.validCommentContent(): Boolean {
+                val content = getObjectField("content_") ?: return true
+                val commentMessage = content.getObjectFieldAs<String>("message_")
+
+                val contentIsToBlock = commentFilterContents.isNotEmpty() && if (commentFilterContentRegexMode) {
+                    commentFilterContentRegexes.any { commentMessage.contains(it) }
+                } else {
+                    commentFilterContents.any { commentMessage.contains(it) }
+                }
+                if (contentIsToBlock) return false
+
+                if (commentFilterBlockAtComment && commentMessage.trim()
+                        .split(blockAtCommentSplitRegex).all { it.startsWith("@") }
+                ) return false
+
+                if (commentFilterAtUpNames.isEmpty() && commentFilterAtUid.isEmpty()) return true
+                val atNameToMid = content.getObjectFieldAs<Map<String, Long>>("atNameToMid_")
+                return !(atNameToMid.keys.any { it in commentFilterAtUpNames } || atNameToMid.values.any { it in commentFilterAtUid })
+            }
+
+            fun Any.filterComment() = validCommentAuthorLevel() && validCommentContent()
+
             "com.bapis.bilibili.main.community.reply.v1.MainListReply".from(mClassLoader)
                 ?.hookAfterMethod("getRepliesList") { p ->
                     val l = p.result as? List<*> ?: return@hookAfterMethod
-                    p.result = l.filter { filterComment(it) }
+                    p.result = l.filter { it?.filterComment() ?: true }
                 }
             "com.bapis.bilibili.main.community.reply.v1.ReplyInfo".from(mClassLoader)
                 ?.hookAfterMethod("getRepliesList") { p ->
                     val l = p.result as? List<*> ?: return@hookAfterMethod
-                    p.result = l.filter { filterComment(it) }
+                    p.result = l.filter { it?.filterComment() ?: true }
                 }
         }
 
