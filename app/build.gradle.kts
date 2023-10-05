@@ -81,7 +81,6 @@ android {
             "-Xno-param-assertions",
             "-Xno-call-assertions",
             "-Xno-receiver-assertions",
-            "-opt-in=kotlin.RequiresOptIn",
             "-language-version=2.0",
         )
     }
