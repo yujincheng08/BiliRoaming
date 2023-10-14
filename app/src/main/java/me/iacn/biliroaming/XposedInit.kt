@@ -100,6 +100,7 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                     startHook(SplashHook(lpparam.classLoader))
                     startHook(EnvHook(lpparam.classLoader))
                     startHook(DownloadThreadHook(lpparam.classLoader))
+                    startHook(MusicNotificationHook(lpparam.classLoader))
                     startHook(DrawerHook(lpparam.classLoader))
                     startHook(CoverHook(lpparam.classLoader))
                     startHook(SubtitleHook(lpparam.classLoader))
