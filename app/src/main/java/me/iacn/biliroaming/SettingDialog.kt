@@ -242,6 +242,9 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
 
         private fun checkCompatibleVersion() {
             val versionCode = getVersionCode(packageName)
+            var supportMusicNotificationHook = versionCode >= 7500300 &&
+                    // from bilibili
+                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !Build.MANUFACTURER.lowercase().equals("huawei")
             var supportCustomizeTab = true
             val supportFullSplash = try {
                 instance.splashInfoClass?.getMethod("getMode") != null
@@ -274,6 +277,15 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             }
             if (!supportFullSplash) {
                 disablePreference("full_splash")
+            }
+            if (!supportMusicNotificationHook) {
+                if (versionCode >= 7500300) {
+                    disablePreference(
+                            "music_notification",
+                            context.getString(R.string.os_not_support))
+                } else {
+                    disablePreference("music_notification")
+                }
             }
             if (!supportMain) {
                 disablePreference("main_func", "Android O以下系统不支持64位Xpatch版，请使用32位版")
