@@ -27,9 +27,11 @@ class ShareHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     private fun transformUrl(url: String, transformAv: Boolean): String {
         val target = Uri.parse(url)
-        val bv = if (transformAv) target.path?.split("/")
-            ?.firstOrNull { it.startsWith("BV") && it.length == 12 }
-        else null
+        val bv = if (transformAv) {
+            target.path?.split("/")?.firstOrNull { it.startsWith("BV") && it.length == 12 }
+        } else {
+            null
+        }
         val av = bv?.let { "av${bv2av(bv)}" }
         val newUrl = target.buildUpon()
         if (av != null) {
@@ -42,9 +44,11 @@ class ShareHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }.filter {
                 it.size == 2
             }.mapNotNull {
-                if (it[0] == "p" || it[0] == "t") "${it[0]}=${it[1]}"
-                else if (it[0] == "start_progress") "start_progress=${it[1]}&t=${it[1].toLong() / 1000}"
-                else null
+                when {
+                    it[0] == "p" || it[0] == "t" -> "${it[0]}=${it[1]}"
+                    it[0] == "start_progress" -> "start_progress=${it[1]}&t=${it[1].toLong() / 1000}"
+                    else -> null
+                }
             }.joinToString("&", postfix = "&unique_k=114514")
             newUrl.encodedQuery(query)
         } else {
@@ -73,13 +77,9 @@ class ShareHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     content?.let {
                         contentUrlPattern.matchEntire(it)?.groups?.get(1)?.value
                     }?.let { contentUrl ->
-                        (param.thisObject.getObjectField("link")?.let { it as String }
-                            ?: contentUrl).resolveB23URL().takeIf { it.contains("/video/") }
-                            ?.let { realUrl ->
-                                param.result = content.replace(
-                                    contentUrl, transformUrl(realUrl, miniProgramEnabled)
-                                )
-                            }
+                        val resolvedUrl = (param.thisObject.getObjectField("link")?.let { it as String } ?: contentUrl)
+                            .resolveB23URL()
+                        param.result = content.replace(contentUrl, transformUrl(resolvedUrl, miniProgramEnabled))
                     }
                 }
             }
