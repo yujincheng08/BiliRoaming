@@ -10,7 +10,10 @@ updates:
     registries:
       - maven-google
       - gralde-plugin
-
+    groups:
+      maven-dependencies:
+        patterns:
+          - "*"
 registries:
   maven-google:
     type: maven-repository
