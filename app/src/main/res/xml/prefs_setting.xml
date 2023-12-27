@@ -266,6 +266,11 @@
             android:summary="@string/pegasus_cover_ratio_summary"
             android:title="@string/pegasus_cover_ratio_title" />
 
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="fake_non_multiwindow"
+            android:title="@string/fake_non_multiwindow_title"
+            android:summary="@string/fake_non_multiwindow_summary"/>
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/pref_backup">
         <Preference
