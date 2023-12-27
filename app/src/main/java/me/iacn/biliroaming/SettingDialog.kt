@@ -10,6 +10,7 @@ import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.Typeface
@@ -1060,7 +1061,16 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         }
 
         fun show(context: Context) {
-            SettingDialog(context).show()
+            try {
+                SettingDialog(context).show()
+            } catch (e: Resources.NotFoundException) {
+                AlertDialog.Builder(context)
+                    .setTitle("需要重启")
+                    .setMessage("哔哩漫游更新了")
+                    .setPositiveButton("重启") { _, _ ->
+                        restartApplication(context as Activity)
+                    }.show()
+            }
         }
 
         const val SPLASH_SELECTION = 0
