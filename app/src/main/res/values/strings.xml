@@ -290,4 +290,6 @@
     <string name="target_comment_author_level_title">屏蔽指定等级以下用户评论</string>
     <string name="pegasus_cover_ratio_title">推荐封面比例</string>
     <string name="pegasus_cover_ratio_summary">自定义首页推荐小卡（双列显示的）封面比例</string>
+    <string name="fake_non_multiwindow_title">伪装处于非多窗口模式</string>
+    <string name="fake_non_multiwindow_summary">比如视频多窗口模式下全屏</string>
 </resources>
