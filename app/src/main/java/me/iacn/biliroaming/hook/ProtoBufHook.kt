@@ -306,7 +306,7 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     if (videoCard.getLongField("mid_") in searchFilterUid) return@filter false
                     if (videoCard.getObjectFieldAs<String>("author_") in searchFilterUpNames) return@filter false
                     if (searchFilterContentRegexMode) {
-                        if (searchFilterContentRegexes.any { it.matches(videoCard.getObjectFieldAs<String>("title_")) })
+                        if (searchFilterContentRegexes.any { it.containsMatchIn(videoCard.getObjectFieldAs<String>("title_")) })
                             return@filter false
                     } else {
                         if (searchFilterContents.any { videoCard.getObjectFieldAs<String>("title_").contains(it) }) return@filter false
