@@ -23,6 +23,5 @@ object Constant {
     const val CUSTOM_COLOR_KEY = "biliroaming_custom_color"
     const val CURRENT_COLOR_KEY = "theme_entries_current_key"
     const val DEFAULT_CUSTOM_COLOR = -0xe6b7d
-    const val infoUrl = "https://api.bilibili.com/client_info"
     const val zoneUrl = "https://api.bilibili.com/x/web-interface/zone"
 }
