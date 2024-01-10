@@ -715,11 +715,35 @@ message ViewReply {
   optional UgcSeason ugc_season = 0x18;
   optional string vip_active = 0xd;
 }
-
+message ViewUniteOfficialVerify {
+  optional int32 type = 0x1;
+  optional string desc = 0x2;
+}
+message ViewUniteVipLabel {
+  optional string path = 0x1;
+  optional string text = 0x2;
+  optional string label_theme = 0x3;
+}
+message ViewUniteVip {
+  optional int32 type = 0x1;
+  optional int32 status = 0x2;
+  optional int32 theme_type = 0x3;
+  optional ViewUniteVipLabel vip_label = 0x4;
+  optional int32 is_vip = 0x5;
+}
+message ViewUniteOwner {
+  optional string title = 0x3;
+  optional string fans = 0x4;
+  optional string arc_count = 0x5;
+  optional ViewUniteVip vip = 0x9;
+  optional string face = 0xb;
+  optional int64 mid = 0xc;
+  optional ViewUniteOfficialVerify official_verify = 0xd;
+}
 message ViewUniteReply {
   optional ViewBase view_base = 0x1;
   optional ViewUniteArc arc = 0x2;
-  // optional Owner owner = 0x4;
+  optional ViewUniteOwner owner = 0x4;
   optional Tab tab = 0x5;
   optional google.protobuf.Any supplement = 0x6;
 }
@@ -731,11 +755,20 @@ message ViewBase {
   optional int32 biz_type = 0x1;
   optional PageType page_type = 0x2;
 }
+message ViewUniteStat {
+  optional int64 reply = 0x3;
+  optional int64 fav = 0x4;
+  optional int64 coin = 0x5;
+  optional int64 share = 0x6;
+  optional int64 like = 0x7;
+  optional int64 follow = 0x8;
+}
 // Renamed due to name collision
 message ViewUniteArc {
   optional int64 aid = 0x1;
   optional int64 cid = 0x2;
   optional int64 duration = 0x3;
+  optional ViewUniteStat stat = 0x4;
   optional string bvid = 0x5;
   optional int32 copyright = 0x6;
   optional ViewUniteArcRights right = 0x7;
@@ -748,6 +781,25 @@ message ViewUniteArcRights {
   optional bool only_vip_download = 0x1;
   optional bool no_reprint = 0x2;
   optional bool download = 0x3;
+}
+message UgcDimension {
+  optional int64 width = 0x1;
+  optional int64 height = 0x2;
+  optional int64 rotate = 0x3;
+}
+message UgcPage {
+  optional int64 cid = 0x1;
+  optional string part = 0x2;
+  optional int64 duration = 0x3;
+  optional string desc = 0x4;
+  optional UgcDimension dimension = 0x5;
+  optional string dl_title = 0x6;
+  optional string dl_subtitle = 0x7;
+}
+message ViewUgcAny {
+  optional string short_link = 0x3;
+  optional string share_subtitle = 0x4;
+  repeated UgcPage pages = 0x5;
 }
 message ViewPgcAny {
   optional OgvData ogv_data = 0x1;
@@ -950,7 +1002,28 @@ message OgvIntroduction {
   optional string score = 0x2;
   optional StatInfo play_data = 0x3;
 }
-message UgcIntroduction {}
+enum DescType {
+    DescTypeUnknown = 0;
+    DescTypeText = 1;
+    DescTypeAt = 2;
+}
+message DescV2 {
+  optional string text = 0x1;
+  optional DescType type = 0x2;
+
+  optional int64 rid = 0x4;
+}
+message UgcTag {
+  optional int64 id = 0x1;
+  optional string name = 0x2;
+  optional string uri = 0x3;
+  optional string tag_type = 0x4;
+}
+message UgcIntroduction {
+  repeated UgcTag tags = 0x1;
+  optional int64 pubdate = 0x7;
+  repeated DescV2 desc = 0x8;
+}
 message KingPosition {
   repeated KingPos king_pos = 0x1;
   repeated KingPos extenf = 0x2;
@@ -978,7 +1051,9 @@ message KingPos {
     CoinExtend coin = 0x7;
   }
 }
-message Headline {}
+message Headline {
+  optional string content = 0x2;
+}
 message OgvTitle {
   optional string title = 0x1;
   optional BadgeInfo badge_info = 0x2;

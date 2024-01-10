@@ -63,6 +63,8 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
         private const val PGC_ANY_MODEL_TYPE_URL =
             "type.googleapis.com/bilibili.app.viewunite.pgcanymodel.ViewPgcAny"
+        private const val UGC_ANY_MODEL_TYPE_URL =
+            "type.googleapis.com/bilibili.app.viewunite.ugcanymodel.ViewUgcAny"
 
         private val needUnlockDownload = sPrefs.getBoolean("allow_download", false)
     }
@@ -336,15 +338,15 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             if (instance.networkExceptionClass?.isInstance(param.throwable) == true) return@hookAfterMethod
             val response = param.result
             if (response == null) {
-                Log.toast("发现东南亚区域番剧，尝试解锁……")
                 val req = param.args[0].callMethodAs<ByteArray>("toByteArray").let {
                     ViewUniteReq.parseFrom(it)
                 }
-                fixViewProto(req)?.toByteArray()?.let {
+                val av = (if (req.hasAid()) req.aid.takeIf { it != 0L } else if (req.hasBvid()) bv2av(req.bvid)  else null)?.toString()
+                fixViewProto(req, av)?.toByteArray()?.let {
                     param.result =
-                        "com.bapis.bilibili.app.viewunite.v1.ViewReply".from(mClassLoader)
-                            ?.callStaticMethod("parseFrom", it)
-                } ?: Log.toast("东南亚区域番剧解锁失败！", force = true)
+                            "com.bapis.bilibili.app.viewunite.v1.ViewReply".from(mClassLoader)
+                                    ?.callStaticMethod("parseFrom", it)
+                } ?: Log.toast("解锁失败！", force = true)
                 return@hookAfterMethod
             }
             val supplementAny = response.callMethod("getSupplement")
@@ -1051,6 +1053,168 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
     }
 
+    private fun fixViewProto(req: ViewUniteReq, av: String?): ViewUniteReply? {
+        av ?: return fixViewProto(req)
+
+        Log.toast("发现区域限制视频，尝试解锁……")
+        val query = Uri.Builder().run {
+            appendQueryParameter("id", av)
+            appendQueryParameter("bvid", req.bvid.toString())
+            appendQueryParameter("from", req.from.toString())
+            appendQueryParameter("trackid", req.trackId.toString())
+            appendQueryParameter("ad_extra", req.adExtra.toString())
+            appendQueryParameter("qn", req.playerArgs.qn.toString())
+            appendQueryParameter("fnver", req.playerArgs.fnver.toString())
+            appendQueryParameter("fnval", req.playerArgs.fnval.toString())
+            appendQueryParameter("force_host", req.playerArgs.forceHost.toString())
+            appendQueryParameter("spmid", req.spmid.toString())
+            build()
+        }.query
+
+        BiliRoamingApi.getPagelist(av) ?: return null
+
+        Log.toast("发现区域限制视频，尝试解锁……")
+
+        val content = BiliRoamingApi.getView(query)?.toJSONObject() ?: return null
+        val result = content.optJSONObject("v2_app_api") ?: return null
+        Log.w(result)
+        return viewUniteReply {
+            arc = viewUniteArc {
+                stat = viewUniteStat {
+                    result.optJSONObject("stat")?.run {
+                        reply = optLong("reply")
+                        fav = optLong("favorite")
+                        coin = optLong("coin")
+                        share = optLong("share")
+                        like = optLong("like")
+                    }
+                }
+                result.run {
+                    aid = optLong("aid")
+                    copyright = optInt("copyright")
+                    duration = optLong("duration")
+                    title = optString("title")
+                    typeId = optLong("tid")
+                    cover = optString("pic")
+                    bvid = optString("bvid")
+                    cid = optLong("cid")
+                }
+                right = viewUniteArcRights {
+                    download = true
+                    onlyVipDownload = true
+                }
+            }
+            supplement = any {
+                typeUrl = UGC_ANY_MODEL_TYPE_URL
+                value = viewUgcAny {
+                    shareSubtitle = result.optString("share_subtitle")
+                    shortLink = result.optString("short_link")
+
+                    val pages = result.optJSONArray("pages")
+                    for (page in pages.orEmpty()) {
+                        this.pages += ugcPage {
+                            page.run {
+                                dlSubtitle = optString("download_subtitle")
+                                dlTitle = optString("download_title")
+                                cid = optLong("cid")
+                                part = optString("part")
+                                duration = optLong("duration")
+                                dimension = ugcDimension {
+                                    optJSONObject("dimension")?.run {
+                                        width = optLong("width")
+                                        height = optLong("height")
+                                        rotate = optLong("rotate")
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }.toByteString()
+            }
+            viewBase = viewBase {
+                bizType = 1
+            }
+            tab = tab {
+                tabModule += tabModule {
+                    tabType = TabType.TAB_INTRODUCTION
+                    introduction = introductionTab {
+                        title = "简介"
+                        modules += module {
+                            type = ModuleType.OWNER
+                        }
+                        modules += module {
+                            type = ModuleType.UGC_HEADLINE
+                            headLine = headline {
+                                this.content = result.optString("title")
+                            }
+                        }
+                        modules += module {
+                            type = ModuleType.UGC_INTRODUCTION
+                            ugcIntroduction = ugcIntroduction {
+                                desc += descV2 {
+                                    text = result.optString("desc")
+                                    type = DescType.DescTypeText
+                                }
+                                pubdate = result.optLong("ctime")
+                                val tags = result.optJSONArray("tag")
+                                for (tag in tags.orEmpty()) {
+                                    this.tags += ugcTag {
+                                        tag.run {
+                                            id = optLong("tag_id")
+                                            name = optString("tag_name")
+                                            tagType = optString("tag_type")
+                                            uri = optString("uri")
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                tabModule += tabModule {
+                    tabType = TabType.TAB_REPLY
+                    reply = replyTab {
+                        title = "评论"
+                        replyStyle = replyStyle {
+                            badgeType = 0L
+                        }
+                    }
+                }
+            }
+            owner = viewUniteOwner {
+                result.optJSONObject("owner_ext")?.run {
+                    officialVerify = viewUniteOfficialVerify {
+                        optJSONObject("official_verify")?.run {
+                            type = optInt("type")
+                            desc = optString("desc")
+                        }
+                    }
+                    vip = viewUniteVip {
+                        optJSONObject("vip")?.run {
+                            type = optInt("vipType")
+                            isVip = if (optInt("vipStatus") != 0) 1 else 0
+                            status = optInt("vipStatus")
+                            themeType = optInt("themeType")
+                            vipLabel = viewUniteVipLabel {
+                                optJSONObject("label")?.run {
+                                    path = optString("path")
+                                    text = optString("text")
+                                    labelTheme = optString("label_theme")
+                                }
+                            }
+                        }
+                    }
+                    fans = optLong("fans").toString()
+                    arcCount = optString("arc_count")
+                }
+                result.optJSONObject("owner")?.run {
+                    title = optString("name")
+                    face = optString("face")
+                    mid = optLong("mid")
+                }
+            }
+        }
+    }
     private fun fixViewProto(resp: Any, supplement: ViewPgcAny) {
         val isAreaLimit = supplement.ogvData.rights.areaLimit != 0
 
@@ -1137,6 +1301,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     private fun fixViewProto(req: ViewUniteReq): ViewUniteReply? {
+        Log.toast("发现东南亚区域番剧，尝试解锁……")
         val reqEpId = req.extraContentMap["ep_id"]?.also {
             lastSeasonInfo.clear()
             lastSeasonInfo["ep_id"] = it
