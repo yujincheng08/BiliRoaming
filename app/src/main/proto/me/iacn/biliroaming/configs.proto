@@ -79,9 +79,11 @@ message PlayerCoreService {
   optional Method seek_to = 3;
   optional Method on_seek_complete = 4;
   optional Class seek_complete_listener = 5;
-  optional Method set_playback_speed = 6;
-  optional Method player_on_prepare = 7;
-  optional Method theseus_player_set_speed = 8;
+  reserved 6, 7, 8;
+}
+
+message PcsFacade {
+  optional Class play_speed_manager = 1;
 }
 
 message PegasusFeed {
@@ -312,4 +314,5 @@ message HookInfo {
   optional Class publish_to_following_config = 90;
   optional Comment3Copy comment3_copy = 91;
   repeated PlayerQualityService player_quality_service = 92;
+  optional Class play_speed_manager = 93;
 }

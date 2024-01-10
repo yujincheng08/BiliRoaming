@@ -161,6 +161,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     }
     val searchAllResponseClass by Weak { "com.bapis.bilibili.polymer.app.search.v1.SearchAllResponse" from mClassLoader }
     val searchVideoCardClass by Weak { "com.bapis.bilibili.polymer.app.search.v1.SearchVideoCard" from mClassLoader }
+    val playSpeedManager by Weak { mHookInfo.playSpeedManager from mClassLoader }
 
     val ids: Map<String, Int> by lazy {
         mHookInfo.mapIds.idsMap
@@ -230,12 +231,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     fun gson() = mHookInfo.gsonHelper.gson.orNull
 
     fun getPlaybackSpeed() = mHookInfo.playerCoreService.getPlaybackSpeed.orNull
-
-    fun setPlaybackSpeed() = mHookInfo.playerCoreService.setPlaybackSpeed.orNull
-
-    fun theseusPlayerSetSpeed() = mHookInfo.playerCoreService.theseusPlayerSetSpeed.orNull
-
-    fun playerOnPrepare() = mHookInfo.playerCoreService.playerOnPrepare.orNull
 
     fun urlField() = mHookInfo.okHttp.request.url.orNull
 
@@ -1136,7 +1131,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                             dexHelper.decodeMethodIndex(it)
                         }
                     } ?: doSeekToMethod
-                } ?: return@playerCoreService
+                }
                 val playerCoreServiceClass = seekToMethod.declaringClass
                 seekTo = method { name = seekToMethod.name }
                 class_ = class_ { name = playerCoreServiceClass.name }
@@ -1173,58 +1168,34 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                         dexHelper.decodeMethodIndex(it)
                     }?.name ?: return@method
                 }
-                dexHelper.findMethodUsingString(
-                    "player_key_video_speed",
-                    true,
-                    -1,
-                    1,
-                    "VF",
-                    dexHelper.encodeClassIndex(playerCoreServiceClass),
-                    null,
-                    null,
-                    null,
-                    true
-                ).asSequence().firstOrNull()?.also { mIndex ->
-                    dexHelper.decodeMethodIndex(mIndex)?.let {
-                        setPlaybackSpeed = method {
-                            name = it.name
-                        }
-                    }
-                }?.let {
-                    dexHelper.findMethodInvoked(
-                        it,
+            }
+            val playSpeedManagerClass = ("com.bilibili.player.tangram.basic.PlaySpeedManagerImpl" from classloader) ?: run {
+                val pcsFacadeClass = dexHelper.findMethodUsingString(
+                        "Cannot switch to quality ",
+                        false,
                         -1,
                         -1,
-                        "VF",
+                        null,
                         -1,
                         null,
                         null,
                         null,
                         true
-                    ).asSequence().firstNotNullOfOrNull {
-                        dexHelper.decodeMethodIndex(it)
-                    }?.let {
-                        theseusPlayerSetSpeed = method {
-                            name = it.name
-                        }
-                    }
+                ).asSequence().firstNotNullOfOrNull {
+                    dexHelper.decodeMethodIndex(it)
+                }?.declaringClass ?: return@run null
+
+                val playSpeedManagerInterface = pcsFacadeClass.declaredFields.firstNotNullOfOrNull { f ->
+                    if (f.type.isInterface && f.type.declaredMethods.size == 1) f.type else null
                 }
-                playerOnPrepare = method {
-                    name = dexHelper.findMethodUsingString(
-                        "[ijk][callback]player onPrepared",
-                        true,
-                        -1,
-                        -1,
-                        "VLL",
-                        dexHelper.encodeClassIndex(playerCoreServiceClass),
-                        null,
-                        null,
-                        null,
-                        true
-                    ).asSequence().firstNotNullOfOrNull {
-                        dexHelper.decodeMethodIndex(it)
-                    }?.name ?: return@method
+                classesList.filter {
+                    it.startsWith("com.bilibili.player.tangram")
+                }.firstNotNullOfOrNull { c ->
+                    c.findClass(classloader).takeIf { it.interfaces.contains(playSpeedManagerInterface) }
                 }
+            }
+            playSpeedManager = class_ {
+                name = playSpeedManagerClass?.name ?: return@class_
             }
             generalResponse = class_ {
                 name = "com.bilibili.okretro.GeneralResponse"
