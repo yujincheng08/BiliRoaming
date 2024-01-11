@@ -32,7 +32,6 @@ import java.util.zip.InflaterInputStream
  */
 object BiliRoamingApi {
     private const val BILI_SEASON_URL = "api.bilibili.com/pgc/view/web/season"
-    private const val BILI_HIDDEN_SEASON_URL = "bangumi.bilibili.com/view/web_api/season"
     private const val BILI_SEARCH_URL = "/x/v2/search/type"
     private const val BILIPLUS_VIEW_URL = "www.biliplus.com/api/view"
     private const val BILI_REVIEW_URL = "api.bilibili.com/pgc/review/user"
@@ -78,17 +77,13 @@ object BiliRoamingApi {
         } else null
         var hidden = hiddenHint
         val builder = Uri.Builder()
-        builder.scheme("https")
-            .encodedAuthority(if (hidden) BILI_HIDDEN_SEASON_URL else BILI_SEASON_URL)
+        builder.scheme("https").encodedAuthority(BILI_SEASON_URL)
         info.filter { !it.value.isNullOrEmpty() }
             .forEach { builder.appendQueryParameter(it.key, it.value) }
-        var seasonJson = getContent(builder.toString())?.toJSONObject()?.let {
+        var seasonJson = getContent(builder.toString())?.toJSONObject()?.also {
             if (it.optInt("code") == -404) {
                 hidden = true
-                getContent(
-                    builder.encodedAuthority(BILI_HIDDEN_SEASON_URL).toString()
-                )?.toJSONObject()
-            } else it
+            }
         } ?: run {
             cacheTuple?.third?.countDown()
             return null

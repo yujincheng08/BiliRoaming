@@ -32,6 +32,8 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val qnApplied = AtomicBoolean(false)
         private const val PGC_ANY_MODEL_TYPE_URL =
             "type.googleapis.com/bilibili.app.playerunite.pgcanymodel.PGCAnyModel"
+        private const val UGC_ANY_MODEL_TYPE_URL =
+                "type.googleapis.com/bilibili.app.playerunite.ugcanymodel.UGCAnyModel"
         private val codecMap =
             mapOf(CodeType.CODE264 to 7, CodeType.CODE265 to 12, CodeType.CODEAV1 to 13)
         val supportedPlayArcIndices = arrayOf(
