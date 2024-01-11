@@ -45,6 +45,11 @@ class PlayArcConfHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         ) { param ->
             param.result?.callMethod("mergePlayArcConf", arcConfs)
         }
+        instance.playerMossClass?.hookAfterMethod("playViewUnite", instance.mossResponseHandlerClass) { param ->
+            param.args[1] = param.args[1].mossResponseHandlerProxy { resp ->
+                resp?.callMethod("mergePlayArcConf", arcConfs)
+            }
+        }
         "com.bapis.bilibili.app.listener.v1.ListenerMoss".from(mClassLoader)?.run {
             val playlistHook = { param: MethodHookParam ->
                 val req = param.args[0]
