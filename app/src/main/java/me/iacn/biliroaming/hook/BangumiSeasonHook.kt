@@ -253,7 +253,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     val newStream = json?.toString()?.byteInputStream()
                     body.setObjectField(
                         instance.okio(),
-                        okioBuffer?.javaClass?.newInstance()?.apply {
+                        okioBuffer?.javaClass?.new()?.apply {
                             callMethod(instance.okioReadFrom(), newStream)
                         })
                     body.setLongField(instance.okioLength(), newStream?.available()?.toLong() ?: 0L)
@@ -1256,12 +1256,12 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             Tab.parseFrom(it)
         }.copy {
             val newTabModule = tabModule.map { tabModule ->
-                tabModule.copy {
-                    if (!hasIntroduction()) return@copy
+                 tabModule.copy tab_copy@ {
+                    if (!hasIntroduction()) return@tab_copy
                     introduction = introduction.copy {
                         val newModules = modules.map { module ->
-                            module.copy {
-                                if (!hasSectionData()) return@copy
+                            module.copy module_copy@ {
+                                if (!hasSectionData()) return@module_copy
                                 sectionData = sectionData.copy {
                                     val newEpisodes = episodes.map {
                                         it.copy {
@@ -1337,16 +1337,16 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
         }
 
-        val introductionTab = IntroductionTab.newBuilder().apply {
+        val introductionTab = introductionTab {
             title = "简介"
-            module {
+            modules += module {
                 type = ModuleType.OGV_TITLE
                 ogvTitle = ogvTitle {
                     title = seasonInfo.optString("title")
                     reserveId = 0
                 }
-            }.let { addModules(it) }
-            module {
+            }
+            modules += module {
                 type = ModuleType.OGV_INTRODUCTION
                 ogvIntroduction = ogvIntroduction {
                     followers =
@@ -1358,12 +1358,12 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         value = seasonInfo.optJSONObject("stat")?.optLong("views") ?: 0
                     }
                 }
-            }.let { addModules(it) }
+            }
 
             // seasons
             seasonInfo.optJSONObject("series")?.optJSONArray("seasons")?.takeIf { it.length() > 0 }
                 ?.let { seasonArray ->
-                    module {
+                    modules += module {
                         type = ModuleType.OGV_SEASONS
                         ogvSeasons = ogvSeasons {
                             seasonArray.iterator().forEach { season ->
@@ -1375,7 +1375,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                 }
                             }
                         }
-                    }.let { addModules(it) }
+                    }
                 }
 
             val reconstructSectionData = { module: JSONObject ->
@@ -1450,18 +1450,18 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             seasonInfo.optJSONArray("modules")?.iterator()?.forEach { module ->
                 val style = module.optString("style")
                 if (style == "positive") {
-                    module {
+                    modules += module {
                         type = ModuleType.POSITIVE
                         sectionData = reconstructSectionData(module)
-                    }.let { addModules(it) }
+                    }
                 } else {
-                    module {
+                    modules += module {
                         type = ModuleType.SECTION
                         sectionData = reconstructSectionData(module)
-                    }.let { addModules(it) }
+                    }
                 }
             }
-        }.build()
+        }
         val tabDefault = tab {
             tabModule.add(tabModule {
                 tabType = TabType.TAB_INTRODUCTION
