@@ -45,7 +45,7 @@ class PlayArcConfHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         ) { param ->
             param.result?.callMethod("mergePlayArcConf", arcConfs)
         }
-        instance.playerMossClass?.hookAfterMethod("playViewUnite", instance.mossResponseHandlerClass) { param ->
+        instance.playerMossClass?.hookAfterMethod("playViewUnite", instance.playViewUniteReqClass, instance.mossResponseHandlerClass) { param ->
             param.args[1] = param.args[1].mossResponseHandlerProxy { resp ->
                 resp?.callMethod("mergePlayArcConf", arcConfs)
             }
