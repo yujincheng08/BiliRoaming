@@ -32,15 +32,18 @@ class PlayArcConfHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 callMethod("setDisabled", false)
                 callMethod("setIsSupport", true)
             }
-        instance.playerMossClass?.hookAfterMethod(
-            "playViewUnite", instance.playViewUniteReqClass
-        ) { param ->
-            param.result?.callMethod("getPlayArcConf")
-                ?.callMethodAs<LinkedHashMap<Int, Any?>>("internalGetMutableArcConfs")
+        val arcConfs = "com.bapis.bilibili.playershared.PlayArcConf"
+                .from(mClassLoader)?.callStaticMethod("getDefaultInstance")
+        arcConfs?.callMethodAs<LinkedHashMap<Int, Any?>>("internalGetMutableArcConfs")
                 ?.run {
                     // CASTCONF,BACKGROUNDPLAY,SMALLWINDOW,LISTEN
                     intArrayOf(2, 9, 23, 36).forEach { this[it] = supportedArcConf }
                 }
+
+        instance.playerMossClass?.hookAfterMethod(
+            "playViewUnite", instance.playViewUniteReqClass
+        ) { param ->
+            param.result?.callMethod("mergePlayArcConf", arcConfs)
         }
         "com.bapis.bilibili.app.listener.v1.ListenerMoss".from(mClassLoader)?.run {
             val playlistHook = { param: MethodHookParam ->
