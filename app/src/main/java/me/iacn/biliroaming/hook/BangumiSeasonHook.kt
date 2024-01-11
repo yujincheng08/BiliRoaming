@@ -1169,6 +1169,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                 }
                             }
                         }
+                        addKingPosition()
                     }
                 }
                 tabModule += tabModule {
@@ -1300,6 +1301,29 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
     }
 
+    private fun IntroductionTabKt.Dsl.addKingPosition() {
+        modules += module {
+            type = ModuleType.KING_POSITION
+            kingPosition = kingPosition {
+                kingPos += kingPos {
+                    type = KingPos.KingPositionType.LIKE
+                }
+                kingPos += kingPos {
+                    type = KingPos.KingPositionType.COIN
+                }
+                kingPos += kingPos {
+                    type = KingPos.KingPositionType.FAV
+                }
+                kingPos += kingPos {
+                    type = KingPos.KingPositionType.CACHE
+                }
+                kingPos += kingPos {
+                    type = KingPos.KingPositionType.SHARE
+                }
+            }
+        }
+    }
+
     private fun fixViewProto(req: ViewUniteReq): ViewUniteReply? {
         Log.toast("发现东南亚区域番剧，尝试解锁……")
         val reqEpId = req.extraContentMap["ep_id"]?.also {
@@ -1359,6 +1383,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     }
                 }
             }
+            addKingPosition()
 
             // seasons
             seasonInfo.optJSONObject("series")?.optJSONArray("seasons")?.takeIf { it.length() > 0 }
