@@ -1487,10 +1487,19 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
         }
         val tabDefault = tab {
-            tabModule.add(tabModule {
+            tabModule += tabModule {
                 tabType = TabType.TAB_INTRODUCTION
                 introduction = introductionTab
-            })
+            }
+            tabModule += tabModule {
+                tabType = TabType.TAB_REPLY
+                reply = replyTab {
+                    replyStyle = replyStyle {
+                        badgeType = 0L
+                    }
+                    title = "评论"
+                }
+            }
         }
 
         val viewPgcAny = viewPgcAny {
