@@ -110,6 +110,7 @@ object BiliRoamingApi {
                         .appendQueryParameter("access_key", instance.getCustomizeAccessKey("th_server"))
                         .appendQueryParameter("mobi_app", "bstar_a")
                         .appendQueryParameter("build", "1080003")
+                        .appendQueryParameter("season_id", seasonId.toString())
                 getContent(builder.toString(), mobiApp)?.toJSONObject()?.also {
                     it.optJSONObject("result")?.let { result ->
                         fixThailandSeason(result)
