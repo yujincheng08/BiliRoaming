@@ -803,7 +803,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             Log.d("Info: $lastSeasonInfo")
             val (newCode, newJsonResult) = getSeason(
                 lastSeasonInfo,
-                jsonResult == null
+                jsonResult
             )?.toJSONObject()?.let {
                 it.optInt("code", FAIL_CODE) to it.optJSONObject("result")
             } ?: (FAIL_CODE to null)

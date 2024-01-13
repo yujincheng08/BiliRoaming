@@ -31,12 +31,12 @@ import java.util.zip.InflaterInputStream
  * Email i@iacn.me
  */
 object BiliRoamingApi {
-    private const val BILI_SEASON_URL = "api.bilibili.com/pgc/view/web/season"
+    private const val BILI_SEASON_URL = "api.bilibili.com/pgc/view/v2/app/season"
     private const val BILI_SEARCH_URL = "/x/v2/search/type"
     private const val BILIPLUS_VIEW_URL = "www.biliplus.com/api/view"
     private const val BILI_REVIEW_URL = "api.bilibili.com/pgc/review/user"
     private const val BILI_USER_STATUS_URL = "api.bilibili.com/pgc/view/web/season/user/status"
-    private const val BILI_MEDIA_URL = "bangumi.bilibili.com/view/web_api/media"
+    private const val BILI_MEDIA_URL = "www.bilibili.com/bangumi/media/md"
     private const val BILI_SECTION_URL = "api.bilibili.com/pgc/web/season/section"
     private const val BILI_CARD_URL = "https://account.bilibili.com/api/member/getCardByMid"
     private const val BILI_PAGELIST = "api.bilibili.com/x/player/pagelist"
@@ -58,78 +58,72 @@ object BiliRoamingApi {
     const val mainlandTestParams =
         "cid=13073143&ep_id=100615&otype=json&fnval=16&module=pgc&platform=android&test=true"
 
-    private val seasonCache: AtomicReference<Triple<Int, AtomicReference<String>, CountDownLatch>?> =
+    private val seasonCache: AtomicReference<Triple<Int, AtomicReference<String?>, CountDownLatch>?> =
         AtomicReference(null)
 
     @JvmStatic
-    fun getSeason(info: Map<String, String?>, hiddenHint: Boolean): String? {
-        val seasonId = info.getOrDefault("season_id", null)?.toInt()
+    fun getSeason(info: Map<String, String?>, season: JSONObject?): String? {
+        val seasonId = info.getOrDefault("season_id", null)?.toInt() ?: return null
         val cache = seasonCache.get()
-        val cacheTuple = if (seasonId != null && seasonId != 0) {
+        val cacheTuple = if (seasonId != 0) {
             if (cache?.first == seasonId) {
                 cache.third.await()
                 return cache.second.get()
             } else {
-                Triple(seasonId, AtomicReference<String>(), CountDownLatch(1)).also {
+                Triple(seasonId, AtomicReference<String?>(null), CountDownLatch(1)).also {
                     seasonCache.compareAndSet(cache, it)
                 }
             }
         } else null
-        var hidden = hiddenHint
-        val builder = Uri.Builder()
-        builder.scheme("https").encodedAuthority(BILI_SEASON_URL)
-        info.filter { !it.value.isNullOrEmpty() }
-            .forEach { builder.appendQueryParameter(it.key, it.value) }
-        var seasonJson = getContent(builder.toString())?.toJSONObject()?.also {
-            if (it.optInt("code") == -404) {
-                hidden = true
-            }
+
+        var seasonJson = season
+
+        seasonJson = seasonJson ?: run {
+            val query = mapOf(
+                    "season_id" to seasonId.toString(),
+            )
+            val content = getContent(Uri.Builder().scheme("https").encodedAuthority(BILI_SEASON_URL).encodedQuery(signQuery(query)).toString())
+            content?.toJSONObject()?.optJSONObject("data")
         } ?: run {
-            cacheTuple?.third?.countDown()
-            return null
+            val content = getContent(Uri.Builder().scheme("https").encodedAuthority("${BILI_MEDIA_URL}${seasonId}").toString())
+            if (content != null) {
+//                fixHiddenSeason(it)
+//                fixSection(it)
+//                getExtraInfo(it, instance.accessKey)
+            }
+            null
         }
-        var fixThailandSeasonFlag = false
-        seasonJson.optJSONObject("result")?.also {
-            if (hidden) fixHiddenSeason(it)
-            if (hidden || it.has("section_bottom_desc")) fixSection(it)
+
+        seasonJson = seasonJson?.let {
             fixEpisodes(it)
             fixPrevueSection(it)
             reconstructModules(it)
             fixRight(it)
-            if (hidden) getExtraInfo(it, instance.accessKey)
-            if ((it.optJSONArray("episodes")?.length() == 0 && it.optJSONObject("publish")
-                    ?.optInt("is_started", -1) != 0)
-                || (it.optJSONObject("up_info")
-                    ?.optInt("mid")
-                    // 677043260 Classic_Anime
-                    // 688418886 Anime_Ongoing
-                    ?.let { mid -> mid == 677043260 || mid == 688418886 } == true)
-                || (it.has("total_ep") && it.optInt("total_ep") != -1 && it.optInt("total_ep")
-                    .toString() != it.optJSONObject("newest_ep")?.optString("index"))
-            ) {
-                fixThailandSeasonFlag = true
-            }
-        }
-        val thUrl = sPrefs.getString("th_server", null)
-        val mobiApp = sPrefs.getString("th_server_platform", platform)!!
-        if (thUrl != null && (seasonJson.optInt("code") == -404 || fixThailandSeasonFlag)) {
-            builder.scheme("https").encodedAuthority(thUrl + THAILAND_PATH_SEASON)
-                .appendQueryParameter("s_locale", "zh_SG")
-                .appendQueryParameter("access_key", instance.getCustomizeAccessKey("th_server"))
-                .appendQueryParameter("mobi_app", "bstar_a")
-                .appendQueryParameter("build", "1080003")
-            getContent(builder.toString(), mobiApp)?.toJSONObject()?.also {
-                it.optJSONObject("result")?.let { result ->
-                    fixThailandSeason(result)
-                    seasonJson = it
+            JSONObject().put("code", 0).put("result", it)
+        } ?: run {
+            val thUrl = sPrefs.getString("th_server", null)
+            val mobiApp = sPrefs.getString("th_server_platform", platform)!!
+            if (thUrl != null) {
+                val builder = Uri.Builder()
+                builder.scheme("https").encodedAuthority(thUrl).path(THAILAND_PATH_SEASON)
+                        .appendQueryParameter("s_locale", "zh_SG")
+                        .appendQueryParameter("access_key", instance.getCustomizeAccessKey("th_server"))
+                        .appendQueryParameter("mobi_app", "bstar_a")
+                        .appendQueryParameter("build", "1080003")
+                getContent(builder.toString(), mobiApp)?.toJSONObject()?.also {
+                    it.optJSONObject("result")?.let { result ->
+                        fixThailandSeason(result)
+                        return@run it
+                    }
+                    checkErrorToast(it, true)
                 }
-                checkErrorToast(it, true)
+            } else {
+                checkErrorToast("""{"code" = -404, "message" = "未设置泰区解析服务器"}""".toJSONObject())
             }
-        } else {
-            checkErrorToast(seasonJson)
+            null
         }
-        return seasonJson.toString().also {
-            if (seasonJson.optInt("code", -1) == 0)
+        return seasonJson?.toString().also {
+            if (seasonJson?.optInt("code", -1) == 0)
                 cacheTuple?.second?.set(it)
             cacheTuple?.third?.countDown()
         }
@@ -142,9 +136,9 @@ object BiliRoamingApi {
         val cacheTuple = if (seasonIdStr != 0) {
             if (cache?.first == seasonIdStr) {
                 cache.third.await()
-                return cache.second.get().toJSONObject()
+                return cache.second.get()?.toJSONObject()
             } else {
-                Triple(seasonIdStr, AtomicReference<String>(), CountDownLatch(1)).also {
+                Triple(seasonIdStr, AtomicReference<String?>(null), CountDownLatch(1)).also {
                     seasonCache.compareAndSet(cache, it)
                 }
             }
@@ -188,14 +182,11 @@ object BiliRoamingApi {
         val sectionJson = getContent(uri).toJSONObject().optJSONObject("result") ?: return
         val sections = sectionJson.optJSONArray("section") ?: return
 
-        val episodeMap = result.optJSONArray("episodes")?.iterator()?.asSequence()
-            ?.map { it.optInt("ep_id") to it }?.toMap()
-            ?: return
         for ((i, section) in sections.iterator().withIndex()) {
             section.put("episode_id", i)
             val newEpisodes = JSONArray()
             for (episode in section.optJSONArray("episodes").orEmpty()) {
-                newEpisodes.put(episodeMap[episode.optInt("id")] ?: episode)
+                newEpisodes.put(episode)
             }
             section.put("episodes", newEpisodes)
         }
@@ -208,7 +199,7 @@ object BiliRoamingApi {
         val newEpisodes = JSONArray()
         for (episode in sectionJson.optJSONObject("main_section")?.optJSONArray("episodes")
             .orEmpty()) {
-            newEpisodes.put(episodeMap[episode.optInt("id")] ?: episode)
+            newEpisodes.put(episode)
         }
         result.put("episodes", newEpisodes)
     }
@@ -380,28 +371,8 @@ object BiliRoamingApi {
     @JvmStatic
     private fun getExtraInfo(result: JSONObject, accessKey: String?) {
         val mediaId = result.optString("media_id")
-        getMediaInfo(result, mediaId, accessKey)
         val seasonId = result.optString("season_id")
         getUserStatus(result, seasonId, mediaId, accessKey)
-    }
-
-    @JvmStatic
-    private fun getMediaInfo(result: JSONObject, mediaId: String, accessKey: String?) {
-        val uri = Uri.Builder()
-            .scheme("https")
-            .encodedAuthority(BILI_MEDIA_URL)
-            .appendQueryParameter("media_id", mediaId)
-            .appendQueryParameter("access_key", accessKey)
-            .toString()
-        val mediaJson = getContent(uri)?.toJSONObject()
-        val mediaResult = mediaJson?.optJSONObject("result")
-        val actors = mediaResult?.optString("actors")
-        result.put("actor", "{\"info\": \"$actors\", \"title\": \"角色声优\"}".toJSONObject())
-        val staff = mediaResult?.optString("staff")
-        result.put("staff", "{\"info\": \"$staff\", \"title\": \"制作信息\"}".toJSONObject())
-        for (field in listOf("alias", "areas", "origin_name", "style", "type_name")) {
-            result.put(field, mediaResult?.opt(field))
-        }
     }
 
     @JvmStatic
