@@ -95,6 +95,7 @@ object BiliRoamingApi {
         }
 
         seasonJson = seasonJson?.let {
+            fixSection(it)
             fixEpisodes(it)
             fixPrevueSection(it)
             reconstructModules(it)
