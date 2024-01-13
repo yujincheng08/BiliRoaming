@@ -85,13 +85,11 @@ object BiliRoamingApi {
             val content = getContent(Uri.Builder().scheme("https").encodedAuthority(BILI_SEASON_URL).encodedQuery(signQuery(query)).toString())
             content?.toJSONObject()?.optJSONObject("data")
         } ?: run {
-            val content = getContent(Uri.Builder().scheme("https").encodedAuthority("${BILI_MEDIA_URL}${seasonId}").toString())
-            if (content != null) {
-//                fixHiddenSeason(it)
-//                fixSection(it)
-//                getExtraInfo(it, instance.accessKey)
+            val content = getContent(Uri.Builder().scheme("https").encodedAuthority("${BILI_MEDIA_URL}${seasonId}").toString()) ?: return@run null
+            val json = Regex("""[\w\W]*window\.__INITIAL_STATE__=(.*);\(function\(\)[\w\W]*""").matchEntire(content)?.groupValues?.get(1)?.toJSONObject() ?: return@run null
+            json.optJSONObject("mediaInfo")?.also {
+                it.put("modules", JSONArray().put(JSONObject().put("data", JSONObject().put("seasons", it.optJSONObject("seasons")))))
             }
-            null
         }
 
         seasonJson = seasonJson?.let {
@@ -127,48 +125,6 @@ object BiliRoamingApi {
         return seasonJson?.toString().also {
             if (seasonJson?.optInt("code", -1) == 0)
                 cacheTuple?.second?.set(it)
-            cacheTuple?.third?.countDown()
-        }
-    }
-
-    @JvmStatic
-    fun getThaiSeason(seasonId: String, epId: String): JSONObject? {
-        val seasonIdStr = seasonId.toInt()
-        val cache = seasonCache.get()
-        val cacheTuple = if (seasonIdStr != 0) {
-            if (cache?.first == seasonIdStr) {
-                cache.third.await()
-                return cache.second.get()?.toJSONObject()
-            } else {
-                Triple(seasonIdStr, AtomicReference<String?>(null), CountDownLatch(1)).also {
-                    seasonCache.compareAndSet(cache, it)
-                }
-            }
-        } else null
-        val thUrl = sPrefs.getString("th_server", null) ?: return null
-        val mobiApp = sPrefs.getString("th_server_platform", platform)!!
-        val fullUrl = Uri.Builder()
-            .scheme("https")
-            .encodedAuthority(thUrl + THAILAND_PATH_SEASON)
-            .appendQueryParameter("season_id", seasonId)
-            .appendQueryParameter("ep_id", epId)
-            .appendQueryParameter("s_locale", "zh_SG")
-            .appendQueryParameter("access_key", instance.getCustomizeAccessKey("th_server"))
-            .appendQueryParameter("mobi_app", "bstar_a")
-            .appendQueryParameter("build", "1080003")
-            .toString()
-        val seasonJson = getContent(fullUrl, mobiApp)?.toJSONObject()?.also {
-            it.optJSONObject("result")?.let { result ->
-                fixThailandSeason(result)
-            }
-            checkErrorToast(it, true)
-        } ?: run {
-            cacheTuple?.third?.countDown()
-            return null
-        }
-        return seasonJson.also {
-            if (seasonJson.optInt("code", -1) == 0)
-                cacheTuple?.second?.set(it.toString())
             cacheTuple?.third?.countDown()
         }
     }

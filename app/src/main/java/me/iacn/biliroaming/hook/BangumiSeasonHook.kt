@@ -23,7 +23,6 @@ import me.iacn.biliroaming.network.BiliRoamingApi.getAreaSearchBangumi
 import me.iacn.biliroaming.network.BiliRoamingApi.getContent
 import me.iacn.biliroaming.network.BiliRoamingApi.getSeason
 import me.iacn.biliroaming.network.BiliRoamingApi.getSpace
-import me.iacn.biliroaming.network.BiliRoamingApi.getThaiSeason
 import me.iacn.biliroaming.utils.*
 import org.json.JSONObject
 import java.io.InputStream
@@ -1335,7 +1334,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             lastSeasonInfo["season_id"] = it
         } ?: "0"
 
-        val seasonInfo = getThaiSeason(reqSeasonId, reqEpId)?.let {
+        val seasonInfo = getSeason(mapOf("season_id" to reqSeasonId, "ep_id" to reqEpId), null)?.toJSONObject()?.let {
             val eCode = it.optLong("code")
             if (eCode != 0L) {
                 Log.e("Invalid thai season info reply, code $eCode, message ${it.optString("message")}")
