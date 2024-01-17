@@ -379,6 +379,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 "com.bilibili.bangumi.ui.page.search.BangumiSearchResultFragment".from(mClassLoader)
                     ?: "com.bilibili.search.result.bangumi.ogv.BangumiSearchResultFragment"
                         .from(mClassLoader) ?: "com.bilibili.search.ogv.OgvSearchResultFragment"
+                        .from(mClassLoader) ?: "com.bilibili.search2.ogv.OgvSearchResultFragment"
                         .from(mClassLoader)
             searchResultFragment?.run {
                 val intTypeFields = declaredFields.filter {
