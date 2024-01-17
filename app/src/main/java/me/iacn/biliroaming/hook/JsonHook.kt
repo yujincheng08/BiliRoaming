@@ -367,12 +367,11 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
         }
 
-        val searchRankClass = "com.bilibili.search.api.SearchRank".findClass(mClassLoader)
+        val searchRankClass = "com.bilibili.search.api.SearchRank".findClassOrNull(mClassLoader)
         val searchGuessClass =
-            "com.bilibili.search.api.SearchReferral\$Guess".findClass(mClassLoader)
-        val searchRankV2Class = "com.bilibili.search2.api.SearchRank".from(mClassLoader)
-        val searchGuessV2Class = "com.bilibili.search2.api.SearchReferral\$Guess".from(mClassLoader)
-        val categoryClass = "tv.danmaku.bili.category.CategoryMeta".findClass(mClassLoader)
+            "com.bilibili.search.api.SearchReferral\$Guess".findClassOrNull(mClassLoader)
+        val searchRankV2Class = "com.bilibili.search2.api.SearchRank".findClassOrNull(mClassLoader)
+        val searchGuessV2Class = "com.bilibili.search2.api.SearchReferral\$Guess".findClassOrNull(mClassLoader)
 
         instance.fastJsonClass?.hookAfterMethod(
             "parseArray",

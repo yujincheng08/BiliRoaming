@@ -502,15 +502,8 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             (sPrefs.getBoolean("search_area_bangumi", false)
                     || sPrefs.getBoolean("search_area_movie", false))
         ) {
-            Class.forName(
-                "com.bilibili.search.result.pages.BiliMainSearchResultPage\$PageTypes",
-                true, mClassLoader
-            ).reconstructPageType()
-            if (getVersionCode(packageName) < 7390000) return
-            Class.forName(
-                "com.bilibili.search2.result.pages.BiliMainSearchResultPage\$PageTypes",
-                true, mClassLoader
-            ).reconstructPageType()
+            "com.bilibili.search.result.pages.BiliMainSearchResultPage\$PageTypes".findClassOrNull(mClassLoader)?.reconstructPageType()
+            "com.bilibili.search2.result.pages.BiliMainSearchResultPage\$PageTypes".findClassOrNull(mClassLoader)?.reconstructPageType()
         }
     }
 
