@@ -292,4 +292,7 @@
     <string name="pegasus_cover_ratio_summary">自定义首页推荐小卡（双列显示的）封面比例</string>
     <string name="fake_non_multiwindow_title">伪装处于非多窗口模式</string>
     <string name="fake_non_multiwindow_summary">比如视频多窗口模式下全屏</string>
+    <string name="copy_access_key_title">复制 access_key</string>
+    <string name="copy_access_key_summary">请勿泄露给他人</string>
+    <string name="copy_access_key_toast">已复制</string>
 </resources>
