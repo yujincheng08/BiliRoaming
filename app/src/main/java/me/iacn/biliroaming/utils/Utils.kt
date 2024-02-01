@@ -59,7 +59,7 @@ fun bv2av(bv: String): Long {
     val r = intArrayOf(11, 10, 3, 8, 4, 6).withIndex().sumOf { (i, p) ->
         table[bv[p]]!! * BigInteger.valueOf(58).pow(i).toLong()
     }
-    return (r - 8728348608).xor(177451812)
+    return (r - 7654606784).xor(1251193636)
 }
 
 fun getPackageVersion(packageName: String) = try {
