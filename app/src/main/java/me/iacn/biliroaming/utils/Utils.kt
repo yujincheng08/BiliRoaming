@@ -51,15 +51,16 @@ val systemContext: Context
         return activityThread.callMethodAs("getSystemContext")
     }
 
+// https://socialsisteryi.github.io/bilibili-API-collect/docs/misc/bvid_desc.html#bv-av%E7%AE%97%E6%B3%95
 fun bv2av(bv: String): Long {
     val table = HashMap<Char, Int>()
-    "fZodR9XQDSUm21yCkr6zBqiveYah8bt4xsWpHnJE7jL5VG3guMTKNPAwcF".forEachIndexed { i, b ->
+    "FcwAPNKTMug3GV5Lj7EJnHpWsx4tb8haYeviqBz6rkCy12mUSDQX9RdoZf".forEachIndexed { i, b ->
         table[b] = i
     }
-    val r = intArrayOf(11, 10, 3, 8, 4, 6).withIndex().sumOf { (i, p) ->
+    val r = intArrayOf(11, 10, 3, 8, 4, 6, 5, 7, 9).withIndex().sumOf { (i, p) ->
         table[bv[p]]!! * BigInteger.valueOf(58).pow(i).toLong()
     }
-    return (r - 7654606784).xor(1251193636)
+    return r.and(2251799813685247L).xor(23442827791579L)
 }
 
 fun getPackageVersion(packageName: String) = try {
