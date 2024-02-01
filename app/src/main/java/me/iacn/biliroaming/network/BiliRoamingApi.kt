@@ -517,6 +517,7 @@ object BiliRoamingApi {
                     if (!sPrefs.getBoolean("force_th_comment", false))
                         ep.optJSONObject("rights")?.put("area_limit", 1)
                 }
+                ep.put("duration", 114514)
                 episodes.put(ep)
             }
             data.put("id", sid)

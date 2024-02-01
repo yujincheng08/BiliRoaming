@@ -1428,6 +1428,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                         height = optLong("height")
                                     }
                                 }
+                                duration = episode.optInt("duration")
                                 epId = episode.optLong("id")
                                 epIndex = episode.optInt("index")
                                 from = episode.optString("from")
