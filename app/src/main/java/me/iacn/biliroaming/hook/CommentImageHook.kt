@@ -21,7 +21,7 @@ class CommentImageHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     companion object {
         fun saveImage(url: String) = runCatching {
             URL(url).openStream().use { stream ->
-                val relativePath = "${Environment.DIRECTORY_PICTURES}${File.separator}bilibili"
+                val relativePath = "${Environment.DIRECTORY_PICTURES}${File.separator}bili"
                 val fullFilename = url.substringAfterLast('/')
                 val filename = fullFilename.substringBeforeLast('.')
 
@@ -41,7 +41,7 @@ class CommentImageHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         val path = File(
                             Environment.getExternalStoragePublicDirectory(
                                 Environment.DIRECTORY_PICTURES
-                            ), "bilibili"
+                            ), "bili"
                         ).also { it.mkdirs() }
                         put(MediaStore.MediaColumns.DATA, File(path, fullFilename).absolutePath)
                     }
