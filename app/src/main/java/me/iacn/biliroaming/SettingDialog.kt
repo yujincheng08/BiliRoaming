@@ -7,6 +7,8 @@ import android.app.Activity
 import android.app.Activity.RESULT_CANCELED
 import android.app.AlertDialog
 import android.content.ActivityNotFoundException
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
@@ -33,6 +35,7 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
 import android.widget.SeekBar.OnSeekBarChangeListener
+import android.widget.Toast
 import androidx.documentfile.provider.DocumentFile
 import kotlinx.coroutines.*
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
@@ -105,6 +108,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("customize_dynamic")?.onPreferenceClickListener = this
             findPreference("filter_search")?.onPreferenceClickListener = this
             findPreference("filter_comment")?.onPreferenceClickListener = this
+            findPreference("copy_access_key")?.onPreferenceClickListener = this
             checkCompatibleVersion()
             searchItems = retrieve(preferenceScreen)
             checkUpdate()
@@ -847,6 +851,16 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             }.show()
             return true
         }
+
+        private fun onCopyAccessKeyClick(): Boolean {
+            val manager = context.getSystemService(ClipboardManager::class.java)
+
+            manager.setPrimaryClip(ClipData.newPlainText("access_key", instance.accessKey))
+            Toast.makeText(context, R.string.copy_access_key_toast, Toast.LENGTH_SHORT).show()
+
+            return true
+        }
+
         @Deprecated("Deprecated in Java")
         override fun onPreferenceClick(preference: Preference) = when (preference.key) {
             "version" -> onVersionClick()
@@ -867,6 +881,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             "default_speed" -> onDefaultSpeedClick()
             "filter_search" -> onFilterSearchClick()
             "filter_comment" -> onFilterCommentClick()
+            "copy_access_key" -> onCopyAccessKeyClick()
             else -> false
         }
     }

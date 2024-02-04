@@ -504,6 +504,11 @@
             android:dependency="hidden"
             android:key="block_video_comment"
             android:title="@string/block_video_comment_title" />
+
+        <Preference
+            android:key="copy_access_key"
+            android:title="@string/copy_access_key_title"
+            android:summary="@string/copy_access_key_summary" />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/setting_category">
