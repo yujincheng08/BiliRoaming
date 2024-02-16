@@ -1,6 +1,6 @@
 [versions]
 protobuf = "3.25.2"
-coroutine = "1.7.3"
+coroutine = "1.8.0"
 kotlin = "1.9.22"
 
 [plugins]
