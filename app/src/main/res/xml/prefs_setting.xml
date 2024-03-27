@@ -68,6 +68,10 @@
             android:summary="@string/custom_theme_summary"
             android:title="@string/custom_theme_title" />
         <SwitchPreference
+            android:key="auto_dark_splash"
+            android:summary="@string/auto_dark_splash_summary"
+            android:title="@string/auto_dark_splash_title" />
+        <SwitchPreference
             android:key="custom_splash"
             android:summary="@string/custom_splash_summary"
             android:title="@string/custom_splash_title" />
