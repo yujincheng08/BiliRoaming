@@ -295,4 +295,6 @@
     <string name="copy_access_key_title">复制 access_key</string>
     <string name="copy_access_key_summary">请勿泄露给他人</string>
     <string name="copy_access_key_toast">已复制</string>
+    <string name="auto_dark_splash_title">启动屏背景适配深色</string>
+    <string name="auto_dark_splash_summary">防瞎眼</string>
 </resources>

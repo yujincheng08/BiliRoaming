@@ -1,5 +1,7 @@
 package me.iacn.biliroaming.hook
 
+import android.content.res.Configuration
+import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
@@ -14,7 +16,7 @@ class SplashHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 "custom_splash_logo",
                 false
             )
-            && !sPrefs.getBoolean("full_splash", false)
+            && !sPrefs.getBoolean("full_splash", false) && !sPrefs.getBoolean("auto_dark_splash", false)
         ) return
         Log.d("startHook: Splash")
 
@@ -34,6 +36,14 @@ class SplashHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             Bundle::class.java
         ) { param ->
             val view = param.args[0] as View
+            val containerId = getId("splash_container")
+            if (sPrefs.getBoolean("auto_dark_splash", false))
+                view.findViewById<View>(containerId)
+                    .setBackgroundColor(
+                        if (view.resources.configuration.uiMode.and(Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES)
+                            Color.BLACK
+                        else Color.WHITE
+                    )
             if (sPrefs.getBoolean("custom_splash", false)) {
                 val brandId = getId("brand_splash")
                 val fullId = getId("full_brand_splash")
