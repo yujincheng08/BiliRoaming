@@ -1,5 +1,8 @@
-cmake_minimum_required(VERSION 3.4.1)
+cmake_minimum_required(VERSION 3.28)
 project(biliroaming)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_SCAN_FOR_MODULES ON)
 
 find_package(cxx REQUIRED CONFIG)
 link_libraries(cxx::cxx)
