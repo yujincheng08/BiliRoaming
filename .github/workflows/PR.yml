@@ -28,6 +28,11 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
         cache: 'gradle'
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+    - uses: seanmiddleditch/gha-setup-ninja@master
+      with:
+        version: 1.12.0
     - name: Set up ccache
       uses: hendrikmuhs/ccache-action@v1.2
       with:
@@ -35,6 +40,7 @@ jobs:
         restore-keys: ${{ runner.os }}
     - name: Build with Gradle
       run: |
+        sudo rm -rf $ANDROID_HOME/cmake
         echo 'org.gradle.caching=true' >> gradle.properties
         echo 'org.gradle.parallel=true' >> gradle.properties
         echo 'org.gradle.vfs.watch=true' >> gradle.properties

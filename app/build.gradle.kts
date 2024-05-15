@@ -47,7 +47,7 @@ android {
     namespace = "me.iacn.biliroaming"
     compileSdk = 34
     buildToolsVersion = "34.0.0"
-    ndkVersion = "26.0.10792818"
+    ndkVersion = "27.0.11718014-beta1"
 
     buildFeatures {
         prefab = true
@@ -115,7 +115,7 @@ android {
     externalNativeBuild {
         cmake {
             path("src/main/jni/CMakeLists.txt")
-            version = "3.22.1+"
+            version = "3.28.0+"
         }
     }
 }
