@@ -69,7 +69,7 @@ class ShareHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         it.startsWith("https://b23.tv") || it.startsWith("http://b23.tv")
                     }?.let {
                         val targetUrl = Uri.parse(it).buildUpon().query("").build().toString()
-                        param.result = targetUrl.resolveB23URL()
+                        param.result = targetUrl.resolveB23URL().also { r -> param.thisObject.setObjectField("link", r) }
                     }
                 }
                 hookAfterMethod("getContent") { param ->
@@ -78,8 +78,14 @@ class ShareHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         contentUrlPattern.matchEntire(it)?.groups?.get(1)?.value
                     }?.let { contentUrl ->
                         val resolvedUrl = (param.thisObject.getObjectField("link")?.let { it as String } ?: contentUrl)
-                            .resolveB23URL()
-                        param.result = content.replace(contentUrl, transformUrl(resolvedUrl, miniProgramEnabled))
+                            .let {
+                                if (it.startsWith("https://b23.tv") || it.startsWith("http://b23.tv"))
+                                    it.resolveB23URL()
+                                else it
+                            }
+                        param.result = content.replace(contentUrl, transformUrl(resolvedUrl, miniProgramEnabled)).also { r ->
+                            param.thisObject.setObjectField("content", r)
+                        }
                     }
                 }
             }
