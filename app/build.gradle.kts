@@ -34,8 +34,11 @@ cmaker {
     default {
         targets("biliroaming")
         abiFilters("armeabi-v7a", "arm64-v8a", "x86")
-        arguments += "-DANDROID_STL=none"
-        cppFlags += "-Wno-c++2b-extensions"
+        arguments += arrayOf(
+            "-DANDROID_STL=none",
+            "-DCMAKE_CXX_STANDARD=23",
+            "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON",
+        )
     }
 
     buildTypes {
