@@ -297,4 +297,6 @@
     <string name="copy_access_key_toast">已复制</string>
     <string name="auto_dark_splash_title">启动屏背景适配深色</string>
     <string name="auto_dark_splash_summary">防瞎眼</string>
+    <string name="no_live_mask_title">隐藏直播模糊遮罩</string>
+    <string name="no_live_mask_summary">隐藏部分直播的模糊遮罩</string>
 </resources>

@@ -427,6 +427,8 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             ?.setObjectField("followCard", null)
                     if (hidden && purifyLivePopups.contains("banner"))
                         result.setObjectField("bannerInfo", null)
+                    if (hidden && sPrefs.getBoolean("no_live_mask", false))
+                        result.setObjectField("areaMaskInfo", null)
                 }
 
                 liveRoomRecommendCardClass -> {
