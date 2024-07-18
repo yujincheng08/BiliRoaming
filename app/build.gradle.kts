@@ -50,7 +50,7 @@ android {
     namespace = "me.iacn.biliroaming"
     compileSdk = 35
     buildToolsVersion = "35.0.0"
-    ndkVersion = "27.0.11718014-beta1"
+    ndkVersion = "27.0.12077973"
 
     buildFeatures {
         prefab = true
