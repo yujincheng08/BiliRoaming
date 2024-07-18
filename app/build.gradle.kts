@@ -39,6 +39,8 @@ cmaker {
             "-DCMAKE_CXX_STANDARD=23",
             "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON",
         )
+        cFlags += "-flto"
+        cppFlags += "-flto"
     }
 
     buildTypes {
