@@ -1,5 +1,5 @@
 [versions]
-protobuf = "4.27.2"
+protobuf = "4.27.3"
 coroutine = "1.8.1"
 kotlin = "2.0.0"
 
