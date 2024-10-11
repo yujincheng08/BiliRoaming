@@ -251,6 +251,7 @@ message CardClickProcessor {
 message Comment3Copy {
   optional Class class = 1;
   optional Method method = 2;
+  optional int32 comment3ViewIndex = 3;
 }
 
 message HookInfo {

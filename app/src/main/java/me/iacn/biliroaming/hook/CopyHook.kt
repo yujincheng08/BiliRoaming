@@ -88,14 +88,15 @@ class CopyHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
         instance.comment3CopyClass?.let { c ->
             instance.comment3Copy()?.let { m ->
-                c.replaceAllMethods(m) { param ->
-                    if (!enhanceLongClickCopy) return@replaceAllMethods true
-
-                    val view = param.args[2] as View
-                    view.getFirstFieldByExactTypeOrNull<CharSequence>()?.also { text ->
-                        showCopyDialog(view.context, text, param)
+                instance.comment3ViewIndex().let { i ->
+                    c.replaceAllMethods(m) { param ->
+                        if (!enhanceLongClickCopy) return@replaceAllMethods true
+                        val view = param.args[i] as View
+                        view.getFirstFieldByExactTypeOrNull<CharSequence>()?.also { text ->
+                            showCopyDialog(view.context, text, param)
+                        }
+                        return@replaceAllMethods true
                     }
-                    return@replaceAllMethods true
                 }
             }
         }
