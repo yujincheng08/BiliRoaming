@@ -71,6 +71,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             ?: "tv.danmaku.bili.MainActivityV2" from mClassLoader
     }
     val mainActivityClass by Weak { "tv.danmaku.bili.MainActivityV2" from mClassLoader }
+    val gripperBootExpClass by Weak { "com.bilibili.gripper.exp.a\$a" from mClassLoader }
     val homeUserCenterClass by Weak { if (mHookInfo.settings.homeUserCenterCount == 1) mHookInfo.settings.homeUserCenterList.first().class_ from mClassLoader else null }
     val menuGroupItemClass by Weak { mHookInfo.settings.menuGroupItem from mClassLoader }
     val drawerLayoutClass by Weak { mHookInfo.drawer.layout from mClassLoader }
