@@ -580,10 +580,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             }
             biliAccounts = biliAccounts {
                 val biliAccountsClass = dexHelper.findMethodUsingString(
-                    "refresh token error",
+                    "logout with account exception",
                     false,
                     -1,
-                    0,
+                    1,
                     null,
                     -1,
                     null,
