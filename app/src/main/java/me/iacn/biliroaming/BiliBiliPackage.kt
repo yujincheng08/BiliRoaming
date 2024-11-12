@@ -247,6 +247,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     fun comment3Copy() = mHookInfo.comment3Copy.method.orNull
 
+    fun comment3ViewIndex() = mHookInfo.comment3Copy.comment3ViewIndex
+
     fun responseDataField() = runCatchingOrNull {
         rxGeneralResponseClass?.getDeclaredField("data")?.name
     } ?: "_data"
@@ -1309,7 +1311,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     setExpandLinesIndex,
                     -1,
                     1,
-                    "VL",
+                    null,
                     -1,
                     null,
                     null,
@@ -1458,42 +1460,18 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 }
             }
             comment3Copy = comment3Copy {
-                val clipBoardCopyMethod =
-                    "com.bilibili.droid.ClipboardHelper".from(classloader)
-                        ?.getDeclaredMethod("copy", Context::class.java, String::class.java)?.let {
-                            dexHelper.encodeMethodIndex(it)
-                        } ?: return@comment3Copy
-                val commentExtensionsKtClass =
-                    "com.bilibili.app.comment3.utils.CommentExtensionsKt".from(classloader)?.let {
-                        dexHelper.encodeClassIndex(it)
-                    } ?: return@comment3Copy
-                dexHelper.findMethodInvoked(
-                    clipBoardCopyMethod,
-                    -1,
-                    2,
-                    "ZLL",
-                    commentExtensionsKtClass,
-                    null,
-                    null,
-                    null,
-                    true
-                ).firstOrNull()?.let {
-                    dexHelper.findMethodInvoked(
-                        it,
-                        -1,
-                        3,
-                        "ZLLL",
-                        -1,
-                        null,
-                        null,
-                        null,
-                        true
-                    ).firstOrNull()?.let {
-                        dexHelper.decodeMethodIndex(it)
+                classesList.filter {
+                    it.startsWith("com.bilibili.app.comment3.ui.holder.handle.CommentContentRichTextHandler")
+                }.map { it.on(classloader) }.flatMap { c ->
+                    c.declaredMethods.filter {
+                        (it.isPrivate && it.parameterCount == 6 && it.parameterTypes[5] == View::class.java) ||
+                                (it.isPrivate && it.parameterCount == 3 && it.parameterTypes[2] == View::class.java)
                     }
-                }?.let {
+                }.firstOrNull()?.let {
+                    Log.d(it.declaringClass.name + it.name)
                     class_ = class_ { name = it.declaringClass.name }
                     method = method { name = it.name }
+                    comment3ViewIndex = it.parameterCount - 1
                 }
             }
             dexHelper.findMethodUsingString(
