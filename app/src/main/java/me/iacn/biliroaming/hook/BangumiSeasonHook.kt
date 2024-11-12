@@ -456,6 +456,10 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val navList = v.callMethodAs<List<Any>>("getNavList")
             .map { SearchNav.parseFrom(it.callMethodAs<ByteArray>("toByteArray")) }
             .toMutableList()
+        // fix crash when searching sensitive words
+        if (navList.size == 0) {
+            return
+        }
         val currentArea = runCatchingOrNull {
             XposedInit.country.get(5L, TimeUnit.SECONDS)
         }
