@@ -471,9 +471,14 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         var hasKoreaTW = false
         tab.forEach {
             when (it.getObjectFieldAs<String>("uri")) {
+                "bilibili://pgc/bangumi_v2",
                 "bilibili://pgc/home" -> hasBangumiCN = true
+
                 "bilibili://following/home_activity_tab/6544" -> hasBangumiTW = true
+
+                "bilibili://pgc/cinema_v2",
                 "bilibili://pgc/home?home_flow_type=2" -> hasMovieCN = true
+
                 "bilibili://following/home_activity_tab/168644" -> hasMovieTW = true
                 "bilibili://following/home_activity_tab/163541" -> hasKoreaHK = true
                 "bilibili://following/home_activity_tab/95636" -> hasKoreaTW = true
@@ -556,10 +561,12 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 "bilibili://pegasus/hottopic"
                 -> purifytabset.contains("hottopic")
 
+                "bilibili://pgc/bangumi_v2",
                 "bilibili://pgc/home",
                 "bilibili://following/home_activity_tab/6544"
                 -> purifytabset.contains("bangumi")
 
+                "bilibili://pgc/cinema_v2",
                 "bilibili://pgc/home?home_flow_type=2",
                 "bilibili://following/home_activity_tab/168644"
                 -> purifytabset.contains("movie")
