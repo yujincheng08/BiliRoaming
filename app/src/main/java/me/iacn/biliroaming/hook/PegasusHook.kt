@@ -514,6 +514,28 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             param.result.callMethod("ensureListIsMutable")
             param.result.callMethodAs<MutableList<Any>>("getListList").filter()
         }
+        // v8.17.0+
+        instance.viewMossClass?.hookAfterMethod("executeView", instance.viewReqClass) { param ->
+            param.result ?: return@hookAfterMethod
+            if (removeRelatePromote && removeRelateOnlyAv && removeRelateNothing) {
+                param.result.callMethod("clearRelates")
+                param.result.callMethod("clearPagination")
+                return@hookAfterMethod
+            }
+            param.result.callMethod("ensureRelatesIsMutable")
+            param.result.callMethodAs<MutableList<Any>>("getRelatesList").filter()
+        }
+        instance.viewMossClass?.hookAfterMethod(
+            "executeRelatesFeed",
+            "com.bapis.bilibili.app.view.v1.RelatesFeedReq"
+        ) { param ->
+            param.result ?: return@hookAfterMethod
+            param.result.callMethod("ensureListIsMutable")
+            param.result.callMethodAs<MutableList<Any>>("getListList").filter()
+        }
+
+
+
         instance.viewUniteMossClass?.run {
             hookAfterMethod("view", instance.viewUniteReqClass) { param ->
                 param.result ?: return@hookAfterMethod
@@ -536,6 +558,35 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
             hookAfterMethod(
                 "relatesFeed",
+                "com.bapis.bilibili.app.viewunite.v1.RelatesFeedReq"
+            ) { param ->
+                param.result?.run {
+                    callMethod("ensureRelatesIsMutable")
+                    callMethodAs<MutableList<Any>>("getRelatesList").filterUnite()
+                }
+            }
+            // v8.17.0+
+            hookAfterMethod("executeView", instance.viewUniteReqClass) { param ->
+                param.result ?: return@hookAfterMethod
+                param.result.callMethod("getTab")?.run {
+                    callMethod("ensureTabModuleIsMutable")
+                    callMethodAs<MutableList<Any>>("getTabModuleList").map { originalTabModules ->
+                        if (!originalTabModules.callMethodAs<Boolean>("hasIntroduction")) return@map
+                        originalTabModules.callMethodAs<Any>("getIntroduction").run {
+                            callMethod("ensureModulesIsMutable")
+                            callMethodAs<MutableList<Any>>("getModulesList").map { module ->
+                                if (!module.callMethodAs<Boolean>("hasRelates")) return@map
+                                module.callMethodAs<Any>("getRelates").run {
+                                    callMethod("ensureCardsIsMutable")
+                                    callMethodAs<MutableList<Any>>("getCardsList").filterUnite()
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            hookAfterMethod(
+                "executeRelatesFeed",
                 "com.bapis.bilibili.app.viewunite.v1.RelatesFeedReq"
             ) { param ->
                 param.result?.run {
@@ -588,6 +639,8 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 param.result = null
             }
 
+
+
         fun MutableList<Any>.filterPopular() = removeIf {
             when (it.callMethod("getItemCase")?.toString()) {
                 "SMALL_COVER_V5" -> {
@@ -625,9 +678,35 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             param.args[0].setObjectField("lastParam_", popularDataVersion)
             param.args[0].setLongField("idx_", popularDataCount)
         }
-
         instance.popularClass?.hookAfterMethod(
             "index",
+            "com.bapis.bilibili.app.show.popular.v1.PopularResultReq"
+        ) { param ->
+            param.result ?: return@hookAfterMethod
+
+            param.result.callMethod("ensureItemsIsMutable")
+            param.result.callMethodAs<MutableList<Any>>("getItemsList").filterPopular()
+        }
+
+        // v8.17.0+
+        instance.popularClass?.hookBeforeMethod(
+            "executeIndex",
+            "com.bapis.bilibili.app.show.popular.v1.PopularResultReq"
+        ) { param ->
+            param.args ?: return@hookBeforeMethod
+
+            val idx = param.args[0].getLongFieldOrNull("idx_")
+            if (idx == null || idx == 0L) {
+                popularDataCount = 0
+                popularDataVersion = ""
+                return@hookBeforeMethod
+            }
+
+            param.args[0].setObjectField("lastParam_", popularDataVersion)
+            param.args[0].setLongField("idx_", popularDataCount)
+        }
+        instance.popularClass?.hookAfterMethod(
+            "executeIndex",
             "com.bapis.bilibili.app.show.popular.v1.PopularResultReq"
         ) { param ->
             param.result ?: return@hookAfterMethod
