@@ -107,9 +107,6 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     // 屏蔽过低的播放数
     private fun isLowCountVideo(obj: Any): Boolean {
         if (hideLowPlayCountLimit == 0L) return false
-        if (obj is Long) {
-            return obj < hideLowPlayCountLimit
-        }
         val text = obj.runCatchingOrNull {
             getObjectFieldAs<String?>("coverLeftText1")
         }.orEmpty()
@@ -118,18 +115,24 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             else it < hideLowPlayCountLimit
         }
     }
+    private fun isLowCountVideoUnite(count: Long): Boolean {
+        if (hideLowPlayCountLimit == 0L) return false
+        return count < hideLowPlayCountLimit
+    }
 
     // 屏蔽指定播放时长
     private fun durationVideo(obj: Any): Boolean {
         if (hideLongDurationLimit == 0 && hideShortDurationLimit == 0)
             return false
-        val duration =
-            if (obj is Long) {
-                obj
-            } else {
-                obj.getObjectField("playerArgs")
-                    ?.getObjectFieldAs("fakeDuration") ?: 0
-            }
+        val duration = obj.getObjectField("playerArgs")
+            ?.getObjectFieldAs("fakeDuration") ?: 0
+        if (hideLongDurationLimit != 0 && duration > hideLongDurationLimit)
+            return true
+        return hideShortDurationLimit != 0 && duration < hideShortDurationLimit
+    }
+    private fun durationVideoUnite(duration: Long): Boolean {
+        if (hideLongDurationLimit == 0 && hideShortDurationLimit == 0)
+            return false
         if (hideLongDurationLimit != 0 && duration > hideLongDurationLimit)
             return true
         return hideShortDurationLimit != 0 && duration < hideShortDurationLimit
@@ -548,7 +551,7 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 if (it.callMethodAs("hasAv")) {
                     it.callMethodAs<Any>("getAv").let { av ->
                         val duration = av.callMethodAs<Long>("getDuration")
-                        if (durationVideo(duration)) {
+                        if (durationVideoUnite(duration)) {
                             shouldFiltered = true
                             return@let
                         }
@@ -556,7 +559,7 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             av.callMethodAs<Any>("getStat").let { stat ->
                                 if (stat.callMethodAs("hasVt")) {
                                     stat.callMethodAs<Any>("getVt").let { vt ->
-                                        if (isLowCountVideo(vt.callMethodAs<Long>("getValue"))) {
+                                        if (isLowCountVideoUnite(vt.callMethodAs<Long>("getValue"))) {
                                             shouldFiltered = true
                                             return@let
                                         }
