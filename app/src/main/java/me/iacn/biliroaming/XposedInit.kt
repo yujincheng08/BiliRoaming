@@ -55,6 +55,15 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                     Log.d("Bilibili version: ${getPackageVersion(lpparam.packageName)} (${if (is64) "64" else "32"}bit)")
                     Log.d("SDK: ${Build.VERSION.RELEASE}(${Build.VERSION.SDK_INT}); Phone: ${Build.BRAND} ${Build.MODEL}")
                     Log.d("Config: ${sPrefs.all}")
+
+                    BiliBiliPackage(lpparam.classLoader, param.args[0] as Context)
+
+                    if (isIntegrated) {
+                        Log.w("Not available in integrated mode, skip.")
+                        startHook(IntegratedDisabledHintHook(lpparam.classLoader))
+                        return@hookBeforeMethod
+                    }
+
                     Log.toast(
                         "哔哩漫游已激活${
                             if (sPrefs.getBoolean("main_func", false) &&
@@ -76,7 +85,6 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                         }.also { Log.d("当前地区: $it") }
                     }
 
-                    BiliBiliPackage(lpparam.classLoader, param.args[0] as Context)
                     if (BuildConfig.DEBUG) {
                         startHook(SSLHook(lpparam.classLoader))
                     }
@@ -126,6 +134,9 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
 
                 lpparam.processName.endsWith(":web") -> {
                     BiliBiliPackage(lpparam.classLoader, param.args[0] as Context)
+
+                    if (isIntegrated) return@hookBeforeMethod
+
                     CustomThemeHook(lpparam.classLoader).insertColorForWebProcess()
                     startHook(WebViewHook(lpparam.classLoader))
                     startHook(ShareHook(lpparam.classLoader))
@@ -134,6 +145,9 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
 
                 lpparam.processName.endsWith(":download") -> {
                     BiliBiliPackage(lpparam.classLoader, param.args[0] as Context)
+
+                    if (isIntegrated) return@hookBeforeMethod
+
                     startHook(BangumiPlayUrlHook(lpparam.classLoader))
                 }
             }
