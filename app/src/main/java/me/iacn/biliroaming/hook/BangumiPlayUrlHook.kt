@@ -268,6 +268,79 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     param.result = purifyViewInfo(response)
                 }
             }
+            // v8.17.0+
+            hookBeforeMethod(
+                "executePlayView",
+                "com.bapis.bilibili.pgc.gateway.player.v2.PlayViewReq"
+            ) { param ->
+                val request = param.args[0]
+                // if getDownload == 1 -> flv download
+                // if getDownload == 2 -> dash download
+                // if qn == 0, we are querying available quality
+                // else we are downloading
+                // if fnval == 0 -> flv download
+                // thus fix download will set qn = 0 and set fnval to max
+                isDownload = sPrefs.getBoolean("allow_download", false)
+                        && request.callMethodAs<Int>("getDownload") >= 1
+                if (isDownload) {
+                    if (!sPrefs.getBoolean("fix_download", false)
+                        || request.callMethodAs<Int>("getFnval") <= 1
+                    ) {
+                        request.callMethod("setFnval", MAX_FNVAL)
+                        request.callMethod("setFourk", true)
+                    }
+                    request.callMethod("setDownload", 0)
+                } else if (halfScreenQuality == 1 || fullScreenQuality != 0) {
+                    request.callMethod("setFnval", MAX_FNVAL)
+                    request.callMethod("setFourk", true)
+                    if (halfScreenQuality == 1 && qnApplied.compareAndSet(false, true)) {
+                        defaultQn?.let { request.callMethod("setQn", it) }
+                    }
+                }
+            }
+            hookAfterMethod(
+                "executePlayView",
+                "com.bapis.bilibili.pgc.gateway.player.v2.PlayViewReq"
+            ) { param ->
+                // th:
+                // com.bilibili.lib.moss.api.BusinessException: 抱歉您所使用的平台不可观看！
+                // com.bilibili.lib.moss.api.BusinessException: 啥都木有
+                // connection err <- should skip because of cache:
+                // throwable: com.bilibili.lib.moss.api.NetworkException
+                if (instance.networkExceptionClass?.isInstance(param.throwable) == true)
+                    return@hookAfterMethod
+                val request = param.args[0]
+                val response =
+                    param.result ?: "com.bapis.bilibili.pgc.gateway.player.v2.PlayViewReply"
+                        .on(mClassLoader).new()
+                if (needProxy(response)) {
+                    try {
+                        val serializedRequest = request.callMethodAs<ByteArray>("toByteArray")
+                        val req = PlayViewReq.parseFrom(serializedRequest)
+                        val seasonId = req.seasonId.toString().takeIf { it != "0" }
+                            ?: lastSeasonInfo["season_id"] ?: "0"
+                        val (thaiSeason, thaiEp) = getSeasonLazy(seasonId, req.epId)
+                        val content = getPlayUrl(reconstructQuery(req, response, thaiEp))
+                        content?.let {
+                            Log.toast("已从代理服务器获取播放地址\n如加载缓慢或黑屏，可去漫游设置中测速并设置 UPOS")
+                            param.result = reconstructResponse(
+                                req, response, it, isDownload, thaiSeason, thaiEp
+                            )
+                        }
+                            ?: throw CustomServerException(mapOf("未知错误" to "请检查哔哩漫游设置中解析服务器设置。"))
+                    } catch (e: CustomServerException) {
+                        param.result = showPlayerError(
+                            response,
+                            "请求解析服务器发生错误(点此查看更多)\n${e.message}"
+                        )
+                        Log.toast("请求解析服务器发生错误: ${e.message}", alsoLog = true)
+                    }
+                } else if (isDownload) {
+                    param.result = fixDownloadProto(response)
+                } else if (blockBangumiPageAds) {
+                    param.result = purifyViewInfo(response)
+                }
+            }
         }
         instance.playerMossClass?.run {
             var isDownload = false
