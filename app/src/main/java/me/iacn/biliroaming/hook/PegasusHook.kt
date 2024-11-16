@@ -107,6 +107,9 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     // 屏蔽过低的播放数
     private fun isLowCountVideo(obj: Any): Boolean {
         if (hideLowPlayCountLimit == 0L) return false
+        if (obj is Long) {
+            return obj < hideLowPlayCountLimit
+        }
         val text = obj.runCatchingOrNull {
             getObjectFieldAs<String?>("coverLeftText1")
         }.orEmpty()
@@ -120,8 +123,13 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private fun durationVideo(obj: Any): Boolean {
         if (hideLongDurationLimit == 0 && hideShortDurationLimit == 0)
             return false
-        val duration = obj.getObjectField("playerArgs")
-            ?.getObjectFieldAs("fakeDuration") ?: 0
+        val duration =
+            if (obj is Long) {
+                obj
+            } else {
+                obj.getObjectField("playerArgs")
+                    ?.getObjectFieldAs("fakeDuration") ?: 0
+            }
         if (hideLongDurationLimit != 0 && duration > hideLongDurationLimit)
             return true
         return hideShortDurationLimit != 0 && duration < hideShortDurationLimit
@@ -193,6 +201,46 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
         }
 
+        return false
+    }
+
+    private fun isContainsBlockKwdUnite(card: Any): Boolean {
+        if (card.callMethodAs("hasBasicInfo")) {
+            card.callMethodAs<Any>("getBasicInfo").let { basicInfo ->
+                // 屏蔽标题关键词
+                if (kwdFilterTitleList.isNotEmpty()) {
+                    val title = basicInfo.callMethodAs<String>("getTitle")
+                    if (kwdFilterTitleRegexMode && title.isNotEmpty()) {
+                        if (kwdFilterTitleRegexes.any { title.contains(it) })
+                            return true
+                    } else if (title.isNotEmpty()) {
+                        if (kwdFilterTitleList.any { title.contains(it) })
+                            return true
+                    }
+                }
+
+                basicInfo.callMethodAs<Any>("getAuthor").let { author ->
+                    // 屏蔽UID
+                    if (kwdFilterUidList.isNotEmpty()) {
+                        val uid = author.callMethodAs<Long>("getMid")
+                        if (uid != 0L && kwdFilterUidList.any { it == uid })
+                            return true
+                    }
+
+                    // 屏蔽UP主
+                    if (kwdFilterUpnameList.isNotEmpty()) {
+                        val upName = author.callMethodAs<String>("getTitle")
+                        if (kwdFilterUpnameRegexMode && upName.isNotEmpty()) {
+                            if (kwdFilterUpnameRegexes.any { upName.contains(it) })
+                                return true
+                        } else if (upName.isNotEmpty()) {
+                            if (kwdFilterUpnameList.any { upName.contains(it) })
+                                return true
+                        }
+                    }
+                }
+            }
+        }
         return false
     }
 
@@ -486,6 +534,7 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
         fun MutableList<Any>.filterUnite() = removeAll {
             val allowTypeList = mutableListOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+            var shouldFiltered = false
             allowTypeList.removeAll { digit ->
                 (removeRelateOnlyAv && digit != 1) || (removeRelatePromote && digit in listOf(
                     3, // Resource, like mall
@@ -494,7 +543,35 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     10 // SPECIAL
                 ))
             }
-            removeRelateNothing || it.callMethodAs("getRelateCardTypeValue") !in allowTypeList
+            // av filter
+            if (applyToRelate) {
+                if (it.callMethodAs("hasAv")) {
+                    it.callMethodAs<Any>("getAv").let { av ->
+                        val duration = av.callMethodAs<Long>("getDuration")
+                        if (durationVideo(duration)) {
+                            shouldFiltered = true
+                            return@let
+                        }
+                        if (av.callMethodAs("hasStat")) {
+                            av.callMethodAs<Any>("getStat").let { stat ->
+                                if (stat.callMethodAs("hasVt")) {
+                                    stat.callMethodAs<Any>("getVt").let { vt ->
+                                        if (isLowCountVideo(vt.callMethodAs<Long>("getValue"))) {
+                                            shouldFiltered = true
+                                            return@let
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if (isContainsBlockKwdUnite(it)) {
+                        shouldFiltered = true
+                    }
+                }
+                // todo: support rcmd
+            }
+            removeRelateNothing || it.callMethodAs("getRelateCardTypeValue") !in allowTypeList || shouldFiltered
         }
         instance.viewMossClass?.hookAfterMethod("view", instance.viewReqClass) { param ->
             param.result ?: return@hookAfterMethod
