@@ -23,7 +23,6 @@ class StartActivityHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             .appendQueryParameter("aid", original.path?.split("/")?.last() ?: "")
             .appendQueryParameter("bvid", "")
             .build()
-        Log.d(fixedUri)
         return fixedUri
     }
 
@@ -43,7 +42,6 @@ class StartActivityHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             ) {
                 intent.data?.let {
                     try {
-                        Log.e("replaceHook isStory, fix!!!")
                         val cid = intent.data?.getQueryParameter("player_preload").toJSONObject().getLong("cid")
                         intent.data = fixIntentUri(Uri.parse(intent.dataString))
                         // fix extra
@@ -61,20 +59,16 @@ class StartActivityHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         intent.putExtra("from", 7)
                         intent.putExtra("blrouter.targeturl", pre)
                         intent.putExtra("blrouter.matchrule", "bilibili://united_video/")
-                        Log.d("replaceHook fixedExtras: ${intent.extras}")
                         // fix component
                         intent.component = ComponentName(
                             intent.component?.packageName ?: packageName,
                             "com.bilibili.ship.theseus.detail.UnitedBizDetailsActivity"
                         )
                     } catch (e: Exception) {
-                        Log.e("replaceHook fix failed!!!")
+                        Log.e("replaceStoryVideo fix intent failed!!!")
                         Log.e(e)
-                        Log.e("replaceHook fix failed!!!")
                     }
                 }
-            } else {
-                Log.d("replaceHook default: ${intent.dataString}")
             }
             if (sPrefs.getBoolean("force_browser", false)) {
                 if (intent.component?.className?.endsWith("MWebActivity") == true &&
