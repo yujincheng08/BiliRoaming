@@ -209,7 +209,6 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 mClassLoader,
                 if (instance.useNewMossFunc) "executeMainList" else "mainList",
                 "com.bapis.bilibili.main.community.reply.v1.MainListReq",
-                instance.mossResponseHandlerClass
             ) { param ->
                 val type = param.args[0].callMethodAs<Long>("getType")
                 if (hidden && blockVideoComment && type == 1L) {
@@ -235,28 +234,25 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             emptyPage?.callMethod("addTexts", it)
                         }
                     }
-                    param.args[1].callMethod("onNext", reply)
-                    param.result = null
+                    param.result = reply
                     return@hookBeforeMethod
                 }
                 if (!blockCommentGuide) return@hookBeforeMethod
-                param.args[1] = param.args[1].mossResponseHandlerProxy { reply ->
-                    reply?.runCatchingOrNull {
-                        callMethod("getSubjectControl")?.run {
-                            callMethod("clearEmptyBackgroundTextPlain")
-                            callMethod("clearEmptyBackgroundTextHighlight")
-                            callMethod("clearEmptyBackgroundUri")
-                            callMethod("getEmptyPage")?.let { page ->
-                                page.callMethod("clearLeftButton")
-                                page.callMethod("clearRightButton")
-                                page.callMethodAs<List<Any>>("getTextsList").takeIf { it.size > 1 }
-                                    ?.let {
-                                        page.callMethod("clearTexts")
-                                        page.callMethod("addTexts", it.first().apply {
-                                            callMethod("setRaw", "还没有评论哦")
-                                        })
-                                    }
-                            }
+                param.result.runCatchingOrNull {
+                    callMethod("getSubjectControl")?.run {
+                        callMethod("clearEmptyBackgroundTextPlain")
+                        callMethod("clearEmptyBackgroundTextHighlight")
+                        callMethod("clearEmptyBackgroundUri")
+                        callMethod("getEmptyPage")?.let { page ->
+                            page.callMethod("clearLeftButton")
+                            page.callMethod("clearRightButton")
+                            page.callMethodAs<List<Any>>("getTextsList").takeIf { it.size > 1 }
+                                ?.let {
+                                    page.callMethod("clearTexts")
+                                    page.callMethod("addTexts", it.first().apply {
+                                        callMethod("setRaw", "还没有评论哦")
+                                    })
+                                }
                         }
                     }
                 }
@@ -264,8 +260,7 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             "com.bapis.bilibili.main.community.reply.v2.ReplyMoss".from(mClassLoader)
                 ?.hookBeforeMethod(
                     if (instance.useNewMossFunc) "executeSubjectDescription" else "subjectDescription",
-                    "com.bapis.bilibili.main.community.reply.v2.SubjectDescriptionReq",
-                    instance.mossResponseHandlerClass
+                    "com.bapis.bilibili.main.community.reply.v2.SubjectDescriptionReq"
                 ) { param ->
                     val defaultText = textV2Class?.new()?.apply {
                         val tipStr = if (hidden && blockVideoComment) {
@@ -282,22 +277,20 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             callMethod("setStyle", it)
                         }
                     } ?: return@hookBeforeMethod
-                    param.args[1] = param.args[1].mossResponseHandlerProxy { reply ->
-                        reply?.runCatchingOrNull {
-                            callMethod("getEmptyPage")?.run {
-                                callMethod("clearLeftButton")
-                                callMethod("clearRightButton")
-                                callMethod("ensureTextsIsMutable")
-                                callMethodAs<MutableList<Any>>("getTextsList").run {
-                                    clear()
-                                    add(defaultText)
-                                }
-                                if (!(hidden && blockVideoComment)) return@run
-                                callMethod(
-                                    "setImageUrl",
-                                    "https://i0.hdslb.com/bfs/app-res/android/img_holder_forbid_style1.webp"
-                                )
+                    param.result.runCatchingOrNull {
+                        callMethod("getEmptyPage")?.run {
+                            callMethod("clearLeftButton")
+                            callMethod("clearRightButton")
+                            callMethod("ensureTextsIsMutable")
+                            callMethodAs<MutableList<Any>>("getTextsList").run {
+                                clear()
+                                add(defaultText)
                             }
+                            if (!(hidden && blockVideoComment)) return@run
+                            callMethod(
+                                "setImageUrl",
+                                "https://i0.hdslb.com/bfs/app-res/android/img_holder_forbid_style1.webp"
+                            )
                         }
                     }
                 }
