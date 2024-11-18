@@ -313,9 +313,24 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         .on(mClassLoader).new()
                 val supplementAny = response.callMethod("getSupplement")
                 val typeUrl = supplementAny?.callMethodAs<String>("getTypeUrl")
+
                 // Only handle pgc video
-                if (param.result != null && typeUrl != PGC_ANY_MODEL_TYPE_URL)
+                ///////////////////
+                // newPlayUnite:
+                // request.vod.cid, response.play_arc.cid need skip
+                val requestVod = request.callMethod("getVod")
+                val reqCid = requestVod?.callMethodAs<Long>("getCid")
+
+                val responsePlayArc = response.callMethod("getPlayArc")
+                val respCid = responsePlayArc?.callMethodAs<Long>("getCid")
+
+                val isThai = reqCid != 0.toLong() && reqCid != respCid
+                if (
+                    param.result != null && typeUrl != PGC_ANY_MODEL_TYPE_URL && !isThai
+                    ) {
                     return@hookAfterMethod
+                }
+
                 val extraContent = request.callMethodAs<Map<String, String>>("getExtraContentMap")
                 val seasonId = extraContent.getOrDefault("season_id", "0")
                 val reqEpId = extraContent.getOrDefault("ep_id", "0").toLong()
@@ -324,7 +339,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 val supplement = supplementAny?.callMethod("getValue")
                     ?.callMethodAs<ByteArray>("toByteArray")
                     ?.let { PlayViewReply.parseFrom(it) } ?: playViewReply {}
-                if (needProxyUnite(response, supplement)) {
+                if (needProxyUnite(response, supplement) || isThai) {
                     try {
                         val serializedRequest = request.callMethodAs<ByteArray>("toByteArray")
                         val req = PlayViewUniteReq.parseFrom(serializedRequest)
@@ -350,7 +365,6 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     param.result = purifyViewInfo(response, supplement)
                 }
             }
-            /*
             // 7.41.0+ use async
             hookBeforeMethod(
                 "playViewUnite",
@@ -389,9 +403,24 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             .on(mClassLoader).new()
                     val supplementAny = response.callMethod("getSupplement")
                     val typeUrl = supplementAny?.callMethodAs<String>("getTypeUrl")
+
                     // Only handle pgc video
-                    if (originalResp != null && typeUrl != PGC_ANY_MODEL_TYPE_URL)
+                    ///////////////////
+                    // newPlayUnite:
+                    // request.vod.cid, response.play_arc.cid
+                    val requestVod = request.callMethod("getVod")
+                    val reqCid = requestVod?.callMethodAs<Long>("getCid")
+
+                    val responsePlayArc = response.callMethod("getPlayArc")
+                    val respCid = responsePlayArc?.callMethodAs<Long>("getCid")
+
+                    val isThai = reqCid != 0.toLong() && reqCid != respCid
+                    if (
+                        param.result != null && typeUrl != PGC_ANY_MODEL_TYPE_URL && !isThai
+                    ) {
                         return@mossResponseHandlerReplaceProxy null
+                    }
+
                     val extraContent =
                         request.callMethodAs<Map<String, String>>("getExtraContentMap")
                     val seasonId = extraContent.getOrDefault("season_id", "0")
@@ -401,7 +430,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     val supplement = supplementAny?.callMethod("getValue")
                         ?.callMethodAs<ByteArray>("toByteArray")
                         ?.let { PlayViewReply.parseFrom(it) } ?: playViewReply {}
-                    val newResponse = if (needProxyUnite(response, supplement)) {
+                    val newResponse = if (needProxyUnite(response, supplement) || isThai) {
                         try {
                             val serializedRequest = request.callMethodAs<ByteArray>("toByteArray")
                             val req = PlayViewUniteReq.parseFrom(serializedRequest)
@@ -428,7 +457,6 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     newResponse
                 }
             }
-            */
         }
         instance.playURLMossClass?.hookBeforeMethod(
             if (instance.useNewMossFunc) "executePlayView" else "playView",

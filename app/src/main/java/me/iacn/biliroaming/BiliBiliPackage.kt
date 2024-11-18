@@ -165,13 +165,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val playSpeedManager by Weak { mHookInfo.playSpeedManager from mClassLoader }
 
     // for v8.17.0+
-    val useNewMossFunc = instance.viewMossClass?.run {
-        for (m in declaredMethods) {
-            if (m.name == "executeRelatesFeed") {
-                return@run true
-            }
-        }
-        return@run false
+    val useNewMossFunc = instance.viewMossClass?.declaredMethods?.any {
+        it.name == "executeRelatesFeed"
     } ?: false
 
     val ids: Map<String, Int> by lazy {
