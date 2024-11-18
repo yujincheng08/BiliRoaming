@@ -321,17 +321,10 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
         }
 
-        instance.viewMossClass?.hookAfterMethod("view", instance.viewReqClass) { param ->
-            param.result?.let { return@hookAfterMethod }
-            val serializedRequest = param.args[0].callMethodAs<ByteArray>("toByteArray")
-            val req = ViewReq.parseFrom(serializedRequest)
-            val reply = fixViewProto(req)
-            val serializedReply = reply?.toByteArray() ?: return@hookAfterMethod
-            param.result =
-                (param.method as Method).returnType.callStaticMethod("parseFrom", serializedReply)
-        }
-        // v8.17.0+
-        instance.viewMossClass?.hookAfterMethod("execView", instance.viewReqClass) { param ->
+        instance.viewMossClass?.hookAfterMethod(
+            if (instance.useNewMossFunc) "executeView" else "view",
+            instance.viewReqClass
+        ) { param ->
             param.result?.let { return@hookAfterMethod }
             val serializedRequest = param.args[0].callMethodAs<ByteArray>("toByteArray")
             val req = ViewReq.parseFrom(serializedRequest)
@@ -342,7 +335,8 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
 
         instance.viewUniteMossClass?.hookAfterMethod(
-            "view", "com.bapis.bilibili.app.viewunite.v1.ViewReq"
+            if (instance.useNewMossFunc) "executeView" else "view",
+            "com.bapis.bilibili.app.viewunite.v1.ViewReq"
         ) { param ->
             if (instance.networkExceptionClass?.isInstance(param.throwable) == true) return@hookAfterMethod
             val response = param.result
@@ -355,36 +349,6 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     param.result =
                             "com.bapis.bilibili.app.viewunite.v1.ViewReply".from(mClassLoader)
                                     ?.callStaticMethod("parseFrom", it)
-                } ?: Log.toast("解锁失败！", force = true)
-                return@hookAfterMethod
-            }
-            val supplementAny = response.callMethod("getSupplement")
-            val typeUrl = supplementAny?.callMethodAs<String>("getTypeUrl")
-            // Only handle pgc video
-            if (param.result != null && typeUrl != PGC_ANY_MODEL_TYPE_URL) {
-                return@hookAfterMethod
-            }
-            val supplement =
-                supplementAny?.callMethod("getValue")?.callMethodAs<ByteArray>("toByteArray")
-                    ?.let { ViewPgcAny.parseFrom(it) } ?: viewPgcAny {}
-
-            fixViewProto(response, supplement)
-        }
-        // v8.17.0+
-        instance.viewUniteMossClass?.hookAfterMethod(
-            "executeView", "com.bapis.bilibili.app.viewunite.v1.ViewReq"
-        ) { param ->
-            if (instance.networkExceptionClass?.isInstance(param.throwable) == true) return@hookAfterMethod
-            val response = param.result
-            if (response == null) {
-                val req = param.args[0].callMethodAs<ByteArray>("toByteArray").let {
-                    ViewUniteReq.parseFrom(it)
-                }
-                val av = (if (req.hasAid()) req.aid.takeIf { it != 0L } else if (req.hasBvid()) bv2av(req.bvid)  else null)?.toString()
-                fixViewProto(req, av)?.toByteArray()?.let {
-                    param.result =
-                        "com.bapis.bilibili.app.viewunite.v1.ViewReply".from(mClassLoader)
-                            ?.callStaticMethod("parseFrom", it)
                 } ?: Log.toast("解锁失败！", force = true)
                 return@hookAfterMethod
             }

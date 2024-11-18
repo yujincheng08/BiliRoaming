@@ -164,6 +164,16 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val searchVideoCardClass by Weak { "com.bapis.bilibili.polymer.app.search.v1.SearchVideoCard" from mClassLoader }
     val playSpeedManager by Weak { mHookInfo.playSpeedManager from mClassLoader }
 
+    // for v8.17.0+
+    val useNewMossFunc = instance.viewMossClass?.run {
+        for (m in declaredMethods) {
+            if (m.name == "executeRelatesFeed") {
+                return@run true
+            }
+        }
+        return@run false
+    } ?: false
+
     val ids: Map<String, Int> by lazy {
         mHookInfo.mapIds.idsMap
     }
