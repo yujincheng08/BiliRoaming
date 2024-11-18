@@ -43,6 +43,7 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val searchFilterUpNames = run {
             sPrefs.getStringSet("search_filter_keyword_upname", null).orEmpty()
         }
+        val searchRemoveRelatePromote = sPrefs.getBoolean("search_filter_remove_relate_promote", false)
         val commentFilterAtUid = run {
             sPrefs.getStringSet("comment_filter_keyword_at_uid", null)
                 ?.mapNotNull { it.toLongOrNull() }.orEmpty()
@@ -301,13 +302,19 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     }
                 }
         }
-        val needSearchFilter = hidden and (searchFilterContents.isNotEmpty() or searchFilterUid.isNotEmpty() or searchFilterUpNames.isNotEmpty())
+        val needSearchFilter = hidden and (searchFilterContents.isNotEmpty() or searchFilterUid.isNotEmpty() or searchFilterUpNames.isNotEmpty()) or searchRemoveRelatePromote
         if (needSearchFilter) {
             instance.searchAllResponseClass?.hookAfterMethod("getItemList") { p ->
                 val items = p.result as? List<Any?> ?: return@hookAfterMethod
                 p.result = items.filter { item ->
                     val videoCard = item?.getObjectField("cardItem_") ?: return@filter true
-                    if (instance.searchVideoCardClass?.isInstance(videoCard) == false) return@filter true
+                    if (instance.searchVideoCardClass?.isInstance(videoCard) == false) {
+                        if (searchRemoveRelatePromote) {
+                            if (item.callMethodAs<Boolean>("hasCm")) return@filter false
+                            if (item.callMethodAs<Boolean>("hasSpecial")) return@filter false
+                        }
+                        return@filter true
+                    }
                     if (videoCard.getLongField("mid_") in searchFilterUid) return@filter false
                     if (videoCard.getObjectFieldAs<String>("author_") in searchFilterUpNames) return@filter false
                     if (searchFilterContentRegexMode) {
