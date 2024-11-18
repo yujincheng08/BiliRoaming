@@ -282,6 +282,7 @@
     <string name="filter_search_title">过滤搜索</string>
     <string name="filter_search_summary">按内容过滤搜索结果</string>
     <string name="filter_search_video">过滤视频</string>
+    <string name="filter_search_remove_relate_promote">搜索结果移除推广</string>
     <string name="filter_comment_title">过滤评论</string>
     <string name="filter_comment_summary">按内容过滤评论</string>
     <string name="keyword_group_name_at_up">\@的用户名</string>
