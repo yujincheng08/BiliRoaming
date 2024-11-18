@@ -45,6 +45,10 @@ class SearchFilterDialog(activity: Activity, prefs: SharedPreferences) :
             uidGroup.addView(keywordInputItem(uidGroup, it, EditorInfo.TYPE_CLASS_NUMBER).first)
         }
 
+        val removeRelatePromoteSwitch = switchPrefsItem(string(R.string.filter_search_remove_relate_promote))
+            .let { root.addView(it.first); it.second }
+        removeRelatePromoteSwitch.isChecked = prefs.getBoolean("search_filter_remove_relate_promote", false)
+
         setTitle(string(R.string.filter_search_title))
 
         setPositiveButton(android.R.string.ok) { _, _ ->
@@ -61,6 +65,7 @@ class SearchFilterDialog(activity: Activity, prefs: SharedPreferences) :
                 putStringSet("search_filter_keyword_upname", upNameGroup.getKeywords())
                 putStringSet("search_filter_keyword_uid", uidGroup.getKeywords())
                 putBoolean("search_filter_content_regex_mode", contentRegexMode)
+                putBoolean("search_filter_remove_relate_promote", removeRelatePromoteSwitch.isChecked)
             }.apply()
             Log.toast(string(R.string.prefs_save_success_and_reboot))
         }
