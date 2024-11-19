@@ -268,8 +268,10 @@
     <string name="block_comment_guide_summary">屏蔽视频详情页及评论页的评论引导提示</string>
     <string name="disable_auto_refresh_title">禁止首页自动刷新</string>
     <string name="disable_auto_refresh_summary">禁止首页内容在退至后台、切换其他页面一段时间后返回或热重启时自动刷新</string>
+    <!--
     <string name="disable_auto_select_title">禁止自动转到动态</string>
     <string name="disable_auto_select_summary">禁止评论带图时自动勾选转到动态</string>
+    -->
     <string name="apply_to_relate_title">同时应用于视频下方推荐</string>
     <string name="disable_vip_dm_colorful_title">过滤渐变色弹幕</string>
     <string name="disable_vip_dm_colorful_summary">渐变色（非普通彩色）弹幕显示为白色</string>

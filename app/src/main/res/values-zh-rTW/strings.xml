@@ -266,8 +266,10 @@
     <string name="block_comment_guide_summary">封鎖影片詳情頁及評論頁的評論引導提示</string>
     <string name="disable_auto_refresh_title">禁止首頁自動重新整理</string>
     <string name="disable_auto_refresh_summary">禁止首頁內容在退至後台、切換其他頁面一段時間後返回或熱重啟時自動重新整理</string>
+    <!--
     <string name="disable_auto_select_title">禁止自動轉到動態</string>
     <string name="disable_auto_select_summary">禁止評論帶圖時自動勾選轉到動態</string>
+    -->
     <string name="apply_to_relate_title">同時套用於影片下方推薦</string>
     <string name="disable_vip_dm_colorful_title">篩選漸層顏色弹幕</string>
     <string name="disable_vip_dm_colorful_summary">漸層顏色（非一般彩色）彈幕顯示為白色</string>
