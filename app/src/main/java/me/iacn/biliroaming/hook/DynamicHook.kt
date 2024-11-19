@@ -39,7 +39,7 @@ class DynamicHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val hidden = sPrefs.getBoolean("hidden", false)
         if (hidden && (needFilterDynamic || removeTopicOfAll || removeUpOfAll)) {
             dynamicMossV2?.hookAfterMethod(
-                "dynAll",
+                if (instance.useNewMossFunc) "executeDynAll" else "dynAll",
                 "com.bapis.bilibili.app.dynamic.v2.DynAllReq"
             ) { param ->
                 param.result?.let {

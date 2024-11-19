@@ -313,7 +313,8 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     private fun hookSubtitleList() {
         instance.dmMossClass?.hookAfterMethod(
-            "dmView", instance.dmViewReqClass,
+            if (instance.useNewMossFunc) "executeDmView" else "dmView",
+            instance.dmViewReqClass,
         ) { param ->
             param.result.hookSubtitleList(param.args[0])?.let { param.result = it }
         }
