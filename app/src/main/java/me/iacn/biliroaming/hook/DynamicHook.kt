@@ -52,7 +52,7 @@ class DynamicHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
             }
             dynamicMossV2?.hookBeforeMethod(
-                "dynAll",
+                if (instance.useNewMossFunc) "executeDynAll" else "dynAll",
                 "com.bapis.bilibili.app.dynamic.v2.DynAllReq",
                 instance.mossResponseHandlerClass
             ) {
@@ -70,7 +70,7 @@ class DynamicHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
         if (hidden && ((filterApplyToVideo && needFilterDynamic) || removeUpOfVideo)) {
             dynamicMossV2?.hookAfterMethod(
-                "dynVideo",
+                if (instance.useNewMossFunc) "executeDynVideo" else "dynVideo",
                 "com.bapis.bilibili.app.dynamic.v2.DynVideoReq"
             ) { param ->
                 param.result?.let {
@@ -81,7 +81,7 @@ class DynamicHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
             }
             dynamicMossV2?.hookBeforeMethod(
-                "dynVideo",
+                if (instance.useNewMossFunc) "executeDynVideo" else "dynVideo",
                 "com.bapis.bilibili.app.dynamic.v2.DynVideoReq",
                 instance.mossResponseHandlerClass
             ) {
@@ -97,13 +97,13 @@ class DynamicHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
         if (hidden && preferVideoTab) {
             dynamicMossV1?.hookAfterMethod(
-                "dynRed",
+                if (instance.useNewMossFunc) "executeDynRed" else "dynRed",
                 "com.bapis.bilibili.app.dynamic.v1.DynRedReq"
             ) { param ->
                 param.result?.callMethod("setDefaultTab", "video")
             }
             dynamicMossV2?.hookBeforeMethod(
-                "dynTab",
+                if (instance.useNewMossFunc) "executeDynTab" else "dynTab",
                 "com.bapis.bilibili.app.dynamic.v2.DynTabReq",
                 instance.mossResponseHandlerClass
             ) {
