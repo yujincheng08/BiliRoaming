@@ -52,7 +52,7 @@ class DynamicHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
             }
             dynamicMossV2?.hookBeforeMethod(
-                if (instance.useNewMossFunc) "executeDynAll" else "dynAll",
+                "dynAll",
                 "com.bapis.bilibili.app.dynamic.v2.DynAllReq",
                 instance.mossResponseHandlerClass
             ) {
