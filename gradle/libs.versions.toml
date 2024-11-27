@@ -1,7 +1,7 @@
 [versions]
-protobuf = "4.28.3"
+protobuf = "4.29.0"
 coroutine = "1.9.0"
-kotlin = "2.0.21"
+kotlin = "2.1.0"
 
 [plugins]
 kotlin = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
