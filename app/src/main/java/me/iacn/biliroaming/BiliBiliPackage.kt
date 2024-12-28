@@ -467,9 +467,11 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     null,
                     null,
                     null,
-                    true
-                ).asSequence().firstNotNullOfOrNull {
+                    false
+                ).asSequence().mapNotNull {
                     dexHelper.decodeMethodIndex(it)
+                }.firstOrNull {
+                    it.declaringClass?.name?.startsWith("okhttp3") == true
                 }?.declaringClass
             okHttp = okHttp {
                 val responseClass = "okhttp3.Response".from(classloader)
@@ -483,9 +485,11 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                         null,
                         null,
                         null,
-                        true
-                    ).asSequence().firstNotNullOfOrNull {
+                        false
+                    ).asSequence().mapNotNull {
                         dexHelper.decodeMethodIndex(it)
+                    }.firstOrNull {
+                        it.declaringClass?.name?.startsWith("okhttp3") == true
                     }?.declaringClass ?: return@okHttp
                 val requestClass = "okhttp3.Request".from(classloader)
                     ?: dexHelper.findMethodUsingString(
@@ -498,9 +502,11 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                         null,
                         null,
                         null,
-                        true
-                    ).asSequence().firstNotNullOfOrNull {
+                        false
+                    ).asSequence().mapNotNull {
                         dexHelper.decodeMethodIndex(it)
+                    }.firstOrNull {
+                        it.declaringClass?.name?.startsWith("okhttp3") == true
                     }?.declaringClass ?: return@okHttp
                 val urlClass = "okhttp3.HttpUrl".from(classloader)
                     ?: dexHelper.findMethodUsingString(
@@ -528,9 +534,11 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     null,
                     null,
                     null,
-                    true
-                ).asSequence().firstNotNullOfOrNull {
+                    false
+                ).asSequence().mapNotNull {
                     dexHelper.decodeMethodIndex(it)
+                }.firstOrNull {
+                    it.declaringClass?.name?.startsWith("okhttp3") == true
                 } ?: return@okHttp
                 request = request {
                     class_ = class_ { name = requestClass.name }
@@ -1379,10 +1387,21 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     null,
                     null,
                     null,
-                    true
-                ).asSequence().firstNotNullOfOrNull {
+                    false
+                ).asSequence().mapNotNull {
                     dexHelper.decodeMethodIndex(it)
-                }?.declaringClass ?: return@okIOBuffer
+                }.firstNotNullOfOrNull {
+                    val method = it as? Method ?: return@firstNotNullOfOrNull null
+                    val firstParameterType = method.parameterTypes.firstOrNull()
+                    val returnType = method.returnType
+                    when {
+                        method.declaringClass?.name?.startsWith("okio") != true -> null
+                        // https://github.com/square/okio/blob/okio-parent-2.0.0-RC1/okio/jvm/src/main/java/okio/Buffer.kt#L1717
+                        firstParameterType == null || firstParameterType == returnType -> it.declaringClass
+                        // https://github.com/square/okio/blob/parent-2.10.0/okio/src/commonMain/kotlin/okio/internal/Buffer.kt#L1509
+                        else -> firstParameterType
+                    }
+                } ?: return@okIOBuffer
                 class_ = class_ { name = okioBufferClass.name }
                 val okioInputStreamMethod = okioBufferClass.declaredMethods.firstOrNull {
                     it.parameterTypes.isEmpty() && it.returnType == InputStream::class.java
