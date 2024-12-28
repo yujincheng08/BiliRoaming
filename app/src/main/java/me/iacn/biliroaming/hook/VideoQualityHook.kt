@@ -12,7 +12,7 @@ class VideoQualityHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         if (halfScreenQuality != 0) {
             instance.playerPreloadHolderClass?.replaceAllMethods(instance.getPreload()) { null }
             instance.playerQualityServices().forEach { (clazz, getDefaultQnThumb) ->
-                clazz?.replaceMethod(getDefaultQnThumb) { halfScreenQuality }
+                clazz?.replaceAllMethods(getDefaultQnThumb) { halfScreenQuality }
             }
         }
         if (fullScreenQuality != 0) {
