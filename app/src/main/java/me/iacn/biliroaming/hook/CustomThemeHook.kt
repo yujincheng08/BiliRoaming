@@ -34,10 +34,6 @@ class CustomThemeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
         val allThemes =
             instance.builtInThemesClass?.getStaticObjectFieldAs<MutableMap<Long, Any>>(instance.allThemesField())
-        primaryColor.toTheme()?.let {
-            allThemes?.put(CUSTOM_THEME_ID1.toLong(), it)
-            allThemes?.put(CUSTOM_THEME_ID2.toLong(), it)
-        }
 
         instance.skinList()?.let {
             "tv.danmaku.bili.ui.theme.ThemeStoreActivity".hookBeforeMethod(
@@ -104,6 +100,17 @@ class CustomThemeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
         instance.themeReset().forEach {
             instance.themeProcessorClass?.replaceMethod(it, replacer = replacer)
+        }
+    }
+
+    override fun lateInitHook() {
+        val primaryColor = customColor
+
+        val allThemes =
+            instance.builtInThemesClass?.getStaticObjectFieldAs<MutableMap<Long, Any>>(instance.allThemesField())
+        primaryColor.toTheme()?.let {
+            allThemes?.put(CUSTOM_THEME_ID1.toLong(), it)
+            allThemes?.put(CUSTOM_THEME_ID2.toLong(), it)
         }
     }
 
@@ -205,8 +212,26 @@ class CustomThemeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         private fun @receiver:ColorInt Int.pack() = toLong() and 0xFFFFFFFF shl 32
         private fun @receiver:ColorInt Int.toTheme() = instance.themeColorsConstructor?.run {
             parameterTypes.let {
+                val garb = it[0].let { cls ->
+                    try {
+                        cls.new()
+                    } catch (err: NoSuchMethodError) {
+                        // GarbInfo in play v3.20.0
+                        cls.new(
+                            0L,     // id
+                            true,   // showDarkContent
+                            true,   // isPure
+                            "",     // homePrimaryBgPath
+                            0L,     // primary
+                            0L,     // secondary
+                            0L,     // background
+                            0L,     // textTitle
+                            0L      // actionIcon
+                        )
+                    }
+                }
                 newInstance(
-                    it[0].new(),            // garb
+                    garb,                   // garb
                     it[1].enumConstants[0], // currentDayNight ThemeDayNight#Day
                     pack(),                 // primary !!important
                     pack(),                 // secondary !!important
