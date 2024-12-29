@@ -519,9 +519,11 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                         null,
                         null,
                         null,
-                        true
-                    ).asSequence().firstNotNullOfOrNull {
+                        false
+                    ).asSequence().mapNotNull {
                         dexHelper.decodeMethodIndex(it)
+                    }.firstOrNull {
+                        it.declaringClass?.name?.startsWith("okhttp3") == true
                     }?.declaringClass ?: return@okHttp
                 responseBodyClass ?: return@okHttp
                 val getMethod = dexHelper.findMethodUsingString(
@@ -562,7 +564,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                         }?.name ?: return@method
                     }
                     string = method {
-                        name = responseBodyClass.methods.find {
+                        name = responseBodyClass.declaredMethods.find {
                             it.parameterTypes.isEmpty() && it.returnType == String::class.java
                         }?.name ?: return@method
                     }
