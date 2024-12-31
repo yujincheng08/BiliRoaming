@@ -33,7 +33,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         private const val PGC_ANY_MODEL_TYPE_URL =
             "type.googleapis.com/bilibili.app.playerunite.pgcanymodel.PGCAnyModel"
         private const val UGC_ANY_MODEL_TYPE_URL =
-                "type.googleapis.com/bilibili.app.playerunite.ugcanymodel.UGCAnyModel"
+            "type.googleapis.com/bilibili.app.playerunite.ugcanymodel.UGCAnyModel"
         private val codecMap =
             mapOf(CodeType.CODE264 to 7, CodeType.CODE265 to 12, CodeType.CODEAV1 to 13)
         val supportedPlayArcIndices = arrayOf(
@@ -325,16 +325,17 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 val respCid = responsePlayArc?.callMethodAs<Long>("getCid")
 
                 val isThai = reqCid != 0.toLong() && reqCid != respCid
-                if (
-                    param.result != null && typeUrl != PGC_ANY_MODEL_TYPE_URL && !isThai
-                    ) {
+                // if it is download request
+                // can't skip
+                if (!isDownload && param.result != null && typeUrl != PGC_ANY_MODEL_TYPE_URL && !isThai
+                ) {
                     return@hookAfterMethod
                 }
 
                 val extraContent = request.callMethodAs<Map<String, String>>("getExtraContentMap")
                 val seasonId = extraContent.getOrDefault("season_id", "0")
                 val reqEpId = extraContent.getOrDefault("ep_id", "0").toLong()
-                if (seasonId == "0" && reqEpId == 0L)
+                if (!isDownload && seasonId == "0" && reqEpId == 0L)
                     return@hookAfterMethod
                 val supplement = supplementAny?.callMethod("getValue")
                     ?.callMethodAs<ByteArray>("toByteArray")
