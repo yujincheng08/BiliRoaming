@@ -1419,6 +1419,17 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                         && View.OnLongClickListener::class.java.isAssignableFrom(it.on(classloader))
             }.let { l -> dynDescHolderListener.addAll(l.toList().map { class_ { name = it } }) }
             descCopy = descCopy {
+                classesList.filter {
+                    it.startsWith("com.bilibili.ship.theseus.ugc.intro.ugcheadline.UgcIntroductionComponent")
+                }.map { it.on(classloader) }.flatMap { c ->
+                    c.declaredMethods.filter {
+                        it.isPublic && it.parameterCount == 2 && it.parameterTypes[0] == View::class.java && it.parameterTypes[1] == ClickableSpan::class.java
+                    }
+                }.forEach {
+                    classes += class_ { name = it.declaringClass.name }
+                    methods += method { name = it.name }
+                }
+
                 val descViewHolderClass = dexHelper.findMethodUsingString(
                     "AV%d",
                     false,
@@ -1470,16 +1481,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     false
                 ).asSequence().mapNotNull {
                     dexHelper.decodeMethodIndex(it)
-                }.forEach {
-                    classes += class_ { name = it.declaringClass.name }
-                    methods += method { name = it.name }
-                }
-                classesList.filter {
-                    it.startsWith("com.bilibili.ship.theseus.ugc.intro.ugcheadline.UgcIntroductionComponent")
-                }.map { it.on(classloader) }.flatMap { c ->
-                    c.declaredMethods.filter {
-                        it.isPublic && it.parameterCount == 2 && it.parameterTypes[0] == View::class.java && it.parameterTypes[1] == ClickableSpan::class.java
-                    }
                 }.forEach {
                     classes += class_ { name = it.declaringClass.name }
                     methods += method { name = it.name }
