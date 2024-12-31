@@ -96,14 +96,8 @@ class DynamicHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
         }
         if (hidden && preferVideoTab) {
-            dynamicMossV1?.hookAfterMethod(
-                if (instance.useNewMossFunc) "executeDynRed" else "dynRed",
-                "com.bapis.bilibili.app.dynamic.v1.DynRedReq"
-            ) { param ->
-                param.result?.callMethod("setDefaultTab", "video")
-            }
             dynamicMossV2?.hookBeforeMethod(
-                if (instance.useNewMossFunc) "executeDynTab" else "dynTab",
+                "dynTab",
                 "com.bapis.bilibili.app.dynamic.v2.DynTabReq",
                 instance.mossResponseHandlerClass
             ) {
@@ -116,6 +110,39 @@ class DynamicHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         )
                     }
                     reply
+                }
+            }
+            dynamicMossV1?.hookAfterMethod(
+                if (instance.useNewMossFunc) "executeDynRed" else "dynRed",
+                "com.bapis.bilibili.app.dynamic.v1.DynRedReq"
+            ) { param ->
+                param.result?.callMethod("setDefaultTab", "video")
+            }
+
+            dynamicMossV2?.hookBeforeAllMethods(
+                if (instance.useNewMossFunc) "executeDynTab" else "dynTab"
+            ) {
+                fun modifyReply(reply: Any?): Any? {
+                    reply?.callMethod("ensureScreenTabIsMutable")
+                    reply?.callMethodAs<MutableList<Any>>("getScreenTabList")?.map {
+                        it.callMethod(
+                            "setDefaultTab",
+                            it.callMethodAs<String>("getName") == "video"
+                        )
+                    }
+                    return reply
+                }
+                val responseHandler = it.args.getOrNull(1)
+                when {
+                    responseHandler == null -> {
+                        val reply = it.invokeOriginalMethod().let(::modifyReply)
+                        reply?.let { r ->
+                            it.result = r
+                        }
+                    }
+                    instance.mossResponseHandlerClass?.isInstance(responseHandler) == true -> {
+                        responseHandler.mossResponseHandlerReplaceProxy(::modifyReply)
+                    }
                 }
             }
         }
