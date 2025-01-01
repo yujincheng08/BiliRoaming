@@ -141,7 +141,7 @@
     <string name="drawer_style_title">修改我的頁面樣式</string>
     <string name="drawer_style_summary">開啟改為列表，關閉改為按鈕</string>
     <string name="purify_share_title">淨化分享</string>
-    <string name="purify_share_summary">把分享連結中的 b23.tv 短連結換成正常連結</string>
+    <string name="purify_share_summary">把分享連結中的 bili2233.cn 短連結換成正常連結</string>
     <string name="custom_link_title">開啟自訂連結</string>
     <string name="custom_link_summary">僅支援 bilibili:// 開頭的格式</string>
     <string name="add_custom_button_title">在【我的】頁面新增自訂按鈕</string>
