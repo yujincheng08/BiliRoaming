@@ -81,7 +81,7 @@ class DynamicHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
             }
             dynamicMossV2?.hookBeforeMethod(
-                if (instance.useNewMossFunc) "executeDynVideo" else "dynVideo",
+                "dynVideo",
                 "com.bapis.bilibili.app.dynamic.v2.DynVideoReq",
                 instance.mossResponseHandlerClass
             ) {
