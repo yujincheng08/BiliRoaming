@@ -14,14 +14,24 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
         "com.bilibili.lib.blconfig.ConfigManager\$Companion".findClassOrNull(mClassLoader)?.run {
             hookBeforeMethod(
-                    "isHitFF",
-                    String::class.java
+                "isHitFF",
+                String::class.java
             ) { param ->
                 (param.args[0] as String).run {
                     if (this == "ff_background_use_system_media_controls") {
                         param.result = true
                     }
                 }
+            }
+        }
+
+        "com.bilibili.lib.dd.DeviceDecision".findClassOrNull(mClassLoader)?.hookBeforeMethod(
+            "getBoolean",
+            String::class.java,
+            Boolean::class.javaPrimitiveType
+        ) { param ->
+            if (param.args[0] == "dd_enable_system_media_control") {
+                param.result = true
             }
         }
 
