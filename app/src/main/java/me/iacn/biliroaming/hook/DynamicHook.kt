@@ -38,19 +38,6 @@ class DynamicHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
         val hidden = sPrefs.getBoolean("hidden", false)
         if (hidden && (needFilterDynamic || removeTopicOfAll || removeUpOfAll)) {
-            dynamicMossV2?.hookAfterMethod(
-                if (instance.useNewMossFunc) "executeDynAll" else "dynAll",
-                "com.bapis.bilibili.app.dynamic.v2.DynAllReq"
-            ) { param ->
-                param.result?.let {
-                    if (removeTopicOfAll)
-                        it.callMethod("clearTopicList")
-                    if (removeUpOfAll)
-                        it.callMethod("clearUpList")
-                    if (needFilterDynamic)
-                        filterDynamic(it)
-                }
-            }
             dynamicMossV2?.hookBeforeMethod(
                 "dynAll",
                 "com.bapis.bilibili.app.dynamic.v2.DynAllReq",
@@ -69,17 +56,6 @@ class DynamicHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
         }
         if (hidden && ((filterApplyToVideo && needFilterDynamic) || removeUpOfVideo)) {
-            dynamicMossV2?.hookAfterMethod(
-                if (instance.useNewMossFunc) "executeDynVideo" else "dynVideo",
-                "com.bapis.bilibili.app.dynamic.v2.DynVideoReq"
-            ) { param ->
-                param.result?.let {
-                    if (removeUpOfVideo)
-                        it.callMethod("clearVideoUpList")
-                    if (filterApplyToVideo && needFilterDynamic)
-                        filterDynamic(it)
-                }
-            }
             dynamicMossV2?.hookBeforeMethod(
                 "dynVideo",
                 "com.bapis.bilibili.app.dynamic.v2.DynVideoReq",
@@ -117,33 +93,6 @@ class DynamicHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 "com.bapis.bilibili.app.dynamic.v1.DynRedReq"
             ) { param ->
                 param.result?.callMethod("setDefaultTab", "video")
-            }
-
-            dynamicMossV2?.hookBeforeAllMethods(
-                if (instance.useNewMossFunc) "executeDynTab" else "dynTab"
-            ) {
-                fun modifyReply(reply: Any?): Any? {
-                    reply?.callMethod("ensureScreenTabIsMutable")
-                    reply?.callMethodAs<MutableList<Any>>("getScreenTabList")?.map {
-                        it.callMethod(
-                            "setDefaultTab",
-                            it.callMethodAs<String>("getName") == "video"
-                        )
-                    }
-                    return reply
-                }
-                val responseHandler = it.args.getOrNull(1)
-                when {
-                    responseHandler == null -> {
-                        val reply = it.invokeOriginalMethod().let(::modifyReply)
-                        reply?.let { r ->
-                            it.result = r
-                        }
-                    }
-                    instance.mossResponseHandlerClass?.isInstance(responseHandler) == true -> {
-                        responseHandler.mossResponseHandlerReplaceProxy(::modifyReply)
-                    }
-                }
             }
         }
     }
