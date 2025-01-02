@@ -1,6 +1,6 @@
 [versions]
-protobuf = "4.29.1"
-coroutine = "1.9.0"
+protobuf = "4.29.2"
+coroutine = "1.10.1"
 kotlin = "2.1.0"
 
 [plugins]
