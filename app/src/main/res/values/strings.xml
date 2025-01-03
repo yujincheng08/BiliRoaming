@@ -158,7 +158,8 @@
     <string name="customize_dynamic_summary">支持移除同城及校园标签，支持移除话题及最常访问，支持按类型和关键词过滤动态</string>
     <string name="customize_dynamic_prefer_video_tab">首选视频标签</string>
     <string name="customize_dynamic_all_rm_topic_title">移除热门话题（综合）</string>
-    <string name="customize_dynamic_all_rm_up_title">移除最常访问（综合）</string>
+    <string name="customize_dynamic_all_rm_up_title">移除最常访问UP（综合）</string>
+    <string name="customize_dynamic_all_rm_live_title">移除最常访问直播（综合）</string>
     <string name="customize_dynamic_video_rm_up_title">移除最常访问（视频）</string>
     <string name="customize_dynamic_filter_apply_to_video">过滤设置同时作用于视频分区</string>
     <string name="customize_dynamic_rm_blocked_title">屏蔽无权查看动态(例如充电专属)</string>

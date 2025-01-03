@@ -26,6 +26,7 @@ class DynamicHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
     private val removeTopicOfAll = sPrefs.getBoolean("customize_dynamic_all_rm_topic", false)
     private val removeUpOfAll = sPrefs.getBoolean("customize_dynamic_all_rm_up", false)
+    private val removeLiveOfAll = sPrefs.getBoolean("customize_dynamic_all_rm_live", false)
     private val removeUpOfVideo = sPrefs.getBoolean("customize_dynamic_video_rm_up", false)
     private val preferVideoTab = sPrefs.getBoolean("prefer_video_tab", false)
     private val filterApplyToVideo = sPrefs.getBoolean("filter_apply_to_video", false)
@@ -37,21 +38,43 @@ class DynamicHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     override fun startHook() {
         val hidden = sPrefs.getBoolean("hidden", false)
-        if (hidden && (needFilterDynamic || removeTopicOfAll || removeUpOfAll)) {
+        if (hidden && (needFilterDynamic || removeTopicOfAll || removeUpOfAll || removeLiveOfAll)) {
             dynamicMossV2?.hookBeforeMethod(
                 "dynAll",
                 "com.bapis.bilibili.app.dynamic.v2.DynAllReq",
                 instance.mossResponseHandlerClass
-            ) {
-                it.args[1] = it.args[1].mossResponseHandlerProxy { result ->
-                    result?.let {
-                        if (removeTopicOfAll)
-                            it.callMethod("clearTopicList")
-                        if (removeUpOfAll)
-                            it.callMethod("clearUpList")
-                        if (needFilterDynamic)
-                            filterDynamic(it)
+            ) { param ->
+                param.args[1] = param.args[1].mossResponseHandlerProxy { reply ->
+                    reply ?: return@mossResponseHandlerProxy
+                    Log.d("upList: ${reply.callMethod("getUpList")}")
+                    if (removeTopicOfAll)
+                        reply.callMethod("clearTopicList")
+                    if (removeUpOfAll || removeLiveOfAll) {
+                        reply.callMethod("getUpList")?.runCatching UpList@{
+                            val upList = this@UpList
+                            val firstList =
+                                upList.callMethodAs("getListList") ?: emptyList<Any>()
+                            val secondList =
+                                upList.callMethodAs("getListSecondList") ?: emptyList<Any>()
+                            val allUpItems = firstList + secondList
+                            val newItems = allUpItems.filter { item ->
+                                val liveState = item.callMethodAs<Int>("getLiveStateValue")
+                                val isLive = liveState > 0
+                                when {
+                                    removeUpOfAll && removeLiveOfAll -> false
+                                    removeUpOfAll -> isLive
+                                    else -> !isLive
+                                }
+                            }.onEachIndexed { index, item ->
+                                item.callMethod("setPos", index + 1L)
+                            }
+                            upList.callMethod("clearList")
+                            upList.callMethod("clearListSecond")
+                            upList.callMethod("addAllList", newItems)
+                        }?.onFailure { Log.e(it) }
                     }
+                    if (needFilterDynamic)
+                        filterDynamic(reply)
                 }
             }
         }
