@@ -2,6 +2,7 @@ package me.iacn.biliroaming.hook
 
 import android.content.SharedPreferences
 import me.iacn.biliroaming.utils.*
+import java.lang.reflect.Proxy
 import java.util.regex.Pattern
 
 class EnvHook(classLoader: ClassLoader) : BaseHook(classLoader) {
@@ -39,6 +40,31 @@ class EnvHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     ?: result.edit().remove(config.key).apply()
             }
         }
+
+        "com.bilibili.lib.blconfig.internal.OverrideConfig".findClassOrNull(mClassLoader)
+            ?.hookBeforeAllConstructors { param ->
+                val delegate = param.args.getOrNull(0) ?: return@hookBeforeAllConstructors
+                val realConfig = param.args.getOrNull(1) ?: return@hookBeforeAllConstructors
+                val delegateClass = delegate.javaClass
+                param.args[0] = Proxy.newProxyInstance(
+                    delegateClass.classLoader,
+                    delegateClass.interfaces
+                ) { _, m, a ->
+                    val args = a ?: emptyArray()
+                    if (m.name == "getConfig") {
+                        var result: Any? = null
+                        val key = args[0]
+                        for (config in configSet) {
+                            if (sPrefs.getBoolean(config.config, false) && config.key == key) {
+                                result = realConfig.callMethodOrNull("get", *args)
+                            }
+                        }
+                        result ?: m(delegate, *args)
+                    } else {
+                        m(delegate, *args)
+                    }
+                }
+            }
 
 //        // Disable tinker
 //        "com.tencent.tinker.loader.app.TinkerApplication".findClass(mClassLoader)?.hookBeforeAllConstructors { param ->
