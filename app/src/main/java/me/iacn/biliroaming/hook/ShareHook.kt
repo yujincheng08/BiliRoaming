@@ -12,7 +12,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 class ShareHook(classLoader: ClassLoader) : BaseHook(classLoader) {
-    private val contentUrlPattern = Regex("""[\s\S]*(https?://bili2233\.cn/\S*)$""")
+    private val contentUrlPattern = Regex("""[\s\S]*(https?://(?:bili2233\.cn|b23\.tv)/\S*)$""")
 
     private fun String.resolveB23URL(): String {
         val conn = URL(this).openConnection() as HttpURLConnection
@@ -66,7 +66,7 @@ class ShareHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             if (purifyShareEnabled) {
                 hookAfterMethod("getLink") { param ->
                     (param.result as? String)?.takeIf {
-                        it.startsWith("https://bili2233.cn") || it.startsWith("http://bili2233.cn")
+                        it.startsWith("https://bili2233.cn") || it.startsWith("http://bili2233.cn") || it.startsWith("https://b23.tv") || it.startsWith("http://b23.tv")
                     }?.let {
                         val targetUrl = Uri.parse(it).buildUpon().query("").build().toString()
                         param.result = targetUrl.resolveB23URL().also { r -> param.thisObject.setObjectField("link", r) }
@@ -79,7 +79,7 @@ class ShareHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     }?.let { contentUrl ->
                         val resolvedUrl = (param.thisObject.getObjectField("link")?.let { it as String } ?: contentUrl)
                             .let {
-                                if (it.startsWith("https://bili2233.cn") || it.startsWith("http://bili2233.cn"))
+                                if (it.startsWith("https://bili2233.cn") || it.startsWith("http://bili2233.cn") || it.startsWith("https://b23.tv") || it.startsWith("http://b23.tv"))
                                     it.resolveB23URL()
                                 else it
                             }
