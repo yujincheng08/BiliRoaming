@@ -416,9 +416,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     val respCid = responsePlayArc?.callMethodAs<Long>("getCid")
 
                     val isThai = reqCid != 0.toLong() && reqCid != respCid
-                    if (
-                        param.result != null && typeUrl != PGC_ANY_MODEL_TYPE_URL && !isThai
-                    ) {
+                    if (originalResp != null && typeUrl != PGC_ANY_MODEL_TYPE_URL && !isThai) {
                         return@mossResponseHandlerReplaceProxy null
                     }
 
