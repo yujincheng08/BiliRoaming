@@ -18,5 +18,37 @@ class VideoQualityHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         if (fullScreenQuality != 0) {
             instance.playerSettingHelperClass?.replaceMethod(instance.getDefaultQn()) { fullScreenQuality }
         }
+
+        if (halfScreenQuality != 0 || fullScreenQuality != 0) {
+            instance.autoSupremumQualityClass?.hookBeforeConstructor(
+                *Array(6) { Int::class.javaPrimitiveType }
+            ) { param ->
+                if (halfScreenQuality != 0) {
+                    param.args[0] = halfScreenQuality       // loginHalf
+
+                    param.args[3] = halfScreenQuality       // unloginHalf
+                    param.args[4] = halfScreenQuality       // unloginFull
+                    param.args[5] = halfScreenQuality       // unloginMobileFull
+                }
+                if (fullScreenQuality != 0) {
+                    param.args[1] = fullScreenQuality       // loginFull
+                    param.args[2] = fullScreenQuality       // loginMobileFull
+                }
+            }
+            instance.qualityStrategyProviderClass?.hookBeforeMethod(
+                instance.selectQuality(),
+                instance.autoSupremumQualityClass,
+                Boolean::class.javaPrimitiveType,           // isFullscreen
+                Boolean::class.javaPrimitiveType            // isVideoPortrait
+            ) { param ->
+                // videoQuality = when {
+                //     isVideoPortrait && isFullscreen -> loginFull
+                //     isVideoPortrait && !isFullscreen -> unloginFull
+                //     isFullscreen -> loginHalf
+                //     else -> unloginHalf
+                // }
+                param.args[2] = true
+            }
+        }
     }
 }

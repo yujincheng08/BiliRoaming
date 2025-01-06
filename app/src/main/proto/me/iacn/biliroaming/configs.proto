@@ -228,6 +228,15 @@ message PlayerSettingHelper {
   optional Method get_default_qn = 2;
 }
 
+message AutoSupremumQuality {
+  optional Class class = 1;
+}
+
+message QualityStrategyProvider {
+  optional Class class = 1;
+  optional Method selectQuality = 2;
+}
+
 message LiveRtcHelper {
   optional Class live_rtc_enable_class = 1;
   optional Method live_rtc_enable_method = 2;
@@ -316,4 +325,6 @@ message HookInfo {
   optional Comment3Copy comment3_copy = 91;
   repeated PlayerQualityService player_quality_service = 92;
   optional Class play_speed_manager = 93;
+  optional AutoSupremumQuality autoSupremumQuality = 94;
+  optional QualityStrategyProvider qualityStrategyProvider = 95;
 }

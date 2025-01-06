@@ -133,6 +133,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val latestVersionExceptionClass by Weak { "tv.danmaku.bili.update.internal.exception.LatestVersionException" from mClassLoader }
     val playerPreloadHolderClass by Weak { mHookInfo.playerPreloadHolder.class_ from mClassLoader }
     val playerSettingHelperClass by Weak { mHookInfo.playerSettingHelper.class_ from mClassLoader }
+    val autoSupremumQualityClass by Weak { mHookInfo.autoSupremumQuality.class_ from mClassLoader }
+    val qualityStrategyProviderClass by Weak { mHookInfo.qualityStrategyProvider.class_ from mClassLoader }
     val liveRtcEnableClass by Weak { mHookInfo.liveRtcHelper.liveRtcEnableClass from mClassLoader }
     val playURLMossClass by Weak { "com.bapis.bilibili.app.playurl.v1.PlayURLMoss" from mClassLoader }
     val playViewReqClass by Weak { "com.bapis.bilibili.app.playurl.v1.PlayViewReq" from mClassLoader }
@@ -312,6 +314,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         mHookInfo.playerQualityServiceList.map { it.class_.from(mClassLoader) to it.getDefaultQnThumb.orNull }
 
     fun getDefaultQn() = mHookInfo.playerSettingHelper.getDefaultQn.orNull
+
+    fun selectQuality() = mHookInfo.qualityStrategyProvider.selectQuality.orNull
 
     fun liveRtcEnable() = mHookInfo.liveRtcHelper.liveRtcEnableMethod.orNull
 
@@ -1845,6 +1849,73 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 } ?: return@playerSettingHelper
                 class_ = class_ { name = getDefaultQnMethod.declaringClass.name }
                 getDefaultQn = method { name = getDefaultQnMethod.name }
+            }
+            val autoSupremumQualityClass = dexHelper.findMethodUsingString(
+                "AutoSupremumQuality(loginHalfScreen=",
+                false,
+                -1,
+                -1,
+                null,
+                -1,
+                null,
+                null,
+                null,
+                true
+            ).asSequence().firstNotNullOfOrNull {
+                dexHelper.decodeMethodIndex(it)
+            }?.declaringClass?.also {
+                autoSupremumQuality = autoSupremumQuality {
+                    class_ = class_ {
+                        name = it.name
+                    }
+                }
+            }
+            qualityStrategyProvider = qualityStrategyProvider {
+                val buildStrategyMethod = dexHelper.findMethodUsingString(
+                    "Quality Strategy share:",
+                    false,
+                    -1,
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).asSequence().firstNotNullOfOrNull {
+                    dexHelper.decodeMethodIndex(it)
+                } ?: return@qualityStrategyProvider
+                val providerClass = buildStrategyMethod.declaringClass
+                val selectQualityMethod = providerClass.declaredMethods.asSequence().filter {
+                    it.isPrivate && it.parameterCount == 3
+                            && it.parameterTypes.contentEquals(
+                        arrayOf(
+                            autoSupremumQualityClass,
+                            Boolean::class.javaPrimitiveType,
+                            Boolean::class.javaPrimitiveType
+                        )
+                    )
+                }.firstNotNullOfOrNull { method ->
+                    val methodIdx = dexHelper.encodeMethodIndex(method)
+                    val syntheticMethods = dexHelper.findMethodInvoked(
+                        methodIdx,
+                        dexHelper.encodeClassIndex(Int::class.javaPrimitiveType!!),
+                        4,
+                        null,
+                        dexHelper.encodeClassIndex(providerClass),
+                        null,
+                        null,
+                        null,
+                        true
+                    )
+                    if (syntheticMethods.isEmpty()) {
+                        method
+                    } else {
+                        null
+                    }
+                } ?: return@qualityStrategyProvider
+                class_ = class_ { name = providerClass.name }
+                selectQuality = method { name = selectQualityMethod.name }
             }
             liveRtcHelper = liveRtcHelper {
                 val liveRtcEnable = dexHelper.findMethodUsingString(
