@@ -156,6 +156,9 @@ message SignQuery {
 message Section {
   optional Class class = 1;
   optional Method like = 2;
+  optional Class view_holder = 3;
+  optional Method bind_view = 4;
+  optional Method get_root = 5;
 }
 
 message Drawer {
@@ -263,6 +266,10 @@ message Comment3Copy {
   optional int32 comment3ViewIndex = 3;
 }
 
+message Continuation {
+  optional Class class = 1;
+}
+
 message HookInfo {
   int64 last_update_time = 1;
   optional MapIds map_ids = 2;
@@ -327,4 +334,5 @@ message HookInfo {
   optional Class play_speed_manager = 93;
   optional AutoSupremumQuality autoSupremumQuality = 94;
   optional QualityStrategyProvider qualityStrategyProvider = 95;
+  optional Continuation continuation = 96;
 }

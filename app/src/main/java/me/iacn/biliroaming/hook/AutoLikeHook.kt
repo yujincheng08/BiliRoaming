@@ -16,23 +16,52 @@ class AutoLikeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
         Log.d("startHook: AutoLike")
 
-        val likeId = getId("frame_recommend")
-        val like1 = getId("frame1")
+        val likeIds = arrayOf(
+            "frame_recommend",
+            "frame1",
+            "frame_like"
+        ).map { getId(it) }
 
-        instance.sectionClass?.hookAfterAllMethods(instance.likeMethod()) { param ->
-            val sec = param.thisObject ?: return@hookAfterAllMethods
-            val (aid, like) = detail ?: return@hookAfterAllMethods
-            if (likedVideos.contains(aid)) return@hookAfterAllMethods
-            likedVideos.add(aid)
-            val likeView = sec.javaClass.declaredFields.filter {
-                View::class.java.isAssignableFrom(it.type)
-            }.firstNotNullOfOrNull {
-                sec.getObjectFieldOrNullAs<View>(it.name)?.takeIf { v ->
-                    v.id == likeId || v.id == like1
+        instance.likeMethod()?.let { likeMethod ->
+            instance.sectionClass?.hookAfterAllMethods(likeMethod) { param ->
+                val sec = param.thisObject ?: return@hookAfterAllMethods
+                if (!shouldClickLike()) {
+                    return@hookAfterAllMethods
                 }
-            }
-            if (like == 0)
+                val likeView = sec.javaClass.declaredFields.filter {
+                    View::class.java.isAssignableFrom(it.type)
+                }.firstNotNullOfOrNull {
+                    sec.getObjectFieldOrNullAs<View>(it.name)?.takeIf { v ->
+                        v.id in likeIds
+                    }
+                }
                 likeView?.callOnClick()
+            }
         }
+        instance.bindViewMethod()?.let { bindViewMethod ->
+            instance.sectionClass?.hookAfterMethod(
+                bindViewMethod,
+                instance.viewHolderClass,
+                instance.continuationClass
+            ) { param ->
+                if (!shouldClickLike()) {
+                    return@hookAfterMethod
+                }
+                val root = param.args[0].callMethodAs<View>(instance.getRootMethod())
+                val likeView = likeIds.firstNotNullOfOrNull { id ->
+                    root.findViewById(id)
+                }
+                likeView?.callOnClick()
+            }
+        }
+    }
+
+    private fun shouldClickLike(): Boolean {
+        val (aid, like) = detail ?: return false
+        if (likedVideos.contains(aid) || like != 0) {
+            return false
+        }
+        likedVideos.add(aid)
+        return true
     }
 }
