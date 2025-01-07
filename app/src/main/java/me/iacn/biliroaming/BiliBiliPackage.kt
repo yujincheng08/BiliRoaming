@@ -48,6 +48,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val fastJsonClass by Weak { mHookInfo.fastJson.class_ from mClassLoader }
     val bangumiUniformSeasonClass by Weak { mHookInfo.bangumiSeason from mClassLoader }
     val sectionClass by Weak { mHookInfo.section.class_ from mClassLoader }
+    val viewHolderClass by Weak { mHookInfo.section.viewHolder from mClassLoader }
     val retrofitResponseClass by Weak { mHookInfo.retrofitResponse from mClassLoader }
     val themeHelperClass by Weak { mHookInfo.themeHelper.class_ from mClassLoader }
     val themeIdHelperClass by Weak { mHookInfo.themeIdHelper.class_ from mClassLoader }
@@ -165,6 +166,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val searchAllResponseClass by Weak { "com.bapis.bilibili.polymer.app.search.v1.SearchAllResponse" from mClassLoader }
     val searchVideoCardClass by Weak { "com.bapis.bilibili.polymer.app.search.v1.SearchVideoCard" from mClassLoader }
     val playSpeedManager by Weak { mHookInfo.playSpeedManager from mClassLoader }
+    val continuationClass by Weak { mHookInfo.continuation.class_ from mClassLoader }
 
     // for v8.17.0+
     val useNewMossFunc = instance.viewMossClass?.declaredMethods?.any {
@@ -221,6 +223,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     fun requestField() = mHookInfo.okHttp.response.request.orNull
 
     fun likeMethod() = mHookInfo.section.like.orNull
+
+    fun bindViewMethod() = mHookInfo.section.bindView.orNull
+
+    fun getRootMethod() = mHookInfo.section.getRoot.orNull
 
     fun themeName() = mHookInfo.themeName.field.orNull
 
@@ -783,6 +789,48 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 }
             }
             section = section {
+                val kingPositionComponentClass = dexHelper.findMethodUsingString(
+                    "LikeClicked(view=",
+                    false,
+                    -1,
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).asSequence().firstNotNullOfOrNull {
+                    dexHelper.decodeMethodIndex(it)?.declaringClass?.run {
+                        var outerClass = this
+                        while (outerClass.declaringClass != null) {
+                            outerClass = outerClass.declaringClass!!
+                        }
+                        outerClass
+                    }
+                }
+                val genericInterface = kingPositionComponentClass?.genericInterfaces?.getOrNull(0)
+                val parameterType = (genericInterface as? ParameterizedType)?.actualTypeArguments?.getOrNull(0)
+                val viewHolderClass = if (parameterType is ParameterizedType) {
+                    parameterType.rawType
+                } else {
+                    parameterType
+                }?.let { it as? Class<*> }
+                val getRootMethod = viewHolderClass?.declaredMethods?.firstOrNull {
+                    it.returnType == View::class.java && it.parameterCount == 0
+                }
+                val bindViewMethod = kingPositionComponentClass?.declaredMethods?.firstOrNull {
+                    it.isPublic && it.parameterCount == 2
+                            && it.parameterTypes[0] == viewHolderClass
+                }
+                if (kingPositionComponentClass != null && viewHolderClass != null && bindViewMethod != null && getRootMethod != null) {
+                    class_ = class_ { name = kingPositionComponentClass.name }
+                    viewHolder = class_ { name = viewHolderClass.name }
+                    bindView = method { name = bindViewMethod.name }
+                    getRoot = method { name = getRootMethod.name }
+                    return@section
+                }
+
                 val sectionClass = dexHelper.findMethodUsingString(
                     "ActionViewHolder",
                     false,
@@ -797,7 +845,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 ).firstOrNull()?.let {
                     dexHelper.decodeMethodIndex(it)
                 }?.declaringClass ?: return@section
-                val likeMethod = sectionClass.superclass?.declaredMethods?.find {
+                val likeMethod = sectionClass?.superclass?.declaredMethods?.find {
                     it.parameterTypes.size == 1 && it.returnType == Void.TYPE && !it.isFinal
                 } ?: return@section
                 class_ = class_ { name = sectionClass.name }
@@ -2041,6 +2089,25 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 dexHelper.decodeMethodIndex(it)?.declaringClass
             }?.let {
                 publishToFollowingConfig = class_ { name = it.name }
+            }
+
+            continuation = continuation {
+                val continuationImpl = dexHelper.findMethodUsingString(
+                    "create(Continuation) has not been overridden",
+                    false,
+                    -1,
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).asSequence().firstNotNullOfOrNull {
+                    dexHelper.decodeMethodIndex(it)?.declaringClass
+                } ?: return@continuation
+                val continuation = continuationImpl.interfaces.firstOrNull() ?: return@continuation
+                class_ = class_ { name = continuation.name }
             }
 
             dexHelper.close()
