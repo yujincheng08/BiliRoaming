@@ -536,14 +536,27 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
 
         fun MutableList<Any>.filterUnite() = removeAll {
-            val allowTypeList = mutableListOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+
+            val allowTypeList = mutableListOf(
+                2,      // AV(2),
+                3,      // BANGUMI(3),
+                4,      // RESOURCE(4),
+                5,      // GAME(5),
+                6,      // CM(6),
+                7,      // LIVE(7),
+                8,      // BANGUMI_AV(8),
+                9,      // AI_CARD(9),
+                13,     // BANGUMI_UGC(13),
+                14,     // SPECIAL(14),
+                15      // COURSE(15),
+            )
             var shouldFiltered = false
             allowTypeList.removeAll { digit ->
                 (removeRelateOnlyAv && digit != 1) || (removeRelatePromote && digit in listOf(
-                    3, // Resource, like mall
-                    4, // GAME
-                    5, // CM
-                    10 // SPECIAL
+                    4, // Resource, like mall
+                    5, // GAME
+                    6, // CM
+                    14 // SPECIAL
                 ))
             }
             // av filter
