@@ -261,12 +261,14 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             var supportDrawerStyle = true
             val supportRevertLive = versionCode < 6830000
             var supportAddTag = true
+            var supportCustomTheme = true
             when (platform) {
                 "android_hd" -> {
                     supportCustomizeTab = false
                     supportDrawer = false
                     supportDrawerStyle = false
                     supportAddTag = false
+                    supportCustomTheme = false
                 }
             }
             val supportSplashHook = instance.brandSplashClass != null
@@ -323,6 +325,9 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 disablePreference("add_bangumi")
                 disablePreference("add_korea")
                 disablePreference("add_movie")
+            }
+            if (!supportCustomTheme) {
+                disablePreference("custom_theme")
             }
         }
 

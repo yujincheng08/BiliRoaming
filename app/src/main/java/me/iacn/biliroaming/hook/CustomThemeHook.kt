@@ -104,6 +104,8 @@ class CustomThemeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     override fun lateInitHook() {
+        if (!sPrefs.getBoolean("custom_theme", false)) return
+
         val primaryColor = customColor
 
         val allThemes =
