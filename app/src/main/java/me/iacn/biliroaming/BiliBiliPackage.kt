@@ -1945,22 +1945,18 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     )
                 }.firstNotNullOfOrNull { method ->
                     val methodIdx = dexHelper.encodeMethodIndex(method)
-                    val syntheticMethods = dexHelper.findMethodInvoked(
+                    val isConnectedMethods = dexHelper.findMethodInvoking(
                         methodIdx,
                         dexHelper.encodeClassIndex(Int::class.javaPrimitiveType!!),
-                        4,
+                        1,
                         null,
-                        dexHelper.encodeClassIndex(providerClass),
-                        null,
+                        -1,
+                        longArrayOf(dexHelper.encodeClassIndex(Context::class.java)),
                         null,
                         null,
                         true
                     )
-                    if (syntheticMethods.isEmpty()) {
-                        method
-                    } else {
-                        null
-                    }
+                    if (isConnectedMethods.isEmpty()) method else null
                 } ?: return@qualityStrategyProvider
                 class_ = class_ { name = providerClass.name }
                 selectQuality = method { name = selectQualityMethod.name }
