@@ -1935,8 +1935,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 } ?: return@qualityStrategyProvider
                 val providerClass = buildStrategyMethod.declaringClass
                 val selectQualityMethod = providerClass.declaredMethods.asSequence().filter {
-                    it.isPrivate && it.parameterCount == 3
-                            && it.parameterTypes.contentEquals(
+                    it.parameterCount == 3 && it.parameterTypes.contentEquals(
                         arrayOf(
                             autoSupremumQualityClass,
                             Boolean::class.javaPrimitiveType,
