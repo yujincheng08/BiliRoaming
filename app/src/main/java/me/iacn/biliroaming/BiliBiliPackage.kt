@@ -167,6 +167,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val searchVideoCardClass by Weak { "com.bapis.bilibili.polymer.app.search.v1.SearchVideoCard" from mClassLoader }
     val playSpeedManager by Weak { mHookInfo.playSpeedManager from mClassLoader }
     val continuationClass by Weak { mHookInfo.continuation.class_ from mClassLoader }
+    val vipQualityTrialService by Weak { mHookInfo.vipQualityTrialService.class_ from mClassLoader }
 
     // for v8.17.0+
     val useNewMossFunc = instance.viewMossClass?.declaredMethods?.any {
@@ -284,7 +285,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     fun cancelShowToast() = mHookInfo.toastHelper.cancel.orNull
 
-    fun canTryWatchVipQuality() = mHookInfo.canTryWatchVipQuality.orNull
+    fun canTrialMethod() = mHookInfo.vipQualityTrialService.canTrial.orNull
 
     fun setInvalidTips() = commentInvalidFragmentClass?.declaredMethods?.find { m ->
         m.parameterTypes.let { it.size == 2 && it[0] == commentInvalidFragmentClass && it[1].name == "kotlin.Pair" }
@@ -1645,22 +1646,6 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     dexHelper.decodeMethodIndex(it)
                 }?.declaringClass?.name ?: return@class_
             }
-            canTryWatchVipQuality = method {
-                name = dexHelper.findMethodUsingString(
-                    "user is vip, cannot trywatch",
-                    false,
-                    dexHelper.encodeClassIndex(Boolean::class.java),
-                    -1,
-                    null,
-                    -1,
-                    null,
-                    null,
-                    null,
-                    true
-                ).firstOrNull()?.let {
-                    dexHelper.decodeMethodIndex(it)
-                }?.name ?: return@method
-            }
             dexHelper.findMethodUsingString(
                 "player.player.story-button.0.player",
                 false,
@@ -2103,6 +2088,42 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 } ?: return@continuation
                 val continuation = continuationImpl.interfaces.firstOrNull() ?: return@continuation
                 class_ = class_ { name = continuation.name }
+            }
+            vipQualityTrialService = vipQualityTrialService {
+                val serviceClass = dexHelper.findMethodUsingString(
+                    "go to buy vip: ",
+                    false,
+                    -1,
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    false
+                ).asSequence().mapNotNull {
+                    dexHelper.decodeMethodIndex(it)?.declaringClass
+                }.firstOrNull {
+                    it.name.startsWith("com.bilibili")
+                } ?: return@vipQualityTrialService
+                val canTrialMethod = serviceClass.declaredMethods.asSequence().filter {
+                    it.returnType == Boolean::class.javaPrimitiveType && it.parameterCount == 0
+                }.firstNotNullOfOrNull { candidate ->
+                    val getTrialInfoMethods = dexHelper.findMethodInvoking(
+                        dexHelper.encodeMethodIndex(candidate),
+                        -1,
+                        0,
+                        null,
+                        dexHelper.encodeClassIndex(serviceClass),
+                        null,
+                        null,
+                        null,
+                        true
+                    )
+                    if (getTrialInfoMethods.isNotEmpty()) candidate else null
+                } ?: return@vipQualityTrialService
+                class_ = class_ { name = serviceClass.name }
+                canTrial = method { name = canTrialMethod.name }
             }
 
             dexHelper.close()
