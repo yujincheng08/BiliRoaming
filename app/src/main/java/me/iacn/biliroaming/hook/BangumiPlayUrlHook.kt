@@ -339,7 +339,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     return@hookAfterMethod
                 val supplement = supplementAny?.callMethod("getValue")
                     ?.callMethodAs<ByteArray>("toByteArray")
-                    ?.let { PlayViewReply.parseFrom(it) } ?: playViewReply {}
+                    ?.runCatchingOrNull { PlayViewReply.parseFrom(this) } ?: playViewReply {}
                 if (needProxyUnite(response, supplement) || isThai) {
                     try {
                         val serializedRequest = request.callMethodAs<ByteArray>("toByteArray")
@@ -428,7 +428,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         return@mossResponseHandlerReplaceProxy null
                     val supplement = supplementAny?.callMethod("getValue")
                         ?.callMethodAs<ByteArray>("toByteArray")
-                        ?.let { PlayViewReply.parseFrom(it) } ?: playViewReply {}
+                        ?.runCatchingOrNull { PlayViewReply.parseFrom(this) } ?: playViewReply {}
                     val newResponse = if (needProxyUnite(response, supplement) || isThai) {
                         try {
                             val serializedRequest = request.callMethodAs<ByteArray>("toByteArray")
