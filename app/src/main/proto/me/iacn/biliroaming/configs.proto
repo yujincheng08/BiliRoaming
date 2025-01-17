@@ -275,6 +275,21 @@ message VipQualityTrialService {
   optional Method canTrial = 2;
 }
 
+message LivePlayUrlSelectUtil {
+  optional Class class = 1;
+  optional Method parseUri = 2;
+}
+
+message LiveRTCSourceServiceImpl {
+  optional Class class = 1;
+  optional Method switchAuto = 2;
+}
+
+message LiveQuality {
+  optional LivePlayUrlSelectUtil selectUtil = 1;
+  optional LiveRTCSourceServiceImpl sourceService = 2;
+}
+
 message HookInfo {
   int64 last_update_time = 1;
   optional MapIds map_ids = 2;
@@ -340,4 +355,5 @@ message HookInfo {
   optional QualityStrategyProvider qualityStrategyProvider = 95;
   optional Continuation continuation = 96;
   optional VipQualityTrialService vipQualityTrialService = 97;
+  optional LiveQuality liveQuality = 98;
 }

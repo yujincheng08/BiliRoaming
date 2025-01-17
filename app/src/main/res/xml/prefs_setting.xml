@@ -237,6 +237,14 @@
             android:summary="@string/full_screen_quality_summary"
             android:title="@string/full_screen_quality_title" />
 
+        <ListPreference
+            android:defaultValue="0"
+            android:entries="@array/live_quality_entries"
+            android:entryValues="@array/live_quality_values"
+            android:key="live_quality"
+            android:summary="@string/live_quality_summary"
+            android:title="@string/live_quality_title"/>
+
         <SwitchPreference
             android:key="block_comment_guide"
             android:summary="@string/block_comment_guide_summary"

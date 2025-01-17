@@ -269,6 +269,26 @@
         <item>120</item>
         <item>127</item>
     </string-array>
+    <string-array name="live_quality_entries">
+        <item>默认</item>
+        <item>流畅</item>
+        <item>高清</item>
+        <item>超清</item>
+        <item>蓝光</item>
+        <item>原画</item>
+        <item>4K</item>
+        <item>杜比</item>
+    </string-array>
+    <string-array name="live_quality_values">
+        <item>0</item>
+        <item>80</item>
+        <item>150</item>
+        <item>250</item>
+        <item>400</item>
+        <item>10000</item>
+        <item>20000</item>
+        <item>30000</item>
+    </string-array>
     <string-array name="full_screen_quality_entries">
         <item>默认</item>
         <item>240P</item>
