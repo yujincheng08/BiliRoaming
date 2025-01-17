@@ -265,6 +265,8 @@
     <string name="half_screen_quality_summary">设置视频半屏播放时的清晰度，设置后会大幅降低视频的首次播放加载速度，旧版播放器（半屏时进度条在框内）仅支持跟随全屏清晰度，需开启解锁番剧限制选项</string>
     <string name="full_screen_quality_title">视频全屏清晰度</string>
     <string name="full_screen_quality_summary">设置视频全屏播放时默认的清晰度，当播放器画质选项为自动时此选项不生效，需开启解锁番剧限制选项</string>
+    <string name="live_quality_title">直播清晰度</string>
+    <string name="live_quality_summary">设置进入直播间的默认清晰度，若不存在指定清晰度，则会取最接近的清晰度</string>
     <string name="block_comment_guide_title">屏蔽评论引导</string>
     <string name="block_comment_guide_summary">屏蔽视频详情页及评论页的评论引导提示</string>
     <string name="disable_auto_refresh_title">禁止首页自动刷新</string>
