@@ -171,6 +171,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val vipQualityTrialService by Weak { mHookInfo.vipQualityTrialService.class_ from mClassLoader }
     val livePlayUrlSelectUtilClass by Weak { mHookInfo.liveQuality.selectUtil.class_ from mClassLoader }
     val liveRTCSourceServiceImplClass by Weak { mHookInfo.liveQuality.sourceService.class_ from mClassLoader }
+    val defaultRequestInterceptClass by Weak { mHookInfo.liveQuality.interceptor.class_ from mClassLoader }
+    val httpUrlClass by Weak { mHookInfo.okHttp.httpUrl.class_ from mClassLoader }
 
     // for v8.17.0+
     val useNewMossFunc = instance.viewMossClass?.declaredMethods?.any {
@@ -335,9 +337,13 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     fun onFeedClicked() = mHookInfo.cardClickProcessor.onFeedClicked.orNull
 
-    fun parseUriMethod() = mHookInfo.liveQuality.selectUtil.parseUri.orNull
+    fun buildSelectorDataMethod() = mHookInfo.liveQuality.selectUtil.buildSelectorData.orNull
 
     fun switchAutoMethod() = mHookInfo.liveQuality.sourceService.switchAuto.orNull
+
+    fun interceptMethod() = mHookInfo.liveQuality.interceptor.intercept.orNull
+
+    fun httpUrlParseMethod() = mHookInfo.okHttp.httpUrl.parse.orNull
 
     private fun readHookInfo(context: Context): Configs.HookInfo {
         try {
@@ -543,6 +549,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     }.firstOrNull {
                         it.declaringClass?.name?.startsWith("okhttp3") == true
                     }?.declaringClass ?: return@okHttp
+                val parseMethod = urlClass.declaredMethods.firstOrNull {
+                    it.isStatic && it.returnType == urlClass && it.parameterCount == 1 && it.parameterTypes[0] == String::class.java
+                } ?: return@okHttp
                 responseBodyClass ?: return@okHttp
                 val getMethod = dexHelper.findMethodUsingString(
                     "No subtype found for:",
@@ -590,6 +599,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 mediaType = mediaType {
                     class_ = class_ { name = getMethod.declaringClass.name }
                     get = method { name = getMethod.name }
+                }
+                httpUrl = httpUrl {
+                    class_ = class_ { name = urlClass.name }
+                    parse = method { name = parseMethod.name }
                 }
             }
             fastJson = fastJson {
@@ -2161,7 +2174,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 ).map {
                     dexHelper.decodeMethodIndex(it)?.declaringClass
                 }.firstOrNull() ?: return@liveQuality
-                val parseUriMethod = utilClass.declaredMethods.firstOrNull {
+                val buildSelectorDataMethod = utilClass.declaredMethods.firstOrNull {
                     it.returnType == selectorDataClass && it.parameterCount == 1 && it.parameterTypes[0] == Uri::class.java
                 } ?: return@liveQuality
                 val switchAutoMethod = dexHelper.findMethodUsingString(
@@ -2178,13 +2191,34 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 ).map {
                     dexHelper.decodeMethodIndex(it)
                 }.firstOrNull() ?: return@liveQuality
+                val interceptorClass = dexHelper.findMethodUsingString(
+                    "inject common param to body failure : ",
+                    false,
+                    -1,
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).map {
+                    dexHelper.decodeMethodIndex(it)?.declaringClass
+                }.firstOrNull() ?: return@liveQuality
+                val interceptMethod = interceptorClass.declaredMethods.firstOrNull {
+                    it.isPublic && it.parameterCount == 1 && it.returnType == it.parameterTypes[0]
+                } ?: return@liveQuality
                 selectUtil = livePlayUrlSelectUtil {
                     class_ = class_ { name = utilClass.name }
-                    parseUri = method { name = parseUriMethod.name }
+                    buildSelectorData = method { name = buildSelectorDataMethod.name }
                 }
                 sourceService = liveRTCSourceServiceImpl {
                     class_ = class_ { name = switchAutoMethod.declaringClass.name }
                     switchAuto = method { name = switchAutoMethod.name }
+                }
+                interceptor = defaultRequestIntercept {
+                    class_ = class_ { name = interceptorClass.name }
+                    intercept = method { name = interceptMethod.name }
                 }
             }
 
