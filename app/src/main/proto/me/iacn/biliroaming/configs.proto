@@ -34,6 +34,11 @@ message ResponseBody {
   optional Method string = 3;
 }
 
+message HttpUrl {
+  optional Class class = 1;
+  optional Method parse = 2;
+}
+
 message MediaType {
   optional Class class = 1;
   optional Method get = 2;
@@ -44,6 +49,7 @@ message OkHttp {
   optional Response response = 2;
   optional ResponseBody response_body = 3;
   optional MediaType mediaType = 4;
+  optional HttpUrl httpUrl = 5;
 }
 
 message FastJson {
@@ -277,7 +283,7 @@ message VipQualityTrialService {
 
 message LivePlayUrlSelectUtil {
   optional Class class = 1;
-  optional Method parseUri = 2;
+  optional Method buildSelectorData = 2;
 }
 
 message LiveRTCSourceServiceImpl {
@@ -285,9 +291,15 @@ message LiveRTCSourceServiceImpl {
   optional Method switchAuto = 2;
 }
 
+message DefaultRequestIntercept {
+  optional Class class = 1;
+  optional Method intercept = 2;
+}
+
 message LiveQuality {
   optional LivePlayUrlSelectUtil selectUtil = 1;
   optional LiveRTCSourceServiceImpl sourceService = 2;
+  optional DefaultRequestIntercept interceptor = 3;
 }
 
 message HookInfo {
