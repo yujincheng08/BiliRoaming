@@ -47,7 +47,7 @@ jobs:
           ./gradlew -PappVerName=${{ env.VERSION }} assembleRelease assembleDebug
       - name: Upload built apk
         if: success()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: snapshot
           path: |
