@@ -567,12 +567,28 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                 }
                             }
                         }
+                        // rcmd_reason 推荐理由
+                        if (av.callMethodAs("hasRcmdReason")) {
+                            av.callMethodAs<Any>("getRcmdReason").let { rcmd ->
+                                if (kwdFilterReasonList.isNotEmpty()) {
+                                    val reason = rcmd.callMethodAs<String>("getText")
+                                    if (kwdFilterReasonRegexMode && reason.isNotEmpty()) {
+                                        if (kwdFilterReasonRegexes.any { reason.contains(it) })
+                                            shouldFiltered = true
+                                            return@let
+                                    } else if (reason.isNotEmpty()) {
+                                        if (kwdFilterReasonList.any { reason.contains(it) })
+                                            shouldFiltered = true
+                                            return@let
+                                    }
+                                }
+                            }
+                        }
                     }
                     if (isContainsBlockKwdUnite(it)) {
                         shouldFiltered = true
                     }
                 }
-                // todo: support rcmd
             }
             removeRelateNothing || it.callMethodAs("getRelateCardTypeValue") !in allowTypeList || shouldFiltered
         }
