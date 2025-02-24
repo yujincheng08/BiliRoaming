@@ -6,6 +6,8 @@ import android.content.ComponentName
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import me.iacn.biliroaming.BiliBiliPackage
+import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.utils.Log
 import me.iacn.biliroaming.utils.hookBeforeAllMethods
 import me.iacn.biliroaming.utils.hookBeforeMethod
@@ -40,35 +42,44 @@ class StartActivityHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     false
                 ) && uri.startsWith("bilibili://story/")
             ) {
-                intent.data?.let {
-                    try {
-                        val cid = intent.data?.getQueryParameter("player_preload").toJSONObject().getLong("cid")
-                        intent.data = fixIntentUri(Uri.parse(intent.dataString))
-                        // fix extra
-                        val pre = Uri.parse(intent.dataString).buildUpon().clearQuery().build().toString()
-                        val aid = pre.split("/").last().toLong()
-                        intent.removeExtra("player_preload")
-                        intent.putExtra("player_preload", floor(Math.random()*1000000000).toInt().toString())
-                        intent.putExtra("blrouter.targeturl", pre)
-                        intent.putExtra("blrouter.pagename", "bilibili://united_video/")
-                        intent.putExtra("jumpFrom", 7)
-                        intent.putExtra("", aid)
-                        intent.putExtra("aid", aid)
-                        intent.putExtra("cid", cid)
-                        intent.putExtra("bvid", "")
-                        intent.putExtra("from", 7)
-                        intent.putExtra("blrouter.targeturl", pre)
-                        intent.putExtra("blrouter.matchrule", "bilibili://united_video/")
-                        // fix component
-                        intent.component = ComponentName(
-                            intent.component?.packageName ?: packageName,
-                            "com.bilibili.ship.theseus.detail.UnitedBizDetailsActivity"
-                        )
-                    } catch (e: Exception) {
-                        Log.e("replaceStoryVideo fix intent failed!!!")
-                        Log.e(e)
+                if (instance.hasUnitedVideoActivity) {
+                    intent.data?.let {
+                        try {
+                            val cid = intent.data?.getQueryParameter("player_preload").toJSONObject().getLong("cid")
+                            intent.data = fixIntentUri(Uri.parse(intent.dataString))
+                            // fix extra
+                            val pre = Uri.parse(intent.dataString).buildUpon().clearQuery().build().toString()
+                            val aid = pre.split("/").last().toLong()
+                            intent.removeExtra("player_preload")
+                            intent.putExtra("player_preload", floor(Math.random()*1000000000).toInt().toString())
+                            intent.putExtra("blrouter.targeturl", pre)
+                            intent.putExtra("blrouter.pagename", "bilibili://united_video/")
+                            intent.putExtra("jumpFrom", 7)
+                            intent.putExtra("", aid)
+                            intent.putExtra("aid", aid)
+                            intent.putExtra("cid", cid)
+                            intent.putExtra("bvid", "")
+                            intent.putExtra("from", 7)
+                            intent.putExtra("blrouter.targeturl", pre)
+                            intent.putExtra("blrouter.matchrule", "bilibili://united_video/")
+                            // fix component
+                            intent.component = ComponentName(
+                                intent.component?.packageName ?: packageName,
+                                "com.bilibili.ship.theseus.detail.UnitedBizDetailsActivity"
+                            )
+                        } catch (e: Exception) {
+                            Log.e("replaceStoryVideo fix intent failed!!!")
+                            Log.e(e)
+                        }
                     }
+                    return@hookBeforeAllMethods
                 }
+                // 兼容旧版
+                intent.component = ComponentName(
+                    intent.component?.packageName ?: packageName,
+                    "com.bilibili.video.videodetail.VideoDetailsActivity"
+                )
+                intent.data = Uri.parse(uri.replace("bilibili://story/", "bilibili://video/"))
             }
             if (sPrefs.getBoolean("force_browser", false)) {
                 if (intent.component?.className?.endsWith("MWebActivity") == true &&
