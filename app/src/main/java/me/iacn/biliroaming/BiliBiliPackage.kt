@@ -22,6 +22,7 @@ import java.lang.reflect.Constructor
 import java.lang.reflect.Method
 import java.lang.reflect.Modifier
 import java.lang.reflect.ParameterizedType
+import java.util.Objects
 import kotlin.math.max
 import kotlin.system.measureTimeMillis
 import kotlin.time.ExperimentalTime
@@ -97,8 +98,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val chronosSwitchClass by Weak { mHookInfo.chronosSwitch from mClassLoader }
     val biliSpaceClass by Weak { "com.bilibili.app.authorspace.api.BiliSpace" from mClassLoader }
     val biliVideoDetailClass by Weak {
-        "tv.danmaku.bili.ui.video.api.BiliVideoDetail" from mClassLoader
-            ?: "tv.danmaku.bili.videopage.data.view.model.BiliVideoDetail" from mClassLoader
+        ("tv.danmaku.bili.ui.video.api.BiliVideoDetail" from mClassLoader)
+            ?: ("tv.danmaku.bili.videopage.data.view.model.BiliVideoDetail" from mClassLoader)
     }
     val commentSpanTextViewClass by Weak { mHookInfo.commentSpan from mClassLoader }
     val commentSpanEllipsisTextViewClass by Weak { "com.bilibili.app.comm.comment2.widget.CommentSpanEllipsisTextView" from mClassLoader }
@@ -178,6 +179,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val useNewMossFunc = instance.viewMossClass?.declaredMethods?.any {
         it.name == "executeRelatesFeed"
     } ?: false
+
+    private val unitedVideoActivity by Weak { "com.bilibili.ship.theseus.detail.UnitedBizDetailsActivity" from mClassLoader }
+    val hasUnitedVideoActivity = !Objects.isNull(unitedVideoActivity)
 
     val ids: Map<String, Int> by lazy {
         mHookInfo.mapIds.idsMap
