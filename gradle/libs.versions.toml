@@ -1,12 +1,12 @@
 [versions]
-protobuf = "4.30.1"
+protobuf = "4.30.2"
 coroutine = "1.10.1"
 kotlin = "2.1.20"
 
 [plugins]
 kotlin = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
-agp-app = { id = "com.android.application", version = "8.9.0" }
-protobuf = { id = "com.google.protobuf", version = "0.9.4" }
+agp-app = { id = "com.android.application", version = "8.9.1" }
+protobuf = { id = "com.google.protobuf", version = "0.9.5" }
 lsplugin-jgit = { id = "org.lsposed.lsplugin.jgit", version = "1.1" }
 lsplugin-resopt = { id = "org.lsposed.lsplugin.resopt", version = "1.6" }
 lsplugin-apksign = { id = "org.lsposed.lsplugin.apksign", version = "1.4" }
