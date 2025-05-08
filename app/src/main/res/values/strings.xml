@@ -103,6 +103,7 @@
     <string name="hide_low_play_count_recommend_title">隐藏低播放量视频</string>
     <string name="hide_low_play_count_recommend_summary">隐藏低于指定播放量的视频</string>
     <string name="hide_top_entrance_popular_summary">隐藏热门的顶栏(排行榜等)</string>
+    <string name="hide_topic_list_popular_summary">隐藏热门的话题</string>
     <string name="hide_suggest_follow_popular_summary">隐藏热门的推荐关注(及其视频)</string>
     <string name="add_bangumi_title">添加其他地区番剧</string>
     <string name="add_bangumi_summary">在首页标签添加大陆/港澳台番剧分页</string>
