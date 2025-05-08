@@ -50,6 +50,7 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     private val hideTopEntrance = sPrefs.getBoolean("hide_top_entrance_popular", false)
     private val hideSuggestFollow = sPrefs.getBoolean("hide_suggest_follow_popular", false)
+    private val hideTopicList = sPrefs.getBoolean("hide_topic_list_popular", true)
 
     private val filterMap = mapOf(
         "advertisement" to listOf("ad", "cm", "cm_v2"),
@@ -707,6 +708,10 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 "RCMD_ONE_ITEM" -> {
                     popularDataCount++
                     return@removeIf hideSuggestFollow
+                }
+                "TOPIC_LIST" -> {
+                    popularDataCount++
+                    return@removeIf hideTopicList
                 }
                 else -> {
                     popularDataCount++
