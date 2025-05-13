@@ -1,11 +1,11 @@
 [versions]
 protobuf = "4.30.2"
 coroutine = "1.10.2"
-kotlin = "2.1.20"
+kotlin = "2.1.21"
 
 [plugins]
 kotlin = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
-agp-app = { id = "com.android.application", version = "8.9.1" }
+agp-app = { id = "com.android.application", version = "8.10.0" }
 protobuf = { id = "com.google.protobuf", version = "0.9.5" }
 lsplugin-jgit = { id = "org.lsposed.lsplugin.jgit", version = "1.1" }
 lsplugin-resopt = { id = "org.lsposed.lsplugin.resopt", version = "1.6" }
@@ -22,4 +22,4 @@ protobuf-protoc = { module = "com.google.protobuf:protoc", version.ref = "protob
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
 kotlin-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutine" }
 kotlin-coroutines-jdk = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-jdk8", version.ref = "coroutine" }
-androidx-documentfile = { module = "androidx.documentfile:documentfile", version = "1.0.1" }
+androidx-documentfile = { module = "androidx.documentfile:documentfile", version = "1.1.0" }
