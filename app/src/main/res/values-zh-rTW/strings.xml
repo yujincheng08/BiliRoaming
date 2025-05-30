@@ -275,7 +275,7 @@
     <string name="disable_vip_dm_colorful_title">篩選漸層顏色弹幕</string>
     <string name="disable_vip_dm_colorful_summary">漸層顏色（非一般彩色）彈幕顯示為白色</string>
     <string name="search_hint" tools:ignore="TypographyEllipsis">搜尋...</string>
-    <string name="block_video_comment_title">屏蔽影片評論區</string>
+    <string name="block_video_comment_title">封鎖影片評論區</string>
     <string name="support">捐贈</string>
     <string name="support_summary">捐贈以支持模組開發</string>
     <string name="pegasus_cover_ratio_title">推薦封面比例</string>
