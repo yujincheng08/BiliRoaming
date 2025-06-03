@@ -28,6 +28,7 @@ import java.lang.reflect.Proxy
 import java.math.BigInteger
 import java.net.URL
 import java.util.*
+import java.util.function.Consumer
 import kotlin.math.roundToInt
 import kotlin.reflect.KProperty
 
@@ -335,7 +336,7 @@ fun Window.blurBackground() {
     addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND)
     attributes.blurBehindRadius = 50
     setBackgroundBlurRadius(50)
-    val blurEnableListener = { enable: Boolean ->
+    val blurEnableListener = Consumer<Boolean> { enable: Boolean ->
         setDimAmount(if (enable) 0.1F else 0.6F)
     }
     decorView.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {

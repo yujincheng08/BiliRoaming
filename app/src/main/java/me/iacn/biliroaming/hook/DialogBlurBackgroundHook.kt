@@ -10,7 +10,7 @@ class DialogBlurBackgroundHook(mClassLoader: ClassLoader) : BaseHook(mClassLoade
     override fun startHook() {
         if (sPrefs.getBoolean("dialog_blur_background", false).not()) return
         Log.d("startHook: DialogBlurBackgroundHook")
-        Dialog::class.java.hookAfterMethod("show") {
+        Dialog::class.java.hookAfterMethod("onStart") {
             (it.thisObject as Dialog).window?.blurBackground()
         }
     }
