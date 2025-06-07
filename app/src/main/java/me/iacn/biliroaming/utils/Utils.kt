@@ -438,3 +438,23 @@ fun Context.inflateLayout(
 fun Context.addModuleAssets() {
     resources.assets.callMethod("addAssetPath", XposedInit.modulePath)
 }
+
+@OptIn(ExperimentalStdlibApi::class)
+fun Any.dumpToString(): String {
+    val sb = StringBuilder()
+    sb.append("---- ${this.javaClass.name}@${this.hashCode().toHexString()} dump begin ----\n")
+    fun dumpClassFields(clazz: Class<*>) {
+        clazz.fields.forEach { field ->
+            if (field.isStatic) return@forEach
+            field.isAccessible = true
+            val v = field.get(this)
+            sb.append("${field.name}: $v\n")
+        }
+        clazz.superclass?.let {
+            dumpClassFields(it)
+        }
+    }
+    dumpClassFields(this.javaClass)
+    sb.append("---- ${this.javaClass.name}@${this.hashCode().toHexString()} dump end ----")
+    return sb.toString()
+}
