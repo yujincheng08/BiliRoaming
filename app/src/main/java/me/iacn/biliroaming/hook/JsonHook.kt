@@ -242,6 +242,22 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             }
                             title in hides
                         }
+
+                        // liveTip
+                        // 就是通常在 我的 -> 创做中心 下 但不属于创作中心的提示
+                        result.getObjectFieldOrNull("liveTip")?.let { liveTip ->
+                            val text = liveTip.getObjectFieldAs<String>("text")
+                            val id = liveTip.getObjectField("id").toString()
+                            val url = liveTip.getObjectFieldAs<String>("url")
+                            val showing = id !in hides
+                            drawerItems.add(BottomItem(
+                                name = text, id = id, uri = url, showing = showing
+                            ))
+                            if (!showing) {
+                                result.setObjectField("liveTip", null)
+                            }
+                        }
+
                     }
                     accountMineClass.findFieldOrNull("vipSectionRight")?.set(result, null)
                     if (sPrefs.getBoolean("custom_theme", false)) {
