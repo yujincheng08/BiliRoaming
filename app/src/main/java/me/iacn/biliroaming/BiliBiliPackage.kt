@@ -174,6 +174,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val liveRTCSourceServiceImplClass by Weak { mHookInfo.liveQuality.sourceService.class_ from mClassLoader }
     val defaultRequestInterceptClass by Weak { mHookInfo.liveQuality.interceptor.class_ from mClassLoader }
     val httpUrlClass by Weak { mHookInfo.okHttp.httpUrl.class_ from mClassLoader }
+    val preBuiltConfigClass by Weak { mHookInfo.preBuiltConfig.class_ from mClassLoader }
+    val dataSPClass by Weak { mHookInfo.dataSP.class_ from mClassLoader }
 
     // for v8.17.0+
     val useNewMossFunc = instance.viewMossClass?.declaredMethods?.any {
@@ -348,6 +350,11 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     fun interceptMethod() = mHookInfo.liveQuality.interceptor.intercept.orNull
 
     fun httpUrlParseMethod() = mHookInfo.okHttp.httpUrl.parse.orNull
+
+    fun getPreBuiltConfigMethod() = mHookInfo.preBuiltConfig.get.orNull
+
+    fun getDataSPMethod() = mHookInfo.dataSP.get.orNull
+
 
     private fun readHookInfo(context: Context): Configs.HookInfo {
         try {
@@ -793,21 +800,50 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     }?.name ?: return@class_
             }
             themeName = themeName {
-                val themeNameClassRegex = Regex("""^tv\.danmaku\.bili\.ui\.garb\.\w?$""")
-                val themeNameClass = classesList.filter {
-                    it.startsWith("tv.danmaku.bili.ui.garb") && it.contains(themeNameClassRegex)
-                }.map {
-                    it.findClass(classloader)
-                }.firstOrNull { c ->
-                    c.declaredFields.count {
-                        Modifier.isStatic(it.modifiers) && it.type == Map::class.java
-                    } == 1
-                }
+                val mainGarbClass = dexHelper.findMethodUsingString(
+                    ".garb.GARB_CHANGE",
+                    false,
+                    -1,
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).asSequence().mapNotNull {
+                    dexHelper.decodeMethodIndex(it)?.declaringClass
+                }.firstOrNull() ?: return@themeName
+                val id2NameIndex = dexHelper.findMethodUsingString(
+                    "white",
+                    false,
+                    -1,
+                    1,
+                    null,
+                    dexHelper.encodeClassIndex(mainGarbClass),
+                    null,
+                    null,
+                    null,
+                    true
+                ).asSequence().firstOrNull() ?: return@themeName
+                val themeNameClass = dexHelper.findMethodInvoking(
+                    id2NameIndex,
+                    dexHelper.encodeClassIndex(Map::class.java),
+                    0,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).asSequence().mapNotNull {
+                    dexHelper.decodeMethodIndex(it)?.declaringClass
+                }.firstOrNull() ?: return@themeName
                 class_ = class_ {
-                    name = themeNameClass?.name ?: return@class_
+                    name = themeNameClass.name
                 }
                 field = field {
-                    name = themeNameClass?.declaredFields?.firstOrNull {
+                    name = themeNameClass.declaredFields.firstOrNull {
                         it.type == Map::class.java
                                 && Modifier.isStatic(it.modifiers)
                     }?.name ?: return@field
@@ -2225,7 +2261,55 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     intercept = method { name = interceptMethod.name }
                 }
             }
-
+            preBuiltConfig = preBuiltConfig {
+                val getMap = dexHelper.findMethodUsingString(
+                    "/config.json",
+                    false,
+                    -1,
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).asSequence().mapNotNull { dexHelper.decodeMethodIndex(it) }.firstOrNull()
+                    ?: return@preBuiltConfig
+                class_ = class_ { name = getMap.declaringClass.name }
+                get = method { name = getMap.name }
+            }
+            dataSP = dataSP {
+                val spxClass =
+                    ("com.bilibili.lib.blkv.SharedPrefX" from classloader) ?: return@dataSP
+                val blkvClass = ("com.bilibili.lib.blkv.BLKV" from classloader) ?: return@dataSP
+                val getBLSP = runCatchingOrNull {
+                    blkvClass.getDeclaredMethod(
+                        "getBLSharedPreferences",
+                        Context::class.java,
+                        File::class.java,
+                        Boolean::class.javaPrimitiveType,
+                        Int::class.javaPrimitiveType
+                    )
+                } ?: return@dataSP
+                val getDataSP = dexHelper.findMethodInvoked(
+                    dexHelper.encodeMethodIndex(getBLSP),
+                    dexHelper.encodeClassIndex(spxClass),
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    false
+                ).asSequence().mapNotNull {
+                    dexHelper.decodeMethodIndex(it)
+                }.firstOrNull {
+                    Log.d(it)
+                    it.declaringClass.name.startsWith("com.bilibili.lib.blconfig.internal.TypedContext")
+                } ?: return@dataSP
+                class_ = class_ { name = getDataSP.declaringClass.name }
+                get = method { name = getDataSP.name }
+            }
             dexHelper.close()
         }
 

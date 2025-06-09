@@ -302,6 +302,16 @@ message LiveQuality {
   optional DefaultRequestIntercept interceptor = 3;
 }
 
+message PreBuiltConfig {
+  optional Class class = 1;
+  optional Method get = 2;
+}
+
+message DataSP {
+  optional Class class = 1;
+  optional Method get = 2;
+}
+
 message HookInfo {
   int64 last_update_time = 1;
   optional MapIds map_ids = 2;
@@ -368,4 +378,6 @@ message HookInfo {
   optional Continuation continuation = 96;
   optional VipQualityTrialService vipQualityTrialService = 97;
   optional LiveQuality liveQuality = 98;
+  optional PreBuiltConfig preBuiltConfig = 99;
+  optional DataSP dataSP = 100;
 }

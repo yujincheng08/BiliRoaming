@@ -133,8 +133,9 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
     private val offset by lazy { sPrefs.getInt("subtitle_offset", 0) }
 
-    private val closeText =
+    private val closeText by lazy {
         currentContext.getString(getResId("Player_option_subtitle_lan_doc_nodisplay", "string"))
+    }
 
     private var subtitleFont: Typeface? = null
 

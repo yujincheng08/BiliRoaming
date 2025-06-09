@@ -1,6 +1,7 @@
 package me.iacn.biliroaming.hook
 
 import android.content.SharedPreferences
+import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.utils.*
 import java.lang.reflect.Proxy
 import java.util.regex.Pattern
@@ -8,37 +9,47 @@ import java.util.regex.Pattern
 class EnvHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
         Log.d("startHook: Env")
-        "com.bilibili.lib.blconfig.internal.EnvContext\$preBuiltConfig\$2".hookAfterMethod(
-            mClassLoader,
-            "invoke"
-        ) { param ->
-            @Suppress("UNCHECKED_CAST")
-            val result = param.result as MutableMap<String, String?>
-            for (config in configSet) {
-                (if (sPrefs.getBoolean(
-                        config.config,
-                        false
-                    )
-                ) config.trueValue else config.falseValue)
-                    ?.let { result[config.key] = it } ?: result.remove(config.key)
+
+        // EnvContext
+        instance.preBuiltConfigClass?.let {
+            val hooker: Hooker = hooker@ { param ->
+                @Suppress("UNCHECKED_CAST")
+                val result = param.result as MutableMap<String, String?>
+                for (config in configSet) {
+                    (if (sPrefs.getBoolean(
+                            config.config,
+                            false
+                        )
+                    ) config.trueValue else config.falseValue)
+                        ?.let { result[config.key] = it } ?: result.remove(config.key)
+                }
             }
+            // v8.28.0 - ?
+            it.hookAfterMethod(instance.getPreBuiltConfigMethod(), hooker = hooker)
+            // ? - v8.48.0 ..
+            it.hookAfterMethod(instance.getPreBuiltConfigMethod(), it, hooker = hooker)
         }
-        "com.bilibili.lib.blconfig.internal.TypedContext\$dataSp\$2".hookAfterMethod(
-            mClassLoader,
-            "invoke"
-        ) { param ->
-            val result = param.result as SharedPreferences
-            // this indicates the proper instance
-            if (!result.contains("bv.enable_bv")) return@hookAfterMethod
-            for (config in configSet) {
-                (if (sPrefs.getBoolean(
-                        config.config,
-                        false
-                    )
-                ) config.trueValue else config.falseValue)
-                    ?.let { result.edit().putString(config.key, it).apply() }
-                    ?: result.edit().remove(config.key).apply()
+
+        // TypedContext
+        instance.dataSPClass?.let {
+            val hooker: Hooker = hooker@ { param ->
+                val result = param.result as SharedPreferences
+                // this indicates the proper instance
+                if (!result.contains("bv.enable_bv")) return@hooker
+                for (config in configSet) {
+                    (if (sPrefs.getBoolean(
+                            config.config,
+                            false
+                        )
+                    ) config.trueValue else config.falseValue)
+                        ?.let { result.edit().putString(config.key, it).apply() }
+                        ?: result.edit().remove(config.key).apply()
+                }
             }
+            // v8.28.0 - ?
+            it.hookAfterMethod(instance.getDataSPMethod(), hooker = hooker)
+            // ? - v8.48.0 ..
+            it.hookAfterMethod(instance.getDataSPMethod(), it, hooker = hooker)
         }
 
         "com.bilibili.lib.blconfig.internal.OverrideConfig".findClassOrNull(mClassLoader)
