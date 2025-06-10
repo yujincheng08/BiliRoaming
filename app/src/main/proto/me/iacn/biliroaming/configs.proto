@@ -380,4 +380,5 @@ message HookInfo {
   optional LiveQuality liveQuality = 98;
   optional PreBuiltConfig preBuiltConfig = 99;
   optional DataSP dataSP = 100;
+  optional Class pegasus_parser = 101;
 }

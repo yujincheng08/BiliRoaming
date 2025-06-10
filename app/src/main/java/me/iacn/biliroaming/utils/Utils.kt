@@ -24,6 +24,7 @@ import java.io.File
 import java.io.IOException
 import java.io.InputStream
 import java.lang.ref.WeakReference
+import java.lang.reflect.Field
 import java.lang.reflect.Proxy
 import java.math.BigInteger
 import java.net.URL
@@ -444,7 +445,7 @@ fun Any.dumpToString(): String {
     val sb = StringBuilder()
     sb.append("---- ${this.javaClass.name}@${this.hashCode().toHexString()} dump begin ----\n")
     fun dumpClassFields(clazz: Class<*>) {
-        clazz.fields.forEach { field ->
+        clazz.declaredFields.forEach { field ->
             if (field.isStatic) return@forEach
             field.isAccessible = true
             val v = field.get(this)
@@ -457,4 +458,11 @@ fun Any.dumpToString(): String {
     dumpClassFields(this.javaClass)
     sb.append("---- ${this.javaClass.name}@${this.hashCode().toHexString()} dump end ----")
     return sb.toString()
+}
+
+fun Class<*>.findField(filter: (Field) -> Boolean): Field? {
+    return declaredFields.find { field ->
+        field.isAccessible = true
+        filter(field)
+    } ?: superclass?.findField(filter)
 }
