@@ -1,7 +1,14 @@
 package me.iacn.biliroaming.hook
 
+import de.robv.android.xposed.XC_MethodHook
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.utils.*
+import me.iacn.biliroaming.utils.json.FastjsonHelper
+import me.iacn.biliroaming.utils.json.GsonHelper
+import me.iacn.biliroaming.utils.json.JsonHelper
+import me.iacn.biliroaming.utils.json.getObjectAs
+import me.iacn.biliroaming.utils.json.getObjectAsHelperOrNull
+import me.iacn.biliroaming.utils.json.toJsonHelper
 
 class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private val hidden = sPrefs.getBoolean("hidden", false)
@@ -106,10 +113,10 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     } ?: -1L
 
     // 屏蔽过低的播放数
-    private fun isLowCountVideo(obj: Any): Boolean {
+    private fun isLowCountVideo(obj: JsonHelper): Boolean {
         if (hideLowPlayCountLimit == 0L) return false
         val text = obj.runCatchingOrNull {
-            getObjectFieldAs<String?>("coverLeftText1")
+            getObjectAs<String?>("cover_left_text_1")
         }.orEmpty()
         return text.toPlayCount().let {
             if (it == -1L) false
@@ -122,11 +129,11 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     // 屏蔽指定播放时长
-    private fun durationVideo(obj: Any): Boolean {
+    private fun durationVideo(obj: JsonHelper): Boolean {
         if (hideLongDurationLimit == 0 && hideShortDurationLimit == 0)
             return false
-        val duration = obj.getObjectField("playerArgs")
-            ?.getObjectFieldAs("fakeDuration") ?: 0
+        val duration = obj.getObjectAsHelperOrNull("player_args")
+            ?.getObjectAs("duration") ?: 0
         if (hideLongDurationLimit != 0 && duration > hideLongDurationLimit)
             return true
         return hideShortDurationLimit != 0 && duration < hideShortDurationLimit
@@ -139,10 +146,10 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         return hideShortDurationLimit != 0 && duration < hideShortDurationLimit
     }
 
-    private fun isContainsBlockKwd(obj: Any): Boolean {
+    private fun isContainsBlockKwd(obj: JsonHelper): Boolean {
         // 屏蔽标题关键词
         if (kwdFilterTitleList.isNotEmpty()) {
-            val title = obj.getObjectFieldAs<String?>("title").orEmpty()
+            val title = obj.getObjectAs<String?>("title").orEmpty()
             if (kwdFilterTitleRegexMode && title.isNotEmpty()) {
                 if (kwdFilterTitleRegexes.any { title.contains(it) })
                     return true
@@ -154,17 +161,17 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
         // 屏蔽UID
         if (kwdFilterUidList.isNotEmpty()) {
-            val uid = obj.getObjectField("args")?.getLongField("upId") ?: 0L
+            val uid = obj.getObjectAsHelperOrNull("args")?.getObjectAs<Long>("up_id") ?: 0L
             if (uid != 0L && kwdFilterUidList.any { it == uid })
                 return true
         }
 
         // 屏蔽UP主
         if (kwdFilterUpnameList.isNotEmpty()) {
-            val upname = if (obj.getObjectField("goTo") == "picture") {
-                obj.runCatchingOrNull { getObjectFieldAs<String?>("desc") }.orEmpty()
+            val upname = if (obj.getObjectAs<String?>("goto") == "picture") {
+                obj.runCatchingOrNull { getObjectAs<String?>("desc") }.orEmpty()
             } else {
-                obj.getObjectField("args")?.getObjectFieldAs<String?>("upName").orEmpty()
+                obj.getObjectAsHelperOrNull("args")?.getObjectAs<String?>("up_name").orEmpty()
             }
             if (kwdFilterUpnameRegexMode && upname.isNotEmpty()) {
                 if (kwdFilterUpnameRegexes.any { upname.contains(it) })
@@ -177,16 +184,16 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
         // 屏蔽分区
         if (kwdFilterRnameList.isNotEmpty()) {
-            val rname = obj.getObjectField("args")
-                ?.getObjectFieldAs<String?>("rname").orEmpty()
+            val rname = obj.getObjectAsHelperOrNull("args")
+                ?.getObjectAs<String?>("rname").orEmpty()
             if (rname.isNotEmpty() && kwdFilterRnameList.any { rname.contains(it) })
                 return true
         }
 
         // 屏蔽频道
         if (kwdFilterTnameList.isNotEmpty()) {
-            val tname = obj.getObjectField("args")
-                ?.getObjectFieldAs<String?>("tname").orEmpty()
+            val tname = obj.getObjectAsHelperOrNull("args")
+                ?.getObjectAs<String?>("tname").orEmpty()
             if (tname.isNotEmpty() && kwdFilterTnameList.any { tname.contains(it) })
                 return true
         }
@@ -194,7 +201,7 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         // 屏蔽推荐关键词（可能不存在，必须放最后）
         if (kwdFilterReasonList.isNotEmpty()) {
             val reason = obj.runCatchingOrNull {
-                getObjectField("rcmdReason")?.getObjectFieldAs<String?>("text").orEmpty()
+                getObjectAsHelperOrNull("rcmd_reason")?.getObjectAs<String?>("text").orEmpty()
             }.orEmpty()
             if (kwdFilterReasonRegexMode && reason.isNotEmpty()) {
                 if (kwdFilterReasonRegexes.any { reason.contains(it) })
@@ -248,25 +255,26 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         return false
     }
 
-    private fun ArrayList<Any>.appendReasons() = forEach { item ->
-        val title = item.getObjectFieldAs<String?>("title").orEmpty()
+    private fun ArrayList<Any>.appendReasons(jsonHelper: Class<JsonHelper>) = this.forEach {
+        val item = it.toJsonHelper(jsonHelper)
+        val title = item.getObjectAs<String?>("title").orEmpty()
         val rcmdReason = item.runCatchingOrNull {
-            getObjectField("rcmdReason")?.getObjectFieldAs<String?>("text")
+            getObjectAsHelperOrNull("rcmd_reason")?.getObjectAs<String?>("text")
         }.orEmpty()
-        val args = item.getObjectField("args")
-        val upId = args?.getLongField("upId") ?: 0L
-        val upName = if (item.getObjectField("goTo") == "picture") {
-            item.runCatchingOrNull { getObjectFieldAs<String?>("desc") }.orEmpty()
+        val args = item.getObjectAsHelperOrNull("args")
+        val upId = args?.getObjectAs<Long>("up_id") ?: 0L
+        val upName = if (item.getObject("goto") == "picture") {
+            item.runCatchingOrNull { getObjectAs<String?>("desc") }.orEmpty()
         } else {
-            args?.getObjectFieldAs<String?>("upName").orEmpty()
+            args?.getObjectAs<String?>("up_name").orEmpty()
         }
-        val categoryName = args?.getObjectFieldAs<String?>("rname").orEmpty()
-        val channelName = args?.getObjectFieldAs<String?>("tname").orEmpty()
-        val treePoint = item.getObjectFieldAs<MutableList<Any>?>("threePoint")
+        val categoryName = args?.getObjectAs<String?>("rname").orEmpty()
+        val channelName = args?.getObjectAs<String?>("tname").orEmpty()
+        val treePoint = item.getObjectAs<MutableList<Any>?>("three_point_v2")
         val reasons = mutableListOf<Any>()
         instance.treePointItemClass?.new()?.apply {
             setObjectField("title", "漫游屏蔽")
-            setObjectField("subtitle", "(本地屏蔽，重启生效，可前往首页推送过滤器查看)")
+            setObjectField("subtitle", "（本地屏蔽，重启生效，可前往首页推送过滤器查看）")
             setObjectField("type", "dislike")
             if (title.isNotEmpty()) {
                 instance.dislikeReasonClass?.new()?.apply {
@@ -507,29 +515,45 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     override fun startHook() {
         Log.d("startHook: Pegasus")
-        instance.pegasusFeedClass?.hookAfterMethod(
-            instance.pegasusFeed(),
-            instance.responseBodyClass
-        ) { param ->
-            param.result ?: return@hookAfterMethod
-            val data = param.result.getObjectField("data")
-            data?.getObjectField("config")?.apply {
+
+        fun hookPegasusFeedConvert(json: JsonHelper) {
+            json.getObject("config")!!.apply {
                 disableAutoRefresh()
                 customSmallCoverWhRatio()
             }
-            if (!hidden) return@hookAfterMethod
-            data?.getObjectFieldAs<ArrayList<Any>>("items")?.run {
+            if (!hidden) return
+            json.getObjectAs<ArrayList<Any>>("items").run {
                 removeAll {
-                    val cardGoto = it.getObjectFieldAs<String?>("cardGoto").orEmpty()
-                    val cardType = it.getObjectFieldAs<String?>("cardType").orEmpty()
-                    val goto = it.getObjectFieldAs<String?>("goTo").orEmpty()
-                    filter.any { item ->
-                        item in cardGoto || item in cardType || item in goto
-                    } || isLowCountVideo(it) || isContainsBlockKwd(it) || durationVideo(it)
+                    val item = it.toJsonHelper(json.javaClass)
+                    val cardGoto = item.getObjectAs<String?>("card_goto").orEmpty()
+                    val cardType = item.getObjectAs<String?>("card_type").orEmpty()
+                    val goto = item.getObjectAs<String?>("goto").orEmpty()
+                    filter.any {
+                        it in cardGoto || it in cardType || it in goto
+                    } || isLowCountVideo(item) || isContainsBlockKwd(item) || durationVideo(item)
                 }
-                appendReasons()
+                appendReasons(json.javaClass)
             }
         }
+
+        instance.pegasusFeedClass?.hookAfterMethod(
+            "convert",
+            Object::class.java
+        ) { param ->
+            val data = param.result?.getObjectField("data") ?: return@hookAfterMethod
+            val json = data.toJsonHelper<FastjsonHelper>()
+            hookPegasusFeedConvert(json)
+        }
+
+        instance.pegasusParserClass?.hookAfterMethod(
+            "convert",
+            Object::class.java
+        ) { param ->
+            val data = param.result?.getObjectField("data") ?: return@hookAfterMethod
+            val json = data.toJsonHelper<GsonHelper>()
+            hookPegasusFeedConvert(json)
+        }
+
         if (!hidden) return
         fun MutableList<Any>.filter() = removeAll {
             isPromoteRelate(it) || isNotAvRelate(it) || (applyToRelate && (isLowCountRelate(it)
@@ -650,50 +674,61 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
         }
 
+        fun hookDislikeReason(reason: Any?): Boolean {
+            if (reason == null || reason.getLongField("id") !in blockReasonIds)
+                return false
+            val id = reason.getLongField("id")
+            val name = reason.getObjectFieldAs<String?>("name").orEmpty()
+            val value = name.substringAfter(":")
+            when (id) {
+                REASON_ID_TITLE -> {
+                    val validValue =
+                        if (kwdFilterTitleRegexMode) Regex.escape(value) else value
+                    sPrefs.appendStringForSet("home_filter_keywords_title", validValue)
+                }
+
+                REASON_ID_RCMD_REASON -> {
+                    val validValue =
+                        if (kwdFilterReasonRegexMode) Regex.escape(value) else value
+                    sPrefs.appendStringForSet("home_filter_keywords_reason", validValue)
+                }
+
+                REASON_ID_UP_ID -> {
+                    sPrefs.appendStringForSet("home_filter_keywords_uid", value)
+                }
+
+                REASON_ID_UP_NAME -> {
+                    val validValue =
+                        if (kwdFilterUpnameRegexMode) Regex.escape(value) else value
+                    sPrefs.appendStringForSet("home_filter_keywords_up", validValue)
+                }
+
+                REASON_ID_CATEGORY_NAME -> {
+                    sPrefs.appendStringForSet("home_filter_keywords_category", value)
+                }
+
+                REASON_ID_CHANNEL_NAME -> {
+                    sPrefs.appendStringForSet("home_filter_keywords_channel", value)
+                }
+            }
+            Log.toast("添加成功", force = true)
+            return true
+        }
+
         instance.cardClickProcessorClass?.declaredMethods
             ?.find { it.name == instance.onFeedClicked() }?.hookBeforeMethod { param ->
-                val reason = param.args[2]
-                if (reason == null || reason.getLongField("id") !in blockReasonIds)
-                    return@hookBeforeMethod
-                val id = reason.getLongField("id")
-                val name = reason.getObjectFieldAs<String?>("name").orEmpty()
-                val value = name.substringAfter(":")
-                when (id) {
-                    REASON_ID_TITLE -> {
-                        val validValue =
-                            if (kwdFilterTitleRegexMode) Regex.escape(value) else value
-                        sPrefs.appendStringForSet("home_filter_keywords_title", validValue)
-                    }
-
-                    REASON_ID_RCMD_REASON -> {
-                        val validValue =
-                            if (kwdFilterReasonRegexMode) Regex.escape(value) else value
-                        sPrefs.appendStringForSet("home_filter_keywords_reason", validValue)
-                    }
-
-                    REASON_ID_UP_ID -> {
-                        sPrefs.appendStringForSet("home_filter_keywords_uid", value)
-                    }
-
-                    REASON_ID_UP_NAME -> {
-                        val validValue =
-                            if (kwdFilterUpnameRegexMode) Regex.escape(value) else value
-                        sPrefs.appendStringForSet("home_filter_keywords_up", validValue)
-                    }
-
-                    REASON_ID_CATEGORY_NAME -> {
-                        sPrefs.appendStringForSet("home_filter_keywords_category", value)
-                    }
-
-                    REASON_ID_CHANNEL_NAME -> {
-                        sPrefs.appendStringForSet("home_filter_keywords_channel", value)
-                    }
+                if (hookDislikeReason(param.args[2])) {
+                    param.result = null
                 }
-                Log.toast("添加成功", force = true)
-                param.result = null
             }
 
-
+        "com.bilibili.pegasus.ext.threepoint.ThreePointKt".findClass(mClassLoader)
+            .declaredMethods.find { it.parameterTypes.size == 8 }
+            ?.hookBeforeMethod {
+                if (hookDislikeReason(it.args[3])) {
+                    it.result = null
+                }
+            }
 
         fun MutableList<Any>.filterPopular() = removeIf {
             when (it.callMethod("getItemCase")?.toString()) {

@@ -176,6 +176,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val httpUrlClass by Weak { mHookInfo.okHttp.httpUrl.class_ from mClassLoader }
     val preBuiltConfigClass by Weak { mHookInfo.preBuiltConfig.class_ from mClassLoader }
     val dataSPClass by Weak { mHookInfo.dataSP.class_ from mClassLoader }
+    val fastjsonFieldAnnotation by Weak { "com.alibaba.fastjson.annotation.JSONField" from mClassLoader }
+    val gsonFieldAnnotation by Weak { "com.google.gson.annotations.SerializedName" from mClassLoader }
+    val pegasusParserClass by Weak { mHookInfo.pegasusParser from mClassLoader }
 
     // for v8.17.0+
     val useNewMossFunc = instance.viewMossClass?.declaredMethods?.any {
@@ -2309,6 +2312,22 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 } ?: return@dataSP
                 class_ = class_ { name = getDataSP.declaringClass.name }
                 get = method { name = getDataSP.name }
+            }
+            pegasusParser = class_ {
+                val getPegasusParser = dexHelper.findMethodUsingString(
+                    "[Pegasus]PegasusParser",
+                    false,
+                    -1,
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).asSequence().mapNotNull { dexHelper.decodeMethodIndex(it) }.firstOrNull()
+                    ?: return@class_
+                name = getPegasusParser.declaringClass.name
             }
             dexHelper.close()
         }
