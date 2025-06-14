@@ -722,8 +722,8 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
             }
 
-        "com.bilibili.pegasus.ext.threepoint.ThreePointKt".findClass(mClassLoader)
-            .declaredMethods.find { it.parameterTypes.size == 8 }
+        "com.bilibili.pegasus.ext.threepoint.ThreePointKt".findClassOrNull(mClassLoader)
+            ?.declaredMethods?.find { it.parameterTypes.size == 8 }
             ?.hookBeforeMethod {
                 if (hookDislikeReason(it.args[3])) {
                     it.result = null
