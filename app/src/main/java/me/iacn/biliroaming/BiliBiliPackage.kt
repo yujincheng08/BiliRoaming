@@ -49,8 +49,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val rxGeneralResponseClass by Weak { "com.bilibili.okretro.call.rxjava.RxGeneralResponse" from mClassLoader }
     val fastJsonClass by Weak { mHookInfo.fastJson.class_ from mClassLoader }
     val bangumiUniformSeasonClass by Weak { mHookInfo.bangumiSeason from mClassLoader }
-    val sectionClass by Weak { mHookInfo.section.class_ from mClassLoader }
-    val viewHolderClass by Weak { mHookInfo.section.viewHolder from mClassLoader }
+    val kingPositionComponentClass by Weak { mHookInfo.autoLike.kingPositionComponent.class_ from mClassLoader }
+    val storyAbsControllerClass by Weak { mHookInfo.autoLike.storyAbsController.class_ from mClassLoader }
+    val storyDetailClass by Weak { "com.bilibili.video.story.StoryDetail" from mClassLoader }
     val retrofitResponseClass by Weak { mHookInfo.retrofitResponse from mClassLoader }
     val themeHelperClass by Weak { mHookInfo.themeHelper.class_ from mClassLoader }
     val themeIdHelperClass by Weak { mHookInfo.themeIdHelper.class_ from mClassLoader }
@@ -237,11 +238,11 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     fun requestField() = mHookInfo.okHttp.response.request.orNull
 
-    fun likeMethod() = mHookInfo.section.like.orNull
+    fun componentMapField() = mHookInfo.autoLike.kingPositionComponent.componentMap.orNull
 
-    fun bindViewMethod() = mHookInfo.section.bindView.orNull
+    fun setMDataMethod() = mHookInfo.autoLike.storyAbsController.setMData.orNull
 
-    fun getRootMethod() = mHookInfo.section.getRoot.orNull
+    fun getMPlayerMethod() = mHookInfo.autoLike.storyAbsController.getMPlayer.orNull
 
     fun themeName() = mHookInfo.themeName.field.orNull
 
@@ -852,68 +853,74 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     }?.name ?: return@field
                 }
             }
-            section = section {
-                val kingPositionComponentClass = dexHelper.findMethodUsingString(
-                    "LikeClicked(view=",
-                    false,
-                    -1,
-                    -1,
-                    null,
-                    -1,
-                    null,
-                    null,
-                    null,
-                    true
-                ).asSequence().firstNotNullOfOrNull {
-                    dexHelper.decodeMethodIndex(it)?.declaringClass?.run {
-                        var outerClass = this
-                        while (outerClass.declaringClass != null) {
-                            outerClass = outerClass.declaringClass!!
+            autoLike = autoLike {
+                kingPositionComponent = kingPositionComponent {
+                    val kingPositionComponentClass = dexHelper.findMethodUsingString(
+                        "LikeClicked(view=",
+                        false,
+                        -1,
+                        -1,
+                        null,
+                        -1,
+                        null,
+                        null,
+                        null,
+                        true
+                    ).asSequence().firstNotNullOfOrNull {
+                        dexHelper.decodeMethodIndex(it)?.declaringClass?.run {
+                            var outerClass = this
+                            while (outerClass.declaringClass != null) {
+                                outerClass = outerClass.declaringClass!!
+                            }
+                            outerClass
                         }
-                        outerClass
-                    }
-                }
-                val genericInterface = kingPositionComponentClass?.genericInterfaces?.getOrNull(0)
-                val parameterType = (genericInterface as? ParameterizedType)?.actualTypeArguments?.getOrNull(0)
-                val viewHolderClass = if (parameterType is ParameterizedType) {
-                    parameterType.rawType
-                } else {
-                    parameterType
-                }?.let { it as? Class<*> }
-                val getRootMethod = viewHolderClass?.declaredMethods?.firstOrNull {
-                    it.returnType == View::class.java && it.parameterCount == 0
-                }
-                val bindViewMethod = kingPositionComponentClass?.declaredMethods?.firstOrNull {
-                    it.isPublic && it.parameterCount == 2
-                            && it.parameterTypes[0] == viewHolderClass
-                }
-                if (kingPositionComponentClass != null && viewHolderClass != null && bindViewMethod != null && getRootMethod != null) {
+                    } ?: return@kingPositionComponent
+                    val componentMapField = kingPositionComponentClass.declaredFields.firstOrNull {
+                        it.type == Map::class.java
+                    } ?: return@kingPositionComponent
                     class_ = class_ { name = kingPositionComponentClass.name }
-                    viewHolder = class_ { name = viewHolderClass.name }
-                    bindView = method { name = bindViewMethod.name }
-                    getRoot = method { name = getRootMethod.name }
-                    return@section
+                    componentMap = field { name = componentMapField.name }
                 }
-
-                val sectionClass = dexHelper.findMethodUsingString(
-                    "ActionViewHolder",
-                    false,
-                    -1,
-                    -1,
-                    null,
-                    -1,
-                    null,
-                    null,
-                    null,
-                    true
-                ).firstOrNull()?.let {
-                    dexHelper.decodeMethodIndex(it)
-                }?.declaringClass ?: return@section
-                val likeMethod = sectionClass?.superclass?.declaredMethods?.find {
-                    it.parameterTypes.size == 1 && it.returnType == Void.TYPE && !it.isFinal
-                } ?: return@section
-                class_ = class_ { name = sectionClass.name }
-                like = method { name = likeMethod.name }
+                storyAbsController = storyAbsController {
+                    val storyAbsControllerClass = dexHelper.findMethodUsingString(
+                        "notify player state fail",
+                        false,
+                        -1,
+                        -1,
+                        null,
+                        -1,
+                        null,
+                        null,
+                        null,
+                        true
+                    ).asSequence().mapNotNull {
+                        dexHelper.decodeMethodIndex(it)?.declaringClass
+                    }.firstOrNull() ?: return@storyAbsController
+                    val storyPagerPlayerInterface = dexHelper.findMethodUsingString(
+                        " play item but is inactivate",
+                        false,
+                        -1,
+                        -1,
+                        null,
+                        -1,
+                        null,
+                        null,
+                        null,
+                        true
+                    ).asSequence().mapNotNull {
+                        dexHelper.decodeMethodIndex(it)?.declaringClass?.interfaces?.getOrNull(0)
+                    }.firstOrNull() ?: return@storyAbsController
+                    val storyDetailClass = "com.bilibili.video.story.StoryDetail".from(classloader)
+                    val setMDataMethod = storyAbsControllerClass.declaredMethods.firstOrNull {
+                        it.returnType == Void.TYPE && it.parameterCount == 1 && it.parameterTypes[0] == storyDetailClass
+                    } ?: return@storyAbsController
+                    val getMPlayerMethod = storyAbsControllerClass.declaredMethods.firstOrNull {
+                        storyPagerPlayerInterface.isAssignableFrom(it.returnType) && it.parameterCount == 0
+                    } ?: return@storyAbsController
+                    class_ = class_ { name = storyAbsControllerClass.name }
+                    setMData = method { name = setMDataMethod.name }
+                    getMPlayer = method { name = getMPlayerMethod.name }
+                }
             }
             signQuery = signQuery {
                 val signedQueryClass =

@@ -376,7 +376,11 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             ?.callMethodAs("getAid") ?: -1L
         val like = viewReply.callMethod("getReqUser")
             ?.callMethodAs("getLike") ?: -1
-        AutoLikeHook.detail = aid to like
+
+        if (aid > 0 && like != -1) {
+            AutoLikeHook.detail = aid to like
+        }
+
         BangumiPlayUrlHook.qnApplied.set(false)
 
         // 视频详情页荣誉卡片
