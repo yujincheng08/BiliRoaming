@@ -159,12 +159,20 @@ message SignQuery {
   optional Method method = 2;
 }
 
-message Section {
+message AutoLike {
+  optional KingPositionComponent kingPositionComponent = 1;
+  optional StoryAbsController storyAbsController = 2;
+}
+
+message KingPositionComponent {
   optional Class class = 1;
-  optional Method like = 2;
-  optional Class view_holder = 3;
-  optional Method bind_view = 4;
-  optional Method get_root = 5;
+  optional Field componentMap = 2;
+}
+
+message StoryAbsController {
+  optional Class class = 1;
+  optional Method setMData = 2;
+  optional Method getMPlayer = 3;
 }
 
 message Drawer {
@@ -330,7 +338,7 @@ message HookInfo {
   optional ThemeProcessor theme_processor = 20;
   optional Class theme_list_click = 22;
   optional ThemeName theme_name = 24;
-  optional Section section = 25;
+  optional AutoLike autoLike = 25;
   optional SignQuery sign_query = 27;
   optional Class general_response = 28;
   optional Drawer drawer = 30;
