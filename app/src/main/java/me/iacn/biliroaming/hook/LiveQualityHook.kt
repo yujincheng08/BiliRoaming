@@ -112,17 +112,25 @@ class LiveQualityHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
             debug { "originalLiveUrl: $originalUri" }
 
-            newQn = findQuality(
-                JSONArray(originalUri.getQueryParameter("accept_quality")),
-                liveQuality
-            ).toString()
-            debug { "newQn: $newQn" }
+            if (originalUri.getQueryParameter("no_playurl") == "1") {
+                newQn = liveQuality.toString()
+            } else {
+                newQn = findQuality(
+                    JSONArray(originalUri.getQueryParameter("accept_quality")),
+                    liveQuality
+                ).toString()
 
-            param.args[0] = originalUri.removeQuery { name ->
-                name.startsWith("playurl")
-            }.also {
-                debug { "newLiveUrl: $it" }
+                param.args[0] = originalUri.modified(
+                    removeIf = { name ->
+                        name.startsWith("playurl")
+                    },
+                    append = mapOf("no_playurl" to "1")
+                ).also {
+                    debug { "newLiveUrl: $it" }
+                }
             }
+
+            debug { "newQn: $newQn" }
         }
     }
 
@@ -143,13 +151,16 @@ class LiveQualityHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
     }
 
-    private fun Uri.removeQuery(predicate: (String) -> Boolean): Uri {
+    private fun Uri.modified(removeIf: (String) -> Boolean, append: Map<String, Any>): Uri {
         val newBuilder = buildUpon().clearQuery()
         for (name in queryParameterNames) {
             val value = getQueryParameter(name) ?: ""
-            if (!predicate(name)) {
+            if (!removeIf(name)) {
                 newBuilder.appendQueryParameter(name, value)
             }
+        }
+        append.forEach { (k, v) ->
+            newBuilder.appendQueryParameter(k, v.toString())
         }
         return newBuilder.build()
     }
