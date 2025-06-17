@@ -269,6 +269,24 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
             }
         }
+
+        // 修复下载时提示获取剧集信息失败
+        instance.resolveClientCompanionClass?.hookAfterMethod(
+            instance.buildCommonResolverParamsMethod(),
+            instance.videoDownloadEntryClass
+        ) { param ->
+            val entry = param.args[0].callMethodAs<JSONObject?>("toJsonObject")
+            val seasonId = entry?.optString("season_id")
+            val epId = entry?.optJSONObject("ep")?.optString("episode_id")
+            val extraMap = buildMap {
+                seasonId?.let { put("season_id", it) }
+                epId?.let { put("ep_id", it) }
+            }.ifEmpty {
+                return@hookAfterMethod
+            }
+            param.result.callMethod(instance.setExtraContentMethod(), extraMap)
+        }
+
         instance.playerMossClass?.run {
             var isDownload = false
             hookBeforeMethod(
@@ -354,10 +372,11 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         }
                             ?: throw CustomServerException(mapOf("未知错误" to "请检查哔哩漫游设置中解析服务器设置。"))
                     } catch (e: CustomServerException) {
-                        param.result = showPlayerErrorUnite(
-                            response, supplement,
-                            "请求解析服务器发生错误", e.message, true
-                        )
+                        // v8.48.0+ 打开缓存弹窗导致应用崩溃
+//                        param.result = showPlayerErrorUnite(
+//                            response, supplement,
+//                            "请求解析服务器发生错误", e.message, true
+//                        )
                         Log.toast("请求解析服务器发生错误: ${e.message}", alsoLog = true)
                     }
                 } else if (isDownload) {

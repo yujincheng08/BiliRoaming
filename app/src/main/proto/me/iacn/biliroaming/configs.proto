@@ -320,6 +320,16 @@ message DataSP {
   optional Method get = 2;
 }
 
+message ResolveClientCompanion {
+  optional Class class = 1;
+  optional Method buildCommonResolverParams = 2;
+}
+
+message GCommonResolverParams {
+  optional Class class = 1;
+  optional Method setExtraContent = 2;
+}
+
 message HookInfo {
   int64 last_update_time = 1;
   optional MapIds map_ids = 2;
@@ -389,4 +399,6 @@ message HookInfo {
   optional PreBuiltConfig preBuiltConfig = 99;
   optional DataSP dataSP = 100;
   optional Class pegasus_parser = 101;
+  optional ResolveClientCompanion resolveClientCompanion = 102;
+  optional GCommonResolverParams gCommonResolverParams = 103;
 }

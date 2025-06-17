@@ -180,6 +180,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val fastjsonFieldAnnotation by Weak { "com.alibaba.fastjson.annotation.JSONField" from mClassLoader }
     val gsonFieldAnnotation by Weak { "com.google.gson.annotations.SerializedName" from mClassLoader }
     val pegasusParserClass by Weak { mHookInfo.pegasusParser from mClassLoader }
+    val resolveClientCompanionClass by Weak { mHookInfo.resolveClientCompanion.class_ from mClassLoader }
+    val videoDownloadEntryClass by Weak { "com.bilibili.videodownloader.model.VideoDownloadEntry" from mClassLoader }
 
     // for v8.17.0+
     val useNewMossFunc = instance.viewMossClass?.declaredMethods?.any {
@@ -359,6 +361,10 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
     fun getDataSPMethod() = mHookInfo.dataSP.get.orNull
 
+    fun buildCommonResolverParamsMethod() =
+        mHookInfo.resolveClientCompanion.buildCommonResolverParams.orNull
+
+    fun setExtraContentMethod() = mHookInfo.gCommonResolverParams.setExtraContent.orNull
 
     private fun readHookInfo(context: Context): Configs.HookInfo {
         try {
@@ -2335,6 +2341,46 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 ).asSequence().mapNotNull { dexHelper.decodeMethodIndex(it) }.firstOrNull()
                     ?: return@class_
                 name = getPegasusParser.declaringClass.name
+            }
+            resolveClientCompanion = resolveClientCompanion {
+                val resolveClientClass = dexHelper.findMethodUsingString(
+                    "Invalid segment id: %s, segment list size:%s",
+                    false,
+                    -1,
+                    -1,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null,
+                    true
+                ).asSequence().firstNotNullOfOrNull {
+                    dexHelper.decodeMethodIndex(it)?.declaringClass
+                } ?: return@resolveClientCompanion
+                val resolveClientCompanionClass = "${resolveClientClass.name}\$a".from(classloader)
+                    ?: return@resolveClientCompanion
+                val paramsClass =
+                    "com.bilibili.app.gemini.base.player.GeminiCommonResolverParams".from(
+                        classloader
+                    )
+                val videoDownloadEntryClass =
+                    "com.bilibili.videodownloader.model.VideoDownloadEntry".from(classloader)
+                val buildParamsMethod = resolveClientCompanionClass.declaredMethods.firstOrNull {
+                    it.returnType == paramsClass && it.parameterCount == 1 && it.parameterTypes[0] == videoDownloadEntryClass
+                } ?: return@resolveClientCompanion
+                class_ = class_ { name = resolveClientCompanionClass.name }
+                buildCommonResolverParams = method { name = buildParamsMethod.name }
+            }
+            gCommonResolverParams = gCommonResolverParams {
+                val commonResolverParamsClass =
+                    "com.bilibili.app.gemini.base.player.GeminiCommonResolverParams".from(
+                        classloader
+                    ) ?: return@gCommonResolverParams
+                val setExtraContentMethod = commonResolverParamsClass.declaredMethods?.firstOrNull {
+                    it.returnType == Void.TYPE && it.parameterCount == 1 && it.parameterTypes[0] == Map::class.java
+                } ?: return@gCommonResolverParams
+                class_ = class_ { name = commonResolverParamsClass.name }
+                setExtraContent = method { name = setExtraContentMethod.name }
             }
             dexHelper.close()
         }
