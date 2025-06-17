@@ -1937,7 +1937,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             }.let { playerQualityService.addAll(it.toList()) }
             playerSettingHelper = playerSettingHelper {
                 val getDefaultQnMethod = dexHelper.findMethodUsingString(
-                    "get free data failed",
+                    "quality settings:",
                     false,
                     -1,
                     -1,
