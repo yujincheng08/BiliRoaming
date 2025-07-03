@@ -330,6 +330,11 @@ message GCommonResolverParams {
   optional Method setExtraContent = 2;
 }
 
+message RewardAd {
+  optional Class class_ = 1;
+  optional Field rewardFlag = 2;
+}
+
 message HookInfo {
   int64 last_update_time = 1;
   optional MapIds map_ids = 2;
@@ -401,4 +406,5 @@ message HookInfo {
   optional Class pegasus_parser = 101;
   optional ResolveClientCompanion resolveClientCompanion = 102;
   optional GCommonResolverParams gCommonResolverParams = 103;
+  optional RewardAd rewardAd = 104;
 }

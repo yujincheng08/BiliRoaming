@@ -182,6 +182,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val pegasusParserClass by Weak { mHookInfo.pegasusParser from mClassLoader }
     val resolveClientCompanionClass by Weak { mHookInfo.resolveClientCompanion.class_ from mClassLoader }
     val videoDownloadEntryClass by Weak { "com.bilibili.videodownloader.model.VideoDownloadEntry" from mClassLoader }
+    val rewardAdClass by Weak { mHookInfo.rewardAd.class_ from mClassLoader }
 
     // for v8.17.0+
     val useNewMossFunc = instance.viewMossClass?.declaredMethods?.any {
@@ -365,6 +366,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
         mHookInfo.resolveClientCompanion.buildCommonResolverParams.orNull
 
     fun setExtraContentMethod() = mHookInfo.gCommonResolverParams.setExtraContent.orNull
+
+    fun rewardFlag() = mHookInfo.rewardAd.rewardFlag.orNull
 
     private fun readHookInfo(context: Context): Configs.HookInfo {
         try {
@@ -2382,6 +2385,19 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 class_ = class_ { name = commonResolverParamsClass.name }
                 setExtraContent = method { name = setExtraContentMethod.name }
             }
+            rewardAd = rewardAd {
+                val rewardAdActivityClass =
+                    "com.bilibili.ad.reward.RewardAdActivity".from(classloader) ?: return@rewardAd
+
+                class_ = class_ { name = rewardAdActivityClass.name }
+                val rewardFlagField =
+                    rewardAdActivityClass.declaredFields.filter { it.type == Boolean::class.javaPrimitiveType }
+                        .getOrNull(1) ?: return@rewardAd
+
+                rewardFlag = field { name = rewardFlagField.name }
+
+            }
+
             dexHelper.close()
         }
 

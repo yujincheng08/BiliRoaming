@@ -306,4 +306,6 @@
     <string name="auto_dark_splash_summary">防瞎眼</string>
     <string name="no_live_mask_title">隐藏直播模糊遮罩</string>
     <string name="no_live_mask_summary">隐藏部分直播的模糊遮罩</string>
+    <string name="skip_reward_ad_title">跳过视频激励广告</string>
+    <string name="skip_reward_ad_summary">受不了了！我要看个爽！（需重启两次哔哩哔哩）</string>
 </resources>
