@@ -131,6 +131,7 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                     startHook { WebViewHook(lpparam.classLoader) }
                     startHook { ShareHook(lpparam.classLoader) }
                     startHook { DialogBlurBackgroundHook(lpparam.classLoader) }
+                    startHook { RewardAdHook(lpparam.classLoader) }
                 }
 
                 lpparam.processName.endsWith(":download") -> {

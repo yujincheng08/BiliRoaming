@@ -315,6 +315,11 @@
             android:title="@string/customize_bottom_bar_title" />
         <SwitchPreference
             android:dependency="hidden"
+            android:key="skip_reward_ad"
+            android:summary="@string/skip_reward_ad_summary"
+            android:title="@string/skip_reward_ad_title" />
+        <SwitchPreference
+            android:dependency="hidden"
             android:key="purify_game"
             android:summary="@string/purify_game_summary"
             android:title="@string/purify_game_title" />

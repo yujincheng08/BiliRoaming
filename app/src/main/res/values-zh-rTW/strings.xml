@@ -281,4 +281,6 @@
     <string name="pegasus_cover_ratio_title">推薦封面比例</string>
     <string name="pegasus_cover_ratio_summary">自訂首頁推薦小卡（雙列顯示的）封面比例</string>
     <string name="filter_search_remove_relate_promote">搜尋結果移除推廣</string>
+    <string name="skip_reward_ad_title">跳過視頻激勵廣告</string>
+    <string name="skip_reward_ad_summary">受不了了！我要看個爽！（需重啟兩次嗶哩嗶哩）</string>
 </resources>
