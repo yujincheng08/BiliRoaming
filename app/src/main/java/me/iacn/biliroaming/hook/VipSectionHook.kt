@@ -15,19 +15,30 @@ class VipSectionHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         if (!sPrefs.getBoolean("hidden", false)
             || !sPrefs.getBoolean("remove_vip_section", false)
         ) return
-        val vipEntranceViewClass =
-            "tv.danmaku.bili.ui.main2.mine.widgets.MineVipEntranceView".from(mClassLoader)
-        val vipEntranceViewField =
-            vipEntranceViewClass?.let { instance.homeUserCenterClass?.findFieldByExactType(it) }
-        instance.homeUserCenterClass?.hookAfterMethod(
-            "onCreateView",
-            LayoutInflater::class.java,
-            ViewGroup::class.java,
+
+
+        instance.homeUserCenterClass!!.hookAfterMethod(
+            "onViewCreated",
+            View::class.java,
             Bundle::class.java
         ) {
-            val self = it.thisObject
-            (vipEntranceViewField?.get(self) as? View)?.visibility = View.GONE
-            vipEntranceViewField?.set(self, null)
+            val obj = it.thisObject
+            val vipModuleManager = instance.homeUserCenterClass!!.declaredFields.single {
+                // $mineVipModuleManager
+                it.type.toString().contains("MineVipModuleManager")
+            }.run {
+                isAccessible = true
+                get(obj)
+            }
+
+            vipModuleManager::class.java.declaredMethods.single {
+                // $method(isTeenager: Boolean)
+                it.parameterCount == 1 &&
+                        it.parameterTypes[0] == Boolean::class.java
+            }.run {
+                isAccessible = true
+                invoke(vipModuleManager, true)
+            }
         }
     }
 }
