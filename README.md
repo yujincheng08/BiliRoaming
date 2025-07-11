@@ -70,3 +70,8 @@ https://github.com/yujincheng08/BiliRoaming/wiki#%E4%BD%BF%E7%94%A8%E6%96%B9%E6%
 Telegram: [@biliroaming](https://t.me/biliroaming)
 ### License
 [GNU General Public License, version 3](LICENSE)
+
+
+### 本项目 CDN 加速及安全防护由 Tencent EdgeOne 赞助
+[亚洲最佳CDN、边缘和安全解决方案 - Tencent EdgeOne](https://edgeone.ai/zh?from=github)
+![](https://edgeone.ai/media/34fe3a45-492d-4ea4-ae5d-ea1087ca7b4b.png)
