@@ -924,6 +924,39 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     "（累计拦截 $blockedCount 条）"
         }
 
+        private fun onLongPressSpeedClick(): Boolean {
+            AlertDialog.Builder(activity).run {
+                val view = context.inflateLayout(R.layout.seekbar_dialog)
+                val seekBar = view.findViewById<SeekBar>(R.id.seekBar)
+                seekBar.max = 100
+                val tvHint = view.findViewById<TextView>(R.id.tvHint)
+                seekBar.setOnSeekBarChangeListener(object : OnSeekBarChangeListener {
+                    @SuppressLint("SetTextI18n")
+                    override fun onProgressChanged(
+                        seekBar: SeekBar?, progress: Int, fromUser: Boolean
+                    ) {
+                        tvHint.text = "${progress * 10}%"
+                    }
+
+                    override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+                    override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+                })
+                val current = prefs.getInt("long_press_speed", 300)
+                @SuppressLint("SetTextI18n")
+                tvHint.text = "${current * 10}%"
+                seekBar.progress = current / 10
+                setTitle(R.string.long_press_speed)
+                setNegativeButton(android.R.string.cancel, null)
+                setPositiveButton(android.R.string.ok) { _, _ ->
+                    prefs.edit().putInt("long_press_speed", seekBar.progress * 10).apply()
+                }
+                setView(view)
+                show()
+
+            }
+            return true
+        }
+
         @Deprecated("Deprecated in Java")
         override fun onPreferenceClick(preference: Preference) = when (preference.key) {
             "version" -> onVersionClick()
@@ -946,6 +979,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             "filter_comment" -> onFilterCommentClick()
             "copy_access_key" -> onCopyAccessKeyClick()
             "purify_story_video_ad" -> onPurifyStoryVideoAdClick()
+            "long_press_speed" -> onLongPressSpeedClick()
             else -> false
         }
     }
