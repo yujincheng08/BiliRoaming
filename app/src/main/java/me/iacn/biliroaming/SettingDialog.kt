@@ -111,6 +111,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             findPreference("filter_comment")?.onPreferenceClickListener = this
             findPreference("copy_access_key")?.onPreferenceClickListener = this
             findPreference("purify_story_video_ad")?.onPreferenceClickListener = this
+            findPreference("long_press_speed")?.onPreferenceClickListener = this
             checkCompatibleVersion()
             searchItems = retrieve(preferenceScreen)
             checkUpdate()

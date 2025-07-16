@@ -310,4 +310,5 @@
     <string name="skip_reward_ad_summary">有了这个，终于能过第二关了😋（需重启两次哔哩哔哩）</string>
     <string name="purify_story_video_ad_title">净化竖屏模式广告/推广</string>
     <string name="purify_story_video_ad_summary">有了这个，连第一关都看不到了😭</string>
+    <string name="long_press_speed">长按播放速度设置</string>
 </resources>

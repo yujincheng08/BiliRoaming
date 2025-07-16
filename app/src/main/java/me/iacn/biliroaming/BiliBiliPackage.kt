@@ -183,6 +183,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val resolveClientCompanionClass by Weak { mHookInfo.resolveClientCompanion.class_ from mClassLoader }
     val videoDownloadEntryClass by Weak { "com.bilibili.videodownloader.model.VideoDownloadEntry" from mClassLoader }
     val rewardAdClass by Weak { mHookInfo.rewardAd.class_ from mClassLoader }
+    val tripleSpeedServiceClass by Weak { "com.bilibili.ship.theseus.united.player.TripleSpeedService\$runOldTripleSpeed\$1\$listener\$1\$onLongPress\$1" from mClassLoader }
 
     // for v8.17.0+
     val useNewMossFunc = instance.viewMossClass?.declaredMethods?.any {
