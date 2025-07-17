@@ -285,6 +285,11 @@
             android:key="fake_non_multiwindow"
             android:title="@string/fake_non_multiwindow_title"
             android:summary="@string/fake_non_multiwindow_summary"/>
+
+        <Preference
+            android:defaultValue="300"
+            android:key="long_press_speed"
+            android:title="@string/long_press_speed" />
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/pref_backup">
         <Preference
