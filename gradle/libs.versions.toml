@@ -1,11 +1,11 @@
 [versions]
-protobuf = "4.30.2"
+protobuf = "4.31.1"
 coroutine = "1.10.2"
-kotlin = "2.1.20"
+kotlin = "2.2.0"
 
 [plugins]
 kotlin = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
-agp-app = { id = "com.android.application", version = "8.9.1" }
+agp-app = { id = "com.android.application", version = "8.12.0" }
 protobuf = { id = "com.google.protobuf", version = "0.9.5" }
 lsplugin-jgit = { id = "org.lsposed.lsplugin.jgit", version = "1.1" }
 lsplugin-resopt = { id = "org.lsposed.lsplugin.resopt", version = "1.6" }
@@ -15,11 +15,11 @@ lsplugin-cmaker = { id = "org.lsposed.lsplugin.cmaker", version = "1.2" }
 
 [libraries]
 xposed = { module = "de.robv.android.xposed:api", version = "82" }
-cxx = { module = "org.lsposed.libcxx:libcxx", version = "27.0.12077973" }
+cxx = { module = "org.lsposed.libcxx:libcxx", version = "28.1.13356709" }
 protobuf-kotlin = { module = "com.google.protobuf:protobuf-kotlin-lite", version.ref = "protobuf" }
 protobuf-java = { module = "com.google.protobuf:protobuf-javalite", version.ref = "protobuf" }
 protobuf-protoc = { module = "com.google.protobuf:protoc", version.ref = "protobuf" }
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
 kotlin-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutine" }
 kotlin-coroutines-jdk = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-jdk8", version.ref = "coroutine" }
-androidx-documentfile = { module = "androidx.documentfile:documentfile", version = "1.0.1" }
+androidx-documentfile = { module = "androidx.documentfile:documentfile", version = "1.1.0" }
