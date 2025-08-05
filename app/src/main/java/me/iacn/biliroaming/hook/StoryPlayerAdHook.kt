@@ -1,5 +1,6 @@
 package me.iacn.biliroaming.hook
 
+import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.utils.Log
 import me.iacn.biliroaming.utils.from
 import me.iacn.biliroaming.utils.hookBeforeMethod
@@ -12,10 +13,10 @@ class StoryPlayerAdHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val purifyTags = sPrefs.getStringSet("purify_story_video_ad_tags", emptySet()) ?: emptySet()
         if (purifyTags.isEmpty()) return
 
-        Log.d("startHook: StoryPlayerAd, purifyTags: ${purifyTags}")
+        Log.d("startHook: StoryPlayerAd, purifyTags: $purifyTags")
 
-        "com.bilibili.video.story.player.StoryPagerPlayer".from(mClassLoader)
-            ?.hookBeforeMethod("n1", List::class.java) { params ->
+        instance.storyPagerPlayerClass?.hookBeforeMethod(
+            instance.addVideo(), List::class.java) { params ->
                 val storyDetailList = params.args[0] as? MutableList<*> ?: return@hookBeforeMethod
                 val toRemove = mutableListOf<Any>()
 

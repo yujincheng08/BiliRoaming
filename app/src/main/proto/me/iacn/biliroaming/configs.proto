@@ -335,6 +335,11 @@ message RewardAd {
   optional Field rewardFlag = 2;
 }
 
+message StoryPagerPlayer {
+  optional Class class = 1;
+  optional Method addVideo = 2;
+}
+
 message HookInfo {
   int64 last_update_time = 1;
   optional MapIds map_ids = 2;
@@ -407,4 +412,5 @@ message HookInfo {
   optional ResolveClientCompanion resolveClientCompanion = 102;
   optional GCommonResolverParams gCommonResolverParams = 103;
   optional RewardAd rewardAd = 104;
+  optional StoryPagerPlayer storyPagerPlayer = 105;
 }

@@ -80,7 +80,6 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 packageName + "_preferences",
                 Context.MODE_MULTI_PROCESS
             )
-            updatePurifyStoryVideoAdBlockedCount()
             if (!prefs.getBoolean("hidden", false)) {
                 val hiddenGroup = findPreference("hidden_group") as PreferenceCategory
                 preferenceScreen.removePreference(hiddenGroup)
@@ -886,7 +885,6 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 val prefKey = "purify_story_video_ad_tags"
                 val oldPurifyAdTags = sPrefs.getStringSet(prefKey, emptySet()) ?: emptySet()
 
-
                 val keys = tagMap.keys.toList()
                 val values = tagMap.values.toTypedArray()
 
@@ -894,8 +892,9 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                     keys[index] in oldPurifyAdTags
                 }
 
+                val blockedCount = sPrefs.getInt("purify_story_video_ad_blocked_count", 0)
 
-                setTitle(context.getString(R.string.purify_story_video_ad_title))
+                setTitle(context.getString(R.string.purify_story_video_ad_title) + "（累计拦截 $blockedCount 条）")
                 setPositiveButton(context.getString(android.R.string.ok)) { _, _ ->
                     val selected = mutableSetOf<String>()
                     for (i in keys.indices) {
@@ -916,12 +915,6 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 }
             }.show()
             return true
-        }
-
-        private fun updatePurifyStoryVideoAdBlockedCount() {
-            val blockedCount = sPrefs.getInt("purify_story_video_ad_blocked_count", 0)
-            findPreference("purify_story_video_ad")?.summary = getString(R.string.purify_story_video_ad_summary) +
-                    "（累计拦截 $blockedCount 条）"
         }
 
         private fun onLongPressSpeedClick(): Boolean {

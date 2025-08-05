@@ -184,6 +184,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val videoDownloadEntryClass by Weak { "com.bilibili.videodownloader.model.VideoDownloadEntry" from mClassLoader }
     val rewardAdClass by Weak { mHookInfo.rewardAd.class_ from mClassLoader }
     val tripleSpeedServiceClass by Weak { "com.bilibili.ship.theseus.united.player.TripleSpeedService\$runOldTripleSpeed\$1\$listener\$1\$onLongPress\$1" from mClassLoader }
+    val storyPagerPlayerClass by Weak { mHookInfo.storyPagerPlayer.class_ from mClassLoader }
 
     // for v8.17.0+
     val useNewMossFunc = instance.viewMossClass?.declaredMethods?.any {
@@ -369,6 +370,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     fun setExtraContentMethod() = mHookInfo.gCommonResolverParams.setExtraContent.orNull
 
     fun rewardFlag() = mHookInfo.rewardAd.rewardFlag.orNull
+
+    fun addVideo() = mHookInfo.storyPagerPlayer.addVideo.orNull
 
     private fun readHookInfo(context: Context): Configs.HookInfo {
         try {
@@ -2397,6 +2400,29 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
                 rewardFlag = field { name = rewardFlagField.name }
 
+            }
+            storyPagerPlayer = storyPagerPlayer {
+                val storyPagerPlayerClass =
+                    "com.bilibili.video.story.player.StoryPagerPlayer".from(classloader) ?: return@storyPagerPlayer
+
+                class_ = class_ { name = storyPagerPlayerClass.name }
+
+                val addVideoMethod = dexHelper.findMethodUsingString(
+                    " add ",
+                    false,
+                    -1,
+                    -1,
+                    null,
+                    dexHelper.encodeClassIndex(storyPagerPlayerClass),
+                    null,
+                    longArrayOf(dexHelper.encodeClassIndex(List::class.java)),
+                    null,
+                    true
+                ).asSequence().mapNotNull {
+                    dexHelper.decodeMethodIndex(it)
+                }.firstOrNull() ?: return@storyPagerPlayer
+
+                addVideo = method { name = addVideoMethod.name }
             }
 
             dexHelper.close()
