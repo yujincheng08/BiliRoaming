@@ -23,8 +23,6 @@ jobs:
           distribution: 'temurin'
           java-version: 17
           cache: 'gradle'
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
       - name: Retrieve version
         run: |
           echo VERSION=$(echo ${{ github.event.head_commit.id }} | head -c 10) >> $GITHUB_ENV
