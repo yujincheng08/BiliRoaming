@@ -14,9 +14,9 @@ class DownloadThreadHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         if (!sPrefs.getBoolean("custom_download_thread", false)) return
         Log.d("startHook: DownloadThread")
         instance.downloadThreadListenerClass?.run {
-            hookBeforeAllConstructors { param ->
-                val view = param.args.find { it is TextView } as? TextView
-                    ?: return@hookBeforeAllConstructors
+            hookAllConstructors { chain ->
+                val view = chain.args.find { it is TextView } as? TextView
+                    ?: return@hookAllConstructors chain.proceed()
                 val visibility = if (view.tag as Int == 1) {
                     view.text = "自定义"
                     View.VISIBLE
@@ -24,8 +24,9 @@ class DownloadThreadHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     View.INVISIBLE
                 }
                 (view.parent as ViewGroup).getChildAt(1).visibility = visibility
+                chain.proceed()
             }
-            replaceMethod("onClick", View::class.java) { param ->
+            hookMethod("onClick", View::class.java) { chain ->
                 var textViewField: String? = null
                 var viewHostField: String? = null
                 declaredFields.forEach {
@@ -34,7 +35,7 @@ class DownloadThreadHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         TextView::class.java -> textViewField = it.name
                     }
                 }
-                val view = param.thisObject!!.getObjectFieldAs<TextView>(textViewField)
+                val view = chain.thisObject!!.getObjectFieldAs<TextView>(textViewField)
                 if (view.tag as? Int == 1) {
                     AlertDialog.Builder(view.context).create().run {
                         setTitle("自定义同时缓存数")
@@ -42,26 +43,26 @@ class DownloadThreadHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             minValue = 1
                             maxValue = 64
                             wrapSelectorWheel = false
-                            value = param.thisObject!!.getObjectField(viewHostField)
+                            value = chain.thisObject!!.getObjectField(viewHostField)
                                 ?.getIntField(instance.downloadingThread())
                                 ?: 1
                         }
                         setView(numberPicker, 50, 0, 50, 0)
                         setButton(AlertDialog.BUTTON_POSITIVE, "OK") { _, _ ->
                             view.tag = numberPicker.value
-                            param.invokeOriginalMethod()
+                            chain.proceed()
                         }
                         show()
                     }
                 } else {
-                    param.invokeOriginalMethod()
+                    chain.proceed()
                 }
             }
         }
-        instance.reportDownloadThreadClass?.replaceMethod(
+        instance.reportDownloadThreadClass?.hookMethod(
             instance.reportDownloadThread(),
             Context::class.java,
             Int::class.javaPrimitiveType
-        ) {}
+        ) { null }
     }
 }

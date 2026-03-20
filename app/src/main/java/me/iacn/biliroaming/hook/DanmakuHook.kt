@@ -9,15 +9,17 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val blockWeight = sPrefs.getInt("danmaku_filter_weight", 0)
         val disableVipDmColorful = sPrefs.getBoolean("disable_vip_dm_colorful", false)
         if (blockWeight <= 0 && !disableVipDmColorful) return
-        instance.dmMossClass?.hookBeforeMethod(
+        instance.dmMossClass?.hookMethod(
             "dmSegMobile",
             "com.bapis.bilibili.community.service.dm.v1.DmSegMobileReq",
             instance.mossResponseHandlerClass
-        ) { param ->
-            param.args[1] = param.args[1]!!.mossResponseHandlerProxy {
+        ) { chain ->
+            val args = chain.args.toTypedArray()
+            args[1] = args[1]!!.mossResponseHandlerProxy {
                 if (blockWeight > 0) filterDanmaku(it, blockWeight)
                 if (disableVipDmColorful) clearVipColorfulSrc(it)
             }
+            chain.proceed(args)
         }
     }
 

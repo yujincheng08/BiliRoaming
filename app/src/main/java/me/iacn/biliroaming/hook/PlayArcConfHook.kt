@@ -3,6 +3,7 @@ package me.iacn.biliroaming.hook
 import android.net.Uri
 import me.iacn.biliroaming.*
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
+import io.github.libxposed.api.XposedInterface
 import me.iacn.biliroaming.utils.*
 import kotlin.math.ceil
 
@@ -13,10 +14,11 @@ class PlayArcConfHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
         if (!sPrefs.getBoolean("play_arc_conf", false)) return
 
-        instance.playURLMossClass?.hookAfterMethod(
+        instance.playURLMossClass?.hookMethod(
             if (instance.useNewMossFunc) "executePlayView" else "playView", instance.playViewReqClass
-        ) { param ->
-            param.result?.callMethod("getPlayArc")?.run {
+        ) { chain ->
+            val result = chain.proceed()
+            result?.callMethod("getPlayArc")?.run {
                 arrayOf(
                     callMethod("getCastConf"),
                     callMethod("getBackgroundPlayConf"),
@@ -26,6 +28,7 @@ class PlayArcConfHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     it?.callMethod("setIsSupport", true)
                 }
             }
+            result
         }
         val supportedArcConf = "com.bapis.bilibili.playershared.ArcConf"
             .from(mClassLoader)?.new()?.apply {
@@ -40,21 +43,26 @@ class PlayArcConfHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     intArrayOf(2, 9, 23, 36).forEach { this[it] = supportedArcConf }
                 }
 
-        instance.playerMossClass?.hookAfterMethod(
+        instance.playerMossClass?.hookMethod(
             if (instance.useNewMossFunc) "executePlayViewUnite" else "playViewUnite",
             instance.playViewUniteReqClass
-        ) { param ->
-            param.result?.callMethod("mergePlayArcConf", arcConfs)
+        ) { chain ->
+            val result = chain.proceed()
+            result?.callMethod("mergePlayArcConf", arcConfs)
+            result
         }
-        instance.playerMossClass?.hookBeforeMethod("playViewUnite", instance.playViewUniteReqClass, instance.mossResponseHandlerClass) { param ->
-            param.args[1] = param.args[1]!!.mossResponseHandlerProxy { resp ->
+        instance.playerMossClass?.hookMethod("playViewUnite", instance.playViewUniteReqClass, instance.mossResponseHandlerClass) { chain ->
+            val args = chain.args.toTypedArray()
+            args[1] = args[1]!!.mossResponseHandlerProxy { resp ->
                 resp?.callMethod("mergePlayArcConf", arcConfs)
             }
+            chain.proceed(args)
         }
         "com.bapis.bilibili.app.listener.v1.ListenerMoss".from(mClassLoader)?.run {
-            val playlistHook = { param: MethodHookParam ->
-                val req = param.args[0]!!
-                param.args[1] = param.args[1]!!.mossResponseHandlerProxy { resp ->
+            val playlistHook: HookCallback = { chain ->
+                val args = chain.args.toTypedArray()
+                val req = args[0]!!
+                args[1] = args[1]!!.mossResponseHandlerProxy { resp ->
                     runCatching {
                         reconstructPlaylistResponse(req, resp)
                     }.onFailure {
@@ -62,39 +70,41 @@ class PlayArcConfHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         Log.toast("听视频解锁失败")
                     }
                 }
+                chain.proceed(args)
             }
-            hookBeforeMethod(
+            hookMethod(
                 "playlist",
                 "com.bapis.bilibili.app.listener.v1.PlaylistReq",
                 instance.mossResponseHandlerClass,
-                hooker = playlistHook
+                callback = playlistHook
             )
-            hookBeforeMethod(
+            hookMethod(
                 "rcmdPlaylist",
                 "com.bapis.bilibili.app.listener.v1.RcmdPlaylistReq",
                 instance.mossResponseHandlerClass,
-                hooker = playlistHook
+                callback = playlistHook
             )
-            hookBeforeMethod(
+            hookMethod(
                 "playHistory",
                 "com.bapis.bilibili.app.listener.v1.PlayHistoryReq",
                 instance.mossResponseHandlerClass,
-                hooker = playlistHook
+                callback = playlistHook
             )
-            hookAfterMethod(
+            hookMethod(
                 if (instance.useNewMossFunc) "executePlayURL" else "playURL",
                 "com.bapis.bilibili.app.listener.v1.PlayURLReq"
-            ) { param ->
-                if (instance.networkExceptionClass?.isInstance(param.throwable) == true)
-                    return@hookAfterMethod
-                val resp = param.result ?: "com.bapis.bilibili.app.listener.v1.PlayURLResp"
+            ) { chain ->
+                val result = runCatching { chain.proceed() }
+                if (result.isFailure && instance.networkExceptionClass?.isInstance(result.exceptionOrNull()) == true)
+                    return@hookMethod result.getOrThrow()
+                val resp = result.getOrNull() ?: "com.bapis.bilibili.app.listener.v1.PlayURLResp"
                     .on(mClassLoader).new()
                 val playable = resp.callMethodAs<Int>("getPlayable")
                 val playerInfoMap = resp.callMethodAs<Map<*, *>>("getPlayerInfoMap")
                 if (playable == 0 && playerInfoMap.isNotEmpty())
-                    return@hookAfterMethod
+                    return@hookMethod resp
                 Log.toast("听视频解锁中")
-                param.result = reconstructPlayUrlResponse(param.args[0]!!, resp)
+                reconstructPlayUrlResponse(chain.args[0]!!, resp)
             }
         }
     }

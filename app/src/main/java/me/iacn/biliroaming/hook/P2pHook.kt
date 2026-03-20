@@ -13,26 +13,38 @@ class P2pHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         Log.d("startHook: P2P")
         "tv.danmaku.ijk.media.player.IjkMediaPlayer\$IjkMediaPlayerServiceConnection".from(
             mClassLoader
-        )?.replaceMethod("initP2PClient") {}
+        )?.hookMethod("initP2PClient") { null }
         if (blockPcdn) {
             "tv.danmaku.ijk.media.player.P2P".from(mClassLoader)?.run {
-                hookBeforeMethod("getInstance", Context::class.java, Bundle::class.java) { param ->
-                    param.args[0] = null
-                    param.args[1]!!.callMethod("clear")
+                hookMethod("getInstance", Context::class.java, Bundle::class.java) { chain ->
+                    val args = chain.args.toTypedArray()
+                    args[0] = null
+                    args[1]!!.callMethod("clear")
+                    chain.proceed(args)
                 }
-                hookBeforeConstructor(Context::class.java, Bundle::class.java) { param ->
-                    param.args[0] = null
-                    param.args[1]!!.callMethod("clear")
+                hookConstructor(Context::class.java, Bundle::class.java) { chain ->
+                    val args = chain.args.toTypedArray()
+                    args[0] = null
+                    args[1]!!.callMethod("clear")
+                    chain.proceed(args)
                 }
             }
         }
         if (blockPcdnLive) {
             instance.liveRtcEnable()?.let {
-                instance.liveRtcEnableClass?.replaceMethod(it) { false }
+                instance.liveRtcEnableClass?.hookMethod(it) { false }
             }
             "com.bilibili.bililive.playercore.p2p.P2PType".from(mClassLoader)?.run {
-                hookBeforeMethod("create", Int::class.javaPrimitiveType) { it.args[0] = 0 }
-                hookBeforeMethod("createTo", Int::class.javaPrimitiveType) { it.args[0] = 0 }
+                hookMethod("create", Int::class.javaPrimitiveType) { chain ->
+                    val args = chain.args.toTypedArray()
+                    args[0] = 0
+                    chain.proceed(args)
+                }
+                hookMethod("createTo", Int::class.javaPrimitiveType) { chain ->
+                    val args = chain.args.toTypedArray()
+                    args[0] = 0
+                    chain.proceed(args)
+                }
             }
         }
     }

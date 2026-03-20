@@ -37,7 +37,7 @@ class XposedInit : XposedModule() {
         val packageName = param.packageName
         val classLoader = param.classLoader
         if (BuildConfig.APPLICATION_ID == packageName) {
-            MainActivity.Companion::class.java.name.replaceMethod(
+            MainActivity.Companion::class.java.name.hookMethod(
                 classLoader,
                 "isModuleActive"
             ) { true }
@@ -46,10 +46,10 @@ class XposedInit : XposedModule() {
         if (!Constant.BILIBILI_PACKAGE_NAME.containsValue(packageName) &&
             "tv.danmaku.bili.MainActivityV2".findClassOrNull(classLoader) == null
         ) return
-        Instrumentation::class.java.hookBeforeMethod(
+        Instrumentation::class.java.hookMethod(
             "callApplicationOnCreate",
             Application::class.java
-        ) { param ->
+        ) { chain ->
             // Hook main process and download process
             when {
                 !processName.contains(":") -> {
@@ -82,7 +82,7 @@ class XposedInit : XposedModule() {
                         }.also { Log.d("当前地区: $it") }
                     }
 
-                    BiliBiliPackage(classLoader, param.args[0] as Context)
+                    BiliBiliPackage(classLoader, chain.args[0] as Context)
                     if (BuildConfig.DEBUG) {
                         startHook { SSLHook(classLoader) }
                     }
@@ -135,7 +135,7 @@ class XposedInit : XposedModule() {
                 }
 
                 processName.endsWith(":web") -> {
-                    BiliBiliPackage(classLoader, param.args[0] as Context)
+                    BiliBiliPackage(classLoader, chain.args[0] as Context)
                     CustomThemeHook(classLoader).insertColorForWebProcess()
                     startHook { WebViewHook(classLoader) }
                     startHook { ShareHook(classLoader) }
@@ -144,14 +144,16 @@ class XposedInit : XposedModule() {
                 }
 
                 processName.endsWith(":download") -> {
-                    BiliBiliPackage(classLoader, param.args[0] as Context)
+                    BiliBiliPackage(classLoader, chain.args[0] as Context)
                     startHook { BangumiPlayUrlHook(classLoader) }
                 }
             }
+            chain.proceed()
         }
-        lateInitHook = Activity::class.java.hookBeforeMethod("onResume") {
+        lateInitHook = Activity::class.java.hookMethod("onResume") { chain ->
             startLateHook()
             lateInitHook?.unhook()
+            chain.proceed()
         }
     }
 

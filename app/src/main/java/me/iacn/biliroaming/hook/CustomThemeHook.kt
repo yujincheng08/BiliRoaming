@@ -36,16 +36,17 @@ class CustomThemeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             instance.builtInThemesClass?.getStaticObjectFieldAs<MutableMap<Long, Any>>(instance.allThemesField())
 
         instance.skinList()?.let {
-            "tv.danmaku.bili.ui.theme.ThemeStoreActivity".hookBeforeMethod(
+            "tv.danmaku.bili.ui.theme.ThemeStoreActivity".hookMethod(
                 mClassLoader, it,
                 "tv.danmaku.bili.ui.theme.api.BiliSkinList", Boolean::class.javaPrimitiveType
-            ) { param ->
-                val biliSkinList = param.args[0]!!
+            ) { chain ->
+                val args = chain.args.toTypedArray()
+                val biliSkinList = args[0]!!
 
                 val mList = biliSkinList.getObjectFieldAs<MutableList<Any>>("mList")
                 val biliSkin =
                     "tv.danmaku.bili.ui.theme.api.BiliSkin".findClassOrNull(mClassLoader)?.new()
-                        ?: return@hookBeforeMethod
+                        ?: return@hookMethod chain.proceed()
                 biliSkin.setIntField(
                     "mId",
                     if (currentKey == CUSTOM_THEME_ID2) CUSTOM_THEME_ID2 else CUSTOM_THEME_ID1
@@ -55,13 +56,14 @@ class CustomThemeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 // Under the night mode item
                 mList.add(3, biliSkin)
                 Log.d("Add a theme item: size = " + mList.size)
+                chain.proceed()
             }
         }
-        instance.themeListClickClass?.hookBeforeMethod("onClick", View::class.java) { param ->
-            val view = param.args[0] as View
+        instance.themeListClickClass?.hookMethod("onClick", View::class.java) { chain ->
+            val view = chain.args[0] as View
             val idName = view.resources.getResourceEntryName(view.id)
-            if ("list_item" != idName) return@hookBeforeMethod
-            val biliSkin = view.tag ?: return@hookBeforeMethod
+            if ("list_item" != idName) return@hookMethod chain.proceed()
+            val biliSkin = view.tag ?: return@hookMethod chain.proceed()
             val mId = biliSkin.getIntField("mId")
             // Make colors updated immediately
             if (mId == CUSTOM_THEME_ID1 || mId == CUSTOM_THEME_ID2) {
@@ -80,7 +82,7 @@ class CustomThemeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     biliSkin.setIntField("mId", newId)
                     customColor = color
                     try {
-                        param.invokeOriginalMethod()
+                        chain.proceed()
                     } catch (e: Exception) {
                         Log.w(e)
                     }
@@ -88,18 +90,19 @@ class CustomThemeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 colorDialog.show()
 
                 // Stop executing the original method
-                param.result = null
+                return@hookMethod null
             }
+            chain.proceed()
         }
 
         // No reset when not logged in
-        val replacer: Replacer = { param ->
+        val replacer: HookCallback = { chain ->
             if (Thread.currentThread().stackTrace.any { s ->
                     s.className == "tv.danmaku.bili.MainActivityV2" && s.methodName == "onPostCreate"
-                }) null else param.invokeOriginalMethod()
+                }) null else chain.proceed()
         }
         instance.themeReset().forEach {
-            instance.themeProcessorClass?.replaceMethod(it, replacer = replacer)
+            instance.themeProcessorClass?.hookMethod(it, callback = replacer)
         }
     }
 
@@ -143,25 +146,27 @@ class CustomThemeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     put(CUSTOM_THEME_ID2, CUSTOM_THEME_ID2)
                 }
 
-            SparseArray::class.java.hookAfterMethod(
+            SparseArray::class.java.hookMethod(
                 "get",
                 Int::class.javaPrimitiveType,
                 Object::class.java
-            ) { param ->
-                if (param.args[0] != CUSTOM_THEME_ID1 || param.args[0] != CUSTOM_THEME_ID2) return@hookAfterMethod
-                if (param.result?.javaClass == generatedColorArray.javaClass && param.result == generatedColorArray) {
+            ) { chain ->
+                val result = chain.proceed()
+                if (chain.args[0] != CUSTOM_THEME_ID1 || chain.args[0] != CUSTOM_THEME_ID2) return@hookMethod result
+                if (result?.javaClass == generatedColorArray.javaClass && result == generatedColorArray) {
                     val newColor = customColor
                     if (newColor != cacheColor) {
                         generatedColorArray = generateColorArray(newColor)
                         cacheColor = newColor
                         @Suppress("UNCHECKED_CAST")
-                        (param.thisObject as SparseArray<IntArray>).run {
+                        (chain.thisObject as SparseArray<IntArray>).run {
                             put(CUSTOM_THEME_ID1, generatedColorArray)
                             put(CUSTOM_THEME_ID2, generatedColorArray)
                         }
-                        param.result = generatedColorArray
+                        return@hookMethod generatedColorArray
                     }
                 }
+                result
             }
         } catch (e: Throwable) {
             Log.e(e)

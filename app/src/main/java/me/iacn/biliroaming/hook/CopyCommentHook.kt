@@ -7,23 +7,24 @@ import android.view.View
 import android.widget.TextView
 import me.iacn.biliroaming.utils.currentContext
 import me.iacn.biliroaming.utils.getResId
-import me.iacn.biliroaming.utils.hookAfterMethod
+import me.iacn.biliroaming.utils.hookMethod
 import me.iacn.biliroaming.utils.sPrefs
 
 
 class CopyCommentHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
         if (!sPrefs.getBoolean("copy_comment", false)) return
-        "com.bilibili.app.comment3.ui.widget.menu.CommentMoreMenuItemHolder".hookAfterMethod(
+        "com.bilibili.app.comment3.ui.widget.menu.CommentMoreMenuItemHolder".hookMethod(
             mClassLoader,
             "y3",
             "kotlin.jvm.functions.Function1",
             "com.bilibili.app.comment3.data.model.CommentItem\$MenuItem",
             "android.view.View",
-        ) { param ->
-            val menu = param.args[1]
-            val view = param.args[2] as View
-            if (!menu.toString().contains("COPY")) return@hookAfterMethod
+        ) { chain ->
+            val result = chain.proceed()
+            val menu = chain.args[1]
+            val view = chain.args[2] as View
+            if (!menu.toString().contains("COPY")) return@hookMethod result
 
             val clipboard =
                 currentContext.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
@@ -39,6 +40,7 @@ class CopyCommentHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }.apply {
                     findViewById<TextView>(android.R.id.message).setTextIsSelectable(true)
                 }
+            result
         }
     }
 }

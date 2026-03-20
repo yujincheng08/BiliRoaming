@@ -5,7 +5,7 @@ import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.utils.Log
 import me.iacn.biliroaming.utils.bv2av
 import me.iacn.biliroaming.utils.getObjectField
-import me.iacn.biliroaming.utils.hookAfterMethod
+import me.iacn.biliroaming.utils.hookMethod
 import me.iacn.biliroaming.utils.sPrefs
 import me.iacn.biliroaming.utils.setObjectField
 import java.net.HttpURLConnection
@@ -64,29 +64,32 @@ class ShareHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         Log.d("startHook: ShareHook")
         instance.shareClickResultClass?.apply {
             if (purifyShareEnabled) {
-                hookAfterMethod("getLink") { param ->
-                    (param.result as? String)?.takeIf {
+                hookMethod("getLink") { chain ->
+                    val result = chain.proceed()
+                    (result as? String)?.takeIf {
                         it.startsWith("https://bili2233.cn") || it.startsWith("http://bili2233.cn") || it.startsWith("https://b23.tv") || it.startsWith("http://b23.tv")
                     }?.let {
                         val targetUrl = Uri.parse(it).buildUpon().query("").build().toString()
-                        param.result = targetUrl.resolveB23URL().also { r -> param.thisObject.setObjectField("link", r) }
-                    }
+                        targetUrl.resolveB23URL().also { r -> chain.thisObject.setObjectField("link", r) }
+                    } ?: result
                 }
-                hookAfterMethod("getContent") { param ->
-                    val content = param.result as? String
-                    content?.let {
+                hookMethod("getContent") { chain ->
+                    val result = chain.proceed()
+                    val content = result as? String
+                    val contentUrl = content?.let {
                         contentUrlPattern.matchEntire(it)?.groups?.get(1)?.value
-                    }?.let { contentUrl ->
-                        val resolvedUrl = (param.thisObject!!.getObjectField("link")?.let { it as String } ?: contentUrl)
+                    }
+                    if (contentUrl != null) {
+                        val resolvedUrl = (chain.thisObject!!.getObjectField("link")?.let { it as String } ?: contentUrl)
                             .let {
                                 if (it.startsWith("https://bili2233.cn") || it.startsWith("http://bili2233.cn") || it.startsWith("https://b23.tv") || it.startsWith("http://b23.tv"))
                                     it.resolveB23URL()
                                 else it
                             }
-                        param.result = content.replace(contentUrl, transformUrl(resolvedUrl, miniProgramEnabled)).also { r ->
-                            param.thisObject.setObjectField("content", r)
+                        content.replace(contentUrl, transformUrl(resolvedUrl, miniProgramEnabled)).also { r ->
+                            chain.thisObject.setObjectField("content", r)
                         }
-                    }
+                    } else result
                 }
             }
             if (!miniProgramEnabled) return@apply
@@ -98,10 +101,10 @@ class ShareHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             // 6 / 7: PARAMS_TYPE_MIN_PROGRAM
             // 21: PARAMS_TYPE_PURE_IMAGE
             // Others: PARAMS_TYPE_WEB
-            hookAfterMethod("getShareMode") { param ->
-                if (param.result == 6 || param.result == 7) {
-                    param.result = 0
-                    param.thisObject.apply {
+            hookMethod("getShareMode") { chain ->
+                val result = chain.proceed()
+                if (result == 6 || result == 7) {
+                    chain.thisObject.apply {
                         getObjectField("title")?.takeIf { it == "哔哩哔哩" }?.let { title ->
                             setObjectField("title", getObjectField("content"))
                             setObjectField("content", "由哔哩漫游分享")
@@ -111,7 +114,8 @@ class ShareHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                 setObjectField("content", "$content\n由哔哩漫游分享")
                             }
                     }
-                }
+                    0
+                } else result
             }
         }
     }

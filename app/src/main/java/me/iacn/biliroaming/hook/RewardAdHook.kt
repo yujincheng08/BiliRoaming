@@ -12,11 +12,13 @@ class RewardAdHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
         Log.d("startHook: RewardAd")
 
-        instance.rewardAdClass?.hookAfterMethod("onCreate", Bundle::class.java) { params ->
-            params.thisObject!!.setBooleanField(instance.rewardFlag(), true)
-            (params.thisObject!!.javaClass.declaredFields.firstOrNull {
+        instance.rewardAdClass?.hookMethod("onCreate", Bundle::class.java) { chain ->
+            val result = chain.proceed()
+            chain.thisObject!!.setBooleanField(instance.rewardFlag(), true)
+            (chain.thisObject!!.javaClass.declaredFields.firstOrNull {
                 it.type == TextView::class.java
-            }?.apply { isAccessible = true }?.get(params.thisObject) as? TextView)?.performClick()
+            }?.apply { isAccessible = true }?.get(chain.thisObject) as? TextView)?.performClick()
+            result
         }
 
     }

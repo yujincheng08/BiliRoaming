@@ -154,13 +154,14 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     private fun hookDmViewAsync() {
         if (!(mainFunc || generateSubtitle || (hidden && removeCmdDms))) return
-        instance.dmMossClass?.hookBeforeMethod(
+        instance.dmMossClass?.hookMethod(
             "dmView",
             instance.dmViewReqClass,
             instance.mossResponseHandlerClass
-        ) { param ->
-            val dmViewReq = param.args[0]!!
-            param.args[1] = param.args[1]!!.mossResponseHandlerReplaceProxy { dmViewReply ->
+        ) { chain ->
+            val dmViewReq = chain.args[0]!!
+            val args = chain.args.toTypedArray()
+            args[1] = chain.args[1]!!.mossResponseHandlerReplaceProxy { dmViewReply ->
                 if (hidden && removeCmdDms) {
                     dmViewReply?.removeCmdDms()
                 }
@@ -168,32 +169,35 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     dmViewReply.hookSubtitleList(dmViewReq)
                 } else null
             }
+            chain.proceed(args)
         }
     }
 
     private fun hookSubtitleStyle() {
-        instance.chronosSwitchClass?.hookAfterConstructor { param ->
-            param.thisObject!!.javaClass.declaredFields.forEach {
+        instance.chronosSwitchClass?.hookConstructor { chain ->
+            chain.proceed()
+            chain.thisObject!!.javaClass.declaredFields.forEach {
                 if (it.type == Boolean::class.javaObjectType) {
-                    param.thisObject!!.setObjectField(it.name, false)
+                    chain.thisObject!!.setObjectField(it.name, false)
                 }
             }
+            null
         }
 
-        android.text.SpannableString::class.java.hookBeforeMethod(
+        android.text.SpannableString::class.java.hookMethod(
             "setSpan",
             Object::class.java,
             Int::class.java,
             Int::class.java,
             Int::class.java
-        ) { param ->
-            if (instance.subtitleSpanClass?.isInstance(param.args[0]) != true) return@hookBeforeMethod
+        ) { chain ->
+            if (instance.subtitleSpanClass?.isInstance(chain.args[0]) != true) return@hookMethod chain.proceed()
             val (start, end, flags) = listOf(
-                param.args[1] as Int,
-                param.args[2] as Int,
-                param.args[3] as Int
+                chain.args[1] as Int,
+                chain.args[2] as Int,
+                chain.args[3] as Int
             )
-            (param.thisObject as SpannableString).run {
+            (chain.thisObject as SpannableString).run {
                 subtitleStylizeRunner(
                     this, start, end, flags,
                     sPrefs.getInt("subtitle_blur_solid", 1),
@@ -210,22 +214,24 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     sPrefs.getFloat("subtitle_stroke_width", 0F),
                     sPrefs.getBoolean("subtitle_fix_break", false)
                 )
-                param.result = null
             }
+            null
         }
     }
 
     private fun hookSubtitleStyleNew() {
         if (offset != 0) {
             arrayOf(instance.subtitleConfigGetClass, instance.subtitleConfigChangeClass).forEach {
-                it?.hookBeforeMethod("setBottomMargin", Float::class.javaObjectType) { param ->
-                    param.args[0] = (param.args[0] as Float) + offset
+                it?.hookMethod("setBottomMargin", Float::class.javaObjectType) { chain ->
+                    val args = chain.args.toTypedArray()
+                    args[0] = (chain.args[0] as Float) + offset
+                    chain.proceed(args)
                 }
             }
         }
         val cronCanvasClass = instance.cronCanvasClass ?: return
         if (removeBg) {
-            cronCanvasClass.replaceMethod(
+            cronCanvasClass.hookMethod(
                 "drawPath",
                 Path::class.java,
                 Boolean::class.javaPrimitiveType
@@ -251,11 +257,11 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 Typeface.createFromFile(fontFile)
             } else null
         }
-        cronCanvasClass.hookBeforeMethod(
+        cronCanvasClass.hookMethod(
             "measureTextImpl",
             String::class.java
-        ) { param ->
-            val cronCanvas = param.thisObject
+        ) { chain ->
+            val cronCanvas = chain.thisObject
             val maxWidth = maxWidthField.getFloat(cronCanvas)
             if (maxWidth != 0.0F) {
                 val paint = paintField.get(cronCanvas) as TextPaint
@@ -267,11 +273,11 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 } else if (!currentIsLandscape && fontSizePortrait > 0) {
                     paint.textSize = fontSizePortrait.toFloat()
                 }
-                val text = param.args[0] as String
+                val text = chain.args[0] as String
                 val alignment = alignmentField.get(cronCanvas) as Layout.Alignment
                 val staticLayout = staticLayoutField.get(cronCanvas) as? StaticLayout
                 if (staticLayout != null && staticLayout.text == text) {
-                    param.result = measureTextFromLayoutMethod(null, staticLayout)
+                    return@hookMethod measureTextFromLayoutMethod(null, staticLayout)
                 } else {
                     val wantWidth = if (maxWidth <= 0.0F) Int.MAX_VALUE
                     else maxWidth.toInt().coerceAtMost(Int.MAX_VALUE)
@@ -289,56 +295,64 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         .setIncludePad(false)
                         .build()
                     staticLayoutField.set(cronCanvas, layout)
-                    param.result = measureTextFromLayoutMethod(null, layout)
+                    return@hookMethod measureTextFromLayoutMethod(null, layout)
                 }
             }
+            chain.proceed()
         }
-        cronCanvasClass.hookBeforeMethod(
+        cronCanvasClass.hookMethod(
             "drawText",
             String::class.java,
             Float::class.javaPrimitiveType,
             Float::class.javaPrimitiveType,
             Boolean::class.javaPrimitiveType
-        ) { param ->
-            val cronCanvas = param.thisObject
+        ) { chain ->
+            val cronCanvas = chain.thisObject
             val maxWidth = maxWidthField.getFloat(cronCanvas)
             if (maxWidth != 0.0F) {
                 fillColorField.setInt(cronCanvas, fillColor)
                 strokeColorField.setInt(cronCanvas, strokeColor)
-                param.args[3] = true
-                param.invokeOriginalMethod()
-                param.args[3] = false
+                val args1 = chain.args.toTypedArray()
+                args1[3] = true
+                chain.proceed(args1)
+                val args2 = chain.args.toTypedArray()
+                args2[3] = false
+                chain.proceed(args2)
+            } else {
+                chain.proceed()
             }
         }
     }
 
     private fun hookSubtitleList() {
-        instance.dmMossClass?.hookAfterMethod(
+        instance.dmMossClass?.hookMethod(
             if (instance.useNewMossFunc) "executeDmView" else "dmView",
             instance.dmViewReqClass,
-        ) { param ->
-            param.result.hookSubtitleList(param.args[0]!!)?.let { param.result = it }
+        ) { chain ->
+            val result = chain.proceed()
+            result.hookSubtitleList(chain.args[0]!!)?.let { it } ?: result
         }
 
         if (!generateSubtitle) return
-        instance.biliCallClass?.hookBeforeMethod(
+        instance.biliCallClass?.hookMethod(
             instance.setParser(), instance.parserClass
-        ) { param ->
-            val url = param.thisObject?.getObjectField(instance.biliCallRequestField())
+        ) { chain ->
+            val url = chain.thisObject?.getObjectField(instance.biliCallRequestField())
                 ?.getObjectField(instance.urlField())?.toString()
             if (url?.contains("zh_converter=t2cn") != true)
-                return@hookBeforeMethod
-            val parser = param.args[0]!!
-            param.args[0] = Proxy.newProxyInstance(
+                return@hookMethod chain.proceed()
+            val parser = chain.args[0]!!
+            val args = chain.args.toTypedArray()
+            args[0] = Proxy.newProxyInstance(
                 parser.javaClass.classLoader,
                 arrayOf(instance.parserClass)
-            ) { _, m, args ->
+            ) { _, m, proxyArgs ->
                 val dictReady = if (!SubtitleHelper.dictExist) {
                     SubtitleHelper.downloadDict()
                 } else true
                 val converted = if (dictReady) {
                     runCatching {
-                        val responseText = args[0].callMethodAs<String>(instance.string())
+                        val responseText = proxyArgs[0].callMethodAs<String>(instance.string())
                         SubtitleHelper.convert(responseText)
                     }.onFailure {
                         Log.e(it)
@@ -350,15 +364,16 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     ?.callStaticMethod(
                         instance.get(),
                         "application/json; charset=UTF-8"
-                    ) ?: return@newProxyInstance m(parser, *args)
+                    ) ?: return@newProxyInstance m(parser, *proxyArgs)
                 val responseBody = instance.responseBodyClass
                     ?.callStaticMethod(
                         instance.create(),
                         mediaType,
                         converted
-                    ) ?: return@newProxyInstance m(parser, *args)
+                    ) ?: return@newProxyInstance m(parser, *proxyArgs)
                 m(parser, responseBody)
             }
+            chain.proceed(args)
         }
     }
 

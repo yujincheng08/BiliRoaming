@@ -39,12 +39,13 @@ class DynamicHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
         val hidden = sPrefs.getBoolean("hidden", false)
         if (hidden && (needFilterDynamic || removeTopicOfAll || removeUpOfAll || removeLiveOfAll)) {
-            dynamicMossV2?.hookBeforeMethod(
+            dynamicMossV2?.hookMethod(
                 "dynAll",
                 "com.bapis.bilibili.app.dynamic.v2.DynAllReq",
                 instance.mossResponseHandlerClass
-            ) { param ->
-                param.args[1] = param.args[1]!!.mossResponseHandlerProxy { reply ->
+            ) { chain ->
+                val args = chain.args.toTypedArray()
+                args[1] = args[1]!!.mossResponseHandlerProxy { reply ->
                     reply ?: return@mossResponseHandlerProxy
                     Log.d("upList: ${reply.callMethod("getUpList")}")
                     if (removeTopicOfAll)
@@ -76,15 +77,17 @@ class DynamicHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     if (needFilterDynamic)
                         filterDynamic(reply)
                 }
+                chain.proceed(args)
             }
         }
         if (hidden && ((filterApplyToVideo && needFilterDynamic) || removeUpOfVideo)) {
-            dynamicMossV2?.hookBeforeMethod(
+            dynamicMossV2?.hookMethod(
                 "dynVideo",
                 "com.bapis.bilibili.app.dynamic.v2.DynVideoReq",
                 instance.mossResponseHandlerClass
-            ) {
-                it.args[1] = it.args[1]!!.mossResponseHandlerProxy { result ->
+            ) { chain ->
+                val args = chain.args.toTypedArray()
+                args[1] = args[1]!!.mossResponseHandlerProxy { result ->
                     result?.let {
                         if (removeUpOfVideo)
                             it.callMethod("clearVideoUpList")
@@ -92,15 +95,17 @@ class DynamicHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             filterDynamic(it)
                     }
                 }
+                chain.proceed(args)
             }
         }
         if (hidden && preferVideoTab) {
-            dynamicMossV2?.hookBeforeMethod(
+            dynamicMossV2?.hookMethod(
                 "dynTab",
                 "com.bapis.bilibili.app.dynamic.v2.DynTabReq",
                 instance.mossResponseHandlerClass
-            ) {
-                it.args[1] = it.args[1]!!.mossResponseHandlerReplaceProxy { reply ->
+            ) { chain ->
+                val args = chain.args.toTypedArray()
+                args[1] = args[1]!!.mossResponseHandlerReplaceProxy { reply ->
                     reply?.callMethod("ensureScreenTabIsMutable")
                     reply?.callMethodAs<MutableList<Any>>("getScreenTabList")?.map {
                         it.callMethod(
@@ -110,12 +115,15 @@ class DynamicHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     }
                     reply
                 }
+                chain.proceed(args)
             }
-            dynamicMossV1?.hookAfterMethod(
+            dynamicMossV1?.hookMethod(
                 if (instance.useNewMossFunc) "executeDynRed" else "dynRed",
                 "com.bapis.bilibili.app.dynamic.v1.DynRedReq"
-            ) { param ->
-                param.result?.callMethod("setDefaultTab", "video")
+            ) { chain ->
+                val result = chain.proceed()
+                result?.callMethod("setDefaultTab", "video")
+                result
             }
         }
     }

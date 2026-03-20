@@ -25,19 +25,20 @@ class CoverHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 //        if (!sPrefs.getBoolean("get_cover", false)) return
 //        Log.d("startHook: GetCover")
 //        arrayOf(bgmClass, ugcClass, liveClass).forEach {
-//            it?.hookAfterMethod(
+//            it?.hookMethod(
 //                "onViewCreated",
 //                View::class.java,
 //                Bundle::class.java,
-//                hooker = hooker
+//                callback = hooker
 //            )
 //        }
     }
 
     @SuppressLint("ClickableViewAccessibility")
-    val hooker: Hooker = { param ->
-        val group = param.args[0] as ViewGroup
-        val activity = param.thisObject!!.callMethodAs<Activity>("getActivity")
+    val hooker: HookCallback = { chain ->
+        val result = chain.proceed()
+        val group = chain.args[0] as ViewGroup
+        val activity = chain.thisObject!!.callMethodAs<Activity>("getActivity")
 
         val gestureDetector =
             GestureDetector(activity, object : GestureDetector.SimpleOnGestureListener() {
@@ -46,7 +47,7 @@ class CoverHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     var filename: String? = null
                     var title: String? = null
                     try {
-                        when (param.thisObject!!.javaClass) {
+                        when (chain.thisObject!!.javaClass) {
                             bgmClass -> activity.run {
                                 val viewModelField =
                                     activity.javaClass.declaredFields.firstOrNull { it.type.name == "com.bilibili.bangumi.logic.page.detail.BangumiDetailViewModelV2" }
@@ -81,7 +82,7 @@ class CoverHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                         title = getObjectField(it.name)?.getObjectFieldAs("mTitle")
                                     }
                             }
-                            else -> if (liveClass?.isInstance(param.thisObject) == true) {
+                            else -> if (liveClass?.isInstance(chain.thisObject) == true) {
                                 val viewModelField = activity.javaClass.declaredFields.firstOrNull {
                                     it.type.name == "com.bilibili.bililive.videoliveplayer.ui.roomv3.base.viewmodel.LiveRoomRootViewModel" ||
                                             it.type.name == "com.bilibili.bililive.room.ui.roomv3.base.viewmodel.LiveRoomRootViewModel"
@@ -193,6 +194,7 @@ class CoverHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
         val liveId = getId("controller_underlay")
         activity.findViewById<View>(liveId)?.setOnTouchListener(onTouchListener)
+        result
     }
 
     val bgmClass by Weak {

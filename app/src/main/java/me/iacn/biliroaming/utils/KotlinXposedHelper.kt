@@ -9,10 +9,7 @@ import me.iacn.biliroaming.XposedInit
 import java.lang.reflect.*
 import java.util.*
 
-typealias Replacer = (MethodHookParam) -> Any?
-typealias Hooker = (MethodHookParam) -> Unit
-
-// MethodHookParam is defined in MethodHookParam.kt
+typealias HookCallback = (XposedInterface.Chain) -> Any?
 
 // --- Internal reflection helpers ---
 
@@ -131,113 +128,31 @@ private fun findConstructorBestMatch(clazz: Class<*>, argTypes: Array<Class<*>>)
     null
 }
 
-@PublishedApi internal inline fun createBeforeHooker(crossinline hooker: Hooker) = object : XposedInterface.Hooker {
-    override fun intercept(chain: XposedInterface.Chain): Any? {
-        val param = MethodHookParam(chain)
-        param.callHooker(hooker)
-        if (param.returnEarly) {
-            if (param.throwable != null) throw param.throwable!!
-            return param.result
-        }
-        return chain.proceed(param.args)
+@PublishedApi internal inline fun createHooker(crossinline callback: HookCallback) = object : XposedInterface.Hooker {
+    override fun intercept(chain: XposedInterface.Chain): Any? = try {
+        callback(chain)
+    } catch (e: Throwable) {
+        Log.e("Error occurred calling hooker on ${chain.executable}")
+        Log.e(e)
+        chain.proceed()
     }
-}
-
-@PublishedApi internal inline fun createAfterHooker(crossinline hooker: Hooker) = object : XposedInterface.Hooker {
-    override fun intercept(chain: XposedInterface.Chain): Any? {
-        val param = MethodHookParam(chain)
-        try {
-            param.setResultInternal(chain.proceed())
-        } catch (e: Throwable) {
-            param.setThrowableInternal(e)
-        }
-        param.callHooker(hooker)
-        if (param.throwable != null) throw param.throwable!!
-        return param.result
-    }
-}
-
-@PublishedApi internal inline fun createReplaceHooker(crossinline replacer: Replacer) = object : XposedInterface.Hooker {
-    override fun intercept(chain: XposedInterface.Chain): Any? {
-        val param = MethodHookParam(chain)
-        return param.callReplacer(replacer)
-    }
-}
-
-// --- callHooker / callReplacer ---
-
-inline fun MethodHookParam.callHooker(crossinline hooker: Hooker) = try {
-    hooker(this)
-} catch (e: Throwable) {
-    Log.e("Error occurred calling hooker on ${this.method}")
-    Log.e(e)
-}
-
-inline fun MethodHookParam.callReplacer(crossinline replacer: Replacer) = try {
-    replacer(this)
-} catch (e: Throwable) {
-    Log.e("Error occurred calling replacer on ${this.method}")
-    Log.e(e)
-    null
 }
 
 // --- Member hook functions ---
 
-inline fun Member.replaceMethod(crossinline replacer: Replacer) =
-    hookExecutable(this as Executable, createReplaceHooker(replacer))
-
-inline fun Member.hookAfterMethod(crossinline hooker: Hooker) =
-    hookExecutable(this as Executable, createAfterHooker(hooker))
-
-inline fun Member.hookBeforeMethod(crossinline hooker: (MethodHookParam) -> Unit) =
-    hookExecutable(this as Executable, createBeforeHooker(hooker))
+inline fun Member.hookMethod(crossinline callback: HookCallback) =
+    hookExecutable(this as Executable, createHooker(callback))
 
 // --- Class method hook functions ---
 
-inline fun Class<*>.hookBeforeMethod(
+inline fun Class<*>.hookMethod(
     method: String?,
     vararg args: Any?,
-    crossinline hooker: Hooker
+    crossinline callback: HookCallback
 ): HookHandle? = try {
     val paramTypes = resolveParameterTypes(args)
     val m = findMethodExact(this, method!!, *paramTypes)
-    hookExecutable(m, createBeforeHooker(hooker))
-} catch (e: NoSuchMethodError) {
-    Log.e(e); null
-} catch (e: NoSuchMethodException) {
-    Log.e(e); null
-} catch (e: NoClassDefFoundError) {
-    Log.e(e); null
-} catch (e: ClassNotFoundException) {
-    Log.e(e); null
-}
-
-inline fun Class<*>.hookAfterMethod(
-    method: String?,
-    vararg args: Any?,
-    crossinline hooker: Hooker
-): HookHandle? = try {
-    val paramTypes = resolveParameterTypes(args)
-    val m = findMethodExact(this, method!!, *paramTypes)
-    hookExecutable(m, createAfterHooker(hooker))
-} catch (e: NoSuchMethodError) {
-    Log.e(e); null
-} catch (e: NoSuchMethodException) {
-    Log.e(e); null
-} catch (e: NoClassDefFoundError) {
-    Log.e(e); null
-} catch (e: ClassNotFoundException) {
-    Log.e(e); null
-}
-
-inline fun Class<*>.replaceMethod(
-    method: String?,
-    vararg args: Any?,
-    crossinline replacer: Replacer
-): HookHandle? = try {
-    val paramTypes = resolveParameterTypes(args)
-    val m = findMethodExact(this, method!!, *paramTypes)
-    hookExecutable(m, createReplaceHooker(replacer))
+    hookExecutable(m, createHooker(callback))
 } catch (e: NoSuchMethodError) {
     Log.e(e); null
 } catch (e: NoSuchMethodException) {
@@ -275,58 +190,16 @@ fun Class<*>.hookAllMethods(methodName: String?, hooker: XposedInterface.Hooker)
         emptySet()
     }
 
-inline fun Class<*>.hookBeforeAllMethods(methodName: String?, crossinline hooker: Hooker) =
-    hookAllMethods(methodName, createBeforeHooker(hooker))
-
-inline fun Class<*>.hookAfterAllMethods(methodName: String?, crossinline hooker: Hooker) =
-    hookAllMethods(methodName, createAfterHooker(hooker))
-
-inline fun Class<*>.replaceAllMethods(methodName: String?, crossinline replacer: Replacer) =
-    hookAllMethods(methodName, createReplaceHooker(replacer))
+inline fun Class<*>.hookAllMethods(methodName: String?, crossinline callback: HookCallback) =
+    hookAllMethods(methodName, createHooker(callback))
 
 // --- Constructor hook functions ---
 
-inline fun Class<*>.hookBeforeConstructor(vararg args: Any?, crossinline hooker: Hooker): HookHandle? =
+inline fun Class<*>.hookConstructor(vararg args: Any?, crossinline callback: HookCallback): HookHandle? =
     try {
         val paramTypes = resolveParameterTypes(args)
         val ctor = getDeclaredConstructor(*paramTypes).also { it.isAccessible = true }
-        hookExecutable(ctor, createBeforeHooker(hooker))
-    } catch (e: NoSuchMethodError) {
-        Log.e(e); null
-    } catch (e: NoSuchMethodException) {
-        Log.e(e); null
-    } catch (e: NoClassDefFoundError) {
-        Log.e(e); null
-    } catch (e: ClassNotFoundException) {
-        Log.e(e); null
-    }
-
-inline fun Class<*>.hookAfterConstructor(vararg args: Any?, crossinline hooker: Hooker): HookHandle? =
-    try {
-        val paramTypes = resolveParameterTypes(args)
-        val ctor = getDeclaredConstructor(*paramTypes).also { it.isAccessible = true }
-        hookExecutable(ctor, createAfterHooker(hooker))
-    } catch (e: NoSuchMethodError) {
-        Log.e(e); null
-    } catch (e: NoSuchMethodException) {
-        Log.e(e); null
-    } catch (e: NoClassDefFoundError) {
-        Log.e(e); null
-    } catch (e: ClassNotFoundException) {
-        Log.e(e); null
-    }
-
-inline fun Class<*>.replaceConstructor(vararg args: Any?, crossinline hooker: Hooker): HookHandle? =
-    try {
-        val paramTypes = resolveParameterTypes(args)
-        val ctor = getDeclaredConstructor(*paramTypes).also { it.isAccessible = true }
-        hookExecutable(ctor, object : XposedInterface.Hooker {
-            override fun intercept(chain: XposedInterface.Chain): Any? {
-                val param = MethodHookParam(chain)
-                param.callHooker(hooker)
-                return null
-            }
-        })
+        hookExecutable(ctor, createHooker(callback))
     } catch (e: NoSuchMethodError) {
         Log.e(e); null
     } catch (e: NoSuchMethodException) {
@@ -361,60 +234,18 @@ fun Class<*>.hookAllConstructors(hooker: XposedInterface.Hooker): Set<HookHandle
     emptySet()
 }
 
-inline fun Class<*>.hookAfterAllConstructors(crossinline hooker: Hooker) =
-    hookAllConstructors(createAfterHooker(hooker))
-
-inline fun Class<*>.hookBeforeAllConstructors(crossinline hooker: Hooker) =
-    hookAllConstructors(createBeforeHooker(hooker))
-
-inline fun Class<*>.replaceAllConstructors(crossinline hooker: Hooker) =
-    hookAllConstructors(object : XposedInterface.Hooker {
-        override fun intercept(chain: XposedInterface.Chain): Any? {
-            val param = MethodHookParam(chain)
-            param.callHooker(hooker)
-            return null
-        }
-    })
+inline fun Class<*>.hookAllConstructors(crossinline callback: HookCallback) =
+    hookAllConstructors(createHooker(callback))
 
 // --- String hook functions ---
 
-inline fun String.hookBeforeMethod(
+inline fun String.hookMethod(
     classLoader: ClassLoader,
     method: String?,
     vararg args: Any?,
-    crossinline hooker: Hooker
+    crossinline callback: HookCallback
 ) = try {
-    findClass(classLoader).hookBeforeMethod(method, *args, hooker = hooker)
-} catch (e: NoClassDefFoundError) {
-    Log.e(e)
-    null
-} catch (e: ClassNotFoundException) {
-    Log.e(e)
-    null
-}
-
-inline fun String.hookAfterMethod(
-    classLoader: ClassLoader,
-    method: String?,
-    vararg args: Any?,
-    crossinline hooker: Hooker
-) = try {
-    findClass(classLoader).hookAfterMethod(method, *args, hooker = hooker)
-} catch (e: NoClassDefFoundError) {
-    Log.e(e)
-    null
-} catch (e: ClassNotFoundException) {
-    Log.e(e)
-    null
-}
-
-inline fun String.replaceMethod(
-    classLoader: ClassLoader,
-    method: String?,
-    vararg args: Any?,
-    crossinline replacer: Replacer
-) = try {
-    findClass(classLoader).replaceMethod(method, *args, replacer = replacer)
+    findClass(classLoader).hookMethod(method, *args, callback = callback)
 } catch (e: NoClassDefFoundError) {
     Log.e(e)
     null

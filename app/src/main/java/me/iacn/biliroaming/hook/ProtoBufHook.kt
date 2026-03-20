@@ -87,11 +87,12 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 "com.bapis.bilibili.app.dynamic.v1.DynTabReply",
                 "com.bapis.bilibili.app.dynamic.v2.DynTabReply"
             ).forEach { clazz ->
-                clazz.hookAfterMethod(
+                clazz.hookMethod(
                     mClassLoader,
                     "getDynTabList"
-                ) { param ->
-                    param.result = (param.result as List<*>).filterNot {
+                ) { chain ->
+                    val result = chain.proceed()
+                    (result as List<*>).filterNot {
                         purifyCity && it?.callMethodAs<Long>("getCityId") != 0L
                                 || purifyCampus && it?.callMethodAs<String>("getAnchor") == "campus"
                     }
@@ -100,45 +101,55 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
 
         if (hidden && removeCmdDms) {
-            instance.viewMossClass?.hookAfterMethod(
+            instance.viewMossClass?.hookMethod(
                 if (instance.useNewMossFunc) "executeViewProgress" else "viewProgress",
                 "com.bapis.bilibili.app.view.v1.ViewProgressReq"
-            ) { param ->
-                param.result?.callMethod("setVideoGuide", videoGuideClass?.new())
+            ) { chain ->
+                val result = chain.proceed()
+                result?.callMethod("setVideoGuide", videoGuideClass?.new())
+                result
             }
-            instance.viewUniteMossClass?.hookAfterMethod(
+            instance.viewUniteMossClass?.hookMethod(
                 if (instance.useNewMossFunc) "executeViewProgress" else "viewProgress",
                 "com.bapis.bilibili.app.viewunite.v1.ViewProgressReq"
-            ) { param ->
-                param.result?.run {
+            ) { chain ->
+                val result = chain.proceed()
+                result?.run {
                     callMethod("clearDm")
                     callMethod("getVideoGuide")?.callMethod("clearContractCard")
                 }
+                result
             }
-            instance.viewMossClass?.replaceMethod(
+            instance.viewMossClass?.hookMethod(
                 if (instance.useNewMossFunc) "executeTFInfo" else "tFInfo",
                 "com.bapis.bilibili.app.view.v1.TFInfoReq"
             ) { null }
-            instance.dmMossClass?.hookAfterMethod(
+            instance.dmMossClass?.hookMethod(
                 if (instance.useNewMossFunc) "executeDmView" else "dmView",
                 instance.dmViewReqClass,
-            ) { it.result?.removeCmdDms() }
+            ) { chain ->
+                val result = chain.proceed()
+                result?.removeCmdDms()
+                result
+            }
         }
         if (hidden && purifySearch) {
-            "com.bapis.bilibili.app.interfaces.v1.SearchMoss".hookAfterMethod(
+            "com.bapis.bilibili.app.interfaces.v1.SearchMoss".hookMethod(
                 mClassLoader,
                 if (instance.useNewMossFunc) "executeDefaultWords" else "defaultWords",
                 "com.bapis.bilibili.app.interfaces.v1.DefaultWordsReq"
-            ) { param ->
-                param.result = null
+            ) { chain ->
+                chain.proceed()
+                null
             }
         }
         if (hidden && blockWordSearch) {
-            "com.bapis.bilibili.main.community.reply.v1.Content".hookAfterMethod(
+            "com.bapis.bilibili.main.community.reply.v1.Content".hookMethod(
                 mClassLoader,
                 "internalGetUrls"
-            ) { param ->
-                (param.result as LinkedHashMap<*, *>?)?.let { m ->
+            ) { chain ->
+                val result = chain.proceed()
+                (result as LinkedHashMap<*, *>?)?.let { m ->
                     val iterator = m.iterator()
                     while (iterator.hasNext()) {
                         iterator.next().value.callMethodAs<String?>("getAppUrlSchema")
@@ -149,25 +160,29 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             }
                     }
                 }
+                result
             }
         }
         if (hidden && blockModules) {
-            "com.bapis.bilibili.app.resource.v1.ModuleMoss".hookAfterMethod(
+            "com.bapis.bilibili.app.resource.v1.ModuleMoss".hookMethod(
                 mClassLoader,
                 if (instance.useNewMossFunc) "executeList" else "list",
                 "com.bapis.bilibili.app.resource.v1.ListReq"
-            ) {
-                it.result?.callMethod("clearPools")
+            ) { chain ->
+                val result = chain.proceed()
+                result?.callMethod("clearPools")
+                result
             }
         }
         if (hidden && blockUpperRecommendAd) {
             "com.bapis.bilibili.ad.v1.SourceContentDto".from(mClassLoader)
-                ?.replaceMethod("getAdContent") { null }
+                ?.hookMethod("getAdContent") { null }
         }
         if (disableMainPageStory) {
             "com.bapis.bilibili.app.distribution.setting.experimental.MultipleTusConfig"
-                .from(mClassLoader)?.hookAfterMethod("getTopLeft") { param ->
-                    param.result?.runCatchingOrNull {
+                .from(mClassLoader)?.hookMethod("getTopLeft") { chain ->
+                    val result = chain.proceed()
+                    result?.runCatchingOrNull {
                         callMethod("clearBadge")
                         callMethod("clearListenBackgroundImage")
                         callMethod("clearListenForegroundImage")
@@ -179,15 +194,16 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         callMethod("getGoto")?.callMethod("setValue", "1")
                         callMethod("getGotoV2")?.callMethod("setValue", 1)
                     }
+                    result
                 }
         }
         if (blockCommentGuide || (hidden && blockVideoComment)) {
-            "com.bapis.bilibili.main.community.reply.v1.ReplyMoss".hookBeforeMethod(
+            "com.bapis.bilibili.main.community.reply.v1.ReplyMoss".hookMethod(
                 mClassLoader,
                 if (instance.useNewMossFunc) "executeMainList" else "mainList",
                 "com.bapis.bilibili.main.community.reply.v1.MainListReq",
-            ) { param ->
-                val type = param.args[0]!!.callMethodAs<Long>("getType")
+            ) { chain ->
+                val type = chain.args[0]!!.callMethodAs<Long>("getType")
                 if (hidden && blockVideoComment && type == 1L) {
                     val reply = mainListReplyClass?.new()?.apply {
                         val subjectControl = callMethod("getSubjectControl")
@@ -211,11 +227,11 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             emptyPage?.callMethod("addTexts", it)
                         }
                     }
-                    param.result = reply
-                    return@hookBeforeMethod
+                    return@hookMethod reply
                 }
-                if (!blockCommentGuide) return@hookBeforeMethod
-                param.result.runCatchingOrNull {
+                if (!blockCommentGuide) return@hookMethod chain.proceed()
+                val result = chain.proceed()
+                result.runCatchingOrNull {
                     callMethod("getSubjectControl")?.run {
                         callMethod("clearEmptyBackgroundTextPlain")
                         callMethod("clearEmptyBackgroundTextHighlight")
@@ -233,12 +249,13 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         }
                     }
                 }
+                result
             }
             "com.bapis.bilibili.main.community.reply.v2.ReplyMoss".from(mClassLoader)
-                ?.hookBeforeMethod(
+                ?.hookMethod(
                     if (instance.useNewMossFunc) "executeSubjectDescription" else "subjectDescription",
                     "com.bapis.bilibili.main.community.reply.v2.SubjectDescriptionReq"
-                ) { param ->
+                ) { chain ->
                     val defaultText = textV2Class?.new()?.apply {
                         val tipStr = if (hidden && blockVideoComment) {
                             "评论区已由漫游屏蔽"
@@ -253,8 +270,9 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         }?.let {
                             callMethod("setStyle", it)
                         }
-                    } ?: return@hookBeforeMethod
-                    param.result.runCatchingOrNull {
+                    } ?: return@hookMethod chain.proceed()
+                    val result = chain.proceed()
+                    result.runCatchingOrNull {
                         callMethod("getEmptyPage")?.run {
                             callMethod("clearLeftButton")
                             callMethod("clearRightButton")
@@ -270,13 +288,15 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             )
                         }
                     }
+                    result
                 }
         }
         val needSearchFilter = hidden and (searchFilterContents.isNotEmpty() or searchFilterUid.isNotEmpty() or searchFilterUpNames.isNotEmpty()) or searchRemoveRelatePromote
         if (needSearchFilter) {
-            instance.searchAllResponseClass?.hookAfterMethod("getItemList") { p ->
-                val items = p.result as? List<Any?> ?: return@hookAfterMethod
-                p.result = items.filter { item ->
+            instance.searchAllResponseClass?.hookMethod("getItemList") { chain ->
+                val result = chain.proceed()
+                val items = result as? List<Any?> ?: return@hookMethod result
+                items.filter { item ->
                     val videoCard = item?.getObjectField("cardItem_") ?: return@filter true
                     if (instance.searchVideoCardClass?.isInstance(videoCard) == false) {
                         if (searchRemoveRelatePromote) {
@@ -332,42 +352,48 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             fun Any.filterComment() = validCommentAuthorLevel() && validCommentContent()
 
             "com.bapis.bilibili.main.community.reply.v1.MainListReply".from(mClassLoader)
-                ?.hookAfterMethod("getRepliesList") { p ->
-                    val l = p.result as? List<*> ?: return@hookAfterMethod
-                    p.result = l.filter { it?.filterComment() ?: true }
+                ?.hookMethod("getRepliesList") { chain ->
+                    val result = chain.proceed()
+                    val l = result as? List<*> ?: return@hookMethod result
+                    l.filter { it?.filterComment() ?: true }
                 }
             "com.bapis.bilibili.main.community.reply.v1.ReplyInfo".from(mClassLoader)
-                ?.hookAfterMethod("getRepliesList") { p ->
-                    val l = p.result as? List<*> ?: return@hookAfterMethod
-                    p.result = l.filter { it?.filterComment() ?: true }
+                ?.hookMethod("getRepliesList") { chain ->
+                    val result = chain.proceed()
+                    val l = result as? List<*> ?: return@hookMethod result
+                    l.filter { it?.filterComment() ?: true }
                 }
         }
 
         if (!sPrefs.getBoolean("replace_story_video", false)) return
         val disableBooleanValue = "com.bapis.bilibili.app.distribution.BoolValue".from(mClassLoader)?.callStaticMethod("getDefaultInstance") ?: return
         "com.bapis.bilibili.app.distribution.setting.play.PlayConfig".from(mClassLoader)?.run {
-            replaceAllMethods("getLandscapeAutoStory") { disableBooleanValue }
-            replaceAllMethods("getShouldAutoStory") { disableBooleanValue }
+            hookAllMethods("getLandscapeAutoStory") { disableBooleanValue }
+            hookAllMethods("getShouldAutoStory") { disableBooleanValue }
         }
     }
 
     private fun hookMossView() {
-        instance.viewUniteMossClass?.hookAfterMethod(
+        instance.viewUniteMossClass?.hookMethod(
             "executeView",
             instance.viewUniteReqClass
-        ) { param ->
-            param.result?.let {
+        ) { chain ->
+            val result = chain.proceed()
+            result?.let {
                 handleViewReply(it, true)
             }
+            result
         }
 
-        instance.viewMossClass?.hookAfterMethod(
+        instance.viewMossClass?.hookMethod(
             if (instance.useNewMossFunc) "executeView" else "view",
             instance.viewReqClass
-        ) { param ->
-            param.result?.let {
+        ) { chain ->
+            val result = chain.proceed()
+            result?.let {
                 handleViewReply(it, false)
             }
+            result
         }
     }
 
