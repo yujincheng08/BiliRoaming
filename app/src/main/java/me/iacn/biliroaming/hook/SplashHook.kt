@@ -20,6 +20,12 @@ class SplashHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         ) return
         Log.d("startHook: Splash")
 
+        if (sPrefs.getBoolean("auto_dark_splash", false)) {
+            // Force old XML layout path so splash_container exists for background color override
+            "com.bilibili.lib.performance.EntryPointKt".findClassOrNull(mClassLoader)
+                ?.hookMethod("getBrandSplashOptEnable") { false }
+        }
+
         instance.splashInfoClass?.hookMethod(
             "getMode"
         ) { chain ->
@@ -41,7 +47,7 @@ class SplashHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             val containerId = getId("splash_container")
             if (sPrefs.getBoolean("auto_dark_splash", false))
                 view.findViewById<View>(containerId)
-                    .setBackgroundColor(
+                    ?.setBackgroundColor(
                         if (view.resources.configuration.uiMode.and(Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES)
                             Color.BLACK
                         else Color.WHITE
