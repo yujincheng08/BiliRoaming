@@ -68,6 +68,7 @@ jobs:
           COMMIT_MESSAGE: |+
             New push to github\!
             Branch: `${{ github.ref_name }}`
+            ${{ github.ref == 'refs/heads/feat/api-101' && ' This version is ONLY FOR LSPosed-it \(7601 or higher\) or frameworks supporting Xposed API 101' || '' }}
             ```
             ${{ github.event.head_commit.message }}
             ```by `${{ github.event.head_commit.author.name }}`
