@@ -38,74 +38,88 @@ class SSLHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             ): List<X509Certificate> = emptyList()
         })
 
-        "javax.net.ssl.TrustManagerFactory".hookBeforeMethod(
+        "javax.net.ssl.TrustManagerFactory".hookMethod(
             mClassLoader,
             "getTrustManagers"
-        ) { param ->
-            param.result = emptyTrustManagers
+        ) { chain ->
+            chain.proceed()
+            emptyTrustManagers
         }
 
-        "javax.net.ssl.SSLContext".hookBeforeMethod(
+        "javax.net.ssl.SSLContext".hookMethod(
             mClassLoader,
             "init",
             "javax.net.ssl.KeyManager[]",
             "javax.net.ssl.TrustManager[]",
             SecureRandom::class.java
-        ) { param ->
-            param.args[0] = null
-            param.args[1] = emptyTrustManagers
-            param.args[2] = null
+        ) { chain ->
+            val args = chain.args.toTypedArray()
+            args[0] = null
+            args[1] = emptyTrustManagers
+            args[2] = null
+            chain.proceed(args)
         }
 
-        "javax.net.ssl.HttpsURLConnection".hookBeforeMethod(
+        "javax.net.ssl.HttpsURLConnection".hookMethod(
             mClassLoader,
             "setSSLSocketFactory",
             javax.net.ssl.SSLSocketFactory::class.java
-        ) { param ->
-            param.args[0] = "javax.net.ssl.SSLSocketFactory".findClass(mClassLoader).new()
+        ) { chain ->
+            val args = chain.args.toTypedArray()
+            args[0] = "javax.net.ssl.SSLSocketFactory".findClass(mClassLoader).new()
+            chain.proceed(args)
         }
 
         "org.apache.http.conn.scheme.SchemeRegistry".findClassOrNull(mClassLoader)
-            ?.hookBeforeMethod("register", "org.apache.http.conn.scheme.Scheme") { param ->
-                if (param.args[0].callMethodAs<String>("getName") == "https") {
-                    param.args[0] = param.args[0].javaClass.new(
+            ?.hookMethod("register", "org.apache.http.conn.scheme.Scheme") { chain ->
+                if (chain.args[0]!!.callMethodAs<String>("getName") == "https") {
+                    val args = chain.args.toTypedArray()
+                    args[0] = chain.args[0]!!.javaClass.new(
                         "https",
                         SSLSocketFactory.getSocketFactory(),
                         443
                     )
+                    return@hookMethod chain.proceed(args)
                 }
+                chain.proceed()
             }
 
         "org.apache.http.conn.ssl.HttpsURLConnection".findClassOrNull(mClassLoader)?.run {
-            hookBeforeMethod("setDefaultHostnameVerifier", HostnameVerifier::class.java) { param ->
-                param.args[0] = SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER
+            hookMethod("setDefaultHostnameVerifier", HostnameVerifier::class.java) { chain ->
+                val args = chain.args.toTypedArray()
+                args[0] = SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER
+                chain.proceed(args)
             }
 
-            hookBeforeMethod("setHostnameVerifier", HostnameVerifier::class.java) { param ->
-                param.args[0] = SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER
+            hookMethod("setHostnameVerifier", HostnameVerifier::class.java) { chain ->
+                val args = chain.args.toTypedArray()
+                args[0] = SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER
+                chain.proceed(args)
             }
 
         }
-        "org.apache.http.conn.ssl.SSLSocketFactory".hookBeforeMethod(
+        "org.apache.http.conn.ssl.SSLSocketFactory".hookMethod(
             mClassLoader,
             "getSocketFactory"
-        ) { param ->
-            param.result = SSLSocketFactory::class.java.new()
+        ) { chain ->
+            chain.proceed()
+            SSLSocketFactory::class.java.new()
         }
 
         "org.apache.http.conn.ssl.SSLSocketFactory".findClassOrNull(mClassLoader)
-            ?.hookAfterConstructor(
+            ?.hookConstructor(
                 String::class.java,
                 KeyStore::class.java,
                 String::class.java,
                 KeyStore::class.java,
                 SecureRandom::class.java,
                 HostNameResolver::class.java
-            ) { param ->
-                val algorithm = param.args[0] as? String
-                val keystore = param.args[1] as? KeyStore
-                val keystorePassword = param.args[2] as? String
-                val random = param.args[4] as? SecureRandom
+            ) { chain ->
+                chain.proceed()
+                val algorithm = chain.args[0] as? String
+                val keystore = chain.args[1] as? KeyStore
+                val keystorePassword = chain.args[2] as? String
+                val random = chain.args[4] as? SecureRandom
 
                 @Suppress("UNCHECKED_CAST") val trustManagers =
                     emptyTrustManagers as Array<TrustManager>
@@ -119,41 +133,45 @@ class SSLHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
 
 
-                param.thisObject.setObjectField("sslcontext", SSLContext.getInstance(algorithm))
-                param.thisObject.getObjectField("sslcontext")
+                chain.thisObject!!.setObjectField("sslcontext", SSLContext.getInstance(algorithm))
+                chain.thisObject!!.getObjectField("sslcontext")
                     ?.callMethod("init", keyManagers, trustManagers, random)
-                param.thisObject.setObjectField(
+                chain.thisObject!!.setObjectField(
                     "socketfactory",
-                    param.thisObject.getObjectField("sslcontext")?.callMethod("getSocketFactory")
+                    chain.thisObject!!.getObjectField("sslcontext")?.callMethod("getSocketFactory")
                 )
+                null
             }
 
-        "org.apache.http.conn.ssl.SSLSocketFactory".hookAfterMethod(
+        "org.apache.http.conn.ssl.SSLSocketFactory".hookMethod(
             mClassLoader,
             "isSecure",
             Socket::class.java
-        ) { param ->
-            param.result = true
+        ) { chain ->
+            chain.proceed()
+            true
         }
 
         "okhttp3.CertificatePinner".findClassOrNull(mClassLoader)?.run {
             (runCatchingOrNull { getDeclaredMethod("findMatchingPins", String::class.java) }
-                ?: declaredMethods.firstOrNull { it.parameterTypes.size == 1 && it.parameterTypes[0] == String::class.java && it.returnType == List::class.java })?.hookBeforeMethod { param ->
-                param.args[0] = ""
+                ?: declaredMethods.firstOrNull { it.parameterTypes.size == 1 && it.parameterTypes[0] == String::class.java && it.returnType == List::class.java })?.hookMethod { chain ->
+                val args = chain.args.toTypedArray()
+                args[0] = ""
+                chain.proceed(args)
             }
         }
 
         "android.webkit.WebViewClient".findClassOrNull(mClassLoader)?.run {
-            replaceMethod(
+            hookMethod(
                 "onReceivedSslError",
                 WebView::class.java,
                 SslErrorHandler::class.java,
                 SslError::class.java
-            ) { param ->
-                (param.args[1] as SslErrorHandler).proceed()
+            ) { chain ->
+                (chain.args[1] as SslErrorHandler).proceed()
                 null
             }
-            replaceMethod(
+            hookMethod(
                 "onReceivedError",
                 WebView::class.java,
                 Int::class.javaPrimitiveType,

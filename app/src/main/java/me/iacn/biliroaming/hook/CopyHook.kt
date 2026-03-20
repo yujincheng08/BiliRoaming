@@ -9,6 +9,7 @@ import android.text.style.ClickableSpan
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.TextView
+import io.github.libxposed.api.XposedInterface
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.utils.*
 import org.json.JSONObject
@@ -31,71 +32,72 @@ class CopyHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         instance.descCopyView().zip(instance.descCopy()).forEach { p ->
             val clazz = p.first ?: return@forEach
             val method = p.second ?: return@forEach
-            clazz.replaceMethod(
+            clazz.hookMethod(
                 method,
                 View::class.java,
                 ClickableSpan::class.java
-            ) { param ->
-                if (!enhanceLongClickCopy) return@replaceMethod Unit
+            ) { chain ->
+                if (!enhanceLongClickCopy) return@hookMethod Unit
 
-                param.thisObject.getFirstFieldByExactTypeOrNull<SpannableStringBuilder>()?.let {
-                    val view = param.args[0] as View
-                    showCopyDialog(view.context, it, param)
-                } ?: (param.args[0] as? TextView)?.let { tv ->
-                    showCopyDialog(tv.context, tv.text, param)
+                chain.thisObject!!.getFirstFieldByExactTypeOrNull<SpannableStringBuilder>()?.let {
+                    val view = chain.args[0] as View
+                    showCopyDialog(view.context, it)
+                } ?: (chain.args[0] as? TextView)?.let { tv ->
+                    showCopyDialog(tv.context, tv.text)
                 }
             }
         }
 
         instance.dynamicDescHolderListeners().forEach { c ->
-            c?.replaceMethod("onLongClick", View::class.java) { param ->
+            c?.hookMethod("onLongClick", View::class.java) { chain ->
                 if (!enhanceLongClickCopy)
-                    return@replaceMethod true
-                val itemView = param.args[0] as? View
+                    return@hookMethod true
+                val itemView = chain.args[0] as? View
                 DYNAMIC_COPYABLE_IDS.asSequence().firstNotNullOfOrNull { n ->
                     getId(n).takeIf { it != 0 }?.let { itemView?.findViewById<TextView>(it) }
                 }?.let { v ->
                     (if (instance.ellipsizingTextViewClass?.isInstance(v) == true) {
                         v.getFirstFieldByExactTypeOrNull()
                     } else v.text)?.also { text ->
-                        showCopyDialog(v.context, text, param)
+                        showCopyDialog(v.context, text)
                     }
                 } ?: Log.toast("找不到动态内容", true)
                 true
             }
         }
 
-        val commentCopyHook = fun(param: MethodHookParam, idName: String): Any? {
+
+        val commentCopyHook = fun(chain: XposedInterface.Chain, idName: String): Any? {
             if (!enhanceLongClickCopy) return true
-            if (param.args[0] is FrameLayout) return param.invokeOriginalMethod()
-            (param.args[0] as? View)?.findViewById<View>(getId(idName))?.let {
+            if (chain.args[0] is FrameLayout) return chain.proceed()
+            (chain.args[0] as? View)?.findViewById<View>(getId(idName))?.let {
                 if (instance.commentSpanTextViewClass?.isInstance(it) == true ||
                     instance.commentSpanEllipsisTextViewClass?.isInstance(it) == true
                 ) it else null
             }?.let { view ->
                 view.getFirstFieldByExactTypeOrNull<CharSequence>()?.also { text ->
-                    showCopyDialog(view.context, text, param)
+                    showCopyDialog(view.context, text)
                 }
             } ?: Log.toast("找不到评论内容", true)
             return true
         }
-        instance.commentCopyClass?.replaceMethod("onLongClick", View::class.java) {
-            commentCopyHook(it, "message")
+        instance.commentCopyClass?.hookMethod("onLongClick", View::class.java) { chain ->
+            commentCopyHook(chain, "message")
         }
-        instance.commentCopyNewClass?.replaceMethod("onLongClick", View::class.java) {
-            commentCopyHook(it, "comment_message")
+        instance.commentCopyNewClass?.hookMethod("onLongClick", View::class.java) { chain ->
+            commentCopyHook(chain, "comment_message")
         }
 
         instance.comment3CopyClass?.let { c ->
             instance.comment3Copy()?.let { m ->
                 instance.comment3ViewIndex().let { i ->
-                    c.replaceAllMethods(m) { param ->
-                        if (!enhanceLongClickCopy) return@replaceAllMethods true
-                        val view = param.args[i] as View
+                    c.hookAllMethods(m) { chain ->
+                        if (!enhanceLongClickCopy) return@hookAllMethods true
+                        val view = chain.args[i] as View
                         view.getFirstFieldByExactTypeOrNull<CharSequence>()?.also { text ->
-                            showCopyDialog(view.context, text, param)
+                            showCopyDialog(view.context, text)
                         }
-                        return@replaceAllMethods true
+                        return@hookAllMethods true
                     }
                 }
             }
@@ -105,10 +107,10 @@ class CopyHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         "com.bilibili.bplus.im.conversation.ConversationActivity".from(mClassLoader)
             ?.declaredMethods?.find {
                 it.name == instance.onOperateClick() && it.parameterTypes.size == 8
-            }?.hookBeforeMethod { param ->
-                if (param.args.last() == param.args.first()) {
-                    val activity = param.thisObject as Activity
-                    val json = param.args[1].callMethodOrNullAs(instance.getContentString()) ?: ""
+            }?.hookMethod { chain ->
+                if (chain.args.last() == chain.args.first()) {
+                    val activity = chain.thisObject as Activity
+                    val json = chain.args[1]!!.callMethodOrNullAs(instance.getContentString()) ?: ""
                     val text = runCatchingOrNull { json.toJSONObject() }?.run {
                         optString("content").ifEmpty {
                             buildString {
@@ -123,15 +125,16 @@ class CopyHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                                 }
                             }.run { removeSuffix("\n") }
                         }
-                    } ?: return@hookBeforeMethod
-                    showCopyDialog(activity, text, param)
-                    param.args[6].callMethodOrNull("dismiss")
-                    param.result = null
+                    } ?: return@hookMethod chain.proceed()
+                    showCopyDialog(activity, text)
+                    chain.args[6]!!.callMethodOrNull("dismiss")
+                    return@hookMethod null
                 }
+                chain.proceed()
             }
     }
 
-    private fun showCopyDialog(context: Context, text: CharSequence, param: MethodHookParam) {
+    private fun showCopyDialog(context: Context, text: CharSequence) {
         val appDialogTheme = getResId("AppTheme.Dialog.Alert", "style")
         AlertDialog.Builder(context, appDialogTheme).run {
             setTitle("自由复制内容")
@@ -148,7 +151,12 @@ class CopyHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 )
             }
             setNeutralButton("复制全部") { _, _ ->
-                param.invokeOriginalMethod()
+                val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE)
+                        as android.content.ClipboardManager
+                clipboardManager.setPrimaryClip(
+                    android.content.ClipData.newPlainText("copied_text", text)
+                )
+                Log.toast("已复制", false)
             }
             setNegativeButton(android.R.string.cancel, null)
             show()

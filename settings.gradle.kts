@@ -12,7 +12,6 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        maven(url = "https://api.xposed.info")
     }
 }
 rootProject.name = "BiliRoaming"

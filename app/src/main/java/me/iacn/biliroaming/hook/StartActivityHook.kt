@@ -9,8 +9,8 @@ import android.os.Bundle
 import me.iacn.biliroaming.BiliBiliPackage
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.utils.Log
-import me.iacn.biliroaming.utils.hookBeforeAllMethods
-import me.iacn.biliroaming.utils.hookBeforeMethod
+import me.iacn.biliroaming.utils.hookAllMethods
+import me.iacn.biliroaming.utils.hookMethod
 import me.iacn.biliroaming.utils.packageName
 import me.iacn.biliroaming.utils.sPrefs
 import me.iacn.biliroaming.utils.toJSONObject
@@ -29,14 +29,15 @@ class StartActivityHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     override fun startHook() {
-        "tv.danmaku.bili.ui.intent.IntentHandlerActivity".hookBeforeMethod(mClassLoader, "onCreate", Bundle::class.java) { param ->
-            val a = param.thisObject as Activity
-            val data = a.intent.data ?: return@hookBeforeMethod
+        "tv.danmaku.bili.ui.intent.IntentHandlerActivity".hookMethod(mClassLoader, "onCreate", Bundle::class.java) { chain ->
+            val a = chain.thisObject as Activity
+            val data = a.intent.data ?: return@hookMethod chain.proceed()
             a.intent.data = data.buildUpon().encodedQuery(data.encodedQuery?.replace("&-Arouter=story", "")?.replace("&-Atype=story", "")).build()
+            chain.proceed()
         }
-        Instrumentation::class.java.hookBeforeAllMethods("execStartActivity") { param ->
-            val intent = param.args[4] as? Intent ?: return@hookBeforeAllMethods
-            val uri = intent.dataString ?: return@hookBeforeAllMethods
+        Instrumentation::class.java.hookAllMethods("execStartActivity") { chain ->
+            val intent = chain.args[4] as? Intent ?: return@hookAllMethods chain.proceed()
+            val uri = intent.dataString ?: return@hookAllMethods chain.proceed()
             if (sPrefs.getBoolean(
                     "replace_story_video",
                     false
@@ -72,7 +73,7 @@ class StartActivityHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             Log.e(e)
                         }
                     }
-                    return@hookBeforeAllMethods
+                    return@hookAllMethods chain.proceed()
                 }
                 // 兼容旧版
                 intent.component = ComponentName(
@@ -85,11 +86,14 @@ class StartActivityHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 if (intent.component?.className?.endsWith("MWebActivity") == true &&
                         intent.data?.authority?.matches(whileListDomain) == false) {
                     Log.d("force_browser ${intent.data?.authority}")
-                    param.args[4] = Intent(Intent.ACTION_VIEW).apply {
+                    val args = chain.args.toTypedArray()
+                    args[4] = Intent(Intent.ACTION_VIEW).apply {
                         data = intent.data
                     }
+                    return@hookAllMethods chain.proceed(args)
                 }
             }
+            chain.proceed()
         }
     }
     companion object {

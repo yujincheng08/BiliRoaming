@@ -33,7 +33,7 @@ apktransform {
 cmaker {
     default {
         targets("biliroaming")
-        abiFilters("armeabi-v7a", "arm64-v8a", "x86")
+        abiFilters("armeabi-v7a", "arm64-v8a")
         arguments += arrayOf(
             "-DANDROID_STL=none",
             "-DCMAKE_CXX_STANDARD=23",
@@ -50,8 +50,8 @@ cmaker {
 
 android {
     namespace = "me.iacn.biliroaming"
-    compileSdk = 35
-    buildToolsVersion = "35.0.0"
+    compileSdk = 36
+    buildToolsVersion = "36.0.0"
     ndkVersion = "29.0.14206865"
 
     buildFeatures {
@@ -101,6 +101,7 @@ android {
 
     packaging {
         resources {
+            merges += "META-INF/xposed/*"
             excludes += "**"
         }
     }
@@ -151,6 +152,7 @@ configurations.all {
 
 dependencies {
     compileOnly(libs.xposed)
+    implementation(libs.xposed.service)
     implementation(libs.protobuf.kotlin)
     implementation(libs.protobuf.java)
     compileOnly(libs.protobuf.protoc)

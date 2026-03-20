@@ -12,30 +12,32 @@ class EnvHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
         // EnvContext
         instance.preBuiltConfigClass?.let {
-            val hooker: Hooker = hooker@ { param ->
+            val hooker: HookCallback = hooker@{ chain ->
+                val result = chain.proceed()
                 @Suppress("UNCHECKED_CAST")
-                val result = param.result as MutableMap<String, String?>
+                val resultMap = result as MutableMap<String, String?>
                 for (config in configSet) {
                     (if (sPrefs.getBoolean(
                             config.config,
                             false
                         )
                     ) config.trueValue else config.falseValue)
-                        ?.let { result[config.key] = it } ?: result.remove(config.key)
+                        ?.let { resultMap[config.key] = it } ?: resultMap.remove(config.key)
                 }
+                result
             }
-            // v8.28.0 - ?
-            it.hookAfterMethod(instance.getPreBuiltConfigMethod(), hooker = hooker)
-            // ? - v8.48.0 ..
-            it.hookAfterMethod(instance.getPreBuiltConfigMethod(), it, hooker = hooker)
+            // v8.28.0 - ? (instance method, no params)
+            it.hookMethod(instance.getPreBuiltConfigMethod(), callback = hooker)
+                // ? - v8.48.0 .. (static method, takes EnvContext param)
+                ?: it.hookMethod(instance.getPreBuiltConfigMethod(), it, callback = hooker)
         }
 
         // TypedContext
         instance.dataSPClass?.let {
-            val hooker: Hooker = hooker@ { param ->
-                val result = param.result as SharedPreferences
+            val hooker: HookCallback = hooker@{ chain ->
+                val result = chain.proceed() as SharedPreferences
                 // this indicates the proper instance
-                if (!result.contains("bv.enable_bv")) return@hooker
+                if (!result.contains("bv.enable_bv")) return@hooker result
                 for (config in configSet) {
                     (if (sPrefs.getBoolean(
                             config.config,
@@ -45,41 +47,46 @@ class EnvHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         ?.let { result.edit().putString(config.key, it).apply() }
                         ?: result.edit().remove(config.key).apply()
                 }
+                result
             }
-            // v8.28.0 - ?
-            it.hookAfterMethod(instance.getDataSPMethod(), hooker = hooker)
-            // ? - v8.48.0 ..
-            it.hookAfterMethod(instance.getDataSPMethod(), it, hooker = hooker)
+            // v8.28.0 - ? (instance method, no params)
+            it.hookMethod(instance.getDataSPMethod(), callback = hooker)
+                // ? - v8.48.0 .. (static method, takes class param)
+                ?: it.hookMethod(instance.getDataSPMethod(), it, callback = hooker)
         }
 
         "com.bilibili.lib.blconfig.internal.OverrideConfig".findClassOrNull(mClassLoader)
-            ?.hookBeforeAllConstructors { param ->
-                val delegate = param.args.getOrNull(0) ?: return@hookBeforeAllConstructors
-                val realConfig = param.args.getOrNull(1) ?: return@hookBeforeAllConstructors
+            ?.hookAllConstructors { chain ->
+                val delegate = chain.args.getOrNull(0) ?: return@hookAllConstructors chain.proceed()
+                val realConfig = chain.args.getOrNull(1) ?: return@hookAllConstructors chain.proceed()
                 val delegateClass = delegate.javaClass
-                param.args[0] = Proxy.newProxyInstance(
+                val args = chain.args.toTypedArray()
+                args[0] = Proxy.newProxyInstance(
                     delegateClass.classLoader,
                     delegateClass.interfaces
                 ) { _, m, a ->
-                    val args = a ?: emptyArray()
+                    val proxyArgs = a ?: emptyArray()
                     if (m.name == "getConfig") {
                         var result: Any? = null
-                        val key = args[0]
+                        val key = proxyArgs[0]
                         for (config in configSet) {
                             if (sPrefs.getBoolean(config.config, false) && config.key == key) {
-                                result = realConfig.callMethodOrNull("get", *args)
+                                result = realConfig.callMethodOrNull("get", *proxyArgs)
                             }
                         }
-                        result ?: m(delegate, *args)
+                        result ?: m(delegate, *proxyArgs)
                     } else {
-                        m(delegate, *args)
+                        m(delegate, *proxyArgs)
                     }
                 }
+                chain.proceed(args)
             }
 
 //        // Disable tinker
-//        "com.tencent.tinker.loader.app.TinkerApplication".findClass(mClassLoader)?.hookBeforeAllConstructors { param ->
-//            param.args[0] = 0
+//        "com.tencent.tinker.loader.app.TinkerApplication".findClass(mClassLoader)?.hookAllConstructors { chain ->
+//            val args = chain.args.toTypedArray()
+//            args[0] = 0
+//            chain.proceed(args)
 //        }
     }
 

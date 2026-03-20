@@ -18,49 +18,55 @@ class SettingHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
         Log.d("startHook: Setting")
 
-        instance.splashActivityClass?.hookBeforeMethod("onCreate", Bundle::class.java) { param ->
-            val self = param.thisObject as Activity
+        instance.splashActivityClass?.hookMethod("onCreate", Bundle::class.java) { chain ->
+            val self = chain.thisObject as Activity
             startSetting = self.intent.hasExtra(START_SETTING_KEY)
+            chain.proceed()
         }
 
-        instance.mainActivityClass?.hookAfterMethod("onResume") { param ->
+        instance.mainActivityClass?.hookMethod("onResume") { chain ->
+            val result = chain.proceed()
             if (startSetting) {
                 startSetting = false
-                SettingDialog.show(param.thisObject as Activity)
+                SettingDialog.show(chain.thisObject as Activity)
             }
+            result
         }
 
-        instance.mainActivityClass?.hookBeforeMethod(
+        instance.mainActivityClass?.hookMethod(
             "onCreate",
             Bundle::class.java
-        ) { param ->
-            val bundle = param.args[0] as? Bundle
+        ) { chain ->
+            val bundle = chain.args[0] as? Bundle
             bundle?.remove("android:fragments")
+            chain.proceed()
         }
 
-        instance.drawerClass?.hookAfterMethod(
+        instance.drawerClass?.hookMethod(
             "onCreateView",
             LayoutInflater::class.java,
             ViewGroup::class.java,
             Bundle::class.java
-        ) { param ->
+        ) { chain ->
+            val result = chain.proceed()
             val navSettingId = getId("nav_settings")
             val nav =
-                param.thisObject.javaClass.declaredFields.first { it.type.name == "android.support.design.widget.NavigationView" }.name
-            (param.thisObject.getObjectField(nav)
-                ?: param.result).callMethodAs<View>("findViewById", navSettingId)
+                chain.thisObject!!.javaClass.declaredFields.first { it.type.name == "android.support.design.widget.NavigationView" }.name
+            (chain.thisObject!!.getObjectField(nav)
+                ?: result)!!.callMethodAs<View>("findViewById", navSettingId)
                 .setOnLongClickListener {
-                    SettingDialog.show(param.thisObject.callMethodAs<Activity>("getActivity"))
+                    SettingDialog.show(chain.thisObject!!.callMethodAs<Activity>("getActivity"))
                     true
                 }
+            result
         }
 
         instance.homeCenters().forEach { (c, m) ->
-            c?.hookBeforeAllMethods(m) { param ->
+            c?.hookAllMethods(m) { chain ->
                 @Suppress("UNCHECKED_CAST")
-                val list = param.args[1] as? MutableList<Any>
-                    ?: param.args[1]?.getObjectFieldOrNullAs<MutableList<Any>>("moreSectionList")
-                    ?: return@hookBeforeAllMethods
+                val list = chain.args[1] as? MutableList<Any>
+                    ?: chain.args[1]?.getObjectFieldOrNullAs<MutableList<Any>>("moreSectionList")
+                    ?: return@hookAllMethods chain.proceed()
 
                 val itemList = list.lastOrNull()?.let {
                     if (it.javaClass != instance.menuGroupItemClass) it.getObjectFieldOrNullAs<MutableList<Any>>(
@@ -68,7 +74,7 @@ class SettingHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     ) else list
                 } ?: list
 
-                val item = instance.menuGroupItemClass?.new() ?: return@hookBeforeAllMethods
+                val item = instance.menuGroupItemClass?.new() ?: return@hookAllMethods chain.proceed()
                 item.setIntField("id", SETTING_ID)
                     .setObjectField("title", "哔哩漫游设置")
                     .setObjectField(
@@ -83,16 +89,18 @@ class SettingHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         } catch (t: Throwable) {
                             it.getLongField("id") == SETTING_ID.toLong()
                         }
-                    ) return@hookBeforeAllMethods
+                    ) return@hookAllMethods chain.proceed()
                 }
                 itemList.add(item)
+                chain.proceed()
             }
         }
 
-        instance.settingRouterClass?.hookBeforeAllConstructors { param ->
-            if (param.args[1] != SETTING_URI) return@hookBeforeAllConstructors
-            val routerType = (param.method as Constructor<*>).parameterTypes[3]
-            param.args[3] = Proxy.newProxyInstance(
+        instance.settingRouterClass?.hookAllConstructors { chain ->
+            if (chain.args[1] != SETTING_URI) return@hookAllConstructors chain.proceed()
+            val routerType = (chain.executable as Constructor<*>).parameterTypes[3]
+            val args = chain.args.toTypedArray()
+            args[3] = Proxy.newProxyInstance(
                 routerType.classLoader,
                 arrayOf(routerType)
             ) { _, method, _ ->
@@ -100,14 +108,14 @@ class SettingHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 Proxy.newProxyInstance(
                     returnType.classLoader,
                     arrayOf(returnType)
-                ) { _, method2, args ->
+                ) { _, method2, args2 ->
                     when (method2.returnType) {
                         Boolean::class.javaPrimitiveType -> false
                         else -> {
                             if (method2.parameterTypes.isNotEmpty() &&
                                 method2.parameterTypes[0].name == "android.app.Activity"
                             ) {
-                                val currentActivity = args[0] as Activity
+                                val currentActivity = args2[0] as Activity
                                 SettingDialog.show(currentActivity)
                             }
                             null
@@ -115,6 +123,7 @@ class SettingHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     }
                 }
             }
+            chain.proceed(args)
         }
     }
 

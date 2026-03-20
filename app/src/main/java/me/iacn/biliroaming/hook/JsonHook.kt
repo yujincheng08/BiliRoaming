@@ -82,16 +82,17 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val channelItemClass = "com.bilibili.lib.sharewrapper.online.api.ShareChannels\$ChannelItem"
             .from(mClassLoader)
 
-        instance.fastJsonClass?.hookAfterMethod(
+        instance.fastJsonClass?.hookMethod(
             instance.fastJsonParse(),
             String::class.java,
             Type::class.java,
             Int::class.javaPrimitiveType,
             "com.alibaba.fastjson.parser.Feature[]"
-        ) { param ->
-            var result = param.result ?: return@hookAfterMethod
+        ) { chain ->
+            val origResult = chain.proceed()
+            var result = origResult ?: return@hookMethod null
             if (result.javaClass == instance.generalResponseClass) {
-                result = result.getObjectField("data") ?: return@hookAfterMethod
+                result = result.getObjectField("data") ?: return@hookMethod origResult
             }
 
             when (result.javaClass) {
@@ -359,7 +360,7 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
                 shareChannelsClass -> if (unlockPlayLimit) runCatchingOrNull {
                     val belowChannels = result.getObjectFieldAs<ArrayList<Any>?>("belowChannels")
-                        .takeUnless { it.isNullOrEmpty() } ?: return@hookAfterMethod
+                        .takeUnless { it.isNullOrEmpty() } ?: return@hookMethod origResult
                     var alreadyHas = false
                     var toInsertIdx = -1
                     belowChannels.forEachIndexed { idx, item ->
@@ -370,17 +371,18 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             alreadyHas = true
                     }
                     if (alreadyHas || toInsertIdx == -1)
-                        return@hookAfterMethod
+                        return@hookMethod origResult
                     val listenChannel = channelItemClass?.new()
                         ?.setObjectField("name", "听视频")
                         ?.setObjectField("shareChannel", "LISTEN")
                         ?.setObjectField(
                             "picture",
                             "https://i0.hdslb.com/bfs/share/f88d8c420a59ff1ca5975b38722408056e7337b7.png"
-                        ) ?: return@hookAfterMethod
+                        ) ?: return@hookMethod origResult
                     belowChannels.add(toInsertIdx, listenChannel)
                 }
             }
+            origResult
         }
 
         val searchRankClass = "com.bilibili.search.api.SearchRank".findClassOrNull(mClassLoader)
@@ -389,34 +391,38 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val searchRankV2Class = "com.bilibili.search2.api.SearchRank".findClassOrNull(mClassLoader)
         val searchGuessV2Class = "com.bilibili.search2.api.SearchReferral\$Guess".findClassOrNull(mClassLoader)
 
-        instance.fastJsonClass?.hookAfterMethod(
+        instance.fastJsonClass?.hookMethod(
             "parseArray",
             String::class.java,
             Class::class.java
-        ) { param ->
+        ) { chain ->
+            val result = chain.proceed()
             @Suppress("UNCHECKED_CAST")
-            val result = param.result as? MutableList<Any>
-            when (param.args[1] as Class<*>) {
+            val list = result as? MutableList<Any>
+            when (chain.args[1] as Class<*>) {
                 searchRankClass, searchGuessClass, searchRankV2Class, searchGuessV2Class ->
                     if (sPrefs.getBoolean("purify_search", false) && sPrefs.getBoolean(
                             "hidden",
                             false
                         )
                     ) {
-                        result?.clear()
+                        list?.clear()
                     }
             }
+            result
         }
 
-        instance.fastJsonClass?.hookAfterMethod(
+        instance.fastJsonClass?.hookMethod(
             instance.fastJsonParse(),
             String::class.java,
             Type::class.java,
             "com.alibaba.fastjson.parser.Feature[]"
-        ) { param ->
-            var result = param.result ?: return@hookAfterMethod
+        ) { chain ->
+            val origResult = chain.proceed()
+            var returnResult = origResult
+            var result = origResult ?: return@hookMethod null
             if (result.javaClass == instance.generalResponseClass)
-                result = result.getObjectField("data") ?: return@hookAfterMethod
+                result = result.getObjectField("data") ?: return@hookMethod origResult
 
             when (result.javaClass) {
                 liveShoppingInfoClass -> {
@@ -434,7 +440,7 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
                 liveGoodsCardInfoClass, liveRecommendCardGoodsClass -> {
                     if (hidden && purifyLivePopups.contains("shoppingCard"))
-                        param.result = null
+                        returnResult = null
                 }
 
                 biliLiveRoomInfoClass -> {
@@ -449,7 +455,7 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
                 liveRoomRecommendCardClass -> {
                     if (hidden && purifyLivePopups.contains("follow"))
-                        param.result = null
+                        returnResult = null
                 }
 
                 liveRoomReserveInfoClass -> {
@@ -469,9 +475,10 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
                 liveShoppingGotoBuyInfoClass -> {
                     if (hidden && purifyLivePopups.contains("gotoBuy"))
-                        param.result = null
+                        returnResult = null
                 }
             }
+            returnResult
         }
     }
 
