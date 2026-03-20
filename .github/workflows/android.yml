@@ -56,9 +56,9 @@ jobs:
         with:
           name: snapshot
           path: |
-              app/build/outputs/apk
-              app/build/outputs/mapping
-              app/release
+            app/build/outputs/apk
+            app/build/outputs/mapping
+            app/release
       - name: Post to channel
         if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/feat/api-101'
         env:
@@ -66,28 +66,14 @@ jobs:
           BOT_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           FILE: app/release/BiliRoaming_${{ env.VERSION }}.apk
           COMMIT_MESSAGE: |+
-            New push to github!
+            New push to github\!
             Branch: `${{ github.ref_name }}`
-            ${{ github.ref == 'refs/heads/feat/api-101' && ' This version is ONLY FOR LSPosed-it (7601 or higher) or frameworks supporting Xposed API 101' || '' }}
+            ${{ github.ref == 'refs/heads/feat/api-101' && ' This version is ONLY FOR LSPosed\-it \(7601 or higher\) or frameworks supporting Xposed API 101' || '' }}
             ```
             ${{ github.event.head_commit.message }}
             ```by `${{ github.event.head_commit.author.name }}`
             See commit detail [here](${{ github.event.head_commit.url }})
             Snapshot apk is attached
         run: |
-          ESCAPED=`python3 -c '
-          import json,os,urllib.parse,re
-          msg = os.environ["COMMIT_MESSAGE"]
-          # Escape MarkdownV2 special chars outside of code blocks and backtick spans
-          parts = msg.split("\x60\x60\x60")
-          for i in range(len(parts)):
-              if i % 2 == 0:  # outside code blocks
-                  segs = parts[i].split("\x60")
-                  for j in range(len(segs)):
-                      if j % 2 == 0:  # outside inline code
-                          segs[j] = re.sub(r"([_*\[\]()~>#+\-=|{}.!])", r"\\\1", segs[j])
-                  parts[i] = "\x60".join(segs)
-          msg = "\x60\x60\x60".join(parts)
-          print(urllib.parse.quote(json.dumps(msg)))
-          '`
+          ESCAPED=`python3 -c 'import json,os,urllib.parse; print(urllib.parse.quote(json.dumps(os.environ["COMMIT_MESSAGE"])))'`
           curl -v "https://api.telegram.org/bot${BOT_TOKEN}/sendMediaGroup?chat_id=${CHANNEL_ID}&media=%5B%7B%22type%22:%22document%22,%20%22media%22:%22attach://release%22,%22parse_mode%22:%22MarkdownV2%22,%22caption%22:${ESCAPED}%7D%5D"  -F release="@$FILE"
