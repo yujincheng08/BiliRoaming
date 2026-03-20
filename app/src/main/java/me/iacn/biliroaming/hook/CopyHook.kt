@@ -41,9 +41,9 @@ class CopyHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
                 chain.thisObject!!.getFirstFieldByExactTypeOrNull<SpannableStringBuilder>()?.let {
                     val view = chain.args[0] as View
-                    showCopyDialog(view.context, it, chain)
+                    showCopyDialog(view.context, it)
                 } ?: (chain.args[0] as? TextView)?.let { tv ->
-                    showCopyDialog(tv.context, tv.text, chain)
+                    showCopyDialog(tv.context, tv.text)
                 }
             }
         }
@@ -59,12 +59,13 @@ class CopyHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     (if (instance.ellipsizingTextViewClass?.isInstance(v) == true) {
                         v.getFirstFieldByExactTypeOrNull()
                     } else v.text)?.also { text ->
-                        showCopyDialog(v.context, text, chain)
+                        showCopyDialog(v.context, text)
                     }
                 } ?: Log.toast("找不到动态内容", true)
                 true
             }
         }
+
 
         val commentCopyHook = fun(chain: XposedInterface.Chain, idName: String): Any? {
             if (!enhanceLongClickCopy) return true
@@ -75,7 +76,7 @@ class CopyHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 ) it else null
             }?.let { view ->
                 view.getFirstFieldByExactTypeOrNull<CharSequence>()?.also { text ->
-                    showCopyDialog(view.context, text, chain)
+                    showCopyDialog(view.context, text)
                 }
             } ?: Log.toast("找不到评论内容", true)
             return true
@@ -94,7 +95,7 @@ class CopyHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         if (!enhanceLongClickCopy) return@hookAllMethods true
                         val view = chain.args[i] as View
                         view.getFirstFieldByExactTypeOrNull<CharSequence>()?.also { text ->
-                            showCopyDialog(view.context, text, chain)
+                            showCopyDialog(view.context, text)
                         }
                         return@hookAllMethods true
                     }
@@ -125,7 +126,7 @@ class CopyHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             }.run { removeSuffix("\n") }
                         }
                     } ?: return@hookMethod chain.proceed()
-                    showCopyDialog(activity, text, chain)
+                    showCopyDialog(activity, text)
                     chain.args[6]!!.callMethodOrNull("dismiss")
                     return@hookMethod null
                 }
@@ -133,7 +134,7 @@ class CopyHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
     }
 
-    private fun showCopyDialog(context: Context, text: CharSequence, chain: XposedInterface.Chain) {
+    private fun showCopyDialog(context: Context, text: CharSequence) {
         val appDialogTheme = getResId("AppTheme.Dialog.Alert", "style")
         AlertDialog.Builder(context, appDialogTheme).run {
             setTitle("自由复制内容")
@@ -150,7 +151,12 @@ class CopyHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 )
             }
             setNeutralButton("复制全部") { _, _ ->
-                chain.proceed()
+                val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE)
+                        as android.content.ClipboardManager
+                clipboardManager.setPrimaryClip(
+                    android.content.ClipData.newPlainText("copied_text", text)
+                )
+                Log.toast("已复制", false)
             }
             setNegativeButton(android.R.string.cancel, null)
             show()

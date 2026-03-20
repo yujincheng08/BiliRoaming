@@ -16,6 +16,8 @@ import me.iacn.biliroaming.utils.*
  * Email i@iacn.me
  */
 class CustomThemeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
+    private var skipOnClick = false
+
     override fun startHook() {
         if (!sPrefs.getBoolean("custom_theme", false)) return
         Log.d("startHook: CustomTheme")
@@ -60,6 +62,7 @@ class CustomThemeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
         }
         instance.themeListClickClass?.hookMethod("onClick", View::class.java) { chain ->
+            if (skipOnClick) return@hookMethod chain.proceed()
             val view = chain.args[0] as View
             val idName = view.resources.getResourceEntryName(view.id)
             if ("list_item" != idName) return@hookMethod chain.proceed()
@@ -67,6 +70,7 @@ class CustomThemeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             val mId = biliSkin.getIntField("mId")
             // Make colors updated immediately
             if (mId == CUSTOM_THEME_ID1 || mId == CUSTOM_THEME_ID2) {
+                val thisObject = chain.thisObject
                 view.context.addModuleAssets()
                 val colorDialog = ColorChooseDialog(view.context, customColor)
                 colorDialog.setPositiveButton("确定") { _, _ ->
@@ -82,9 +86,12 @@ class CustomThemeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     biliSkin.setIntField("mId", newId)
                     customColor = color
                     try {
-                        chain.proceed()
+                        skipOnClick = true
+                        thisObject?.callMethod("onClick", view)
                     } catch (e: Exception) {
                         Log.w(e)
+                    } finally {
+                        skipOnClick = false
                     }
                 }
                 colorDialog.show()
@@ -222,7 +229,7 @@ class CustomThemeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 val garb = it[0].let { cls ->
                     try {
                         cls.new()
-                    } catch (err: NoSuchMethodError) {
+                    } catch (err: ReflectiveOperationException) {
                         // GarbInfo in play v3.20.0
                         cls.new(
                             0L,     // id

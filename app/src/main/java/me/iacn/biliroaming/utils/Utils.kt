@@ -1,6 +1,7 @@
 package me.iacn.biliroaming.utils
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
@@ -96,6 +97,18 @@ val currentContext: Context by lazy {
     val clazz = Class.forName("android.app.ActivityThread")
     clazz.getMethod("currentApplication").invoke(null) as Application
 }
+
+val currentActivity: Activity?
+    get() = try {
+        val clz = Class.forName("android.app.ActivityThread")
+        val at = clz.getMethod("currentActivityThread").invoke(null)
+        @Suppress("UNCHECKED_CAST")
+        val activities = at?.getObjectField("mActivities") as? Map<Any, Any> ?: return null
+        activities.values.firstNotNullOfOrNull { record ->
+            (record.getObjectField("activity") as? Activity)
+                ?.takeIf { !it.isFinishing && !it.isDestroyed }
+        }
+    } catch (_: Throwable) { null }
 
 val packageName: String by lazy { currentContext.packageName }
 
