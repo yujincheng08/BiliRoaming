@@ -35,11 +35,19 @@ private fun isAssignable(target: Class<*>, source: Class<*>?): Boolean {
 private fun getParameterTypes(args: Array<out Any?>): Array<Class<*>> =
     args.map { it?.javaClass ?: Any::class.java }.toTypedArray()
 
-@PublishedApi internal fun resolveParameterTypes(args: Array<out Any?>): Array<Class<*>> =
+private fun resolveClassName(name: String, classLoader: ClassLoader?): Class<*> {
+    if (name.endsWith("[]")) {
+        val componentClass = resolveClassName(name.dropLast(2), classLoader)
+        return java.lang.reflect.Array.newInstance(componentClass, 0).javaClass
+    }
+    return Class.forName(name, false, classLoader ?: ClassLoader.getSystemClassLoader())
+}
+
+@PublishedApi internal fun resolveParameterTypes(args: Array<out Any?>, classLoader: ClassLoader? = null): Array<Class<*>> =
     args.map {
         when (it) {
             is Class<*> -> it
-            is String -> Class.forName(it)
+            is String -> resolveClassName(it, classLoader)
             else -> throw IllegalArgumentException("Expected Class or String, got: ${it?.javaClass}")
         }
     }.toTypedArray()
@@ -150,7 +158,7 @@ inline fun Class<*>.hookMethod(
     vararg args: Any?,
     crossinline callback: HookCallback
 ): HookHandle? = try {
-    val paramTypes = resolveParameterTypes(args)
+    val paramTypes = resolveParameterTypes(args, this.classLoader)
     val m = findMethodExact(this, method!!, *paramTypes)
     hookExecutable(m, createHooker(callback))
 } catch (e: NoSuchMethodError) {
@@ -197,7 +205,7 @@ inline fun Class<*>.hookAllMethods(methodName: String?, crossinline callback: Ho
 
 inline fun Class<*>.hookConstructor(vararg args: Any?, crossinline callback: HookCallback): HookHandle? =
     try {
-        val paramTypes = resolveParameterTypes(args)
+        val paramTypes = resolveParameterTypes(args, this.classLoader)
         val ctor = getDeclaredConstructor(*paramTypes).also { it.isAccessible = true }
         hookExecutable(ctor, createHooker(callback))
     } catch (e: NoSuchMethodError) {
