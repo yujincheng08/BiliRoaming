@@ -47,14 +47,14 @@ class PlayArcConfHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             param.result?.callMethod("mergePlayArcConf", arcConfs)
         }
         instance.playerMossClass?.hookBeforeMethod("playViewUnite", instance.playViewUniteReqClass, instance.mossResponseHandlerClass) { param ->
-            param.args[1] = param.args[1].mossResponseHandlerProxy { resp ->
+            param.args[1] = param.args[1]!!.mossResponseHandlerProxy { resp ->
                 resp?.callMethod("mergePlayArcConf", arcConfs)
             }
         }
         "com.bapis.bilibili.app.listener.v1.ListenerMoss".from(mClassLoader)?.run {
             val playlistHook = { param: MethodHookParam ->
-                val req = param.args[0]
-                param.args[1] = param.args[1].mossResponseHandlerProxy { resp ->
+                val req = param.args[0]!!
+                param.args[1] = param.args[1]!!.mossResponseHandlerProxy { resp ->
                     runCatching {
                         reconstructPlaylistResponse(req, resp)
                     }.onFailure {
@@ -94,7 +94,7 @@ class PlayArcConfHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 if (playable == 0 && playerInfoMap.isNotEmpty())
                     return@hookAfterMethod
                 Log.toast("听视频解锁中")
-                param.result = reconstructPlayUrlResponse(param.args[0], resp)
+                param.result = reconstructPlayUrlResponse(param.args[0]!!, resp)
             }
         }
     }

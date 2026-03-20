@@ -128,7 +128,7 @@ object UposReplaceHelper {
         // fake grpc TF header then only reply with mirror type playurl
         "com.bilibili.lib.moss.utils.RuntimeHelper".from(mClassLoader)
             ?.hookAfterMethod("tf") { param ->
-                val result = param.result
+                val result = param.result ?: return@hookAfterMethod
                 if (result.callMethodOrNullAs<Int>("getNumber") != 0) return@hookAfterMethod
                 result.javaClass.callStaticMethodOrNull("forNumber", 1)?.let {
                     param.result = it

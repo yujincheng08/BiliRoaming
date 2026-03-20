@@ -37,7 +37,7 @@ class CoverHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     @SuppressLint("ClickableViewAccessibility")
     val hooker: Hooker = { param ->
         val group = param.args[0] as ViewGroup
-        val activity = param.thisObject.callMethodAs<Activity>("getActivity")
+        val activity = param.thisObject!!.callMethodAs<Activity>("getActivity")
 
         val gestureDetector =
             GestureDetector(activity, object : GestureDetector.SimpleOnGestureListener() {
@@ -46,7 +46,7 @@ class CoverHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     var filename: String? = null
                     var title: String? = null
                     try {
-                        when (param.thisObject.javaClass) {
+                        when (param.thisObject!!.javaClass) {
                             bgmClass -> activity.run {
                                 val viewModelField =
                                     activity.javaClass.declaredFields.firstOrNull { it.type.name == "com.bilibili.bangumi.logic.page.detail.BangumiDetailViewModelV2" }

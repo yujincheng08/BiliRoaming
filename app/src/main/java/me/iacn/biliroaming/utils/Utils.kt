@@ -1,7 +1,7 @@
 package me.iacn.biliroaming.utils
 
 import android.annotation.SuppressLint
-import android.app.AndroidAppHelper
+import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
 import android.content.pm.PackageManager.GET_META_DATA
@@ -92,7 +92,10 @@ val appKeyMap = mapOf(
     "tv.danmaku.bilibilihd" to "dfca71928277209b",
 )
 
-val currentContext by lazy { AndroidAppHelper.currentApplication() as Context }
+val currentContext: Context by lazy {
+    val clazz = Class.forName("android.app.ActivityThread")
+    clazz.getMethod("currentApplication").invoke(null) as Application
+}
 
 val packageName: String by lazy { currentContext.packageName }
 
@@ -158,7 +161,7 @@ fun signQuery(query: String?, extraMap: Map<String, String> = emptyMap()): Strin
 fun signQuery(query: Map<String, String>, extraMap: Map<String, String> = emptyMap()): String {
     val queryMap = TreeMap<String, String>()
     queryMap.putAll(query)
-    val packageName = AndroidAppHelper.currentPackageName()
+    val packageName = currentContext.packageName
     queryMap["appkey"] = instance.appKey
     queryMap["build"] = getVersionCode(packageName).toString()
     queryMap["device"] = "android"

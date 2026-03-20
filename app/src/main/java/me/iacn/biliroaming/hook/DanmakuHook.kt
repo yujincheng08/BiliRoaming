@@ -14,7 +14,7 @@ class DanmakuHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             "com.bapis.bilibili.community.service.dm.v1.DmSegMobileReq",
             instance.mossResponseHandlerClass
         ) { param ->
-            param.args[1] = param.args[1].mossResponseHandlerProxy {
+            param.args[1] = param.args[1]!!.mossResponseHandlerProxy {
                 if (blockWeight > 0) filterDanmaku(it, blockWeight)
                 if (disableVipDmColorful) clearVipColorfulSrc(it)
             }

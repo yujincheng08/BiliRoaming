@@ -2,7 +2,7 @@
 
 package me.iacn.biliroaming
 
-import android.app.AndroidAppHelper
+import me.iacn.biliroaming.utils.currentContext
 import android.content.Context
 import android.content.SharedPreferences
 import android.net.Uri
@@ -207,7 +207,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val biliAccounts by lazy {
         biliAccountsClass?.callStaticMethodOrNull(
             mHookInfo.biliAccounts.get.orNull,
-            AndroidAppHelper.currentApplication()
+            currentContext
         )
     }
 
@@ -380,7 +380,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             val t = measureTimeMillis {
                 if (hookInfoFile.isFile && hookInfoFile.canRead()) {
                     val lastUpdateTime = context.packageManager.getPackageInfo(
-                        AndroidAppHelper.currentPackageName(),
+                        currentContext.packageName,
                         0
                     ).lastUpdateTime
                     val lastModuleUpdateTime = try {
@@ -460,7 +460,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 DexHelper(classloader.findDexClassLoader(::findRealClassloader) ?: return@hookInfo)
             lastUpdateTime = max(
                 context.packageManager.getPackageInfo(
-                    AndroidAppHelper.currentPackageName(),
+                    currentContext.packageName,
                     0
                 ).lastUpdateTime,
                 runCatchingOrNull {
@@ -2111,7 +2111,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                         null,
                         false
                     ).asSequence().firstNotNullOfOrNull { idx ->
-                        dexHelper.decodeMethodIndex(idx)?.declaringClass?.takeIf { !it.superclass.isAbstract }
+                        dexHelper.decodeMethodIndex(idx)?.declaringClass?.takeIf { !it.superclass!!.isAbstract }
                     } ?: return@biliGlobalPreference
                 val method = clazz.declaredMethods.firstOrNull {
                     it.isStatic && it.parameterTypes.isEmpty() && it.returnType == SharedPreferences::class.java

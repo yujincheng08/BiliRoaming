@@ -187,7 +187,7 @@ class ProtoBufHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 if (instance.useNewMossFunc) "executeMainList" else "mainList",
                 "com.bapis.bilibili.main.community.reply.v1.MainListReq",
             ) { param ->
-                val type = param.args[0].callMethodAs<Long>("getType")
+                val type = param.args[0]!!.callMethodAs<Long>("getType")
                 if (hidden && blockVideoComment && type == 1L) {
                     val reply = mainListReplyClass?.new()?.apply {
                         val subjectControl = callMethod("getSubjectControl")

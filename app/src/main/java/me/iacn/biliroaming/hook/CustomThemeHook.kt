@@ -40,7 +40,7 @@ class CustomThemeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 mClassLoader, it,
                 "tv.danmaku.bili.ui.theme.api.BiliSkinList", Boolean::class.javaPrimitiveType
             ) { param ->
-                val biliSkinList = param.args[0]
+                val biliSkinList = param.args[0]!!
 
                 val mList = biliSkinList.getObjectFieldAs<MutableList<Any>>("mList")
                 val biliSkin =
@@ -234,7 +234,7 @@ class CustomThemeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
                 newInstance(
                     garb,                   // garb
-                    it[1].enumConstants[0], // currentDayNight ThemeDayNight#Day
+                    it[1].enumConstants!![0], // currentDayNight ThemeDayNight#Day
                     pack(),                 // primary !!important
                     pack(),                 // secondary !!important
                     Color.WHITE.pack(),     // background !!important

@@ -44,7 +44,7 @@ class DynamicHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 "com.bapis.bilibili.app.dynamic.v2.DynAllReq",
                 instance.mossResponseHandlerClass
             ) { param ->
-                param.args[1] = param.args[1].mossResponseHandlerProxy { reply ->
+                param.args[1] = param.args[1]!!.mossResponseHandlerProxy { reply ->
                     reply ?: return@mossResponseHandlerProxy
                     Log.d("upList: ${reply.callMethod("getUpList")}")
                     if (removeTopicOfAll)
@@ -84,7 +84,7 @@ class DynamicHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 "com.bapis.bilibili.app.dynamic.v2.DynVideoReq",
                 instance.mossResponseHandlerClass
             ) {
-                it.args[1] = it.args[1].mossResponseHandlerProxy { result ->
+                it.args[1] = it.args[1]!!.mossResponseHandlerProxy { result ->
                     result?.let {
                         if (removeUpOfVideo)
                             it.callMethod("clearVideoUpList")
@@ -100,7 +100,7 @@ class DynamicHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 "com.bapis.bilibili.app.dynamic.v2.DynTabReq",
                 instance.mossResponseHandlerClass
             ) {
-                it.args[1] = it.args[1].mossResponseHandlerReplaceProxy { reply ->
+                it.args[1] = it.args[1]!!.mossResponseHandlerReplaceProxy { reply ->
                     reply?.callMethod("ensureScreenTabIsMutable")
                     reply?.callMethodAs<MutableList<Any>>("getScreenTabList")?.map {
                         it.callMethod(

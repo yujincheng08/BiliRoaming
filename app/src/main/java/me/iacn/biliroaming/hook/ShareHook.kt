@@ -77,7 +77,7 @@ class ShareHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     content?.let {
                         contentUrlPattern.matchEntire(it)?.groups?.get(1)?.value
                     }?.let { contentUrl ->
-                        val resolvedUrl = (param.thisObject.getObjectField("link")?.let { it as String } ?: contentUrl)
+                        val resolvedUrl = (param.thisObject!!.getObjectField("link")?.let { it as String } ?: contentUrl)
                             .let {
                                 if (it.startsWith("https://bili2233.cn") || it.startsWith("http://bili2233.cn") || it.startsWith("https://b23.tv") || it.startsWith("http://b23.tv"))
                                     it.resolveB23URL()

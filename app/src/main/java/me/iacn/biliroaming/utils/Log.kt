@@ -5,8 +5,8 @@ package me.iacn.biliroaming.utils
 import android.os.Handler
 import android.os.Looper
 import android.widget.Toast
-import de.robv.android.xposed.XposedBridge
 import me.iacn.biliroaming.BiliBiliPackage
+import me.iacn.biliroaming.XposedInit
 import me.iacn.biliroaming.Constant.TAG
 import android.util.Log as ALog
 
@@ -55,7 +55,7 @@ object Log {
         } else {
             f(TAG, str)
             if (toXposed)
-                XposedBridge.log("$TAG : $str")
+                XposedInit.instance.log(ALog.ERROR, TAG, str)
         }
     }
 

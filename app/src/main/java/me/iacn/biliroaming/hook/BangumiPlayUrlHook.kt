@@ -94,7 +94,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
         }
         instance.retrofitResponseClass?.hookBeforeAllConstructors { param ->
-            val url = getRetrofitUrl(param.args[0]) ?: return@hookBeforeAllConstructors
+            val url = getRetrofitUrl(param.args[0]!!) ?: return@hookBeforeAllConstructors
             val body = param.args[1] ?: return@hookBeforeAllConstructors
             val dataField =
                 if (instance.generalResponseClass?.isInstance(body) == true) "data" else instance.responseDataField()
@@ -137,7 +137,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 "playView",
                 "com.bapis.bilibili.pgc.gateway.player.v1.PlayViewReq"
             ) { param ->
-                val request = param.args[0]
+                val request = param.args[0]!!
                 isDownload = sPrefs.getBoolean("allow_download", false)
                         && request.callMethodAs<Int>("getDownload") >= 1
                 if (isDownload) {
@@ -160,8 +160,8 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 "playView",
                 "com.bapis.bilibili.pgc.gateway.player.v1.PlayViewReq"
             ) { param ->
-                val request = param.args[0]
-                val response = param.result
+                val request = param.args[0]!!
+                val response = param.result!!
                 if (!response.callMethodAs<Boolean>("hasVideoInfo")
                     || needForceProxy(response)
                 ) {
@@ -200,7 +200,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 if (instance.useNewMossFunc) "executePlayView" else "playView",
                 "com.bapis.bilibili.pgc.gateway.player.v2.PlayViewReq"
             ) { param ->
-                val request = param.args[0]
+                val request = param.args[0]!!
                 // if getDownload == 1 -> flv download
                 // if getDownload == 2 -> dash download
                 // if qn == 0, we are querying available quality
@@ -236,7 +236,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 // throwable: com.bilibili.lib.moss.api.NetworkException
                 if (instance.networkExceptionClass?.isInstance(param.throwable) == true)
                     return@hookAfterMethod
-                val request = param.args[0]
+                val request = param.args[0]!!
                 val response =
                     param.result ?: "com.bapis.bilibili.pgc.gateway.player.v2.PlayViewReply"
                         .on(mClassLoader).new()
@@ -275,7 +275,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             instance.buildCommonResolverParamsMethod(),
             instance.videoDownloadEntryClass
         ) { param ->
-            val entry = param.args[0].callMethodAs<JSONObject?>("toJsonObject")
+            val entry = param.args[0]!!.callMethodAs<JSONObject?>("toJsonObject")
             val seasonId = entry?.optString("season_id")
             val epId = entry?.optJSONObject("ep")?.optString("episode_id")
             val extraMap = buildMap {
@@ -284,7 +284,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }.ifEmpty {
                 return@hookAfterMethod
             }
-            param.result.callMethod(instance.setExtraContentMethod(), extraMap)
+            param.result!!.callMethod(instance.setExtraContentMethod(), extraMap)
         }
 
         instance.playerMossClass?.run {
@@ -293,7 +293,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 if (instance.useNewMossFunc) "executePlayViewUnite" else "playViewUnite",
                 instance.playViewUniteReqClass
             ) { param ->
-                val request = param.args[0]
+                val request = param.args[0]!!
                 val vod = request.callMethod("getVod") ?: return@hookBeforeMethod
                 isDownload = sPrefs.getBoolean("allow_download", false)
                         && vod.callMethodAs<Int>("getDownload") >= 1
@@ -325,7 +325,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             ) { param ->
                 if (instance.networkExceptionClass?.isInstance(param.throwable) == true)
                     return@hookAfterMethod
-                val request = param.args[0]
+                val request = param.args[0]!!
                 val response =
                     param.result ?: "com.bapis.bilibili.app.playerunite.v1.PlayViewUniteReply"
                         .on(mClassLoader).new()
@@ -391,7 +391,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 instance.playViewUniteReqClass,
                 instance.mossResponseHandlerClass
             ) { param ->
-                param.args[0].callMethod("getVod")?.apply {
+                param.args[0]!!.callMethod("getVod")?.apply {
                     isDownload = sPrefs.getBoolean("allow_download", false)
                             && callMethodAs<Int>("getDownload") >= 1
                     if (isDownload) {
@@ -416,8 +416,8 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         }
                     }
                 }
-                param.args[1] = param.args[1].mossResponseHandlerReplaceProxy { originalResp ->
-                    val request = param.args[0]
+                param.args[1] = param.args[1]!!.mossResponseHandlerReplaceProxy { originalResp ->
+                    val request = param.args[0]!!
                     val response =
                         originalResp ?: "com.bapis.bilibili.app.playerunite.v1.PlayViewUniteReply"
                             .on(mClassLoader).new()
@@ -480,7 +480,7 @@ class BangumiPlayUrlHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             if (instance.useNewMossFunc) "executePlayView" else "playView",
             instance.playViewReqClass
         ) { param ->
-            val request = param.args[0]
+            val request = param.args[0]!!
             val isDownload = request.callMethodAs<Int>("getDownload") >= 1
             if (isDownload) return@hookBeforeMethod
             if (halfScreenQuality != 0 || fullScreenQuality != 0) {

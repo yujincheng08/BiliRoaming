@@ -31,7 +31,7 @@ class LiveQualityHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val canSwitchLiveRoom = !sPrefs.getBoolean("forbid_switch_live_room", false)
 
         instance.defaultRequestInterceptClass?.hookBeforeAllMethods(instance.interceptMethod()) { param ->
-            val request = param.args[0]
+            val request = param.args[0]!!
             val httpUrl = request.getObjectField(instance.urlField())
             val url = httpUrl.toString()
             if (!url.startsWith("https://api.live.bilibili.com/xlive/app-room/v2/index/getRoomPlayInfo?")) {
@@ -61,7 +61,7 @@ class LiveQualityHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
 
         instance.retrofitResponseClass?.hookBeforeAllConstructors { param ->
-            val url = getRetrofitUrl(param.args[0]) ?: return@hookBeforeAllConstructors
+            val url = getRetrofitUrl(param.args[0]!!) ?: return@hookBeforeAllConstructors
             val body = param.args[1] ?: return@hookBeforeAllConstructors
 
             when {

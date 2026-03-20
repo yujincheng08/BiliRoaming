@@ -2,7 +2,7 @@ package me.iacn.biliroaming.hook
 
 import android.view.View
 import android.widget.LinearLayout
-import de.robv.android.xposed.XC_MethodHook.Unhook
+import io.github.libxposed.api.XposedInterface.HookHandle
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.utils.*
 
@@ -25,11 +25,11 @@ class AutoLikeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
         Log.d("startHook: AutoLike")
 
-        val unhookSet = arrayOf<Set<Unhook>?>(null)
+        val unhookSet = arrayOf<Set<HookHandle>?>(null)
         unhookSet[0] = instance.kingPositionComponentClass?.hookAfterAllConstructors { param ->
             val kingPositionComponent = param.thisObject
             val componentMap =
-                kingPositionComponent.getObjectFieldAs<Map<*, *>>(instance.componentMapField())
+                kingPositionComponent!!.getObjectFieldAs<Map<*, *>>(instance.componentMapField())
 
             val likeComponentClass = componentMap.keys.filterNotNull().firstNotNullOfOrNull {
                 val componentClass = it.javaClass
@@ -58,13 +58,13 @@ class AutoLikeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             "com.bapis.bilibili.app.viewunite.v1.ArcRefreshReq",
             instance.mossResponseHandlerClass
         ) { param ->
-            val req = param.args[0]
+            val req = param.args[0]!!
             val aid = req.callMethodAs("getAid")
                 ?: req.callMethodAs<String?>("getBvid")?.let { bv2av(it) }
             if (aid == null || aid <= 0L) {
                 return@hookBeforeMethod
             }
-            param.args[1] = param.args[1].mossResponseHandlerReplaceProxy { reply ->
+            param.args[1] = param.args[1]!!.mossResponseHandlerReplaceProxy { reply ->
                 reply ?: return@mossResponseHandlerReplaceProxy null
                 val like = reply.callMethod("getReqUser")?.callMethodAs<Int?>("getLike")
                     ?: return@mossResponseHandlerReplaceProxy null
@@ -78,7 +78,7 @@ class AutoLikeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             instance.setMDataMethod(),
             instance.storyDetailClass
         ) { param ->
-            if (param.thisObject.callMethod(instance.getMPlayerMethod()) == null) {
+            if (param.thisObject!!.callMethod(instance.getMPlayerMethod()) == null) {
                 return@hookAfterMethod
             }
             val storyDetail = instance.fastJsonClass?.callStaticMethodAs<String>(

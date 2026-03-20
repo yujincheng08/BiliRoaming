@@ -40,7 +40,7 @@ class UposReplaceHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
                 if (!(enablePcdnBlock || forceUpos)) return@run
                 hookBeforeMethod("setBackupUrls", MutableCollection::class.java) { param ->
-                    val mediaAssertSegment = param.thisObject.getObjectFieldOrNull("target")
+                    val mediaAssertSegment = param.thisObject?.getObjectFieldOrNull("target")
                     val baseUrl =
                         mediaAssertSegment?.getObjectFieldOrNullAs<String>("url").orEmpty()
                     if (baseUrl.isEmpty()) return@hookBeforeMethod

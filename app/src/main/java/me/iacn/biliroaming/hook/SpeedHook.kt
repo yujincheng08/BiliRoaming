@@ -14,8 +14,8 @@ class SpeedHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val defaultPlaybackSpeed = sPrefs.getInt("default_speed", 100) / 100f
         if (defaultPlaybackSpeed == 1f) return
         instance.playSpeedManager?.hookAfterAllConstructors {
-            for (f in it.thisObject.javaClass.declaredFields) {
-                val o = it.thisObject.getObjectField(f.name)
+            for (f in it.thisObject!!.javaClass.declaredFields) {
+                val o = it.thisObject!!.getObjectField(f.name)
                 val v = o?.callMethodOrNullAs<Float?>("getValue") ?: continue
                 if (v != 1f) continue
                 o.callMethod("setValue", defaultPlaybackSpeed)

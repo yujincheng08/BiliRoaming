@@ -18,6 +18,7 @@ interface JsonHelper {
     }
 }
 
+@Suppress("UNCHECKED_CAST")
 fun <T> JsonHelper.getObjectAs(key: String): T {
     return getObject(key) as T
 }
@@ -39,13 +40,13 @@ fun JsonHelper.getObjectAsHelperOrNull(key: String): JsonHelper? {
 }
 
 inline fun <reified T : JsonHelper> Any.toJsonHelper(): T {
-    val jsonHelper = T::class.java.newInstance() as T
+    val jsonHelper = T::class.java.getDeclaredConstructor().newInstance() as T
     jsonHelper.data = this
     return jsonHelper
 }
 
 fun Any.toJsonHelper(jsonHelper: Class<JsonHelper>): JsonHelper {
-    return jsonHelper.newInstance().apply {
+    return jsonHelper.getDeclaredConstructor().newInstance().apply {
         data = this@toJsonHelper
     }
 }

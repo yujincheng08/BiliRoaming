@@ -1,6 +1,5 @@
 package me.iacn.biliroaming.hook
 
-import de.robv.android.xposed.XC_MethodHook
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.utils.*
 import me.iacn.biliroaming.utils.json.FastjsonHelper
@@ -622,22 +621,22 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             if (instance.useNewMossFunc) "executeView" else "view",
             instance.viewReqClass
         ) { param ->
-            param.result ?: return@hookAfterMethod
+            val result = param.result ?: return@hookAfterMethod
             if (removeRelatePromote && removeRelateOnlyAv && removeRelateNothing) {
-                param.result.callMethod("clearRelates")
-                param.result.callMethod("clearPagination")
+                result.callMethod("clearRelates")
+                result.callMethod("clearPagination")
                 return@hookAfterMethod
             }
-            param.result.callMethod("ensureRelatesIsMutable")
-            param.result.callMethodAs<MutableList<Any>>("getRelatesList").filter()
+            result.callMethod("ensureRelatesIsMutable")
+            result.callMethodAs<MutableList<Any>>("getRelatesList").filter()
         }
         instance.viewMossClass?.hookAfterMethod(
             if (instance.useNewMossFunc) "executeRelatesFeed" else "relatesFeed",
             "com.bapis.bilibili.app.view.v1.RelatesFeedReq"
         ) { param ->
-            param.result ?: return@hookAfterMethod
-            param.result.callMethod("ensureListIsMutable")
-            param.result.callMethodAs<MutableList<Any>>("getListList").filter()
+            val result = param.result ?: return@hookAfterMethod
+            result.callMethod("ensureListIsMutable")
+            result.callMethodAs<MutableList<Any>>("getListList").filter()
         }
 
         instance.viewUniteMossClass?.run {
@@ -645,8 +644,8 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 if (instance.useNewMossFunc) "executeView" else "view",
                 instance.viewUniteReqClass
             ) { param ->
-                param.result ?: return@hookAfterMethod
-                param.result.callMethod("getTab")?.run {
+                val result = param.result ?: return@hookAfterMethod
+                result.callMethod("getTab")?.run {
                     callMethod("ensureTabModuleIsMutable")
                     callMethodAs<MutableList<Any>>("getTabModuleList").map { originalTabModules ->
                         if (!originalTabModules.callMethodAs<Boolean>("hasIntroduction")) return@map
@@ -761,24 +760,24 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         ) { param ->
             param.args ?: return@hookBeforeMethod
 
-            val idx = param.args[0].getLongFieldOrNull("idx_")
+            val idx = param.args[0]!!.getLongFieldOrNull("idx_")
             if (idx == null || idx == 0L) {
                 popularDataCount = 0
                 popularDataVersion = ""
                 return@hookBeforeMethod
             }
 
-            param.args[0].setObjectField("lastParam_", popularDataVersion)
-            param.args[0].setLongField("idx_", popularDataCount)
+            param.args[0]!!.setObjectField("lastParam_", popularDataVersion)
+            param.args[0]!!.setLongField("idx_", popularDataCount)
         }
         instance.popularClass?.hookAfterMethod(
             if (instance.useNewMossFunc) "executeIndex" else "index",
             "com.bapis.bilibili.app.show.popular.v1.PopularResultReq"
         ) { param ->
-            param.result ?: return@hookAfterMethod
+            val result = param.result ?: return@hookAfterMethod
 
-            param.result.callMethod("ensureItemsIsMutable")
-            param.result.callMethodAs<MutableList<Any>>("getItemsList").filterPopular()
+            result.callMethod("ensureItemsIsMutable")
+            result.callMethodAs<MutableList<Any>>("getItemsList").filterPopular()
         }
     }
 }

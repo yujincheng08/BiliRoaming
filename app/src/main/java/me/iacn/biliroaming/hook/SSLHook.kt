@@ -67,8 +67,8 @@ class SSLHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
         "org.apache.http.conn.scheme.SchemeRegistry".findClassOrNull(mClassLoader)
             ?.hookBeforeMethod("register", "org.apache.http.conn.scheme.Scheme") { param ->
-                if (param.args[0].callMethodAs<String>("getName") == "https") {
-                    param.args[0] = param.args[0].javaClass.new(
+                if (param.args[0]!!.callMethodAs<String>("getName") == "https") {
+                    param.args[0] = param.args[0]!!.javaClass.new(
                         "https",
                         SSLSocketFactory.getSocketFactory(),
                         443
@@ -119,12 +119,12 @@ class SSLHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
 
 
-                param.thisObject.setObjectField("sslcontext", SSLContext.getInstance(algorithm))
-                param.thisObject.getObjectField("sslcontext")
+                param.thisObject!!.setObjectField("sslcontext", SSLContext.getInstance(algorithm))
+                param.thisObject!!.getObjectField("sslcontext")
                     ?.callMethod("init", keyManagers, trustManagers, random)
-                param.thisObject.setObjectField(
+                param.thisObject!!.setObjectField(
                     "socketfactory",
-                    param.thisObject.getObjectField("sslcontext")?.callMethod("getSocketFactory")
+                    param.thisObject!!.getObjectField("sslcontext")?.callMethod("getSocketFactory")
                 )
             }
 

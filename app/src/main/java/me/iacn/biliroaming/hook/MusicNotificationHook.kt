@@ -1,6 +1,5 @@
 package me.iacn.biliroaming.hook
 
-import de.robv.android.xposed.XposedHelpers
 import me.iacn.biliroaming.utils.Log
 import me.iacn.biliroaming.utils.findClassOrNull
 import me.iacn.biliroaming.utils.hookBeforeMethod
@@ -37,7 +36,9 @@ class MusicNotificationHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
         // Play store
         "com.bilibili.lib.blconfig.ConfigManager\$a".findClassOrNull(mClassLoader)?.run {
-            XposedHelpers.findMethodExactIfExists(this, "g", String::class.java)?.hookBeforeMethod {
+            declaredMethods.firstOrNull {
+                it.name == "g" && it.parameterTypes.contentEquals(arrayOf(String::class.java))
+            }?.hookBeforeMethod {
                 (it.args[0] as String).run {
                     if (this == "ff_background_use_system_media_controls") {
                         it.result = true

@@ -74,12 +74,12 @@ class CommentImageHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         instance.imageFragmentClass?.hookAfterMethod(
             "onViewCreated", View::class.java, Bundle::class.java
         ) { param ->
-            val self = param.thisObject
+            val self = param.thisObject!!
             val view = param.args[0] as? View
             val imageItem = self.callMethodOrNullAs<Bundle?>("getArguments")
                 ?.getParcelable<Parcelable>("image_item") ?: return@hookAfterMethod
             val urlFieldName = cacheUrlFieldName.ifEmpty {
-                imageItem.javaClass.superclass.findFirstFieldByExactTypeOrNull(String::class.java)
+                imageItem.javaClass.superclass?.findFirstFieldByExactTypeOrNull(String::class.java)
                     ?.name.orEmpty().also { cacheUrlFieldName = it }
             }.ifEmpty { return@hookAfterMethod }
             val imageUrl = imageItem.getObjectFieldAs<String?>(urlFieldName).takeIf {

@@ -34,7 +34,7 @@ class DownloadThreadHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         TextView::class.java -> textViewField = it.name
                     }
                 }
-                val view = param.thisObject.getObjectFieldAs<TextView>(textViewField)
+                val view = param.thisObject!!.getObjectFieldAs<TextView>(textViewField)
                 if (view.tag as? Int == 1) {
                     AlertDialog.Builder(view.context).create().run {
                         setTitle("自定义同时缓存数")
@@ -42,7 +42,7 @@ class DownloadThreadHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             minValue = 1
                             maxValue = 64
                             wrapSelectorWheel = false
-                            value = param.thisObject.getObjectField(viewHostField)
+                            value = param.thisObject!!.getObjectField(viewHostField)
                                 ?.getIntField(instance.downloadingThread())
                                 ?: 1
                         }

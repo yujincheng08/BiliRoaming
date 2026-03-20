@@ -159,8 +159,8 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             instance.dmViewReqClass,
             instance.mossResponseHandlerClass
         ) { param ->
-            val dmViewReq = param.args[0]
-            param.args[1] = param.args[1].mossResponseHandlerReplaceProxy { dmViewReply ->
+            val dmViewReq = param.args[0]!!
+            param.args[1] = param.args[1]!!.mossResponseHandlerReplaceProxy { dmViewReply ->
                 if (hidden && removeCmdDms) {
                     dmViewReply?.removeCmdDms()
                 }
@@ -173,9 +173,9 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     private fun hookSubtitleStyle() {
         instance.chronosSwitchClass?.hookAfterConstructor { param ->
-            param.thisObject.javaClass.declaredFields.forEach {
+            param.thisObject!!.javaClass.declaredFields.forEach {
                 if (it.type == Boolean::class.javaObjectType) {
-                    param.thisObject.setObjectField(it.name, false)
+                    param.thisObject!!.setObjectField(it.name, false)
                 }
             }
         }
@@ -317,18 +317,18 @@ class SubtitleHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             if (instance.useNewMossFunc) "executeDmView" else "dmView",
             instance.dmViewReqClass,
         ) { param ->
-            param.result.hookSubtitleList(param.args[0])?.let { param.result = it }
+            param.result.hookSubtitleList(param.args[0]!!)?.let { param.result = it }
         }
 
         if (!generateSubtitle) return
         instance.biliCallClass?.hookBeforeMethod(
             instance.setParser(), instance.parserClass
         ) { param ->
-            val url = param.thisObject.getObjectField(instance.biliCallRequestField())
+            val url = param.thisObject?.getObjectField(instance.biliCallRequestField())
                 ?.getObjectField(instance.urlField())?.toString()
             if (url?.contains("zh_converter=t2cn") != true)
                 return@hookBeforeMethod
-            val parser = param.args[0]
+            val parser = param.args[0]!!
             param.args[0] = Proxy.newProxyInstance(
                 parser.javaClass.classLoader,
                 arrayOf(instance.parserClass)

@@ -13,7 +13,7 @@ class LongPressSpeed(cl: ClassLoader) : BaseHook(cl) {
         if (speed == 3f) return
 
         instance.tripleSpeedServiceClass!!.hookAfterAllConstructors {
-            val obj = it.thisObject
+            val obj = it.thisObject!!
             obj::class.java.getDeclaredField("\$speed").apply {
                 isAccessible = true
                 set(obj, speed)

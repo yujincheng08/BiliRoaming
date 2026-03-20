@@ -43,7 +43,7 @@ class WebViewHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         WebView::class.java.hookBeforeMethod(
             "setWebViewClient", WebViewClient::class.java
         ) { param ->
-            val clazz = param.args[0].javaClass
+            val clazz = param.args[0]!!.javaClass
             (param.thisObject as WebView).addJavascriptInterface(jsHooker, "hooker")
             if (hookedClient.contains(clazz)) return@hookBeforeMethod
             try {

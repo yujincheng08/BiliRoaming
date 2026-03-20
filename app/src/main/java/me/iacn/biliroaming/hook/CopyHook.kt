@@ -38,7 +38,7 @@ class CopyHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             ) { param ->
                 if (!enhanceLongClickCopy) return@replaceMethod Unit
 
-                param.thisObject.getFirstFieldByExactTypeOrNull<SpannableStringBuilder>()?.let {
+                param.thisObject!!.getFirstFieldByExactTypeOrNull<SpannableStringBuilder>()?.let {
                     val view = param.args[0] as View
                     showCopyDialog(view.context, it, param)
                 } ?: (param.args[0] as? TextView)?.let { tv ->
@@ -108,7 +108,7 @@ class CopyHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }?.hookBeforeMethod { param ->
                 if (param.args.last() == param.args.first()) {
                     val activity = param.thisObject as Activity
-                    val json = param.args[1].callMethodOrNullAs(instance.getContentString()) ?: ""
+                    val json = param.args[1]!!.callMethodOrNullAs(instance.getContentString()) ?: ""
                     val text = runCatchingOrNull { json.toJSONObject() }?.run {
                         optString("content").ifEmpty {
                             buildString {
@@ -125,7 +125,7 @@ class CopyHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         }
                     } ?: return@hookBeforeMethod
                     showCopyDialog(activity, text, param)
-                    param.args[6].callMethodOrNull("dismiss")
+                    param.args[6]!!.callMethodOrNull("dismiss")
                     param.result = null
                 }
             }

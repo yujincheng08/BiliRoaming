@@ -46,11 +46,11 @@ class SettingHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         ) { param ->
             val navSettingId = getId("nav_settings")
             val nav =
-                param.thisObject.javaClass.declaredFields.first { it.type.name == "android.support.design.widget.NavigationView" }.name
-            (param.thisObject.getObjectField(nav)
-                ?: param.result).callMethodAs<View>("findViewById", navSettingId)
+                param.thisObject!!.javaClass.declaredFields.first { it.type.name == "android.support.design.widget.NavigationView" }.name
+            (param.thisObject!!.getObjectField(nav)
+                ?: param.result)!!.callMethodAs<View>("findViewById", navSettingId)
                 .setOnLongClickListener {
-                    SettingDialog.show(param.thisObject.callMethodAs<Activity>("getActivity"))
+                    SettingDialog.show(param.thisObject!!.callMethodAs<Activity>("getActivity"))
                     true
                 }
         }

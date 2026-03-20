@@ -17,7 +17,7 @@ class LiveRoomHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             instance.liveRoomPlayerViewClass?.declaredMethods?.find { it.name == "onDoubleTap" }
                 ?.hookBeforeMethod { param ->
                     runCatching {
-                        val player = param.thisObject.callMethod("getPlayerCommonBridge")
+                        val player = param.thisObject!!.callMethod("getPlayerCommonBridge")
                             ?: return@hookBeforeMethod
                         val method = if (player.callMethodAs("isPlaying"))
                             "pause" else "resume"

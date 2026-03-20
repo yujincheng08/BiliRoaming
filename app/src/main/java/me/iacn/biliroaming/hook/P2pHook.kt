@@ -18,11 +18,11 @@ class P2pHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             "tv.danmaku.ijk.media.player.P2P".from(mClassLoader)?.run {
                 hookBeforeMethod("getInstance", Context::class.java, Bundle::class.java) { param ->
                     param.args[0] = null
-                    param.args[1].callMethod("clear")
+                    param.args[1]!!.callMethod("clear")
                 }
                 hookBeforeConstructor(Context::class.java, Bundle::class.java) { param ->
                     param.args[0] = null
-                    param.args[1].callMethod("clear")
+                    param.args[1]!!.callMethod("clear")
                 }
             }
         }

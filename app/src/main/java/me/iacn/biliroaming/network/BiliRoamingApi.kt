@@ -1,7 +1,7 @@
 package me.iacn.biliroaming.network
 
 import android.annotation.SuppressLint
-import android.app.AndroidAppHelper
+import me.iacn.biliroaming.utils.currentContext
 import android.net.Uri
 import android.os.Build
 import android.os.Handler
@@ -607,7 +607,7 @@ object BiliRoamingApi {
                 !urlString.contains("bilibili.com")
             ) {
                 Log.d("Found Android 7, try to bypass ssl issue")
-                val handler = Handler(AndroidAppHelper.currentApplication().mainLooper)
+                val handler = Handler(currentContext.mainLooper)
                 val listener = object : Any() {
                     val latch = CountDownLatch(1)
                     var result = ""
