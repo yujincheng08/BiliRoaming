@@ -544,6 +544,12 @@
             android:key="block_video_comment"
             android:title="@string/block_video_comment_title" />
 
+        <SwitchPreference
+            android:dependency="hidden"
+            android:key="skip_video_ad"
+            android:summary="@string/skip_video_ad_summary"
+            android:title="@string/skip_video_ad_title" />
+
         <Preference
             android:key="copy_access_key"
             android:summary="@string/copy_access_key_summary"

@@ -65,6 +65,18 @@ fun bv2av(bv: String): Long {
     return r.and(2251799813685247L).xor(23442827791579L)
 }
 
+fun av2bv(aid: Long): String {
+    val s = CharArray(12) { if (it < 3) "BV1"[it] else '0' }
+    var t = ((1L shl 51) or aid) xor 23442827791579L
+    var i = 11
+    while (t > 0) {
+        s[i--] = "FcwAPNKTMug3GV5Lj7EJnHpWsx4tb8haYeviqBz6rkCy12mUSDQX9RdoZf"[(t % 58).toInt()]
+        t /= 58
+    }
+    s[3] = s[9].also { s[9] = s[3] }
+    s[4] = s[7].also { s[7] = s[4] }
+    return String(s)
+}
 fun getPackageVersion(packageName: String) = try {
     @Suppress("DEPRECATION")
     systemContext.packageManager.getPackageInfo(packageName, 0).run {
