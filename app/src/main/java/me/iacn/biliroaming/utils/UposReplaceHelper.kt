@@ -127,12 +127,10 @@ object UposReplaceHelper {
         if (!(enablePcdnBlock || forceUpos)) return
         // fake grpc TF header then only reply with mirror type playurl
         "com.bilibili.lib.moss.utils.RuntimeHelper".from(mClassLoader)
-            ?.hookAfterMethod("tf") { param ->
-                val result = param.result
-                if (result.callMethodOrNullAs<Int>("getNumber") != 0) return@hookAfterMethod
-                result.javaClass.callStaticMethodOrNull("forNumber", 1)?.let {
-                    param.result = it
-                }
+            ?.hookMethod("tf") { chain ->
+                val result = chain.proceed() ?: return@hookMethod null
+                if (result.callMethodOrNullAs<Int>("getNumber") != 0) return@hookMethod result
+                result.javaClass.callStaticMethodOrNull("forNumber", 1) ?: result
             }
     }
 

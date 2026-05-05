@@ -16,8 +16,8 @@ import me.iacn.biliroaming.utils.UposReplaceHelper.videoUposBackups
 import me.iacn.biliroaming.utils.from
 import me.iacn.biliroaming.utils.getObjectFieldOrNull
 import me.iacn.biliroaming.utils.getObjectFieldOrNullAs
-import me.iacn.biliroaming.utils.hookBeforeConstructor
-import me.iacn.biliroaming.utils.hookBeforeMethod
+import me.iacn.biliroaming.utils.hookConstructor
+import me.iacn.biliroaming.utils.hookMethod
 import me.iacn.biliroaming.utils.setObjectField
 
 
@@ -27,38 +27,45 @@ class UposReplaceHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         Log.d("startHook: UposReplaceHook")
         "tv.danmaku.ijk.media.player.IjkMediaAsset\$MediaAssertSegment\$Builder".from(mClassLoader)
             ?.run {
-                hookBeforeConstructor(String::class.java, Int::class.javaPrimitiveType) { param ->
-                    val baseUrl = param.args[0] as String
+                hookConstructor(String::class.java, Int::class.javaPrimitiveType) { chain ->
+                    val baseUrl = chain.args[0] as String
+                    val args = chain.args.toTypedArray()
                     if (baseUrl.contains("live-bvc")) {
                         if (enableLivePcdnBlock && !baseUrl.contains(gotchaRegex)) {
-                            param.args[0] = baseUrl.replaceUpos(liveUpos)
+                            args[0] = baseUrl.replaceUpos(liveUpos)
                         }
                     } else if (baseUrl.isNeedReplaceVideoUpos()) {
-                        param.args[0] = baseUrl.replaceUpos()
+                        args[0] = baseUrl.replaceUpos()
                     }
+                    chain.proceed(args)
                 }
 
                 if (!(enablePcdnBlock || forceUpos)) return@run
-                hookBeforeMethod("setBackupUrls", MutableCollection::class.java) { param ->
-                    val mediaAssertSegment = param.thisObject.getObjectFieldOrNull("target")
+                hookMethod("setBackupUrls", MutableCollection::class.java) { chain ->
+                    val mediaAssertSegment = chain.thisObject?.getObjectFieldOrNull("target")
                     val baseUrl =
                         mediaAssertSegment?.getObjectFieldOrNullAs<String>("url").orEmpty()
-                    if (baseUrl.isEmpty()) return@hookBeforeMethod
-                    val backupUrls = if (param.args[0] == null) {
-                        if (baseUrl.contains("live-bvc")) return@hookBeforeMethod else {
+                    if (baseUrl.isEmpty()) return@hookMethod chain.proceed()
+                    val backupUrls = if (chain.args[0] == null) {
+                        if (baseUrl.contains("live-bvc")) return@hookMethod chain.proceed() else {
                             emptyList<String>()
                         }
                     } else {
                         @Suppress("UNCHECKED_CAST")
-                        (param.args[0] as List<String>).filter { !it.isPCdnUpos() }
+                        (chain.args[0] as List<String>).filter { !it.isPCdnUpos() }
                             .takeIf { backupUrls ->
                                 backupUrls.isEmpty() || !backupUrls.any { it.contains("live-bvc") }
-                            } ?: return@hookBeforeMethod
+                            } ?: return@hookMethod chain.proceed()
                     }
-                    reconstructBackupUposList(
+                    val newBackupUrls = reconstructBackupUposList(
                         baseUrl, backupUrls, mediaAssertSegment
-                    ).takeIf { it.isNotEmpty() }?.let {
-                        param.args[0] = it
+                    ).takeIf { it.isNotEmpty() }
+                    if (newBackupUrls != null) {
+                        val args = chain.args.toTypedArray()
+                        args[0] = newBackupUrls
+                        chain.proceed(args)
+                    } else {
+                        chain.proceed()
                     }
                 }
             }

@@ -3,7 +3,7 @@ package me.iacn.biliroaming.hook
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.utils.Log
 import me.iacn.biliroaming.utils.from
-import me.iacn.biliroaming.utils.hookBeforeMethod
+import me.iacn.biliroaming.utils.hookMethod
 import me.iacn.biliroaming.utils.sPrefs
 
 class StoryPlayerAdHook(classLoader: ClassLoader) : BaseHook(classLoader) {
@@ -15,9 +15,9 @@ class StoryPlayerAdHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
         Log.d("startHook: StoryPlayerAd, purifyTags: $purifyTags")
 
-        instance.storyPagerPlayerClass?.hookBeforeMethod(
-            instance.addVideo(), List::class.java) { params ->
-                val storyDetailList = params.args[0] as? MutableList<*> ?: return@hookBeforeMethod
+        instance.storyPagerPlayerClass?.hookMethod(
+            instance.addVideo(), List::class.java) { chain ->
+                val storyDetailList = chain.args[0] as? MutableList<*> ?: return@hookMethod chain.proceed()
                 val toRemove = mutableListOf<Any>()
 
                 storyDetailList.forEach {
@@ -58,6 +58,7 @@ class StoryPlayerAdHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 storyDetailList.removeAll(toRemove.toSet())
                 val blockedCount = sPrefs.getInt("purify_story_video_ad_blocked_count", 0)
                 sPrefs.edit().putInt("purify_story_video_ad_blocked_count", blockedCount + toRemove.size).apply()
+                chain.proceed()
             }
 
     }

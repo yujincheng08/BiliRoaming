@@ -8,8 +8,8 @@ class BangumiPageAdHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         if (!sPrefs.getBoolean("block_view_page_ads", false)) return
         Log.d("startHook: BangumiPageAd")
 
-        val oGVActivityVoHooker: Hooker = { param ->
-            val args = param.args
+        val oGVActivityVoHooker: HookCallback = { chain ->
+            val args = chain.args.toTypedArray()
             for (i in args.indices) {
                 when (val item = args[i]) {
                     is Int -> args[i] = 0
@@ -17,16 +17,17 @@ class BangumiPageAdHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     else -> args[i] = null
                 }
             }
+            chain.proceed(args)
         }
         // activity toast ad
         "com.bilibili.bangumi.data.page.detail.entity.OGVActivityVo".from(mClassLoader)
-            ?.hookBeforeAllConstructors(oGVActivityVoHooker)
+            ?.hookAllConstructors(oGVActivityVoHooker)
         "com.bilibili.ship.theseus.ogv.activity.OGVActivityVo".from(mClassLoader)
-            ?.hookBeforeAllConstructors(oGVActivityVoHooker)
+            ?.hookAllConstructors(oGVActivityVoHooker)
 
         // mall
         instance.bangumiUniformSeasonActivityEntrance()?.let {
-            instance.bangumiUniformSeasonClass?.replaceMethod(it) { null }
+            instance.bangumiUniformSeasonClass?.hookMethod(it) { null }
         }
     }
 }

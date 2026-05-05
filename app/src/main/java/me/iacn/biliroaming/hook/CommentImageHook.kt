@@ -71,20 +71,21 @@ class CommentImageHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     @Suppress("DEPRECATION")
     override fun startHook() {
         if (!sPrefs.getBoolean("save_comment_image", false)) return
-        instance.imageFragmentClass?.hookAfterMethod(
+        instance.imageFragmentClass?.hookMethod(
             "onViewCreated", View::class.java, Bundle::class.java
-        ) { param ->
-            val self = param.thisObject
-            val view = param.args[0] as? View
+        ) { chain ->
+            val result = chain.proceed()
+            val self = chain.thisObject!!
+            val view = chain.args[0] as? View
             val imageItem = self.callMethodOrNullAs<Bundle?>("getArguments")
-                ?.getParcelable<Parcelable>("image_item") ?: return@hookAfterMethod
+                ?.getParcelable<Parcelable>("image_item") ?: return@hookMethod result
             val urlFieldName = cacheUrlFieldName.ifEmpty {
-                imageItem.javaClass.superclass.findFirstFieldByExactTypeOrNull(String::class.java)
+                imageItem.javaClass.superclass?.findFirstFieldByExactTypeOrNull(String::class.java)
                     ?.name.orEmpty().also { cacheUrlFieldName = it }
-            }.ifEmpty { return@hookAfterMethod }
+            }.ifEmpty { return@hookMethod result }
             val imageUrl = imageItem.getObjectFieldAs<String?>(urlFieldName).takeIf {
                 !it.isNullOrEmpty() && it.startsWith("http")
-            }?.substringBefore('@') ?: return@hookAfterMethod
+            }?.substringBefore('@') ?: return@hookMethod result
             view?.findViewById<View>(imageViewId)?.setOnLongClickListener {
                 it.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
                 MainScope().launch(Dispatchers.IO) {
@@ -92,6 +93,7 @@ class CommentImageHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
                 true
             }
+            result
         }
     }
 }

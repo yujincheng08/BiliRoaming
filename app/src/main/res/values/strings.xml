@@ -1,4 +1,5 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="back_to_main">返回</string>
     <string name="app_name">哔哩漫游</string>
     <string name="xposed_description">解锁B站港澳台番剧限制</string>
     <string name="about">关于</string>
@@ -313,4 +314,6 @@
     <string name="purify_story_video_ad_title">净化竖屏模式广告/推广</string>
     <string name="purify_story_video_ad_summary">有了这个，连第一关都看不到了😭</string>
     <string name="long_press_speed">长按播放速度设置</string>
+    <string name="auto_receive_coupon_title">自动领取卡券及经验</string>
+    <string name="auto_receive_coupon_summary">自动领取大会员每日卡券、经验及分享经验</string>
 </resources>

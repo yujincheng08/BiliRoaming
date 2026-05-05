@@ -10,44 +10,48 @@ class VideoQualityHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val halfScreenQuality = sPrefs.getString("half_screen_quality", "0")?.toInt() ?: 0
         val fullScreenQuality = sPrefs.getString("full_screen_quality", "0")?.toInt() ?: 0
         if (halfScreenQuality != 0) {
-            instance.playerPreloadHolderClass?.replaceAllMethods(instance.getPreload()) { null }
+            instance.playerPreloadHolderClass?.hookAllMethods(instance.getPreload()) { null }
             instance.playerQualityServices().forEach { (clazz, getDefaultQnThumb) ->
-                clazz?.replaceAllMethods(getDefaultQnThumb) { halfScreenQuality }
+                clazz?.hookAllMethods(getDefaultQnThumb) { halfScreenQuality }
             }
         }
         if (fullScreenQuality != 0) {
-            instance.playerSettingHelperClass?.replaceMethod(instance.getDefaultQn()) { fullScreenQuality }
+            instance.playerSettingHelperClass?.hookMethod(instance.getDefaultQn()) { fullScreenQuality }
         }
 
         if (halfScreenQuality != 0 || fullScreenQuality != 0) {
-            instance.autoSupremumQualityClass?.hookBeforeConstructor(
+            instance.autoSupremumQualityClass?.hookConstructor(
                 *Array(6) { Int::class.javaPrimitiveType }
-            ) { param ->
+            ) { chain ->
+                val args = chain.args.toTypedArray()
                 if (halfScreenQuality != 0) {
-                    param.args[0] = halfScreenQuality       // loginHalf
+                    args[0] = halfScreenQuality       // loginHalf
 
-                    param.args[3] = halfScreenQuality       // unloginHalf
-                    param.args[4] = halfScreenQuality       // unloginFull
-                    param.args[5] = halfScreenQuality       // unloginMobileFull
+                    args[3] = halfScreenQuality       // unloginHalf
+                    args[4] = halfScreenQuality       // unloginFull
+                    args[5] = halfScreenQuality       // unloginMobileFull
                 }
                 if (fullScreenQuality != 0) {
-                    param.args[1] = fullScreenQuality       // loginFull
-                    param.args[2] = fullScreenQuality       // loginMobileFull
+                    args[1] = fullScreenQuality       // loginFull
+                    args[2] = fullScreenQuality       // loginMobileFull
                 }
+                chain.proceed(args)
             }
-            instance.qualityStrategyProviderClass?.hookBeforeMethod(
+            instance.qualityStrategyProviderClass?.hookMethod(
                 instance.selectQuality(),
                 instance.autoSupremumQualityClass,
                 Boolean::class.javaPrimitiveType,           // isFullscreen
                 Boolean::class.javaPrimitiveType            // isVideoPortrait
-            ) { param ->
+            ) { chain ->
                 // videoQuality = when {
                 //     isVideoPortrait && isFullscreen -> loginFull
                 //     isVideoPortrait && !isFullscreen -> unloginFull
                 //     isFullscreen -> loginHalf
                 //     else -> unloginHalf
                 // }
-                param.args[2] = true
+                val args = chain.args.toTypedArray()
+                args[2] = true
+                chain.proceed(args)
             }
         }
     }

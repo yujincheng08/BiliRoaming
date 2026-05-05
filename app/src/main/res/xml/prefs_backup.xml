@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?><!--suppress DeprecatedClassUsageInspection -->
+<!-- 配置备份 -->
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <Preference android:key="back_to_main" android:title="@string/back_to_main" />
+    <PreferenceCategory android:title="@string/pref_backup">
+        <Preference
+            android:key="pref_export"
+            android:title="@string/pref_export_title" />
+        <Preference
+            android:key="pref_import"
+            android:title="@string/pref_import_title" />
+    </PreferenceCategory>
+</PreferenceScreen>

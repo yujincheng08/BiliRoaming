@@ -1,4 +1,5 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="back_to_main">返回</string>
     <string name="app_name">嗶哩漫遊</string>
     <string name="xposed_description">解鎖B站港澳台番劇限制</string>
     <string name="about">關於</string>
@@ -287,4 +288,6 @@
     <string name="skip_reward_ad_summary">有了這個，終於能過第二關了😋（需重啟兩次嗶哩嗶哩）</string>
     <string name="purify_story_video_ad_title">淨化豎屏模式廣告/推廣</string>
     <string name="purify_story_video_ad_summary">有了這個，連第一關都看不到了😭</string>
+    <string name="auto_receive_coupon_title">自動領取卡券及經驗</string>
+    <string name="auto_receive_coupon_summary">自動領取大會員每日卡券、經驗及分享經驗</string>
 </resources>

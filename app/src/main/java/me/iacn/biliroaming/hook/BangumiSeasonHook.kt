@@ -174,20 +174,25 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
         if (!sPrefs.getBoolean("main_func", false)) return
         Log.d("startHook: BangumiSeason")
-        instance.seasonParamsMapClass?.hookAfterAllConstructors { param ->
+        instance.seasonParamsMapClass?.hookAllConstructors { chain ->
+            chain.proceed()
             @Suppress("UNCHECKED_CAST")
-            val paramMap = param.thisObject as Map<String, String>
-            updateSeasonInfo(param.args, paramMap)
+            val paramMap = chain.thisObject as Map<String, String>
+            updateSeasonInfo(chain.args.toTypedArray(), paramMap)
+            null
         }
 
-        instance.seasonParamsClass?.hookAfterAllConstructors { param ->
+        instance.seasonParamsClass?.hookAllConstructors { chain ->
+            chain.proceed()
             val paramMap =
-                param.thisObject.callMethodAs<Map<String, String>>(instance.paramsToMap())
-            updateSeasonInfo(param.args, paramMap)
+                chain.thisObject!!.callMethodAs<Map<String, String>>(instance.paramsToMap())
+            updateSeasonInfo(chain.args.toTypedArray(), paramMap)
+            null
         }
 
-        val invalidTipsHook: Hooker = { param ->
-            val view = param.args[0]?.let {
+        val invalidTipsHook: HookCallback = { chain ->
+            chain.proceed()
+            val view = chain.args[0]?.let {
                 if (it is View) it else it.callMethod("getView") as View?
             }
             if (lastSeasonInfo["allow_comment"] == "0" &&
@@ -204,37 +209,42 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     }
                 }
             }
+            null
         }
         instance.commentInvalidFragmentClass?.run {
-            hookAfterMethod(
+            hookMethod(
                 "onViewCreated",
                 View::class.java,
                 Bundle::class.java,
-                hooker = invalidTipsHook
+                callback = invalidTipsHook
             )
             instance.setInvalidTips()?.let {
-                hookAfterMethod(it, this, "kotlin.Pair", hooker = invalidTipsHook)
+                hookMethod(it, this, "kotlin.Pair", callback = invalidTipsHook)
             }
         }
 
-        "com.bilibili.bangumi.ui.page.detail.BangumiDetailActivityV3".hookAfterMethod(
+        "com.bilibili.bangumi.ui.page.detail.BangumiDetailActivityV3".hookMethod(
             mClassLoader, "onCreate", Bundle::class.java
-        ) {
-            setErrorMessage(it.thisObject as Activity)
+        ) { chain ->
+            chain.proceed()
+            setErrorMessage(chain.thisObject as Activity)
+            null
         }
-        "com.bilibili.bangumi.ui.page.detail.BangumiDetailActivityV3".hookAfterMethod(
+        "com.bilibili.bangumi.ui.page.detail.BangumiDetailActivityV3".hookMethod(
             mClassLoader, "onConfigurationChanged", Configuration::class.java
-        ) {
-            setErrorMessage(it.thisObject as Activity)
+        ) { chain ->
+            chain.proceed()
+            setErrorMessage(chain.thisObject as Activity)
+            null
         }
 
         if (isBuiltIn && is64 && Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
             Log.e("Not support")
             Log.toast("Android O以下系统不支持64位Xpatch版，请使用32位版")
         } else {
-            instance.retrofitResponseClass?.hookBeforeAllConstructors { param ->
-                val url = getRetrofitUrl(param.args[0])
-                val body = param.args[1] ?: return@hookBeforeAllConstructors
+            instance.retrofitResponseClass?.hookAllConstructors { chain ->
+                val url = getRetrofitUrl(chain.args[0]!!)
+                val body = chain.args[1] ?: return@hookAllConstructors chain.proceed()
                 if (url?.startsWith("https://api.bilibili.com/pgc/view/v2/app/season") == true &&
                     body.javaClass == instance.okioWrapperClass
                 ) {
@@ -281,7 +291,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     if (data?.javaClass == searchAllResultClass) {
                         addAreaTags(data)
                     }
-                    url ?: return@hookBeforeAllConstructors
+                    url ?: return@hookAllConstructors chain.proceed()
                     if (url.startsWith("https://app.bilibili.com/x/v2/search/type") || url.startsWith(
                             "https://appintl.biliapi.net/intl/gateway/app/search/type"
                         ) || url.startsWith("https://app.bilibili.com/x/intl/search/type")
@@ -318,61 +328,69 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         }
                     }
                 }
+                chain.proceed()
             }
         }
 
-        instance.viewMossClass?.hookAfterMethod(
+        instance.viewMossClass?.hookMethod(
             if (instance.useNewMossFunc) "executeView" else "view",
             instance.viewReqClass
-        ) { param ->
-            param.result?.let { return@hookAfterMethod }
-            val serializedRequest = param.args[0].callMethodAs<ByteArray>("toByteArray")
+        ) { chain ->
+            val result = chain.proceed()
+            if (result != null) return@hookMethod result
+            val serializedRequest = chain.args[0]!!.callMethodAs<ByteArray>("toByteArray")
             val req = ViewReq.parseFrom(serializedRequest)
             val reply = fixViewProto(req)
-            val serializedReply = reply?.toByteArray() ?: return@hookAfterMethod
-            param.result =
-                (param.method as Method).returnType.callStaticMethod("parseFrom", serializedReply)
+            val serializedReply = reply?.toByteArray() ?: return@hookMethod null
+            (chain.executable as Method).returnType.callStaticMethod("parseFrom", serializedReply)
         }
 
-        instance.viewUniteMossClass?.hookAfterMethod(
+        instance.viewUniteMossClass?.hookMethod(
             if (instance.useNewMossFunc) "executeView" else "view",
             "com.bapis.bilibili.app.viewunite.v1.ViewReq"
-        ) { param ->
-            if (instance.networkExceptionClass?.isInstance(param.throwable) == true) return@hookAfterMethod
-            val response = param.result
+        ) { chain ->
+            var response: Any?
+            try {
+                response = chain.proceed()
+            } catch (t: Throwable) {
+                if (instance.networkExceptionClass?.isInstance(t) == true) throw t
+                response = null
+            }
             if (response == null) {
-                val req = param.args[0].callMethodAs<ByteArray>("toByteArray").let {
+                val req = chain.args[0]!!.callMethodAs<ByteArray>("toByteArray").let {
                     ViewUniteReq.parseFrom(it)
                 }
                 val av = (if (req.hasAid()) req.aid.takeIf { it != 0L } else if (req.hasBvid()) bv2av(req.bvid)  else null)?.toString()
                 fixViewProto(req, av)?.toByteArray()?.let {
-                    param.result =
+                    response =
                             "com.bapis.bilibili.app.viewunite.v1.ViewReply".from(mClassLoader)
                                     ?.callStaticMethod("parseFrom", it)
                 } ?: Log.toast("解锁失败！", force = true)
-                return@hookAfterMethod
+                return@hookMethod response
             }
-            val supplementAny = response.callMethod("getSupplement")
+            val supplementAny = response!!.callMethod("getSupplement")
             val typeUrl = supplementAny?.callMethodAs<String>("getTypeUrl")
             // Only handle pgc video
-            if (param.result != null && typeUrl != PGC_ANY_MODEL_TYPE_URL) {
-                return@hookAfterMethod
+            if (typeUrl != PGC_ANY_MODEL_TYPE_URL) {
+                return@hookMethod response
             }
             val supplement =
                 supplementAny?.callMethod("getValue")?.callMethodAs<ByteArray>("toByteArray")
                     ?.let { ViewPgcAny.parseFrom(it) } ?: viewPgcAny {}
 
-            fixViewProto(response, supplement)
+            fixViewProto(response!!, supplement)
+            response
         }
 
-        val urlHook: Hooker = fun(param) {
-            val redirectUrl = param.thisObject.getObjectFieldAs<String?>("redirectUrl")
-            if (redirectUrl.isNullOrEmpty()) return
-            param.result = param.thisObject.callMethod("getUrl", redirectUrl)
+        val urlHook: HookCallback = fun(chain): Any? {
+            val result = chain.proceed()
+            val redirectUrl = chain.thisObject!!.getObjectFieldAs<String?>("redirectUrl")
+            if (redirectUrl.isNullOrEmpty()) return result
+            return chain.thisObject!!.callMethod("getUrl", redirectUrl)
         }
         "com.bilibili.bplus.followingcard.api.entity.cardBean.VideoCard".from(mClassLoader)?.run {
-            hookAfterMethod("getJumpUrl", hooker = urlHook)
-            hookAfterMethod("getCommentJumpUrl", hooker = urlHook)
+            hookMethod("getJumpUrl", callback = urlHook)
+            hookMethod("getCommentJumpUrl", callback = urlHook)
         }
 
         if (sPrefs.getBoolean("hidden", false) &&
@@ -389,21 +407,22 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 val intTypeFields = declaredFields.filter {
                     it.type == Int::class.javaPrimitiveType
                 }.onEach { it.isAccessible = true }
-                hookBeforeMethod(
+                hookMethod(
                     "setUserVisibleCompat",
                     Boolean::class.javaPrimitiveType
-                ) { param ->
-                    param.thisObject.callMethodAs<Bundle>("getArguments").run {
+                ) { chain ->
+                    chain.thisObject!!.callMethodAs<Bundle>("getArguments").run {
                         val from = getString("from")
                         for (area in AREA_TYPES) {
                             if (from == area.value.area) {
                                 intTypeFields.forEach {
-                                    if (it.get(param.thisObject) == area.value.type.toInt())
-                                        it.set(param.thisObject, area.key)
+                                    if (it.get(chain.thisObject) == area.value.type.toInt())
+                                        it.set(chain.thisObject, area.key)
                                 }
                             }
                         }
                     }
+                    chain.proceed()
                 }
             }
         }
@@ -414,30 +433,32 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             val mossResponseHandlerClass = instance.mossResponseHandlerClass ?: return
             val searchMossClass =
                 "com.bapis.bilibili.polymer.app.search.v1.SearchMoss".from(mClassLoader) ?: return
-            searchMossClass.hookBeforeMethod(
+            searchMossClass.hookMethod(
                 "searchAll",
                 "com.bapis.bilibili.polymer.app.search.v1.SearchAllRequest",
                 mossResponseHandlerClass
-            ) { param ->
-                param.args[1] = param.args[1].mossResponseHandlerProxy {
+            ) { chain ->
+                val args = chain.args.toTypedArray()
+                args[1] = chain.args[1]!!.mossResponseHandlerProxy {
                     addAreaTagsV2(it)
                 }
+                chain.proceed(args)
             }
-            searchMossClass.hookBeforeMethod(
+            searchMossClass.hookMethod(
                 "searchByType",
                 "com.bapis.bilibili.polymer.app.search.v1.SearchByTypeRequest",
                 mossResponseHandlerClass
-            ) { param ->
-                val searchByTypeRespClass = searchByTypeRespClass ?: return@hookBeforeMethod
+            ) { chain ->
+                val searchByTypeRespClass = searchByTypeRespClass ?: return@hookMethod chain.proceed()
                 val key =
-                    param.args[0].callMethodOrNullAs<Int>("getType") ?: return@hookBeforeMethod
-                val areaType = AREA_TYPES[key] ?: return@hookBeforeMethod
+                    chain.args[0]!!.callMethodOrNullAs<Int>("getType") ?: return@hookMethod chain.proceed()
+                val areaType = AREA_TYPES[key] ?: return@hookMethod chain.proceed()
                 val request = SearchByTypeRequest.parseFrom(
-                    param.args[0].callMethodAs<ByteArray>("toByteArray")
+                    chain.args[0]!!.callMethodAs<ByteArray>("toByteArray")
                 )
                 val type = areaType.type
                 val area = areaType.area
-                val handler = param.args[1]
+                val handler = chain.args[1]!!
                 MainScope().launch(Dispatchers.IO) {
                     val result = retrieveAreaSearchV3(request, area, type)
                     if (result != null) {
@@ -449,7 +470,7 @@ class BangumiSeasonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         handler.callMethod("onError", null)
                     }
                 }
-                param.result = null
+                null
             }
         }
     }

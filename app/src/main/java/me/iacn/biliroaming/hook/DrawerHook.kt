@@ -22,8 +22,9 @@ class DrawerHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             instance.kanbanCallbackClass?.new(null)?.callMethod(instance.kanbanCallback(), null)
         }
 
-        instance.mainActivityClass?.hookAfterMethod("onCreate", Bundle::class.java) { param ->
-            val self = param.thisObject as Activity
+        instance.mainActivityClass?.hookMethod("onCreate", Bundle::class.java) { chain ->
+            val result = chain.proceed()
+            val self = chain.thisObject as Activity
             val view = self.findViewById<ViewGroup>(android.R.id.content).getChildAt(0)
             (view.parent as ViewGroup).removeViewInLayout(view)
             drawerLayout = instance.drawerLayoutClass?.new(self)
@@ -36,10 +37,12 @@ class DrawerHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             fragmentManager?.callMethod("executePendingTransactions")
 
             self.setContentView(drawerLayout as View)
+            result
         }
 
-        val createHooker: Hooker = { param ->
-            val self = param.thisObject as Activity
+        val createHooker: HookCallback = { chain ->
+            val result = chain.proceed()
+            val self = chain.thisObject as Activity
             val fragmentManager = self.callMethod("getSupportFragmentManager")
             navView = fragmentManager?.callMethod("findFragmentByTag", "home")
                 ?.callMethodAs<View>("getView")
@@ -52,6 +55,7 @@ class DrawerHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             )
             layoutParams?.javaClass?.fields?.get(0)?.set(layoutParams, Gravity.START)
             navView?.parent ?: drawerLayout?.callMethod("addView", navView, 1, layoutParams)
+            result
         }
 
         instance.mainActivityClass?.runCatching {
@@ -59,37 +63,39 @@ class DrawerHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 "onPostCreate",
                 Bundle::class.java
             )
-        }?.onSuccess { it.hookAfterMethod(createHooker) }
+        }?.onSuccess { it.hookMethod(createHooker) }
 
         instance.mainActivityClass?.runCatching { getDeclaredMethod("onStart") }
-            ?.onSuccess { it.hookAfterMethod(createHooker) }
+            ?.onSuccess { it.hookMethod(createHooker) }
 
-        instance.mainActivityClass?.replaceMethod("onBackPressed") { param ->
+        instance.mainActivityClass?.hookMethod("onBackPressed") { chain ->
             try {
                 if (drawerLayout?.callMethodAs<Boolean>(instance.isDrawerOpen(), navView) == true) {
                     drawerLayout?.callMethod(instance.closeDrawer(), navView, true)
                 } else {
-                    param.invokeOriginalMethod()
+                    chain.proceed()
                 }
             } catch (e: Throwable) {
-                param.invokeOriginalMethod()
+                chain.proceed()
             }
         }
 
-        "tv.danmaku.bili.ui.main2.basic.BaseMainFrameFragment".hookAfterMethod(
+        "tv.danmaku.bili.ui.main2.basic.BaseMainFrameFragment".hookMethod(
             mClassLoader,
             "onViewCreated",
             View::class.java,
             Bundle::class.java
-        ) { param ->
+        ) { chain ->
+            val result = chain.proceed()
             val id = getId("avatar_layout")
-            (param.args[0] as View).findViewById<View>(id)?.setOnClickListener {
+            (chain.args[0] as View).findViewById<View>(id)?.setOnClickListener {
                 try {
                     drawerLayout?.callMethod(instance.openDrawer(), navView, true)
                 } catch (e: Throwable) {
                     Log.e(e)
                 }
             }
+            result
         }
 
     }

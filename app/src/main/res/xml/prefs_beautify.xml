@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?><!--suppress DeprecatedClassUsageInspection -->
+<!-- 美化设置 -->
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <Preference android:key="back_to_main" android:title="@string/back_to_main" />
+    <PreferenceCategory android:title="@string/beautify_category">
+        <SwitchPreference
+            android:key="custom_theme"
+            android:summary="@string/custom_theme_summary"
+            android:title="@string/custom_theme_title" />
+        <SwitchPreference
+            android:key="auto_dark_splash"
+            android:summary="@string/auto_dark_splash_summary"
+            android:title="@string/auto_dark_splash_title" />
+        <SwitchPreference
+            android:key="custom_splash"
+            android:summary="@string/custom_splash_summary"
+            android:title="@string/custom_splash_title" />
+        <SwitchPreference
+            android:key="custom_splash_logo"
+            android:summary="@string/custom_splash_logo_summary"
+            android:title="@string/custom_splash_logo_title" />
+        <SwitchPreference
+            android:key="full_splash"
+            android:summary="@string/full_splash_summary"
+            android:title="@string/full_splash_title" />
+        <SwitchPreference
+            android:key="music_notification"
+            android:summary="@string/music_notification_summary"
+            android:title="@string/music_notification_title" />
+        <SwitchPreference
+            android:key="drawer"
+            android:summary="@string/drawer_summary"
+            android:title="@string/drawer_title" />
+        <SwitchPreference
+            android:key="custom_subtitle"
+            android:summary="@string/custom_subtitle_summary"
+            android:title="@string/custom_subtitle_title" />
+        <SwitchPreference
+            android:key="disable_story_full"
+            android:summary="@string/disable_story_full_summary"
+            android:title="@string/disable_story_full_title" />
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="disable_main_page_story"
+            android:summary="@string/disable_main_page_story_summary"
+            android:title="@string/disable_main_page_story_title" />
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="dialog_blur_background"
+            android:summary="@string/dialog_blur_background_summary"
+            android:title="@string/dialog_blur_background_title" />
+    </PreferenceCategory>
+</PreferenceScreen>

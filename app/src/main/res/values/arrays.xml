@@ -158,13 +158,6 @@
         <item>game</item>
     </string-array>
 
-    <string-array name="xposed_scope">
-        <item>tv.danmaku.bili</item>
-        <item>com.bilibili.app.blue</item>
-        <item>com.bilibili.app.in</item>
-        <item>tv.danmaku.bilibilihd</item>
-    </string-array>
-
     <string-array name="dynamic_entries">
         <item>转发</item>
         <item>投稿视频</item>

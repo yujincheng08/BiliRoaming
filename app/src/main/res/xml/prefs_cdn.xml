@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?><!--suppress DeprecatedClassUsageInspection -->
+<!-- 加速CDN设置 -->
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <Preference android:key="back_to_main" android:title="@string/back_to_main" />
+    <PreferenceCategory android:title="@string/cdn_category">
+        <ListPreference
+            android:defaultValue="@string/ali_host"
+            android:entries="@array/upos_entries"
+            android:entryValues="@array/upos_values"
+            android:key="upos_host"
+            android:summary="@string/custom_upos_summary"
+            android:title="@string/custom_upos_title" />
+
+        <Preference
+            android:key="test_upos"
+            android:summary="@string/test_upos_summary"
+            android:title="@string/test_upos_title" />
+
+        <SwitchPreference
+            android:key="force_upos"
+            android:summary="@string/force_upos_summary"
+            android:title="@string/force_upos_title" />
+
+        <SwitchPreference
+            android:key="block_pcdn"
+            android:summary="@string/block_pcdn_summary"
+            android:title="@string/block_pcdn_title" />
+
+        <SwitchPreference
+            android:key="block_pcdn_live"
+            android:summary="@string/block_pcdn_live_summary"
+            android:title="@string/block_pcdn_live_title" />
+    </PreferenceCategory>
+</PreferenceScreen>

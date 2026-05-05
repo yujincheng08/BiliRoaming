@@ -1,6 +1,5 @@
 package me.iacn.biliroaming.hook
 
-import de.robv.android.xposed.XC_MethodHook
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.utils.*
 import me.iacn.biliroaming.utils.json.FastjsonHelper
@@ -536,22 +535,26 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
         }
 
-        instance.pegasusFeedClass?.hookAfterMethod(
+        instance.pegasusFeedClass?.hookMethod(
             "convert",
             Object::class.java
-        ) { param ->
-            val data = param.result?.getObjectField("data") ?: return@hookAfterMethod
+        ) { chain ->
+            val result = chain.proceed()
+            val data = result?.getObjectField("data") ?: return@hookMethod result
             val json = data.toJsonHelper<FastjsonHelper>()
             hookPegasusFeedConvert(json)
+            result
         }
 
-        instance.pegasusParserClass?.hookAfterMethod(
+        instance.pegasusParserClass?.hookMethod(
             "convert",
             Object::class.java
-        ) { param ->
-            val data = param.result?.getObjectField("data") ?: return@hookAfterMethod
+        ) { chain ->
+            val result = chain.proceed()
+            val data = result?.getObjectField("data") ?: return@hookMethod result
             val json = data.toJsonHelper<GsonHelper>()
             hookPegasusFeedConvert(json)
+            result
         }
 
         if (!hidden) return
@@ -618,35 +621,37 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             removeRelateNothing || it.callMethodAs("getRelateCardTypeValue") !in allowTypeList || shouldFiltered
         }
 
-        instance.viewMossClass?.hookAfterMethod(
+        instance.viewMossClass?.hookMethod(
             if (instance.useNewMossFunc) "executeView" else "view",
             instance.viewReqClass
-        ) { param ->
-            param.result ?: return@hookAfterMethod
+        ) { chain ->
+            val result = chain.proceed() ?: return@hookMethod null
             if (removeRelatePromote && removeRelateOnlyAv && removeRelateNothing) {
-                param.result.callMethod("clearRelates")
-                param.result.callMethod("clearPagination")
-                return@hookAfterMethod
+                result.callMethod("clearRelates")
+                result.callMethod("clearPagination")
+                return@hookMethod result
             }
-            param.result.callMethod("ensureRelatesIsMutable")
-            param.result.callMethodAs<MutableList<Any>>("getRelatesList").filter()
+            result.callMethod("ensureRelatesIsMutable")
+            result.callMethodAs<MutableList<Any>>("getRelatesList").filter()
+            result
         }
-        instance.viewMossClass?.hookAfterMethod(
+        instance.viewMossClass?.hookMethod(
             if (instance.useNewMossFunc) "executeRelatesFeed" else "relatesFeed",
             "com.bapis.bilibili.app.view.v1.RelatesFeedReq"
-        ) { param ->
-            param.result ?: return@hookAfterMethod
-            param.result.callMethod("ensureListIsMutable")
-            param.result.callMethodAs<MutableList<Any>>("getListList").filter()
+        ) { chain ->
+            val result = chain.proceed() ?: return@hookMethod null
+            result.callMethod("ensureListIsMutable")
+            result.callMethodAs<MutableList<Any>>("getListList").filter()
+            result
         }
 
         instance.viewUniteMossClass?.run {
-            hookAfterMethod(
+            hookMethod(
                 if (instance.useNewMossFunc) "executeView" else "view",
                 instance.viewUniteReqClass
-            ) { param ->
-                param.result ?: return@hookAfterMethod
-                param.result.callMethod("getTab")?.run {
+            ) { chain ->
+                val result = chain.proceed() ?: return@hookMethod null
+                result.callMethod("getTab")?.run {
                     callMethod("ensureTabModuleIsMutable")
                     callMethodAs<MutableList<Any>>("getTabModuleList").map { originalTabModules ->
                         if (!originalTabModules.callMethodAs<Boolean>("hasIntroduction")) return@map
@@ -662,15 +667,18 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         }
                     }
                 }
+                result
             }
-            hookAfterMethod(
+            hookMethod(
                 if (instance.useNewMossFunc) "executeRelatesFeed" else "relatesFeed",
                 "com.bapis.bilibili.app.viewunite.v1.RelatesFeedReq"
-            ) { param ->
-                param.result?.run {
+            ) { chain ->
+                val result = chain.proceed()
+                result?.run {
                     callMethod("ensureRelatesIsMutable")
                     callMethodAs<MutableList<Any>>("getRelatesList").filterUnite()
                 }
+                result
             }
         }
 
@@ -716,18 +724,20 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
 
         instance.cardClickProcessorClass?.declaredMethods
-            ?.find { it.name == instance.onFeedClicked() }?.hookBeforeMethod { param ->
-                if (hookDislikeReason(param.args[2])) {
-                    param.result = null
+            ?.find { it.name == instance.onFeedClicked() }?.hookMethod { chain ->
+                if (hookDislikeReason(chain.args[2])) {
+                    return@hookMethod null
                 }
+                chain.proceed()
             }
 
         "com.bilibili.pegasus.ext.threepoint.ThreePointKt".findClassOrNull(mClassLoader)
             ?.declaredMethods?.find { it.parameterTypes.size == 8 }
-            ?.hookBeforeMethod {
-                if (hookDislikeReason(it.args[3])) {
-                    it.result = null
+            ?.hookMethod { chain ->
+                if (hookDislikeReason(chain.args[3])) {
+                    return@hookMethod null
                 }
+                chain.proceed()
             }
 
         fun MutableList<Any>.filterPopular() = removeIf {
@@ -755,30 +765,26 @@ class PegasusHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
         }
 
-        instance.popularClass?.hookBeforeMethod(
+        instance.popularClass?.hookMethod(
             if (instance.useNewMossFunc) "executeIndex" else "index",
             "com.bapis.bilibili.app.show.popular.v1.PopularResultReq"
-        ) { param ->
-            param.args ?: return@hookBeforeMethod
+        ) { chain ->
+            chain.args ?: return@hookMethod chain.proceed()
 
-            val idx = param.args[0].getLongFieldOrNull("idx_")
+            val idx = chain.args[0]!!.getLongFieldOrNull("idx_")
             if (idx == null || idx == 0L) {
                 popularDataCount = 0
                 popularDataVersion = ""
-                return@hookBeforeMethod
+            } else {
+                chain.args[0]!!.setObjectField("lastParam_", popularDataVersion)
+                chain.args[0]!!.setLongField("idx_", popularDataCount)
             }
 
-            param.args[0].setObjectField("lastParam_", popularDataVersion)
-            param.args[0].setLongField("idx_", popularDataCount)
-        }
-        instance.popularClass?.hookAfterMethod(
-            if (instance.useNewMossFunc) "executeIndex" else "index",
-            "com.bapis.bilibili.app.show.popular.v1.PopularResultReq"
-        ) { param ->
-            param.result ?: return@hookAfterMethod
+            val result = chain.proceed() ?: return@hookMethod null
 
-            param.result.callMethod("ensureItemsIsMutable")
-            param.result.callMethodAs<MutableList<Any>>("getItemsList").filterPopular()
+            result.callMethod("ensureItemsIsMutable")
+            result.callMethodAs<MutableList<Any>>("getItemsList").filterPopular()
+            result
         }
     }
 }

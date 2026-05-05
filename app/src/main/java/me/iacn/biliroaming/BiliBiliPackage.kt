@@ -2,7 +2,7 @@
 
 package me.iacn.biliroaming
 
-import android.app.AndroidAppHelper
+import me.iacn.biliroaming.utils.currentContext
 import android.content.Context
 import android.content.SharedPreferences
 import android.net.Uri
@@ -87,6 +87,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val commentCopyClass by Weak { mHookInfo.commentLongClick from mClassLoader }
     val commentCopyNewClass by Weak { mHookInfo.commentLongClickNew from mClassLoader }
     val comment3CopyClass by Weak { mHookInfo.comment3Copy.class_ from mClassLoader }
+    val commentMenuCopyClass by Weak { mHookInfo.commentMenuCopy.class_ from mClassLoader }
     val kotlinJsonClass by Weak { "kotlinx.serialization.json.Json" from mClassLoader }
     val gsonConverterClass by Weak { mHookInfo.gsonHelper.gsonConverter from mClassLoader }
     val playerCoreServiceV2Class by Weak { mHookInfo.playerCoreService.class_ from mClassLoader }
@@ -207,7 +208,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val biliAccounts by lazy {
         biliAccountsClass?.callStaticMethodOrNull(
             mHookInfo.biliAccounts.get.orNull,
-            AndroidAppHelper.currentApplication()
+            currentContext
         )
     }
 
@@ -282,6 +283,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     fun comment3Copy() = mHookInfo.comment3Copy.method.orNull
 
     fun comment3ViewIndex() = mHookInfo.comment3Copy.comment3ViewIndex
+
+    fun commentMenuCopyActionHandler() = mHookInfo.commentMenuCopy.actionHandler.orNull
 
     fun responseDataField() = runCatchingOrNull {
         rxGeneralResponseClass?.getDeclaredField("data")?.name
@@ -380,7 +383,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             val t = measureTimeMillis {
                 if (hookInfoFile.isFile && hookInfoFile.canRead()) {
                     val lastUpdateTime = context.packageManager.getPackageInfo(
-                        AndroidAppHelper.currentPackageName(),
+                        currentContext.packageName,
                         0
                     ).lastUpdateTime
                     val lastModuleUpdateTime = try {
@@ -460,7 +463,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 DexHelper(classloader.findDexClassLoader(::findRealClassloader) ?: return@hookInfo)
             lastUpdateTime = max(
                 context.packageManager.getPackageInfo(
-                    AndroidAppHelper.currentPackageName(),
+                    currentContext.packageName,
                     0
                 ).lastUpdateTime,
                 runCatchingOrNull {
@@ -1637,6 +1640,20 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     comment3ViewIndex = it.parameterCount - 1
                 }
             }
+            commentMenuCopy = commentMenuCopy {
+                val helperMethod = dexHelper.findMethodUsingString(
+                    "CommentHolderHelper",
+                    false, -1, -1, null, -1, null, null, null, false
+                ).asSequence().mapNotNull { dexHelper.decodeMethodIndex(it) }
+                    .firstOrNull() ?: return@commentMenuCopy
+                val helperClass = helperMethod.declaringClass
+                val actionHandlerMethod = helperClass.declaredMethods.firstOrNull {
+                    it.isStatic && it.parameterCount == 10 &&
+                            it.parameterTypes.last().isEnum
+                } ?: return@commentMenuCopy
+                class_ = class_ { name = helperClass.name }
+                actionHandler = method { name = actionHandlerMethod.name }
+            }
             dexHelper.findMethodUsingString(
                 "BangumiAllButton",
                 true, -1, 0, null, -1, null, null, null, true
@@ -2111,7 +2128,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                         null,
                         false
                     ).asSequence().firstNotNullOfOrNull { idx ->
-                        dexHelper.decodeMethodIndex(idx)?.declaringClass?.takeIf { !it.superclass.isAbstract }
+                        dexHelper.decodeMethodIndex(idx)?.declaringClass?.takeIf { !it.superclass!!.isAbstract }
                     } ?: return@biliGlobalPreference
                 val method = clazz.declaredMethods.firstOrNull {
                     it.isStatic && it.parameterTypes.isEmpty() && it.returnType == SharedPreferences::class.java
@@ -2298,8 +2315,13 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     true
                 ).asSequence().mapNotNull { dexHelper.decodeMethodIndex(it) }.firstOrNull()
                     ?: return@preBuiltConfig
-                class_ = class_ { name = getMap.declaringClass.name }
-                get = method { name = getMap.name }
+                val actualMethod = if (getMap.isStatic) {
+                    getMap.declaringClass.declaredMethods.firstOrNull {
+                        it.isNotStatic && it.parameterTypes.isEmpty() && it.returnType == Map::class.java
+                    } ?: return@preBuiltConfig
+                } else getMap
+                class_ = class_ { name = actualMethod.declaringClass.name }
+                get = method { name = actualMethod.name }
             }
             dataSP = dataSP {
                 val spxClass =
@@ -2330,8 +2352,13 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     Log.d(it)
                     it.declaringClass.name.startsWith("com.bilibili.lib.blconfig.internal.TypedContext")
                 } ?: return@dataSP
-                class_ = class_ { name = getDataSP.declaringClass.name }
-                get = method { name = getDataSP.name }
+                val actualMethod = if (getDataSP.isStatic) {
+                    getDataSP.declaringClass.declaredMethods.firstOrNull {
+                        it.isNotStatic && it.parameterTypes.isEmpty() && it.returnType == spxClass
+                    } ?: return@dataSP
+                } else getDataSP
+                class_ = class_ { name = actualMethod.declaringClass.name }
+                get = method { name = actualMethod.name }
             }
             pegasusParser = class_ {
                 val getPegasusParser = dexHelper.findMethodUsingString(
