@@ -62,6 +62,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
         private lateinit var listView: ListView
         private lateinit var adapter: BaseAdapter
         private var searchItems = listOf<SearchItem>()
+        private var currentCategoryKey: String? = null
 
         private var ListAdapter.preferenceList: List<Preference>
             get() = getObjectFieldAs("mPreferenceList")
@@ -80,40 +81,65 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 packageName + "_preferences",
                 Context.MODE_MULTI_PROCESS
             )
-            if (!prefs.getBoolean("hidden", false)) {
-                val hiddenGroup = findPreference("hidden_group") as PreferenceCategory
-                preferenceScreen.removePreference(hiddenGroup)
-            }
-            findPreference("version")?.summary = BuildConfig.VERSION_NAME
-            findPreference("version")?.onPreferenceClickListener = this
-            findPreference("custom_splash")?.onPreferenceChangeListener = this
-            findPreference("custom_splash_logo")?.onPreferenceChangeListener = this
-            findPreference("save_log")?.summary =
-                context.getString(R.string.save_log_summary).format(logFile.absolutePath)
-            findPreference("custom_server")?.onPreferenceClickListener = this
-            findPreference("test_upos")?.onPreferenceClickListener = this
-            findPreference("customize_bottom_bar")?.onPreferenceClickListener = this
-            findPreference("pref_export")?.onPreferenceClickListener = this
-            findPreference("pref_import")?.onPreferenceClickListener = this
-            findPreference("export_video")?.onPreferenceClickListener = this
-            findPreference("home_filter")?.onPreferenceClickListener = this
-            findPreference("custom_subtitle")?.onPreferenceChangeListener = this
-            findPreference("danmaku_filter")?.onPreferenceClickListener = this
-            findPreference("default_speed").onPreferenceClickListener = this
-            findPreference("customize_accessKey")?.onPreferenceClickListener = this
-            findPreference("share_log")?.onPreferenceClickListener = this
-            findPreference("customize_drawer")?.onPreferenceClickListener = this
-            findPreference("custom_link")?.onPreferenceClickListener = this
-            findPreference("add_custom_button")?.onPreferenceChangeListener = this
-            findPreference("customize_dynamic")?.onPreferenceClickListener = this
-            findPreference("filter_search")?.onPreferenceClickListener = this
-            findPreference("filter_comment")?.onPreferenceClickListener = this
-            findPreference("copy_access_key")?.onPreferenceClickListener = this
-            findPreference("purify_story_video_ad")?.onPreferenceClickListener = this
-            findPreference("long_press_speed")?.onPreferenceClickListener = this
+            initCategoryPreferences()
             checkCompatibleVersion()
             searchItems = retrieve(preferenceScreen)
             checkUpdate()
+        }
+
+        private fun initCategoryPreferences() {
+            if (currentCategoryKey == null) {
+                // 主页面：设置分类入口的点击监听
+                arrayOf("main_category", "cdn_category", "beautify_category", "miscellaneous_category",
+                    "pref_backup", "hidden_group", "setting_category", "about").forEach {
+                    findPreference(it)?.onPreferenceClickListener = this
+                }
+                // 隐藏hidden_group分类入口如果hidden功能未开启
+                if (!prefs.getBoolean("hidden", false)) {
+                    val hiddenGroup = findPreference("hidden_group") as? PreferenceCategory
+                    if (hiddenGroup != null) {
+                        preferenceScreen.removePreference(hiddenGroup)
+                    }
+                }
+            } else {
+                // 子页面：设置返回按钮点击监听
+                findPreference("back_to_main")?.onPreferenceClickListener = this
+                
+                // 设置各子项的点击监听
+                findPreference("version")?.summary = BuildConfig.VERSION_NAME
+                findPreference("version")?.onPreferenceClickListener = this
+                findPreference("custom_splash")?.onPreferenceChangeListener = this
+                findPreference("custom_splash_logo")?.onPreferenceChangeListener = this
+                findPreference("save_log")?.summary =
+                    context.getString(R.string.save_log_summary).format(logFile.absolutePath)
+                findPreference("custom_server")?.onPreferenceClickListener = this
+                findPreference("test_upos")?.onPreferenceClickListener = this
+                findPreference("customize_bottom_bar")?.onPreferenceClickListener = this
+                findPreference("pref_export")?.onPreferenceClickListener = this
+                findPreference("pref_import")?.onPreferenceClickListener = this
+                findPreference("export_video")?.onPreferenceClickListener = this
+                findPreference("home_filter")?.onPreferenceClickListener = this
+                findPreference("custom_subtitle")?.onPreferenceChangeListener = this
+                findPreference("danmaku_filter")?.onPreferenceClickListener = this
+                findPreference("default_speed")?.onPreferenceClickListener = this
+                findPreference("customize_accessKey")?.onPreferenceClickListener = this
+                findPreference("share_log")?.onPreferenceClickListener = this
+                findPreference("customize_drawer")?.onPreferenceClickListener = this
+                findPreference("custom_link")?.onPreferenceClickListener = this
+                findPreference("add_custom_button")?.onPreferenceChangeListener = this
+                findPreference("customize_dynamic")?.onPreferenceClickListener = this
+                findPreference("filter_search")?.onPreferenceClickListener = this
+                findPreference("filter_comment")?.onPreferenceClickListener = this
+                findPreference("copy_access_key")?.onPreferenceClickListener = this
+                findPreference("purify_story_video_ad")?.onPreferenceClickListener = this
+                findPreference("long_press_speed")?.onPreferenceClickListener = this
+                
+                // 处理hidden_group的隐藏逻辑
+                val hiddenGroup = findPreference("hidden_group") as? PreferenceCategory
+                if (hiddenGroup != null && !prefs.getBoolean("hidden", false)) {
+                    preferenceScreen.removePreference(hiddenGroup)
+                }
+            }
         }
 
         @Deprecated("Deprecated in Java")
@@ -232,8 +258,8 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 val versionName = BuildConfig.VERSION_NAME
                 if (newestVer.isNotEmpty() && versionName != newestVer) {
                     searchItems.forEach { it.restore() }
-                    findPreference("version").summary = "${versionName}（最新版$newestVer）"
-                    (findPreference("about") as PreferenceCategory).addPreference(
+                    findPreference("version")?.summary = "${versionName}（最新版$newestVer）"
+                    (findPreference("about") as? PreferenceCategory)?.addPreference(
                         Preference(activity).apply {
                             key = "update"
                             title = context.getString(R.string.update_title)
@@ -342,6 +368,25 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 summary = message
                 if (this is SwitchPreference) this.isChecked = false
             }
+        }
+
+        private fun loadCategorySettings(key: String) {
+            currentCategoryKey = key
+            preferenceScreen.removeAll()
+            val xmlResId = when (key) {
+                "main_category" -> R.xml.prefs_main
+                "cdn_category" -> R.xml.prefs_cdn
+                "beautify_category" -> R.xml.prefs_beautify
+                "miscellaneous_category" -> R.xml.prefs_miscellaneous
+                "pref_backup" -> R.xml.prefs_backup
+                "hidden_group" -> R.xml.prefs_hidden
+                "setting_category" -> R.xml.prefs_settings
+                "about" -> R.xml.prefs_about
+                else -> return
+            }
+            addPreferencesFromResource(xmlResId)
+            initCategoryPreferences()
+            searchItems = retrieve(preferenceScreen)
         }
 
         private fun showCustomSubtitle() {
@@ -952,6 +997,19 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
 
         @Deprecated("Deprecated in Java")
         override fun onPreferenceClick(preference: Preference) = when (preference.key) {
+            "back_to_main" -> {
+                currentCategoryKey = null
+                preferenceScreen.removeAll()
+                addPreferencesFromResource(R.xml.prefs_setting)
+                initCategoryPreferences()
+                searchItems = retrieve(preferenceScreen)
+                true
+            }
+            "main_category", "cdn_category", "beautify_category", "miscellaneous_category",
+            "pref_backup", "hidden_group", "setting_category", "about" -> {
+                loadCategorySettings(preference.key)
+                true
+            }
             "version" -> onVersionClick()
             "update" -> onUpdateClick()
             "custom_server" -> onCustomServerClick()

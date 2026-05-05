@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?><!--suppress DeprecatedClassUsageInspection -->
+<!-- 解锁番剧限制 -->
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <Preference android:key="back_to_main" android:title="@string/back_to_main" />
+    <PreferenceCategory android:title="@string/main_category">
+        <SwitchPreference
+            android:key="main_func"
+            android:summary="@string/main_func_summary"
+            android:title="@string/main_func_title" />
+
+        <Preference
+            android:dependency="main_func"
+            android:key="custom_server"
+            android:summary="@string/custom_server_summary"
+            android:title="@string/custom_server_title" />
+
+        <SwitchPreference
+            android:dependency="main_func"
+            android:key="allow_download"
+            android:summary="@string/allow_download_summary"
+            android:title="@string/allow_download_title" />
+
+        <SwitchPreference
+            android:dependency="allow_download"
+            android:key="fix_download"
+            android:summary="@string/fix_download_summary"
+            android:title="@string/fix_download_title" />
+
+        <SwitchPreference
+            android:dependency="main_func"
+            android:key="allow_mini_play"
+            android:summary="@string/allow_mini_play_summary"
+            android:title="@string/allow_mini_play_title" />
+    </PreferenceCategory>
+</PreferenceScreen>

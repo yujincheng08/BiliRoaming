@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?><!--suppress DeprecatedClassUsageInspection -->
+<!-- 关于 -->
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory
+        android:key="about"
+        android:title="@string/about">
+
+        <Preference
+            android:key="version"
+            android:title="@string/version" />
+
+        <Preference
+            android:key="author"
+            android:summary="@string/author_list"
+            android:title="@string/author">
+            <intent
+                android:action="android.intent.action.VIEW"
+                android:data="@string/github_url" />
+        </Preference>
+
+        <Preference
+            android:key="support"
+            android:summary="@string/support_summary"
+            android:title="@string/support">
+            <intent
+                android:action="android.intent.action.VIEW"
+                android:data="@string/afdian_url" />
+        </Preference>
+
+        <Preference
+            android:key="help"
+            android:summary="@string/help_summary"
+            android:title="@string/help_title">
+            <intent
+                android:action="android.intent.action.VIEW"
+                android:data="@string/help_url" />
+        </Preference>
+
+        <Preference
+            android:key="group"
+            android:summary="@string/group_summary"
+            android:title="@string/group_title">
+            <intent
+                android:action="android.intent.action.VIEW"
+                android:data="@string/group_url" />
+        </Preference>
+
+        <Preference
+            android:key="tg"
+            android:summary="@string/tg_summary"
+            android:title="@string/tg_title">
+            <intent
+                android:action="android.intent.action.VIEW"
+                android:data="@string/tg_url" />
+        </Preference>
+
+    </PreferenceCategory>
+</PreferenceScreen>

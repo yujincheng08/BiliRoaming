@@ -7,6 +7,8 @@ import android.content.Context
 import android.content.res.Resources
 import android.content.res.XModuleResources
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import de.robv.android.xposed.IXposedHookLoadPackage
 import de.robv.android.xposed.IXposedHookZygoteInit
 import de.robv.android.xposed.XC_MethodHook
@@ -126,6 +128,14 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                     startHook { LiveQualityHook(lpparam.classLoader) }
                     startHook { StoryPlayerAdHook(lpparam.classLoader) }
                     startHook { LongPressSpeed(lpparam.classLoader) }
+                    startHook { CouponAutoReceiveHook(lpparam.classLoader) }
+
+                    // 延迟5秒后执行自动领取
+                    if (sPrefs.getBoolean("auto_receive_coupon", false)) {
+                        Handler(Looper.getMainLooper()).postDelayed({
+                            CouponAutoReceiveHook.check()
+                        }, 5000)
+                    }
                 }
 
                 lpparam.processName.endsWith(":web") -> {

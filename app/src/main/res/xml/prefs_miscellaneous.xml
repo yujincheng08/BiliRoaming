@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="utf-8"?><!--suppress DeprecatedClassUsageInspection -->
+<!-- 杂项设置 -->
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <Preference android:key="back_to_main" android:title="@string/back_to_main" />
+    <PreferenceCategory android:title="@string/miscellaneous_category">
+        <SwitchPreference
+            android:key="teenagers_mode_dialog"
+            android:summary="@string/teenagers_mode_dialog_summary"
+            android:title="@string/teenagers_mode_dialog_title" />
+
+        <SwitchPreference
+            android:key="comment_copy"
+            android:summary="@string/comment_copy_summary"
+            android:title="@string/comment_copy_title" />
+
+        <SwitchPreference
+            android:dependency="comment_copy"
+            android:key="comment_copy_enhance"
+            android:summary="@string/comment_copy_enhance_summary"
+            android:title="@string/comment_copy_enhance_title" />
+
+        <SwitchPreference
+            android:key="copy_comment"
+            android:summary="@string/copy_comment_summary"
+            android:title="@string/copy_comment_title" />
+
+        <SwitchPreference
+            android:key="mini_program"
+            android:summary="@string/mini_program_summary"
+            android:title="@string/mini_program_title" />
+
+        <SwitchPreference
+            android:key="auto_like"
+            android:summary="@string/auto_like_summary"
+            android:title="@string/auto_like_title" />
+
+        <SwitchPreference
+            android:key="enable_av"
+            android:summary="@string/enable_av_summary"
+            android:title="@string/enable_av_title" />
+
+        <SwitchPreference
+            android:key="custom_download_thread"
+            android:summary="@string/custom_download_thread_summary"
+            android:title="@string/custom_download_thread_title" />
+
+        <SwitchPreference
+            android:key="revert_live_room_feed"
+            android:summary="@string/revert_live_room_feed_summary"
+            android:title="@string/revert_live_room_feed_title" />
+
+        <SwitchPreference
+            android:key="replace_story_video"
+            android:summary="@string/replace_story_video_summary"
+            android:title="@string/replace_story_video_title" />
+
+        <SwitchPreference
+            android:key="purify_share"
+            android:summary="@string/purify_share_summary"
+            android:title="@string/purify_share_title" />
+
+        <Preference
+            android:key="custom_link"
+            android:summary="@string/custom_link_summary"
+            android:title="@string/custom_link_title" />
+
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="fix_space"
+            android:summary="@string/fix_space_summary"
+            android:title="@string/fix_space_title" />
+
+        <SwitchPreference
+            android:key="play_arc_conf"
+            android:summary="@string/play_arc_conf_summary"
+            android:title="@string/play_arc_conf_title" />
+
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="force_browser"
+            android:summary="@string/force_browser_summary"
+            android:title="@string/force_browser_title" />
+
+        <SwitchPreference
+            android:key="auto_generate_subtitle"
+            android:summary="@string/generate_subtitle_summary"
+            android:title="@string/generate_subtitle_title" />
+
+        <SwitchPreference
+            android:key="forbid_switch_live_room"
+            android:summary="@string/forbid_switch_live_room_summary"
+            android:title="@string/forbid_switch_live_room_title" />
+
+        <SwitchPreference
+            android:key="forbid_player_long_click_accelerate"
+            android:summary="@string/forbid_player_long_click_accelerate_summary"
+            android:title="@string/forbid_player_long_click_accelerate_title" />
+
+        <SwitchPreference
+            android:key="disable_live_room_double_click"
+            android:summary="@string/disable_live_room_double_click_summary"
+            android:title="@string/disable_live_room_double_click_title" />
+
+        <SwitchPreference
+            android:key="block_update"
+            android:title="@string/block_update_title" />
+
+        <SwitchPreference
+            android:key="save_comment_image"
+            android:summary="@string/save_comment_image_summary"
+            android:title="@string/save_comment_image_title" />
+
+        <Preference
+            android:key="danmaku_filter"
+            android:summary="@string/danmaku_filter_summary"
+            android:title="@string/danmaku_filter_title" />
+
+        <ListPreference
+            android:defaultValue="0"
+            android:dependency="main_func"
+            android:entries="@array/half_screen_quality_entries"
+            android:entryValues="@array/half_screen_quality_values"
+            android:key="half_screen_quality"
+            android:summary="@string/half_screen_quality_summary"
+            android:title="@string/half_screen_quality_title" />
+
+        <ListPreference
+            android:defaultValue="0"
+            android:dependency="main_func"
+            android:entries="@array/full_screen_quality_entries"
+            android:entryValues="@array/full_screen_quality_values"
+            android:key="full_screen_quality"
+            android:summary="@string/full_screen_quality_summary"
+            android:title="@string/full_screen_quality_title" />
+
+        <ListPreference
+            android:defaultValue="0"
+            android:entries="@array/live_quality_entries"
+            android:entryValues="@array/live_quality_values"
+            android:key="live_quality"
+            android:summary="@string/live_quality_summary"
+            android:title="@string/live_quality_title" />
+
+        <SwitchPreference
+            android:key="block_comment_guide"
+            android:summary="@string/block_comment_guide_summary"
+            android:title="@string/block_comment_guide_title" />
+
+        <SwitchPreference
+            android:key="disable_auto_refresh"
+            android:summary="@string/disable_auto_refresh_summary"
+            android:title="@string/disable_auto_refresh_title" />
+
+        <SwitchPreference
+            android:key="disable_vip_dm_colorful"
+            android:summary="@string/disable_vip_dm_colorful_summary"
+            android:title="@string/disable_vip_dm_colorful_title" />
+
+        <Preference
+            android:key="default_speed"
+            android:summary="@string/default_speed_summary"
+            android:title="@string/default_speed_title" />
+
+        <ListPreference
+            android:defaultValue="0"
+            android:entries="@array/pegasus_cover_ratio_entries"
+            android:entryValues="@array/pegasus_cover_ratio_values"
+            android:key="pegasus_cover_ratio"
+            android:summary="@string/pegasus_cover_ratio_summary"
+            android:title="@string/pegasus_cover_ratio_title" />
+
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="fake_non_multiwindow"
+            android:summary="@string/fake_non_multiwindow_summary"
+            android:title="@string/fake_non_multiwindow_title" />
+
+        <Preference
+            android:defaultValue="300"
+            android:key="long_press_speed"
+            android:title="@string/long_press_speed" />
+    </PreferenceCategory>
+</PreferenceScreen>

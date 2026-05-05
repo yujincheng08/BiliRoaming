@@ -10,8 +10,8 @@ plugins {
     alias(libs.plugins.lsplugin.apktransform)
     alias(libs.plugins.lsplugin.cmaker)
 }
-
-val appVerCode = jgit.repo()?.commitCount("refs/remotes/origin/master") ?: 0
+//val appVerCode = jgit.repo()?.commitCount("refs/remotes/origin/master") ?: 1
+val appVerCode = (rootProject.properties["appVerCode"] as String).toInt()
 val appVerName: String by rootProject
 
 apksign {
@@ -60,7 +60,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "me.iacn.biliroaming"
+        applicationId = "me.iacn.biliroamingx"
         minSdk = 24
         targetSdk = 35  // Target Android U
         versionCode = appVerCode
@@ -181,5 +181,5 @@ val restartBiliBili = task("restartBiliBili").apply {
 }
 
 afterEvaluate {
-    tasks.getByPath("installDebug").finalizedBy(restartBiliBili)
+    tasks.findByName("installDebug")?.finalizedBy(restartBiliBili)
 }
