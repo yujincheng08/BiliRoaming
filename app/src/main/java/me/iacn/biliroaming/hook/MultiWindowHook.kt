@@ -2,8 +2,8 @@ package me.iacn.biliroaming.hook
 
 import android.app.Activity
 import me.iacn.biliroaming.utils.Log
-import me.iacn.biliroaming.utils.hookBeforeAllMethods
-import me.iacn.biliroaming.utils.replaceMethod
+import me.iacn.biliroaming.utils.hookAllMethods
+import me.iacn.biliroaming.utils.hookMethod
 import me.iacn.biliroaming.utils.sPrefs
 
 class MultiWindowHook(mClassLoader: ClassLoader) : BaseHook(mClassLoader) {
@@ -12,10 +12,12 @@ class MultiWindowHook(mClassLoader: ClassLoader) : BaseHook(mClassLoader) {
         Log.d("startHook: MultiWindowHook")
         Activity::class.java
             .getDeclaredMethod("isInMultiWindowMode")
-            .replaceMethod { false }
+            .hookMethod { false }
         Activity::class.java
-            .hookBeforeAllMethods("onMultiWindowModeChanged") { param ->
-                param.args[0] = false
+            .hookAllMethods("onMultiWindowModeChanged") { chain ->
+                val args = chain.args.toTypedArray()
+                args[0] = false
+                chain.proceed(args)
             }
     }
 }

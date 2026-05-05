@@ -50,8 +50,8 @@ cmaker {
 
 android {
     namespace = "me.iacn.biliroaming"
-    compileSdk = 35
-    buildToolsVersion = "35.0.0"
+    compileSdk = 36
+    buildToolsVersion = "36.0.0"
     ndkVersion = "29.0.14206865"
 
     buildFeatures {
@@ -62,7 +62,7 @@ android {
     defaultConfig {
         applicationId = "me.iacn.biliroamingx"
         minSdk = 24
-        targetSdk = 35  // Target Android U
+        targetSdk = 36  // Target Android U
         versionCode = appVerCode
         versionName = appVerName
     }
@@ -101,6 +101,7 @@ android {
 
     packaging {
         resources {
+            merges += "META-INF/xposed/*"
             excludes += "**"
         }
     }
@@ -151,6 +152,7 @@ configurations.all {
 
 dependencies {
     compileOnly(libs.xposed)
+    implementation(libs.xposed.service)
     implementation(libs.protobuf.kotlin)
     implementation(libs.protobuf.java)
     compileOnly(libs.protobuf.protoc)

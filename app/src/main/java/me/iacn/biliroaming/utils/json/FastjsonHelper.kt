@@ -15,6 +15,7 @@ class FastjsonHelper : JsonHelper {
 
     override fun getField(key: String): Field {
         val field = data.javaClass.findField{ field ->
+            @Suppress("UNCHECKED_CAST")
             val annotation = field.getAnnotation(instance.fastjsonFieldAnnotation as Class<Annotation>) ?: return@findField false
             annotation.callMethod("name") == key
         } ?: throw NoSuchFieldException("No field found for key: $key in ${data.javaClass.name} or its superclasses")

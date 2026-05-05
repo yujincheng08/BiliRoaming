@@ -40,39 +40,43 @@ class WebViewHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
     override fun startHook() {
         Log.d("startHook: WebView")
-        WebView::class.java.hookBeforeMethod(
+        WebView::class.java.hookMethod(
             "setWebViewClient", WebViewClient::class.java
-        ) { param ->
-            val clazz = param.args[0].javaClass
-            (param.thisObject as WebView).addJavascriptInterface(jsHooker, "hooker")
-            if (hookedClient.contains(clazz)) return@hookBeforeMethod
-            try {
-                clazz.getDeclaredMethod(
-                    "onPageStarted",
-                    WebView::class.java, String::class.java, Bitmap::class.java
-                ).hookBeforeMethod { p ->
-                    val webView = p.args[0] as WebView
-                    webView.evaluateJavascript("""(function(){$js})()""".trimMargin(), null)
-                }
-                if (sPrefs.getBoolean("save_comment_image", false)) {
+        ) { chain ->
+            val clazz = chain.args[0]!!.javaClass
+            (chain.thisObject as WebView).addJavascriptInterface(jsHooker, "hooker")
+            if (!hookedClient.contains(clazz)) {
+                try {
                     clazz.getDeclaredMethod(
-                        "onPageFinished",
-                        WebView::class.java, String::class.java
-                    ).hookBeforeMethod { p ->
-                        val webView = p.args[0] as WebView
-                        val url = p.args[1] as String
-                        if (url.startsWith("https://www.bilibili.com/h5/note-app/view")) {
-                            webView.evaluateJavascript(
-                                """(function(){for(var i=0;i<document.images.length;++i){if(document.images[i].className==='img-preview'){document.images[i].addEventListener("contextmenu",(e)=>{hooker.saveImage(e.target.currentSrc);})}}})()""",
-                                null
-                            )
+                        "onPageStarted",
+                        WebView::class.java, String::class.java, Bitmap::class.java
+                    ).hookMethod { innerChain ->
+                        val webView = innerChain.args[0] as WebView
+                        webView.evaluateJavascript("""(function(){$js})()""".trimMargin(), null)
+                        innerChain.proceed()
+                    }
+                    if (sPrefs.getBoolean("save_comment_image", false)) {
+                        clazz.getDeclaredMethod(
+                            "onPageFinished",
+                            WebView::class.java, String::class.java
+                        ).hookMethod { innerChain ->
+                            val webView = innerChain.args[0] as WebView
+                            val url = innerChain.args[1] as String
+                            if (url.startsWith("https://www.bilibili.com/h5/note-app/view")) {
+                                webView.evaluateJavascript(
+                                    """(function(){for(var i=0;i<document.images.length;++i){if(document.images[i].className==='img-preview'){document.images[i].addEventListener("contextmenu",(e)=>{hooker.saveImage(e.target.currentSrc);})}}})()""",
+                                    null
+                                )
+                            }
+                            innerChain.proceed()
                         }
                     }
+                    hookedClient.add(clazz)
+                    Log.d("hook webview $clazz")
+                } catch (_: NoSuchMethodException) {
                 }
-                hookedClient.add(clazz)
-                Log.d("hook webview $clazz")
-            } catch (_: NoSuchMethodException) {
             }
+            chain.proceed()
         }
     }
 

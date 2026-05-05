@@ -3,7 +3,7 @@ package me.iacn.biliroaming.hook
 import android.os.Bundle
 import android.view.View
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
-import me.iacn.biliroaming.utils.hookAfterMethod
+import me.iacn.biliroaming.utils.hookMethod
 import me.iacn.biliroaming.utils.sPrefs
 
 
@@ -13,12 +13,13 @@ class VipSectionHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             || !sPrefs.getBoolean("remove_vip_section", false)
         ) return
 
-        instance.homeUserCenterClass!!.hookAfterMethod(
+        instance.homeUserCenterClass!!.hookMethod(
             "onViewCreated",
             View::class.java,
             Bundle::class.java
-        ) {
-            val obj = it.thisObject
+        ) { chain ->
+            chain.proceed()
+            val obj = chain.thisObject
             val vipModuleManager = instance.homeUserCenterClass!!.declaredFields.single {
                 // $mineVipModuleManager
                 it.type.toString().contains("MineVipModuleManager")
@@ -35,6 +36,7 @@ class VipSectionHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 isAccessible = true
                 invoke(vipModuleManager, true)
             }
+            null
         }
     }
 }

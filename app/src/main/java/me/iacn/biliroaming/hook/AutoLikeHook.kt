@@ -2,7 +2,7 @@ package me.iacn.biliroaming.hook
 
 import android.view.View
 import android.widget.LinearLayout
-import de.robv.android.xposed.XC_MethodHook.Unhook
+import io.github.libxposed.api.XposedInterface.HookHandle
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.utils.*
 
@@ -25,11 +25,12 @@ class AutoLikeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
         Log.d("startHook: AutoLike")
 
-        val unhookSet = arrayOf<Set<Unhook>?>(null)
-        unhookSet[0] = instance.kingPositionComponentClass?.hookAfterAllConstructors { param ->
-            val kingPositionComponent = param.thisObject
+        val unhookSet = arrayOf<Set<HookHandle>?>(null)
+        unhookSet[0] = instance.kingPositionComponentClass?.hookAllConstructors { chain ->
+            chain.proceed()
+            val kingPositionComponent = chain.thisObject
             val componentMap =
-                kingPositionComponent.getObjectFieldAs<Map<*, *>>(instance.componentMapField())
+                kingPositionComponent!!.getObjectFieldAs<Map<*, *>>(instance.componentMapField())
 
             val likeComponentClass = componentMap.keys.filterNotNull().firstNotNullOfOrNull {
                 val componentClass = it.javaClass
@@ -37,64 +38,71 @@ class AutoLikeHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     it.type == Runnable::class.java
                 } ?: return@firstNotNullOfOrNull null
                 componentClass
-            } ?: return@hookAfterAllConstructors
+            } ?: return@hookAllConstructors null
 
             val rebindView = likeComponentClass.declaredMethods.firstOrNull {
                 it.returnType == Void.TYPE && it.parameterCount == 5
                         && it.parameterTypes[0] == likeComponentClass
                         && it.parameterTypes[4] == LinearLayout::class.java
-            } ?: return@hookAfterAllConstructors
+            } ?: return@hookAllConstructors null
 
-            rebindView.hookAfterMethod { p ->
+            rebindView.hookMethod { p ->
+                val result = p.proceed()
                 performLike(p.args[4] as View)
+                result
             }
 
             unhookSet[0]?.forEach { it.unhook() }
+            null
         }
 
         // 番剧分集切换
-        instance.viewUniteMossClass?.hookBeforeMethod(
+        instance.viewUniteMossClass?.hookMethod(
             "arcRefresh",
             "com.bapis.bilibili.app.viewunite.v1.ArcRefreshReq",
             instance.mossResponseHandlerClass
-        ) { param ->
-            val req = param.args[0]
+        ) { chain ->
+            val args = chain.args.toTypedArray()
+            val req = args[0]!!
             val aid = req.callMethodAs("getAid")
                 ?: req.callMethodAs<String?>("getBvid")?.let { bv2av(it) }
             if (aid == null || aid <= 0L) {
-                return@hookBeforeMethod
+                return@hookMethod chain.proceed()
             }
-            param.args[1] = param.args[1].mossResponseHandlerReplaceProxy { reply ->
+            args[1] = args[1]!!.mossResponseHandlerReplaceProxy { reply ->
                 reply ?: return@mossResponseHandlerReplaceProxy null
                 val like = reply.callMethod("getReqUser")?.callMethodAs<Int?>("getLike")
                     ?: return@mossResponseHandlerReplaceProxy null
                 detail = aid to like
                 null
             }
+            chain.proceed(args)
         }
 
         // 竖屏模式
-        instance.storyAbsControllerClass?.hookAfterMethod(
+        instance.storyAbsControllerClass?.hookMethod(
             instance.setMDataMethod(),
             instance.storyDetailClass
-        ) { param ->
-            if (param.thisObject.callMethod(instance.getMPlayerMethod()) == null) {
-                return@hookAfterMethod
+        ) { chain ->
+            val result = chain.proceed()
+            if (chain.thisObject!!.callMethod(instance.getMPlayerMethod()) == null) {
+                return@hookMethod result
             }
             val storyDetail = instance.fastJsonClass?.callStaticMethodAs<String>(
                 "toJSONString",
-                param.args[0]
+                chain.args[0]
             ).toJSONObject()
             val playerArgs = storyDetail.optJSONObject("player_args")
             val aid = playerArgs?.optLong("aid")
             val reqUser = storyDetail.optJSONObject("req_user")
             val like = reqUser?.optBoolean("like")
             if (aid == null || like == null) {
-                return@hookAfterMethod
+                return@hookMethod result
             }
             detail = aid to if (like) 1 else 0
 
-            performLike(param.thisObject as View)
+            performLike(chain.thisObject as View)
+            result
         }
     }
 

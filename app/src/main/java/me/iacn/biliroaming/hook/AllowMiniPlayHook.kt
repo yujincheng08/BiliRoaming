@@ -2,8 +2,8 @@ package me.iacn.biliroaming.hook
 
 import me.iacn.biliroaming.utils.from
 import me.iacn.biliroaming.utils.getStaticObjectField
-import me.iacn.biliroaming.utils.hookBeforeAllConstructors
-import me.iacn.biliroaming.utils.hookBeforeConstructor
+import me.iacn.biliroaming.utils.hookAllConstructors
+import me.iacn.biliroaming.utils.hookConstructor
 import me.iacn.biliroaming.utils.sPrefs
 
 class AllowMiniPlayHook(classLoader: ClassLoader) : BaseHook(classLoader) {
@@ -15,21 +15,25 @@ class AllowMiniPlayHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     "com.bilibili.lib.media.resource.PlayConfig\$PlayConfigType"
                             .from(mClassLoader)?.getStaticObjectField("MINIPLAYER")
             "com.bilibili.lib.media.resource.PlayConfig\$PlayMenuConfig".from(mClassLoader)?.run {
-                hookBeforeConstructor(
+                hookConstructor(
                         Boolean::class.javaPrimitiveType,
                         "com.bilibili.lib.media.resource.PlayConfig\$PlayConfigType"
-                ) { param ->
-                    val type = param.args[1]
+                ) { chain ->
+                    val args = chain.args.toTypedArray()
+                    val type = args[1]
                     if (type == miniPlayerType)
-                        param.args[0] = true
+                        args[0] = true
+                    chain.proceed(args)
                 }
-                hookBeforeConstructor(Boolean::class.javaPrimitiveType,
+                hookConstructor(Boolean::class.javaPrimitiveType,
                         "com.bilibili.lib.media.resource.PlayConfig\$PlayConfigType",
                         List::class.java
-                ) { param ->
-                    val type = param.args[1]
+                ) { chain ->
+                    val args = chain.args.toTypedArray()
+                    val type = args[1]
                     if (type == miniPlayerType)
-                        param.args[0] = true
+                        args[0] = true
+                    chain.proceed(args)
                 }
             }
         }

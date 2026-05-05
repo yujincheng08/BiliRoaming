@@ -1165,8 +1165,9 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
 
         // dirty way to make list preference summary span style take effect,
         // we have no choice, see ListPreference#getSummary
-        val summaryHook = ListPreference::class.java.hookBeforeMethod("getSummary") { param ->
-            param.thisObject.setObjectField("mSummary", null)
+        val summaryHook = ListPreference::class.java.hookMethod("getSummary") { chain ->
+            chain.thisObject.setObjectField("mSummary", null)
+            chain.proceed()
         }
 
         val prefsFragment = PrefsFragment()
@@ -1175,16 +1176,18 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
 
         prefsFragment.onActivityCreated(null)
 
-        val unhook = Preference::class.java.hookAfterMethod(
+        val unhook = Preference::class.java.hookMethod(
             "onCreateView", ViewGroup::class.java
-        ) { param ->
-            if (PreferenceCategory::class.java.isInstance(param.thisObject)
-                && TextView::class.java.isInstance(param.result)
+        ) { chain ->
+            val result = chain.proceed()
+            if (PreferenceCategory::class.java.isInstance(chain.thisObject)
+                && TextView::class.java.isInstance(result)
             ) {
-                val textView = param.result as TextView
+                val textView = result as TextView
                 if (textView.textColors.defaultColor == -13816531)
                     textView.setTextColor(Color.GRAY)
             }
+            result
         }
 
         setView(getContentView(prefsFragment))
