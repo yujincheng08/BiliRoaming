@@ -1,6 +1,8 @@
 package me.iacn.biliroaming.hook
 
 import android.net.Uri
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.utils.Log
 import me.iacn.biliroaming.utils.bv2av
@@ -14,15 +16,16 @@ import java.net.URL
 class ShareHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private val contentUrlPattern = Regex("""[\s\S]*(https?://(?:bili2233\.cn|b23\.tv)/\S*)$""")
 
-    private fun String.resolveB23URL(): String {
-        val conn = URL(this).openConnection() as HttpURLConnection
+    private fun String.resolveB23URL(): String = runBlocking(Dispatchers.IO) {
+        val conn = URL(this@resolveB23URL).openConnection() as HttpURLConnection
         conn.requestMethod = "GET"
         conn.instanceFollowRedirects = false
         conn.connect()
         if (conn.responseCode == HttpURLConnection.HTTP_MOVED_TEMP) {
-            return conn.getHeaderField("Location")
+            conn.getHeaderField("Location") ?: this@resolveB23URL
+        } else {
+            this@resolveB23URL
         }
-        return this
     }
 
     private fun transformUrl(url: String, transformAv: Boolean): String {
