@@ -1,9 +1,6 @@
 package me.iacn.biliroaming.hook
 
 import android.app.Activity
-import android.app.AlertDialog
-import android.content.Context
-import android.content.Intent
 import android.text.SpannableStringBuilder
 import android.text.style.ClickableSpan
 import android.view.View
@@ -21,6 +18,12 @@ class CopyHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             "dy_opus_paragraph_title",
             "dy_opus_copy_right_id",
             "dy_opus_paragraph_text",
+        )
+
+        private val COMMENT3_CONTENT_HANDLER_CLASSES = arrayOf(
+            "com.bilibili.app.comment3.ui.holder.handle.CommentContentRichTextHandler",
+            "com.bilibili.app.comment3.ui.nextholder.handle.CommentNextContentRichTextHandler",
+            "com.bilibili.app.comment3.ui.nextholderexp3.handle.CommentNextExperiment3ContentRichTextHandler",
         )
     }
 
@@ -40,9 +43,9 @@ class CopyHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
                 param.thisObject.getFirstFieldByExactTypeOrNull<SpannableStringBuilder>()?.let {
                     val view = param.args[0] as View
-                    showCopyDialog(view.context, it, param)
+                    SelectableCopyDialog.show(view.context, it)
                 } ?: (param.args[0] as? TextView)?.let { tv ->
-                    showCopyDialog(tv.context, tv.text, param)
+                    SelectableCopyDialog.show(tv.context, tv.text)
                 }
             }
         }
@@ -58,7 +61,7 @@ class CopyHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     (if (instance.ellipsizingTextViewClass?.isInstance(v) == true) {
                         v.getFirstFieldByExactTypeOrNull()
                     } else v.text)?.also { text ->
-                        showCopyDialog(v.context, text, param)
+                        SelectableCopyDialog.show(v.context, text)
                     }
                 } ?: Log.toast("找不到动态内容", true)
                 true
@@ -74,7 +77,7 @@ class CopyHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 ) it else null
             }?.let { view ->
                 view.getFirstFieldByExactTypeOrNull<CharSequence>()?.also { text ->
-                    showCopyDialog(view.context, text, param)
+                    SelectableCopyDialog.show(view.context, text)
                 }
             } ?: Log.toast("找不到评论内容", true)
             return true
@@ -86,20 +89,7 @@ class CopyHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             commentCopyHook(it, "comment_message")
         }
 
-        instance.comment3CopyClass?.let { c ->
-            instance.comment3Copy()?.let { m ->
-                instance.comment3ViewIndex().let { i ->
-                    c.replaceAllMethods(m) { param ->
-                        if (!enhanceLongClickCopy) return@replaceAllMethods true
-                        val view = param.args[i] as View
-                        view.getFirstFieldByExactTypeOrNull<CharSequence>()?.also { text ->
-                            showCopyDialog(view.context, text, param)
-                        }
-                        return@replaceAllMethods true
-                    }
-                }
-            }
-        }
+        hookComment3LongClickCopy()
 
         if (!enhanceLongClickCopy) return
         "com.bilibili.bplus.im.conversation.ConversationActivity".from(mClassLoader)
@@ -124,36 +114,32 @@ class CopyHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                             }.run { removeSuffix("\n") }
                         }
                     } ?: return@hookBeforeMethod
-                    showCopyDialog(activity, text, param)
+                    SelectableCopyDialog.show(activity, text)
                     param.args[6].callMethodOrNull("dismiss")
                     param.result = null
                 }
             }
     }
 
-    private fun showCopyDialog(context: Context, text: CharSequence, param: MethodHookParam) {
-        val appDialogTheme = getResId("AppTheme.Dialog.Alert", "style")
-        AlertDialog.Builder(context, appDialogTheme).run {
-            setTitle("自由复制内容")
-            setMessage(text)
-            setPositiveButton("分享") { _, _ ->
-                context.startActivity(
-                    Intent.createChooser(
-                        Intent().apply {
-                            action = Intent.ACTION_SEND
-                            putExtra(Intent.EXTRA_TEXT, text)
-                            type = "text/plain"
-                        }, "分享评论内容"
-                    )
-                )
+    private fun hookComment3LongClickCopy() {
+        COMMENT3_CONTENT_HANDLER_CLASSES.asSequence()
+            .mapNotNull { it.findClassOrNull(mClassLoader) }
+            .flatMap { clazz ->
+                clazz.declaredMethods.asSequence().filter { method ->
+                    method.returnType == Boolean::class.javaPrimitiveType &&
+                        method.parameterTypes.lastOrNull() == View::class.java
+                }
             }
-            setNeutralButton("复制全部") { _, _ ->
-                param.invokeOriginalMethod()
+            .forEach { method ->
+                method.replaceMethod { param ->
+                    if (!enhanceLongClickCopy) return@replaceMethod true
+                    val view = param.args.lastOrNull() as? View
+                        ?: return@replaceMethod param.invokeOriginalMethod()
+                    val text = SelectableCopyDialog.findText(view)
+                        ?: return@replaceMethod param.invokeOriginalMethod()
+                    SelectableCopyDialog.show(view.context, text)
+                    true
+                }
             }
-            setNegativeButton(android.R.string.cancel, null)
-            show()
-        }.apply {
-            findViewById<TextView>(android.R.id.message).setTextIsSelectable(true)
-        }
     }
 }

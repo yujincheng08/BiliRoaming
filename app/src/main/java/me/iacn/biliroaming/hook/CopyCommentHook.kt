@@ -1,49 +1,37 @@
 package me.iacn.biliroaming.hook
 
-import android.app.AlertDialog
-import android.content.ClipboardManager
 import android.content.Context
-import android.view.View
-import android.widget.TextView
-import de.robv.android.xposed.XC_MethodHook
-import de.robv.android.xposed.XposedHelpers
-import me.iacn.biliroaming.utils.currentContext
-import me.iacn.biliroaming.utils.getResId
+import me.iacn.biliroaming.utils.findClassOrNull
+import me.iacn.biliroaming.utils.invokeOriginalMethod
+import me.iacn.biliroaming.utils.replaceMethod
 import me.iacn.biliroaming.utils.sPrefs
 
 
 class CopyCommentHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
         if (!sPrefs.getBoolean("copy_comment", false)) return
-        XposedHelpers.findAndHookMethod(
-            "com.bilibili.app.comment3.ui.widget.menu.CommentMoreMenuItemHolder",
-            mClassLoader,
-            "y3",
-            "kotlin.jvm.functions.Function1",
-            "com.bilibili.app.comment3.data.model.CommentItem\$MenuItem",
-            "android.view.View",  // ConstraintLayout
-            object : XC_MethodHook() {
-                override fun afterHookedMethod(param: MethodHookParam) {
-                    super.afterHookedMethod(param)
-                    val menu = param.args[1]
-                    val view = param.args[2] as View
-                    if (!menu.toString().contains("COPY")) return
+        hookComment3CopyAction()
+    }
 
-                    val clipboard =
-                        currentContext.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                    // 实在是找不到了。那你就说有没有获取到吧
-                    val txt = clipboard.primaryClip!!.getItemAt(0).text
-                    AlertDialog.Builder(view.context, getResId("AppTheme.Dialog.Alert", "style"))
-                        .run {
-                            setTitle("自由复制内容")
-                            setMessage(txt)
-                            setPositiveButton("完成") { _, _ -> }
-                            setNegativeButton("复制全部") { _, _ -> }
-                            show()
-                        }.apply {
-                            findViewById<TextView>(android.R.id.message).setTextIsSelectable(true)
-                        }
-                }
-            })
+    private fun hookComment3CopyAction() {
+        if (sPrefs.getBoolean("comment_copy", false) &&
+            sPrefs.getBoolean("comment_copy_enhance", false)
+        ) return
+
+        "com.bilibili.app.comment3.utils.CommentExtensionsKt"
+            .findClassOrNull(mClassLoader)
+            ?.declaredMethods
+            ?.firstOrNull {
+                it.returnType == Boolean::class.javaPrimitiveType &&
+                    it.parameterTypes.contentEquals(arrayOf(String::class.java, Context::class.java))
+            }
+            ?.replaceMethod { param ->
+                val text = param.args.getOrNull(0) as? String
+                    ?: return@replaceMethod param.invokeOriginalMethod()
+                val context = param.args.getOrNull(1) as? Context
+                    ?: return@replaceMethod param.invokeOriginalMethod()
+                SelectableCopyDialog.show(context, text)
+                true
+            }
     }
 }
