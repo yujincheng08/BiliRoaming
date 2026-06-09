@@ -1,59 +1,37 @@
 package me.iacn.biliroaming.hook
 
-import android.app.AlertDialog
-import android.content.ClipData
-import android.content.ClipboardManager
 import android.content.Context
-import android.view.View
-import android.widget.TextView
-import me.iacn.biliroaming.utils.currentContext
 import me.iacn.biliroaming.utils.findClassOrNull
-import me.iacn.biliroaming.utils.getResId
-import me.iacn.biliroaming.utils.hookAfterMethod
+import me.iacn.biliroaming.utils.invokeOriginalMethod
+import me.iacn.biliroaming.utils.replaceMethod
 import me.iacn.biliroaming.utils.sPrefs
 
 
 class CopyCommentHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
         if (!sPrefs.getBoolean("copy_comment", false)) return
-        val menuItemHolderClass =
-            "com.bilibili.app.comment3.ui.widget.menu.CommentMoreMenuItemHolder".findClassOrNull(mClassLoader)
-                ?: return
-        val functionClass = "kotlin.jvm.functions.Function1".findClassOrNull(mClassLoader) ?: return
-        val menuItemClass =
-            "com.bilibili.app.comment3.data.model.CommentItem\$MenuItem".findClassOrNull(mClassLoader)
-                ?: return
+        hookComment3CopyAction()
+    }
 
-        menuItemHolderClass.declaredMethods.asSequence()
-            .filter { method ->
-                val params = method.parameterTypes
-                params.size == 3 &&
-                        params[0] == functionClass &&
-                        params[1] == menuItemClass &&
-                        View::class.java.isAssignableFrom(params[2])
+    private fun hookComment3CopyAction() {
+        if (sPrefs.getBoolean("comment_copy", false) &&
+            sPrefs.getBoolean("comment_copy_enhance", false)
+        ) return
+
+        "com.bilibili.app.comment3.utils.CommentExtensionsKt"
+            .findClassOrNull(mClassLoader)
+            ?.declaredMethods
+            ?.firstOrNull {
+                it.returnType == Boolean::class.javaPrimitiveType &&
+                    it.parameterTypes.contentEquals(arrayOf(String::class.java, Context::class.java))
             }
-            .forEach { method ->
-                method.hookAfterMethod { param ->
-                    val menu = param.args[1]
-                    val view = param.args[2] as View
-                    if (!menu.toString().contains("COPY")) return@hookAfterMethod
-
-                    val clipboard =
-                        currentContext.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                    val txt = clipboard.primaryClip?.getItemAt(0)?.text ?: return@hookAfterMethod
-                    AlertDialog.Builder(view.context, getResId("AppTheme.Dialog.Alert", "style"))
-                        .run {
-                            setTitle("自由复制内容")
-                            setMessage(txt)
-                            setPositiveButton("完成") { _, _ -> }
-                            setNegativeButton("复制全部") { _, _ ->
-                                clipboard.setPrimaryClip(ClipData.newPlainText("comment", txt))
-                            }
-                            show()
-                        }.apply {
-                            findViewById<TextView>(android.R.id.message).setTextIsSelectable(true)
-                        }
-                }
+            ?.replaceMethod { param ->
+                val text = param.args.getOrNull(0) as? String
+                    ?: return@replaceMethod param.invokeOriginalMethod()
+                val context = param.args.getOrNull(1) as? Context
+                    ?: return@replaceMethod param.invokeOriginalMethod()
+                SelectableCopyDialog.show(context, text)
+                true
             }
     }
 }
