@@ -88,6 +88,7 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                     startHook { CustomThemeHook(lpparam.classLoader) }
                     startHook { TeenagersModeHook(lpparam.classLoader) }
                     startHook { JsonHook(lpparam.classLoader) }
+                    startHook { GsonHook(lpparam.classLoader) }
                     startHook { ShareHook(lpparam.classLoader) }
                     startHook { AutoLikeHook(lpparam.classLoader) }
                     startHook { SettingHook(lpparam.classLoader) }

@@ -48,6 +48,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val bangumiApiResponseClass by Weak { mHookInfo.bangumiApiResponse from mClassLoader }
     val rxGeneralResponseClass by Weak { "com.bilibili.okretro.call.rxjava.RxGeneralResponse" from mClassLoader }
     val fastJsonClass by Weak { mHookInfo.fastJson.class_ from mClassLoader }
+    val gsonClass by Weak { "com.google.gson.Gson" from mClassLoader }
     val bangumiUniformSeasonClass by Weak { mHookInfo.bangumiSeason from mClassLoader }
     val kingPositionComponentClass by Weak { mHookInfo.autoLike.kingPositionComponent.class_ from mClassLoader }
     val storyAbsControllerClass by Weak { mHookInfo.autoLike.storyAbsController.class_ from mClassLoader }
