@@ -68,15 +68,7 @@ class SettingHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     ) else list
                 } ?: list
 
-                val item = instance.menuGroupItemClass?.new() ?: return@hookBeforeAllMethods
-                item.setIntField("id", SETTING_ID)
-                    .setObjectField("title", "哔哩漫游设置")
-                    .setObjectField(
-                        "icon",
-                        "https://i0.hdslb.com/bfs/album/276769577d2a5db1d9f914364abad7c5253086f6.png"
-                    )
-                    .setObjectField("uri", SETTING_URI)
-                    .setIntField("visible", 1)
+                val item = makeSettingItem() ?: return@hookBeforeAllMethods
                 itemList.forEach {
                     if (try {
                             it.getIntField("id") == SETTING_ID
@@ -116,11 +108,136 @@ class SettingHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 }
             }
         }
+
+        // 8.97.0+: hook 菜单适配器 notify* 方法注入设置项
+        instance.mineAdapterClass?.let { hookAdapterFallback(it) }
+    }
+
+    private fun hookAdapterFallback(adapterClass: Class<*>) {
+        val menuGroupItemClass = instance.menuGroupItemClass ?: return
+        val dataField = adapterClass.declaredFields.firstOrNull {
+            List::class.java.isAssignableFrom(it.type)
+        } ?: return
+        dataField.isAccessible = true
+
+        fun injectSettingItem(data: MutableList<*>) {
+            if (data.isEmpty()) return
+
+            // 去重：检查 data 中所有 MenuGroup 的 itemList 是否已含设置项
+            for (group in data) {
+                group?.getObjectFieldOrNullAs<MutableList<Any>>("itemList")?.forEach { item ->
+                    if (item.javaClass == menuGroupItemClass &&
+                        (try {
+                            item.getIntField("id") == SETTING_ID
+                        } catch (_: Throwable) {
+                            item.getLongField("id") == SETTING_ID.toLong()
+                        })
+                    ) return
+                }
+            }
+
+            val targetList = data.lastOrNull()
+                ?.getObjectFieldOrNullAs<MutableList<Any>>("itemList") ?: return
+
+            val item = makeSettingItem() ?: return
+            targetList.add(if(targetList.isEmpty()) 0 else targetList.lastIndex, item)
+        }
+
+        // hook RecyclerView.Adapter 多个通知方法代替单一 notifyDataSetChanged
+        // 8.97.0 的适配器使用 notifyItemRangeChanged 刷新数据
+        listOf(
+            "notifyDataSetChanged", "notifyItemRangeChanged",
+            "notifyItemRangeInserted", "notifyItemRangeRemoved", "notifyItemChanged"
+        ).forEach { methodName ->
+            runCatching {
+                adapterClass.getMethod(methodName).hookBeforeMethod { param ->
+                    if (!adapterClass.isInstance(param.thisObject)) return@hookBeforeMethod
+                    val data = dataField.get(param.thisObject) as? MutableList<*>
+                        ?: return@hookBeforeMethod
+                    injectSettingItem(data)
+                }
+            }
+        }
+
+        // 为注入的设置项绑定点击监听
+        // 8.97.0+ 为双层 RecyclerView：外层分组适配器 → 内层条目适配器
+        // 从外层 data 定位包含注入项的 MenuGroup，post 后遍历 View 树找到内层 RecyclerView
+        fun bindSettingClick(holder: Any, position: Int, adapter: Any) {
+            val data = dataField.get(adapter) as? List<*> ?: return
+            val group = data.getOrNull(position) ?: return
+            val itemList = group.getObjectFieldOrNullAs<List<*>>("itemList") ?: return
+            itemList.find {
+                it?.javaClass == menuGroupItemClass && it.getObjectField("uri") == SETTING_URI
+            } ?: return
+            val itemView = holder.getObjectFieldOrNullAs<View>("itemView") ?: return
+            itemView.post {
+                val rv = findFirstRecyclerView(itemView) ?: return@post
+                val innerAdapter = rv.callMethodAs<Any?>("getAdapter") ?: return@post
+
+                @Suppress("UNCHECKED_CAST")
+                val innerData = innerAdapter.javaClass.declaredFields
+                    .firstOrNull { List::class.java.isAssignableFrom(it.type) }
+                    ?.also { it.isAccessible = true }
+                    ?.get(innerAdapter) as? List<Any> ?: return@post
+                val idx = innerData.indexOfFirst {
+                    it.javaClass == menuGroupItemClass &&
+                            it.getObjectField("uri") == SETTING_URI
+                }
+                if (idx < 0) return@post
+                val lm = rv.callMethodAs<Any?>("getLayoutManager") ?: return@post
+                val child = lm.callMethodAs<View?>("findViewByPosition", idx) ?: return@post
+                child.setOnClickListener {
+                    val ctx = it.context
+                    if (ctx is Activity) SettingDialog.show(ctx)
+                }
+            }
+        }
+
+        // 2-param onBindViewHolder (首次 bind、全量刷新)
+        adapterClass.methods.firstOrNull { m ->
+            m.name == "onBindViewHolder" && m.parameterTypes.size == 2
+        }?.hookAfterMethod { param ->
+            bindSettingClick(param.args[0], param.args[1] as Int, param.thisObject)
+        }
+    }
+
+    /**
+     * 递归遍历 View 树，查找第一个 RecyclerView 实例。
+     */
+    private fun findFirstRecyclerView(root: View): View? {
+        if (rvClass?.isInstance(root) == true) return root
+        if (root !is ViewGroup) return null
+        for (i in 0 until root.childCount) {
+            findFirstRecyclerView(root.getChildAt(i))?.let { return it }
+        }
+        return null
+    }
+
+    private val rvClass: Class<*>? by lazy {
+        "androidx.recyclerview.widget.RecyclerView".findClassOrNull(mClassLoader)
+            ?: "android.support.v7.widget.RecyclerView".findClassOrNull(mClassLoader)
     }
 
     companion object {
         const val START_SETTING_KEY = "biliroaming_start_setting"
         const val SETTING_URI = "bilibili://biliroaming"
         const val SETTING_ID = 114514
+
+        fun makeSettingItem(): Any? {
+            val item = instance.menuGroupItemClass?.new() ?: return null
+            try {
+                item.setIntField("id", SETTING_ID)
+            } catch (_: Throwable) {
+                item.setLongField("id", SETTING_ID.toLong())
+            }
+            item.setObjectField("title", "哔哩漫游设置")
+                .setObjectField(
+                    "icon",
+                    "https://i0.hdslb.com/bfs/album/276769577d2a5db1d9f914364abad7c5253086f6.png"
+                )
+                .setObjectField("uri", SETTING_URI)
+            item.setIntField("visible", 1)
+            return item
+        }
     }
 }

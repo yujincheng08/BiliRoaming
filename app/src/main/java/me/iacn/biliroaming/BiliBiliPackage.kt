@@ -83,6 +83,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val menuGroupItemClass by Weak { mHookInfo.settings.menuGroupItem from mClassLoader }
     val drawerLayoutClass by Weak { mHookInfo.drawer.layout from mClassLoader }
     val drawerLayoutParamsClass by Weak { mHookInfo.drawer.layoutParams from mClassLoader }
+    val mineAdapterClass by Weak { mHookInfo.settings.mineAdapter from mClassLoader }
     val splashInfoClass by Weak {
         "tv.danmaku.bili.ui.splash.brand.BrandShowInfo" from mClassLoader
             ?: "tv.danmaku.bili.ui.splash.brand.model.BrandShowInfo" from mClassLoader
@@ -956,7 +957,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             }
             settings = settings {
                 val menuGroupItemClass =
-                    "com.bilibili.lib.homepage.mine.MenuGroup\$Item" from classloader
+                    ("com.bilibili.lib.homepage.mine.MenuGroup\$Item" from classloader)
                         ?: return@settings
                 menuGroupItem = class_ { name = menuGroupItemClass.name }
                 settingRouter = class_ {
@@ -983,7 +984,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 }
                 val contextIndex = dexHelper.encodeClassIndex(Context::class.java)
                 val listIndex = dexHelper.encodeClassIndex(List::class.java)
-                dexHelper.findMethodUsingString(
+                // 旧版 DEX 扫描链: 先通过字符串定位 HomeUserCenter 类
+                val homeUserCenterClasses = dexHelper.findMethodUsingString(
                     "main.my-information.noportrait.0.show",
                     false,
                     -1,
@@ -994,8 +996,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     null,
                     null,
                     false
-                ).asSequence().mapNotNull { dexHelper.decodeMethodIndex(it)?.declaringClass }
-                    .forEach { homeUserCenterClass ->
+                ).asSequence().mapNotNull { dexHelper.decodeMethodIndex(it)?.declaringClass }.toList()
+                val legacyResult = homeUserCenterClasses.mapNotNull { homeUserCenterClass ->
                         val homeUserCenterIndex = dexHelper.encodeClassIndex(homeUserCenterClass)
                         val addSettingMethod = dexHelper.findMethodUsingString(
                             "bilibili://main/scan",
@@ -1039,12 +1041,30 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                             true
                         ).asSequence().firstNotNullOfOrNull {
                             dexHelper.decodeMethodIndex(it)
-                        } ?: return@settings
+                        }
+                        addSettingMethod?.let { homeUserCenterClass to it }
+                    }.toList()
+                if (legacyResult.isNotEmpty()) {
+                    legacyResult.forEach { (cls, method) ->
                         homeUserCenter += homeUserCenter {
-                            class_ = class_ { name = homeUserCenterClass.name }
-                            addSetting = method { name = addSettingMethod.name }
+                            class_ = class_ { name = cls.name }
+                            addSetting = method { name = method.name }
                         }
                     }
+                } else {
+                    // 8.97.0: addSetting 方法未找到，通过字符串扫描拿到的类找菜单适配器
+                    val adapterType =
+                        ("androidx.recyclerview.widget.RecyclerView\$Adapter" from classloader)
+                            ?: ("android.support.v7.widget.RecyclerView\$Adapter" from classloader)
+                    mineAdapter = class_ {
+                        adapterType ?: return@class_
+                        name = homeUserCenterClasses.firstNotNullOfOrNull { cls ->
+                            cls.declaredFields.firstOrNull {
+                                adapterType.isAssignableFrom(it.type)
+                            }?.type?.name
+                        } ?: return@class_
+                    }
+                }
             }
             drawer = drawer {
                 val navigationViewClass =
