@@ -2,6 +2,7 @@
 
 package me.iacn.biliroaming
 
+import android.app.Activity
 import android.app.AndroidAppHelper
 import android.content.Context
 import android.content.SharedPreferences
@@ -32,6 +33,7 @@ import kotlin.time.measureTimedValue
 infix fun Configs.Class.from(cl: ClassLoader) = if (hasName()) name.findClassOrNull(cl) else null
 val Configs.Method.orNull get() = if (hasName()) name else null
 val Configs.Field.orNull get() = if (hasName()) name else null
+val Configs.Class.orNull get() = if (hasName()) name else null
 
 class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContext: Context) {
     init {
@@ -323,6 +325,8 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     fun biliCallRequestField() = mHookInfo.biliCall.request.orNull
 
     fun onOperateClick() = mHookInfo.onOperateClick.orNull
+
+    fun operateClickHostClass() = mHookInfo.operateClickHostClass.orNull
 
     fun getContentString() = mHookInfo.getContentString.orNull
 
@@ -1841,13 +1845,33 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 null,
                 null,
                 true
-            ).asSequence().firstNotNullOfOrNull {
+            ).asSequence().mapNotNull {
                 dexHelper.decodeMethodIndex(it) as? Method
-            }?.let {
-                val getContentStringMethod = it.parameterTypes[1].declaredMethods.find { m ->
+            }.find { method ->
+                // 跨版本匹配: 方法在 ConversationActivity 中，或在捕获了
+                // ConversationActivity 的 lambda 类中。用 Activity 类型做混淆无关匹配
+                val dc = method.declaringClass
+                Activity::class.java.isAssignableFrom(dc) ||
+                        dc.declaredFields.any {
+                            Activity::class.java.isAssignableFrom(it.type)
+                        }
+            }?.let { method ->
+                // 跨版本获取 BaseTypedMessage: 旧版为方法参数，新版为 captured field
+                val btmClass = method.parameterTypes.getOrNull(1)
+                    ?: method.declaringClass.declaredFields.firstNotNullOfOrNull { f ->
+                        f.type.takeIf { t ->
+                            t != String::class.java && !t.isPrimitive &&
+                                    t.declaredMethods.any { m ->
+                                        m.returnType == String::class.java && m.parameterTypes.isEmpty()
+                                    }
+                        }
+                    }
+                    ?: return@let
+                val getContentStringMethod = btmClass.declaredMethods.find { m ->
                     m.returnType == String::class.java && m.parameterTypes.isEmpty()
                 } ?: return@let
-                onOperateClick = method { name = it.name }
+                onOperateClick = method { name = method.name }
+                operateClickHostClass = class_ { name = method.declaringClass.name }
                 getContentString = method { name = getContentStringMethod.name }
             }
             livePagerRecyclerView = class_ {
