@@ -2296,8 +2296,9 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     null,
                     null,
                     null,
-                    true
-                ).asSequence().mapNotNull { dexHelper.decodeMethodIndex(it) }.firstOrNull()
+                    false
+                ).asSequence().mapNotNull { dexHelper.decodeMethodIndex(it) }
+                    .firstOrNull { it.declaringClass.name.contains("blconfig") }
                     ?: return@preBuiltConfig
                 class_ = class_ { name = getMap.declaringClass.name }
                 get = method { name = getMap.name }
