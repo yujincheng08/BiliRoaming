@@ -175,9 +175,9 @@ class CustomSubtitleDialog(activity: Activity, fragment: Fragment, prefs: Shared
 
     private fun refreshFontStatus() {
         fontStatus?.text = if (SubtitleHook.fontFile.isFile)
-            context.getString(R.string.custom_subtitle_status_custom)
+            XposedInit.moduleRes.getString(R.string.custom_subtitle_status_custom)
         else
-            context.getString(R.string.custom_subtitle_status_default)
+            XposedInit.moduleRes.getString(R.string.custom_subtitle_status_default)
     }
 
     fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
