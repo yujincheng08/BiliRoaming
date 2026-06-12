@@ -16,7 +16,7 @@ import me.iacn.biliroaming.utils.dp
 import me.iacn.biliroaming.utils.setRippleBackground
 
 open class BaseWidgetDialog(context: Context) : AlertDialog.Builder(context) {
-    protected fun string(resId: Int) = context.getString(resId)
+    protected fun string(resId: Int) = XposedInit.moduleRes.getString(resId)
 
     protected fun categoryTitle(title: String) = TextView(context).apply {
         text = title
