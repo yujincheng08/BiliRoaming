@@ -411,6 +411,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                         && getVersionCode(context.packageName) == info.clientVersionCode
                         && BuildConfig.VERSION_CODE == info.moduleVersionCode
                         && BuildConfig.VERSION_NAME == info.moduleVersionName
+                        && info.generation >= getModuleGeneration(context)
                         && info.biliAccounts.getAccessKey.orNull != null
                     )
                         return info
@@ -458,6 +459,13 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             } else classloader
         }
 
+        private fun getModuleGeneration(context: Context): Int = try {
+            context.createPackageContext(BuildConfig.APPLICATION_ID,
+                Context.CONTEXT_IGNORE_SECURITY)
+                .getSharedPreferences("biliroaming_hookinfo", Context.MODE_PRIVATE)
+                .getInt("generation", 0)
+        } catch (_: Exception) { 0 }
+
         @JvmStatic
         fun initHookInfo(context: Context) = hookInfo {
             val classloader = context.classLoader
@@ -503,6 +511,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             clientVersionCode = getVersionCode(context.packageName)
             moduleVersionCode = BuildConfig.VERSION_CODE
             moduleVersionName = BuildConfig.VERSION_NAME
+            generation = getModuleGeneration(context)
             mapIds = mapIds {
                 val reg = Regex("^tv\\.danmaku\\.bili\\.[^.]*$")
                 val mask = Modifier.STATIC or Modifier.PUBLIC or Modifier.FINAL
