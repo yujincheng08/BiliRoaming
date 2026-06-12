@@ -66,6 +66,8 @@ class SettingHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                 @Suppress("UNCHECKED_CAST")
                 val list = chain.args[1] as? MutableList<Any>
                     ?: chain.args[1]?.getObjectFieldOrNullAs<MutableList<Any>>("moreSectionList")
+                    ?: chain.args[1]?.getObjectFieldOrNullAs<MutableList<Any>>("sectionListV2")
+                    ?: chain.args[1]?.getObjectFieldOrNullAs<MutableList<Any>>("sectionList")
                     ?: return@hookAllMethods chain.proceed()
 
                 val itemList = list.lastOrNull()?.let {
@@ -74,15 +76,7 @@ class SettingHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                     ) else list
                 } ?: list
 
-                val item = instance.menuGroupItemClass?.new() ?: return@hookAllMethods chain.proceed()
-                item.setIntField("id", SETTING_ID)
-                    .setObjectField("title", "哔哩漫游设置")
-                    .setObjectField(
-                        "icon",
-                        "https://i0.hdslb.com/bfs/album/276769577d2a5db1d9f914364abad7c5253086f6.png"
-                    )
-                    .setObjectField("uri", SETTING_URI)
-                    .setIntField("visible", 1)
+                val item = makeSettingItem() ?: return@hookAllMethods chain.proceed()
                 itemList.forEach {
                     if (try {
                             it.getIntField("id") == SETTING_ID
@@ -97,7 +91,9 @@ class SettingHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
 
         instance.settingRouterClass?.hookAllConstructors { chain ->
-            if (chain.args[1] != SETTING_URI) return@hookAllConstructors chain.proceed()
+            if (chain.args.size < 4 ||
+                chain.args.getOrNull(1) != SETTING_URI
+            ) return@hookAllConstructors chain.proceed()
             val routerType = (chain.executable as Constructor<*>).parameterTypes[3]
             val args = chain.args.toTypedArray()
             args[3] = Proxy.newProxyInstance(
@@ -125,11 +121,49 @@ class SettingHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
             chain.proceed(args)
         }
+
+        // 8.97.0+: 拦截默认菜单项点击 handler
+        val menuItemClass = instance.menuGroupItemClass
+        val fragActivityClass = menuItemClass?.let {
+            runCatching { mClassLoader.loadClass("androidx.fragment.app.FragmentActivity") }.getOrNull()
+        }
+        if (menuItemClass != null && fragActivityClass != null) {
+            instance.settingRouterClass?.declaredMethods?.forEach { method ->
+                if (method.parameterTypes.size == 2 &&
+                    method.parameterTypes[0] == fragActivityClass &&
+                    method.parameterTypes[1] == menuItemClass
+                ) {
+                    method.hookMethod { chain ->
+                        val uri = chain.args.getOrNull(1)?.getObjectFieldOrNullAs<String>("uri")
+                        if (uri != SETTING_URI) return@hookMethod chain.proceed()
+                        SettingDialog.show(chain.args[0] as Activity)
+                        null
+                    }
+                }
+            }
+        }
     }
 
     companion object {
         const val START_SETTING_KEY = "biliroaming_start_setting"
         const val SETTING_URI = "bilibili://biliroaming"
         const val SETTING_ID = 114514
+
+        fun makeSettingItem(): Any? {
+            val item = instance.menuGroupItemClass?.new() ?: return null
+            try {
+                item.setIntField("id", SETTING_ID)
+            } catch (_: Throwable) {
+                item.setLongField("id", SETTING_ID.toLong())
+            }
+            item.setObjectField("title", "哔哩漫游设置")
+                .setObjectField(
+                    "icon",
+                    "https://i0.hdslb.com/bfs/album/276769577d2a5db1d9f914364abad7c5253086f6.png"
+                )
+                .setObjectField("uri", SETTING_URI)
+            item.setIntField("visible", 1)
+            return item
+        }
     }
 }

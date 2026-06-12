@@ -991,7 +991,29 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                         dexHelper.findField(it, null, true).asSequence().firstNotNullOfOrNull { f ->
                             dexHelper.decodeFieldIndex(f)
                         }?.declaringClass
-                    }?.name ?: return@class_
+                    }?.name ?: run {
+                        // 8.97.0+: 通过客服 URL 定位默认菜单项点击 handler
+                        val fragActivityIndex =
+                            ("androidx.fragment.app.FragmentActivity" from classloader)
+                                ?.let { dexHelper.encodeClassIndex(it) } ?: return@run null
+                        dexHelper.findMethodUsingString(
+                            "www.bilibili.com/h5/customer-service",
+                            false,
+                            -1,
+                            2,
+                            "VLL",
+                            -1,
+                            longArrayOf(
+                                fragActivityIndex,
+                                dexHelper.encodeClassIndex(menuGroupItemClass)
+                            ),
+                            null,
+                            null,
+                            true
+                        ).asSequence().firstNotNullOfOrNull {
+                            dexHelper.decodeMethodIndex(it)
+                        }?.declaringClass?.name
+                    } ?: return@class_
                 }
                 val contextIndex = dexHelper.encodeClassIndex(Context::class.java)
                 val listIndex = dexHelper.encodeClassIndex(List::class.java)
