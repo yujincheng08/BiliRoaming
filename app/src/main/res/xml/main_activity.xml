@@ -26,6 +26,11 @@
                 android:action="android.intent.action.VIEW"
                 android:data="@string/help_url" />
         </Preference>
+
+        <Preference
+            android:key="clear_hook_cache"
+            android:summary="@string/clear_hook_cache_summary"
+            android:title="@string/clear_hook_cache_title" />
     </PreferenceCategory>
 
     <PreferenceCategory

@@ -135,6 +135,8 @@
     <string name="force_th_comment_summary">强制开启串台的泰区评论弹幕（仅调试使用）</string>
     <string name="share_log_title">分享日志</string>
     <string name="share_log_summary">可能在旧版无效</string>
+    <string name="clear_hook_cache_title">清除hook缓存</string>
+    <string name="clear_hook_cache_summary">下次打开哔哩哔哩时强制重新扫描hook信息</string>
     <string name="replace_story_video_title">替换竖版视频</string>
     <string name="replace_story_video_summary">替换竖版视频为正常视频</string>
     <string name="customize_drawer_title">自定义我的页面</string>
