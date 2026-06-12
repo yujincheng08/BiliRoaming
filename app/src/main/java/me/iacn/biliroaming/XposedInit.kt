@@ -95,6 +95,7 @@ class XposedInit : XposedModule() {
                     startHook { TeenagersModeHook(classLoader) }
                     startHook { JsonHook(classLoader) }
                     startHook { GsonHook(classLoader) }
+                    startHook { KotlinxJsonHook(classLoader) }
                     startHook { ShareHook(classLoader) }
                     startHook { AutoLikeHook(classLoader) }
                     startHook { SettingHook(classLoader) }
