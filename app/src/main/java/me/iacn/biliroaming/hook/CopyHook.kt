@@ -8,6 +8,7 @@ import android.text.SpannableStringBuilder
 import android.text.style.ClickableSpan
 import android.view.View
 import android.widget.FrameLayout
+import android.widget.PopupWindow
 import android.widget.TextView
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.utils.*
@@ -102,33 +103,59 @@ class CopyHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         }
 
         if (!enhanceLongClickCopy) return
-        "com.bilibili.bplus.im.conversation.ConversationActivity".from(mClassLoader)
-            ?.declaredMethods?.find {
-                it.name == instance.onOperateClick() && it.parameterTypes.size == 8
-            }?.hookBeforeMethod { param ->
-                if (param.args.last() == param.args.first()) {
-                    val activity = param.thisObject as Activity
-                    val json = param.args[1].callMethodOrNullAs(instance.getContentString()) ?: ""
-                    val text = runCatchingOrNull { json.toJSONObject() }?.run {
-                        optString("content").ifEmpty {
-                            buildString {
-                                appendLine(optString("title").trim())
-                                appendLine(optString("text").trim())
-                                optJSONArray("modules")?.run {
-                                    asSequence<JSONObject>().map {
-                                        it.optString("title") + "：" + it.optString("detail")
-                                    }.joinToString("\n").run {
-                                        append(this)
-                                    }
-                                }
-                            }.run { removeSuffix("\n") }
-                        }
-                    } ?: return@hookBeforeMethod
-                    showCopyDialog(activity, text, param)
-                    param.args[6].callMethodOrNull("dismiss")
-                    param.result = null
-                }
-            }
+        val onClickName = instance.onOperateClick() ?: return
+        val contentStringName = instance.getContentString() ?: return
+        val hostClassName = instance.operateClickHostClass() ?: return
+        val hostClass = hostClassName.from(mClassLoader) ?: return
+        val hookMethod = hostClass.declaredMethods.find { it.name == onClickName } ?: return
+
+        fun parseContentText(json: String): String? = runCatchingOrNull { json.toJSONObject() }?.run {
+            optString("content").ifEmpty {
+                buildString {
+                    appendLine(optString("title").trim())
+                    appendLine(optString("text").trim())
+                    optJSONArray("modules")?.run {
+                        asSequence<JSONObject>().map {
+                            it.optString("title") + "：" + it.optString("detail")
+                        }.joinToString("\n").run { append(this) }
+                    }
+                }.run { removeSuffix("\n") }
+            }.ifEmpty { null }
+        }
+
+        hookMethod.hookBeforeMethod { param ->
+            // Repost guard: last arg == first arg
+            if (param.args.size >= 2 && param.args.last() != param.args.first()) return@hookBeforeMethod
+
+            val hostClass = param.thisObject.javaClass
+
+            // Activity: try this first, then search for captured field
+            val activity = (param.thisObject as? Activity)
+                ?: hostClass.declaredFields.find {
+                    Activity::class.java.isAssignableFrom(it.type)
+                }?.apply { isAccessible = true }?.get(param.thisObject) as? Activity
+                ?: return@hookBeforeMethod
+
+            // Typed message: try args[1] first, then search for field with getContentString
+            val typedMsg = param.args.getOrNull(1)
+                ?: hostClass.declaredFields.find {
+                    runCatching { it.type.getMethod(contentStringName) }.isSuccess
+                }?.apply { isAccessible = true }?.get(param.thisObject)
+                ?: return@hookBeforeMethod
+
+            val json = typedMsg.callMethodOrNullAs<String>(contentStringName) ?: return@hookBeforeMethod
+            val text = parseContentText(json) ?: return@hookBeforeMethod
+            showCopyDialog(activity, text, param)
+
+            // Dismiss popup: try args[6] first, then search for PopupWindow field
+            (param.args.getOrNull(6)
+                ?: hostClass.declaredFields.find {
+                    PopupWindow::class.java.isAssignableFrom(it.type)
+                }?.apply { isAccessible = true }?.get(param.thisObject))
+                ?.callMethodOrNull("dismiss")
+
+            param.result = null
+        }
     }
 
     private fun showCopyDialog(context: Context, text: CharSequence, param: MethodHookParam) {

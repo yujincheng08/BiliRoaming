@@ -81,8 +81,8 @@ class DynamicFilterDialog(activity: Activity, prefs: SharedPreferences) :
             )
         }
         root.addView(gridLayout)
-        val dynamicTypes = context.resources.getStringArray(R.array.dynamic_entries).zip(
-            context.resources.getStringArray(R.array.dynamic_values)
+        val dynamicTypes = XposedInit.moduleRes.getStringArray(R.array.dynamic_entries).zip(
+            XposedInit.moduleRes.getStringArray(R.array.dynamic_values)
         )
         val colSpec = fun(colWeight: Float) = GridLayout.spec(GridLayout.UNDEFINED, colWeight)
         val rowSpec = { GridLayout.spec(GridLayout.UNDEFINED) }

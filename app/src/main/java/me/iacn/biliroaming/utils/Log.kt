@@ -18,10 +18,11 @@ object Log {
     fun toast(msg: String, force: Boolean = false, duration: Int = Toast.LENGTH_SHORT, alsoLog: Boolean = true) {
         if (!force && !sPrefs.getBoolean("show_info", true)) return
         handler.post {
-            BiliBiliPackage.instance.toastHelperClass?.runCatchingOrNull {
-                callStaticMethod(BiliBiliPackage.instance.cancelShowToast())
+            val inst = runCatchingOrNull { BiliBiliPackage.instance } ?: return@post
+            inst.toastHelperClass?.runCatchingOrNull {
+                callStaticMethod(inst.cancelShowToast())
                 callStaticMethod(
-                    BiliBiliPackage.instance.showToast(),
+                    inst.showToast(),
                     currentContext,
                     "哔哩漫游：$msg",
                     duration
