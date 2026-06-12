@@ -2,6 +2,7 @@
 protobuf = "4.30.2"
 coroutine = "1.10.2"
 kotlin = "2.1.20"
+okhttp = "5.3.2"
 
 [plugins]
 kotlin = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
@@ -23,3 +24,4 @@ kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "
 kotlin-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutine" }
 kotlin-coroutines-jdk = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-jdk8", version.ref = "coroutine" }
 androidx-documentfile = { module = "androidx.documentfile:documentfile", version = "1.0.1" }
+okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }

@@ -159,6 +159,7 @@ dependencies {
     implementation(libs.kotlin.coroutines.jdk)
     implementation(libs.androidx.documentfile)
     implementation(libs.cxx)
+    implementation(libs.okhttp)
 }
 
 val adbExecutable: String = androidComponents.sdkComponents.adb.get().asFile.absolutePath

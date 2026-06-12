@@ -129,6 +129,7 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                     startHook { LiveQualityHook(lpparam.classLoader) }
                     startHook { StoryPlayerAdHook(lpparam.classLoader) }
                     startHook { LongPressSpeed(lpparam.classLoader) }
+                    startHook { SkipVideoAd(lpparam.classLoader) }
                 }
 
                 lpparam.processName.endsWith(":web") -> {
