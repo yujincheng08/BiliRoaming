@@ -94,6 +94,7 @@ class XposedInit : XposedModule() {
                     startHook { CustomThemeHook(classLoader) }
                     startHook { TeenagersModeHook(classLoader) }
                     startHook { JsonHook(classLoader) }
+                    startHook { GsonHook(classLoader) }
                     startHook { ShareHook(classLoader) }
                     startHook { AutoLikeHook(classLoader) }
                     startHook { SettingHook(classLoader) }

@@ -62,6 +62,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val themeProcessorClass by Weak { mHookInfo.themeProcessor.class_ from mClassLoader }
     val drawerClass by Weak { mHookInfo.drawer.class_ from mClassLoader }
     val generalResponseClass by Weak { mHookInfo.generalResponse from mClassLoader }
+    val gsonClass by Weak { "com.google.gson.Gson" from mClassLoader }
     val seasonParamsMapClass by Weak { "com.bilibili.bangumi.data.page.detail.BangumiDetailApiService\$UniformSeasonParamsMap" from mClassLoader }
     val seasonParamsClass by Weak { mHookInfo.bangumiParams.class_ from mClassLoader }
     val brandSplashClass by Weak { "tv.danmaku.bili.ui.splash.brand.ui.BaseBrandSplashFragment" from mClassLoader }
