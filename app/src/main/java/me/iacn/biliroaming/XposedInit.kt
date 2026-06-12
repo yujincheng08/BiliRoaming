@@ -15,6 +15,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.future.future
 import me.iacn.biliroaming.hook.*
+import me.iacn.biliroaming.hook.KotlinxJsonHook
 import me.iacn.biliroaming.utils.*
 import java.util.concurrent.CompletableFuture
 
@@ -88,6 +89,8 @@ class XposedInit : IXposedHookLoadPackage, IXposedHookZygoteInit {
                     startHook { CustomThemeHook(lpparam.classLoader) }
                     startHook { TeenagersModeHook(lpparam.classLoader) }
                     startHook { JsonHook(lpparam.classLoader) }
+                    startHook { GsonHook(lpparam.classLoader) }
+                    startHook { KotlinxJsonHook(lpparam.classLoader) }
                     startHook { ShareHook(lpparam.classLoader) }
                     startHook { AutoLikeHook(lpparam.classLoader) }
                     startHook { SettingHook(lpparam.classLoader) }

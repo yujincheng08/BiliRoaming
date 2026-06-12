@@ -56,7 +56,7 @@ class CommentFilterDialog(activity: Activity, prefs: SharedPreferences) :
         val currentTargetCommentAuthorLevel =
             prefs.getLong("target_comment_author_level", 0L).toInt()
         val tvHint = seekBarView.findViewById<TextView>(R.id.tvHint).apply {
-            text = if (currentTargetCommentAuthorLevel == 0) "关闭" else context.getString(
+            text = if (currentTargetCommentAuthorLevel == 0) "关闭" else XposedInit.moduleRes.getString(
                 R.string.danmaku_filter_weight_hint,
                 currentTargetCommentAuthorLevel
             )
@@ -68,7 +68,7 @@ class CommentFilterDialog(activity: Activity, prefs: SharedPreferences) :
                     seekBar: SeekBar?, progress: Int, fromUser: Boolean
                 ) {
                     tvHint.text =
-                        if (progress == 0) "关闭" else context.getString(
+                        if (progress == 0) "关闭" else XposedInit.moduleRes.getString(
                             R.string.danmaku_filter_weight_hint,
                             progress
                         )

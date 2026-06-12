@@ -200,6 +200,7 @@ message Settings {
   optional Class menu_group_item = 2;
   optional Class setting_router = 3;
   repeated HomeUserCenter home_user_center = 5;
+  optional Class mine_adapter = 6;
 }
 
 message BiliAccounts {
@@ -386,6 +387,7 @@ message HookInfo {
   optional Class comment_long_click_new = 73;
   optional Method on_operate_click = 74;
   optional Method get_content_string = 75;
+  optional Class operate_click_host_class = 79;
   optional Class live_pager_recycler_view = 76;
   optional BiliConfig bili_config = 77;
   optional UpdateInfoSupplier update_info_supplier = 78;
@@ -413,4 +415,6 @@ message HookInfo {
   optional GCommonResolverParams gCommonResolverParams = 103;
   optional RewardAd rewardAd = 104;
   optional StoryPagerPlayer storyPagerPlayer = 105;
+  int32 generation = 106;
+  optional Method compose_guard = 107;
 }

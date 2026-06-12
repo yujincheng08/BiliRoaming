@@ -34,7 +34,7 @@ class SpeedTestAdapter(context: Context) : ArrayAdapter<SpeedTestResult>(context
             getItem(position).let {
                 findViewById<TextView>(R.id.upos_name).text = it?.name
                 findViewById<TextView>(R.id.upos_speed).text =
-                    context.getString(R.string.speed_formatter, it?.speed)
+                    XposedInit.moduleRes.getString(R.string.speed_formatter, it?.speed)
             }
         }
     }
@@ -65,8 +65,8 @@ class SpeedTestDialog(activity: Activity, prefs: SharedPreferences) :
         view.adapter = adapter
 
         view.addHeaderView(context.inflateLayout(R.layout.cdn_speedtest_item).apply {
-            findViewById<TextView>(R.id.upos_name).text = context.getString(R.string.upos)
-            findViewById<TextView>(R.id.upos_speed).text = context.getString(R.string.speed)
+            findViewById<TextView>(R.id.upos_name).text = XposedInit.moduleRes.getString(R.string.upos)
+            findViewById<TextView>(R.id.upos_speed).text = XposedInit.moduleRes.getString(R.string.speed)
         }, null, false)
 
         view.setPadding(16.dp, 10.dp, 16.dp, 10.dp)
@@ -98,8 +98,8 @@ class SpeedTestDialog(activity: Activity, prefs: SharedPreferences) :
                 dialog.setTitle("测速失败")
                 return@launch
             }
-            context.resources.getStringArray(R.array.upos_entries)
-                .zip(context.resources.getStringArray(R.array.upos_values)).asFlow().map {
+            XposedInit.moduleRes.getStringArray(R.array.upos_entries)
+                .zip(XposedInit.moduleRes.getStringArray(R.array.upos_values)).asFlow().map {
                     scope.launch {
                         val item = SpeedTestResult(it.first, it.second, "...")
                         adapter.add(item)
