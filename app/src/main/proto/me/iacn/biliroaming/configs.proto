@@ -415,4 +415,6 @@ message HookInfo {
   optional GCommonResolverParams gCommonResolverParams = 103;
   optional RewardAd rewardAd = 104;
   optional StoryPagerPlayer storyPagerPlayer = 105;
+  int32 generation = 106;
+  optional Method compose_guard = 107;
 }

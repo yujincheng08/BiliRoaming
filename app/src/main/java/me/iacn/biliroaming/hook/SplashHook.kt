@@ -4,8 +4,10 @@ import android.content.res.Configuration
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
+import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
+import android.widget.FrameLayout
 import android.widget.ImageView
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.utils.*
@@ -13,6 +15,14 @@ import java.io.File
 
 class SplashHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     override fun startHook() {
+        // 解除 AbstractComposeView 的 addView 限制，使其恢复普通 ViewGroup 行为
+        if (!composeAddViewPatched) {
+            try {
+                instance.composeGuardMethod?.replaceMethod { null }
+            } catch (_: Throwable) {}
+            composeAddViewPatched = true
+        }
+
         val customSplash = sPrefs.getBoolean("custom_splash", false)
         val customSplashLogo = sPrefs.getBoolean("custom_splash_logo", false)
         val fullSplash = sPrefs.getBoolean("full_splash", false)
@@ -51,8 +61,8 @@ class SplashHook(classLoader: ClassLoader) : BaseHook(classLoader) {
 
             if (isXmlPath) {
                 applyXmlPath(view, brandId, customSplash, customSplashLogo)
-            } else if (view is ViewGroup) {
-                view.post { applyComposeOverlay(view, customSplash, customSplashLogo) }
+            } else {
+                applyComposeOverlay(view, customSplash, customSplashLogo)
             }
         }
     }
@@ -84,47 +94,52 @@ class SplashHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     }
 
     /**
-     * Compose 渲染路径：在 ComposeView 上叠加 ImageView。
-     * ComposeView 是 ViewGroup 子类，addView 可添加覆盖层于 Compose 内容之上。
+     * Compose 渲染路径：addView 限制已解除，直接用 FrameLayout 包裹
+     * overlay 添加到 ComposeView 自身，随 ComposeView 自动销毁。
      */
-    private fun applyComposeOverlay(container: ViewGroup, customSplash: Boolean, customSplashLogo: Boolean) {
-        if (sPrefs.getBoolean("custom_splash", false)) {
-            val splashImage = File(currentContext.filesDir, SPLASH_IMAGE)
-            val iv = ImageView(container.context).apply {
+    private fun applyComposeOverlay(composeView: View, customSplash: Boolean, customSplashLogo: Boolean) {
+        val ctx = composeView.context
+        val logoH = composeView.resources.displayMetrics.heightPixels / 8
+        val splashImage = File(currentContext.filesDir, SPLASH_IMAGE)
+        val logoImage = File(currentContext.filesDir, LOGO_IMAGE)
+
+        val overlay = FrameLayout(ctx).apply {
+            layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
+        }
+
+        if (customSplash) {
+            overlay.addView(ImageView(ctx).apply {
                 scaleType = ImageView.ScaleType.CENTER_CROP
-                layoutParams = ViewGroup.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.MATCH_PARENT
+                layoutParams = FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.MATCH_PARENT,
+                    FrameLayout.LayoutParams.MATCH_PARENT
                 )
-                if (splashImage.exists()) {
-                    setImageURI(Uri.fromFile(splashImage))
-                } else {
-                    visibility = View.GONE
-                }
-            }
-            container.addView(iv)
+                if (splashImage.exists()) setImageURI(Uri.fromFile(splashImage))
+                else visibility = View.GONE
+            })
         }
-        if (sPrefs.getBoolean("custom_splash_logo", false)) {
-            val logoH = container.resources.displayMetrics.heightPixels / 8
-            val logoImage = File(currentContext.filesDir, LOGO_IMAGE)
-            val iv = ImageView(container.context).apply {
+        if (customSplashLogo) {
+            overlay.addView(ImageView(ctx).apply {
                 scaleType = ImageView.ScaleType.FIT_CENTER
-                layoutParams = ViewGroup.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT, logoH
+                layoutParams = FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.MATCH_PARENT,
+                    logoH,
+                    Gravity.BOTTOM
                 )
-                y = (container.height - logoH).toFloat()
-                if (logoImage.exists()) {
-                    setImageURI(Uri.fromFile(logoImage))
-                } else {
-                    visibility = View.GONE
-                }
-            }
-            container.addView(iv)
+                if (logoImage.exists()) setImageURI(Uri.fromFile(logoImage))
+                else visibility = View.GONE
+            })
         }
+
+        (composeView as ViewGroup).addView(overlay)
     }
 
     companion object {
         const val SPLASH_IMAGE = "biliroaming_splash"
         const val LOGO_IMAGE = "biliroaming_logo"
+        private var composeAddViewPatched = false
     }
 }

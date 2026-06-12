@@ -5,7 +5,7 @@ import me.iacn.biliroaming.hook.kotlinx.KotlinxProcessor
 import me.iacn.biliroaming.hook.kotlinx.KotlinxSplashListProcessor
 import me.iacn.biliroaming.hook.kotlinx.KotlinxSplashShowProcessor
 import me.iacn.biliroaming.utils.Log
-import me.iacn.biliroaming.utils.getObjectField
+import me.iacn.biliroaming.utils.callMethodOrNull
 import me.iacn.biliroaming.utils.getObjectFieldAs
 import me.iacn.biliroaming.utils.hookAfterAllMethods
 
@@ -36,7 +36,7 @@ class KotlinxJsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         if (deserializer == null || result == null) return
 
         val serialName = deserializer
-            .getObjectField("descriptor")
+            .callMethodOrNull("getDescriptor")
             ?.getObjectFieldAs<String>("serialName")
             ?: return
 

@@ -190,6 +190,15 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
     val tripleSpeedServiceClass by Weak { "com.bilibili.ship.theseus.united.player.TripleSpeedService\$runOldTripleSpeed\$1\$listener\$1\$onLongPress\$1" from mClassLoader }
     val storyPagerPlayerClass by Weak { mHookInfo.storyPagerPlayer.class_ from mClassLoader }
 
+    // Compose guard method，由 initHookInfo 中 DexHelper 查找并缓存到 hook info
+    val composeGuardMethod by Weak {
+        mHookInfo.composeGuard.orNull?.let { methodName ->
+            "androidx.compose.ui.platform.AbstractComposeView"
+                .findClassOrNull(mClassLoader)
+                ?.declaredMethods?.find { it.name == methodName }
+        }
+    }
+
     // for v8.17.0+
     val useNewMossFunc = instance.viewMossClass?.declaredMethods?.any {
         it.name == "executeRelatesFeed"
@@ -402,6 +411,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                         && getVersionCode(context.packageName) == info.clientVersionCode
                         && BuildConfig.VERSION_CODE == info.moduleVersionCode
                         && BuildConfig.VERSION_NAME == info.moduleVersionName
+                        && info.generation >= getModuleGeneration(context)
                         && info.biliAccounts.getAccessKey.orNull != null
                     )
                         return info
@@ -449,6 +459,13 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             } else classloader
         }
 
+        private fun getModuleGeneration(context: Context): Int = try {
+            context.createPackageContext(BuildConfig.APPLICATION_ID,
+                Context.CONTEXT_IGNORE_SECURITY)
+                .getSharedPreferences("biliroaming_hookinfo", Context.MODE_PRIVATE)
+                .getInt("generation", 0)
+        } catch (_: Exception) { 0 }
+
         @JvmStatic
         fun initHookInfo(context: Context) = hookInfo {
             val classloader = context.classLoader
@@ -464,6 +481,21 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
 
             val dexHelper =
                 DexHelper(classloader.findDexClassLoader(::findRealClassloader) ?: return@hookInfo)
+
+            // 查找 AbstractComposeView 的 addView 守卫方法（供 SplashHook 使用）
+            val guardMethod = dexHelper.findMethodUsingString(
+                "Cannot add views to ",
+                true,
+                -1, -1, null,
+                -1,
+                null, null, null, true
+            ).firstOrNull()?.let {
+                dexHelper.decodeMethodIndex(it)
+            }
+            if (guardMethod != null) {
+                composeGuard = method { name = guardMethod.name }
+            }
+
             lastUpdateTime = max(
                 context.packageManager.getPackageInfo(
                     AndroidAppHelper.currentPackageName(),
@@ -479,6 +511,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
             clientVersionCode = getVersionCode(context.packageName)
             moduleVersionCode = BuildConfig.VERSION_CODE
             moduleVersionName = BuildConfig.VERSION_NAME
+            generation = getModuleGeneration(context)
             mapIds = mapIds {
                 val reg = Regex("^tv\\.danmaku\\.bili\\.[^.]*$")
                 val mask = Modifier.STATIC or Modifier.PUBLIC or Modifier.FINAL
