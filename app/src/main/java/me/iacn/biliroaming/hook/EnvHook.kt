@@ -15,14 +15,10 @@ class EnvHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             val hooker: HookCallback = hooker@{ chain ->
                 val result = chain.proceed()
                 @Suppress("UNCHECKED_CAST")
-                val resultMap = result as MutableMap<String, String?>
+                val resultMap = result as? MutableMap<String, String?> ?: return@hooker result
                 for (config in configSet) {
-                    (if (sPrefs.getBoolean(
-                            config.config,
-                            false
-                        )
-                    ) config.trueValue else config.falseValue)
-                        ?.let { resultMap[config.key] = it } ?: resultMap.remove(config.key)
+                    config.getEncryptedValue()?.let { resultMap[config.key] = it }
+                        ?: resultMap.remove(config.key)
                 }
                 result
             }
@@ -35,17 +31,12 @@ class EnvHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         // TypedContext
         instance.dataSPClass?.let {
             val hooker: HookCallback = hooker@{ chain ->
-                val result = chain.proceed() as SharedPreferences
-                // this indicates the proper instance
+                val result = chain.proceed() as? SharedPreferences ?: return@hooker null
                 if (!result.contains("bv.enable_bv")) return@hooker result
                 for (config in configSet) {
-                    (if (sPrefs.getBoolean(
-                            config.config,
-                            false
-                        )
-                    ) config.trueValue else config.falseValue)
-                        ?.let { result.edit().putString(config.key, it).apply() }
-                        ?: result.edit().remove(config.key).apply()
+                    config.getEncryptedValue()?.let {
+                        result.edit().putString(config.key, it).apply()
+                    } ?: result.edit().remove(config.key).apply()
                 }
                 result
             }
@@ -58,7 +49,7 @@ class EnvHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         "com.bilibili.lib.blconfig.internal.OverrideConfig".findClassOrNull(mClassLoader)
             ?.hookAllConstructors { chain ->
                 val delegate = chain.args.getOrNull(0) ?: return@hookAllConstructors chain.proceed()
-                val realConfig = chain.args.getOrNull(1) ?: return@hookAllConstructors chain.proceed()
+                val realConfig = chain.args.getOrNull(1) // may be null on 8.97.0+ (z12=true)
                 val delegateClass = delegate.javaClass
                 val args = chain.args.toTypedArray()
                 args[0] = Proxy.newProxyInstance(
@@ -70,8 +61,10 @@ class EnvHook(classLoader: ClassLoader) : BaseHook(classLoader) {
                         var result: Any? = null
                         val key = proxyArgs[0]
                         for (config in configSet) {
-                            if (sPrefs.getBoolean(config.config, false) && config.key == key) {
-                                result = realConfig.callMethodOrNull("get", *proxyArgs)
+                            if (config.key == key) {
+                                result = if (realConfig != null) {
+                                    realConfig.callMethodOrNull("get", *proxyArgs)
+                                } else config.getPlainValue()
                             }
                         }
                         result ?: m(delegate, *proxyArgs)
@@ -94,13 +87,22 @@ class EnvHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         Log.d("lateHook: Env")
         if (sPrefs.getBoolean("enable_av", false)) {
             val compatClass = "com.bilibili.droid.BVCompat".findClassOrNull(mClassLoader)
-            compatClass?.declaredFields?.forEach {
-                val field = compatClass.getStaticObjectField(it.name)
-                if (field is Pattern && field.pattern() == "av[1-9]\\d*")
-                    compatClass.setStaticObjectField(
-                        it.name,
-                        Pattern.compile("(av[1-9]\\d*)|(BV1[1-9A-NP-Za-km-z]{9})", field.flags())
-                    )
+            compatClass?.declaredFields?.forEach { f ->
+                runCatchingOrNull {
+                    val field = compatClass.getStaticObjectField(f.name)
+                    if (field is Pattern && field.pattern() == "av[1-9]\\d*") {
+                        compatClass.setStaticObjectField(
+                            f.name,
+                            Pattern.compile("(av[1-9]\\d*)|(BV1[1-9A-NP-Za-km-z]{9})", field.flags())
+                        )
+                    }
+                }
+                if (f.type == Boolean::class.javaPrimitiveType) {
+                    runCatching {
+                        f.isAccessible = true
+                        f.setBoolean(null, false)
+                    }.onFailure { Log.e(it) }
+                }
             }
         }
     }
@@ -116,15 +118,25 @@ class EnvHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             val key: String,
             val config: String,
             val trueValue: String?,
-            val falseValue: String?
-        )
+            val falseValue: String?,
+            val plainTrueValue: String? = null,
+            val plainFalseValue: String? = null
+        ) {
+            fun getEncryptedValue(): String? =
+                if (sPrefs.getBoolean(config, false)) trueValue else falseValue
+
+            fun getPlainValue(): String? =
+                if (sPrefs.getBoolean(config, false)) plainTrueValue else plainFalseValue
+        }
 
         val configSet = listOf(
             ConfigTuple(
                 "bv.enable_bv",
                 "enable_av",
                 encryptedValueMap["0"],
-                encryptedValueMap["1"]
+                encryptedValueMap["1"],
+                "0",
+                "1"
             ),
         )
     }
