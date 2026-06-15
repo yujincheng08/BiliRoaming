@@ -400,11 +400,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                         currentContext.packageName,
                         0
                     ).lastUpdateTime
-                    val lastModuleUpdateTime = try {
-                        context.packageManager.getPackageInfo(BuildConfig.APPLICATION_ID, 0)
-                    } catch (e: Throwable) {
-                        null
-                    }?.lastUpdateTime ?: 0
+                    val lastModuleUpdateTime = getModuleLastUpdateTime(context)
                     val info = FileInputStream(hookInfoFile).use {
                         runCatchingOrNull { Configs.HookInfo.parseFrom(it) }
                             ?: Configs.HookInfo.newBuilder().build()
@@ -468,6 +464,17 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                 .getInt("generation", 0)
         } catch (_: Exception) { 0 }
 
+        private fun getModuleLastUpdateTime(context: Context): Long = try {
+            context.packageManager.getPackageInfo(BuildConfig.APPLICATION_ID, 0).lastUpdateTime
+        } catch (_: Throwable) {
+            // Android 11+: host process can't see module package due to visibility restrictions.
+            // Fall back to module APK file modification time via BuildConfig's code source.
+            runCatching {
+                File(BuildConfig::class.java.protectionDomain?.codeSource?.location?.toURI()
+                    ?: return 0L).lastModified()
+            }.getOrDefault(0L)
+        }
+
         @JvmStatic
         fun initHookInfo(context: Context) = hookInfo {
             val classloader = context.classLoader
@@ -488,12 +495,7 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                     currentContext.packageName,
                     0
                 ).lastUpdateTime,
-                runCatchingOrNull {
-                    context.packageManager.getPackageInfo(
-                        BuildConfig.APPLICATION_ID,
-                        0
-                    )
-                }?.lastUpdateTime ?: 0
+                getModuleLastUpdateTime(context)
             )
             clientVersionCode = getVersionCode(context.packageName)
             moduleVersionCode = BuildConfig.VERSION_CODE
