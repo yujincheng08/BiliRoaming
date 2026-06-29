@@ -46,6 +46,9 @@ class XposedInit : XposedModule() {
         if (!Constant.BILIBILI_PACKAGE_NAME.containsValue(packageName) &&
             "tv.danmaku.bili.MainActivityV2".findClassOrNull(classLoader) == null
         ) return
+        if (!processName.contains(":")) {
+            runCatching { JsonHook.earlyHook(classLoader) }
+        }
         Instrumentation::class.java.hookMethod(
             "callApplicationOnCreate",
             Application::class.java

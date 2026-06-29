@@ -1,13 +1,55 @@
 package me.iacn.biliroaming.hook
 
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
+import me.iacn.biliroaming.hook.hometab.BottomItem
+import me.iacn.biliroaming.hook.json.JsonProcessor
+import me.iacn.biliroaming.hook.json.HomeTabProcessor
 import me.iacn.biliroaming.utils.*
 import java.lang.reflect.Type
 
 class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     companion object {
-        val bottomItems = mutableListOf<BottomItem>()
         val drawerItems = mutableListOf<BottomItem>()
+
+        private val allProcessors = listOf<JsonProcessor>(HomeTabProcessor())
+
+        /**
+         * 在 onPackageReady（libxposed 最早的 app 级时机，早于 ContentProvider/Application.onCreate）
+         * 提前注册 FastJSON parseObject hook，赶在磁盘缓存读取前拦到 TabResponse 反序列化。
+         *
+         * 精确 hook 可能产生 TabResponse 的 3 个重载：2参 (String,Class) 缓存、4参 (String,Type,int,Feature[]) 网络、
+         * 3参 (String,Type,Feature[])。**不用 hookAllMethods**——那会挂上高频的 parseObject(String) 等通用重载，
+         * 拦到后按 result.javaClass.name 分发给已注册的 [JsonProcessor]。
+         */
+        fun earlyHook(classLoader: ClassLoader) {
+            val fastJson = "com.alibaba.fastjson.JSON".findClassOrNull(classLoader)
+                ?: run {
+                    Log.d("JsonHook earlyHook: fastJson 类未加载，跳过")
+                    return
+                }
+            val enabledProcessors = allProcessors
+                .filter { it.shouldEnable() }
+                .mapNotNull { processor -> processor.takeIf { it.init(classLoader) } }
+                .groupBy { it.targetClassName }
+            val dispatch = { r: Any ->
+                enabledProcessors[r.javaClass.name]?.forEach { p ->
+                    runCatching { p.process(r, classLoader) }
+                        .onFailure { Log.e(it) }
+                }
+            }
+            listOf(
+                arrayOf(String::class.java, Class::class.java),
+                arrayOf(String::class.java, Type::class.java, Int::class.javaPrimitiveType, "com.alibaba.fastjson.parser.Feature[]"),
+                arrayOf(String::class.java, Type::class.java, "com.alibaba.fastjson.parser.Feature[]"),
+            ).forEach { params ->
+                fastJson.hookMethod("parseObject", *params) { chain ->
+                    val r = chain.proceed() ?: return@hookMethod null
+                    dispatch(r)
+                    r
+                }
+            }
+        }
+
     }
 
     override fun startHook() {
@@ -17,10 +59,6 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val purifyLivePopups = sPrefs.getStringSet("purify_live_popups", null) ?: setOf()
         val unlockPlayLimit = sPrefs.getBoolean("play_arc_conf", false)
 
-        val tabResponseClass =
-            "tv.danmaku.bili.ui.main2.resource.MainResourceManager\$TabResponse".findClassOrNull(
-                mClassLoader
-            )
         val accountMineClass =
             "tv.danmaku.bili.ui.main2.api.AccountMine".findClassOrNull(mClassLoader)
         val garbEntranceClass =
@@ -28,10 +66,6 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
         val splashClass = "tv.danmaku.bili.ui.splash.SplashData".findClassOrNull(mClassLoader)
             ?: "tv.danmaku.bili.ui.splash.ad.model.SplashData".findClassOrNull(mClassLoader)
         val splashShowClass = "tv.danmaku.bili.ui.splash.ad.model.SplashShowData".findClassOrNull(mClassLoader)
-        val tabClass =
-            "tv.danmaku.bili.ui.main2.resource.MainResourceManager\$Tab".findClassOrNull(
-                mClassLoader
-            )
         val defaultWordClass =
             "tv.danmaku.bili.ui.main2.api.SearchDefaultWord".findClassOrNull(mClassLoader)
         val defaultKeywordClass =
@@ -96,45 +130,6 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             }
 
             when (result.javaClass) {
-                tabResponseClass -> {
-                    val data = result.getObjectField("tabData")
-
-                    bottomItems.clear()
-                    val hides = sPrefs.getStringSet("hided_bottom_items", mutableSetOf())!!
-                    data?.getObjectFieldAs<MutableList<*>?>("bottom")?.removeAll {
-                        val uri = it?.getObjectFieldAs<String>("uri")
-                        val id = it?.getObjectFieldAs<String>("tabId")
-                        val showing = id !in hides
-                        bottomItems.add(
-                            BottomItem(
-                                it?.getObjectFieldAs("name"),
-                                uri, id, showing
-                            )
-                        )
-                        showing.not()
-                    }
-
-                    if (sPrefs.getBoolean("drawer", false) && !sPrefs.getBoolean("hidden", false)) {
-                        data?.getObjectFieldAs<MutableList<*>?>("bottom")?.removeAll {
-                            it?.getObjectFieldAs<String?>("uri")
-                                ?.startsWith("bilibili://user_center/mine")
-                                ?: false
-                        }
-                    }
-
-                    configTab(data, tabClass)
-
-                    if (sPrefs.getBoolean("purify_game", false) &&
-                        sPrefs.getBoolean("hidden", false)
-                    ) {
-                        val top = data?.getObjectFieldAs<MutableList<*>?>("top")
-                        top?.removeAll {
-                            val uri = it?.getObjectFieldAs<String?>("uri")
-                            uri?.startsWith("bilibili://game_center/home") ?: false
-                        }
-                    }
-
-                }
                 accountMineClass -> {
                     drawerItems.clear()
                     val hides = sPrefs.getStringSet("hided_drawer_items", mutableSetOf())!!
@@ -481,132 +476,5 @@ class JsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
             returnResult
         }
     }
-
-    private fun configTab(data: Any?, tabClass: Class<*>?) {
-        val tab = data?.getObjectFieldAs<MutableList<Any>>("tab") ?: return
-        if (tabClass == null) return
-
-        var hasBangumiCN = false
-        var hasBangumiTW = false
-        var hasMovieCN = false
-        var hasMovieTW = false
-        var hasKoreaHK = false
-        var hasKoreaTW = false
-        tab.forEach {
-            when (it.getObjectFieldAs<String>("uri")) {
-                "bilibili://pgc/bangumi_v2",
-                "bilibili://pgc/home" -> hasBangumiCN = true
-
-                "bilibili://following/home_activity_tab/6544" -> hasBangumiTW = true
-
-                "bilibili://pgc/cinema_v2",
-                "bilibili://pgc/home?home_flow_type=2" -> hasMovieCN = true
-
-                "bilibili://following/home_activity_tab/168644" -> hasMovieTW = true
-                "bilibili://following/home_activity_tab/163541" -> hasKoreaHK = true
-                "bilibili://following/home_activity_tab/95636" -> hasKoreaTW = true
-            }
-        }
-
-        if (sPrefs.getBoolean("add_bangumi", false)) {
-            if (!hasBangumiCN) {
-                val bangumiCN = tabClass.new()
-                    .setObjectField("tabId", "50")
-                    .setObjectField("name", "追番（大陸）")
-                    .setObjectField("uri", "bilibili://pgc/home")
-                    .setObjectField("reportId", "bangumi")
-                    .setIntField("pos", 50)
-                tab.add(bangumiCN)
-            }
-            if (!hasBangumiTW) {
-                val bangumiTW = tabClass.new()
-                    .setObjectField("tabId", "60")
-                    .setObjectField("name", "追番（港澳台）")
-                    .setObjectField("uri", "bilibili://following/home_activity_tab/6544")
-                    .setObjectField("reportId", "bangumi")
-                    .setIntField("pos", 60)
-                tab.add(bangumiTW)
-            }
-        }
-
-        if (sPrefs.getBoolean("add_movie", false)) {
-            if (!hasMovieCN) {
-                val movieCN = tabClass.new()
-                    .setObjectField("tabId", "70")
-                    .setObjectField("name", "影視（大陸）")
-                    .setObjectField("uri", "bilibili://pgc/home?home_flow_type=2")
-                    .setObjectField("reportId", "film")
-                    .setIntField("pos", 70)
-                tab.add(movieCN)
-            }
-            if (!hasMovieTW) {
-                val movieTW = tabClass.new()
-                    .setObjectField("tabId", "80")
-                    .setObjectField("name", "戏剧（港澳台）")
-                    .setObjectField("uri", "bilibili://following/home_activity_tab/168644")
-                    .setObjectField("reportId", "jptv")
-                    .setIntField("pos", 80)
-                tab.add(movieTW)
-            }
-        }
-
-        if (sPrefs.getBoolean("add_korea", false)) {
-            if (!hasKoreaHK) {
-                val koreaHK = tabClass.new()
-                    .setObjectField("tabId", "803")
-                    .setObjectField("name", "韩综（港澳）")
-                    .setObjectField("uri", "bilibili://following/home_activity_tab/163541")
-                    .setObjectField("reportId", "koreavhk")
-                    .setIntField("pos", 803)
-                tab.add(koreaHK)
-            }
-            if (!hasKoreaTW) {
-                val koreaTW = tabClass.new()
-                    .setObjectField("tabId", "804")
-                    .setObjectField("name", "韩综（台湾）")
-                    .setObjectField("uri", "bilibili://following/home_activity_tab/95636")
-                    .setObjectField("reportId", "koreavtw")
-                    .setIntField("pos", 804)
-                tab.add(koreaTW)
-            }
-        }
-
-        val purifytabset = sPrefs.getStringSet("customize_home_tab", emptySet())!!
-        if (purifytabset.isEmpty()) return
-        tab.removeAll {
-            when (it.getObjectFieldAs<String>("uri")) {
-                "bilibili://live/home"
-                -> purifytabset.contains("live")
-
-                "bilibili://pegasus/promo"
-                -> purifytabset.contains("promo")
-
-                "bilibili://pegasus/hottopic"
-                -> purifytabset.contains("hottopic")
-
-                "bilibili://pgc/bangumi_v2",
-                "bilibili://pgc/home",
-                "bilibili://following/home_activity_tab/6544"
-                -> purifytabset.contains("bangumi")
-
-                "bilibili://pgc/cinema_v2",
-                "bilibili://pgc/home?home_flow_type=2",
-                "bilibili://following/home_activity_tab/168644"
-                -> purifytabset.contains("movie")
-
-                "bilibili://following/home_activity_tab/95636",
-                "bilibili://following/home_activity_tab/163541"
-                -> purifytabset.contains("korea")
-
-                else -> purifytabset.contains("other_tabs")
-            }
-        }
-    }
-
-    data class BottomItem(
-        val name: String?,
-        val uri: String?,
-        val id: String?,
-        var showing: Boolean
-    )
 }
+

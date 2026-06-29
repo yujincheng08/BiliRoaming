@@ -14,6 +14,7 @@ import me.iacn.biliroaming.utils.*
  */
 class KotlinxJsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private val allProcessors = listOf(
+        KotlinxHomeTabProcessor(),
         KotlinxSplashListProcessor(),
         KotlinxSplashShowProcessor(),
     )

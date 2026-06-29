@@ -41,6 +41,8 @@ import kotlinx.coroutines.*
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
 import me.iacn.biliroaming.hook.JsonHook
 import me.iacn.biliroaming.hook.SplashHook
+import me.iacn.biliroaming.hook.hometab.BottomItem
+import me.iacn.biliroaming.hook.hometab.HomeTabHandler
 import me.iacn.biliroaming.utils.*
 import me.iacn.biliroaming.utils.UposReplaceHelper.isLocatedCn
 import java.io.ByteArrayOutputStream
@@ -174,7 +176,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
             }
 
             "customize_bottom_bar" -> {
-                extra.addAll(JsonHook.bottomItems.mapNotNull { it.name })
+                extra.addAll(HomeTabHandler.bottomItems.mapNotNull { it.name })
             }
 
             "customize_drawer" -> {
@@ -595,11 +597,11 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
 
         private fun onCustomizeBottomBarClick(): Boolean {
             AlertDialog.Builder(activity).apply {
-                val bottomItems = JsonHook.bottomItems
+                val bottomItems = HomeTabHandler.bottomItems
                 val ids = bottomItems.map { it.id }.toHashSet()
                 sPrefs.getStringSet("hided_bottom_items", null)?.forEach {
                     if (it.isEmpty() || ids.contains(it)) return@forEach
-                    bottomItems.add(JsonHook.BottomItem("未知", null, it, false))
+                    bottomItems.add(BottomItem("未知", null, it, false))
                 }
                 setTitle(XposedInit.moduleRes.getString(R.string.customize_bottom_bar_title))
                 setPositiveButton(android.R.string.ok) { _, _ ->
@@ -736,7 +738,7 @@ class SettingDialog(context: Context) : AlertDialog.Builder(context) {
                 val ids = drawerItems.map { it.id }.toHashSet()
                 sPrefs.getStringSet("hided_drawer_items", null)?.forEach {
                     if (it.isEmpty() || ids.contains(it)) return@forEach
-                    JsonHook.drawerItems.add(JsonHook.BottomItem("未知", null, it, false))
+                    JsonHook.drawerItems.add(BottomItem("未知", null, it, false))
                 }
                 setTitle(XposedInit.moduleRes.getString(R.string.customize_drawer_title))
                 setPositiveButton(android.R.string.ok) { _, _ ->
