@@ -8,5 +8,5 @@ interface KotlinxProcessor {
     fun shouldEnable(): Boolean
 
     /** Process the deserialized result object */
-    fun process(result: Any)
+    fun process(result: Any, deserializer: Any?)
 }

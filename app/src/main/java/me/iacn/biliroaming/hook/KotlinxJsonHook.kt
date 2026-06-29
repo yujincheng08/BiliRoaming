@@ -1,13 +1,17 @@
 package me.iacn.biliroaming.hook
 
 import me.iacn.biliroaming.BiliBiliPackage.Companion.instance
+import me.iacn.biliroaming.hook.kotlinx.KotlinxHomeTabProcessor
 import me.iacn.biliroaming.hook.kotlinx.KotlinxProcessor
 import me.iacn.biliroaming.hook.kotlinx.KotlinxSplashListProcessor
 import me.iacn.biliroaming.hook.kotlinx.KotlinxSplashShowProcessor
-import me.iacn.biliroaming.utils.Log
-import me.iacn.biliroaming.utils.callMethodOrNull
-import me.iacn.biliroaming.utils.hookAllMethods
+import me.iacn.biliroaming.utils.*
 
+/**
+ * hook kotlinx.serialization 路径（ktor + kotlinx）。
+ * 新版底栏（HomeTabResponse）由 KotlinxHomeTabProcessor 处理；
+ * 旧版底栏（FastJSON，默认路径）由 JsonHook.earlyHook 处理。也处理 splash 数据。
+ */
 class KotlinxJsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private val allProcessors = listOf(
         KotlinxSplashListProcessor(),
@@ -36,14 +40,12 @@ class KotlinxJsonHook(classLoader: ClassLoader) : BaseHook(classLoader) {
     private fun dispatchResult(deserializer: Any?, result: Any?) {
         if (deserializer == null || result == null) return
 
-        val serialName = deserializer
-            .callMethodOrNull("getDescriptor")
-            ?.callMethodOrNull("getSerialName")
-            ?: return
+        val desc = deserializer.callMethodOrNull("getDescriptor") ?: return
+        val serialName = desc.callMethodOrNull("getSerialName") as? String ?: return
 
         enabledProcessors[serialName]?.forEach { processor ->
             try {
-                processor.process(result)
+                processor.process(result, deserializer)
             } catch (e: Throwable) {
                 Log.e("KotlinxJsonHook processor ${processor.targetSerialName} error: $e")
             }

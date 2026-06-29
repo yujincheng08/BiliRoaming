@@ -9,7 +9,7 @@ class KotlinxSplashShowProcessor : KotlinxProcessor {
     override fun shouldEnable() =
         sPrefs.getBoolean("hidden", false) && sPrefs.getBoolean("purify_splash", false)
 
-    override fun process(result: Any) {
+    override fun process(result: Any, deserializer: Any?) {
         try {
             result.javaClass.declaredFields
                 .filter { !it.type.isPrimitive }

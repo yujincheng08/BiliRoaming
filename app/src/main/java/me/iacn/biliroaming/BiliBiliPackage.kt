@@ -405,14 +405,16 @@ class BiliBiliPackage constructor(private val mClassLoader: ClassLoader, mContex
                         runCatchingOrNull { Configs.HookInfo.parseFrom(it) }
                             ?: Configs.HookInfo.newBuilder().build()
                     }
+                    val moduleGen = getModuleGeneration(context)
                     if (info.lastUpdateTime >= lastUpdateTime && info.lastUpdateTime >= lastModuleUpdateTime
                         && getVersionCode(context.packageName) == info.clientVersionCode
                         && BuildConfig.VERSION_CODE == info.moduleVersionCode
                         && BuildConfig.VERSION_NAME == info.moduleVersionName
-                        && info.generation >= getModuleGeneration(context)
+                        && info.generation >= moduleGen
                         && info.biliAccounts.getAccessKey.orNull != null
                     )
                         return info
+                    Log.d("Hook info cache invalid: cachedGen=${info.generation} moduleGen=$moduleGen, re-scanning")
                 }
             }
             Log.d("Read hook info completed: take $t ms")
